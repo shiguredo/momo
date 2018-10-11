@@ -66,7 +66,7 @@ $ momo --no-audio --video-codec H264 --video-bitrate 800 \
        p2p --port 8080 
 ```
 
-http://[momo の IP アドレス]:8080/index.html にアクセスしてください。
+http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
 
 ### WebRTC SFU Sora で動作を確認する
 
