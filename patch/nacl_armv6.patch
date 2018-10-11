@@ -1,0 +1,47 @@
+diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
+index d31a9f2..a592f9f 100644
+--- a/third_party/boringssl/BUILD.gn
++++ b/third_party/boringssl/BUILD.gn
+@@ -87,9 +87,13 @@ if (is_win && !is_msan) {
+       }
+     } else if (current_cpu == "arm") {
+       if (is_linux || is_android) {
+-        sources += crypto_sources_linux_arm
++        if (arm_version <= 6) {
++          public_configs = [ ":no_asm_config" ]
++        } else {
++          sources += crypto_sources_linux_arm
++        }
+       } else if (is_ios) {
+-        sources += crypto_sources_ios_arm
++        sources += crypto_sources_linux_arm
+       } else {
+         public_configs = [ ":no_asm_config" ]
+       }
+diff --git a/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S b/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
+index bb48d17..18da322 100644
+--- a/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
++++ b/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
+@@ -15,9 +15,7 @@
+ .code	32
+ #endif
+ 
+-#if defined(__thumb2__) || defined(__clang__)
+ #define ldrhsb	ldrbhs
+-#endif
+ 
+ .align	5
+ .Lsigma:
+diff --git a/third_party/opus/BUILD.gn b/third_party/opus/BUILD.gn
+index 516ba08..ffe6077 100644
+--- a/third_party/opus/BUILD.gn
++++ b/third_party/opus/BUILD.gn
+@@ -16,7 +16,7 @@ use_opus_arm_optimization =
+ # If OPUS Run Time CPU Detections (RTCD) shall be used.
+ # Based on the conditions in celt/arm/armcpu.c:
+ # defined(_MSC_VER) || defined(__linux__).
+-use_opus_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux)
++use_opus_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux) && (arm_version >= 7)
+ 
+ config("opus_config") {
+   include_dirs = [ "src/include" ]

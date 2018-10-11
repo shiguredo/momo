@@ -1,0 +1,23 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 494d33f..37df919 100755
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -271,6 +271,18 @@ target(link_target_type, "ffmpeg_internal") {
+       } else {
+         asmflags += [ "-DHAVE_VFP_ARGS=0" ]
+       }
++      if (is_clang) {
++        # TODO(hans) Enable integrated-as (crbug.com/124610).
++        asmflags += [ "-fno-integrated-as" ]
++        if (is_android) {
++          import("//build/config/android/config.gni")
++          rebased_android_toolchain_root =
++              rebase_path(android_toolchain_root, root_build_dir)
++
++          # Else /usr/bin/as gets picked up.
++          asmflags += [ "-B${rebased_android_toolchain_root}/bin" ]
++        }
++      }
+     }
+   }
+ 
