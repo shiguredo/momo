@@ -15,7 +15,7 @@ $ git clone --recursive git@github.com:shiguredo/momo.git
 
 ## Raspbian June 2018 (armv7) 向けバイナリを作成する
 
-**Docker の最新版がインストールされている必要があります**
+**Docker 18.03 以降がインストールされている必要があります**
 
 Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
 
@@ -29,7 +29,7 @@ $ make armv7
 
 ## Raspbian June 2018 (armv6) 向けバイナリを作成する
 
-**Docker の最新版がインストールされている必要があります**
+**Docker 18.03 以降がインストールされている必要があります**
 
 build ディレクトリ以下で make armv6 と打つことで Momo のバイナリが生成されます。
 
@@ -41,7 +41,7 @@ $ make armv6
 
 ## Ubuntu 16.04 (armv8) 向けバイナリを作成する
 
-**Docker の最新版がインストールされている必要があります**
+**Docker 18.03 以降がインストールされている必要があります**
 
 build ディレクトリ以下で make armv8 と打つことで Momo のバイナリが生成されます。
 
@@ -53,7 +53,7 @@ $ make armv8
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
-**Docker の最新版がインストールされている必要があります**
+**Docker 18.03 以降がインストールされている必要があります**
 
 build ディレクトリ以下で make x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
 
