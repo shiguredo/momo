@@ -4,6 +4,19 @@ https://github.com/shiguredo/momo/releases にて利用したい環境のバイ�
 
 必要なライブラリをインストールしてご利用ください。
 
+## 解凍後の構成
+
+```
+$ tree
+.
+├── html
+│   ├── p2p.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
+```
+
 ## Raspbian で Raspberry Pi を利用する場合
 
 Raspbian にて下記を実行してください。
