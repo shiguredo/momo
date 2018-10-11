@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Momo P2P</title>
+    </head>
+    <body>
+        <h3>Momo P2P</h3>
+        <div>
+            <select id="codec">
+                <option>H264</option>
+                <option>VP8</option>
+                <option>VP9</option>
+            </select>
+            <button type="button" onclick="connect();">Connect</button>
+            <button type="button" onclick="disconnect();">Disconnect</button>
+        </div>
+        <div>
+            <video id="remote_video" autoplay style="border: 3px solid gray;"></video>
+        </div>
+        <script type='text/javascript' src='./webrtc.js'></script>
+    </body>
+</html>

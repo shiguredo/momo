@@ -1,0 +1,12 @@
+[submodule "libs/civetweb"]
+	path = libs/civetweb
+	url = https://github.com/civetweb/civetweb.git
+[submodule "libs/websocketpp"]
+	path = libs/websocketpp
+	url = https://github.com/zaphoyd/websocketpp.git
+[submodule "libs/json"]
+	path = libs/json
+	url = https://github.com/nlohmann/json.git
+[submodule "libs/CLI11"]
+	path = libs/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
