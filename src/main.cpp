@@ -23,7 +23,7 @@
 #include "p2p/p2p_server.h"
 
 // バージョン情報
-#define MOMO_VERSION "18.10.0"
+#define MOMO_VERSION "18.10.0-rc0"
 
 // HWA を効かせる場合は 1 になる
 #if USE_IL_ENCODER
