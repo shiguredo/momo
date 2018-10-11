@@ -8,7 +8,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
 
 詳細については下記をご確認ください。
 

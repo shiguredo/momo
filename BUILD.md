@@ -1,4 +1,4 @@
-# ビルドに挑戦する
+# Momo のビルドに挑戦する
 
 ビルドにはマシンパワーにもよりますが、少なくとも 30 分以上かかり、さらに 20GB 以上のダウンロードが必要です。
 そのため、覚悟を持って make コマンドを叩いてください。
@@ -19,7 +19,7 @@ $ git clone --recursive git@github.com:shiguredo/momo.git
 
 Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
 
-build 以下で make armv7 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make armv7 と打つことで Momo のバイナリが生成されます。
 
 ```shell
 $ make armv7
@@ -31,7 +31,7 @@ $ make armv7
 
 **Docker の最新版がインストールされている必要があります**
 
-build 以下で make armv6 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make armv6 と打つことで Momo のバイナリが生成されます。
 
 ```shell
 $ make armv6
@@ -42,6 +42,8 @@ $ make armv6
 ## Ubuntu 16.04 (armv8) 向けバイナリを作成する
 
 **Docker の最新版がインストールされている必要があります**
+
+build ディレクトリ以下で make armv8 と打つことで Momo のバイナリが生成されます。
 
 ```shell
 $ make armv8
