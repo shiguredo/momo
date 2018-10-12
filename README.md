@@ -16,11 +16,11 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 ## 使ってみる
 
-Momo を使ってみたい人は [USE.md](USE.md) をお読みください。
+Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
 ## ビルドに挑戦する
 
-Momo のビルドに挑戦したい人は [BUILD.md](BUILD.md) をお読みください。
+Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
 
 ## ライセンス
 
