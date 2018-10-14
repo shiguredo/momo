@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "p2p_server.h"
+#include "p2p_handler_proxy.h"
 
 const std::string P2PServer::_url = "/ws";
 
@@ -8,11 +9,13 @@ P2PServer::P2PServer(
     CivetServer *server, RTCManager *rtc_manager, ConnectionSettings conn_settings) :
     _server(server), _rtc_manager(rtc_manager), _conn_settings(conn_settings)
 {
-  server->addWebSocketHandler(_url, this);
 }
 
-P2PServer::~P2PServer()
-{
+std::shared_ptr<P2PServer> P2PServer::create(CivetServer* server, P2PHandlerProxy* proxy, RTCManager* rtc_manager, ConnectionSettings conn_settings) {
+  std::shared_ptr<P2PServer> p2p_server(new P2PServer(server, rtc_manager, conn_settings));
+  proxy->setHandler(p2p_server);
+  server->addWebSocketHandler(_url, proxy);
+  return p2p_server;
 }
 
 std::shared_ptr<RTCConnection> P2PServer::createConnection(
