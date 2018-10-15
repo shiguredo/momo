@@ -7,6 +7,7 @@
 #include "rtc/manager.h"
 #include "connection_settings.h"
 #include "p2p_connection.h"
+#include "p2p_handler_proxy.h"
 
 using json = nlohmann::json;
 
@@ -14,10 +15,10 @@ class P2PConnection;
 
 class P2PServer : public CivetWebSocketHandler
 {
+  P2PServer(CivetServer* server, RTCManager* rtc_manager, ConnectionSettings conn_settings);
+
 public:
-  P2PServer(CivetServer* server, RTCManager* rtc_manager,
-          ConnectionSettings conn_settings);
-  ~P2PServer();
+  static std::shared_ptr<P2PServer> create(CivetServer* server, P2PHandlerProxy* proxy, RTCManager* rtc_manager, ConnectionSettings conn_settings);
 
   std::shared_ptr<RTCConnection> createConnection(struct mg_connection *conn);
 
