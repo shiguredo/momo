@@ -1,5 +1,5 @@
 BUILD_NUMBER=$(shell date +"%Y%m%d%H%M%S")
-WEBRTC_VERSION=70
+WEBRTC_VERSION=71
 
 TARGET=$@
 
