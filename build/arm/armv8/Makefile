@@ -19,7 +19,7 @@ all: clean
 	docker container create -it --name momo momo/webrtc-armv8:m$(WEBRTC_VERSION)
 	docker container start momo
 	docker container cp momo.tar.gz momo:/root/
-	docker container exec momo /bin/bash -c 'cd /root && tar xf momo.tar.gz && cd momo && make ARCH=arm64 OS=xenial RTC_ROOT=/root'
+	docker container exec momo /bin/bash -c 'cd /root && tar xf momo.tar.gz && cd momo && make ARCH=arm64 OS=xenial RTC_ROOT=/root BUILD_MODE=$(BUILD_MODE)'
 	docker container cp momo:/root/momo/momo .
 	docker container stop momo
 	docker container rm momo

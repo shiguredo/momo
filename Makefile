@@ -94,6 +94,11 @@ SOURCE += $(CIVETWEB_LIB)
 # CLI11
 CFLAGS += -Ilibs/CLI11/include
 
+# package
+ifeq ($(BUILD_MODE),pkg)
+	PKG_OPTIONS += -s
+endif
+
 all: $(TARGET)
 
 $(IL_OBJECT): $(ILCLIENT_DIR)/%.o : $(ILCLIENT_DIR)/%.c
@@ -115,7 +120,7 @@ $(CIVETWEB_LIB):
 	cp $(CIVETWEB_DIR)/$(CIVETWEB_LIB) .
 
 $(TARGET): $(SOURCE)
-	$(CXX) -o $@ $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS)
+	$(CXX) $(PKG_OPTIONS) -o $@ $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS)
 
 clean:
 	rm -f *.o *.a $(TARGET)
