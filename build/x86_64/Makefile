@@ -16,7 +16,7 @@ all: clean
 	docker container create -it --name momo momo/webrtc-x86_64:m$(WEBRTC_VERSION)
 	docker container start momo
 	docker container cp momo.tar.gz momo:/root/
-	docker container exec momo /bin/bash -c 'cd /root && tar xf momo.tar.gz && cd momo && make ARCH=x86_64'
+	docker container exec momo /bin/bash -c 'cd /root && tar xf momo.tar.gz && cd momo && make ARCH=x86_64 BUILD_MODE=$(BUILD_MODE)'
 	docker container cp momo:/root/momo/momo .
 	docker container stop momo
 	docker container rm momo
