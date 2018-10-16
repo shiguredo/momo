@@ -184,10 +184,11 @@ int main(int argc, char* argv[])
           server.get(), rtc_manager.get(), ws_client.get(), cs));
   }
 
-  std::unique_ptr<P2PServer> p2p_server;
+  std::unique_ptr<P2PHandlerProxy> p2p_handler_proxy;
+  std::shared_ptr<P2PServer> p2p_server;
   if (p2p_app->parsed()) {
-    p2p_server.reset(new P2PServer(
-            server.get(), rtc_manager.get(), cs));
+    p2p_handler_proxy.reset(new P2PHandlerProxy());
+    p2p_server = P2PServer::create(server.get(), p2p_handler_proxy.get(), rtc_manager.get(), cs);
   }
 
   _signal_waiter.wait_until_running();
@@ -195,6 +196,8 @@ int main(int argc, char* argv[])
   p2p_server = nullptr;
   sora_server = nullptr;
   server = nullptr;
+  // p2p_handler_proxy は必ず CivetServer より後に消すこと
+  p2p_handler_proxy = nullptr;
   ws_client = nullptr;
   rtc_manager = nullptr;
 

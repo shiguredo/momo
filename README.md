@@ -8,19 +8,29 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
 
 詳細については下記をご確認ください。
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
+## 動作環境
+
+- Ubuntu 18.04 x86_64
+- Ubuntu 16.04 ARMv8
+    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) で動作
+- Raspbian Stretch ARMv7
+    - Raspberry Pi 3 B/B+ で動作
+- Raspbian Stretch ARMv6
+    - Raspberry Pi Zero W/WH で動作
+
 ## 使ってみる
 
-Momo を使ってみたい人は [USE.md](USE.md) をお読みください。
+Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
 ## ビルドに挑戦する
 
-Momo のビルドに挑戦したい人は [BUILD.md](BUILD.md) をお読みください。
+Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
 
 ## ライセンス
 

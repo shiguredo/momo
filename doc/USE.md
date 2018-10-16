@@ -4,6 +4,19 @@ https://github.com/shiguredo/momo/releases にて利用したい環境のバイ�
 
 必要なライブラリをインストールしてご利用ください。
 
+## 解凍後の構成
+
+```
+$ tree
+.
+├── html
+│   ├── p2p.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
+```
+
 ## Raspbian で Raspberry Pi を利用する場合
 
 Raspbian にて下記を実行してください。
@@ -66,7 +79,7 @@ $ momo --no-audio --video-codec H264 --video-bitrate 800 \
        p2p --port 8080 
 ```
 
-http://[momo の IP アドレス]:8080/index.html にアクセスしてください。
+http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
 
 ### WebRTC SFU Sora で動作を確認する
 
