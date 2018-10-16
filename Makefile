@@ -96,7 +96,7 @@ CFLAGS += -Ilibs/CLI11/include
 
 # package
 ifeq ($(BUILD_MODE),pkg)
-	PKG_OPTIONS += -s
+	LDFLAGS += -s
 endif
 
 all: $(TARGET)
@@ -120,7 +120,7 @@ $(CIVETWEB_LIB):
 	cp $(CIVETWEB_DIR)/$(CIVETWEB_LIB) .
 
 $(TARGET): $(SOURCE)
-	$(CXX) $(PKG_OPTIONS) -o $@ $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS)
+	$(CXX) -o $@ $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS)
 
 clean:
 	rm -f *.o *.a $(TARGET)
