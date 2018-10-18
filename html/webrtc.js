@@ -74,9 +74,11 @@ function prepareNewConnection() {
     const peer = new RTCPeerConnection({ "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] });
 
     if ('ontrack' in peer) {
+        let mediaStream = new MediaStream();
+        playVideo(remoteVideo, mediaStream);
         peer.ontrack = function (event) {
             console.log('-- peer.ontrack()');
-            playVideo(remoteVideo, event.streams[0]);
+            mediaStream.addTrack(event.track);
         };
     }
     else {
