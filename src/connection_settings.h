@@ -33,9 +33,11 @@ struct ConnectionSettings
       return 1280;
     } else if (resolution == "FHD") {
       return 1920;
-    } else if (resolution == "4K") {
-      return 3840;
     }
+    // libwebrtc が 4K に対応していないためコメントアウトする
+    // } else if (resolution == "4K") {
+    //   return 3840;
+    // }
     return 640;
   }
 
