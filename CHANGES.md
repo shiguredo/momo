@@ -11,6 +11,13 @@
 
 ## develop
 
+## 18.10.0-rc2
+
+- [CHANGE] libwebrtc が 4K に対応していないため解像度指定から 4K を削除する
+    - 将来的に対応していく予定
+    - https://github.com/shiguredo/momo/issues/21
+- [FIX] P2P モードのサンプルで映像を有効にした場合、音声が正常に流れない問題を修正
+
 ## 18.10.0-rc1
 
 - [UPDATE] ビルド時に `LDFLAGS += -s` 渡してバイナリサイズを圧縮する仕組みを追加
