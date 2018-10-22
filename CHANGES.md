@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] バージョン情報を MOMO_VERSION に指定したら momo のバイナリの --version も反映するようにする
+- [CHANGE] --metadata の引数は JSON のみを指定できるようにする
+
 ## 18.10.0-rc2
 
 - [CHANGE] libwebrtc が 4K に対応していないため解像度指定から 4K を削除する
