@@ -17,6 +17,9 @@ TARGET = momo
 RTC_LIB = libWebRTC_$(ARCH).a
 
 CFLAGS += -fno-lto -pthread -std=gnu++11 -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+ifdef MOMO_VERSION
+	CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
+endif
 
 # webrtc
 CFLAGS += -I$(RTC_ROOT)/src -I$(RTC_ROOT)/src/third_party/libyuv/include -I$(RTC_ROOT)/src/third_party/abseil-cpp

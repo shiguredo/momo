@@ -135,7 +135,7 @@ void SoraConnection::sendConnect()
     {"channel_id", _conn_settings.sora_channel_id},
   };
 
-  if (!_conn_settings.metadata.empty()) {
+  if (!_conn_settings.metadata.is_null()) {
     json_message["metadata"] = _conn_settings.metadata;
   }
 

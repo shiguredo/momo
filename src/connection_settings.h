@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 #include "api/rtpparameters.h"
 
@@ -18,7 +19,7 @@ struct ConnectionSettings
   int framerate = 0;
   std::string priority = "BALANCE";
 
-  std::string metadata;
+  nlohmann::json metadata;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
