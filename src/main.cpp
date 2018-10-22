@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <CLI/CLI.hpp>
+#include <nlohmann/json.hpp>
 
 #include "rtc_base/logsinks.h"
 
@@ -34,6 +35,8 @@
 #else
   #define MOMO_USE_IL_ENCODER 0
 #endif
+
+using json = nlohmann::json;
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
@@ -91,6 +94,21 @@ struct Enum : public CLI::Validator {
   }
 };
 
+// JSON Value のみを許可するバリデータ
+struct JsonValue : public CLI::Validator {
+  JsonValue() {
+    tname = "JSON Value";
+    func = [](std::string input) {
+      try {
+        json::parse(input);
+        return std::string();
+      } catch(json::parse_error& e) {
+        return "Value " + input + " is not JSON Value";
+      }
+    };
+  }
+};
+
 
 int main(int argc, char* argv[])
 {
@@ -117,7 +135,8 @@ int main(int argc, char* argv[])
   app.add_flag("--version", version, "バージョン情報の表示");
   app.add_option("--log-level", log_level, "ログレベル")->check(CLI::Range(0, 5));
   // 隠しオプション
-  app.add_option("--metadata", cs.metadata, "メタデータ")->group("");
+  std::string metadata;
+  app.add_option("--metadata", metadata, "メタデータ")->group("")->check(JsonValue());
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
@@ -132,6 +151,11 @@ int main(int argc, char* argv[])
     app.parse(argc, argv);
   } catch (const CLI::ParseError &e) {
     return app.exit(e);
+  }
+
+  // メタデータのパース
+  if (!metadata.empty()) {
+    cs.metadata = json::parse(metadata);
   }
 
   if (version) {
