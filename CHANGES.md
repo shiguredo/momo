@@ -11,6 +11,8 @@
 
 ## develop
 
+## 18.10.0-rc3
+
 - [FIX] バージョン情報を MOMO_VERSION に指定したら momo のバイナリの --version も反映するようにする
 - [CHANGE] --metadata の引数は JSON のみを指定できるようにする
 
