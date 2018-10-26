@@ -11,6 +11,9 @@
 
 ## develop
 
+- [ADD] 4K の配信にに対応する
+    - armv6, armv7 にも対応はしているが、現時点で Raspberry Pi で配信はマシンパワー不足のためできない
+
 ## 18.10.0-rc3
 
 - [FIX] バージョン情報を MOMO_VERSION に指定したら momo のバイナリの --version も反映するようにする
