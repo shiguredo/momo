@@ -59,6 +59,14 @@ $ sudo apt-get install libx11-dev libnss3 libxext6
 $ sudo apt-get install libx11-6 libxau6 libxdmcp6 libxcb1 libnspr4 libexpat1 libasound2
 ```
 
+## 注意
+
+### 4K を利用する場合
+
+- 4K を利用可能なのは現時点で x86_64 のみです
+    - arm 系でも指定はできるようになっていますが、マシンリソースが足らず動作しません
+- ロジクールの BRIO 4K 動作確認しています
+
 ## 利用方法
 
 Momo はモードを ２ つ持っています。一つが P2P モードで Momo 自体がシグナリングサーバの機能も持つモードです。
