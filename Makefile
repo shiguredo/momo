@@ -10,13 +10,22 @@ ifndef RTC_ROOT
 	RTC_ROOT=$(HOME)
 endif
 
+ifndef BOOST_PATH
+	BOOST_PATH=/root/boost-1.68.0
+endif
+
 UNAME := $(shell uname -s)
 
 TARGET = momo
 
 RTC_LIB = libWebRTC_$(ARCH).a
 
-CFLAGS += -fno-lto -pthread -std=gnu++11 -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+ifdef USE_ROS
+CFLAGS += -fno-lto -Wno-macro-redefined -pthread -std=c++11 -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+else
+CFLAGS += -fno-lto -Wno-macro-redefined -pthread -std=gnu++11 -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+endif
+
 ifdef MOMO_VERSION
 	CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
@@ -28,11 +37,17 @@ ifeq ($(UNAME),Linux)
 	CC = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang
 	CXX = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang++
 	AR = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar
-	CIVETWEB_OPT += -DUSE_WEBSOCKET -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
 	CFLAGS += -fpic
 	LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt
-	CFLAGS += -I/root/boost-1.68.0/include
-	LDFLAGS += -L/root/boost-1.68.0/lib
+	CFLAGS += -I$(BOOST_PATH)/include
+	LDFLAGS += -L$(BOOST_PATH)/lib
+	ifdef USE_ROS
+	CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I/opt/ros/kinetic/include
+	LDFLAGS += -lpthread -L/opt/ros/kinetic/lib -lmessage_filters -lroscpp -lrosconsole -lroscpp_serialization -lrostime
+	CIVETWEB_OPT += -DUSE_WEBSOCKET
+	else
+	CIVETWEB_OPT += -DUSE_WEBSOCKET -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
+	endif
 	ifneq (,$(findstring arm,$(ARCH)))
 		ifneq (,$(findstring arm64,$(ARCH)))
 			CC += --sysroot=$(SYSROOT) --target=aarch64-linux-gnu
@@ -75,10 +90,20 @@ ifeq ($(UNAME),Darwin)
 	RTC_LIB_PATH=$(RTC_ROOT)/src/out/$(ARCH)
 endif
 
-SOURCE += $(shell find $(CURDIR)/src -name '*.cpp') $(RTC_LIB)
+ifdef USE_ROS
+RTC_LIB_PATH = $(RTC_ROOT)/src/out/$(ARCH)_ros
+SOURCE += $(shell find $(CURDIR)/src -name '*.cpp')
+else
+SOURCE += $(shell find $(CURDIR)/src -type d -name 'ros' -prune -o -type f -name '*.cpp' -print)
+endif
+SOURCE += $(RTC_LIB)
 
 # boost
+ifdef USE_ROS
+LDFLAGS += -lboost_system
+else
 LDFLAGS += -lboost_system -lboost_filesystem
+endif
 
 # json
 CFLAGS += -Ilibs/json/include
@@ -86,7 +111,7 @@ CFLAGS += -Ilibs/json/include
 # websocketpp
 WEBSOCKETPP_DIR = libs/websocketpp
 CFLAGS += -I$(WEBSOCKETPP_DIR)/ -I$(RTC_ROOT)/src/third_party/boringssl/src/include -D_WEBSOCKETPP_CPP11_STL_ -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboost_system -lboost_filesystem -lboringssl
+LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboringssl -lboost_system
 
 # civetweb
 CIVETWEB_DIR = libs/civetweb

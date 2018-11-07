@@ -4,6 +4,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <condition_variable>
 
 // タイムアウトを監視するためのクラス。
 // enable() を呼び出した後、一定時間が経過するとコールバック関数が呼ばれる。
