@@ -143,11 +143,11 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
   if (!_conn_settings.no_audio)
   {
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        _factory->CreateAudioTrack(RTCUtil::generateRundomChars(), NULL));
+        _factory->CreateAudioTrack(Util::generateRundomChars(), NULL));
     if (audio_track)
     {
       rtc::scoped_refptr<webrtc::RtpSenderInterface> audio_sender(
-          connection->CreateSender(webrtc::MediaStreamTrackInterface::kAudioKind, RTCUtil::generateRundomChars()));
+          connection->CreateSender(webrtc::MediaStreamTrackInterface::kAudioKind, Util::generateRundomChars()));
       audio_sender->SetTrack(audio_track);
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot create audio_track";
@@ -156,11 +156,11 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 
   if (_video_source) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-            _factory->CreateVideoTrack(RTCUtil::generateRundomChars(), _video_source));
+            _factory->CreateVideoTrack(Util::generateRundomChars(), _video_source));
     if (video_track)
     {
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender(
-          connection->CreateSender(webrtc::MediaStreamTrackInterface::kVideoKind, RTCUtil::generateRundomChars()));
+          connection->CreateSender(webrtc::MediaStreamTrackInterface::kVideoKind, Util::generateRundomChars()));
       webrtc::RtpParameters parameters = video_sender->GetParameters();
       parameters.degradation_preference = _conn_settings.getPriority();
       video_sender->SetParameters(parameters);
