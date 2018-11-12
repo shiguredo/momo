@@ -34,10 +34,13 @@ RUN set -x \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+COPY patch/4k.patch /root/
+
 RUN set -x \
   && cd /root/src \
   && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
-  && gclient sync
+  && gclient sync \
+  && patch -p2 < ../4k.patch
 
 RUN set -x \
   && cd /root/src \

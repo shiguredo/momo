@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 #include "api/rtpparameters.h"
 
@@ -18,7 +19,7 @@ struct ConnectionSettings
   int framerate = 0;
   std::string priority = "BALANCE";
 
-  std::string metadata;
+  nlohmann::json metadata;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
@@ -33,11 +34,9 @@ struct ConnectionSettings
       return 1280;
     } else if (resolution == "FHD") {
       return 1920;
+    } else if (resolution == "4K") {
+      return 3840;
     }
-    // libwebrtc が 4K に対応していないためコメントアウトする
-    // } else if (resolution == "4K") {
-    //   return 3840;
-    // }
     return 640;
   }
 

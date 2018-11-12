@@ -253,7 +253,7 @@ void SoraWebsocketClient::doSendConnect()
       {"channel_id", conn_settings_.sora_channel_id},
     };
 
-    if (!conn_settings_.metadata.empty()) {
+    if (!conn_settings_.metadata.is_null()) {
       json_message["metadata"] = conn_settings_.metadata;
     }
 
