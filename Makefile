@@ -20,7 +20,7 @@ TARGET = momo
 
 RTC_LIB = libWebRTC_$(ARCH).a
 
-ifdef USE_ROS
+ifdef ROS_VERSION
 CFLAGS += -fno-lto -Wno-macro-redefined -pthread -std=c++11 -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 else
 CFLAGS += -fno-lto -Wno-macro-redefined -pthread -std=gnu++11 -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
@@ -41,9 +41,9 @@ ifeq ($(UNAME),Linux)
 	LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt
 	CFLAGS += -I$(BOOST_PATH)/include
 	LDFLAGS += -L$(BOOST_PATH)/lib
-	ifdef USE_ROS
-	CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I/opt/ros/kinetic/include
-	LDFLAGS += -lpthread -L/opt/ros/kinetic/lib -lmessage_filters -lroscpp -lrosconsole -lroscpp_serialization -lrostime
+	ifdef ROS_VERSION
+	CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I/opt/ros/$(ROS_VERSION)/include
+	LDFLAGS += -lpthread -L/opt/ros/$(ROS_VERSION)/lib -lmessage_filters -lroscpp -lrosconsole -lroscpp_serialization -lrostime -lxmlrpcpp -lcpp_common -lrosconsole_log4cxx -lrosconsole_backend_interface
 	CIVETWEB_OPT += -DUSE_WEBSOCKET
 	else
 	CIVETWEB_OPT += -DUSE_WEBSOCKET -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
@@ -90,7 +90,7 @@ ifeq ($(UNAME),Darwin)
 	RTC_LIB_PATH=$(RTC_ROOT)/src/out/$(ARCH)
 endif
 
-ifdef USE_ROS
+ifdef ROS_VERSION
 RTC_LIB_PATH = $(RTC_ROOT)/src/out/$(ARCH)_ros
 SOURCE += $(shell find $(CURDIR)/src -name '*.cpp')
 else
@@ -99,7 +99,7 @@ endif
 SOURCE += $(RTC_LIB)
 
 # boost
-ifdef USE_ROS
+ifdef ROS_VERSION
 LDFLAGS += -lboost_system
 else
 LDFLAGS += -lboost_system -lboost_filesystem

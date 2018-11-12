@@ -56,6 +56,13 @@ x86_64:
 	# 生成されたバイナリをこのディレクトリに移動
 	mv $(TARGET)/momo ./momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
 
+.PHONY: x86_64_ros
+x86_64_ros:
+	# x86_64 用ビルド
+	$(MAKE) -C $(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+	# 生成されたバイナリをこのディレクトリに移動
+	mv $(TARGET)/momo ./momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
+
 .PHONY: macos
 macos:
 	$(MAKE) -C $(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
@@ -73,7 +80,7 @@ define COPY
 
 endef
 
-pkg: armv6.pkg armv7.pkg armv8.pkg x86_64.pkg
+pkg: armv6.pkg armv7.pkg armv8.pkg x86_64.pkg x86_64_ros.pkg
 
 armv6.pkg:
 	mkdir momo-$(MOMO_VERSION)_raspbian_armv6
@@ -102,6 +109,13 @@ x86_64.pkg:
 	cp $(lastword $(sort $(wildcard ./momo-x86_64-*))) momo-$(MOMO_VERSION)_ubuntu_x86_64/momo
 	tar czf momo-$(MOMO_VERSION)_ubuntu_x86_64.tar.gz momo-$(MOMO_VERSION)_ubuntu_x86_64
 	rm -rf momo-$(MOMO_VERSION)_ubuntu_x86_64
+
+x86_64_ros.pkg:
+	mkdir momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
+	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu_x86_64_ros/))
+	cp $(lastword $(sort $(wildcard ./momo-x86_64_ros-*))) momo-$(MOMO_VERSION)_ubuntu_x86_64_ros/momo
+	tar czf momo-$(MOMO_VERSION)_ubuntu_x86_64_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
+	rm -rf momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
 
 clean.pkg:
 	rm -rf momo-$(MOMO_VERSION)_*
