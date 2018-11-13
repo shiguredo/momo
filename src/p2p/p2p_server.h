@@ -1,40 +1,39 @@
 #ifndef P2P_SERVER_H_
 #define P2P_SERVER_H_
 
-#include <nlohmann/json.hpp>
-#include "CivetServer.h"
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
 
 #include "rtc/manager.h"
 #include "connection_settings.h"
-#include "p2p_connection.h"
-#include "p2p_handler_proxy.h"
+#include "util.h"
 
-using json = nlohmann::json;
-
-class P2PConnection;
-
-class P2PServer : public CivetWebSocketHandler
+class P2PServer : public std::enable_shared_from_this<P2PServer>
 {
-  P2PServer(CivetServer* server, RTCManager* rtc_manager, ConnectionSettings conn_settings);
+    boost::asio::ip::tcp::acceptor acceptor_;
+    boost::asio::ip::tcp::socket socket_;
+    std::shared_ptr<std::string const> doc_root_;
+
+    RTCManager* rtc_manager_;
+    ConnectionSettings conn_settings_;
 
 public:
-  static std::shared_ptr<P2PServer> create(CivetServer* server, P2PHandlerProxy* proxy, RTCManager* rtc_manager, ConnectionSettings conn_settings);
+    P2PServer(
+        boost::asio::io_context& ioc,
+        boost::asio::ip::tcp::endpoint endpoint,
+        std::shared_ptr<std::string const> const& doc_root,
+        RTCManager* rtc_manager,
+        ConnectionSettings conn_settings);
 
-  std::shared_ptr<RTCConnection> createConnection(struct mg_connection *conn);
-
-  //websocket server
-  bool handleData(
-          CivetServer *server, struct mg_connection *conn,
-          int bits, char *data, size_t data_len) override;
-  void handleClose(
-          CivetServer *server, const struct mg_connection *conn) override;
+    void run();
 
 private:
-  CivetServer* _server;
-  RTCManager* _rtc_manager;
-
-  ConnectionSettings _conn_settings;
-  static const std::string _url;
-  std::map<const struct mg_connection*, std::shared_ptr<P2PConnection>> _connections;
+    void doAccept();
+    void onAccept(boost::system::error_code ec);
 };
+
 #endif

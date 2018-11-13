@@ -1,40 +1,51 @@
 #ifndef SORA_SERVER_H_
 #define SORA_SERVER_H_
 
+#include <boost/beast.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl/stream.hpp>
 #include <nlohmann/json.hpp>
-#include "CivetServer.h"
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <memory>
+#include <string>
 
+#include "rtc/manager.h"
 #include "connection_settings.h"
-#include "sora/sora_connection.h"
+#include "sora_websocket_client.h"
 
-using json = nlohmann::json;
+/*
+Sora と接続する用のサーバ。
 
-class SoraServer : public CivetHandler
+SoraServer には２種類の役割がある。
+
+- 指定されたエンドポイントを listen して、HTTP 経由でリクエストされた処理に対応する
+- 指定されたシグナリングサーバに WebSocket で接続し、シグナリングサーバからの offer に答えたりする
+*/
+class SoraServer : public std::enable_shared_from_this<SoraServer>
 {
+    boost::asio::ip::tcp::acceptor acceptor_;
+    boost::asio::ip::tcp::socket socket_;
+
+    RTCManager* rtc_manager_;
+    ConnectionSettings conn_settings_;
+    std::shared_ptr<SoraWebsocketClient> ws_client_;
+
 public:
-  SoraServer(
-        CivetServer* server, RTCManager* rtc_manager,
-        WebSocketClient* ws_client, ConnectionSettings conn_settings);
-  ~SoraServer();
+    SoraServer(
+        boost::asio::io_context& ioc,
+        boost::asio::ip::tcp::endpoint endpoint,
+        RTCManager* rtc_manager,
+        ConnectionSettings conn_settings);
+    ~SoraServer();
 
-  bool connect();
-  bool close();
-  int writeOKwithJson(struct mg_connection *conn, json json_message);
-  int writeFailed(struct mg_connection *conn);
-  int writeBadRequest(struct mg_connection *conn);
-  int writeMuteStatus(struct mg_connection *conn, std::shared_ptr<RTCConnection> rtc_conn);
-
-  //web server
-  bool handleGet(CivetServer *server, struct mg_connection *conn) override;
-  bool handlePost(CivetServer *server, struct mg_connection *conn) override;
+    void run();
 
 private:
-  CivetServer* _server;
-  RTCManager* _rtc_manager;
-  WebSocketClient* _ws_client;
-  std::unique_ptr<SoraConnection> _connection;
-
-  static const std::string _urls[];
-  ConnectionSettings _conn_settings;
+    void doAccept();
+    void onAccept(boost::system::error_code ec);
 };
+
 #endif
