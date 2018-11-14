@@ -1,34 +1,29 @@
 #ifndef WATCH_DOG_H_
 #define WATCH_DOG_H_
 
-#include <mutex>
-#include <thread>
-#include <atomic>
+#include <boost/asio.hpp>
+#include <functional>
 
-// タイムアウトを監視するためのクラス。
-// enable() を呼び出した後、一定時間が経過するとコールバック関数が呼ばれる。
-// コールバック関数は WatchDog のスレッド上で呼ばれるため、必要であれば排他制御を行うこと。
-// コールバックが発生する時、WatchDog は無効になるので、必要であれば再度 enable() を呼び出すこと。
+/*
+タイムアウトを監視するためのクラス。
+
+enable() を呼び出した後、一定時間が経過するとコールバック関数が呼ばれる。
+コールバックが発生する時 WatchDog は無効になるので、必要であれば再度 enable() や reset() を呼び出すこと。
+マルチスレッド下では動作しないので注意。
+*/
 class WatchDog
 {
 public:
-  WatchDog(std::function<void()> callback);
-  ~WatchDog();
+  WatchDog(boost::asio::io_context& ioc, std::function<void()> callback);
   void enable(int timeout);
   void disable();
   void reset();
 
 private:
-  void loop();
 
-  bool _enable;
-  bool _running;
-  std::function<void()> _callback;
-  std::chrono::system_clock::time_point _abs_timeout;
-  std::chrono::system_clock::duration _timeout;
-
-  std::mutex _mutex;
-  std::condition_variable _condition;
-  std::unique_ptr<std::thread> _thread;
+  int timeout_;
+  boost::asio::deadline_timer timer_;
+  std::function<void()> callback_;
 };
+
 #endif
