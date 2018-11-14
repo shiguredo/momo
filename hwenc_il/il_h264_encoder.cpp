@@ -606,7 +606,7 @@ int32_t ILH264Encoder::Encode(
 
   encoded_image_._encodedWidth = frame_buffer->width();
   encoded_image_._encodedHeight = frame_buffer->height();
-  encoded_image_._timeStamp = input_frame.timestamp();
+  encoded_image_.SetTimestamp(input_frame.timestamp());
   encoded_image_.ntp_time_ms_ = input_frame.ntp_time_ms();
   encoded_image_.capture_time_ms_ = input_frame.render_time_ms();
   encoded_image_.rotation_ = input_frame.rotation();
@@ -671,11 +671,11 @@ int32_t ILH264Encoder::DrainEncodedData()
       size_t required_size = 0;
       size_t writtenSize = 0;
       uint64_t buf_time = (((((uint64_t)out->nTimeStamp.nHighPart << 32) & 0xFFFFFFFF00000000) + (uint64_t)out->nTimeStamp.nLowPart)) / 1000ll;
-      if (buf_time != encoded_image_._timeStamp)
+      if (buf_time != encoded_image_.Timestamp())
       {
-        RTC_LOG(LS_ERROR) << "Error timestamp is not match. timestamp:" << encoded_image_._timeStamp << " buf_time:" << buf_time;
+        RTC_LOG(LS_ERROR) << "Error timestamp is not match. timestamp:" << encoded_image_.Timestamp() << " buf_time:" << buf_time;
       }
-      if (buf_time < encoded_image_._timeStamp)
+      if (buf_time < encoded_image_.Timestamp())
       {
         RTC_LOG(LS_ERROR) << "buf_time is yanger than timestamp. retry get buffer.";
         out->nFilledLen = 0;
