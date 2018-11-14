@@ -253,8 +253,8 @@ void SoraWebsocketClient::doSendConnect()
       {"channel_id", conn_settings_.sora_channel_id},
     };
 
-    if (!conn_settings_.metadata.is_null()) {
-      json_message["metadata"] = conn_settings_.metadata;
+    if (!conn_settings_.sora_metadata.is_null()) {
+      json_message["metadata"] = conn_settings_.sora_metadata;
     }
 
     json_message["video"]["codec_type"] = conn_settings_.video_codec;
