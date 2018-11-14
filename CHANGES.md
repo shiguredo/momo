@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] websocketpp と civietweb を Boost.beast に置き換える
+
 ## 18.10.0
 
 **18.10.0-rc4 から変更なし**
