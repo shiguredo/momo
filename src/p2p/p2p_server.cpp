@@ -1,121 +1,82 @@
-#include <iostream>
-
 #include "p2p_server.h"
-#include "p2p_handler_proxy.h"
 
-const std::string P2PServer::_url = "/ws";
+#include "p2p_session.h"
+#include "util.h"
 
 P2PServer::P2PServer(
-    CivetServer *server, RTCManager *rtc_manager, ConnectionSettings conn_settings) :
-    _server(server), _rtc_manager(rtc_manager), _conn_settings(conn_settings)
+    boost::asio::io_context& ioc,
+    boost::asio::ip::tcp::endpoint endpoint,
+    std::shared_ptr<std::string const> const& doc_root,
+    RTCManager* rtc_manager,
+    ConnectionSettings conn_settings)
+    : acceptor_(ioc)
+    , socket_(ioc)
+    , doc_root_(doc_root)
+    , rtc_manager_(rtc_manager)
+    , conn_settings_(conn_settings)
 {
+    boost::system::error_code ec;
+
+    // Open the acceptor
+    acceptor_.open(endpoint.protocol(), ec);
+    if (ec)
+    {
+        MOMO_BOOST_ERROR(ec, "open");
+        return;
+    }
+
+    // Allow address reuse
+    acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    if (ec)
+    {
+        MOMO_BOOST_ERROR(ec, "set_option");
+        return;
+    }
+
+    // Bind to the server address
+    acceptor_.bind(endpoint, ec);
+    if (ec)
+    {
+        MOMO_BOOST_ERROR(ec, "bind");
+        return;
+    }
+
+    // Start listening for connections
+    acceptor_.listen(
+        boost::asio::socket_base::max_listen_connections, ec);
+    if (ec)
+    {
+        MOMO_BOOST_ERROR(ec, "listen");
+        return;
+    }
 }
 
-std::shared_ptr<P2PServer> P2PServer::create(CivetServer* server, P2PHandlerProxy* proxy, RTCManager* rtc_manager, ConnectionSettings conn_settings) {
-  std::shared_ptr<P2PServer> p2p_server(new P2PServer(server, rtc_manager, conn_settings));
-  proxy->setHandler(p2p_server);
-  server->addWebSocketHandler(_url, proxy);
-  return p2p_server;
+void P2PServer::run() {
+    if (!acceptor_.is_open())
+        return;
+    doAccept();
 }
 
-std::shared_ptr<RTCConnection> P2PServer::createConnection(
-        struct mg_connection *conn) {
-  std::shared_ptr<P2PConnection> p2p_conn =
-          std::shared_ptr<P2PConnection>(new P2PConnection(_rtc_manager, conn));
-  _connections.insert(std::make_pair(conn, p2p_conn));
-  return p2p_conn->getRTCConnection();
-}
-
-bool P2PServer::handleData(
-    CivetServer *server, struct mg_connection *conn,
-    int bits, char *data, size_t data_len)
+void P2PServer::doAccept()
 {
-  std::string recv_string(data, data_len);
-  json recv_message;
-  try
-  {
-    recv_message = json::parse(recv_string);
-  }
-  catch (json::parse_error &e)
-  {
-    return false;
-  }
-
-  std::string type;
-  try
-  {
-    type = recv_message["type"];
-  }
-  catch (json::type_error &e)
-  {
-    return false;
-  }
-
-  if (type == "offer")
-  {
-    std::string sdp;
-    try
-    {
-      sdp = recv_message["sdp"];
-    }
-    catch (json::type_error &e)
-    {
-      return false;
-    }
-    std::shared_ptr<RTCConnection> rtc_conn = createConnection(conn);
-    rtc_conn->setOffer(sdp);
-  }
-  else if (type == "answer")
-  {
-    std::shared_ptr<P2PConnection> p2p_conn = _connections[conn];
-    if (!p2p_conn) {
-      return false;
-    }
-    std::string sdp;
-    try
-    {
-      sdp = recv_message["sdp"];
-    }
-    catch (json::type_error &e)
-    {
-      return false;
-    }
-    std::shared_ptr<RTCConnection> rtc_conn = p2p_conn->getRTCConnection();
-    rtc_conn->setAnswer(sdp);
-  }
-  else if (type == "candidate")
-  {
-    std::shared_ptr<P2PConnection> p2p_conn = _connections[conn];
-    if (!p2p_conn) {
-      return false;
-    }
-    int sdp_mlineindex = 0;
-    std::string sdp_mid, candidate;
-    try
-    {
-      json ice = recv_message["ice"];
-      sdp_mid = ice["sdpMid"];
-      sdp_mlineindex = ice["sdpMLineIndex"];
-      candidate = ice["candidate"];
-    }
-    catch (json::type_error &e)
-    {
-      return false;
-    }
-    std::shared_ptr<RTCConnection> rtc_conn = p2p_conn->getRTCConnection();
-    rtc_conn->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-  }
-  else if (type == "close")
-  {
-    _connections.erase(conn);
-  } else {
-    return false;
-  }
-  return true;
+    acceptor_.async_accept(
+        socket_,
+        std::bind(
+            &P2PServer::onAccept,
+            shared_from_this(),
+            std::placeholders::_1));
 }
 
-void P2PServer::handleClose(
-    CivetServer *server, const struct mg_connection *conn)
+void P2PServer::onAccept(boost::system::error_code ec)
 {
-  _connections.erase(conn);
+    if (ec)
+    {
+        MOMO_BOOST_ERROR(ec, "accept");
+    }
+    else
+    {
+        std::make_shared<P2PSession>(std::move(socket_), doc_root_, rtc_manager_, conn_settings_)->run();
+    }
+
+    doAccept();
 }

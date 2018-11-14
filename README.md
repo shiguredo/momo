@@ -64,14 +64,8 @@ https://github.com/shiguredo/momo/issues
 
 ベストエフォートで運用しています。
 
-https://discord.gg/gmEuZye 
+https://discord.gg/gmEuZye
 
-### 有償サポートについて
+### 有料サポートについて
 
-WebRTC Native Client に対する有償でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
-
-## サポーター
-
-**サポーター企業募集中です**
-
-- [株式会社時雨堂](https://shiguredo.jp)
+WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
