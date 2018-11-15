@@ -14,6 +14,7 @@
 ## 18.10.1-rc0
 
 - [UPDATE] websocketpp と civietweb を Boost.beast に置き換える
+- [FIX] --auido-bitrate を指定した場合に、--auido-bitrate に指定したビットレートがビデオのビットレートとして扱われる問題を修正
 
 ## 18.10.0
 
