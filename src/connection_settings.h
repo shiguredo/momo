@@ -19,13 +19,13 @@ struct ConnectionSettings
   int framerate = 0;
   std::string priority = "BALANCE";
 
-  nlohmann::json metadata;
-
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
   bool sora_auto_connect = false;
+  nlohmann::json sora_metadata;
 
   int p2p_port = 8080;
+  std::string p2p_document_root;
 
   int getWidth() {
     if (resolution == "QVGA") {
@@ -73,11 +73,12 @@ struct ConnectionSettings
     os << "resolution: " << cs.resolution << "\n";
     os << "framerate: " << cs.framerate << "\n";
     os << "priority: " << cs.priority << "\n";
-    os << "metadata: " << cs.metadata << "\n";
     os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";
+    os << "sora_metadata: " << cs.sora_metadata << "\n";
     os << "p2p_port: " << cs.p2p_port << "\n";
+    os << "p2p_document_root: " << cs.p2p_document_root << "\n";
     return os;
   }
 };

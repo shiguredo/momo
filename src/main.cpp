@@ -79,6 +79,24 @@ struct JsonValue : public CLI::Validator {
   }
 };
 
+// ディレクトリが存在するか確認するバリデータ
+struct DirectoryExists : public CLI::Validator {
+  DirectoryExists() {
+    tname = "Directory";
+    func = [](std::string input) {
+      auto path = boost::filesystem::path(input);
+      auto st = boost::filesystem::status(path);
+      if (!boost::filesystem::exists(st)) {
+        return "Path " + input + " not exists";
+      }
+      if (!boost::filesystem::is_directory(st)) {
+        return "Path " + input + " is not directory";
+      }
+
+      return std::string();
+    };
+  }
+};
 
 int main(int argc, char* argv[])
 {
@@ -101,18 +119,19 @@ int main(int argc, char* argv[])
   app.add_flag("--daemon", is_daemon, "デーモン化する");
   app.add_flag("--version", version, "バージョン情報の表示");
   app.add_option("--log-level", log_level, "ログレベル")->check(CLI::Range(0, 5));
-  // 隠しオプション
-  std::string metadata;
-  app.add_option("--metadata", metadata, "メタデータ")->group("")->check(JsonValue());
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
   p2p_app->add_option("--port", cs.p2p_port, "ポート番号")->check(CLI::Range(0, 65535));
+  p2p_app->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")->check(DirectoryExists());
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+  // 隠しオプション
+  std::string sora_metadata;
+  sora_app->add_option("--metadata", sora_metadata, "メタデータ")->group("")->check(JsonValue());
 
   try {
     app.parse(argc, argv);
@@ -121,8 +140,12 @@ int main(int argc, char* argv[])
   }
 
   // メタデータのパース
-  if (!metadata.empty()) {
-    cs.metadata = json::parse(metadata);
+  if (!sora_metadata.empty()) {
+    cs.sora_metadata = json::parse(sora_metadata);
+  }
+
+  if (cs.p2p_document_root.empty()) {
+    cs.p2p_document_root = boost::filesystem::current_path().string();
   }
 
   if (version) {
@@ -162,8 +185,6 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs));
 
-  std::string currentPath = boost::filesystem::path(boost::filesystem::current_path()).string();
-
   {
       boost::asio::io_context ioc{1};
 
@@ -179,7 +200,7 @@ int main(int argc, char* argv[])
 
       if (p2p_app->parsed()) {
         const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.p2p_port)};
-        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(currentPath), rtc_manager.get(), cs)->run();
+        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.p2p_document_root), rtc_manager.get(), cs)->run();
       }
 
       ioc.run();
