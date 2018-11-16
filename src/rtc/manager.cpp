@@ -159,6 +159,10 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
             _factory->CreateVideoTrack(Util::generateRundomChars(), _video_source));
     if (video_track)
     {
+      if (_conn_settings.fixed_resolution) {
+        video_track->set_content_hint(webrtc::VideoTrackInterface::ContentHint::kText);
+      }
+
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender(
           connection->CreateSender(webrtc::MediaStreamTrackInterface::kVideoKind, Util::generateRundomChars()));
       webrtc::RtpParameters parameters = video_sender->GetParameters();
