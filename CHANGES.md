@@ -11,6 +11,8 @@
 
 ## develop
 
+## 18.10.1
+
 - [UPDATE] 利用している libwebrtc のライブラリを M71 にする
 - [FIX] --metadata を Sora のみのオプションにする
 - [FIX] P2P のオプションに --document-root を追加する
