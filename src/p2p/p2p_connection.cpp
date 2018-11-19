@@ -2,11 +2,13 @@
 #include <nlohmann/json.hpp>
 
 #include "p2p_connection.h"
+#include "util.h"
 
 using json = nlohmann::json;
+using IceConnectionState = webrtc::PeerConnectionInterface::IceConnectionState;
 
-P2PConnection::P2PConnection(RTCManager* rtc_manager, struct mg_connection* ws_conn) :
-        _ws_conn(ws_conn)
+P2PConnection::P2PConnection(RTCManager* rtc_manager, std::function<void (std::string)> send) :
+        _send(send)
 {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers servers;
@@ -19,12 +21,16 @@ P2PConnection::P2PConnection(RTCManager* rtc_manager, struct mg_connection* ws_c
 
 void P2PConnection::onIceConnectionStateChange(IceConnectionState new_state)
 {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " rtc_state " << Util::iceConnectionStateToString(_rtc_state) << " -> " << Util::iceConnectionStateToString(new_state);
+
   _rtc_state = new_state;
 }
 
 void P2PConnection::onIceCandidate(
         const std::string sdp_mid, const int sdp_mlineindex, const std::string sdp)
 {
+  RTC_LOG(LS_INFO) << __FUNCTION__;
+
   json json_cand = {
     {"type", "candidate"}
   };
@@ -34,15 +40,17 @@ void P2PConnection::onIceCandidate(
     {"sdpMid", sdp_mid}
   };
   std::string str_cand = json_cand.dump();
-  mg_websocket_write(_ws_conn, WEBSOCKET_OPCODE_TEXT, str_cand.c_str(), str_cand.length());
+  _send(std::move(str_cand));
 }
 
 void P2PConnection::onCreateDescription(webrtc::SdpType type, const std::string sdp)
 {
+  RTC_LOG(LS_INFO) << __FUNCTION__;
+
   json json_desc = {
     {"type", webrtc::SdpTypeToString(type)},
     {"sdp", sdp}
   };
   std::string str_desc = json_desc.dump();
-  mg_websocket_write(_ws_conn, WEBSOCKET_OPCODE_TEXT, str_desc.c_str(), str_desc.length());
+  _send(std::move(str_desc));
 }

@@ -7,6 +7,7 @@
 #include "sensor_msgs/CompressedImage.h"
 #include "media/base/videocapturer.h"
 
+#include <thread>
 #include <mutex>
 
 class ROSVideoCapture : public cricket::VideoCapturer
@@ -34,6 +35,7 @@ private:
   static uint32_t ConvertEncodingType(const std::string encoding);
   void ROSCallback(ros::Time ros_time, const uint8_t* sample, size_t sample_size, int src_width, int src_height, uint32_t fourcc);
 
+  ros::AsyncSpinner* spinner_;
   std::mutex mtx_;
   bool running_;
   ros::Subscriber sub_; 

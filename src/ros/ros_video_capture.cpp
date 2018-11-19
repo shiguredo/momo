@@ -16,10 +16,14 @@ ROSVideoCapture::ROSVideoCapture() : running_(false)
   formats.push_back(cricket::VideoFormat(640, 480,
                                          cricket::VideoFormat::FpsToInterval(30), cricket::FOURCC_I420));
   SetSupportedFormats(formats);
+
+  spinner_ = new ros::AsyncSpinner(1);
+  spinner_->start();
 }
 
 ROSVideoCapture::~ROSVideoCapture()
 {
+  spinner_->stop();
 }
 
 uint32_t ROSVideoCapture::ConvertEncodingType(const std::string encoding)

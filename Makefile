@@ -52,14 +52,12 @@ ifeq ($(UNAME),Linux)
 		ifneq (,$(findstring arm64,$(ARCH)))
 			CC += --sysroot=$(SYSROOT) --target=aarch64-linux-gnu
 			CXX += --sysroot=$(SYSROOT) --target=aarch64-linux-gnu
-			CIVETWEB_OPT += -I$(SYSROOT)/usr/include/aarch64-linux-gnu
 			CFLAGS += -I$(SYSROOT)/usr/include/aarch64-linux-gnu
 			LDFLAGS += -L$(SYSROOT)/usr/lib/aarch64-linux-gnu
 		else
 			USE_IL_ENCODER ?= 1
 			CC += --sysroot=$(SYSROOT) --target=arm-linux-gnueabihf
 			CXX += --sysroot=$(SYSROOT) --target=arm-linux-gnueabihf
-			CIVETWEB_OPT += -I$(SYSROOT)/usr/include/arm-linux-gnueabihf
 			CFLAGS += -I$(SYSROOT)/usr/include/arm-linux-gnueabihf
 			LDFLAGS += -L$(SYSROOT)/usr/lib/arm-linux-gnueabihf -B$(SYSROOT)/usr/lib/arm-linux-gnueabihf
 			# ilclient
@@ -98,26 +96,15 @@ SOURCE += $(shell find $(CURDIR)/src -type d -name 'ros' -prune -o -type f -name
 endif
 SOURCE += $(RTC_LIB)
 
+# boringssl
+CFLAGS += -I$(RTC_ROOT)/src/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
+LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboringssl
+
 # boost
-ifdef ROS_VERSION
-LDFLAGS += -lboost_system
-else
 LDFLAGS += -lboost_system -lboost_filesystem
-endif
 
 # json
 CFLAGS += -Ilibs/json/include
-
-# websocketpp
-WEBSOCKETPP_DIR = libs/websocketpp
-CFLAGS += -I$(WEBSOCKETPP_DIR)/ -I$(RTC_ROOT)/src/third_party/boringssl/src/include -D_WEBSOCKETPP_CPP11_STL_ -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboringssl -lboost_system
-
-# civetweb
-CIVETWEB_DIR = libs/civetweb
-CIVETWEB_LIB = libcivetweb.a
-CFLAGS += -I$(CIVETWEB_DIR)/include
-SOURCE += $(CIVETWEB_LIB)
 
 # CLI11
 CFLAGS += -Ilibs/CLI11/include
@@ -127,7 +114,11 @@ ifeq ($(BUILD_MODE),pkg)
 	LDFLAGS += -s
 endif
 
-all: $(TARGET)
+all: git.init $(TARGET)
+
+.PHONY: git.init
+git.init:
+	git submodule update -i
 
 $(IL_OBJECT): $(ILCLIENT_DIR)/%.o : $(ILCLIENT_DIR)/%.c
 	@rm -f $@ 
@@ -138,14 +129,6 @@ $(ILCLIENT_LIB): $(IL_OBJECT)
 
 $(RTC_LIB): $(shell find $(RTC_LIB_PATH)/obj -name '*.o')
 	$(AR) -rcT $@ $^
-
-$(CIVETWEB_LIB):
-	git submodule init
-	git submodule update
-	cd $(CIVETWEB_DIR) && git reset --hard
-	patch -p1 $(CIVETWEB_DIR)/src/civetweb.c < patch/civetweb_signal.patch
-	$(MAKE) -C $(CIVETWEB_DIR) clean lib WITH_CPP=1 WITH_WEBSOCKET=1 CC="$(CC)" CXX="$(CXX)" COPT="$(CIVETWEB_OPT)"
-	cp $(CIVETWEB_DIR)/$(CIVETWEB_LIB) .
 
 $(TARGET): $(SOURCE)
 	$(CXX) -o $@ $(CFLAGS) $(INCLUDES) $^ $(LDFLAGS)
