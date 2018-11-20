@@ -93,7 +93,7 @@ RUN cd ~/ \
  && rm -rf boost_1_68_0
 
 # 必要なファイルだけ持ってくる
-FROM ros:melodic-ros-core-bionic
+FROM ros:kinetic-ros-core-xenial
 
 COPY --from=builder /src/ /root/src/
 
@@ -107,7 +107,6 @@ RUN set -x \
      git \
      lsb-release \
      sudo \
-     ros-melodic-image-transport \
  && cd /root \
  && sed -i -e 's/sudo/sudo -E/g' ./src/build/install-build-deps.sh \
  && bash ./src/build/install-build-deps.sh --no-arm --no-chromeos-fonts \
