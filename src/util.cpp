@@ -4,6 +4,9 @@
 #include <CLI/CLI.hpp>
 #include <nlohmann/json.hpp>
 #include <boost/preprocessor/stringize.hpp>
+#if USE_ROS
+#include "ros/ros.h"
+#endif
 
 // バージョン情報
 // 通常は外から渡すが、渡されていなかった場合の対応
@@ -72,6 +75,48 @@ struct JsonValue : public CLI::Validator
   }
 };
 
+#if USE_ROS
+void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
+                        bool &use_p2p, bool &use_sora, 
+                        int &log_level, ConnectionSettings &cs)
+{
+  ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
+
+  ros::NodeHandle nh("~");
+  nh.param<bool>("use_p2p", use_p2p, use_p2p);
+  nh.param<bool>("use_sora", use_sora, use_sora);
+
+  nh.param<bool>("no_video", cs.no_video, cs.no_video);
+  nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+  nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
+  nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
+  nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
+  nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
+  nh.param<std::string>("resolution", cs.resolution, cs.resolution);
+  nh.param<int>("framerate", cs.framerate, cs.framerate);
+  nh.param<std::string>("priority", cs.priority, cs.priority);
+  nh.param<int>("framerate", log_level, log_level);
+  // 隠しオプション
+  std::string metadata;
+  nh.param<std::string>("metadata", metadata, "");
+
+  // メタデータのパース
+  if (!metadata.empty())
+  {
+    cs.metadata = json::parse(metadata);
+  }
+
+  if (use_sora && nh.hasParam("SIGNALING_URL") && nh.hasParam("CHANNEL_ID")) {
+    nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
+    nh.getParam("CHANNEL_ID", cs.sora_channel_id);
+    nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
+  } else if (use_p2p) {
+    nh.param<int>("port", cs.p2p_port, cs.p2p_port);
+  } else {
+    exit(1);
+  }
+}
+#else
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
                         bool &use_p2p, bool &use_sora, 
                         int &log_level, ConnectionSettings &cs)
@@ -85,7 +130,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
   app.add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")->check(Enum({"OPUS", "PCMU"}));
   app.add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")->check(CLI::Range(1, 30000));
-  app.add_option("--audio-bitrate", cs.video_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
+  app.add_option("--audio-bitrate", cs.audio_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
   app.add_option("--resolution", cs.resolution, "解像度")->check(Enum({"QVGA", "VGA", "HD", "FHD"}));
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));
   app.add_option("--priority", cs.priority, "優先設定 (Experimental)")->check(Enum({"BALANCE", "FRAMERATE", "RESOLUTION"}));
@@ -140,6 +185,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     use_p2p = true;
   }
 }
+#endif
 
 std::string Util::generateRundomChars()
 {

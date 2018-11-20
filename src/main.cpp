@@ -12,8 +12,6 @@
 #include "rtc_base/logsinks.h"
 
 #if USE_ROS
-#include "ros/ros.h"
-#include "image_transport/image_transport.h"
 #include "ros/ros_video_capture.h"
 #else
 #include <boost/filesystem.hpp>
@@ -32,16 +30,15 @@ int main(int argc, char* argv[])
   ConnectionSettings cs;
 
   bool is_daemon = false;
-  bool use_p2p = true;
+  bool use_p2p = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
+  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
 #if USE_ROS
-  ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
   std::string currentPath(get_current_dir_name());
   std::unique_ptr<cricket::VideoCapturer> capture(new ROSVideoCapture());
 #else
-  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
   std::string currentPath = boost::filesystem::path(boost::filesystem::current_path()).string();
   std::unique_ptr<cricket::VideoCapturer> capture = RTCManager::createVideoCapture();
 #endif
