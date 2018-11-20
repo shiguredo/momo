@@ -1,6 +1,6 @@
 BUILD_NUMBER=$(shell date +"%Y%m%d%H%M%S")
-WEBRTC_VERSION=70
-MOMO_VERSION=18.10.1-rc0
+WEBRTC_VERSION=71
+MOMO_VERSION=18.10.1
 
 TARGET=$@
 
@@ -58,9 +58,8 @@ x86_64:
 
 .PHONY: x86_64_ros
 x86_64_ros:
-	# x86_64 用ビルド
+	# x86_64_ros 用ビルド
 	$(MAKE) -C $(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-	# 生成されたバイナリをこのディレクトリに移動
 	mv $(TARGET)/momo ./momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
 
 .PHONY: macos
