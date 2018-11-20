@@ -10,10 +10,12 @@
 #include <thread>
 #include <mutex>
 
+#include "connection_settings.h"
+
 class ROSVideoCapture : public cricket::VideoCapturer
 {
 public:
-  explicit ROSVideoCapture();
+  explicit ROSVideoCapture(ConnectionSettings conn_settings);
   ~ROSVideoCapture() override;
 
   // cricket::VideoCapturer interface.

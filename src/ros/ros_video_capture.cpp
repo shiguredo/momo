@@ -6,11 +6,14 @@
 #include "third_party/libyuv/include/libyuv.h"
 #include "sensor_msgs/image_encodings.h"
 
-ROSVideoCapture::ROSVideoCapture() : running_(false)
+ROSVideoCapture::ROSVideoCapture(ConnectionSettings conn_settings) : running_(false)
 {
   ros::NodeHandle nh;
-  sub_ = nh.subscribe<sensor_msgs::Image>("/usb_cam/image_raw", 1, boost::bind(&ROSVideoCapture::ROSCallbackRaw, this, _1));
-  //sub_ = nh.subscribe<sensor_msgs::CompressedImage>("/usb_cam/compressed_image/compressed", 1, boost::bind(&ROSVideoCapture::ROSCallbackCompressed, this, _1));
+  if (conn_settings.image_compressed) {
+    sub_ = nh.subscribe<sensor_msgs::CompressedImage>(conn_settings.camera_name, 1, boost::bind(&ROSVideoCapture::ROSCallbackCompressed, this, _1));
+  } else {
+    sub_ = nh.subscribe<sensor_msgs::Image>(conn_settings.camera_name, 1, boost::bind(&ROSVideoCapture::ROSCallbackRaw, this, _1));
+  }
 
   std::vector<cricket::VideoFormat> formats;
   formats.push_back(cricket::VideoFormat(640, 480,
@@ -49,7 +52,6 @@ uint32_t ROSVideoCapture::ConvertEncodingType(const std::string encoding)
 
 void ROSVideoCapture::ROSCallbackRaw(const sensor_msgs::ImageConstPtr &image)
 {
-  //std::cerr << __FUNCTION__ << " encoding:" << image->encoding << std::endl;
   ROSCallback(image->header.stamp, image->data.data(), image->data.size(), image->width, image->height, ConvertEncodingType(image->encoding));
 }
 

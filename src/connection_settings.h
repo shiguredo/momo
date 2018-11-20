@@ -9,6 +9,11 @@
 
 struct ConnectionSettings
 {
+  std::string camera_name = "";
+#if USE_ROS
+  bool image_compressed = false;
+#endif
+
   bool no_video = false;
   bool no_audio = false;
   std::string video_codec = "VP8";

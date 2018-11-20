@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
 #if USE_ROS
   std::string currentPath(get_current_dir_name());
-  std::unique_ptr<cricket::VideoCapturer> capture(new ROSVideoCapture());
+  std::unique_ptr<cricket::VideoCapturer> capture(new ROSVideoCapture(cs));
 #else
   std::string currentPath = boost::filesystem::path(boost::filesystem::current_path()).string();
   std::unique_ptr<cricket::VideoCapturer> capture = RTCManager::createVideoCapture();

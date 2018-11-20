@@ -82,23 +82,28 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
 
-  ros::NodeHandle nh("~");
-  nh.param<bool>("use_p2p", use_p2p, use_p2p);
-  nh.param<bool>("use_sora", use_sora, use_sora);
+  ros::NodeHandle nh;
+  cs.camera_name = nh.resolveName("image");
 
-  nh.param<bool>("no_video", cs.no_video, cs.no_video);
-  nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
-  nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
-  nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
-  nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
-  nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
-  nh.param<std::string>("resolution", cs.resolution, cs.resolution);
-  nh.param<int>("framerate", cs.framerate, cs.framerate);
-  nh.param<std::string>("priority", cs.priority, cs.priority);
-  nh.param<int>("framerate", log_level, log_level);
+  ros::NodeHandle local_nh("~");
+  local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
+
+  local_nh.param<bool>("use_p2p", use_p2p, use_p2p);
+  local_nh.param<bool>("use_sora", use_sora, use_sora);
+
+  local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
+  local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+  local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
+  local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
+  local_nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
+  local_nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
+  local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
+  local_nh.param<int>("framerate", cs.framerate, cs.framerate);
+  local_nh.param<std::string>("priority", cs.priority, cs.priority);
+  local_nh.param<int>("framerate", log_level, log_level);
   // 隠しオプション
   std::string metadata;
-  nh.param<std::string>("metadata", metadata, "");
+  local_nh.param<std::string>("metadata", metadata, "");
 
   // メタデータのパース
   if (!metadata.empty())
@@ -106,12 +111,12 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     cs.metadata = json::parse(metadata);
   }
 
-  if (use_sora && nh.hasParam("SIGNALING_URL") && nh.hasParam("CHANNEL_ID")) {
-    nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
-    nh.getParam("CHANNEL_ID", cs.sora_channel_id);
-    nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
+  if (use_sora && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("CHANNEL_ID")) {
+    local_nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
+    local_nh.getParam("CHANNEL_ID", cs.sora_channel_id);
+    local_nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
   } else if (use_p2p) {
-    nh.param<int>("port", cs.p2p_port, cs.p2p_port);
+    local_nh.param<int>("port", cs.p2p_port, cs.p2p_port);
   } else {
     exit(1);
   }
