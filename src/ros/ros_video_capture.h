@@ -38,9 +38,13 @@ private:
   void ROSCallback(ros::Time ros_time, const uint8_t* sample, size_t sample_size, int src_width, int src_height, uint32_t fourcc);
 
   ros::AsyncSpinner* spinner_;
+  ros::Subscriber sub_; 
   std::mutex mtx_;
   bool running_;
-  ros::Subscriber sub_; 
+  uint64_t last_time_ns_;
+  int width_;
+  int height_;
+  int64_t interval_; 
 };
 
 #endif

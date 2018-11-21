@@ -1,27 +1,36 @@
 #include "ros_video_capture.h"
 
 #include <string.h>
+#include <unistd.h>
+
 #include "api/video/i420_buffer.h"
 #include "rtc_base/logsinks.h"
 #include "third_party/libyuv/include/libyuv.h"
 #include "sensor_msgs/image_encodings.h"
 
-ROSVideoCapture::ROSVideoCapture(ConnectionSettings conn_settings) : running_(false)
+ROSVideoCapture::ROSVideoCapture(ConnectionSettings conn_settings)
+    : running_(false), last_time_ns_(0), width_(0), height_(0), interval_(0)
 {
   ros::NodeHandle nh;
-  if (conn_settings.image_compressed) {
+  if (conn_settings.image_compressed)
+  {
     sub_ = nh.subscribe<sensor_msgs::CompressedImage>(conn_settings.camera_name, 1, boost::bind(&ROSVideoCapture::ROSCallbackCompressed, this, _1));
-  } else {
+  }
+  else
+  {
     sub_ = nh.subscribe<sensor_msgs::Image>(conn_settings.camera_name, 1, boost::bind(&ROSVideoCapture::ROSCallbackRaw, this, _1));
   }
 
-  std::vector<cricket::VideoFormat> formats;
-  formats.push_back(cricket::VideoFormat(640, 480,
-                                         cricket::VideoFormat::FpsToInterval(30), cricket::FOURCC_I420));
-  SetSupportedFormats(formats);
-
   spinner_ = new ros::AsyncSpinner(1);
   spinner_->start();
+
+  while (interval_ == 0) {
+    usleep(1000);
+  }
+
+  std::vector<cricket::VideoFormat> formats;
+  formats.push_back(cricket::VideoFormat(width_, height_, interval_, cricket::FOURCC_I420));
+  SetSupportedFormats(formats);
 }
 
 ROSVideoCapture::~ROSVideoCapture()
@@ -83,15 +92,17 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
   }
 
   webrtc::VideoFrame captureFrame(dst_buffer, 0, rtc::TimeMillis(), webrtc::kVideoRotation_0);
-  int64_t ntp_time_ms = ros_time.sec * 1000;
-  ntp_time_ms += ros_time.nsec / 1000000;
-  if (ntp_time_ms % 1000000 >= 500000)
-  {
-    ntp_time_ms++;
+  uint64_t ros_time_ns = ros_time.toNSec();
+  if (last_time_ns_ != 0) {
+    interval_ = ros_time_ns - last_time_ns_;
   }
-  captureFrame.set_ntp_time_ms(ntp_time_ms);
+  last_time_ns_ = ros_time_ns;
+  width_ = src_width;
+  height_ = src_height;
+  captureFrame.set_ntp_time_ms((int64_t)(ros_time_ns / 1000000));
   std::unique_lock<std::mutex> lk(mtx_);
-  if(!running_) return;
+  if (!running_)
+    return;
   OnFrame(captureFrame, src_width, src_height);
 }
 
@@ -130,8 +141,8 @@ bool ROSVideoCapture::GetBestCaptureFormat(const cricket::VideoFormat &desired,
 {
   if (!best_format)
     return false;
-  best_format->width = 640;
-  best_format->height = 480;
+  best_format->width = width_;
+  best_format->height = height_;
   best_format->fourcc = cricket::FOURCC_I420;
   best_format->interval = desired.interval;
   return true;
