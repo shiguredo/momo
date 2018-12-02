@@ -3,7 +3,6 @@
 
 #include <boost/beast.hpp>
 #include "api/peerconnectioninterface.h"
-
 #include "connection_settings.h"
 
 class Util

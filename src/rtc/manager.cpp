@@ -66,22 +66,33 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (!_conn_settings.no_video && capturer)
+  if (!_conn_settings.no_video)
   {
 #if USE_ROS
     _video_source = _factory->CreateVideoSource(std::move(capturer));
 #else
+
+std::cout << "trace: " << __LINE__ << std::endl;
+    capturer = createVideoCapturer();
+std::cout << "trace: " << capturer.get() << ": " << __LINE__ << std::endl;
+
     webrtc::FakeConstraints constraints;
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
+        constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
+std::cout << "trace: " << __LINE__ << std::endl;
     constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, _conn_settings.getHeight());
     constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-		constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
+        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
     constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-		constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
+        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
+std::cout << "trace: " << __LINE__ << std::endl;
     if (_conn_settings.framerate != 0) {
+std::cout << "trace: " << __LINE__ << std::endl;
       constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxFrameRate, _conn_settings.framerate);
+std::cout << "trace: " << __LINE__ << std::endl;
     }
+std::cout << "trace: " << __LINE__ << std::endl;
     _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
+std::cout << "trace: " << __LINE__ << std::endl;
 #endif
   }
 }
@@ -97,7 +108,7 @@ RTCManager::~RTCManager()
   rtc::CleanupSSL();
 }
 
-std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapture() {
+std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer() {
   std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
   std::vector<std::string> device_names;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
@@ -157,6 +168,10 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
             _factory->CreateVideoTrack(Util::generateRundomChars(), _video_source));
     if (video_track)
     {
+      if (_conn_settings.fixed_resolution) {
+        video_track->set_content_hint(webrtc::VideoTrackInterface::ContentHint::kText);
+      }
+
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender(
           connection->CreateSender(webrtc::MediaStreamTrackInterface::kVideoKind, Util::generateRundomChars()));
       webrtc::RtpParameters parameters = video_sender->GetParameters();

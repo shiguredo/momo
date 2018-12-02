@@ -31,7 +31,7 @@ private:
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
 
     boost::beast::multi_buffer read_buffer_;
-    boost::beast::multi_buffer write_buffer_;
+    std::vector<boost::beast::flat_buffer> write_buffer_;
 
 public:
     // 非SSL

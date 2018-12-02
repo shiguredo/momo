@@ -11,6 +11,17 @@
 
 ## develop
 
+- [ADD] 解像度を固定するオプションを追加する
+- [FIX] WebSocket の分かれているべきフレームがくっついていたのを修正した
+
+## 18.10.1
+
+- [UPDATE] 利用している libwebrtc のライブラリを M71 にする
+- [FIX] --metadata を Sora のみのオプションにする
+- [FIX] P2P のオプションに --document-root を追加する
+- [FIX] P2P モードで Web サーバが立ち上がった場合カレントディレクトリを晒さないようにする
+- [FIX] --auido-bitrate を指定した場合に、--auido-bitrate に指定したビットレートがビデオのビットレートとして扱われる問題を修正
+
 ## 18.10.1-rc0
 
 - [UPDATE] websocketpp と civietweb を Boost.beast に置き換える

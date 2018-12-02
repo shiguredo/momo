@@ -35,13 +35,6 @@ int main(int argc, char* argv[])
   int log_level = rtc::LS_NONE;
 
   Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
-#if USE_ROS
-  std::string currentPath(get_current_dir_name());
-  std::unique_ptr<cricket::VideoCapturer> capture(new ROSVideoCapture(cs));
-#else
-  std::string currentPath = boost::filesystem::path(boost::filesystem::current_path()).string();
-  std::unique_ptr<cricket::VideoCapturer> capture = RTCManager::createVideoCapture();
-#endif
 
 #ifndef _MSC_VER
   if (is_daemon)
@@ -68,7 +61,16 @@ int main(int argc, char* argv[])
   rtc::LogMessage::LogThreads();
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
-  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capture)));
+#if USE_ROS
+  std::unique_ptr<cricket::VideoCapturer> capturer(new ROSVideoCapture(cs));
+#else
+  // この時点では RTCManager の準備ができていないので RTCManager::createVideoCapture() を呼んでも動作しない。
+  // なので capturer が nullptr だったら RTCManager 側で作るようにする。
+  // std::unique_ptr<cricket::VideoCapturer> capturer = RTCManager::createVideoCapture();
+  std::unique_ptr<cricket::VideoCapturer> capturer;
+#endif
+
+  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
 
   {
       boost::asio::io_context ioc{1};
@@ -85,7 +87,7 @@ int main(int argc, char* argv[])
 
       if (use_p2p) {
         const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.p2p_port)};
-        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(currentPath), rtc_manager.get(), cs)->run();
+        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.p2p_document_root), rtc_manager.get(), cs)->run();
       }
 
       ioc.run();

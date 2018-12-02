@@ -4,6 +4,7 @@
 #include <CLI/CLI.hpp>
 #include <nlohmann/json.hpp>
 #include <boost/preprocessor/stringize.hpp>
+#include <boost/filesystem.hpp>
 #if USE_ROS
 #include "ros/ros.h"
 #endif
@@ -75,7 +76,27 @@ struct JsonValue : public CLI::Validator
   }
 };
 
+// ディレクトリが存在するか確認するバリデータ
+struct DirectoryExists : public CLI::Validator {
+  DirectoryExists() {
+    tname = "Directory";
+    func = [](std::string input) {
+      auto path = boost::filesystem::path(input);
+      auto st = boost::filesystem::status(path);
+      if (!boost::filesystem::exists(st)) {
+        return "Path " + input + " not exists";
+      }
+      if (!boost::filesystem::is_directory(st)) {
+        return "Path " + input + " is not directory";
+      }
+
+      return std::string();
+    };
+  }
+};
+
 #if USE_ROS
+
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
                         bool &use_p2p, bool &use_sora, 
                         int &log_level, ConnectionSettings &cs)
@@ -101,27 +122,31 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<int>("framerate", cs.framerate, cs.framerate);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
   local_nh.param<int>("framerate", log_level, log_level);
-  // 隠しオプション
-  std::string metadata;
-  local_nh.param<std::string>("metadata", metadata, "");
-
-  // メタデータのパース
-  if (!metadata.empty())
-  {
-    cs.metadata = json::parse(metadata);
-  }
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("CHANNEL_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
     local_nh.getParam("CHANNEL_ID", cs.sora_channel_id);
     local_nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
+
+    // 隠しオプション
+    std::string sora_metadata;
+    local_nh.param<std::string>("metadata", sora_metadata, "");
+
+    // メタデータのパース
+    if (!sora_metadata.empty())
+    {
+      cs.sora_metadata = json::parse(sora_metadata);
+    }
   } else if (use_p2p) {
     local_nh.param<int>("port", cs.p2p_port, cs.p2p_port);
+    local_nh.param<int>("document_root", cs.p2p_document_root, get_current_dir_name());
   } else {
     exit(1);
   }
 }
+
 #else
+
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
                         bool &use_p2p, bool &use_sora, 
                         int &log_level, ConnectionSettings &cs)
@@ -136,24 +161,27 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   app.add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")->check(Enum({"OPUS", "PCMU"}));
   app.add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")->check(CLI::Range(1, 30000));
   app.add_option("--audio-bitrate", cs.audio_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
-  app.add_option("--resolution", cs.resolution, "解像度")->check(Enum({"QVGA", "VGA", "HD", "FHD"}));
+  app.add_option("--resolution", cs.resolution, "解像度")->check(Enum({"QVGA", "VGA", "HD", "FHD", "4K"}));
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));
+  app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
   app.add_option("--priority", cs.priority, "優先設定 (Experimental)")->check(Enum({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--daemon", is_daemon, "デーモン化する");
   app.add_flag("--version", version, "バージョン情報の表示");
   app.add_option("--log-level", log_level, "ログレベル")->check(CLI::Range(0, 5));
-  // 隠しオプション
-  std::string metadata;
-  app.add_option("--metadata", metadata, "メタデータ")->group("")->check(JsonValue());
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
   p2p_app->add_option("--port", cs.p2p_port, "ポート番号")->check(CLI::Range(0, 65535));
+  p2p_app->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")->check(DirectoryExists());
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+
+  // 隠しオプション
+  std::string sora_metadata;
+  sora_app->add_option("--metadata", sora_metadata, "メタデータ")->group("")->check(JsonValue());
 
   try
   {
@@ -165,9 +193,12 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   }
 
   // メタデータのパース
-  if (!metadata.empty())
-  {
-    cs.metadata = json::parse(metadata);
+  if (!sora_metadata.empty()) {
+    cs.sora_metadata = json::parse(sora_metadata);
+  }
+
+  if (cs.p2p_document_root.empty()) {
+    cs.p2p_document_root = boost::filesystem::current_path().string();
   }
 
   if (version)
@@ -190,6 +221,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     use_p2p = true;
   }
 }
+
 #endif
 
 std::string Util::generateRundomChars()
