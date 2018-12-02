@@ -13,8 +13,6 @@
 
 #if USE_ROS
 #include "ros/ros_video_capture.h"
-#else
-#include <boost/filesystem.hpp>
 #endif
 
 #include "connection_settings.h"

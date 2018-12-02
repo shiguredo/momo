@@ -72,27 +72,19 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
     _video_source = _factory->CreateVideoSource(std::move(capturer));
 #else
 
-std::cout << "trace: " << __LINE__ << std::endl;
     capturer = createVideoCapturer();
-std::cout << "trace: " << capturer.get() << ": " << __LINE__ << std::endl;
 
     webrtc::FakeConstraints constraints;
         constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
-std::cout << "trace: " << __LINE__ << std::endl;
     constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, _conn_settings.getHeight());
     constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
         constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
     constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
         constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
-std::cout << "trace: " << __LINE__ << std::endl;
     if (_conn_settings.framerate != 0) {
-std::cout << "trace: " << __LINE__ << std::endl;
       constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxFrameRate, _conn_settings.framerate);
-std::cout << "trace: " << __LINE__ << std::endl;
     }
-std::cout << "trace: " << __LINE__ << std::endl;
     _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
-std::cout << "trace: " << __LINE__ << std::endl;
 #endif
   }
 }

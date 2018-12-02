@@ -44,9 +44,6 @@ ifeq ($(UNAME),Linux)
 	ifdef ROS_VERSION
 	CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I/opt/ros/$(ROS_VERSION)/include
 	LDFLAGS += -lpthread -L/opt/ros/$(ROS_VERSION)/lib -lmessage_filters -lroscpp -lrosconsole -lroscpp_serialization -lrostime -lxmlrpcpp -lcpp_common -lrosconsole_log4cxx -lrosconsole_backend_interface
-	CIVETWEB_OPT += -DUSE_WEBSOCKET
-	else
-	CIVETWEB_OPT += -DUSE_WEBSOCKET -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
 	endif
 	ifneq (,$(findstring arm,$(ARCH)))
 		ifneq (,$(findstring arm64,$(ARCH)))
@@ -95,10 +92,6 @@ else
 SOURCE += $(shell find $(CURDIR)/src -type d -name 'ros' -prune -o -type f -name '*.cpp' -print)
 endif
 SOURCE += $(RTC_LIB)
-
-# boringssl
-CFLAGS += -I$(RTC_ROOT)/src/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboringssl
 
 # boost
 CFLAGS += -I$(RTC_ROOT)/src/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
