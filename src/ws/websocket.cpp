@@ -91,10 +91,13 @@ void Websocket::sendText(std::string text) {
 void Websocket::doSendText(std::string text) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << text;
 
-    bool empty = write_buffer_.size() == 0;
+    bool empty = write_buffer_.empty();
+    boost::beast::flat_buffer buffer;
 
-    const auto n = boost::asio::buffer_copy(write_buffer_.prepare(text.size()), boost::asio::buffer(text));
-    write_buffer_.commit(n);
+    const auto n = boost::asio::buffer_copy(buffer.prepare(text.size()), boost::asio::buffer(text));
+    buffer.commit(n);
+
+    write_buffer_.push_back(std::move(buffer));
 
     if (empty) {
         doWrite();
@@ -103,10 +106,11 @@ void Websocket::doSendText(std::string text) {
 void Websocket::doWrite() {
     RTC_LOG(LS_INFO) << __FUNCTION__;
 
+    auto& buffer = write_buffer_.front();
     if (isSSL()) {
         wss_->text(true);
         wss_->async_write(
-            write_buffer_.data(),
+            buffer.data(),
             boost::asio::bind_executor(
                 strand_,
                 std::bind(
@@ -117,7 +121,7 @@ void Websocket::doWrite() {
     } else {
         ws_->text(true);
         ws_->async_write(
-            write_buffer_.data(),
+            buffer.data(),
             boost::asio::bind_executor(
                 strand_,
                 std::bind(
@@ -141,9 +145,9 @@ void Websocket::onWrite(boost::system::error_code ec, std::size_t bytes_transfer
     if (ec)
         return MOMO_BOOST_ERROR(ec, "onWrite");
 
-    write_buffer_.consume(bytes_transferred);
+    write_buffer_.erase(write_buffer_.begin());
 
-    if (write_buffer_.size() != 0)
+    if (!write_buffer_.empty())
     {
         doWrite();
     }

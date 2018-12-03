@@ -17,6 +17,7 @@ struct ConnectionSettings
   int audio_bitrate = 0;
   std::string resolution = "VGA";
   int framerate = 0;
+  bool fixed_resolution = false;
   std::string priority = "BALANCE";
 
   std::string sora_signaling_host = "wss://example.com/signaling";
@@ -72,6 +73,7 @@ struct ConnectionSettings
     os << "audio_bitrate: " << cs.audio_bitrate << "\n";
     os << "resolution: " << cs.resolution << "\n";
     os << "framerate: " << cs.framerate << "\n";
+    os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false") << "\n";
     os << "priority: " << cs.priority << "\n";
     os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
