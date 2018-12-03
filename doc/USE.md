@@ -67,6 +67,12 @@ $ sudo apt-get install libx11-6 libxau6 libxdmcp6 libxcb1 libnspr4 libexpat1 lib
     - arm 系でも指定はできるようになっていますが、マシンリソースが足らず動作しません
 - ロジクールの BRIO 4K 動作確認しています
 
+### プレビュー版の機能
+
+下記はプレビュー版の機能です
+
+- --fixed-resolution          固定解像度
+
 ## 利用方法
 
 Momo はモードを ２ つ持っています。一つが P2P モードで Momo 自体がシグナリングサーバの機能も持つモードです。
@@ -77,14 +83,14 @@ Momo はモードを ２ つ持っています。一つが P2P モードで Momo
 
 ```shell
 $ momo --version
-WebRTC Native Client Momo version 18.10.0
+WebRTC Native Client Momo version 18.10.2
 ```
 
 ### P2P で動作を確認する
 
 ```shell
 $ momo --no-audio --video-codec H264 --video-bitrate 800 \
-       p2p --port 8080 
+       p2p --port 8080
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
@@ -102,7 +108,7 @@ $ momo --no-audio --video-codec VP8 --video-bitrate 500 \
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 18.10.0
+WebRTC Native Client Momo 18.10.2
 ```
 
 ```
@@ -125,6 +131,7 @@ Options:
   --resolution STR in [QVGA,VGA,HD,FHD,4K]
                               解像度
   --framerate INT in [1 - 60] フレームレート
+  --fixed-resolution          固定解像度
   --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
                               優先設定
   --daemon                    デーモン化する
