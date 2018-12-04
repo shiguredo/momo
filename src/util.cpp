@@ -121,7 +121,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
   local_nh.param<int>("framerate", cs.framerate, cs.framerate);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
-  local_nh.param<int>("framerate", log_level, log_level);
+  local_nh.param<int>("log_level", log_level, log_level);
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("CHANNEL_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
