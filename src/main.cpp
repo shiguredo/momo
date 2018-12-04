@@ -12,6 +12,7 @@
 #include "rtc_base/logsinks.h"
 
 #if USE_ROS
+#include "ros/ros_log_sink.h"
 #include "ros/ros_video_capture.h"
 #endif
 
@@ -45,6 +46,16 @@ int main(int argc, char* argv[])
   }
 #endif
 
+
+  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
+  rtc::LogMessage::LogTimestamps();
+  rtc::LogMessage::LogThreads();
+
+#if USE_ROS
+  std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
+  rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
+  std::unique_ptr<cricket::VideoCapturer> capturer(new ROSVideoCapture(cs));
+#else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize, 10));
   if (!log_sink->Init())
@@ -53,15 +64,7 @@ int main(int argc, char* argv[])
     log_sink.reset();
     return 1;
   }
-
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-
-#if USE_ROS
-  std::unique_ptr<cricket::VideoCapturer> capturer(new ROSVideoCapture(cs));
-#else
   // この時点では RTCManager の準備ができていないので RTCManager::createVideoCapture() を呼んでも動作しない。
   // なので capturer が nullptr だったら RTCManager 側で作るようにする。
   // std::unique_ptr<cricket::VideoCapturer> capturer = RTCManager::createVideoCapture();
