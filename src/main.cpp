@@ -82,12 +82,12 @@ int main(int argc, char* argv[])
       });
 
       if (use_sora) {
-        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("127.0.0.1"), 8080};
+        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("127.0.0.1"), static_cast<unsigned short>(cs.port)};
         std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
       }
 
       if (use_p2p) {
-        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.p2p_port)};
+        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.port)};
         std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.p2p_document_root), rtc_manager.get(), cs)->run();
       }
 
