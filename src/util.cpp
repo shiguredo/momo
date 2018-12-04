@@ -139,7 +139,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     }
   } else if (use_p2p) {
     local_nh.param<int>("port", cs.p2p_port, cs.p2p_port);
-    local_nh.param<int>("document_root", cs.p2p_document_root, get_current_dir_name());
+    local_nh.param<std::string>("document_root", cs.p2p_document_root, get_current_dir_name());
   } else {
     exit(1);
   }
