@@ -1,5 +1,7 @@
 # WebRTC Native Client Momo
 
+[![GitHub version](https://badge.fury.io/gh/shiguredo%2Fmomo.svg)](https://github.com/shiguredo/momo)
+
 ## WebRTC Native Client Momo について
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
