@@ -69,3 +69,10 @@ https://discord.gg/gmEuZye
 ### 有料サポートについて
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+
+## H.264 のライセンス費用について
+
+- ソフトウェアエンコーダは OpenH264 のバイナリを利用しており、ライセンス費用は Cisco が負担してくれています
+    - https://www.openh264.org/faq.html
+- Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の費用に含まれています
+    - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
