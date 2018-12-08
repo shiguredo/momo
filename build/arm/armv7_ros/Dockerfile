@@ -1,4 +1,4 @@
-FROM momo/webrtc-armv8-buildbase as builder
+FROM momo/webrtc-armv7-ros-buildbase as builder
 
 ARG WEBRTC_VERSION
 
@@ -13,7 +13,6 @@ RUN set -x \
 
 COPY patch/4k.patch /root/
 
-# exit 0 は cipd ensure コマンドでのエラーの暫定対応
 RUN set -x \
  && cd /root/src \
  && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
@@ -22,9 +21,9 @@ RUN set -x \
 
 RUN set -x \
  && cd /root/src \
- && rm -rf out/arm64-xenial \
- && gn gen out/arm64-xenial --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false use_rtti=true' \
- && ninja -C out/arm64-xenial
+ && rm -rf out/arm-xenial \
+ && gn gen out/arm-xenial --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=true is_component_build=false use_rtti=true use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu="arm" target_sysroot="/root/rootfs" custom_toolchain="//build/toolchain/linux:arm" is_clang=false treat_warnings_as_errors=false' \
+ && ninja -C out/arm-xenial
 
 # ビルドに必要なファイルだけ /src に移動する
 # このディレクトリをマルチステージビルド先から持ってくる
@@ -58,7 +57,7 @@ RUN set -x \
   && mkdir -p /src/third_party/boringssl/src && cp -r src/third_party/boringssl/src/include      /src/third_party/boringssl/src/include
 
 # Boost のビルド
-COPY patch/project-config.jam /root/
+COPY patch/project-config-arm_gcc.jam /root/
 
 RUN cd ~/ \
  && set -ex \
@@ -66,8 +65,8 @@ RUN cd ~/ \
  && tar xf boost_1_68_0.tar.gz \
  && cd boost_1_68_0 \
  && ./bootstrap.sh \
- && cp ../project-config.jam ./ \
- && ./b2 target-os=linux architecture=arm address-model=64 link=static variant=release install -j`nproc` --prefix=/root/boost-1.68.0 --with-program_options --with-system --with-filesystem \
+ && cp ../project-config-arm_gcc.jam ./project-config.jam \
+ && ./b2 target-os=linux architecture=arm address-model=32 link=static variant=release install -j`nproc` --prefix=/root/boost-1.68.0 --with-system --with-filesystem \
  && cd ~/ \
  && rm boost_1_68_0.tar.gz \
  && rm -rf boost_1_68_0

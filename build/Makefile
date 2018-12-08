@@ -7,8 +7,8 @@ TARGET=$@
 .PHONY: all
 all: armv6 armv7 armv8
 
-.PHONY: armv6 armv7 armv8
-armv6 armv7 armv8:
+.PHONY: armv6 armv7 armv8 armv7_ros
+armv6 armv7 armv8 armv7_ros:
 	# ARM 系ビルド全体で共通のビルド用イメージを作る
 	docker image build --rm -t momo/webrtc-arm-buildbase arm --file arm/buildbase.Dockerfile
 
@@ -35,6 +35,11 @@ armv8.rebuild:
 	$(MAKE) -C arm/armv8 clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
 	$(MAKE) -C arm/armv8 WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
 
+.PHONY: armv7_ros.rebuild
+armv7_ros.rebuild:
+	$(MAKE) -C arm/armv7_ros clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
+	$(MAKE) -C arm/armv7_ros WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+
 # 各プラットフォーム用イメージの掃除。これをすると全体的にビルドし直すことになる。
 .PHONY: armv6.clean
 armv6.clean:
@@ -47,6 +52,10 @@ armv7.clean:
 .PHONY: armv8.clean
 armv8.clean:
 	$(MAKE) -C arm/armv8 clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
+
+.PHONY: armv7_ros.clean
+armv7_ros.clean:
+	$(MAKE) -C arm/armv7_ros clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
 
 .PHONY: x86_64
 x86_64:
