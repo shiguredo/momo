@@ -23,7 +23,7 @@ RUN set -x \
 RUN set -x \
  && cd /root/src \
  && rm -rf out/arm-xenial \
- && gn gen out/arm-xenial --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=true is_component_build=false use_rtti=true use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu="arm" target_sysroot="/root/rootfs" custom_toolchain="//build/toolchain/linux:arm" is_clang=false treat_warnings_as_errors=false' \
+ && gn gen out/arm-xenial --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=true is_component_build=false use_rtti=true use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu="arm" target_sysroot="/root/rootfs"' \
  && ninja -C out/arm-xenial
 
 # ビルドに必要なファイルだけ /src に移動する

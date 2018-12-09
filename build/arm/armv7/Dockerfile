@@ -13,10 +13,11 @@ RUN set -x \
 
 COPY patch/4k.patch /root/
 
+# exit 0 は cipd ensure コマンドでのエラーの暫定対応
 RUN set -x \
  && cd /root/src \
  && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
- && gclient sync \
+ && gclient sync; exit 0 \
  && patch -p2 < ../4k.patch
 
 RUN set -x \
