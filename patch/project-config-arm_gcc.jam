@@ -1,9 +1,9 @@
 import option ;
 import feature ;
 
-using gcc :
-  : arm-linux-gnueabihf-g++
-  : <cxxflags>-std=gnu++11
+using clang :
+  : /root/src/third_party/llvm-build/Release+Asserts/bin/clang++
+  : <cxxflags>--target=arm-linux-gnueabihf
     <cxxflags>--sysroot=/root/rootfs
     <cxxflags>-march=armv7-a
     <cxxflags>-mfloat-abi=hard
@@ -12,7 +12,7 @@ using gcc :
     <cxxflags>-mthumb
   ;
 
-project : default-build <toolset>gcc ;
+project : default-build <toolset>clang ;
 
 libraries =  ;
 

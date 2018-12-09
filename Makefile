@@ -6,8 +6,8 @@ ifndef BOOST_PATH
 	BOOST_PATH = /root/boost-1.68.0
 endif
 
-ifdef ROS_VERSION
-	USE_GCC = 1
+ifndef ROS_VERSION
+	USE_WEBRTC_LIBCXX = 1
 endif
 
 UNAME := $(shell uname -s)
@@ -18,10 +18,10 @@ RTC_LIB = libWebRTC_$(OUT_PATH).a
 
 RTC_LIB_PATH=$(RTC_ROOT)/src/out/$(OUT_PATH)
 
-CFLAGS += -fno-lto -Wno-macro-redefined -pthread -std=gnu++11 -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+CFLAGS += -Wno-macro-redefined -fno-lto -pthread -std=c++11 -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 
-ifndef USE_GCC
-CFLAGS += -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
+ifdef USE_WEBRTC_LIBCXX
+	CFLAGS += -nostdinc++ -isystem$(RTC_ROOT)/src/buildtools/third_party/libc++/trunk/include
 endif
 
 ifdef MOMO_VERSION
@@ -70,19 +70,13 @@ ifeq ($(UNAME),Linux)
 		endif
 	endif
 
-	ifdef USE_GCC
-		ifdef TARGET_ARCH
-			CC = $(TARGET_ARCH)-gcc --sysroot=$(SYSROOT)
-			CXX = $(TARGET_ARCH)-g++ --sysroot=$(SYSROOT)
-			AR = $(TARGET_ARCH)-ar
-		endif
-	else
-		CC = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang
-		CXX = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang++
-		AR = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar
-		ifdef TARGET_ARCH
-			CC += --sysroot=$(SYSROOT) --target=$(TARGET_ARCH)
-			CXX += --sysroot=$(SYSROOT) --target=$(TARGET_ARCH)
+	CC = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang
+	CXX = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/clang++
+	AR = $(RTC_ROOT)/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar
+	ifdef TARGET_ARCH
+		CC += --sysroot=$(SYSROOT) --target=$(TARGET_ARCH)
+		CXX += --sysroot=$(SYSROOT) --target=$(TARGET_ARCH)
+		ifdef USE_WEBRTC_LIBCXX
 			CFLAGS += -I$(SYSROOT)/usr/include/$(TARGET_ARCH)
 			LDFLAGS += -L$(SYSROOT)/usr/lib/$(TARGET_ARCH)
 		endif

@@ -2,9 +2,11 @@
 import option ;
 import feature ;
 
-using gcc ;
+using clang :
+  : /root/src/third_party/llvm-build/Release+Asserts/bin/clang++
+  ;
 
-project : default-build <toolset>gcc ;
+project : default-build <toolset>clang ;
 
 libraries =  ;
 
