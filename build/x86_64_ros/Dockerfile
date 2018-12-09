@@ -36,10 +36,11 @@ RUN set -x \
 
 COPY patch/4k.patch /root/
 
+# exit 0 は cipd ensure コマンドでのエラーの暫定対応
 RUN set -x \
   && cd /root/src \
   && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
-  && gclient sync \
+  && gclient sync; exit 0 \
   && patch -p2 < ../4k.patch
 
 RUN set -x \
@@ -78,7 +79,7 @@ RUN set -x \
   && mkdir -p /src/third_party/boringssl/src && cp -r src/third_party/boringssl/src/include      /src/third_party/boringssl/src/include
 
 # Boost のビルド
-COPY patch/project-config-ubuntu-x86_64_ros.jam /root/
+COPY patch/project-config-ubuntu-x86_64_gcc.jam /root/
 
 RUN cd ~/ \
  && set -ex \
@@ -86,7 +87,7 @@ RUN cd ~/ \
  && tar xf boost_1_68_0.tar.gz \
  && cd boost_1_68_0 \
  && ./bootstrap.sh \
- && cp ../project-config-ubuntu-x86_64_ros.jam ./project-config.jam \
+ && cp ../project-config-ubuntu-x86_64_gcc.jam ./project-config.jam \
  && ./b2 target-os=linux link=static variant=release install -j`nproc` --prefix=/root/boost-1.68.0 --with-system \
  && cd ~/ \
  && rm boost_1_68_0.tar.gz \
