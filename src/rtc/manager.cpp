@@ -94,7 +94,7 @@ RTCManager::~RTCManager()
   // WebSocketのセッションがCloseせず異常終了することがあるため暫定対処
   // RTCConnectionを保持しているインスタンスがデストラクトでCloseするのが望ましい
   for (RTCConnection* rtc_connection : _connections) {
-    rtc_connection->close();
+    rtc_connection->destroy();
   }
 
   _video_source = NULL;
