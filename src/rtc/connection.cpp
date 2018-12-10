@@ -4,7 +4,8 @@
 
 RTCConnection::~RTCConnection()
 {
-  _connection->Close();
+  _manager->removeConnection(this);
+  close();
 }
 
 void RTCConnection::createOffer()
@@ -154,4 +155,9 @@ bool RTCConnection::isMediaEnabled(
     return track->enabled();
   }
   return false;
+}
+
+void RTCConnection::close()
+{
+  _connection->Close();
 }
