@@ -23,7 +23,7 @@
 #include "absl/memory/memory.h"
 #endif
 
-RTCManager::RTCManager(ConnectionSettings conn_settings) : _conn_settings(conn_settings)
+RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket::VideoCapturer> capturer) : _conn_settings(conn_settings)
 {
   rtc::InitializeSSL();
 
@@ -68,7 +68,24 @@ RTCManager::RTCManager(ConnectionSettings conn_settings) : _conn_settings(conn_s
 
   if (!_conn_settings.no_video)
   {
-    createVideoSource();
+#if USE_ROS
+    _video_source = _factory->CreateVideoSource(std::move(capturer));
+#else
+
+    capturer = createVideoCapturer();
+
+    webrtc::FakeConstraints constraints;
+        constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
+    constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, _conn_settings.getHeight());
+    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
+        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
+    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
+        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
+    if (_conn_settings.framerate != 0) {
+      constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxFrameRate, _conn_settings.framerate);
+    }
+    _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
+#endif
   }
 }
 
@@ -83,14 +100,14 @@ RTCManager::~RTCManager()
   rtc::CleanupSSL();
 }
 
-void RTCManager::createVideoSource() {
+std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer() {
   std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
   std::vector<std::string> device_names;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
             webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
     RTC_LOG(LS_WARNING) << __FUNCTION__ << "CreateDeviceInfo failed";
-    return;
+    return nullptr;
   }
   int num_devices = info->NumberOfDevices();
   for (int i = 0; i < num_devices; ++i) {
@@ -106,23 +123,7 @@ void RTCManager::createVideoSource() {
   for (const auto& name : device_names) {
     capturer = factory.Create(cricket::Device(name, 0));
   }
-  if (capturer) {
-    webrtc::FakeConstraints constraints;
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
-    constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, _conn_settings.getHeight());
-    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-		constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
-    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-		constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
-    if (_conn_settings.framerate != 0) {
-      constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxFrameRate, _conn_settings.framerate);
-    }
-    _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
-  }
-  else
-  {
-    RTC_LOG(LS_WARNING) << __FUNCTION__ << "CreateVideoCapturer failed";
-  }
+  return capturer;
 }
 
 std::shared_ptr<RTCConnection> RTCManager::createConnection(

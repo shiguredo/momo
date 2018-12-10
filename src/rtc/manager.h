@@ -8,15 +8,14 @@
 class RTCManager
 {
 public:
-  RTCManager(ConnectionSettings conn_settings);
+  RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket::VideoCapturer> capturer);
   ~RTCManager();
+  static std::unique_ptr<cricket::VideoCapturer> createVideoCapturer();
   std::shared_ptr<RTCConnection> createConnection(
           webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
           RTCMessageSender *sender);
 
 private:
-  void createVideoSource();
-
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _video_source;
   std::unique_ptr<rtc::Thread> _networkThread;
