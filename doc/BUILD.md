@@ -45,10 +45,10 @@ $ make armv8
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
-build ディレクトリ以下で make x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+build ディレクトリ以下で make ubuntu-1804_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
 
 ```shell
-$ make x86_64
+$ make ubuntu-1804_x86_64
 ```
 
 ## macOS 10.14 または macOS 10.13
