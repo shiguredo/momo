@@ -67,11 +67,11 @@ ubuntu-1804_x86_64:
 	# 生成されたバイナリをこのディレクトリに移動
 	mv x86_64/momo ./momo-ubuntu-18.04_x86_64-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
 
-.PHONY: x86_64_ros
-x86_64_ros:
+.PHONY: ubuntu-1604_x86_64_ros
+ubuntu-1604_x86_64_ros:
 	# x86_64_ros 用ビルド
-	$(MAKE) -C $(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-	mv $(TARGET)/momo ./momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
+	$(MAKE) -C x86_64_ros WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+	mv x86_64_ros/momo ./momo-ubuntu-16.04_x86_64_ros-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
 
 .PHONY: macos
 macos:
@@ -90,7 +90,7 @@ define COPY
 
 endef
 
-pkg: armv6.pkg armv7.pkg armv8.pkg ubuntu-1804_x86_64.pkg x86_64_ros.pkg
+pkg: armv6.pkg armv7.pkg armv8.pkg ubuntu-1804_x86_64.pkg ubuntu-1804_x86_64_ros.pkg armv7_ros.pkg
 
 armv6.pkg:
 	mkdir momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6
@@ -120,12 +120,19 @@ ubuntu-1804_x86_64.pkg:
 	tar czf momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64.tar.gz momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64
 	rm -rf momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64
 
-x86_64_ros.pkg:
-	mkdir momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu_x86_64_ros/))
-	cp $(lastword $(sort $(wildcard ./momo-x86_64_ros-*))) momo-$(MOMO_VERSION)_ubuntu_x86_64_ros/momo
-	tar czf momo-$(MOMO_VERSION)_ubuntu_x86_64_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
-	rm -rf momo-$(MOMO_VERSION)_ubuntu_x86_64_ros
+ubuntu-1604_x86_64_ros.pkg:
+	mkdir momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
+	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros/))
+	cp $(lastword $(sort $(wildcard ./momo-ubuntu-16.04_x86_64_ros-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros/momo
+	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
+	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
+
+armv7_ros.pkg:
+	mkdir momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
+	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros/))
+	cp $(lastword $(sort $(wildcard ./momo-armv7_ros-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros/momo
+	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
+	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
 
 clean.pkg:
 	rm -rf momo-$(MOMO_VERSION)_*
