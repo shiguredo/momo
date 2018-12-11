@@ -25,7 +25,7 @@ class SoraWebsocketClient : public std::enable_shared_from_this<SoraWebsocketCli
 
     boost::asio::ip::tcp::resolver resolver_;
 
-    std::shared_ptr<Websocket> ws_;
+    std::unique_ptr<Websocket> ws_;
 
     URLParts parts_;
 
@@ -83,7 +83,6 @@ private:
 
 private:
     void onRead(boost::system::error_code ec, std::size_t bytes_transferred, std::string text);
-    void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
 
 private:
     // WebRTC からのコールバック

@@ -2,7 +2,7 @@ LIBWEBRTC = src/out/x86_64/obj/libwebrtc.a
 
 .PHONY: all
 all: $(LIBWEBRTC)
-	make -C ../../ ARCH=x86_64 RTC_ROOT=build/macos MOMO_VERSION=$(MOMO_VERSION)
+	make -C ../../ OUT_PATH=x86_64 RTC_ROOT=build/macos MOMO_VERSION=$(MOMO_VERSION)
 
 .PHONY: clean
 clean:

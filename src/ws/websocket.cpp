@@ -3,21 +3,19 @@
 
 #include <utility>
 
-Websocket::Websocket(boost::asio::io_context& ioc, read_callback_t on_read, write_callback_t on_write)
+Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc))
-    , on_read_(on_read)
-    , on_write_(on_write)
     , strand_(ws_->get_executor()) { }
-Websocket::Websocket(boost::asio::io_context& ioc, boost::asio::ssl::context ssl_ctx, read_callback_t on_read, write_callback_t on_write)
+Websocket::Websocket(boost::asio::io_context& ioc, boost::asio::ssl::context ssl_ctx)
     : wss_(new ssl_websocket_t(ioc, ssl_ctx))
-    , on_read_(on_read)
-    , on_write_(on_write)
     , strand_(wss_->get_executor()) { }
-Websocket::Websocket(boost::asio::ip::tcp::socket socket, read_callback_t on_read, write_callback_t on_write)
+Websocket::Websocket(boost::asio::ip::tcp::socket socket)
     : ws_(new websocket_t(std::move(socket)))
-    , on_read_(on_read)
-    , on_write_(on_write)
     , strand_(ws_->get_executor()) { }
+
+Websocket::~Websocket() {
+    RTC_LOG(LS_INFO) << __FUNCTION__;
+}
 
 bool Websocket::isSSL() const { return wss_ != nullptr; }
 Websocket::websocket_t& Websocket::nativeSocket() { return *ws_; }
@@ -25,15 +23,16 @@ Websocket::ssl_websocket_t& Websocket::nativeSecureSocket() { return *wss_; }
 
 boost::asio::strand<boost::asio::io_context::executor_type>& Websocket::strand() { return strand_; }
 
-void Websocket::startToRead() {
+void Websocket::startToRead(read_callback_t on_read) {
     boost::asio::post(
         strand_,
         std::bind(
             &Websocket::doRead,
-            shared_from_this()));
+            this,
+            on_read));
 }
 
-void Websocket::doRead() {
+void Websocket::doRead(read_callback_t on_read) {
     RTC_LOG(LS_INFO) << __FUNCTION__;
 
     if (isSSL()) {
@@ -43,7 +42,8 @@ void Websocket::doRead() {
                 strand_,
                 std::bind(
                     &Websocket::onRead,
-                    shared_from_this(),
+                    this,
+                    on_read,
                     std::placeholders::_1,
                     std::placeholders::_2)));
     } else {
@@ -53,21 +53,22 @@ void Websocket::doRead() {
                 strand_,
                 std::bind(
                     &Websocket::onRead,
-                    shared_from_this(),
+                    this,
+                    on_read,
                     std::placeholders::_1,
                     std::placeholders::_2)));
     }
 }
 
-void Websocket::onRead(boost::system::error_code ec, std::size_t bytes_transferred) {
+void Websocket::onRead(read_callback_t on_read, boost::system::error_code ec, std::size_t bytes_transferred) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
 
-    // エラーだろうが何だろうが on_read_ コールバック関数は必ず呼ぶ
+    // エラーだろうが何だろうが on_read コールバック関数は必ず呼ぶ
 
     const auto text = boost::beast::buffers_to_string(read_buffer_.data());
     read_buffer_.consume(read_buffer_.size());
 
-    on_read_(ec, bytes_transferred, std::move(text));
+    on_read(ec, bytes_transferred, std::move(text));
 
     if (ec == boost::asio::error::operation_aborted)
         return;
@@ -75,7 +76,7 @@ void Websocket::onRead(boost::system::error_code ec, std::size_t bytes_transferr
     if (ec)
         return MOMO_BOOST_ERROR(ec, "onRead");
 
-    doRead();
+    doRead(on_read);
 }
 
 void Websocket::sendText(std::string text) {
@@ -84,7 +85,7 @@ void Websocket::sendText(std::string text) {
         strand_,
         std::bind(
             &Websocket::doSendText,
-            shared_from_this(),
+            this,
             std::move(text)));
 }
 
@@ -115,7 +116,7 @@ void Websocket::doWrite() {
                 strand_,
                 std::bind(
                     &Websocket::onWrite,
-                    shared_from_this(),
+                    this,
                     std::placeholders::_1,
                     std::placeholders::_2)));
     } else {
@@ -126,7 +127,7 @@ void Websocket::doWrite() {
                 strand_,
                 std::bind(
                     &Websocket::onWrite,
-                    shared_from_this(),
+                    this,
                     std::placeholders::_1,
                     std::placeholders::_2)));
     }
@@ -137,7 +138,7 @@ void Websocket::onWrite(boost::system::error_code ec, std::size_t bytes_transfer
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
 
     // エラーだろうが何だろうが on_write_ コールバック関数は必ず呼ぶ
-    on_write_(ec, bytes_transferred);
+    // on_write(ec, bytes_transferred);
 
     if (ec == boost::asio::error::operation_aborted)
         return;
