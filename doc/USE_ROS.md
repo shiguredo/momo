@@ -51,11 +51,6 @@ $ rosrun usb_cam usb_cam_node _pixel_format:=mjpeg
 
 ### P2P で動作を確認する
 
-- 変更可能なパラメータ
-  - image
-    - topic
-  - _port
-    - ポート番号  [0 - 65535]
 - 実行例
 
 ```shell
@@ -70,6 +65,12 @@ http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてくだ
 image は Web カメラから送られてくる画像データの topic を指定してください。
 
 - 変更可能なパラメータ
+  - image
+    - topic
+  - _port
+    - ポート番号  [0 - 65535]
+  - _log_level
+    - ログレベル  [0 - 5]
 
 
 ### WebRTC SFU Sora で動作を確認する
