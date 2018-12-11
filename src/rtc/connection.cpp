@@ -5,7 +5,7 @@
 RTCConnection::~RTCConnection()
 {
   _manager->removeConnection(this);
-  destroy();
+  close();
 }
 
 void RTCConnection::createOffer()
@@ -157,9 +157,7 @@ bool RTCConnection::isMediaEnabled(
   return false;
 }
 
-void RTCConnection::destroy()
+void RTCConnection::close()
 {
   _connection->Close();
-  //想定していない実装のため暫定
-  _connection = nullptr;
 }

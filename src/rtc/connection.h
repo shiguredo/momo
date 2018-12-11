@@ -23,7 +23,7 @@ public:
   bool setVideoEnabled(bool enabled);
   bool isAudioEnabled();
   bool isVideoEnabled();
-  void destroy();
+  void close();
 
 private:
   rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
