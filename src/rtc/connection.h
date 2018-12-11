@@ -3,16 +3,13 @@
 #include "api/peerconnectioninterface.h"
 
 #include "observer.h"
-#include "manager.h"
-
-class RTCManager;
 
 class RTCConnection
 {
 public:
-  RTCConnection(RTCManager *manager, RTCMessageSender *sender,
+  RTCConnection(RTCMessageSender *sender,
           rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
-          : _manager(manager), _sender(sender), _connection(connection) {};
+          : _sender(sender), _connection(connection) {};
   ~RTCConnection();
   void createOffer();
   void setOffer(const std::string sdp);
@@ -23,7 +20,6 @@ public:
   bool setVideoEnabled(bool enabled);
   bool isAudioEnabled();
   bool isVideoEnabled();
-  void close();
 
 private:
   rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
@@ -35,7 +31,6 @@ private:
   bool isMediaEnabled(
           rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
 
-  RTCManager *_manager;
   RTCMessageSender *_sender;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> _connection;
 };

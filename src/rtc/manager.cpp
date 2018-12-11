@@ -1,4 +1,4 @@
-#include <algorithm>
+
 #include <iostream>
 
 #include "api/test/fakeconstraints.h"
@@ -91,12 +91,6 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
 
 RTCManager::~RTCManager()
 {
-  // WebSocketのセッションがCloseせず異常終了することがあるため暫定対処
-  // RTCConnectionを保持しているインスタンスがデストラクトでCloseするのが望ましい
-  for (RTCConnection* rtc_connection : _connections) {
-    rtc_connection->close();
-  }
-
   _video_source = NULL;
   _factory = NULL;
   _networkThread->Stop();
@@ -181,13 +175,5 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     }
   }
 
-  std::shared_ptr<RTCConnection> rtc_connection(new RTCConnection(this, sender, connection));
-  _connections.push_back(rtc_connection.get());
-  return rtc_connection;
+  return std::make_shared<RTCConnection>(sender, connection);
 }
-
-void RTCManager::removeConnection(RTCConnection* rtc_connection)
-{
-  _connections.erase(std::remove(_connections.begin(), _connections.end(), rtc_connection), _connections.end());
-}
-
