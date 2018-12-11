@@ -9,6 +9,11 @@
 
 struct ConnectionSettings
 {
+  std::string camera_name = "";
+#if USE_ROS
+  bool image_compressed = false;
+#endif
+
   bool no_video = false;
   bool no_audio = false;
   std::string video_codec = "VP8";
@@ -19,13 +24,13 @@ struct ConnectionSettings
   int framerate = 0;
   bool fixed_resolution = false;
   std::string priority = "BALANCE";
+  int port = 8080;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
   bool sora_auto_connect = false;
   nlohmann::json sora_metadata;
 
-  int p2p_port = 8080;
   std::string p2p_document_root;
 
   int getWidth() {
@@ -75,11 +80,11 @@ struct ConnectionSettings
     os << "framerate: " << cs.framerate << "\n";
     os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false") << "\n";
     os << "priority: " << cs.priority << "\n";
+    os << "port: " << cs.port << "\n";
     os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";
     os << "sora_metadata: " << cs.sora_metadata << "\n";
-    os << "p2p_port: " << cs.p2p_port << "\n";
     os << "p2p_document_root: " << cs.p2p_document_root << "\n";
     return os;
   }

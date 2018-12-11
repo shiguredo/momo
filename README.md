@@ -1,10 +1,15 @@
 # WebRTC Native Client Momo
 
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ## WebRTC Native Client Momo について
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
 特に Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+
+また [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
 ## OpenMomo プロジェクトについて
 
@@ -23,10 +28,16 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
     - Raspberry Pi 3 B/B+ で動作
 - Raspbian Stretch ARMv6
     - Raspberry Pi Zero W/WH で動作
+- Ubuntu 16.04 x86_64 ROS Kinetic で動作
+    - http://wiki.ros.org/kinetic
 
 ## 使ってみる
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
+
+## ROS ノードとして使ってみる
+
+Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
 
 ## ビルドに挑戦する
 
