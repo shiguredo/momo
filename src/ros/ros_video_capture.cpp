@@ -23,14 +23,6 @@ ROSVideoCapture::ROSVideoCapture(ConnectionSettings conn_settings)
 
   spinner_ = new ros::AsyncSpinner(1);
   spinner_->start();
-
-  while (interval_ == 0) {
-    usleep(1000);
-  }
-
-  std::vector<cricket::VideoFormat> formats;
-  formats.push_back(cricket::VideoFormat(width_, height_, interval_, cricket::FOURCC_I420));
-  SetSupportedFormats(formats);
 }
 
 ROSVideoCapture::~ROSVideoCapture()
@@ -101,9 +93,33 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
   height_ = src_height;
   captureFrame.set_ntp_time_ms((int64_t)(ros_time_ns / 1000000));
   std::unique_lock<std::mutex> lk(mtx_);
-  if (!running_)
+  if (!running_) {
+    if (interval_ != 0) {
+      condition_.notify_all();
+    }
     return;
+  }
   OnFrame(captureFrame, src_width, src_height);
+}
+
+bool ROSVideoCapture::Init()
+{
+  std::unique_lock<std::mutex> lk(mtx_);
+  condition_.wait(lk);
+  if (interval_ == 0) {
+    return false;
+  }
+
+  std::vector<cricket::VideoFormat> formats;
+  formats.push_back(cricket::VideoFormat(width_, height_, interval_, cricket::FOURCC_I420));
+  SetSupportedFormats(formats);
+  return true;
+}
+
+void ROSVideoCapture::OnSignal(int signum)
+{
+  std::unique_lock<std::mutex> lk(mtx_);
+  condition_.notify_all();
 }
 
 cricket::CaptureState ROSVideoCapture::Start(

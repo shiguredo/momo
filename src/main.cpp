@@ -14,6 +14,7 @@
 #if USE_ROS
 #include "ros/ros_log_sink.h"
 #include "ros/ros_video_capture.h"
+#include "signal_listener.h"
 #endif
 
 #include "connection_settings.h"
@@ -54,7 +55,13 @@ int main(int argc, char* argv[])
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<cricket::VideoCapturer> capturer(new ROSVideoCapture(cs));
+  std::unique_ptr<ROSVideoCapture> capturer(new ROSVideoCapture(cs));
+  SignalManager::init();
+  if (!capturer->Init())
+  {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to start ROSVideoCapture";
+    return 0;
+  }
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize, 10));

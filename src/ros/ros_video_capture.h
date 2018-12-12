@@ -9,14 +9,20 @@
 
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 #include "connection_settings.h"
+#include "signal_listener.h"
 
-class ROSVideoCapture : public cricket::VideoCapturer
+class ROSVideoCapture : public cricket::VideoCapturer, public SignalListener
 {
 public:
   explicit ROSVideoCapture(ConnectionSettings conn_settings);
   ~ROSVideoCapture() override;
+
+  bool Init();
+
+  void OnSignal(int signum) override;
 
   // cricket::VideoCapturer interface.
   cricket::CaptureState Start(
@@ -40,6 +46,7 @@ private:
   ros::AsyncSpinner* spinner_;
   ros::Subscriber sub_; 
   std::mutex mtx_;
+  std::condition_variable condition_;
   bool running_;
   uint64_t last_time_ns_;
   int width_;
