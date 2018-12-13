@@ -52,6 +52,7 @@ private:
   int width_;
   int height_;
   int64_t interval_; 
+  bool signal_received_ = false;
 };
 
 #endif

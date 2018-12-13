@@ -105,10 +105,12 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
 bool ROSVideoCapture::Init()
 {
   std::unique_lock<std::mutex> lk(mtx_);
-  condition_.wait(lk);
-  if (interval_ == 0) {
+  // 確実にラムダ式の条件が満たされるまで待つ（既に満たされていたらそもそも wait しない）
+  condition_.wait(lk, [this]() { return signal_received_ || interval_ != 0; });
+  if (signal_received_) {
     return false;
   }
+  // 必ず interval_ != 0 になっているので処理を続行
 
   std::vector<cricket::VideoFormat> formats;
   formats.push_back(cricket::VideoFormat(width_, height_, interval_, cricket::FOURCC_I420));
@@ -119,6 +121,8 @@ bool ROSVideoCapture::Init()
 void ROSVideoCapture::OnSignal(int signum)
 {
   std::unique_lock<std::mutex> lk(mtx_);
+  // 単純に notify_all するだけだと spurious wakeup との区別が付かないのでメンバ変数を用意する
+  signal_received_ = true;
   condition_.notify_all();
 }
 
