@@ -37,7 +37,6 @@ ws.onmessage = function (evt) {
     }
     else if (message.type === 'close') {
         console.log('peer is closed ...');
-        close();
     }
 };
 
@@ -102,10 +101,6 @@ function prepareNewConnection() {
         switch (peer.iceConnectionState) {
             case 'closed':
             case 'failed':
-                if (peerConnection) {
-                    close();
-                }
-                break;
             case 'dissconnected':
                 break;
         }
