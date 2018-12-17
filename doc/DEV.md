@@ -23,6 +23,6 @@ $ make armv8 BUILD_MODE=pkg
 
 ```
 $ git submodule status
- da901cca542612a133efcb04e8e78080186991e4 libs/CLI11 (v1.6.1-8-gda901cc)
- d2dd27dc3b8472dbaa7d66f83619b3ebcd9185fe libs/json (v3.1.2)
+ bd4dc911847d0cde7a6b41dfa626a85aab213baf libs/CLI11 (v1.6.2)
+ e3c28afb61227043dd7c0f9168b9394dfb016f87 libs/json (v3.4.0)
 ```
