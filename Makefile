@@ -3,7 +3,7 @@ ifndef RTC_ROOT
 endif
 
 ifndef BOOST_PATH
-	BOOST_PATH = /root/boost-1.68.0
+	BOOST_PATH = /root/boost-1.69.0
 endif
 
 ifndef ROS_VERSION

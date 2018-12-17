@@ -83,15 +83,15 @@ COPY patch/project-config-ubuntu-x86_64_gcc.jam /root/
 
 RUN cd ~/ \
  && set -ex \
- && curl -LO https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz \
- && tar xf boost_1_68_0.tar.gz \
- && cd boost_1_68_0 \
+ && curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz \
+ && tar xf boost_1_69_0.tar.gz \
+ && cd boost_1_69_0 \
  && ./bootstrap.sh \
  && cp ../project-config-ubuntu-x86_64_gcc.jam ./project-config.jam \
- && ./b2 target-os=linux link=static variant=release install -j`nproc` --prefix=/root/boost-1.68.0 --with-system \
+ && ./b2 target-os=linux link=static variant=release install -j`nproc` --prefix=/root/boost-1.69.0 --with-system \
  && cd ~/ \
- && rm boost_1_68_0.tar.gz \
- && rm -rf boost_1_68_0
+ && rm boost_1_69_0.tar.gz \
+ && rm -rf boost_1_69_0
 
 # 必要なファイルだけ持ってくる
 FROM ros:kinetic-ros-core-xenial
@@ -117,4 +117,4 @@ RUN set -x \
  && rm -rf /var/lib/apt/lists/*
 
 # Boost
-COPY --from=builder /root/boost-1.68.0/ /root/boost-1.68.0/
+COPY --from=builder /root/boost-1.69.0/ /root/boost-1.69.0/
