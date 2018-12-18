@@ -20,7 +20,10 @@ COPY patch/4k.patch /root/
 RUN set -x \
  && cd /root/src \
  && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
- && gclient sync; exit 0 \
+ && gclient sync; exit 0
+
+RUN set -x \
+ && cd /root/src \
  && patch -p2 < ../4k.patch
 
 RUN set -x \
