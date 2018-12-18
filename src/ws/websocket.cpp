@@ -6,17 +6,17 @@
 Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc))
     , strand_(ws_->get_executor()) {
-  ws_->write_buffer_size(40960);
+  ws_->write_buffer_size(8192);
 }
 Websocket::Websocket(boost::asio::io_context& ioc, boost::asio::ssl::context ssl_ctx)
     : wss_(new ssl_websocket_t(ioc, ssl_ctx))
     , strand_(wss_->get_executor()) {
-  wss_->write_buffer_size(40960);
+  wss_->write_buffer_size(8192);
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
     : ws_(new websocket_t(std::move(socket)))
     , strand_(ws_->get_executor()) {
-  ws_->write_buffer_size(40960);
+  ws_->write_buffer_size(8192);
 }
 
 Websocket::~Websocket() {
