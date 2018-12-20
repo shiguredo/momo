@@ -31,6 +31,20 @@ endif
 # webrtc
 CFLAGS += -I$(RTC_ROOT)/src -I$(RTC_ROOT)/src/third_party/libyuv/include -I$(RTC_ROOT)/src/third_party/abseil-cpp
 
+# H264 を使うかどうかの設定。
+# x86_64/armv8 の場合は H264 を使わない
+ifeq ($(UNAME),Linux)
+	ifneq (,$(findstring arm64,$(OUT_PATH)))
+		CFLAGS += -DUSE_H264=0
+	else
+		ifneq (,$(findstring x86_64,$(OUT_PATH)))
+			CFLAGS += -DUSE_H264=0
+		else
+			CFLAGS += -DUSE_H264=1
+		endif
+	endif
+endif
+
 ifeq ($(UNAME),Linux)
 	CFLAGS += -fpic
 	LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt

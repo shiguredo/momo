@@ -22,6 +22,13 @@
   #define MOMO_USE_IL_ENCODER 0
 #endif
 
+// H264 を有効にする場合は 1 になる
+#if USE_H264
+  #define MOMO_USE_H264 1
+#else
+  #define MOMO_USE_H264 0
+#endif
+
 using json = nlohmann::json;
 
 // 列挙した文字列のみを許可するバリデータ
@@ -157,7 +164,11 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
+#if MOMO_USE_H264
   app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
+#else
+  app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9"}));
+#endif
   app.add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")->check(Enum({"OPUS", "PCMU"}));
   app.add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")->check(CLI::Range(1, 30000));
   app.add_option("--audio-bitrate", cs.audio_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
