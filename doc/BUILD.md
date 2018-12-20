@@ -58,7 +58,3 @@ $ make ubuntu-1804_x86_64
 ## Windows 10
 
 **現在準備中です**
-
-## ビルド時に Raspberry Pi の HWA を無効にする方法
-
-- armv6, armv7 の場合、デフォルトで HWA を利用します。もし利用したくない場合は `make USE_IL_ENCODER=0 armv7` のように `USE_IL_ENCODER=0` を指定してください。
