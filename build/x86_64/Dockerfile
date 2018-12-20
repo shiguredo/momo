@@ -48,7 +48,7 @@ RUN set -x \
 
 RUN set -x \
   && cd /root/src \
-  && gn gen out/x86_64 --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=true is_component_build=false use_rtti=true' \
+  && gn gen out/x86_64 --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=false is_component_build=false use_rtti=true' \
   && ninja -C out/x86_64
 
 # ビルドに必要なファイルだけ /src に移動する

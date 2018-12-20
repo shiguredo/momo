@@ -26,7 +26,7 @@ RUN set -x \
 RUN set -x \
  && cd /root/src \
  && rm -rf out/arm64-xenial \
- && gn gen out/arm64-xenial --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false use_rtti=true' \
+ && gn gen out/arm64-xenial --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=false rtc_include_tests=false use_rtti=true' \
  && ninja -C out/arm64-xenial
 
 # ビルドに必要なファイルだけ /src に移動する
