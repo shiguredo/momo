@@ -84,7 +84,7 @@ $ ./momo  _use_sora:=true \
           _port:=0 \
           _SIGNALING_URL:="wss://example.com/signaling" \
           _CHANNEL_ID:="sora" \
-          _video_codec:=H264 \
+          _video_codec:=VP9 \
           _log_level:=5 \
           _video_bitrate:=300 \
           image:=/usb_cam/image_raw/compressed
@@ -101,7 +101,7 @@ image は Web カメラから送られてくる画像データの topic を指�
   - image
     - topic
   - _video_codec
-    - ビデオコーデック  [VP8,VP9,H264]
+    - ビデオコーデック  [VP8,VP9]
   - _video_bitrate
     - ビデオビットレート  [1 - 30000]
   - _log_level
