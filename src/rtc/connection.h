@@ -13,6 +13,7 @@ public:
   ~RTCConnection();
   void createOffer();
   void setOffer(const std::string sdp);
+  void createAnswer();
   void setAnswer(const std::string sdp);
   void addIceCandidate(const std::string sdp_mid,
         const int sdp_mlineindex, const std::string sdp);

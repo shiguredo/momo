@@ -368,7 +368,12 @@ void SoraWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::s
     };
     ws_->sendText(json_message.dump());
 }
-void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {}
+void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
+  if (type == webrtc::SdpType::kOffer) {
+    connection_->createAnswer();
+  }
+}
 
 void SoraWebsocketClient::doIceConnectionStateChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState=" << Util::iceConnectionStateToString(new_state);
