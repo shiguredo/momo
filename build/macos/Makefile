@@ -2,7 +2,7 @@ LIBWEBRTC = src/out/x86_64/obj/libwebrtc.a
 
 .PHONY: all
 all: $(LIBWEBRTC)
-	make -C ../../ ARCH=x86_64 RTC_ROOT=build/macos MOMO_VERSION=$(MOMO_VERSION)
+	make -C ../../ OUT_PATH=x86_64 RTC_ROOT=build/macos MOMO_VERSION=$(MOMO_VERSION)
 
 .PHONY: clean
 clean:
@@ -22,4 +22,9 @@ $(LIBWEBRTC):
 	gclient sync && \
 	gn gen out/x86_64 --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=true is_component_build=false use_rtti=true' && \
 	ninja -C out/x86_64 && \
-	ninja -C out/x86_64 builtin_audio_decoder_factory
+	ninja -C out/x86_64 \
+	  builtin_audio_decoder_factory \
+	  builtin_video_decoder_factory \
+	  builtin_video_encoder_factory \
+	  peerconnection \
+	  create_pc_factory

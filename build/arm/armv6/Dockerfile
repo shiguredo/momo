@@ -16,10 +16,14 @@ RUN set -x \
 
 COPY patch/4k.patch /root/
 
+# exit 0 は cipd ensure コマンドでのエラーの暫定対応
 RUN set -x \
  && cd /root/src \
  && git checkout -b m$WEBRTC_VERSION remotes/branch-heads/$WEBRTC_VERSION \
- && gclient sync \
+ && gclient sync; exit 0
+
+RUN set -x \
+ && cd /root/src \
  && patch -p2 < ../4k.patch
 
 RUN set -x \
@@ -66,15 +70,15 @@ COPY patch/project-config-raspbian.jam /root/
 
 RUN cd ~/ \
  && set -ex \
- && curl -LO https://dl.bintray.com/boostorg/release/1.68.0/source/boost_1_68_0.tar.gz \
- && tar xf boost_1_68_0.tar.gz \
- && cd boost_1_68_0 \
+ && curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz \
+ && tar xf boost_1_69_0.tar.gz \
+ && cd boost_1_69_0 \
  && ./bootstrap.sh \
  && cp ../project-config-raspbian.jam ./project-config.jam \
- && ./b2 target-os=linux architecture=arm address-model=32 link=static variant=release install -j`nproc` --prefix=/root/boost-1.68.0 --with-system --with-filesystem \
+ && ./b2 target-os=linux architecture=arm address-model=32 link=static variant=release install -j`nproc` --prefix=/root/boost-1.69.0 --with-system --with-filesystem \
  && cd ~/ \
- && rm boost_1_68_0.tar.gz \
- && rm -rf boost_1_68_0
+ && rm boost_1_69_0.tar.gz \
+ && rm -rf boost_1_69_0
 
 # 必要なファイルだけ持ってくる
 FROM ubuntu:16.04
@@ -97,4 +101,4 @@ RUN set -x \
 COPY --from=builder /root/rootfs/ /root/rootfs/
 
 # Boost
-COPY --from=builder /root/boost-1.68.0/ /root/boost-1.68.0/
+COPY --from=builder /root/boost-1.69.0/ /root/boost-1.69.0/

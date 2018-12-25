@@ -5,20 +5,6 @@
 
 using json = nlohmann::json;
 
-// RAII を使ってエラーの時に ws_ と connection_ を reset する。
-// ws_, connection_ と this で循環参照させてるので、処理を継続しない場合には ws_ と connection_ を reset しておかないとリークしてしまう。
-struct P2PWebsocketSession::SafeWS {
-    P2PWebsocketSession* p;
-    SafeWS(P2PWebsocketSession* p) : p(p) {}
-    ~SafeWS() {
-        if (p != nullptr) {
-            p->ws_.reset();
-            p->connection_.reset();
-        }
-    }
-    void ok() { p = nullptr; }
-};
-
 P2PWebsocketSession::P2PWebsocketSession(RTCManager* rtc_manager, ConnectionSettings conn_settings)
     : rtc_manager_(rtc_manager)
     , conn_settings_(conn_settings)
@@ -33,18 +19,7 @@ P2PWebsocketSession::~P2PWebsocketSession()
 
 std::shared_ptr<P2PWebsocketSession> P2PWebsocketSession::make_shared(boost::asio::ip::tcp::socket socket, RTCManager* rtc_manager, ConnectionSettings conn_settings) {
     auto p = std::make_shared<P2PWebsocketSession>(rtc_manager, conn_settings);
-    p->ws_ = std::make_shared<Websocket>(std::move(socket),
-        std::bind(
-            &P2PWebsocketSession::onRead,
-            p->shared_from_this(),
-            std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3),
-        std::bind(
-            &P2PWebsocketSession::onWrite,
-            p->shared_from_this(),
-            std::placeholders::_1,
-            std::placeholders::_2));
+    p->ws_ = std::unique_ptr<Websocket>(new Websocket(std::move(socket)));
     return p;
 }
 
@@ -72,15 +47,16 @@ void P2PWebsocketSession::onAccept(boost::system::error_code ec)
 {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
 
-    SafeWS sws(this);
-
     if (ec)
         return MOMO_BOOST_ERROR(ec, "Accept");
 
     // WebSocket での読み込みを開始
-    ws_->startToRead();
-
-    sws.ok();
+    ws_->startToRead(std::bind(
+            &P2PWebsocketSession::onRead,
+            shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2,
+            std::placeholders::_3));
 }
 
 void P2PWebsocketSession::onRead(boost::system::error_code ec, std::size_t bytes_transferred, std::string recv_string)
@@ -88,8 +64,6 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec, std::size_t bytes
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
 
     boost::ignore_unused(bytes_transferred);
-
-    SafeWS sws(this);
 
     if (ec == boost::beast::websocket::error::closed)
         return;
@@ -133,10 +107,10 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec, std::size_t bytes
         }
 
         auto send = std::bind(
-            [](std::shared_ptr<P2PWebsocketSession> session, std::string str) {
+            [](P2PWebsocketSession* session, std::string str) {
                 session->ws_->sendText(str);
             },
-            shared_from_this(),
+            this,
             std::placeholders::_1);
         connection_ = std::make_shared<P2PConnection>(rtc_manager_, send);
         std::shared_ptr<RTCConnection> rtc_conn = connection_->getRTCConnection();
@@ -192,21 +166,4 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec, std::size_t bytes
     {
         return;
     }
-
-    sws.ok();
-}
-
-void P2PWebsocketSession::onWrite(boost::system::error_code ec, std::size_t bytes_transferred)
-{
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
-
-    SafeWS sws(this);
-
-    if (ec == boost::asio::error::operation_aborted)
-        return;
-
-    if (ec)
-        return MOMO_BOOST_ERROR(ec, "Write");
-
-    sws.ok();
 }

@@ -1,4 +1,4 @@
-FROM momo/webrtc-armv7-buildbase as builder
+FROM momo/webrtc-armv7-ros-buildbase as builder
 
 ARG WEBRTC_VERSION
 
@@ -25,9 +25,9 @@ RUN set -x \
 
 RUN set -x \
  && cd /root/src \
- && rm -rf out/arm-raspbian \
- && gn gen out/arm-raspbian --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false rtc_build_json=true use_rtti=true' \
- && ninja -C out/arm-raspbian
+ && rm -rf out/arm-xenial \
+ && gn gen out/arm-xenial --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=true is_component_build=false use_rtti=true use_custom_libcxx=false use_custom_libcxx_for_host=false target_cpu="arm" target_sysroot="/root/rootfs"' \
+ && ninja -C out/arm-xenial
 
 # ビルドに必要なファイルだけ /src に移動する
 # このディレクトリをマルチステージビルド先から持ってくる
@@ -61,7 +61,7 @@ RUN set -x \
   && mkdir -p /src/third_party/boringssl/src && cp -r src/third_party/boringssl/src/include      /src/third_party/boringssl/src/include
 
 # Boost のビルド
-COPY patch/project-config-raspbian.jam /root/
+COPY patch/project-config-arm_gcc.jam /root/
 
 RUN cd ~/ \
  && set -ex \
@@ -69,7 +69,7 @@ RUN cd ~/ \
  && tar xf boost_1_69_0.tar.gz \
  && cd boost_1_69_0 \
  && ./bootstrap.sh \
- && cp ../project-config-raspbian.jam ./project-config.jam \
+ && cp ../project-config-arm_gcc.jam ./project-config.jam \
  && ./b2 target-os=linux architecture=arm address-model=32 link=static variant=release install -j`nproc` --prefix=/root/boost-1.69.0 --with-system --with-filesystem \
  && cd ~/ \
  && rm boost_1_69_0.tar.gz \

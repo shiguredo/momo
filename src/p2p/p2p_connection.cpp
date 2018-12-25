@@ -54,3 +54,10 @@ void P2PConnection::onCreateDescription(webrtc::SdpType type, const std::string 
   std::string str_desc = json_desc.dump();
   _send(std::move(str_desc));
 }
+
+void P2PConnection::onSetDescription(webrtc::SdpType type) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
+  if (type == webrtc::SdpType::kOffer) {
+    _connection->createAnswer();
+  }
+}

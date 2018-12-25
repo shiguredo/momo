@@ -17,14 +17,12 @@
 
 class P2PWebsocketSession : public std::enable_shared_from_this<P2PWebsocketSession>
 {
-    std::shared_ptr<Websocket> ws_;
+    std::unique_ptr<Websocket> ws_;
     boost::beast::multi_buffer sending_buffer_;
 
     RTCManager* rtc_manager_;
     ConnectionSettings conn_settings_;
     std::shared_ptr<P2PConnection> connection_;
-
-    struct SafeWS;
 
 public:
     P2PWebsocketSession(RTCManager* rtc_manager, ConnectionSettings conn_settings);
@@ -37,7 +35,6 @@ private:
     void onAccept(boost::system::error_code ec);
 
     void onRead(boost::system::error_code ec, std::size_t bytes_transferred, std::string recv_string);
-    void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
 };
 
 #endif // P2P_WEBSOCKET_SESSION_H_

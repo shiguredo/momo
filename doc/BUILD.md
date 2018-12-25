@@ -45,10 +45,10 @@ $ make armv8
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
-build ディレクトリ以下で make x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+build ディレクトリ以下で make ubuntu-1804_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
 
 ```shell
-$ make x86_64
+$ make ubuntu-1804_x86_64
 ```
 
 ## macOS 10.14 または macOS 10.13
@@ -58,7 +58,3 @@ $ make x86_64
 ## Windows 10
 
 **現在準備中です**
-
-## ビルド時に Raspberry Pi の HWA を無効にする方法
-
-- armv6, armv7 の場合、デフォルトで HWA を利用します。もし利用したくない場合は `make USE_IL_ENCODER=0 armv7` のように `USE_IL_ENCODER=0` を指定してください。

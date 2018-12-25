@@ -32,6 +32,10 @@ void RTCConnection::setOffer(const std::string sdp)
           SetSessionDescriptionObserver::Create(
                   session_description->GetType(), _sender),
           session_description.release());
+}
+
+void RTCConnection::createAnswer()
+{
   _connection->CreateAnswer(
           CreateSessionDescriptionObserver::Create(_sender, _connection),
           webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());

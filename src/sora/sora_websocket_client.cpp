@@ -61,18 +61,7 @@ void SoraWebsocketClient::reset() {
     if (parseURL(parts_)) {
         auto ssl_ctx = createSSLContext();
         boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> wss(ioc_, ssl_ctx);
-        ws_ = std::make_shared<Websocket>(ioc_, std::move(ssl_ctx),
-            std::bind(
-                &SoraWebsocketClient::onRead,
-                this,
-                std::placeholders::_1,
-                std::placeholders::_2,
-                std::placeholders::_3),
-            std::bind(
-                &SoraWebsocketClient::onWrite,
-                this,
-                std::placeholders::_1,
-                std::placeholders::_2));
+        ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
         // SNI の設定を行う
         if (!SSL_set_tlsext_host_name(ws_->nativeSecureSocket().next_layer().native_handle(), parts_.host.c_str()))
         {
@@ -81,25 +70,13 @@ void SoraWebsocketClient::reset() {
         }
     } else {
         boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws(ioc_);
-        ws_ = std::make_shared<Websocket>(ioc_,
-            std::bind(
-                &SoraWebsocketClient::onRead,
-                this,
-                std::placeholders::_1,
-                std::placeholders::_2,
-                std::placeholders::_3),
-            std::bind(
-                &SoraWebsocketClient::onWrite,
-                this,
-                std::placeholders::_1,
-                std::placeholders::_2));
+        ws_.reset(new Websocket(ioc_));
     }
 }
 
 void SoraWebsocketClient::release() {
     connection_ = nullptr;
 }
-
 
 bool SoraWebsocketClient::connect()
 {
@@ -240,7 +217,12 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec)
 
     connected_ = true;
 
-    ws_->startToRead();
+    ws_->startToRead(std::bind(
+        &SoraWebsocketClient::onRead,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3));
 
     doSendConnect();
 }
@@ -361,14 +343,6 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec, std::size_t bytes
     }
 }
 
-void SoraWebsocketClient::onWrite(boost::system::error_code ec, std::size_t bytes_transferred)
-{
-    boost::ignore_unused(bytes_transferred);
-
-    if (ec)
-        return MOMO_BOOST_ERROR(ec, "Write");
-}
-
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
 void SoraWebsocketClient::onIceConnectionStateChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
@@ -394,7 +368,12 @@ void SoraWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::s
     };
     ws_->sendText(json_message.dump());
 }
-void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {}
+void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
+  if (type == webrtc::SdpType::kOffer) {
+    connection_->createAnswer();
+  }
+}
 
 void SoraWebsocketClient::doIceConnectionStateChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState=" << Util::iceConnectionStateToString(new_state);
