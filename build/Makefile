@@ -134,5 +134,12 @@ armv7_ros.pkg:
 	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
 	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
 
+macos.pkg:
+	mkdir momo-$(MOMO_VERSION)_macos
+	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_macos/))
+	cp $(lastword $(sort $(wildcard ./momo-macos-*))) momo-$(MOMO_VERSION)_macos/momo
+	tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
+	rm -rf momo-$(MOMO_VERSION)_macos
+
 clean.pkg:
 	rm -rf momo-$(MOMO_VERSION)_*
