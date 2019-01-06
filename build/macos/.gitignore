@@ -3,4 +3,4 @@
 /.gclient
 /.gclient_entries
 /.cipd
-/boost
+/boost*

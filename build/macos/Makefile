@@ -39,10 +39,10 @@ $(LIBWEBRTC):
 	  create_pc_factory
 
 $(BOOST):
-	git clone https://github.com/boostorg/boost.git ./boost
+	curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz && \
+	tar xf boost_1_69_0.tar.gz && \
+	rm boost_1_69_0.tar.gz && \
+	mv boost_1_69_0 boost && \
 	cd boost && \
-	git fetch && \
-	git checkout -b boost-1.69.0 && \
-	git submodule update --init --recursive && \
 	./bootstrap.sh && \
-	./b2 link=static install -j$(JOBS) --prefix=out
+	./b2 link=static variant=release install -j$(JOBS) --prefix=out --with-system --with-filesystem
