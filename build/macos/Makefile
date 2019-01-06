@@ -1,5 +1,7 @@
 LIBWEBRTC = src/out/x86_64/obj/libwebrtc.a
-BOOST = boost/out
+BOOST_VERSION = 1.69.0
+BOOST_PATH = boost_$(subst .,_,$(BOOST_VERSION))
+BOOST = $(BOOST_PATH)/out
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -18,7 +20,7 @@ clean:
 	-rm -rf depot_tools/ > /dev/null 2>&1
 	-rm .gclient > /dev/null 2>&1
 	-rm .gclient_entries > /dev/null 2>&1
-	-rm -rf boost/ > /dev/null 2>&1
+	-rm -rf $(BOOST_PATH)/ > /dev/null 2>&1
 
 $(LIBWEBRTC):
 	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ./depot_tools
@@ -39,10 +41,9 @@ $(LIBWEBRTC):
 	  create_pc_factory
 
 $(BOOST):
-	curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz && \
-	tar xf boost_1_69_0.tar.gz && \
-	rm boost_1_69_0.tar.gz && \
-	mv boost_1_69_0 boost && \
-	cd boost && \
+	curl -LO https://dl.bintray.com/boostorg/release/$(BOOST_VERSION)/source/$(BOOST_PATH).tar.gz && \
+	tar xf $(BOOST_PATH).tar.gz && \
+	rm $(BOOST_PATH).tar.gz && \
+	cd $(BOOST_PATH) && \
 	./bootstrap.sh && \
 	./b2 link=static variant=release install -j$(JOBS) --prefix=out --with-system --with-filesystem
