@@ -1,8 +1,16 @@
 LIBWEBRTC = src/out/x86_64/obj/libwebrtc.a
+BOOST = boost/out
+
+ifeq ($(JOBS),)
+	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
+	ifeq ($(JOBS),)
+		JOBS := 1
+	endif
+endif
 
 .PHONY: all
-all: $(LIBWEBRTC)
-	make -C ../../ OUT_PATH=x86_64 RTC_ROOT=build/macos MOMO_VERSION=$(MOMO_VERSION)
+all: $(LIBWEBRTC) $(BOOST)
+	make -C ../../ OUT_PATH=x86_64 RTC_ROOT=build/macos BOOST_PATH=build/macos/$(BOOST) MOMO_VERSION=$(MOMO_VERSION)
 
 .PHONY: clean
 clean:
@@ -10,6 +18,7 @@ clean:
 	-rm -rf depot_tools/ > /dev/null 2>&1
 	-rm .gclient > /dev/null 2>&1
 	-rm .gclient_entries > /dev/null 2>&1
+	-rm -rf boost/ > /dev/null 2>&1
 
 $(LIBWEBRTC):
 	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ./depot_tools
@@ -28,3 +37,12 @@ $(LIBWEBRTC):
 	  builtin_video_encoder_factory \
 	  peerconnection \
 	  create_pc_factory
+
+$(BOOST):
+	git clone https://github.com/boostorg/boost.git ./boost
+	cd boost && \
+	git fetch && \
+	git checkout -b boost-1.69.0 && \
+	git submodule update --init --recursive && \
+	./bootstrap.sh && \
+	./b2 link=static install -j$(JOBS) --prefix=out

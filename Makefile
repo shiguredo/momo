@@ -98,9 +98,10 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifeq ($(UNAME),Darwin)
-	CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-	LDFLAGS += -F/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo
-	LIBRTCCONDUCTOR = lib$(RTCCONDUCTOR)_mac.so
+	CFLAGS += -std=c++17 -DWEBRTC_POSIX -DWEBRTC_MAC
+	LDFLAGS += -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo
+	CFLAGS += -I$(BOOST_PATH)/include
+	LDFLAGS += -L$(BOOST_PATH)/lib
 endif
 
 ifdef ROS_VERSION
