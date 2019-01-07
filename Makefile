@@ -115,7 +115,7 @@ SOURCE += $(RTC_LIB)
 
 # boost
 CFLAGS += -I$(RTC_ROOT)/src/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboost_system -lboost_filesystem -lboringssl
+LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboost_filesystem -lboringssl
 
 # json
 CFLAGS += -Ilibs/json/include

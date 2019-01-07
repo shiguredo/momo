@@ -46,4 +46,4 @@ $(BOOST):
 	rm $(BOOST_PATH).tar.gz && \
 	cd $(BOOST_PATH) && \
 	./bootstrap.sh && \
-	./b2 link=static variant=release install -j$(JOBS) --prefix=out --with-system --with-filesystem
+	./b2 visibility=global link=static variant=release install -j$(JOBS) --prefix=out --with-filesystem
