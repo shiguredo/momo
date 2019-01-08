@@ -106,8 +106,16 @@ function prepareNewConnection() {
         }
     };
 
-    peer.addTransceiver('video');
+    if (isUnifiedPlan(peer)) {
+        peer.addTransceiver('video');
+    }
+
     return peer;
+}
+
+function isUnifiedPlan(peer) {
+    const config = peer.getConfiguration();
+    return ('addTransceiver' in peer) && (!('sdpSemantics' in config) || config.sdpSemantics === "unified-plan");
 }
 
 function sendSdp(sessionDescription) {
