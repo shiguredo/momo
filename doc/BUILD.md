@@ -51,7 +51,7 @@ build ディレクトリ以下で make ubuntu-1804_x86_64 と打つことで Mom
 $ make ubuntu-1804_x86_64
 ```
 
-## macOS 10.14 または macOS 10.13
+## macOS 10.14
 
 ### 事前確認
 
