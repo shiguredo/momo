@@ -31,11 +31,14 @@
 *.out
 *.app
 
-momo-*
-/momo
+momo
 core
 .vscode
-libs/libobject_detection
 *.tar.gz
 webrtc_logs_0
 .DS_Store
+
+/libs/CLI11-*
+/libs/json-*
+/_build
+/build/package

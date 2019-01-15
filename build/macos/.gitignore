@@ -1,6 +1,0 @@
-/depot_tools
-/src
-/.gclient
-/.gclient_entries
-/.cipd
-/boost_*
