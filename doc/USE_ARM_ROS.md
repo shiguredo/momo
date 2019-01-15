@@ -1,23 +1,27 @@
-# ROS 版 momo を使ってみる
+# ARM ROS 版 momo を使ってみる
 
+動作確認済み環境は下記の通り
+
+- Board: Raspberry Pi 3B+
 - OS: Ubuntu 16.04
+- ROS: Kinetic
 
-## ROS 環境を用意する
-
-ROS 環境を用意しておきます。
-
-- ROS Kinetic のインストール方法: http://wiki.ros.org/kinetic/Installation/Ubuntu
-
+検証にあたっては、こちらのブログを参考に環境を構築しました。謝意を表します。
+[RaspberryPi 3B+でUbuntu 16.04を起動させる方法](https://www.asrobot.me/entry/2018/07/11/001603/)
 
 ## momo の準備
 
-### momo のダウンロード
+### momo のビルド
 
-https://github.com/shiguredo/momo/releases にて ROS 版 momo のバイナリをダウンロードしてください。
+[BUILD.md](./BUILD.md)を参考にしていただき、build ディレクトリ以下で make armv7_ros と打つことで Momo の ARM ROS 向けバイナリが生成されます。
 
-必要なライブラリをインストールしてご利用ください。
+```shell
+$ make armv7_ros
+```
 
-#### 解凍後の構成
+#### Raspberry Pi への配置
+
+下記のような構成で Raspberry Pi 内にビルドした momo を配置します。
 
 ```
 $ tree
@@ -25,9 +29,7 @@ $ tree
 ├── html
 │   ├── p2p.html
 │   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
+└── ビルドした momo
 ```
 
 #### ライブラリのインストール
@@ -35,9 +37,18 @@ $ tree
 次のパッケージをイストールします。
 
 ```
-$ sudo apt -y install libnss3
+$ sudo apt -y install libnss3 libasound2
 ```
 
+また H264 ハードウェアエンコーダに対応するため、下記のリポジトリを追加し、パッケージをインストールします。
+
+```
+$ sudo add-apt-repository ppa:ubuntu-raspi2/ppa
+$ sudo apt-get update
+$ sudo apt-get install libraspberrypi-bin libraspberrypi-dev
+```
+
+Raspberry Pi の場合はハードウェアエンコーダを利用することで、非常に少ないCPU消費で配信を行うことが可能です。
 
 ## 実行する
 
@@ -46,8 +57,10 @@ momo を実行する前に下記のように rosrun を使用して Web カメ�
 事前に、apt で ros-kinetic-usb-cam をインストールした上で実行します。
 
 ```
-$ rosrun usb_cam usb_cam_node _pixel_format:=mjpeg
+$ rosrun usb_cam usb_cam_node
 ```
+
+Raspberry Pi の場合は非常にリソースが限られていますので、Image topic は無圧縮での利用をお勧めします。
 
 ### P2P で動作を確認する
 
@@ -55,8 +68,8 @@ $ rosrun usb_cam usb_cam_node _pixel_format:=mjpeg
 
 ```shell
 $ ./momo  _use_p2p:=true \
-          _compressed:=true \
-          image:=/usb_cam/image_raw/compressed \
+          _compressed:=false \
+          image:=/usb_cam/image_raw
           _port:=8080
 ```
 
@@ -82,14 +95,14 @@ image は Web カメラから送られてくる画像データの topic を指�
 ```shell
 $ ./momo  _use_sora:=true \
           _auto:=true  \
-          _compressed:=true \
+          _compressed:=false \
           _port:=0 \
           _SIGNALING_URL:="wss://example.com/signaling" \
           _CHANNEL_ID:="sora" \
-          _video_codec:=VP9 \
+          _video_codec:=H264 \
           _log_level:=5 \
           _video_bitrate:=300 \
-          image:=/usb_cam/image_raw/compressed
+          image:=/usb_cam/image_raw
 ```
 
 image は Web カメラから送られてくる画像データの topic を指定してください。
@@ -105,8 +118,9 @@ image は Web カメラから送られてくる画像データの topic を指�
   - _compressed
     - JPEG 圧縮済みイメージ topic か  [true,false]
   - _video_codec
-    - ビデオコーデック  [VP8,VP9]
+    - ビデオコーデック  [H264,VP8,VP9]
   - _video_bitrate
     - ビデオビットレート  [1 - 30000]
   - _log_level
     - ログレベル  [0 - 5]
+
