@@ -2,7 +2,7 @@
 
 動作確認済み環境は下記の通り
 
-- Board: Raspberry Pi 3B+
+- Board: Raspberry Pi 3 Model B+
 - OS: Ubuntu 16.04
 - ROS: Kinetic
 
@@ -32,6 +32,21 @@ $ tree
 └── ビルドした momo
 ```
 
+
+momo のパッケージを https://github.com/shiguredo/momo/releases からダウンロードした場合は、パッケージを展開すると既に上記と同じ構成で配置されています。
+
+```
+$ tree
+.
+├── html
+│   ├── p2p.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
+```
+
+
 #### ライブラリのインストール
 
 次のパッケージをイストールします。
@@ -48,7 +63,7 @@ $ sudo apt-get update
 $ sudo apt-get install libraspberrypi-bin libraspberrypi-dev
 ```
 
-Raspberry Pi の場合はハードウェアエンコーダを利用することで、非常に少ないCPU消費で配信を行うことが可能です。
+Raspberry Pi の場合はハードウェアエンコーダを利用することで、非常に少ない CPU 消費で配信を行うことが可能です。
 
 ## 実行する
 
@@ -69,13 +84,13 @@ Raspberry Pi の場合は非常にリソースが限られていますので、I
 ```shell
 $ ./momo  _use_p2p:=true \
           _compressed:=false \
-          image:=/usb_cam/image_raw
+          image:=/usb_cam/image_raw \
           _port:=8080
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
 
-image は Web カメラから送られてくる画像データの topic を指定してください。
+image には Web カメラから送られてくる画像データの topic を指定してください。
 
 - 変更可能なパラメータ
   - image
@@ -105,7 +120,7 @@ $ ./momo  _use_sora:=true \
           image:=/usb_cam/image_raw
 ```
 
-image は Web カメラから送られてくる画像データの topic を指定してください。
+image には Web カメラから送られてくる画像データの topic を指定してください。
 
 
 - 変更可能なパラメータ
