@@ -3,7 +3,7 @@
 ビルドにはマシンパワーにもよりますが、少なくとも 30 分以上かかり、さらに 20GB 以上のダウンロードが必要です。
 そのため、覚悟を持って make コマンドを叩いてください。
 
-Docker 18.03 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
+Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
 
 まずは momo のリポジトリをダウンロードします。git submodule を利用しているため --recursive を忘れないでください。
 
@@ -15,40 +15,40 @@ $ git clone --recursive git@github.com:shiguredo/momo.git
 
 Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
 
-build ディレクトリ以下で make armv7 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make raspbian-stretch_armv7 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make armv7
+$ make raspbian-stretch_armv7
 ```
 
-うまくいかない場合は `make armv7.rebuild` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make clean && make raspbian-stretch_armv7` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Raspbian June 2018 (armv6) 向けバイナリを作成する
 
-build ディレクトリ以下で make armv6 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make raspbian-stretch_armv6 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make armv6
+$ make raspbian-stretch_armv6
 ```
 
 うまくいかない場合は `make armv6.rebuild` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Ubuntu 16.04 (armv8) 向けバイナリを作成する
 
-build ディレクトリ以下で make armv8 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make ubuntu-16.04_armv8 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make armv8
+$ make ubuntu-16.04_armv8
 ```
 
-うまくいかない場合は `make armv8.rebuild` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make clean && make ubuntu-16.04_armv8` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
-build ディレクトリ以下で make ubuntu-1804_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+build ディレクトリ以下で make ubuntu-18.04_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
 
 ```shell
-$ make ubuntu-1804_x86_64
+$ make ubuntu-18.04_x86_64
 ```
 
 ## macOS 10.14
@@ -97,10 +97,10 @@ Python 2.7.10
 
 ### ビルド方法
 
-build ディレクトリ以下で make macos と打つことで Momo の macOS 向けバイナリが生成されます。
+build ディレクトリ以下で make mac と打つことで Momo の macOS 向けバイナリが生成されます。
 
 ```shell
-$ make macos
+$ make mac
 ```
 
 ## Windows 10

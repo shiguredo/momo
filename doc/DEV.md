@@ -7,22 +7,14 @@
 
 ## パッケージ用バイナリの作成
 
-バイナリ作成時に BUILD_MODE=pkg を指定することで、シンボルテーブルを削除して、ファイルサイズを削減したバイナリを作成することが可能です。
+バイナリ作成時に BUILD_MODE=package を指定することで、シンボルテーブルを削除して、ファイルサイズを削減したバイナリを作成することが可能です。
 
-パッケージングに使用するバイナリを作成する場合は、下記のように BUILD_MODE=pkg を指定してバイナリを作成します。
+パッケージングに使用するバイナリを作成する場合は、下記のように BUILD_MODE=package を指定してバイナリを作成します。
 
 ```
-$ make armv8 BUILD_MODE=pkg
+$ make BUILD_MODE=package PACKAGE_NAME=ubuntu-16.04_armv8 momo
 ```
 
 ## パッケージング
 
-事前にバイナリを生成しておき、 build ディレクトリで make pkg とすることでパッケージング可能です。
-
-## サブモジュール
-
-```
-$ git submodule status
- bd4dc911847d0cde7a6b41dfa626a85aab213baf libs/CLI11 (v1.6.2)
- e3c28afb61227043dd7c0f9168b9394dfb016f87 libs/json (v3.4.0)
-```
+build ディレクトリで `make <パッケージ名>.package` とすることでパッケージング可能です。

@@ -37,8 +37,12 @@ $(1): $(1).prepare
 	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make MOMO_CFLAGS="-O2" PACKAGE_NAME=$(1) momo'
 
 .PHONY: $(1).package
-$(1).package: $(1)
+$(1).package: $(1).prepare
+	# momo を package モードでビルドし直す
+	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && rm -f _build/$(1)/momo && make MOMO_CFLAGS="-O2" PACKAGE_NAME=$(1) BUILD_MODE=package momo'
+
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
+	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
 	mkdir -p package/momo-$(MOMO_VERSION)_$(1)
 	cp    ../_build/$(1)/momo package/momo-$(MOMO_VERSION)_$(1)/
 	cp    ../LICENSE          package/momo-$(MOMO_VERSION)_$(1)/
@@ -46,6 +50,8 @@ $(1).package: $(1)
 	cp -r ../html             package/momo-$(MOMO_VERSION)_$(1)/html
 	cd package && tar czf momo-$(MOMO_VERSION)_$(1).tar.gz momo-$(MOMO_VERSION)_$(1)
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
+	@echo ""
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_$(1).tar.gz に生成されました。"
 
 .PHONY: $(1).edit
 $(1).edit: $(1).prepare
@@ -77,18 +83,26 @@ $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(pa
 
 .PHONY: mac
 mac: mac.prepare
-	make -C .. PACKAGE_NAME=mac momo
+	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=mac momo
 
 .PHONY: mac.package
-mac.package: mac
+mac.package: mac.prepare
+	# momo を package モードでビルドし直す
+	rm -f ../_build/mac/momo && make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=mac BUILD_MODE=package momo
+
+	# パッケージのバイナリを作る
 	rm -rf package/momo-$(MOMO_VERSION)_mac
+	rm -f package/momo-$(MOMO_VERSION)_mac.tar.gz
 	mkdir -p package/momo-$(MOMO_VERSION)_mac
 	cp    ../_build/mac/momo package/momo-$(MOMO_VERSION)_mac/
 	cp    ../LICENSE         package/momo-$(MOMO_VERSION)_mac/
 	cp    ../NOTICE          package/momo-$(MOMO_VERSION)_mac/
 	cp -r ../html            package/momo-$(MOMO_VERSION)_mac/html
 	cd package && tar czf momo-$(MOMO_VERSION)_mac.tar.gz momo-$(MOMO_VERSION)_mac
+
 	rm -rf package/momo-$(MOMO_VERSION)_mac
+	@echo ""
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_mac.tar.gz に生成されました。"
 
 .PHONY: mac.prepare
 mac.prepare:

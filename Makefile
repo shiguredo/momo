@@ -1,5 +1,7 @@
 include VERSION
 
+# momo バイナリを生成するための Makefile
+
 # 外から指定可能な変数の一覧。
 #
 # 以下の一覧の値は PACKAGE_NAME を指定していれば自動的に設定されますが、
@@ -115,8 +117,68 @@ else ifeq ($(PACKAGE_NAME),mac)
   # (Docker から実行するタイプのビルドでは事前に通してあるが、こっちは通してない可能性があるので)
   export PATH := $(CURDIR)/build/mac/webrtc/depot_tools:$(PATH)
 else
-  # TODO(melpon): 各変数がちゃんと設定されているか確認する
-  $(error TODO)
+  # 各変数がちゃんと設定されているか確認する
+
+  ifndef TARGET_OS
+    $(info - TARGET_OS が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifeq ($(TARGET_OS),linux)
+    ifndef TARGET_OS_LINUX
+      $(info - TARGET_OS_LINUX が指定されていません)
+      HAS_ERROR = 1
+    endif
+  endif
+
+  ifndef TARGET_ARCH
+    $(info - TARGET_ARCH が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifeq ($(TARGET_ARCH),arm)
+    ifndef TARGET_ARCH_ARM
+      $(info - TARGET_ARCH_ARM が指定されていません)
+      HAS_ERROR = 1
+    endif
+  endif
+
+  ifndef USE_ROS
+    $(info - USE_ROS が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef USE_IL_ENCODER
+    $(info - USE_IL_ENCODER が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef BOOST_ROOT
+    $(info - BOOST_ROOT が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef WEBRTC_SRC_ROOT
+    $(info - WEBRTC_SRC_ROOT が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef WEBRTC_LIB_ROOT
+    $(info - WEBRTC_LIB_ROOT が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifeq ($(TARGET_ARCH),arm)
+    ifndef SYSROOT
+      $(info - SYSROOT が指定されていません)
+      HAS_ERROR = 1
+    endif
+  endif
+
+  ifeq ($(HAS_ERROR),1)
+    $(info )
+    $(info 各変数の設定か、PACKAGE_NAME の設定をして下さい。)
+  endif
 endif
 BUILD_MODE ?= build
 
@@ -343,8 +405,14 @@ $(BUILD_ROOT)/libs/ilclient/%.o: libs/ilclient/%.c
 $(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS)
 	$(AR) -rcT $@ $^
 
+# WEBRTC_LIB_ROOT が空の時に find するとエラーになるので、
+# WEBRTC_LIB_ROOT が定義されている時だけルールを定義する
+ifdef WEBRTC_LIB_ROOT
+
 $(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o')
 	$(AR) -rcT $@ $^
+
+endif
 
 # hwenc_il 以下のソースのビルドルール
 $(BUILD_ROOT)/hwenc_il/%.o: hwenc_il/%.cpp
@@ -367,7 +435,7 @@ momo:
 	if [ ! -e libs/CLI11-$(CLI11_VERSION)/include ]; then git clone --branch v$(CLI11_VERSION) --depth 1 https://github.com/CLIUtils/CLI11.git libs/CLI11-$(CLI11_VERSION); fi
 
 	# momo 本体のビルド
-	make $(BUILD_ROOT)/momo
+	$(MAKE) $(BUILD_ROOT)/momo
 
 	# ビルド後に ./momo p2p で動作確認できるようにしたいので、生成されたバイナリをルートディレクトリにコピーする
 	cp $(BUILD_ROOT)/momo momo
