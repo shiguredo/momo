@@ -8,7 +8,7 @@ help:
 	@echo "  make <パッケージ名>"
 	@echo "  make <パッケージ名>.package"
 	@echo "  make <パッケージ名>.edit"
-	@echo "  make clean"
+	@echo "  make <パッケージ名>.clean"
 	@echo ""
 	@echo "<パッケージ名>:"
 	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
@@ -23,11 +23,18 @@ help:
 	@echo "その中で make を打つと momo バイナリが生成できます（make <パッケージ名> としたのと同じバイナリが生成されます）。"
 	@echo "また、/root/webrtc/src 以下にあるソースを書き換えてから /root/momo ディレクトリで make すると、カスタマイズされた WebRTC を使って momo バイナリが生成できます。"
 	@echo ""
-	@echo "make clean は、*全ての* Docker イメージとキャッシュを削除します。"
-	@echo "そのため、momo と無関係なイメージやキャッシュがある場合には注意してください。"
+	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
+	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は docker builder prune --help を参照して下さい。"
+	@echo ""
+	@echo "また、make NOCACHE=1 <パッケージ名> のように NOCACHE=1 を指定することで、イメージのキャッシュを利用しないモードで動作させることができます。"
+	@echo "具体的には docker build コマンドに --no-cache を指定します。詳細は Docker のドキュメントを参照して下さい。"
 	@echo ""
 
 WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
+
+ifeq ($(NOCACHE),1)
+  DOCKER_BUILD_FLAGS += --no-cache
+endif
 
 # パッケージ名からルールを自動生成する
 define generateDockerRules
@@ -64,19 +71,16 @@ $(1).prepare:
 	cp -r ../patch $(1)/patch
 	cp -r ../script $(1)/script
 
-	DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) --build-arg WEBRTC_VERSION=$$(WEBRTC_VERSION) --build-arg WEBRTC_COMMIT=$$(WEBRTC_COMMIT) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
+	DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) $(DOCKER_BUILD_FLAGS) --build-arg WEBRTC_VERSION=$$(WEBRTC_VERSION) --build-arg WEBRTC_COMMIT=$$(WEBRTC_COMMIT) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
 
 	rm -r $(1)/patch
 	rm -r $(1)/script
 
-endef
+.PHONY: $(1).clean
+$(1).clean:
+	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
 
-# 全ての Docker イメージとキャッシュの削除
-.PHONY: clean
-clean:
-	docker container prune -f
-	docker image prune -a -f
-	docker builder prune -f
+endef
 
 # Docker 用のルールを生成
 $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(package_name))))
