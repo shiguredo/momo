@@ -306,7 +306,7 @@ ifeq ($(TARGET_OS),linux)
           -lm
         SOURCES += $(shell find hwenc_il -maxdepth 1 -name '*.cpp')
         LDFLAGS += -lilclient
-        LIBILCLINT = $(BUILD_ROOT)/libilclient.a
+        LIBILCLIENT = $(BUILD_ROOT)/libilclient.a
       endif
     endif
   endif
