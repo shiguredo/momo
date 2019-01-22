@@ -1,4 +1,4 @@
-# ARM ROS 版 momo を使ってみる
+# ARM ROS 版 Momo を使ってみる
 
 動作確認済み環境は下記の通り
 
@@ -9,9 +9,9 @@
 検証にあたっては、こちらのブログを参考に環境を構築しました。謝意を表します。
 [RaspberryPi 3B+でUbuntu 16.04を起動させる方法](https://www.asrobot.me/entry/2018/07/11/001603/)
 
-## momo の準備
+## Momo の準備
 
-### momo のビルド
+### Momo のビルド
 
 [BUILD.md](./BUILD.md)を参考にしていただき、build ディレクトリ以下で make armv7_ros と打つことで Momo の ARM ROS 向けバイナリが生成されます。
 
@@ -21,7 +21,7 @@ $ make armv7_ros
 
 #### Raspberry Pi への配置
 
-下記のような構成で Raspberry Pi 内にビルドした momo を配置します。
+下記のような構成で Raspberry Pi 内にビルドした Momo を配置します。
 
 ```
 $ tree
@@ -33,7 +33,7 @@ $ tree
 ```
 
 
-momo のパッケージを https://github.com/shiguredo/momo/releases からダウンロードした場合は、パッケージを展開すると既に上記と同じ構成で配置されています。
+Momo のパッケージを https://github.com/shiguredo/momo/releases からダウンロードした場合は、パッケージを展開すると既に上記と同じ構成で配置されています。
 
 ```
 $ tree
@@ -67,7 +67,7 @@ Raspberry Pi の場合はハードウェアエンコーダを利用すること�
 
 ## 実行する
 
-momo を実行する前に下記のように rosrun を使用して Web カメラを起動しておきます。
+Momo を実行する前に下記のように rosrun を使用して Web カメラを起動しておきます。
 
 事前に、apt で ros-kinetic-usb-cam をインストールした上で実行します。
 
