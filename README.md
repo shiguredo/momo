@@ -30,6 +30,9 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
     - Raspberry Pi Zero W/WH で動作
 - Ubuntu 16.04 x86_64 ROS Kinetic で動作
     - http://wiki.ros.org/kinetic
+- Ubuntu 16.04 ARMv7 ROS Kinetic で動作
+    - Raspberry Pi 3 B+ で動作
+- macOS 10.14 x86_64
 
 ## 使ってみる
 
@@ -38,6 +41,10 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 ## ROS ノードとして使ってみる
 
 Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
+
+### ARM ROS 版
+
+ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
 
 ## ビルドに挑戦する
 
@@ -48,7 +55,7 @@ Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読み�
 Apache License 2.0
 
 ```
-Copyright 2018, Shiguredo Inc, tnoho, melpon and uupaa
+Copyright 2018, Shiguredo Inc, tnoho and melpon
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -11,6 +11,10 @@
 
 ## develop
 
+## 19.01.0
+
+- [ADD] Ubuntu 16.04 ARMv7 ROS 対応
+
 ## 18.12.0
 
 - [ADD] ROS 対応

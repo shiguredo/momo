@@ -99,8 +99,9 @@ endif
 
 ifeq ($(UNAME),Darwin)
 	CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-	LDFLAGS += -F/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo
-	LIBRTCCONDUCTOR = lib$(RTCCONDUCTOR)_mac.so
+	LDFLAGS += -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo
+	CFLAGS += -I$(BOOST_PATH)/include
+	LDFLAGS += -L$(BOOST_PATH)/lib
 endif
 
 ifdef ROS_VERSION
@@ -114,7 +115,7 @@ SOURCE += $(RTC_LIB)
 
 # boost
 CFLAGS += -I$(RTC_ROOT)/src/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboost_system -lboost_filesystem -lboringssl
+LDFLAGS += -L$(RTC_LIB_PATH)/obj/third_party/boringssl -lboost_filesystem -lboringssl
 
 # json
 CFLAGS += -Ilibs/json/include

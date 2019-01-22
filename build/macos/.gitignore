@@ -2,3 +2,5 @@
 /src
 /.gclient
 /.gclient_entries
+/.cipd
+/boost_*

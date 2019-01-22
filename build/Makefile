@@ -1,6 +1,6 @@
 BUILD_NUMBER=$(shell date +"%Y%m%d%H%M%S")
 WEBRTC_VERSION=71
-MOMO_VERSION=18.12.0
+MOMO_VERSION=19.01.0
 
 RASPBIAN_VERSION=stretch
 
@@ -133,6 +133,13 @@ armv7_ros.pkg:
 	cp $(lastword $(sort $(wildcard ./momo-armv7_ros-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros/momo
 	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
 	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
+
+macos.pkg:
+	mkdir momo-$(MOMO_VERSION)_macos
+	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_macos/))
+	cp $(lastword $(sort $(wildcard ./momo-macos-*))) momo-$(MOMO_VERSION)_macos/momo
+	tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
+	rm -rf momo-$(MOMO_VERSION)_macos
 
 clean.pkg:
 	rm -rf momo-$(MOMO_VERSION)_*
