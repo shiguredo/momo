@@ -83,7 +83,7 @@ Momo はモードを ２ つ持っています。一つが P2P モードで Momo
 
 ```shell
 $ momo --version
-WebRTC Native Client Momo version 18.12.0
+WebRTC Native Client Momo version 19.01.0
 ```
 
 ### P2P で動作を確認する
@@ -108,7 +108,7 @@ $ momo --no-audio --video-codec VP8 --video-bitrate 500 \
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 18.12.0
+WebRTC Native Client Momo 19.01.0
 ```
 
 ```
