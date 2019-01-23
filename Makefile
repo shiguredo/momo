@@ -183,13 +183,12 @@ endif
 BUILD_MODE ?= build
 
 ifdef PACKAGE_NAME
+  # この BUILD_ROOT のデフォルト値に他の場所でも依存してるので、
+  # 書き換える時は気をつけること
   BUILD_ROOT ?= _build/$(PACKAGE_NAME)
 else
   BUILD_ROOT ?= _build/local
 endif
-
-# ビルド用ディレクトリを作っておく
-$(shell mkdir -p $(BUILD_ROOT))
 
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++11 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
@@ -397,34 +396,38 @@ help:
 	@echo "詳細については Makefile のコメントを参照して下さい。"
 	@echo ""
 
+$(BUILD_ROOT):
+	# ビルド用ディレクトリを作っておく
+	mkdir -p $(BUILD_ROOT)
+
 # libs/ilclient 以下のソースのビルドルール
-$(BUILD_ROOT)/libs/ilclient/%.o: libs/ilclient/%.c
+$(BUILD_ROOT)/libs/ilclient/%.o: libs/ilclient/%.c | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
 	$(CC) $(IL_CFLAGS) $(IL_INCLUDES) -c $< -o $@ -Wno-deprecated-declarations
 
-$(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS)
+$(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS) | $(BUILD_ROOT)
 	$(AR) -rcT $@ $^
 
 # WEBRTC_LIB_ROOT が空の時に find するとエラーになるので、
 # WEBRTC_LIB_ROOT が定義されている時だけルールを定義する
 ifdef WEBRTC_LIB_ROOT
 
-$(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o')
+$(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
 	$(AR) -rcT $@ $^
 
 endif
 
 # hwenc_il 以下のソースのビルドルール
-$(BUILD_ROOT)/hwenc_il/%.o: hwenc_il/%.cpp
+$(BUILD_ROOT)/hwenc_il/%.o: hwenc_il/%.cpp | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # src 以下のソースのビルドルール
-$(BUILD_ROOT)/src/%.o: src/%.cpp
+$(BUILD_ROOT)/src/%.o: src/%.cpp | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(BUILD_ROOT)/momo: $(LIBILCLIENT) $(BUILD_ROOT)/libwebrtc.a $(OBJECTS)
+$(BUILD_ROOT)/momo: $(LIBILCLIENT) $(BUILD_ROOT)/libwebrtc.a $(OBJECTS) | $(BUILD_ROOT)
 	$(CXX) -o $(BUILD_ROOT)/momo $(OBJECTS) $(LDFLAGS)
 
 .PHONY: momo

@@ -42,3 +42,5 @@ webrtc_logs_0
 /libs/json-*
 /_build
 /build/package
+/build/momo/
+/build/momo.tar.gz

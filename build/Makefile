@@ -5,14 +5,18 @@ help:
 	@echo "各環境用の momo バイナリやパッケージを作るための Makefile です。"
 	@echo ""
 	@echo "使い方:"
-	@echo "  make <パッケージ名>"
-	@echo "  make <パッケージ名>.package"
-	@echo "  make <パッケージ名>.edit"
-	@echo "  make <パッケージ名>.clean"
+	@echo "  make [オプション] <パッケージ名>"
+	@echo "  make [オプション] <パッケージ名>.package"
+	@echo "  make [オプション] <パッケージ名>.edit"
+	@echo "  make [オプション] <パッケージ名>.clean"
 	@echo ""
 	@echo "<パッケージ名>:"
 	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
 	@echo "  - mac (make mac.edit を除く)"
+	@echo ""
+	@echo "[オプション]:"
+	@echo "  - NOCACHE=1"
+	@echo "  - NOMOUNT=1"
 	@echo ""
 	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
 	@echo ""
@@ -26,8 +30,13 @@ help:
 	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
 	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は docker builder prune --help を参照して下さい。"
 	@echo ""
-	@echo "また、make NOCACHE=1 <パッケージ名> のように NOCACHE=1 を指定することで、イメージのキャッシュを利用しないモードで動作させることができます。"
+	@echo "NOCACHE=1 オプションは、make NOCACHE=1 <パッケージ名> のように指定します。"
+	@echo "これはイメージのキャッシュを利用しないモードで動作させることができます。"
 	@echo "具体的には docker build コマンドに --no-cache を指定します。詳細は Docker のドキュメントを参照して下さい。"
+	@echo ""
+	@echo "NOMOUNT=1 オプションは、make NOMOUNT=1 <パッケージ名> のように指定します。"
+	@echo "これはマウントを利用しないモードで動作させることができます。"
+	@echo "何らかの理由でマウントがうまく動作しない場合に使って下さい。"
 	@echo ""
 
 WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
@@ -36,17 +45,23 @@ ifeq ($(NOCACHE),1)
   DOCKER_BUILD_FLAGS += --no-cache
 endif
 
+ifeq ($(NOMOUNT),1)
+  DOCKER_MOUNT = nomount
+else
+  DOCKER_MOUNT = mount
+endif
+
 # パッケージ名からルールを自動生成する
 define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make MOMO_CFLAGS="-O2" PACKAGE_NAME=$(1) momo'
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build $(CLI11_VERSION) $(JSON_VERSION)
 
 .PHONY: $(1).package
 $(1).package: $(1).prepare
 	# momo を package モードでビルドし直す
-	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && rm -f _build/$(1)/momo && make MOMO_CFLAGS="-O2" PACKAGE_NAME=$(1) BUILD_MODE=package momo'
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) package $(CLI11_VERSION) $(JSON_VERSION)
 
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
@@ -116,3 +131,4 @@ mac.prepare:
 .PHONY: mac.clean
 mac.clean:
 	make -C mac clean
+	make -C .. clean
