@@ -28,7 +28,7 @@ help:
 	@echo "また、/root/webrtc/src 以下にあるソースを書き換えてから /root/momo ディレクトリで make すると、カスタマイズされた WebRTC を使って momo バイナリが生成できます。"
 	@echo ""
 	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
-	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は docker builder prune --help を参照して下さい。"
+	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は doc/CACHE.md を参照して下さい。"
 	@echo ""
 	@echo "NOCACHE=1 オプションは、make NOCACHE=1 <パッケージ名> のように指定します。"
 	@echo "これはイメージのキャッシュを利用しないモードで動作させることができます。"
