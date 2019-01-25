@@ -11,6 +11,8 @@
 
 ## develop
 
+- [FIX] httpsで接続した際にWebSocketもwss　schemeで接続するよう webrtc.js を修正する
+
 ## 19.01.0
 
 - [ADD] Ubuntu 16.04 ARMv7 ROS 対応
