@@ -1,4 +1,4 @@
-# ROS 版 momo を使ってみる
+# ROS 版 Momo を使ってみる
 
 - OS: Ubuntu 16.04
 
@@ -9,11 +9,11 @@ ROS 環境を用意しておきます。
 - ROS Kinetic のインストール方法: http://wiki.ros.org/kinetic/Installation/Ubuntu
 
 
-## momo の準備
+## Momo の準備
 
-### momo のダウンロード
+### Momo のダウンロード
 
-https://github.com/shiguredo/momo/releases にて ROS 版 momo のバイナリをダウンロードしてください。
+https://github.com/shiguredo/momo/releases にて ROS 版 Momo のバイナリをダウンロードしてください。
 
 必要なライブラリをインストールしてご利用ください。
 
@@ -41,7 +41,7 @@ $ sudo apt -y install libnss3
 
 ## 実行する
 
-momo を実行する前に下記のように rosrun を使用して Web カメラを起動しておきます。
+Momo を実行する前に下記のように rosrun を使用して Web カメラを起動しておきます。
 
 事前に、apt で ros-kinetic-usb-cam をインストールした上で実行します。
 
@@ -62,11 +62,13 @@ $ ./momo  _use_p2p:=true \
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
 
-image は Web カメラから送られてくる画像データの topic を指定してください。
+image には Web カメラから送られてくる画像データの topic を指定してください。
 
 - 変更可能なパラメータ
   - image
     - topic
+  - _compressed
+    - JPEG 圧縮済みイメージ topic か  [true,false]
   - _port
     - ポート番号  [0 - 65535]
   - _log_level
@@ -90,7 +92,7 @@ $ ./momo  _use_sora:=true \
           image:=/usb_cam/image_raw/compressed
 ```
 
-image は Web カメラから送られてくる画像データの topic を指定してください。
+image には Web カメラから送られてくる画像データの topic を指定してください。
 
 
 - 変更可能なパラメータ
@@ -100,6 +102,8 @@ image は Web カメラから送られてくる画像データの topic を指�
     - チャネル ID
   - image
     - topic
+  - _compressed
+    - JPEG 圧縮済みイメージ topic か  [true,false]
   - _video_codec
     - ビデオコーデック  [VP8,VP9]
   - _video_bitrate
