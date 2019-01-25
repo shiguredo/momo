@@ -4,7 +4,9 @@ let peerConnection = null;
 let candidates = [];
 let hasReceivedSdp = false;
 
-const wsUrl = ((location.protocol === 'https:') ? 'wss://' : 'ws://') + location.host + '/ws';
+const isSSL = location.protocol === 'https:';
+const wsProtocol = isSSL ? 'wss://' : 'ws://';
+const wsUrl = wsProtocol + location.host + '/ws';
 const ws = new WebSocket(wsUrl);
 ws.onopen = function (evt) {
     console.log('ws open()');
