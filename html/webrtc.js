@@ -72,14 +72,14 @@ function playVideo(element, stream) {
 }
 
 function prepareNewConnection() {
-    const peer = new RTCPeerConnection({ "iceServers": [{ "url": "stun:stun.l.google.com:19302" }] });
+    const peer = new RTCPeerConnection({ "iceServers": [{ "urls": "stun:stun.l.google.com:19302" }] });
 
     if ('ontrack' in peer) {
-        let mediaStream = new MediaStream();
-        playVideo(remoteVideo, mediaStream);
         peer.ontrack = function (event) {
             console.log('-- peer.ontrack()');
+            let mediaStream = new MediaStream();
             mediaStream.addTrack(event.track);
+            playVideo(remoteVideo, mediaStream);
         };
     }
     else {
@@ -108,7 +108,16 @@ function prepareNewConnection() {
         }
     };
 
+    if (isUnifiedPlan(peer)) {
+        peer.addTransceiver('video');
+    }
+
     return peer;
+}
+
+function isUnifiedPlan(peer) {
+    const config = peer.getConfiguration();
+    return ('addTransceiver' in peer) && (!('sdpSemantics' in config) || config.sdpSemantics === "unified-plan");
 }
 
 function sendSdp(sessionDescription) {
