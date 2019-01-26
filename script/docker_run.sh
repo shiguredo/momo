@@ -168,9 +168,7 @@ else
   fi
 
   # 中間ファイル類を取り出す
-  if [ ! -e $MOMO_DIR/_build/$PACKAGE_NAME ]; then
-    rm -rf $MOMO_DIR/_build/$PACKAGE_NAME
-  fi
+  rm -rf $MOMO_DIR/_build/$PACKAGE_NAME
   docker container cp momo-$PACKAGE_NAME:/root/momo/_build/$PACKAGE_NAME/ $MOMO_DIR/_build/$PACKAGE_NAME
 
   popd
