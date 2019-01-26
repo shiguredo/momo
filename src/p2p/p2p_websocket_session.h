@@ -1,13 +1,15 @@
 #ifndef P2P_WEBSOCKET_SESSION_H_
 #define P2P_WEBSOCKET_SESSION_H_
 
-#include <nlohmann/json.hpp>
-#include <algorithm>
 #include <cstdlib>
-#include <functional>
-#include <iostream>
 #include <memory>
 #include <string>
+
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/core/multi_buffer.hpp>
+#include <boost/beast/http/message.hpp>
+#include <boost/beast/http/string_body.hpp>
+#include <boost/system/error_code.hpp>
 
 #include "rtc/manager.h"
 #include "ws/websocket.h"

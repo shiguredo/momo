@@ -1,10 +1,15 @@
 #ifndef WS_WEBSOCKET_H_
 #define WS_WEBSOCKET_H_
 
-#include <boost/beast.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <boost/beast/core/flat_buffer.hpp>
+#include <boost/beast/core/multi_buffer.hpp>
+#include <boost/beast/websocket/stream_fwd.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include <functional>
 #include <memory>
 

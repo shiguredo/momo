@@ -1,16 +1,15 @@
 #ifndef SORA_WEBSOCKET_CLIENT_
 #define SORA_WEBSOCKET_CLIENT_
 
-#include <boost/beast.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/context.hpp>
+#include <nlohmann/json.hpp>
 
 #include "ws/websocket.h"
 #include "rtc/messagesender.h"

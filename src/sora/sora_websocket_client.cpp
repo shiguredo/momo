@@ -1,5 +1,7 @@
 #include "sora_websocket_client.h"
 
+#include <boost/beast/websocket/stream.hpp>
+
 #include <nlohmann/json.hpp>
 #include "url_parts.h"
 #include "util.h"
