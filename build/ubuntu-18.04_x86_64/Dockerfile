@@ -69,5 +69,6 @@ RUN \
       install \
       -j`nproc` \
       --prefix=/root/boost-$BOOST_VERSION \
+      --with-system \
       --with-filesystem \
   "

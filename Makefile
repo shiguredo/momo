@@ -358,10 +358,10 @@ OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.cpp,%.o,$(SOURCES)))
 
 # Boost
 CFLAGS += -I$(BOOST_ROOT)/include
-LDFLAGS += -L$(BOOST_ROOT)/lib
+LDFLAGS += -L$(BOOST_ROOT)/lib -lboost_system -lboost_filesystem
 # Boost.Beast で BoringSSL を使うので、そのあたりも追加する
 CFLAGS += -I$(WEBRTC_SRC_ROOT)/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboost_filesystem -lboringssl
+LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
 
 # JSON
 CFLAGS += -Ilibs/json-$(JSON_VERSION)/include
