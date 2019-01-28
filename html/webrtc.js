@@ -117,11 +117,11 @@ function playVideo(element, stream) {
 function prepareNewConnection() {
   const peer = new RTCPeerConnection(peerConnectionConfig);
   if ('ontrack' in peer) {
+    let mediaStream = new MediaStream();
+    playVideo(remoteVideo, mediaStream);
     peer.ontrack = (event) => {
       console.log('-- peer.ontrack()');
-      let mediaStream = new MediaStream();
       mediaStream.addTrack(event.track);
-      playVideo(remoteVideo, mediaStream);
     };
   }
   else {
