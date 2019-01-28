@@ -1,4 +1,5 @@
 const remoteVideo = document.getElementById('remote_video');
+remoteVideo.controls = true;
 let peerConnection = null;
 let candidates = [];
 let hasReceivedSdp = false;
@@ -117,11 +118,13 @@ function playVideo(element, stream) {
 function prepareNewConnection() {
   const peer = new RTCPeerConnection(peerConnectionConfig);
   if ('ontrack' in peer) {
-    let mediaStream = new MediaStream();
-    playVideo(remoteVideo, mediaStream);
+    let tracks = [];
     peer.ontrack = (event) => {
       console.log('-- peer.ontrack()');
-      mediaStream.addTrack(event.track);
+      tracks.push(event.track)
+      // safari でも動作させるために、ontrack が発火するたびに MediaStream を作成する
+      let mediaStream = new MediaStream(tracks);
+      playVideo(remoteVideo, mediaStream);
     };
   }
   else {
