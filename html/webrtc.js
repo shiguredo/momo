@@ -154,6 +154,7 @@ function prepareNewConnection() {
 
   if (isUnifiedPlan(peer)) {
     peer.addTransceiver('video');
+    peer.addTransceiver('audio');
   }
 
   return peer;
