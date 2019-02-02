@@ -1,7 +1,9 @@
 #ifndef RTC_UTIL_H_
 #define RTC_UTIL_H_
 
-#include <boost/beast.hpp>
+#include <boost/beast/core/string.hpp>
+#include <boost/beast/http/string_body.hpp>
+#include <boost/beast/http/message.hpp>
 #include "api/peerconnectioninterface.h"
 #include "connection_settings.h"
 

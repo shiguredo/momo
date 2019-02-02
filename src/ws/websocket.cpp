@@ -2,6 +2,10 @@
 #include "util.h"
 
 #include <utility>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/beast/core/buffers_to_string.hpp>
+#include <boost/beast/websocket/stream.hpp>
 
 Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc))

@@ -1,16 +1,13 @@
 #ifndef SORA_SERVER_H_
 #define SORA_SERVER_H_
 
-#include <boost/beast.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 #include "rtc/manager.h"
 #include "connection_settings.h"

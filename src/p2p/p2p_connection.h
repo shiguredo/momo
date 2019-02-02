@@ -1,6 +1,10 @@
 #ifndef P2P_CONNECTION_H_
 #define P2P_CONNECTION_H_
 
+#include <functional>
+#include <memory>
+#include <string>
+
 #include "rtc/manager.h"
 #include "rtc/connection.h"
 #include "rtc/messagesender.h"

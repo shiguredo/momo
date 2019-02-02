@@ -1,13 +1,18 @@
 #ifndef P2P_SESSION_H_
 #define P2P_SESSION_H_
 
-#include <nlohmann/json.hpp>
-#include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <string>
+
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/beast/http/message.hpp>
+#include <boost/beast/http/string_body.hpp>
+#include <boost/beast/http/write.hpp>
 
 #include "rtc/manager.h"
 #include "connection_settings.h"

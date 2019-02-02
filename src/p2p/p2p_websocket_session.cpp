@@ -1,6 +1,10 @@
 #include "p2p_websocket_session.h"
 
 #include <nlohmann/json.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/beast/websocket/error.hpp>
+#include <boost/beast/websocket/stream.hpp>
+
 #include "util.h"
 
 using json = nlohmann::json;
