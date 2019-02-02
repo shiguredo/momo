@@ -315,6 +315,7 @@ ifeq ($(TARGET_OS),mac)
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
   CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
   LDFLAGS += \
+    -ObjC \
     -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks \
     -ldl \
     -framework Foundation \
