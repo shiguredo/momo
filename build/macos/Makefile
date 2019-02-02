@@ -35,8 +35,8 @@ $(LIBWEBRTC):
 	ninja -C out/x86_64 && \
 	ninja -C out/x86_64 \
 	  builtin_audio_decoder_factory \
-	  builtin_video_decoder_factory \
-	  builtin_video_encoder_factory \
+	  native_api \
+	  default_codec_factory_objc \
 	  peerconnection \
 	  create_pc_factory
 

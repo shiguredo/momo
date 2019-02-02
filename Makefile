@@ -99,9 +99,10 @@ endif
 
 ifeq ($(UNAME),Darwin)
 	CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-	LDFLAGS += -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo
-	CFLAGS += -I$(BOOST_PATH)/include
+	LDFLAGS += -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -ldl -framework Foundation -framework AVFoundation -framework CoreServices -framework CoreFoundation -framework AudioUnit -framework AudioToolbox -framework CoreAudio -framework CoreGraphics -framework CoreMedia -framework CoreVideo -framework VideoToolbox
+	CFLAGS += -fconstant-string-class=NSConstantString -I$(RTC_ROOT)/src/sdk/objc -I$(RTC_ROOT)/src/sdk/objc/base -I$(BOOST_PATH)/include
 	LDFLAGS += -L$(BOOST_PATH)/lib
+	SOURCE += $(shell find $(CURDIR)/src -name '*.mm')
 endif
 
 ifdef ROS_VERSION
