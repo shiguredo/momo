@@ -206,7 +206,7 @@ ifeq ($(USE_ROS),1)
   endif
 endif
 
-# x86_64/armv8 の場合は H264 を使わない
+# x86_64/armv8/mac の場合は H264 を使わない
 ifeq ($(TARGET_OS),linux)
   ifeq ($(TARGET_ARCH),x86_64)
     CFLAGS += -DUSE_H264=0
@@ -215,6 +215,8 @@ ifeq ($(TARGET_OS),linux)
   else
     CFLAGS += -DUSE_H264=1
   endif
+else ifeq ($(TARGET_OS),mac)
+  CFLAGS += -DUSE_H264=0
 endif
 
 ifeq ($(TARGET_OS),linux)
