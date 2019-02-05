@@ -27,7 +27,7 @@ $(LIBWEBRTC):
 	prepare_webrtc_mac "" $(WEBRTC_COMMIT) $(CURDIR)/webrtc && \
 	cd $(CURDIR)/webrtc/src && \
 	patch -p2 < $(CURDIR)/../../patch/4k.patch && \
-	gn gen $(CURDIR)/webrtc-build/mac --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=true is_component_build=false use_rtti=true' && \
+	gn gen $(CURDIR)/webrtc-build/mac --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true' && \
 	ninja -C $(CURDIR)/webrtc-build/mac && \
 	ninja -C $(CURDIR)/webrtc-build/mac \
 	  builtin_audio_decoder_factory \
