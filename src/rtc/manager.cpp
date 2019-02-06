@@ -106,25 +106,15 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
   {
     // 録音用デバイスの設定
     {
-      const std::string& name = _conn_settings.recording_device;
+      int index = _conn_settings.audio_recording_device;
       std::vector<std::string> device_names = listRecordingDevice();
-      if (device_names.empty()) {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << "No recording device";
-      } else {
-        int device_index = 0;
-
-        // デバイス名が指定されていた場合、そのデバイスを探す
-        if (!name.empty()) {
-          auto it = std::find(device_names.begin(), device_names.end(), name);
-          if (it == device_names.end()) {
-            RTC_LOG(LS_ERROR) << "specified recording device '" << name << "' not found";
-            exit(1);
-          }
-          device_index = std::distance(device_names.begin(), it);
-        }
-
-        _adm->SetRecordingDevice((int16_t)device_index);
+      if (index < 0 || index >= device_names.size()) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "No recording device";
+        exit(1);
       }
+
+      RTC_LOG(LS_INFO) << __FUNCTION__ << "Selected recording device: " << device_names[index];
+      _adm->SetRecordingDevice((int16_t)index);
     }
     // 再生用デバイスの設定（必要になったら作る）
     {
@@ -192,26 +182,20 @@ std::vector<std::string> RTCManager::listVideoDevice() {
   return device_names;
 }
 
-std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer(const std::string& name) {
+std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer(int index) {
   std::vector<std::string> device_names = listVideoDevice();
   if (device_names.empty()) {
     return nullptr;
   }
 
-  int device_index = 0;
-
-  // デバイス名が指定されていた場合、そのデバイスを探す
-  if (!name.empty()) {
-    auto it = std::find(device_names.begin(), device_names.end(), name);
-    if (it == device_names.end()) {
-      RTC_LOG(LS_ERROR) << "specified video device '" << name << "' not found";
-      return nullptr;
-    }
-    device_index = std::distance(device_names.begin(), it);
+  if (index < 0 || index >= device_names.size()) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << "No video device";
+    return nullptr;
   }
 
+  RTC_LOG(LS_INFO) << __FUNCTION__ << "Selected video device: " << device_names[index];
   cricket::WebRtcVideoDeviceCapturerFactory factory;
-  return factory.Create(cricket::Device(device_names[device_index], 0));
+  return factory.Create(cricket::Device(device_names[index], 0));
 }
 
 std::shared_ptr<RTCConnection> RTCManager::createConnection(

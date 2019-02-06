@@ -20,7 +20,7 @@ public:
           RTCMessageSender *sender);
 
 private:
-  static std::unique_ptr<cricket::VideoCapturer> createVideoCapturer(const std::string& name);
+  static std::unique_ptr<cricket::VideoCapturer> createVideoCapturer(int index);
 
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _video_source;

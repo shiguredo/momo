@@ -7,6 +7,7 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include "rtc/manager.h"
 
@@ -169,8 +170,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-  app.add_option("--video-device", cs.video_device, "ビデオデバイス名(./momo list-device を参照)");
-  app.add_option("--recording-device", cs.recording_device, "録音デバイス名(./momo list-device を参照)");
+  app.add_option("--video-device", cs.video_device, "ビデオデバイス番号(./momo list-device を参照)");
+  app.add_option("--audio-recording-device", cs.audio_recording_device, "録音デバイス番号(./momo list-device を参照)");
 #if MOMO_USE_H264
   app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
 #else
@@ -250,13 +251,23 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     auto recording_devices = rtc_manager->listRecordingDevice();
     std::cout << std::endl;
     std::cout << "ビデオデバイス:" << std::endl;
-    for (auto&& device: video_devices) {
-      std::cout << "- " << device << std::endl;
+    for (int i = 0; i < video_devices.size(); i++) {
+      std::cout << "- ";
+      {
+        boost::io::ios_flags_saver saver(std::cout);
+        std::cout << std::right << std::setw(2) << i;
+      }
+      std::cout << ": " << video_devices[i] << std::endl;
     }
     std::cout << std::endl;
     std::cout << "録音デバイス:" << std::endl;
-    for (auto&& device: recording_devices) {
-      std::cout << "- " << device << std::endl;
+    for (int i = 0; i < recording_devices.size(); i++) {
+      std::cout << "- ";
+      {
+        boost::io::ios_flags_saver saver(std::cout);
+        std::cout << std::right << std::setw(2) << i;
+      }
+      std::cout << ": " << recording_devices[i] << std::endl;
     }
     std::cout << std::endl;
 
