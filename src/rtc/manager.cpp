@@ -4,8 +4,6 @@
 #include "api/test/fakeconstraints.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/video_capture/video_capture_factory.h"
@@ -16,6 +14,13 @@
 #include "manager.h"
 #include "observer.h"
 #include "util.h"
+
+#ifdef __APPLE__
+#include "objc_codec_factory_helper.h"
+#else
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
+#endif
 
 #if USE_IL_ENCODER
 #include "api/video_codecs/builtin_video_decoder_factory.h"
@@ -46,12 +51,17 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
 
+#ifdef __APPLE__
+      CreateObjCEncoderFactory(),
+      CreateObjCDecoderFactory(),
+#else
 #if USE_IL_ENCODER
       std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<ILVideoEncoderFactory>()),
 #else
       webrtc::CreateBuiltinVideoEncoderFactory(),
 #endif
       webrtc::CreateBuiltinVideoDecoderFactory(),
+#endif
 
       nullptr, nullptr);
   if (!_factory.get())
