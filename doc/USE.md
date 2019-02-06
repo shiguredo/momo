@@ -89,8 +89,7 @@ WebRTC Native Client Momo version 19.01.0
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 800 \
-       p2p --port 8080
+$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p 
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
