@@ -8,7 +8,7 @@ include VERSION
 # それぞれを外から指定することも可能です。
 #
 # TARGET_OS: ビルド対象の動作する OS
-#   有効な値は linux, mac
+#   有効な値は linux, macos
 #
 # TARGET_OS_LINUX: TARGET_OS が linux の場合の詳細な OS の情報
 #   有効な値は raspbian-stretch, ubuntu-16.04, ubuntu-18.04
@@ -102,20 +102,20 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
-else ifeq ($(PACKAGE_NAME),mac)
-  TARGET_OS ?= mac
+else ifeq ($(PACKAGE_NAME),macos)
+  TARGET_OS ?= macos
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 0
   USE_IL_ENCODER ?= 0
-  BOOST_ROOT ?= $(CURDIR)/build/mac/boost-$(BOOST_VERSION)
+  BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
-  WEBRTC_SRC_ROOT ?= build/mac/webrtc/src
-  WEBRTC_LIB_ROOT ?= build/mac/webrtc-build/mac
+  WEBRTC_SRC_ROOT ?= build/macos/webrtc/src
+  WEBRTC_LIB_ROOT ?= build/macos/webrtc-build/macos
 
   # depot_tools へのパスを通しておく
   # (Docker から実行するタイプのビルドでは事前に通してあるが、こっちは通してない可能性があるので)
-  export PATH := $(CURDIR)/build/mac/webrtc/depot_tools:$(PATH)
+  export PATH := $(CURDIR)/build/macos/webrtc/depot_tools:$(PATH)
 else
   # 各変数がちゃんと設定されているか確認する
 
@@ -215,7 +215,7 @@ ifeq ($(TARGET_OS),linux)
   else
     CFLAGS += -DUSE_H264=1
   endif
-else ifeq ($(TARGET_OS),mac)
+else ifeq ($(TARGET_OS),macos)
   CFLAGS += -DUSE_H264=1
 endif
 
@@ -313,7 +313,7 @@ ifeq ($(TARGET_OS),linux)
   endif
 endif
 
-ifeq ($(TARGET_OS),mac)
+ifeq ($(TARGET_OS),macos)
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
   CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
   LDFLAGS += \

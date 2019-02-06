@@ -12,7 +12,7 @@ help:
 	@echo ""
 	@echo "<パッケージ名>:"
 	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
-	@echo "  - mac (make mac.edit を除く)"
+	@echo "  - macos (make macos.edit を除く)"
 	@echo ""
 	@echo "[オプション]:"
 	@echo "  - NOCACHE=1"
@@ -99,34 +99,34 @@ endef
 # Docker 用のルールを生成
 $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(package_name))))
 
-.PHONY: mac
-mac: mac.prepare
-	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=mac momo
+.PHONY: macos
+macos: macos.prepare
+	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos momo
 
-.PHONY: mac.package
-mac.package: mac.prepare
+.PHONY: macos.package
+macos.package: macos.prepare
 	# momo を package モードでビルドし直す
-	rm -f ../_build/mac/momo && make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=mac BUILD_MODE=package momo
+	rm -f ../_build/macos/momo && make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos BUILD_MODE=package momo
 
 	# パッケージのバイナリを作る
-	rm -rf package/momo-$(MOMO_VERSION)_mac
-	rm -f package/momo-$(MOMO_VERSION)_mac.tar.gz
-	mkdir -p package/momo-$(MOMO_VERSION)_mac
-	cp    ../_build/mac/momo package/momo-$(MOMO_VERSION)_mac/
-	cp    ../LICENSE         package/momo-$(MOMO_VERSION)_mac/
-	cp    ../NOTICE          package/momo-$(MOMO_VERSION)_mac/
-	cp -r ../html            package/momo-$(MOMO_VERSION)_mac/html
-	cd package && tar czf momo-$(MOMO_VERSION)_mac.tar.gz momo-$(MOMO_VERSION)_mac
+	rm -rf package/momo-$(MOMO_VERSION)_macos
+	rm -f package/momo-$(MOMO_VERSION)_macos.tar.gz
+	mkdir -p package/momo-$(MOMO_VERSION)_macos
+	cp    ../_build/macos/momo package/momo-$(MOMO_VERSION)_macos/
+	cp    ../LICENSE           package/momo-$(MOMO_VERSION)_macos/
+	cp    ../NOTICE            package/momo-$(MOMO_VERSION)_macos/
+	cp -r ../html              package/momo-$(MOMO_VERSION)_macos/html
+	cd package && tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
 
-	rm -rf package/momo-$(MOMO_VERSION)_mac
+	rm -rf package/momo-$(MOMO_VERSION)_macos
 	@echo ""
-	@echo "パッケージが package/momo-$(MOMO_VERSION)_mac.tar.gz に生成されました。"
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_macos.tar.gz に生成されました。"
 
-.PHONY: mac.prepare
-mac.prepare:
-	make -C mac
+.PHONY: macos.prepare
+macos.prepare:
+	make -C macos
 
-.PHONY: mac.clean
-mac.clean:
-	make -C mac clean
+.PHONY: macos.clean
+macos.clean:
+	make -C macos clean
 	make -C .. clean

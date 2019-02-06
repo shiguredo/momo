@@ -106,7 +106,7 @@ function _git_clone_awesome() {
 # そのためキャッシュディレクトリの内容をキャッシュしても構わない。
 #
 # 引数:
-#   $1: 対象が arm か x86_64 か mac か
+#   $1: 対象が arm か x86_64 か macos か
 #   $2: 一時ファイル置き場ディレクトリ。$1/depot_tools や $1/src などのディレクトリが生成される。
 #       空文字列だった場合は $4 に直接配置される。
 #   $3: WebRTC のコミットハッシュ
@@ -140,7 +140,7 @@ function _prepare_webrtc() {
     sed -i -e 's/sudo/sudo -E/g' ./src/build/install-build-deps.sh || return 1
     bash ./src/build/install-build-deps.sh --no-arm --no-chromeos-fonts || return 1
     (pushd src/build && git reset --hard && popd) || return 1
-  elif [ "$target_arch" = "mac" ]; then
+  elif [ "$target_arch" = "macos" ]; then
     :
   fi
   gclient sync || return 1
@@ -167,8 +167,8 @@ function prepare_webrtc_x86_64() {
 }
 
 # _prepare_webrtc を参照
-function prepare_webrtc_mac() {
-  _prepare_webrtc mac "$@"
+function prepare_webrtc_macos() {
+  _prepare_webrtc macos "$@"
 }
 
 # 指定した Boost のバージョンをダウンロードして、b2 を実行できる状態にする
