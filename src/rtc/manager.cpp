@@ -39,15 +39,15 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
-  _factory = webrtc::CreatePeerConnectionFactory(
-      _networkThread.get(), _workerThread.get(), _signalingThread.get(),
-
 #ifdef __APPLE__
-      webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio),
+  _adm = webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio);
 #else
-      webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kLinuxAlsaAudio),
+  _adm = webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kLinuxAlsaAudio);
 #endif
 
+  _factory = webrtc::CreatePeerConnectionFactory(
+      _networkThread.get(), _workerThread.get(), _signalingThread.get(),
+      _adm,
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
 
@@ -82,7 +82,11 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
     _video_source = _factory->CreateVideoSource(std::move(capturer));
 #else
 
-    capturer = createVideoCapturer();
+    capturer = createVideoCapturer(_conn_settings.video_device);
+    if (capturer == nullptr)
+    {
+      exit(1);
+    }
 
     webrtc::FakeConstraints constraints;
         constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
@@ -97,6 +101,34 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
     _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
 #endif
   }
+
+  if (!_conn_settings.no_audio)
+  {
+    // 録音用デバイスの設定
+    {
+      const std::string& name = _conn_settings.recording_device;
+      std::vector<std::string> device_names = listRecordingDevice();
+      if (device_names.empty()) {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << "No recording device";
+      } else {
+        int device_index = 0;
+
+        // デバイス名が指定されていた場合、そのデバイスを探す
+        if (!name.empty()) {
+          auto it = std::find(device_names.begin(), device_names.end(), name);
+          if (it == device_names.end()) {
+            RTC_LOG(LS_ERROR) << "specified recording device '" << name << "' not found";
+          }
+          device_index = std::distance(device_names.begin(), it);
+        }
+
+        _adm->SetRecordingDevice((int16_t)device_index);
+      }
+    }
+    // 再生用デバイスの設定（必要になったら作る）
+    {
+    }
+  }
 }
 
 RTCManager::~RTCManager()
@@ -110,14 +142,41 @@ RTCManager::~RTCManager()
   rtc::CleanupSSL();
 }
 
-std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer() {
-  std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
+std::vector<std::string> RTCManager::listRecordingDevice() {
+  std::vector<std::string> device_names;
+  int num_devices = _adm->RecordingDevices();
+  for (int i = 0; i < num_devices; i++) {
+    char name[webrtc::kAdmMaxDeviceNameSize];
+    char guid[webrtc::kAdmMaxGuidSize];
+    if (_adm->RecordingDeviceName(i, name, guid) != -1) {
+      RTC_LOG(LS_INFO) << "found recording device: " << name;
+      device_names.push_back(name);
+    }
+  }
+  return device_names;
+}
+
+std::vector<std::string> RTCManager::listPlayoutDevice() {
+  std::vector<std::string> device_names;
+  int num_devices = _adm->PlayoutDevices();
+  for (int i = 0; i < num_devices; i++) {
+    char name[webrtc::kAdmMaxDeviceNameSize];
+    char guid[webrtc::kAdmMaxGuidSize];
+    if (_adm->PlayoutDeviceName(i, name, guid) != -1) {
+      RTC_LOG(LS_INFO) << "found playout device: " << name;
+      device_names.push_back(name);
+    }
+  }
+  return device_names;
+}
+
+std::vector<std::string> RTCManager::listVideoDevice() {
   std::vector<std::string> device_names;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
             webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
     RTC_LOG(LS_WARNING) << __FUNCTION__ << "CreateDeviceInfo failed";
-    return nullptr;
+    return {};
   }
   int num_devices = info->NumberOfDevices();
   for (int i = 0; i < num_devices; ++i) {
@@ -125,15 +184,32 @@ std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer() {
     char name[nSize] = {0};
     char id[nSize] = {0};
     if (info->GetDeviceName(i, name, nSize, id, nSize) != -1) {
-      RTC_LOG(LS_INFO) << "found device: " << name;
+      RTC_LOG(LS_INFO) << "found video device: " << name;
       device_names.push_back(name);
     }
   }
-  cricket::WebRtcVideoDeviceCapturerFactory factory;
-  for (const auto& name : device_names) {
-    capturer = factory.Create(cricket::Device(name, 0));
+  return device_names;
+}
+
+std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer(const std::string& name) {
+  std::vector<std::string> device_names = listVideoDevice();
+  if (device_names.empty()) {
+    return nullptr;
   }
-  return capturer;
+
+  int device_index = 0;
+
+  // デバイス名が指定されていた場合、そのデバイスを探す
+  if (!name.empty()) {
+    auto it = std::find(device_names.begin(), device_names.end(), name);
+    if (it == device_names.end()) {
+      RTC_LOG(LS_ERROR) << "specified video device '" << name << "' not found";
+    }
+    device_index = std::distance(device_names.begin(), it);
+  }
+
+  cricket::WebRtcVideoDeviceCapturerFactory factory;
+  return factory.Create(cricket::Device(device_names[device_index], 0));
 }
 
 std::shared_ptr<RTCConnection> RTCManager::createConnection(

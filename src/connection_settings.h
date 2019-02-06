@@ -16,6 +16,8 @@ struct ConnectionSettings
 
   bool no_video = false;
   bool no_audio = false;
+  std::string video_device;
+  std::string recording_device;
   std::string video_codec = "VP8";
   std::string audio_codec = "OPUS";
   int video_bitrate = 0;
@@ -72,6 +74,8 @@ struct ConnectionSettings
   friend std::ostream& operator<<(std::ostream& os, const ConnectionSettings& cs) {
     os << "no_video: " << (cs.no_video ? "true" : "false") << "\n";
     os << "no_audio: " << (cs.no_audio ? "true" : "false") << "\n";
+    os << "video_device: " << cs.video_device << "\n";
+    os << "recording_device: " << cs.recording_device << "\n";
     os << "video_codec: " << cs.video_codec << "\n";
     os << "audio_codec: " << cs.audio_codec << "\n";
     os << "video_bitrate: " << cs.video_bitrate << "\n";

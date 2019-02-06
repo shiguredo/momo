@@ -72,9 +72,9 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  // この時点では RTCManager の準備ができていないので RTCManager::createVideoCapture() を呼んでも動作しない。
+  // この時点では RTCManager の準備ができていないので RTCManager::createVideoCapturer() を呼んでも動作しない。
   // なので capturer が nullptr だったら RTCManager 側で作るようにする。
-  // std::unique_ptr<cricket::VideoCapturer> capturer = RTCManager::createVideoCapture();
+  // std::unique_ptr<cricket::VideoCapturer> capturer = RTCManager::createVideoCapturer();
   std::unique_ptr<cricket::VideoCapturer> capturer;
 #endif
 

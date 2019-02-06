@@ -7,6 +7,9 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+
+#include "rtc/manager.h"
+
 #if USE_ROS
 #include "ros/ros.h"
 #endif
@@ -166,6 +169,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
+  app.add_option("--video-device", cs.video_device, "ビデオデバイス名(./momo list-device を参照)");
+  app.add_option("--recording-device", cs.recording_device, "録音デバイス名(./momo list-device を参照)");
 #if MOMO_USE_H264
   app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
 #else
@@ -185,6 +190,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto list_device_app = app.add_subcommand("list-device", "List Available Devices");
 
   p2p_app->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")->check(DirectoryExists());
 
@@ -220,7 +226,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     exit(0);
   }
 
-  if (!p2p_app->parsed() && !sora_app->parsed())
+  if (!p2p_app->parsed() && !sora_app->parsed() && !list_device_app->parsed())
   {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -232,6 +238,30 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   if (p2p_app->parsed()) {
     use_p2p = true;
+  }
+
+  if (list_device_app->parsed()) {
+    rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
+    rtc::LogMessage::LogTimestamps();
+    rtc::LogMessage::LogThreads();
+
+    std::unique_ptr<cricket::VideoCapturer> capturer;
+    std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
+    auto video_devices = rtc_manager->listVideoDevice();
+    auto recording_devices = rtc_manager->listRecordingDevice();
+    std::cout << std::endl;
+    std::cout << "ビデオデバイス:" << std::endl;
+    for (auto&& device: video_devices) {
+      std::cout << "- " << device << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << "録音デバイス:" << std::endl;
+    for (auto&& device: recording_devices) {
+      std::cout << "- " << device << std::endl;
+    }
+    std::cout << std::endl;
+
+    exit(0);
   }
 }
 
