@@ -118,6 +118,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
           auto it = std::find(device_names.begin(), device_names.end(), name);
           if (it == device_names.end()) {
             RTC_LOG(LS_ERROR) << "specified recording device '" << name << "' not found";
+            exit(1);
           }
           device_index = std::distance(device_names.begin(), it);
         }
@@ -204,6 +205,7 @@ std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer(const st
     auto it = std::find(device_names.begin(), device_names.end(), name);
     if (it == device_names.end()) {
       RTC_LOG(LS_ERROR) << "specified video device '" << name << "' not found";
+      return nullptr;
     }
     device_index = std::distance(device_names.begin(), it);
   }

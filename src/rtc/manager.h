@@ -24,10 +24,10 @@ private:
 
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _video_source;
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> _adm;
   std::unique_ptr<rtc::Thread> _networkThread;
   std::unique_ptr<rtc::Thread> _workerThread;
   std::unique_ptr<rtc::Thread> _signalingThread;
   ConnectionSettings _conn_settings;
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> _adm;
 };
 #endif

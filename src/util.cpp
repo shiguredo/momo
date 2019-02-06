@@ -245,8 +245,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     rtc::LogMessage::LogTimestamps();
     rtc::LogMessage::LogThreads();
 
-    std::unique_ptr<cricket::VideoCapturer> capturer;
-    std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
+    std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, nullptr));
     auto video_devices = rtc_manager->listVideoDevice();
     auto recording_devices = rtc_manager->listRecordingDevice();
     std::cout << std::endl;
