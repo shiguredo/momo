@@ -143,6 +143,10 @@ function _prepare_webrtc() {
   elif [ "$target_arch" = "macos" ]; then
     :
   fi
+
+  # third_party ディレクトリを元に戻しておく
+  (cd $cache_dir/src/third_party && git reset --hard) || return 1
+
   gclient sync || return 1
 
   cd $cache_dir/src || return 1
