@@ -132,11 +132,11 @@ Options:
   --framerate INT in [1 - 60] フレームレート
   --fixed-resolution          固定解像度
   --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
-                              優先設定
+                              優先設定 (Experimental)
+  --port INT in [0 - 65535]   ポート番号
   --daemon                    デーモン化する
   --version                   バージョン情報の表示
   --log-level INT in [0 - 5]  ログレベル
-
 
 Subcommands:
   p2p                         P2P
@@ -150,8 +150,8 @@ P2P
 Usage: ./momo p2p [OPTIONS]
 
 Options:
-  -h,--help                   ヘルプ
-  --port INT in [0 - 65535]   ポート番号
+  -h,--help                   Print this help message and exit
+  --document-root Directory   配信ディレクトリ
 ```
 
 
