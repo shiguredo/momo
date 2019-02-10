@@ -15,6 +15,8 @@
 #include "ros/ros_log_sink.h"
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
+#else
+#include "rtc/device_video_capturer.h"
 #endif
 
 #include "connection_settings.h"
@@ -72,10 +74,8 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  // この時点では RTCManager の準備ができていないので RTCManager::createVideoCapture() を呼んでも動作しない。
-  // なので capturer が nullptr だったら RTCManager 側で作るようにする。
-  // std::unique_ptr<cricket::VideoCapturer> capturer = RTCManager::createVideoCapture();
-  std::unique_ptr<cricket::VideoCapturer> capturer;
+  std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer =
+          DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
