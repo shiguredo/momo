@@ -36,15 +36,13 @@ $(LIBWEBRTC): check
 	export GYP_DEFINES="OS=mac target_arch=x64" && \
 	prepare_webrtc_macos "" $(WEBRTC_COMMIT) $(CURDIR)/webrtc && \
 	cd $(CURDIR)/webrtc/src && \
-	patch -p2 < $(CURDIR)/../../patch/4k.patch && \
 	gn gen $(CURDIR)/webrtc-build/macos --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true' && \
 	ninja -C $(CURDIR)/webrtc-build/macos && \
 	ninja -C $(CURDIR)/webrtc-build/macos \
 	  builtin_audio_decoder_factory \
 	  native_api \
 	  default_codec_factory_objc \
-	  peerconnection \
-	  create_pc_factory
+	  peerconnection
 
 $(BOOST):
 	source ../../script/docker.sh && \
