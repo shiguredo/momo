@@ -332,6 +332,11 @@ ifeq ($(TARGET_OS),macos)
     -framework CoreVideo \
     -framework VideoToolbox
   SOURCES += $(shell find src -name '*.mm')
+else
+  ifeq ($(USE_ROS),0)
+    # USE_ROS=0 かつ mac 以外の場合はカスタムされた libc++ を使っているためオプション追加 
+    CFLAGS += -D_LIBCPP_ABI_UNSTABLE
+  endif
 endif
 
 ifeq ($(USE_ROS),1)

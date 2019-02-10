@@ -55,6 +55,7 @@ RUN \
     && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
     && ./b2 \
       cxxflags=' \
+        -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
         -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
       ' \
