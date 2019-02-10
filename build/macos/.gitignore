@@ -1,4 +1,8 @@
 /webrtc
 /webrtc-build
 /boost
-/boost-*
+/boost*
+/src
+/.cipd
+/.gclient
+/.gclient_entries
