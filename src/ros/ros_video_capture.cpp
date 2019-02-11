@@ -94,10 +94,8 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
   webrtc::VideoFrame captureFrame =
           webrtc::VideoFrame::Builder()
               .set_video_frame_buffer(dst_buffer)
-              .set_timestamp_rtp(0)
-              .set_timestamp_ms(rtc::TimeMillis())
               .set_rotation(webrtc::kVideoRotation_0)
+              .set_timestamp_us((int64_t)(ros_time.toNSec() / 1000))
               .build();
-  captureFrame.set_ntp_time_ms((int64_t)(ros_time.toNSec() / 1000000));
   OnFrame(captureFrame);
 }
