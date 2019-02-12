@@ -330,7 +330,11 @@ ifeq ($(TARGET_OS),macos)
     -framework CoreGraphics \
     -framework CoreMedia \
     -framework CoreVideo \
-    -framework VideoToolbox
+    -framework VideoToolbox \
+    -framework AppKit \
+    -framework Metal \
+    -framework MetalKit \
+    -framework OpenGL
   SOURCES += $(shell find src -name '*.mm')
 else
   ifeq ($(USE_ROS),0)

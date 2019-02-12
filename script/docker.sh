@@ -150,6 +150,7 @@ function _prepare_webrtc() {
   gclient sync || return 1
 
   cd $cache_dir/src || return 1
+  git fetch || return 1
   git checkout -f $webrtc_commit || return 1
   gclient sync || return 1
 
