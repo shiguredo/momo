@@ -21,7 +21,7 @@ struct ConnectionSettings
   int video_bitrate = 0;
   int audio_bitrate = 0;
   std::string resolution = "VGA";
-  int framerate = 0;
+  int framerate = 30;
   bool fixed_resolution = false;
   std::string priority = "BALANCE";
   int port = 8080;

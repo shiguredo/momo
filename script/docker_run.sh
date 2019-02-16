@@ -123,6 +123,7 @@ else
   git clone $MOMO_DIR momo
 
   # 中間ファイルのコピー
+  mkdir -p $MOMO_DIR/_build
   if [ -e $MOMO_DIR/_build/$PACKAGE_NAME ]; then
     mkdir -p momo/_build
     cp -r $MOMO_DIR/_build/$PACKAGE_NAME momo/_build/$PACKAGE_NAME
