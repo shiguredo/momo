@@ -156,8 +156,8 @@ function prepareNewConnection() {
   };
 
   if (isUnifiedPlan(peer)) {
-    peer.addTransceiver('video');
-    peer.addTransceiver('audio');
+    peer.addTransceiver('video', {direction: 'recvonly'});
+    peer.addTransceiver('audio', {direction: 'recvonly'});
   }
 
   return peer;
