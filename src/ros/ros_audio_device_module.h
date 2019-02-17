@@ -3,9 +3,10 @@
 
 #include <memory>
 
-#include "ros_audio_device.h"
-
 #include "modules/audio_device/include/audio_device.h"
+
+#include "ros_audio_device.h"
+#include "connection_settings.h"
 
 #define CHECKinitialized_() \
   {                         \
@@ -26,10 +27,10 @@
 class ROSAudioDeviceModule : public webrtc::AudioDeviceModule
 {
 public:
-  static rtc::scoped_refptr<webrtc::AudioDeviceModule> Create();
+  static rtc::scoped_refptr<webrtc::AudioDeviceModule> Create(ConnectionSettings conn_settings);
   int32_t AttachAudioBuffer();
 
-  ROSAudioDeviceModule();
+  ROSAudioDeviceModule(ConnectionSettings conn_settings);
   ~ROSAudioDeviceModule() override;
 
   // Retrieve the currently utilized audio layer
@@ -128,6 +129,7 @@ public:
   int GetRecordAudioParameters(webrtc::AudioParameters *params) const override;
 #endif // WEBRTC_IOS
 private:
+  ConnectionSettings _conn_settings;
   bool initialized_ = false;
   std::unique_ptr<ROSAudioDevice> audio_device_;
   std::unique_ptr<webrtc::AudioDeviceBuffer> audio_device_buffer_;

@@ -18,15 +18,15 @@
 #include "rtc_base/refcountedobject.h"
 #include "system_wrappers/include/metrics.h"
 
-ROSAudioDeviceModule::ROSAudioDeviceModule()
+ROSAudioDeviceModule::ROSAudioDeviceModule(ConnectionSettings conn_settings) : _conn_settings(conn_settings)
 {
-  RTC_LOG(INFO) << "Current setting use Dolby Voice";
+  RTC_LOG(INFO) << "Current setting use ROS Audio";
 }
 
-rtc::scoped_refptr<webrtc::AudioDeviceModule> ROSAudioDeviceModule::Create()
+rtc::scoped_refptr<webrtc::AudioDeviceModule> ROSAudioDeviceModule::Create(ConnectionSettings conn_settings)
 {
   RTC_LOG(INFO) << __FUNCTION__;
-  return new rtc::RefCountedObject<ROSAudioDeviceModule>();
+  return new rtc::RefCountedObject<ROSAudioDeviceModule>(conn_settings);
 }
 
 int32_t ROSAudioDeviceModule::AttachAudioBuffer()
@@ -60,7 +60,7 @@ int32_t ROSAudioDeviceModule::Init()
     return 0;
 
   audio_device_buffer_.reset(new webrtc::AudioDeviceBuffer());
-  audio_device_.reset(new ROSAudioDevice());
+  audio_device_.reset(new ROSAudioDevice(_conn_settings));
   RTC_CHECK(audio_device_);
 
   this->AttachAudioBuffer();

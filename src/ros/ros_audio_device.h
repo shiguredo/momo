@@ -19,10 +19,15 @@
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/timeutils.h"
 
+#include "ros/ros.h"
+#include "audio_common_msgs/AudioData.h"
+
+#include "connection_settings.h"
+
 class ROSAudioDevice : public webrtc::AudioDeviceGeneric
 {
 public:
-  ROSAudioDevice();
+  ROSAudioDevice(ConnectionSettings conn_settings);
   ~ROSAudioDevice() override;
 
   // Retrieve the currently utilized audio layer
@@ -117,10 +122,11 @@ public:
 #endif // WEBRTC_IOS
 
 private:
-  static bool RecThreadFunc(void *);
   static bool PlayThreadFunc(void *);
-  bool RecThreadProcess();
+  bool RecROSCallback(const audio_common_msgs::AudioDataConstPtr &msg);
   bool PlayThreadProcess();
+
+  ConnectionSettings _conn_settings;
 
   int32_t _playout_index;
   int32_t _record_index;
@@ -133,10 +139,13 @@ private:
 
   size_t _recordingBufferSizeIn10MS;
   size_t _recordingFramesIn10MS;
+  size_t _writtenBufferSize;
   size_t _playoutFramesIn10MS;
 
+  ros::AsyncSpinner* _spinner;
+  ros::Subscriber _sub;
+
   // TODO(pbos): Make plain members instead of pointers and stop resetting them.
-  std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
   std::unique_ptr<rtc::PlatformThread> _ptrThreadPlay;
 
   bool _playing;

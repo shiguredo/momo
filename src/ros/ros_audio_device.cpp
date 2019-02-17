@@ -14,21 +14,21 @@
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/sleep.h"
 
-const int kRecordingFixedSampleRate = 8000;
-const size_t kRecordingNumChannels = 1;
 const int kPlayoutFixedSampleRate = 8000;
 const size_t kPlayoutNumChannels = 1;
 const size_t kPlayoutBufferSize =
     kPlayoutFixedSampleRate / 100 * kPlayoutNumChannels * 2;
 
-ROSAudioDevice::ROSAudioDevice()
-    : _ptrAudioBuffer(NULL),
+ROSAudioDevice::ROSAudioDevice(ConnectionSettings conn_settings)
+    : _conn_settings(conn_settings),
+      _ptrAudioBuffer(NULL),
       _recordingBuffer(NULL),
       _playoutBuffer(NULL),
       _recordingFramesLeft(0),
       _playoutFramesLeft(0),
       _recordingBufferSizeIn10MS(0),
       _recordingFramesIn10MS(0),
+      _writtenBufferSize(0),
       _playoutFramesIn10MS(0),
       _playing(false),
       _recording(false),
@@ -191,12 +191,12 @@ int32_t ROSAudioDevice::InitRecording()
     return -1;
   }
 
-  _recordingFramesIn10MS = static_cast<size_t>(kRecordingFixedSampleRate / 100);
+  _recordingFramesIn10MS = static_cast<size_t>(_conn_settings.audio_topic_rate / 100);
 
   if (_ptrAudioBuffer)
   {
-    _ptrAudioBuffer->SetRecordingSampleRate(kRecordingFixedSampleRate);
-    _ptrAudioBuffer->SetRecordingChannels(kRecordingNumChannels);
+    _ptrAudioBuffer->SetRecordingSampleRate(_conn_settings.audio_topic_rate);
+    _ptrAudioBuffer->SetRecordingChannels(_conn_settings.audio_topic_ch);
   }
   return 0;
 }
@@ -269,17 +269,20 @@ int32_t ROSAudioDevice::StartRecording()
 
   // Make sure we only create the buffer once.
   _recordingBufferSizeIn10MS =
-      _recordingFramesIn10MS * kRecordingNumChannels * 2;
+      _recordingFramesIn10MS * _conn_settings.audio_topic_ch * 2;
   if (!_recordingBuffer)
   {
     _recordingBuffer = new int8_t[_recordingBufferSizeIn10MS];
   }
+  
+  ros::NodeHandle nh;
+  _sub = nh.subscribe<audio_common_msgs::AudioData>(
+      _conn_settings.audio_topic_name, 1,
+      boost::bind(&ROSAudioDevice::RecROSCallback, this, _1));
 
-  _ptrThreadRec.reset(new rtc::PlatformThread(
-      RecThreadFunc, this, "webrtc_audio_module_capture_thread"));
-
-  _ptrThreadRec->Start();
-  _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
+  _writtenBufferSize = 0;
+  _spinner = new ros::AsyncSpinner(1);
+  _spinner->start();
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Started recording";
 
@@ -293,10 +296,9 @@ int32_t ROSAudioDevice::StopRecording()
     _recording = false;
   }
 
-  if (_ptrThreadRec)
+  if (_spinner)
   {
-    _ptrThreadRec->Stop();
-    _ptrThreadRec.reset();
+    _spinner->stop();
   }
 
   rtc::CritScope lock(&_critSect);
@@ -434,18 +436,18 @@ int32_t ROSAudioDevice::StereoPlayout(bool &enabled) const
 
 int32_t ROSAudioDevice::StereoRecordingIsAvailable(bool &available)
 {
-  available = true;
+  available = _conn_settings.audio_topic_ch == 2;
   return 0;
 }
 
 int32_t ROSAudioDevice::SetStereoRecording(bool enable)
 {
-  return 0;
+  return ((_conn_settings.audio_topic_ch == 2) == enable) ? 0 : -1;
 }
 
 int32_t ROSAudioDevice::StereoRecording(bool &enabled) const
 {
-  enabled = true;
+  enabled = _conn_settings.audio_topic_ch == 2;
   return 0;
 }
 
@@ -486,11 +488,6 @@ bool ROSAudioDevice::PlayThreadFunc(void *pThis)
   return (static_cast<ROSAudioDevice *>(pThis)->PlayThreadProcess());
 }
 
-bool ROSAudioDevice::RecThreadFunc(void *pThis)
-{
-  return (static_cast<ROSAudioDevice *>(pThis)->RecThreadProcess());
-}
-
 bool ROSAudioDevice::PlayThreadProcess()
 {
   if (!_playing)
@@ -523,33 +520,38 @@ bool ROSAudioDevice::PlayThreadProcess()
   return true;
 }
 
-bool ROSAudioDevice::RecThreadProcess()
+bool ROSAudioDevice::RecROSCallback(const audio_common_msgs::AudioDataConstPtr &msg)
 {
   if (!_recording)
   {
     return false;
   }
 
-  int64_t currentTime = rtc::TimeMillis();
+  size_t copyedDataSize = 0;
   _critSect.Enter();
-
-  if (_lastCallRecordMillis == 0 || currentTime - _lastCallRecordMillis >= 5)
+  while (copyedDataSize != msg->data.size())
   {
-    _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,
-                                       _recordingFramesIn10MS);
-    _lastCallRecordMillis = currentTime;
-    _critSect.Leave();
-    _ptrAudioBuffer->DeliverRecordedData();
-    _critSect.Enter();
+    RTC_LOG(LERROR) << "RecROSCallback _recordingBufferSizeIn10MS:" << _recordingBufferSizeIn10MS
+                    << " _writtenBufferSize" << _writtenBufferSize
+                    << " msg->data.size()" << msg->data.size()
+                    << " copyedDataSize" << copyedDataSize;
+    if (_recordingBufferSizeIn10MS - _writtenBufferSize <= msg->data.size() - copyedDataSize)
+    {
+      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize], _recordingBufferSizeIn10MS - _writtenBufferSize);
+      copyedDataSize += _recordingBufferSizeIn10MS - _writtenBufferSize;
+      _writtenBufferSize = 0;
+      _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer, _recordingFramesIn10MS);
+      _critSect.Leave();
+      _ptrAudioBuffer->DeliverRecordedData();
+      webrtc::SleepMs(10);
+      _critSect.Enter();
+    } else {
+      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize], msg->data.size() - copyedDataSize);
+      _writtenBufferSize += msg->data.size() - copyedDataSize;
+      copyedDataSize += msg->data.size() - copyedDataSize;
+    }
   }
-
   _critSect.Leave();
-
-  int64_t deltaTimeMillis = rtc::TimeMillis() - currentTime;
-  if (deltaTimeMillis < 5)
-  {
-    webrtc::SleepMs(5 - deltaTimeMillis);
-  }
 
   return true;
 }

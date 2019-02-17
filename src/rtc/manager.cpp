@@ -50,7 +50,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
       _networkThread.get(), _workerThread.get(), _signalingThread.get(),
 
 #if USE_ROS
-      ROSAudioDeviceModule::Create(),
+      ROSAudioDeviceModule::Create(_conn_settings),
 #elif __APPLE__
       webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio),
 #else
