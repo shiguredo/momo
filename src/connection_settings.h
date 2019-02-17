@@ -12,6 +12,9 @@ struct ConnectionSettings
   std::string camera_name = "";
 #if USE_ROS
   bool image_compressed = false;
+  std::string audio_topic_name = "";
+  int audio_topic_rate = 16000;
+  int audio_topic_ch = 1;
 #endif
 
   bool no_video = false;

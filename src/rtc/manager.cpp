@@ -23,6 +23,10 @@
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #endif
 
+#if USE_ROS
+#include "ros/ros_audio_device_module.h"
+#endif
+
 #if USE_IL_ENCODER
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "hwenc_il/il_encoder_factory.h"
@@ -45,7 +49,9 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   _factory = webrtc::CreatePeerConnectionFactory(
       _networkThread.get(), _workerThread.get(), _signalingThread.get(),
 
-#ifdef __APPLE__
+#if USE_ROS
+      ROSAudioDeviceModule::Create(_conn_settings),
+#elif __APPLE__
       webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio),
 #else
       webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kLinuxAlsaAudio),
