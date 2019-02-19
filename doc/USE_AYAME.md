@@ -12,6 +12,7 @@ Positionals:
   ROOM-ID TEXT REQUIRED       ルーム ID
 
 Options:
+  -k,--key                    キー
   -h,--help                   Print this help message and exit
 ```
 
