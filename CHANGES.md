@@ -13,6 +13,8 @@
 
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
 - [FIX] https で接続した際に WebSocket も wss scheme で接続するように webrtc.js を修正する
+- [CHANGE] ビルド時のターゲットと、オプションを変更する
+- [UPDATE] STUN サーバの URL の指定を url から urls に変更する
 
 ## 19.01.0
 
