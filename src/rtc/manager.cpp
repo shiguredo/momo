@@ -79,7 +79,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (!_conn_settings.no_video)
+  if (capturer && !_conn_settings.no_video)
   {
     _video_source = CapturerTrackSource::Create(std::move(capturer));
   }
