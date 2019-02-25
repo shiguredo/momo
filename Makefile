@@ -441,7 +441,8 @@ $(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS) | $(BUILD_ROOT)
 ifdef WEBRTC_LIB_ROOT
 
 $(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
-	$(AR) -rcT $@ $^
+	@mkdir -p `dirname $@`
+	$(AR) -r -c -s -D $@ $^
 
 endif
 
