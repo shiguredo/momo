@@ -98,10 +98,10 @@ Python 2.7.10
 
 ### ビルド方法
 
-build ディレクトリ以下で make mac と打つことで Momo の macOS 向けバイナリが生成されます。
+build ディレクトリ以下で make macos と打つことで Momo の macOS 向けバイナリが生成されます。
 
 ```shell
-$ make mac
+$ make macos
 ```
 
 ## Windows 10
