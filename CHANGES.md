@@ -10,8 +10,9 @@
     - バグ修正
 
 ## develop
+
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
-- [FIX] httpsで接続した際にWebSocketもwss　schemeで接続するよう webrtc.js を修正する
+- [FIX] https で接続した際に WebSocket も wss scheme で接続するように webrtc.js を修正する
 
 ## 19.01.0
 
