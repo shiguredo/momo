@@ -14,6 +14,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
     set -ex \
     && source /root/docker.sh \
     && apt_install_ubuntu_x86_64 \
+    && apt_install_ros_kinetic \
   "
 
 # WebRTC の準備
