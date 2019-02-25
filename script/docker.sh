@@ -204,3 +204,12 @@ function setup_boost() {
   fi
 }
 
+# ROS Kinetic 用のパッケージをインストールする
+#
+# 引数: なし
+function apt_install_ros_kinetic() {
+  apt-get update
+  apt-get -y upgrade
+  apt-get -y install \
+    ros-kinetic-audio-common
+}
