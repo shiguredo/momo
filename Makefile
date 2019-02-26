@@ -68,7 +68,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 1
-  USE_IL_ENCODER ?= 0
+  USE_IL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
