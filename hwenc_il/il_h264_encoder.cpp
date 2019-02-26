@@ -211,14 +211,14 @@ int32_t ILH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   list_[0] = video_encode_;
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
-  encoded_image_._size = CalcBufferSize(
+  const size_t new_capacity = CalcBufferSize(
       webrtc::VideoType::kI420, codec_settings->width, codec_settings->height);
-  encoded_image_._buffer = new uint8_t[encoded_image_._size];
-  encoded_image_buffer_.reset(encoded_image_._buffer);
+  encoded_image_buffer_.reset(new uint8_t[new_capacity]);
+  encoded_image_.set_buffer(encoded_image_buffer_.get(), new_capacity);
   encoded_image_._completeFrame = true;
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
-  encoded_image_._length = 0;
+  encoded_image_.set_size(0);
   encoded_image_.content_type_ = webrtc::VideoContentType::UNSPECIFIED;
   encoded_image_.timing_.flags = webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
 
@@ -246,7 +246,6 @@ int32_t ILH264Encoder::Release()
     ilclient_destroy(ilclient_);
     ilclient_ = nullptr;
   }
-  encoded_image_._buffer = nullptr;
   encoded_image_buffer_.reset();
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -693,51 +692,34 @@ int32_t ILH264Encoder::DrainEncodedData()
         required_size = out->nFilledLen;
       }
 
-      if (encoded_image_._size < required_size)
+      if (encoded_image_.capacity() < required_size)
       {
-        encoded_image_._size =
-            CalcBufferSize(webrtc::VideoType::kI420, encoded_image_._encodedWidth, encoded_image_._encodedHeight);
-        if (encoded_image_._size < required_size)
+        size_t new_capacity = CalcBufferSize(
+            webrtc::VideoType::kI420, encoded_image_._encodedWidth, encoded_image_._encodedHeight);
+        if (new_capacity < required_size)
         {
-          encoded_image_._size = required_size;
+          new_capacity = required_size;
         }
-        encoded_image_._buffer = new uint8_t[encoded_image_._size];
-        encoded_image_buffer_.reset(encoded_image_._buffer);
+        encoded_image_buffer_.reset(new uint8_t[new_capacity]);
+        encoded_image_.set_buffer(encoded_image_buffer_.get(), new_capacity);
       }
 
       if (out->nFlags & OMX_BUFFERFLAG_SYNCFRAME)
       {
-        memcpy(encoded_image_._buffer,
+        memcpy(encoded_image_.data(),
                lastSPS_,
                sps_length_);
         writtenSize += sps_length_;
-        memcpy(encoded_image_._buffer + writtenSize,
+        memcpy(encoded_image_.data() + writtenSize,
                lastPPS_,
                pps_length_);
         writtenSize += pps_length_;
       }
       out->pBuffer[out->nOffset + 4] |= 0x40;
-      memcpy(encoded_image_._buffer + writtenSize,
+      memcpy(encoded_image_.data() + writtenSize,
              out->pBuffer + out->nOffset,
              out->nFilledLen);
-      encoded_image_._length = writtenSize + out->nFilledLen;
-
-#if H264HWENC_HEADER_DEBUG
-      if (encoded_image_._length >= 64)
-      {
-        if (encoded_image_._frameType == kVideoFrameKey)
-        {
-          printf("kVideoFrameKey: ");
-        }
-        else
-        {
-          printf("kVideoFrameDelta: ");
-        }
-        for (uint32_t i = 0; i < 64; i++)
-          printf("%02x ", encoded_image_._buffer[i]);
-        printf("\n");
-      }
-#endif
+      encoded_image_.set_size(writtenSize + out->nFilledLen);
 
       SendEncodedDataToCallback(encoded_image_);
       out->nFilledLen = 0;
@@ -755,13 +737,13 @@ void ILH264Encoder::SendEncodedDataToCallback(webrtc::EncodedImage encoded_image
   };
   std::vector<nal_entry> nals;
 
-  const uint8_t *data = encoded_image._buffer;
-  size_t size = encoded_image._length;
+  const uint8_t *data = encoded_image.data();
+  size_t size = encoded_image.size();
   const uint8_t *nalStart = nullptr;
   size_t nalSize = 0;
   while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true))
   {
-    nal_entry nal = {((uint32_t)(nalStart - encoded_image._buffer)), (uint32_t)nalSize};
+    nal_entry nal = {((uint32_t)(nalStart - encoded_image.data())), (uint32_t)nalSize};
     nals.push_back(nal);
   }
 
@@ -786,29 +768,6 @@ void ILH264Encoder::SendEncodedDataToCallback(webrtc::EncodedImage encoded_image
     return;
   }
   bitrate_adjuster_.Update(size);
-}
-
-const char *ILH264Encoder::ImplementationName() const
-{
-  return "OpenMAX IL for Raspberry Pi";
-}
-
-bool ILH264Encoder::SupportsNativeHandle() const
-{
-  return true;
-}
-
-webrtc::VideoEncoder::ScalingSettings ILH264Encoder::GetScalingSettings()
-    const
-{
-  return webrtc::VideoEncoder::ScalingSettings(true, kLowH264QpThreshold,
-                                               kHighH264QpThreshold);
-}
-
-int32_t ILH264Encoder::SetChannelParameters(
-    uint32_t packet_loss, int64_t rtt)
-{
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 bool ILH264Encoder::IsInitialized() const
