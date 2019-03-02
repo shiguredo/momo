@@ -316,6 +316,7 @@ endif
 ifeq ($(TARGET_OS),macos)
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
   CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
+  CFLAGS += -fvisibility=hidden
   LDFLAGS += \
     -ObjC \
     -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks \

@@ -49,4 +49,4 @@ $(BOOST):
 	source ../../script/docker.sh && \
 	setup_boost $(BOOST_VERSION) $(CURDIR)/boost && \
 	cd $(CURDIR)/boost/source && \
-	./b2 visibility=global link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --with-filesystem
+	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --with-filesystem
