@@ -522,14 +522,9 @@ bool ROSAudioDevice::PlayThreadProcess()
 
 bool ROSAudioDevice::RecROSCallback(const audio_common_msgs::AudioDataConstPtr &msg)
 {
-  if (!_recording)
-  {
-    return false;
-  }
-
   size_t copyedDataSize = 0;
   _critSect.Enter();
-  while (copyedDataSize != msg->data.size())
+  while (_recording && copyedDataSize != msg->data.size())
   {
     RTC_LOG(LERROR) << "RecROSCallback _recordingBufferSizeIn10MS:" << _recordingBufferSizeIn10MS
                     << " _writtenBufferSize" << _writtenBufferSize
