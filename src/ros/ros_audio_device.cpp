@@ -37,6 +37,7 @@ ROSAudioDevice::ROSAudioDevice(ConnectionSettings conn_settings)
 
 ROSAudioDevice::~ROSAudioDevice()
 {
+  Terminate();
 }
 
 int32_t ROSAudioDevice::ActiveAudioLayer(
@@ -52,6 +53,7 @@ webrtc::AudioDeviceGeneric::InitStatus ROSAudioDevice::Init()
 
 int32_t ROSAudioDevice::Terminate()
 {
+  StopRecording();
   return 0;
 }
 
@@ -265,6 +267,9 @@ bool ROSAudioDevice::Playing() const
 
 int32_t ROSAudioDevice::StartRecording()
 {
+  if (_recording) {
+    return -1;
+  }
   _recording = true;
 
   // Make sure we only create the buffer once.
@@ -293,6 +298,9 @@ int32_t ROSAudioDevice::StopRecording()
 {
   {
     rtc::CritScope lock(&_critSect);
+    if (!_recording) {
+      return -1;
+    }
     _recording = false;
   }
 
@@ -526,7 +534,7 @@ bool ROSAudioDevice::RecROSCallback(const audio_common_msgs::AudioDataConstPtr &
   _critSect.Enter();
   while (_recording && copyedDataSize != msg->data.size())
   {
-    RTC_LOG(LERROR) << "RecROSCallback _recordingBufferSizeIn10MS:" << _recordingBufferSizeIn10MS
+    RTC_LOG(LS_VERBOSE) << "RecROSCallback _recordingBufferSizeIn10MS:" << _recordingBufferSizeIn10MS
                     << " _writtenBufferSize" << _writtenBufferSize
                     << " msg->data.size()" << msg->data.size()
                     << " copyedDataSize" << copyedDataSize;
