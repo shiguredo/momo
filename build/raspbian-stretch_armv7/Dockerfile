@@ -41,7 +41,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false rtc_build_json=true use_rtti=true' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false is_desktop_linux=false rtc_build_json=true use_rtti=true' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
@@ -57,6 +57,7 @@ RUN \
     && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
     && ./b2 \
       cxxflags=' \
+        -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
         -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
         --target=arm-linux-gnueabihf \
