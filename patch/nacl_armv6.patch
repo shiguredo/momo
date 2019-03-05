@@ -1,8 +1,8 @@
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index d31a9f2..a592f9f 100644
+index 8d46071..e77de9c 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
-@@ -87,9 +87,13 @@ if (is_win && !is_msan) {
+@@ -86,7 +86,11 @@ if (is_win && !is_msan && current_cpu != "arm64") {
        }
      } else if (current_cpu == "arm") {
        if (is_linux || is_android) {
@@ -13,35 +13,31 @@ index d31a9f2..a592f9f 100644
 +          sources += crypto_sources_linux_arm
 +        }
        } else if (is_ios) {
--        sources += crypto_sources_ios_arm
-+        sources += crypto_sources_linux_arm
+         sources += crypto_sources_ios_arm
        } else {
-         public_configs = [ ":no_asm_config" ]
-       }
 diff --git a/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S b/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
-index bb48d17..18da322 100644
+index 4c17124..a0d7bf7 100644
 --- a/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
 +++ b/third_party/boringssl/linux-arm/crypto/chacha/chacha-armv4.S
-@@ -15,9 +15,7 @@
+@@ -28,7 +28,7 @@
  .code	32
  #endif
  
 -#if defined(__thumb2__) || defined(__clang__)
++#if defined(__thumb__) || defined(__thumb2__) || defined(__clang__)
  #define ldrhsb	ldrbhs
--#endif
+ #endif
  
- .align	5
- .Lsigma:
 diff --git a/third_party/opus/BUILD.gn b/third_party/opus/BUILD.gn
-index 516ba08..ffe6077 100644
+index b54f856..a5c7d19 100644
 --- a/third_party/opus/BUILD.gn
 +++ b/third_party/opus/BUILD.gn
-@@ -16,7 +16,7 @@ use_opus_arm_optimization =
+@@ -21,7 +21,7 @@ use_opus_x86_optimization =
  # If OPUS Run Time CPU Detections (RTCD) shall be used.
  # Based on the conditions in celt/arm/armcpu.c:
  # defined(_MSC_VER) || defined(__linux__).
--use_opus_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux)
-+use_opus_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux) && (arm_version >= 7)
+-use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux)
++use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux) && (arm_version >= 7)
  
  config("opus_config") {
    include_dirs = [ "src/include" ]
