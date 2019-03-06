@@ -150,6 +150,7 @@ function _prepare_webrtc() {
   gclient sync || return 1
 
   cd $cache_dir/src || return 1
+  git fetch || return 1
   git checkout -f $webrtc_commit || return 1
   gclient sync || return 1
 
@@ -203,3 +204,12 @@ function setup_boost() {
   fi
 }
 
+# ROS Kinetic 用のパッケージをインストールする
+#
+# 引数: なし
+function apt_install_ros_kinetic() {
+  apt-get update
+  apt-get -y upgrade
+  apt-get -y install \
+    ros-kinetic-audio-common
+}

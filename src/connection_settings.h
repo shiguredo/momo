@@ -12,6 +12,9 @@ struct ConnectionSettings
   std::string camera_name = "";
 #if USE_ROS
   bool image_compressed = false;
+  std::string audio_topic_name = "";
+  int audio_topic_rate = 16000;
+  int audio_topic_ch = 1;
 #endif
 
   bool no_video = false;
@@ -21,7 +24,7 @@ struct ConnectionSettings
   int video_bitrate = 0;
   int audio_bitrate = 0;
   std::string resolution = "VGA";
-  int framerate = 0;
+  int framerate = 30;
   bool fixed_resolution = false;
   std::string priority = "BALANCE";
   int port = 8080;

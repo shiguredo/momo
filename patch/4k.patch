@@ -1,8 +1,8 @@
 diff --git a/src/modules/video_capture/linux/device_info_linux.cc b/src/modules/video_capture/linux/device_info_linux.cc
-index 9ced0ae..a8ded93 100644
+index c138870..e6ec5b4 100644
 --- a/src/modules/video_capture/linux/device_info_linux.cc
 +++ b/src/modules/video_capture/linux/device_info_linux.cc
-@@ -211,11 +211,11 @@ int32_t DeviceInfoLinux::FillCapabilities(int fd) {
+@@ -225,11 +225,11 @@ int32_t DeviceInfoLinux::FillCapabilities(int fd) {
    unsigned int videoFormats[] = {V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_YUV420,
                                   V4L2_PIX_FMT_YUYV, V4L2_PIX_FMT_UYVY};
  
@@ -14,17 +14,5 @@ index 9ced0ae..a8ded93 100644
 -                            {1920, 1080}};
 +                            {1920, 1080}, {3840, 2160}};
  
-   int index = 0;
    for (int fmts = 0; fmts < totalFmts; fmts++) {
-diff --git a/src/pc/videocapturertracksource.cc b/src/pc/videocapturertracksource.cc
-index 0767dcf..518557b 100644
---- a/src/pc/videocapturertracksource.cc
-+++ b/src/pc/videocapturertracksource.cc
-@@ -34,6 +34,7 @@ static const cricket::VideoFormatPod kDefaultFormat = {
- 
- // List of formats used if the camera doesn't support capability enumeration.
- static const cricket::VideoFormatPod kVideoFormats[] = {
-+    {3840, 2160, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-     {1920, 1080, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-     {1280, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
-     {960, 720, FPS_TO_INTERVAL(30), cricket::FOURCC_ANY},
+     for (int i = 0; i < sizes; i++) {

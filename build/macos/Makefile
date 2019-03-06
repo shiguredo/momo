@@ -43,8 +43,7 @@ $(LIBWEBRTC): check
 	  builtin_audio_decoder_factory \
 	  native_api \
 	  default_codec_factory_objc \
-	  peerconnection \
-	  create_pc_factory
+	  peerconnection
 
 $(BOOST):
 	source ../../script/docker.sh && \

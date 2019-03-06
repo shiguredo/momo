@@ -1,16 +1,17 @@
 
 #include <iostream>
 
-#include "api/test/fakeconstraints.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/create_peerconnection_factory.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
-#include "media/engine/webrtcvideocapturerfactory.h"
 #include "rtc_base/ssladapter.h"
 #include "rtc_base/logging.h"
 
+#include "capture_track_source.h"
 #include "manager.h"
 #include "observer.h"
 #include "util.h"
@@ -22,13 +23,19 @@
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #endif
 
+#if USE_ROS
+#include "ros/ros_audio_device_module.h"
+#endif
+
 #if USE_IL_ENCODER
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "hwenc_il/il_encoder_factory.h"
 #include "absl/memory/memory.h"
 #endif
 
-RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket::VideoCapturer> capturer) : _conn_settings(conn_settings)
+RTCManager::RTCManager(ConnectionSettings conn_settings,
+                       std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer)
+                       : _conn_settings(conn_settings)
 {
   rtc::InitializeSSL();
 
@@ -42,7 +49,9 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
   _factory = webrtc::CreatePeerConnectionFactory(
       _networkThread.get(), _workerThread.get(), _signalingThread.get(),
 
-#ifdef __APPLE__
+#if USE_ROS
+      ROSAudioDeviceModule::Create(_conn_settings),
+#elif __APPLE__
       webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio),
 #else
       webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kLinuxAlsaAudio),
@@ -76,26 +85,9 @@ RTCManager::RTCManager(ConnectionSettings conn_settings, std::unique_ptr<cricket
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (!_conn_settings.no_video)
+  if (capturer && !_conn_settings.no_video)
   {
-#if USE_ROS
-    _video_source = _factory->CreateVideoSource(std::move(capturer));
-#else
-
-    capturer = createVideoCapturer();
-
-    webrtc::FakeConstraints constraints;
-        constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxWidth, _conn_settings.getWidth());
-    constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxHeight, _conn_settings.getHeight());
-    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
-    constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinWidth, _conn_settings.getWidth());
-        constraints.AddOptional(webrtc::MediaConstraintsInterface::kMinHeight, _conn_settings.getHeight());
-    if (_conn_settings.framerate != 0) {
-      constraints.AddMandatory(webrtc::MediaConstraintsInterface::kMaxFrameRate, _conn_settings.framerate);
-    }
-    _video_source = _factory->CreateVideoSource(std::move(capturer), &constraints);
-#endif
+    _video_source = CapturerTrackSource::Create(std::move(capturer));
   }
 }
 
@@ -108,32 +100,6 @@ RTCManager::~RTCManager()
   _signalingThread->Stop();
 
   rtc::CleanupSSL();
-}
-
-std::unique_ptr<cricket::VideoCapturer> RTCManager::createVideoCapturer() {
-  std::unique_ptr<cricket::VideoCapturer> capturer = nullptr;
-  std::vector<std::string> device_names;
-  std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-            webrtc::VideoCaptureFactory::CreateDeviceInfo());
-  if (!info) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__ << "CreateDeviceInfo failed";
-    return nullptr;
-  }
-  int num_devices = info->NumberOfDevices();
-  for (int i = 0; i < num_devices; ++i) {
-    const uint32_t nSize = 256;
-    char name[nSize] = {0};
-    char id[nSize] = {0};
-    if (info->GetDeviceName(i, name, nSize, id, nSize) != -1) {
-      RTC_LOG(LS_INFO) << "found device: " << name;
-      device_names.push_back(name);
-    }
-  }
-  cricket::WebRtcVideoDeviceCapturerFactory factory;
-  for (const auto& name : device_names) {
-    capturer = factory.Create(cricket::Device(name, 0));
-  }
-  return capturer;
 }
 
 std::shared_ptr<RTCConnection> RTCManager::createConnection(

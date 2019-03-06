@@ -68,7 +68,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 1
-  USE_IL_ENCODER ?= 0
+  USE_IL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -330,8 +330,17 @@ ifeq ($(TARGET_OS),macos)
     -framework CoreGraphics \
     -framework CoreMedia \
     -framework CoreVideo \
-    -framework VideoToolbox
+    -framework VideoToolbox \
+    -framework AppKit \
+    -framework Metal \
+    -framework MetalKit \
+    -framework OpenGL
   SOURCES += $(shell find src -name '*.mm')
+else
+  ifeq ($(USE_ROS),0)
+    # USE_ROS=0 かつ mac 以外の場合はカスタムされた libc++ を使っているためオプション追加 
+    CFLAGS += -D_LIBCPP_ABI_UNSTABLE
+  endif
 endif
 
 ifeq ($(USE_ROS),1)
@@ -364,10 +373,10 @@ OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(
 
 # Boost
 CFLAGS += -I$(BOOST_ROOT)/include
-LDFLAGS += -L$(BOOST_ROOT)/lib
+LDFLAGS += -L$(BOOST_ROOT)/lib -lboost_filesystem
 # Boost.Beast で BoringSSL を使うので、そのあたりも追加する
 CFLAGS += -I$(WEBRTC_SRC_ROOT)/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboost_filesystem -lboringssl
+LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
 
 # JSON
 CFLAGS += -Ilibs/json-$(JSON_VERSION)/include
@@ -419,7 +428,8 @@ $(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS) | $(BUILD_ROOT)
 ifdef WEBRTC_LIB_ROOT
 
 $(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
-	$(AR) -rcT $@ $^
+	@mkdir -p `dirname $@`
+	$(AR) -r -c -s -D $@ $^
 
 endif
 
