@@ -1,4 +1,5 @@
 const remoteVideo = document.getElementById('remote_video');
+remoteVideo.controls = true;
 let peerConnection = null;
 let candidates = [];
 let hasReceivedSdp = false;
@@ -117,12 +118,24 @@ function playVideo(element, stream) {
 function prepareNewConnection() {
   const peer = new RTCPeerConnection(peerConnectionConfig);
   if ('ontrack' in peer) {
-    let mediaStream = new MediaStream();
-    playVideo(remoteVideo, mediaStream);
-    peer.ontrack = (event) => {
-      console.log('-- peer.ontrack()');
-      mediaStream.addTrack(event.track);
-    };
+    if (isSafari()) {
+      let tracks = [];
+      peer.ontrack = (event) => {
+        console.log('-- peer.ontrack()');
+        tracks.push(event.track)
+        // safari で動作させるために、ontrack が発火するたびに MediaStream を作成する
+        let mediaStream = new MediaStream(tracks);
+        playVideo(remoteVideo, mediaStream);
+      };
+    }
+    else {
+      let mediaStream = new MediaStream();
+      playVideo(remoteVideo, mediaStream);
+      peer.ontrack = (event) => {
+        console.log('-- peer.ontrack()');
+        mediaStream.addTrack(event.track);
+      };
+    }
   }
   else {
     peer.onaddstream = (event) => {
@@ -163,6 +176,30 @@ function prepareNewConnection() {
 function isUnifiedPlan(peer) {
   const config = peer.getConfiguration();
   return ('addTransceiver' in peer) && (!('sdpSemantics' in config) || config.sdpSemantics === "unified-plan");
+}
+
+function browser() {
+  const ua = window.navigator.userAgent.toLocaleLowerCase();
+  if (ua.indexOf('edge') !== -1) {
+    return 'edge';
+  }
+  else if (ua.indexOf('chrome')  !== -1 && ua.indexOf('edge') === -1) {
+    return 'chrome';
+  }
+  else if (ua.indexOf('safari')  !== -1 && ua.indexOf('chrome') === -1) {
+    return 'safari';
+  }
+  else if (ua.indexOf('opera')   !== -1) {
+    return 'opera';
+  }
+  else if (ua.indexOf('firefox') !== -1) {
+    return 'firefox';
+  }
+  return ;
+}
+
+function isSafari() {
+  return browser() === 'safari';
 }
 
 function sendSdp(sessionDescription) {
