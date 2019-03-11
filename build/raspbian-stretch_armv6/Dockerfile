@@ -20,7 +20,6 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 
 COPY patch/4k.patch /root/
 COPY patch/nacl_armv6.patch /root/
-COPY patch/ffmpeg_armv6.patch /root/
 
 # WebRTC の準備
 
@@ -35,7 +34,6 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
     && cd /root/webrtc/src \
     && patch -p2 < /root/4k.patch \
     && patch -p1 < /root/nacl_armv6.patch \
-    && patch -p1 -d third_party/ffmpeg/ < /root/ffmpeg_armv6.patch \
   "
 
 # WebRTC のビルド
@@ -45,7 +43,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
- && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false arm_version=6 arm_arch="armv6" arm_tune="arm1176jzf-s" arm_fpu="vfpv2" arm_float_abi="hard" arm_use_neon=false rtc_build_json=true use_rtti=true' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false arm_version=6 arm_arch="armv6" arm_tune="arm1176jzf-s" arm_fpu="vfpv2" arm_float_abi="hard" arm_use_neon=false is_desktop_linux=false rtc_build_json=true use_rtti=true' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
@@ -61,6 +59,7 @@ RUN \
     && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
     && ./b2 \
       cxxflags=' \
+        -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
         -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
         --target=arm-linux-gnueabihf \
