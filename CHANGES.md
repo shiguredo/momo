@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.02.0
+
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
 - [UPDATE] Momo の前段にリバースプロキシ等を設置して https でアクセス可能にした場合でも、wss で接続できるように webrtc.js を変更する
 - [CHANGE] ビルド時のターゲットとオプション、パッケージの作成先を変更する
