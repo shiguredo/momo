@@ -5,7 +5,7 @@ set -e
 # ヘルプ表示
 function show_help() {
   echo ""
-  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <CLI11_VERSION> <JSON_VERSION>"
+  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION> <CLI11_VERSION> <JSON_VERSION>"
   echo ""
 }
 
@@ -21,8 +21,9 @@ MOUNT_TYPE="$3"
 PACKAGE_NAME="$4"
 DOCKER_IMAGE="$5"
 BUILD_MODE="$6"
-CLI11_VERSION="$7"
-JSON_VERSION="$8"
+MOMO_VERSION="$7"
+CLI11_VERSION="$8"
+JSON_VERSION="$9"
 
 if [ -z "$WORK_DIR" ]; then
   echo "エラー: <作業ディレクトリ> が空です"
@@ -62,6 +63,12 @@ fi
 
 if [ "$BUILD_MODE" != "build" -a "$BUILD_MODE" != "package"  ]; then
   echo "エラー: <ビルドモード> は build または package である必要があります"
+  show_help
+  exit 1
+fi
+
+if [ -z "$MOMO_VERSION" ]; then
+  echo "エラー: <MOMO_VERSION> が空です"
   show_help
   exit 1
 fi
@@ -162,10 +169,10 @@ else
   docker container exec momo-$PACKAGE_NAME /bin/bash -c 'cd /root && tar xf momo.tar.gz && rm momo.tar.gz'
   if [ "$BUILD_MODE" = "build" ]; then
     # build
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    momo"
+    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION momo"
   else
     # package
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package momo"
+    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION momo"
   fi
 
   # 中間ファイル類を取り出す

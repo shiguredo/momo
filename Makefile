@@ -38,6 +38,8 @@ include VERSION
 #
 # BUILD_ROOT: ビルド用ディレクトリ。デフォルトでは ../momo-build になる。
 #
+# MOMO_VERSION: バージョン情報。設定しなければ internal-build になる
+#
 # MOMO_CFLAGS: C コンパイラに追加で渡すフラグ。最適化フラグやデバッグフラグを入れることを想定している。
 #
 # MOMO_LDFLAGS: C リンカーに追加で渡すフラグ。サニタイズフラグや追加のリンクオブジェクトを入れることを想定している。
@@ -195,6 +197,9 @@ endif
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++11 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
 LDFLAGS += -L$(BUILD_ROOT) -lpthread
+ifndef MOMO_VERSION
+  CFLAGS += -DMOMO_VERSION=${MOMO_VERSION}
+endif
 
 LDFLAGS += -lwebrtc
 
