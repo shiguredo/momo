@@ -197,8 +197,8 @@ endif
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++11 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
 LDFLAGS += -L$(BUILD_ROOT) -lpthread
-ifndef MOMO_VERSION
-  CFLAGS += -DMOMO_VERSION=${MOMO_VERSION}
+ifdef MOMO_VERSION
+  CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
 
 LDFLAGS += -lwebrtc
