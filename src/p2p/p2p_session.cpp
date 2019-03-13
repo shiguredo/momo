@@ -1,6 +1,14 @@
 #include "p2p_session.h"
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/beast/core/error.hpp>
+#include <boost/beast/http/error.hpp>
+#include <boost/beast/http/empty_body.hpp>
+#include <boost/beast/http/file_body.hpp>
+#include <boost/beast/http/read.hpp>
+#include <boost/beast/websocket/rfc6455.hpp>
+
 #include "util.h"
 
 P2PSession::P2PSession(

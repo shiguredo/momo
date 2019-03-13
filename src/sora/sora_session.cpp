@@ -1,6 +1,9 @@
 #include "sora_session.h"
 
 #include <nlohmann/json.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/beast/http/read.hpp>
+
 #include "util.h"
 
 using json = nlohmann::json;

@@ -3,8 +3,10 @@
 #include "rtc_base/helpers.h"
 #include <CLI/CLI.hpp>
 #include <nlohmann/json.hpp>
+#include <boost/beast/version.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #if USE_ROS
 #include "ros/ros.h"
 #endif
@@ -112,6 +114,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   ros::NodeHandle nh;
   cs.camera_name = nh.resolveName("image");
+  cs.audio_topic_name = nh.resolveName("audio");
 
   ros::NodeHandle local_nh("~");
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
@@ -127,6 +130,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
   local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
   local_nh.param<int>("framerate", cs.framerate, cs.framerate);
+  local_nh.param<int>("audio_topic_rate", cs.audio_topic_rate, cs.audio_topic_rate);
+  local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
   local_nh.param<int>("port", cs.port, cs.port);
   local_nh.param<int>("log_level", log_level, log_level);

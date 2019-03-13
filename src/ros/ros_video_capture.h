@@ -5,37 +5,24 @@
 
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/CompressedImage.h"
-#include "media/base/videocapturer.h"
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 
 #include "connection_settings.h"
-#include "signal_listener.h"
+#include "rtc/video_capturer.h"
 
-class ROSVideoCapture : public cricket::VideoCapturer, public SignalListener
+class ROSVideoCapture : public VideoCapturer,
+        public rtc::VideoSinkInterface<webrtc::VideoFrame>
 {
 public:
-  explicit ROSVideoCapture(ConnectionSettings conn_settings);
-  ~ROSVideoCapture() override;
+  explicit ROSVideoCapture(ConnectionSettings cs);
+  ~ROSVideoCapture();
 
-  bool Init();
+  void Destroy();
 
-  void OnSignal(int signum) override;
+  // rtc::VideoSinkInterface interface.
+  void OnFrame(const webrtc::VideoFrame& frame) override;
 
-  // cricket::VideoCapturer interface.
-  cricket::CaptureState Start(
-      const cricket::VideoFormat &capture_format) override;
-  void Stop() override;
-
-  bool IsRunning() override;
-  bool GetPreferredFourccs(std::vector<uint32_t> *fourccs) override;
-
-  bool GetBestCaptureFormat(const cricket::VideoFormat &desired,
-                            cricket::VideoFormat *best_format) override;
-  bool IsScreencast() const override;
-
+  // ROS Callback
   void ROSCallbackRaw(const sensor_msgs::ImageConstPtr &image);
   void ROSCallbackCompressed(const sensor_msgs::CompressedImageConstPtr &image);
 
@@ -44,15 +31,7 @@ private:
   void ROSCallback(ros::Time ros_time, const uint8_t* sample, size_t sample_size, int src_width, int src_height, uint32_t fourcc);
 
   ros::AsyncSpinner* spinner_;
-  ros::Subscriber sub_; 
-  std::mutex mtx_;
-  std::condition_variable condition_;
-  bool running_;
-  uint64_t last_time_ns_;
-  int width_;
-  int height_;
-  int64_t interval_; 
-  bool signal_received_ = false;
+  ros::Subscriber sub_;
 };
 
 #endif

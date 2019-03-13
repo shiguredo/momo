@@ -1,6 +1,8 @@
-/depot_tools
+/webrtc
+/webrtc-build
+/boost
+/boost*
 /src
+/.cipd
 /.gclient
 /.gclient_entries
-/.cipd
-/boost_*

@@ -19,7 +19,6 @@ public:
   {
     switch (severity)
     {
-    case rtc::LS_SENSITIVE:
     case rtc::LS_VERBOSE:
     case rtc::LS_NONE:
       ROS_DEBUG_STREAM(message);

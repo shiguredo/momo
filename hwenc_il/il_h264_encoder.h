@@ -51,17 +51,8 @@ public:
                  const webrtc::CodecSpecificInfo *codec_specific_info,
                  const std::vector<webrtc::FrameType> *frame_types) override;
 
-  // Unsupported / Do nothing.
-  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
-
-  int32_t SetRateAllocation(const webrtc::BitrateAllocation &bitrate_allocation,
+  int32_t SetRateAllocation(const webrtc::VideoBitrateAllocation &bitrate_allocation,
                             uint32_t framerate) override;
-
-  webrtc::VideoEncoder::ScalingSettings GetScalingSettings() const override;
-
-  const char *ImplementationName() const override;
-
-  bool SupportsNativeHandle() const override;
 
   // Exposed for testing.
   webrtc::H264PacketizationMode PacketizationModeForTesting() const

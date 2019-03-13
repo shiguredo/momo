@@ -1,145 +1,132 @@
-BUILD_NUMBER=$(shell date +"%Y%m%d%H%M%S")
-WEBRTC_VERSION=71
-MOMO_VERSION=19.01.0
+include ../VERSION
 
-RASPBIAN_VERSION=stretch
+.PHONY: help
+help:
+	@echo "各環境用の momo バイナリやパッケージを作るための Makefile です。"
+	@echo ""
+	@echo "使い方:"
+	@echo "  make [オプション] <パッケージ名>"
+	@echo "  make [オプション] <パッケージ名>.package"
+	@echo "  make [オプション] <パッケージ名>.edit"
+	@echo "  make [オプション] <パッケージ名>.clean"
+	@echo ""
+	@echo "<パッケージ名>:"
+	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
+	@echo "  - macos (make macos.edit を除く)"
+	@echo ""
+	@echo "[オプション]:"
+	@echo "  - NOCACHE=1"
+	@echo "  - NOMOUNT=1"
+	@echo ""
+	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
+	@echo ""
+	@echo "make <パッケージ名>.package は、指定したパッケージ名の環境用の momo バイナリを含んだリリース用パッケージを生成します。"
+	@echo ""
+	@echo "make <パッケージ名>.edit は、WebRTC のソースを変更して、カスタマイズされた WebRTC を使って momo バイナリを生成するための機能です。"
+	@echo "詳細は doc/PATCH_WEBRTC.md を参照して下さい。"
+	@echo ""
+	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
+	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は doc/CACHE.md を参照して下さい。"
+	@echo ""
+	@echo "[オプション] は、make NOCACHE=1 <パッケージ名> のように指定します。"
+	@echo ""
+	@echo "NOCAHCE=1 オプションは、イメージのキャッシュを利用しないモードで動作させることができます。"
+	@echo "具体的には docker build コマンドに --no-cache を指定します。--no-cache コマンドの詳細は Docker のドキュメントを参照して下さい。"
+	@echo ""
+	@echo "NOMOUNT=1 オプションは、マウントを利用しないモードで動作させることができます。"
+	@echo "何らかの理由でマウントがうまく動作しない場合に使って下さい。"
+	@echo ""
 
-TARGET=$@
+WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
 
-.PHONY: all
-all: armv6 armv7 armv8
+ifeq ($(NOCACHE),1)
+  DOCKER_BUILD_FLAGS += --no-cache
+endif
 
-.PHONY: armv6 armv7 armv8 armv7_ros
-armv6 armv7 armv8 armv7_ros:
-	# ARM 系ビルド全体で共通のビルド用イメージを作る
-	docker image build --rm -t momo/webrtc-arm-buildbase arm --file arm/buildbase.Dockerfile
+ifeq ($(NOMOUNT),1)
+  DOCKER_MOUNT = nomount
+else
+  DOCKER_MOUNT = mount
+endif
 
-	# 各 ARM 用ビルド
-	$(MAKE) -C arm/$(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+# パッケージ名からルールを自動生成する
+define generateDockerRules
 
-	# 生成されたバイナリをこのディレクトリに移動
-	mv arm/$(TARGET)/momo ./momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
+.PHONY: $(1)
+$(1): $(1).prepare
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
-# WebRTC から再ビルド。
-# 同じ WEBRTC_VERSION の WebRTC を再取得してビルドしたい時に使う。
-.PHONY: armv6.rebuild
-armv6.rebuild:
-	$(MAKE) -C arm/armv6 clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
-	$(MAKE) -C arm/armv6 WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+.PHONY: $(1).package
+$(1).package: $(1).prepare
+	# momo を package モードでビルドし直す
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
-.PHONY: armv7.rebuild
-armv7.rebuild:
-	$(MAKE) -C arm/armv7 clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
-	$(MAKE) -C arm/armv7 WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+	rm -rf package/momo-$(MOMO_VERSION)_$(1)
+	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
+	mkdir -p package/momo-$(MOMO_VERSION)_$(1)
+	cp    ../_build/$(1)/momo package/momo-$(MOMO_VERSION)_$(1)/
+	cp    ../LICENSE          package/momo-$(MOMO_VERSION)_$(1)/
+	cp    ../NOTICE           package/momo-$(MOMO_VERSION)_$(1)/
+	cp -r ../html             package/momo-$(MOMO_VERSION)_$(1)/html
+	cd package && tar czf momo-$(MOMO_VERSION)_$(1).tar.gz momo-$(MOMO_VERSION)_$(1)
+	rm -rf package/momo-$(MOMO_VERSION)_$(1)
+	@echo ""
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_$(1).tar.gz に生成されました。"
 
-.PHONY: armv8.rebuild
-armv8.rebuild:
-	$(MAKE) -C arm/armv8 clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
-	$(MAKE) -C arm/armv8 WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+.PHONY: $(1).edit
+$(1).edit: $(1).prepare
+	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'export PACKAGE_NAME=$(1); cd /root/momo && exec /bin/bash'
 
-.PHONY: armv7_ros.rebuild
-armv7_ros.rebuild:
-	$(MAKE) -C arm/armv7_ros clean.image WEBRTC_VERSION=$(WEBRTC_VERSION)
-	$(MAKE) -C arm/armv7_ros WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
+.PHONY: $(1).prepare
+$(1).prepare:
+	rm -rf $(1)/patch
+	rm -rf $(1)/script
+	cp -r ../patch $(1)/patch
+	cp -r ../script $(1)/script
 
-# 各プラットフォーム用イメージの掃除。これをすると全体的にビルドし直すことになる。
-.PHONY: armv6.clean
-armv6.clean:
-	$(MAKE) -C arm/armv6 clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
+	DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) $(DOCKER_BUILD_FLAGS) --build-arg WEBRTC_VERSION=$$(WEBRTC_VERSION) --build-arg WEBRTC_COMMIT=$$(WEBRTC_COMMIT) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
 
-.PHONY: armv7.clean
-armv7.clean:
-	$(MAKE) -C arm/armv7 clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
+	rm -r $(1)/patch
+	rm -r $(1)/script
 
-.PHONY: armv8.clean
-armv8.clean:
-	$(MAKE) -C arm/armv8 clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
-
-.PHONY: armv7_ros.clean
-armv7_ros.clean:
-	$(MAKE) -C arm/armv7_ros clean.image.all WEBRTC_VERSION=$(WEBRTC_VERSION)
-
-.PHONY: ubuntu-1804_x86_64
-ubuntu-1804_x86_64:
-	# x86_64 用ビルド
-	$(MAKE) -C x86_64 WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-
-	# 生成されたバイナリをこのディレクトリに移動
-	mv x86_64/momo ./momo-ubuntu-18.04_x86_64-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
-
-.PHONY: ubuntu-1604_x86_64_ros
-ubuntu-1604_x86_64_ros:
-	# x86_64_ros 用ビルド
-	$(MAKE) -C x86_64_ros WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-	mv x86_64_ros/momo ./momo-ubuntu-16.04_x86_64_ros-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
-
-.PHONY: macos
-macos:
-	$(MAKE) -C $(TARGET) WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-	mv ../momo momo-$(TARGET)-m$(WEBRTC_VERSION)-$(BUILD_NUMBER)
-
-.PHONY: macos.clean
-macos.clean:
-	$(MAKE) -C macos clean WEBRTC_VERSION=$(WEBRTC_VERSION) BUILD_NUMBER=$(BUILD_NUMBER) MOMO_VERSION=$(MOMO_VERSION)
-
-.PHONY: pkg
-FILENAMES:=LICENSE NOTICE html
-
-define COPY
-	cp -r $(1) $(2)
+.PHONY: $(1).clean
+$(1).clean:
+	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
+	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
 
 endef
 
-pkg: armv6.pkg armv7.pkg armv8.pkg ubuntu-1804_x86_64.pkg ubuntu-1804_x86_64_ros.pkg armv7_ros.pkg
+# Docker 用のルールを生成
+$(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(package_name))))
 
-armv6.pkg:
-	mkdir momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6/))
-	cp $(lastword $(sort $(wildcard ./momo-armv6-*))) momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6/momo
-	tar czf momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6.tar.gz momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6
-	rm -rf momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv6
+.PHONY: macos
+macos: macos.prepare
+	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
 
-armv7.pkg:
-	mkdir momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7/))
-	cp $(lastword $(sort $(wildcard ./momo-armv7-*))) momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7/momo
-	tar czf momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7.tar.gz momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7
-	rm -rf momo-$(MOMO_VERSION)_raspbian-$(RASPBIAN_VERSION)_armv7
+.PHONY: macos.package
+macos.package: macos.prepare
+	# momo を package モードでビルドし直す
+	rm -f ../_build/macos/momo && make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos BUILD_MODE=package momo
 
-armv8.pkg:
-	mkdir momo-$(MOMO_VERSION)_ubuntu-16.04_armv8
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-16.04_armv8/))
-	cp $(lastword $(sort $(wildcard ./momo-armv8-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_armv8/momo
-	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_armv8.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_armv8
-	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_armv8
+	# パッケージのバイナリを作る
+	rm -rf package/momo-$(MOMO_VERSION)_macos
+	rm -f package/momo-$(MOMO_VERSION)_macos.tar.gz
+	mkdir -p package/momo-$(MOMO_VERSION)_macos
+	cp    ../_build/macos/momo package/momo-$(MOMO_VERSION)_macos/
+	cp    ../LICENSE           package/momo-$(MOMO_VERSION)_macos/
+	cp    ../NOTICE            package/momo-$(MOMO_VERSION)_macos/
+	cp -r ../html              package/momo-$(MOMO_VERSION)_macos/html
+	cd package && tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
 
-ubuntu-1804_x86_64.pkg:
-	mkdir momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64/))
-	cp $(lastword $(sort $(wildcard ./momo-ubuntu-18.04_x86_64-*))) momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64/momo
-	tar czf momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64.tar.gz momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64
-	rm -rf momo-$(MOMO_VERSION)_ubuntu-18.04_x86_64
+	rm -rf package/momo-$(MOMO_VERSION)_macos
+	@echo ""
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_macos.tar.gz に生成されました。"
 
-ubuntu-1604_x86_64_ros.pkg:
-	mkdir momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros/))
-	cp $(lastword $(sort $(wildcard ./momo-ubuntu-16.04_x86_64_ros-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros/momo
-	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
-	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_x86_64_ros
+.PHONY: macos.prepare
+macos.prepare:
+	make -C macos
 
-armv7_ros.pkg:
-	mkdir momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros/))
-	cp $(lastword $(sort $(wildcard ./momo-armv7_ros-*))) momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros/momo
-	tar czf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros.tar.gz momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
-	rm -rf momo-$(MOMO_VERSION)_ubuntu-16.04_armv7_ros
-
-macos.pkg:
-	mkdir momo-$(MOMO_VERSION)_macos
-	$(foreach filename,$(FILENAMES),$(call COPY,../$(filename),momo-$(MOMO_VERSION)_macos/))
-	cp $(lastword $(sort $(wildcard ./momo-macos-*))) momo-$(MOMO_VERSION)_macos/momo
-	tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
-	rm -rf momo-$(MOMO_VERSION)_macos
-
-clean.pkg:
-	rm -rf momo-$(MOMO_VERSION)_*
+.PHONY: macos.clean
+macos.clean:
+	make -C macos clean
+	make -C .. clean

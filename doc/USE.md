@@ -83,14 +83,13 @@ Momo はモードを ２ つ持っています。一つが P2P モードで Momo
 
 ```shell
 $ momo --version
-WebRTC Native Client Momo version 19.01.0
+WebRTC Native Client Momo version 19.02.0
 ```
 
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 800 \
-       p2p --port 8080
+$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p 
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
@@ -108,7 +107,7 @@ $ momo --no-audio --video-codec VP8 --video-bitrate 500 \
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 19.01.0
+WebRTC Native Client Momo 19.02.0
 ```
 
 ```
@@ -133,11 +132,11 @@ Options:
   --framerate INT in [1 - 60] フレームレート
   --fixed-resolution          固定解像度
   --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
-                              優先設定
+                              優先設定 (Experimental)
+  --port INT in [0 - 65535]   ポート番号
   --daemon                    デーモン化する
   --version                   バージョン情報の表示
   --log-level INT in [0 - 5]  ログレベル
-
 
 Subcommands:
   p2p                         P2P
@@ -151,8 +150,8 @@ P2P
 Usage: ./momo p2p [OPTIONS]
 
 Options:
-  -h,--help                   ヘルプ
-  --port INT in [0 - 65535]   ポート番号
+  -h,--help                   Print this help message and exit
+  --document-root Directory   配信ディレクトリ
 ```
 
 

@@ -1,7 +1,7 @@
-LIBWEBRTC = src/out/x86_64/obj/libwebrtc.a
-BOOST_VERSION = 1.69.0
-BOOST_PATH = boost_$(subst .,_,$(BOOST_VERSION))
-BOOST = $(BOOST_PATH)/out
+include ../../VERSION
+
+LIBWEBRTC = $(CURDIR)/webrtc-build/obj/libwebrtc.a
+BOOST = $(CURDIR)/boost-$(BOOST_VERSION)
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -12,38 +12,41 @@ endif
 
 .PHONY: all
 all: $(LIBWEBRTC) $(BOOST)
-	make -C ../../ OUT_PATH=x86_64 RTC_ROOT=build/macos BOOST_PATH=build/macos/$(BOOST) MOMO_VERSION=$(MOMO_VERSION)
 
 .PHONY: clean
 clean:
-	-rm -rf src/ > /dev/null 2>&1
-	-rm -rf depot_tools/ > /dev/null 2>&1
-	-rm .gclient > /dev/null 2>&1
-	-rm .gclient_entries > /dev/null 2>&1
-	-rm -rf $(BOOST_PATH)/ > /dev/null 2>&1
+	rm -rf webrtc
+	rm -rf webrtc-build
+	rm -rf boost
+	rm -rf boost-*
 
-$(LIBWEBRTC):
-	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ./depot_tools
-	export PATH="$(shell pwd)/depot_tools:$(PATH)" && \
+.PHONY: check
+check:
+	@if [ "`python --version 2>&1 | cut -d' ' -f2 | cut -b1-3`" != "2.7" ]; then \
+	  echo ""; \
+	  echo "Python 3 では WebRTC をビルドできません。Python 2.7 を利用して下さい。"; \
+	  echo "macOS でのビルド方法については doc/BUILD.md を確認して下さい。"; \
+	  echo ""; \
+	  exit 1; \
+	fi
+
+$(LIBWEBRTC): check
+	source ../../script/docker.sh && \
+	export PATH="$(CURDIR)/webrtc/depot_tools:$(PATH)" && \
 	export GYP_DEFINES="OS=mac target_arch=x64" && \
-	fetch webrtc && \
-	cd src && \
-	git fetch && \
-	git checkout -b m$(WEBRTC_VERSION) remotes/branch-heads/$(WEBRTC_VERSION) && \
-	gclient sync && \
-	gn gen out/x86_64 --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=true is_component_build=false use_rtti=true' && \
-	ninja -C out/x86_64 && \
-	ninja -C out/x86_64 \
+	prepare_webrtc_macos "" $(WEBRTC_COMMIT) $(CURDIR)/webrtc && \
+	cd $(CURDIR)/webrtc/src && \
+	patch -p2 < $(CURDIR)/../../patch/4k.patch && \
+	gn gen $(CURDIR)/webrtc-build/macos --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true' && \
+	ninja -C $(CURDIR)/webrtc-build/macos && \
+	ninja -C $(CURDIR)/webrtc-build/macos \
 	  builtin_audio_decoder_factory \
-	  builtin_video_decoder_factory \
-	  builtin_video_encoder_factory \
-	  peerconnection \
-	  create_pc_factory
+	  native_api \
+	  default_codec_factory_objc \
+	  peerconnection
 
 $(BOOST):
-	curl -LO https://dl.bintray.com/boostorg/release/$(BOOST_VERSION)/source/$(BOOST_PATH).tar.gz && \
-	tar xf $(BOOST_PATH).tar.gz && \
-	rm $(BOOST_PATH).tar.gz && \
-	cd $(BOOST_PATH) && \
-	./bootstrap.sh && \
-	./b2 visibility=global link=static variant=release install -j$(JOBS) --prefix=out --with-filesystem
+	source ../../script/docker.sh && \
+	setup_boost $(BOOST_VERSION) $(CURDIR)/boost && \
+	cd $(CURDIR)/boost/source && \
+	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --with-filesystem

@@ -11,6 +11,18 @@
 
 ## develop
 
+## 19.02.0
+
+- [UPDATE] webrtc.js / p2p.html のリファクタリング
+- [UPDATE] Momo の前段にリバースプロキシ等を設置して https でアクセス可能にした場合でも、wss で接続できるように webrtc.js を変更する
+- [CHANGE] ビルド時のターゲットとオプション、パッケージの作成先を変更する
+- [UPDATE] STUN サーバの URL の指定を url から urls に変更する
+- [FIX] カメラがない環境で起動させるとセグフォが起きるのを修正する
+- [FIX] ARM ROS 版で H.264 配信の場合はハードウェアエンコーダを使用するように修正する
+- [CHANGE] ROS Audio に対応する
+    - 別ノードから送られてきたオーディオを使用するように変更
+- [UPDATE] 利用している libwebrtc のライブラリを M73 にする
+
 ## 19.01.0
 
 - [ADD] Ubuntu 16.04 ARMv7 ROS 対応
