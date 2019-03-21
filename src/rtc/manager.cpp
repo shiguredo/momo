@@ -116,6 +116,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
         RTCMessageSender *sender)
 {
   rtc_config.enable_dtls_srtp = true;
+  rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   PeerConnectionObserver *observer = new PeerConnectionObserver(sender);
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection = 
       _factory->CreatePeerConnection(
@@ -126,15 +127,21 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     return nullptr;
   }
 
+  std::string stream_id = Util::generateRundomChars();
+
   if (!_conn_settings.no_audio)
   {
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        _factory->CreateAudioTrack(Util::generateRundomChars(), NULL));
+        _factory->CreateAudioTrack(Util::generateRundomChars(),
+                                   _factory->CreateAudioSource(cricket::AudioOptions())));
     if (audio_track)
     {
-      rtc::scoped_refptr<webrtc::RtpSenderInterface> audio_sender(
-          connection->CreateSender(webrtc::MediaStreamTrackInterface::kAudioKind, Util::generateRundomChars()));
-      audio_sender->SetTrack(audio_track);
+      webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > audio_sender =
+          connection->AddTrack(audio_track, {stream_id});
+      if (!audio_sender.ok())
+      {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot add audio_track";
+      }
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot create audio_track";
     }
@@ -149,12 +156,17 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
         video_track->set_content_hint(webrtc::VideoTrackInterface::ContentHint::kText);
       }
 
-      rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender(
-          connection->CreateSender(webrtc::MediaStreamTrackInterface::kVideoKind, Util::generateRundomChars()));
-      webrtc::RtpParameters parameters = video_sender->GetParameters();
-      parameters.degradation_preference = _conn_settings.getPriority();
-      video_sender->SetParameters(parameters);
-      video_sender->SetTrack(video_track);
+      webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > video_add_result =
+          connection->AddTrack(video_track, {stream_id});
+      if (video_add_result.ok())
+      {
+        rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender = video_add_result.value();
+        webrtc::RtpParameters parameters = video_sender->GetParameters();
+        parameters.degradation_preference = _conn_settings.getPriority();
+        video_sender->SetParameters(parameters);
+      } else {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot add video_track";
+      }
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot create video_track";
     }
