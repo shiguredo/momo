@@ -22,6 +22,7 @@
 #include "connection_settings.h"
 #include "util.h"
 #include "rtc/manager.h"
+#include "rtc/video_source_adapter.h"
 #include "sora/sora_server.h"
 #include "p2p/p2p_server.h"
 
@@ -68,7 +69,7 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer =
+  std::unique_ptr<VideoSourceAdapter> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
 

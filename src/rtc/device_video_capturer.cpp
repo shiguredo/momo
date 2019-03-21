@@ -106,7 +106,3 @@ void DeviceVideoCapturer::Destroy() {
 DeviceVideoCapturer::~DeviceVideoCapturer() {
   Destroy();
 }
-
-void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
-  VideoCapturer::OnFrame(frame);
-}

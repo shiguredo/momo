@@ -5,12 +5,13 @@
 
 #include "connection.h"
 #include "connection_settings.h"
+#include "video_source_adapter.h"
 
 class RTCManager
 {
 public:
   RTCManager(ConnectionSettings conn_settings,
-             std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer);
+             std::unique_ptr<VideoSourceAdapter> capturer);
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
           webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
@@ -18,7 +19,8 @@ public:
 
 private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
-  rtc::scoped_refptr<webrtc::VideoTrackSource> _video_source;
+  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _video_source;
+  std::unique_ptr<VideoSourceAdapter> _capturer;
   std::unique_ptr<rtc::Thread> _networkThread;
   std::unique_ptr<rtc::Thread> _workerThread;
   std::unique_ptr<rtc::Thread> _signalingThread;

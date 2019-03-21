@@ -16,11 +16,9 @@
 #include "api/scoped_refptr.h"
 #include "modules/video_capture/video_capture.h"
 
-#include "video_capturer.h"
+#include "rtc/video_source_adapter.h"
 
-
-class DeviceVideoCapturer : public VideoCapturer,
-                    public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class DeviceVideoCapturer : public VideoSourceAdapter {
  public:
   static std::unique_ptr<DeviceVideoCapturer> Create(size_t width,
                              size_t height,
@@ -30,8 +28,6 @@ class DeviceVideoCapturer : public VideoCapturer,
                              size_t target_fps,
                              size_t capture_device_index);
   virtual ~DeviceVideoCapturer();
-
-  void OnFrame(const webrtc::VideoFrame& frame) override;
 
  private:
   DeviceVideoCapturer();

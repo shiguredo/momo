@@ -4,6 +4,7 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/create_peerconnection_factory.h"
+#include "api/video_track_source_proxy.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/video_capture/video_capture.h"
@@ -11,7 +12,7 @@
 #include "rtc_base/ssladapter.h"
 #include "rtc_base/logging.h"
 
-#include "capture_track_source.h"
+#include "scalable_track_source.h"
 #include "manager.h"
 #include "observer.h"
 #include "util.h"
@@ -34,8 +35,8 @@
 #endif
 
 RTCManager::RTCManager(ConnectionSettings conn_settings,
-                       std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer)
-                       : _conn_settings(conn_settings)
+                       std::unique_ptr<VideoSourceAdapter> capturer)
+                       : _capturer(std::move(capturer)), _conn_settings(conn_settings)
 {
   rtc::InitializeSSL();
 
@@ -85,9 +86,13 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (capturer && !_conn_settings.no_video)
+  if (_capturer && !_conn_settings.no_video)
   {
-    _video_source = CapturerTrackSource::Create(std::move(capturer));
+    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source(
+      new rtc::RefCountedObject<ScalableVideoTrackSource>());
+    _video_source = webrtc::VideoTrackSourceProxy::Create(
+          _signalingThread.get(), _workerThread.get(), video_track_source);
+    _capturer->SetVideoTrackSource(video_track_source);
   }
 }
 

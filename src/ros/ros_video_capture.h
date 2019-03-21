@@ -8,19 +8,15 @@
 
 
 #include "connection_settings.h"
-#include "rtc/video_capturer.h"
+#include "rtc/video_source_adapter.h"
 
-class ROSVideoCapture : public VideoCapturer,
-        public rtc::VideoSinkInterface<webrtc::VideoFrame>
+class ROSVideoCapture : public VideoSourceAdapter
 {
 public:
   explicit ROSVideoCapture(ConnectionSettings cs);
   ~ROSVideoCapture();
 
   void Destroy();
-
-  // rtc::VideoSinkInterface interface.
-  void OnFrame(const webrtc::VideoFrame& frame) override;
 
   // ROS Callback
   void ROSCallbackRaw(const sensor_msgs::ImageConstPtr &image);
