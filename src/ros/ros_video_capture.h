@@ -8,9 +8,9 @@
 
 
 #include "connection_settings.h"
-#include "rtc/video_source_adapter.h"
+#include "rtc/scalable_track_source.h"
 
-class ROSVideoCapture : public VideoSourceAdapter
+class ROSVideoCapture : public ScalableVideoTrackSource
 {
 public:
   explicit ROSVideoCapture(ConnectionSettings cs);

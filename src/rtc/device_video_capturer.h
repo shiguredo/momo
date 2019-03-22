@@ -14,28 +14,32 @@
 #include <vector>
 
 #include "api/scoped_refptr.h"
+#include "rtc_base/ref_counted_object.h"
 #include "modules/video_capture/video_capture.h"
 
-#include "rtc/video_source_adapter.h"
+#include "rtc/scalable_track_source.h"
 
-class DeviceVideoCapturer : public VideoSourceAdapter {
+class DeviceVideoCapturer : public ScalableVideoTrackSource, public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  static std::unique_ptr<DeviceVideoCapturer> Create(size_t width,
+  static rtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
                              size_t height,
                              size_t target_fps);
-  static DeviceVideoCapturer* Create(size_t width,
+  static rtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
                              size_t height,
                              size_t target_fps,
                              size_t capture_device_index);
+  DeviceVideoCapturer();
   virtual ~DeviceVideoCapturer();
 
  private:
-  DeviceVideoCapturer();
   bool Init(size_t width,
             size_t height,
             size_t target_fps,
             size_t capture_device_index);
   void Destroy();
+
+  // rtc::VideoSinkInterface interface.
+  void OnFrame(const webrtc::VideoFrame &frame) override;
 
   rtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
   webrtc::VideoCaptureCapability capability_;

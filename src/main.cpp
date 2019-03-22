@@ -22,7 +22,6 @@
 #include "connection_settings.h"
 #include "util.h"
 #include "rtc/manager.h"
-#include "rtc/video_source_adapter.h"
 #include "sora/sora_server.h"
 #include "p2p/p2p_server.h"
 
@@ -58,7 +57,8 @@ int main(int argc, char* argv[])
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<ROSVideoCapture> capturer(new ROSVideoCapture(cs));
+  rtc::scoped_refptr<ROSVideoCapture> capturer(
+    new rtc::RefCountedObject<ROSVideoCapture>(cs));
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize, 10));
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<VideoSourceAdapter> capturer =
+  rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
 

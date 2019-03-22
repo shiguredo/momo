@@ -35,8 +35,8 @@
 #endif
 
 RTCManager::RTCManager(ConnectionSettings conn_settings,
-                       std::unique_ptr<VideoSourceAdapter> capturer)
-                       : _capturer(std::move(capturer)), _conn_settings(conn_settings)
+                       rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source)
+                       : _conn_settings(conn_settings)
 {
   rtc::InitializeSSL();
 
@@ -86,13 +86,10 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (_capturer && !_conn_settings.no_video)
+  if (video_track_source && !_conn_settings.no_video)
   {
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source(
-      new rtc::RefCountedObject<ScalableVideoTrackSource>());
     _video_source = webrtc::VideoTrackSourceProxy::Create(
           _signalingThread.get(), _workerThread.get(), video_track_source);
-    _capturer->SetVideoTrackSource(video_track_source);
   }
 }
 
