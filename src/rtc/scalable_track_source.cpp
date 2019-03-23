@@ -60,22 +60,16 @@ void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) 
     // Video adapter has requested a down-scale. Allocate a new buffer and
     // return scaled version.
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer = webrtc::I420Buffer::Create(adapted_width, adapted_height);
-    i420_buffer->CropAndScaleFrom(*buffer->ToI420(), crop_x, crop_y, crop_width, crop_height);
+    i420_buffer->ScaleFrom(*buffer->ToI420());
     buffer = i420_buffer;
   } else {
     // No adaptations needed, just return the frame as is.
     RTC_LOG(LS_ERROR) << "Not Scaled" << frame.width() << "x" << frame.height();
   }
-  
-  webrtc::VideoRotation rotation = static_cast<webrtc::VideoRotation>(frame.rotation());
-  if (apply_rotation() && rotation != webrtc::kVideoRotation_0) {
-    buffer = webrtc::I420Buffer::Rotate(*buffer->ToI420(), rotation);
-    rotation = webrtc::kVideoRotation_0;
-  }
 
   OnFrame(webrtc::VideoFrame::Builder()
               .set_video_frame_buffer(buffer)
-              .set_rotation(rotation)
+              .set_rotation(frame.rotation())
               .set_timestamp_us(translated_timestamp_us)
               .build());
 }
