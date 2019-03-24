@@ -202,7 +202,7 @@ int32_t ILH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
 
   width_ = codec_settings->width;
   height_ = codec_settings->height;
-  target_bitrate_bps_ = codec_settings->startBitrate;
+  target_bitrate_bps_ = codec_settings->startBitrate * 1000;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
 
   RTC_LOG(LS_ERROR) << "InitEncode " << (uint32_t)(codec_settings->maxFramerate) << "fps "
@@ -252,6 +252,7 @@ int32_t ILH264Encoder::Release()
 
 int32_t ILH264Encoder::OMX_Configure()
 {
+  RTC_LOG(LS_ERROR) << "OMX_Configure";
   OMX_ERRORTYPE err;
 
   OMX_PARAM_PORTDEFINITIONTYPE defin;
@@ -292,6 +293,8 @@ int32_t ILH264Encoder::OMX_Configure()
     Release();
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  configured_width_ = width_;
+  configured_height_ = height_;
 
   OMX_PARAM_PORTDEFINITIONTYPE defout;
   memset(&defout, 0, sizeof(OMX_PARAM_PORTDEFINITIONTYPE));
@@ -403,6 +406,7 @@ int32_t ILH264Encoder::OMX_Configure()
     Release();
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  encoder_bitrate_bps_ = target_bitrate_bps_;
 
   if (ilclient_change_component_state(video_encode_, OMX_StateIdle) == -1)
   {
@@ -500,12 +504,14 @@ void ILH264Encoder::SetEncoderBitrateBps(uint32_t bitrate_bps)
   bitrateType.nSize = sizeof(OMX_VIDEO_CONFIG_BITRATETYPE);
   bitrateType.nVersion.nVersion = OMX_VERSION;
   bitrateType.nPortIndex = 201;
-  bitrateType.nEncodeBitrate = bitrate_bps * kLimitToAverageBitRateFactor;
+  bitrateType.nEncodeBitrate = bitrate_bps;// * kLimitToAverageBitRateFactor;
   OMX_ERRORTYPE err = OMX_SetConfig(ILC_GET_HANDLE(video_encode_),
                                     OMX_IndexConfigVideoBitrate, &bitrateType);
   if (err != OMX_ErrorNone)
   {
-    RTC_LOG(LS_ERROR) << "Failed to set bitrate parameter ErrorType: " << err;
+    std::stringstream ss;
+    ss << std::hex << err;
+    RTC_LOG(LS_ERROR) << "Failed to set bitrate parameter ErrorType: " << ss.str();
   }
   encoder_bitrate_bps_ = bitrate_bps;
 }
@@ -540,13 +546,11 @@ int32_t ILH264Encoder::Encode(
   rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer;
   frame_buffer = input_frame.video_frame_buffer()->ToI420();
 
-  if (frame_buffer->width() != width_ || frame_buffer->height() != height_)
+  if (frame_buffer->width() != configured_width_ || frame_buffer->height() != configured_height_)
   {
-    RTC_LOG(LS_INFO) << "Encoder reinitialized from " << width_
+    RTC_LOG(LS_ERROR) << "Encoder reinitialized from " << width_
                      << "x" << height_ << " to "
                      << frame_buffer->width() << "x" << frame_buffer->height();
-    width_ = frame_buffer->width();
-    height_ = frame_buffer->height();
     omx_reconfigure_ = true;
   }
 
@@ -608,6 +612,7 @@ int32_t ILH264Encoder::Encode(
   buf->nTimeStamp.nLowPart = input_frame.timestamp() * 1000ll;
   buf->nTimeStamp.nHighPart = (input_frame.timestamp() * 1000ll) >> 32;
 
+  RTC_LOG(LS_ERROR) << "OMX_EmptyThisBuffer";
   err = OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_encode_), buf);
   if (err != OMX_ErrorNone)
   {
@@ -629,6 +634,7 @@ int32_t ILH264Encoder::DrainEncodedData()
   OMX_BUFFERHEADERTYPE *out;
   out = ilclient_get_output_buffer(video_encode_, 201, 1);
 
+  RTC_LOG(LS_ERROR) << "OMX_FillThisBuffer";
   err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
   if (err != OMX_ErrorNone)
   {
@@ -636,6 +642,7 @@ int32_t ILH264Encoder::DrainEncodedData()
   }
 
   fill_buffer_event_.Wait(rtc::Event::kForever);
+  RTC_LOG(LS_ERROR) << "OMX_FillThisBuffer End";
 
   if (out != NULL && out->nFilledLen > 0)
   {
