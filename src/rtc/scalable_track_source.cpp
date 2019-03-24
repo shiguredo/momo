@@ -62,9 +62,6 @@ void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) 
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer = webrtc::I420Buffer::Create(adapted_width, adapted_height);
     i420_buffer->ScaleFrom(*buffer->ToI420());
     buffer = i420_buffer;
-  } else {
-    // No adaptations needed, just return the frame as is.
-    RTC_LOG(LS_ERROR) << "Not Scaled" << frame.width() << "x" << frame.height();
   }
 
   OnFrame(webrtc::VideoFrame::Builder()
