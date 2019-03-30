@@ -92,3 +92,7 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
     - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+
+## 利用例
+
+- [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
