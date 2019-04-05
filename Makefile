@@ -323,6 +323,8 @@ endif
 ifeq ($(TARGET_OS),macos)
   CC = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang
   CXX = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang++
+  # brew でインストールした ar コマンドを使うとエラーになるので、明示的にフルパスを指定する
+  AR = /usr/bin/ar
 
   SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
   CC += --sysroot=$(SDK_PATH)
