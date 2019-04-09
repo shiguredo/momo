@@ -301,8 +301,7 @@ ifeq ($(TARGET_OS),linux)
           -DUSE_IL_ENCODER=1 \
           $(IL_CFLAGS) \
           -I$(VC_PATH)/include/ \
-          -Ilibs/ilclient/ \
-          -I.
+          -Ilibs/ilclient/
         LDFLAGS += \
           -L$(VC_PATH)/lib/ \
           -lbrcmGLESv2 \
@@ -312,7 +311,7 @@ ifeq ($(TARGET_OS),linux)
           -lvcos \
           -lvchiq_arm \
           -lm
-        SOURCES += $(shell find hwenc_il -maxdepth 1 -name '*.cpp')
+        SOURCES += $(shell find src/hwenc_il -maxdepth 1 -name '*.cpp')
         LDFLAGS += -lilclient
         LIBILCLIENT = $(BUILD_ROOT)/libilclient.a
       endif
@@ -367,6 +366,12 @@ else
   CFLAGS += -nostdinc++ -isystem$(WEBRTC_SRC_ROOT)/buildtools/third_party/libc++/trunk/include
 endif
 
+SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
+SOURCES += $(shell find src/p2p -name '*.cpp')
+SOURCES += $(shell find src/rtc -name '*.cpp')
+SOURCES += $(shell find src/sora -name '*.cpp')
+SOURCES += $(shell find src/ws -name '*.cpp')
+
 ifeq ($(USE_ROS),1)
   CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I$(SYSROOT)/opt/ros/$(ROS_VERSION)/include
   LDFLAGS += \
@@ -381,9 +386,7 @@ ifeq ($(USE_ROS),1)
     -lcpp_common \
     -lrosconsole_log4cxx \
     -lrosconsole_backend_interface
-  SOURCES += $(shell find src -name '*.cpp')
-else
-  SOURCES += $(shell find src -type d -name 'ros' -prune -o -type f -name '*.cpp' -print)
+  SOURCES += $(shell find src/ros -name '*.cpp')
 endif
 
 OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(SOURCES))))
@@ -452,11 +455,6 @@ $(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(
 	$(AR) -rcT $@ $^
 
 endif
-
-# hwenc_il 以下のソースのビルドルール
-$(BUILD_ROOT)/hwenc_il/%.o: hwenc_il/%.cpp | $(BUILD_ROOT)
-	@mkdir -p `dirname $@`
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # src 以下のソースのビルドルール
 $(BUILD_ROOT)/src/%.o: src/%.cpp | $(BUILD_ROOT)
