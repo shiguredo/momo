@@ -14,6 +14,10 @@ $ git clone --recursive git@github.com:shiguredo/momo.git
 Rspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
 また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
 
+ビルド時に Docker の VM のディスクが足りなくなった場合には、ディスク容量を増やして再度実行してください。
+
+mac OS をターゲットにビルドする際には、Docker は利用せず直接ビルドしています。
+
 ## Raspbian June 2018 (armv7) 向けバイナリを作成する
 
 Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
@@ -113,8 +117,8 @@ $ make macos
 
 ## 中間ファイルのクリーンアップ
 
-ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して make _ターゲット_.clean を実行することでクリーンアップできます。例えば raspbian-stretch_armv7 をターゲットにしている場合は、build ディレクトリ以下で次のようクリーンアップします。
+ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して make _ターゲット_.clean を実行することでクリーンアップできます。例えば mac OS をターゲットにしている場合は、build ディレクトリ以下で次のようクリーンアップします。
 
 ```shell
-$ make raspbian-stretch_armv7.clean
+$ make macos.clean
 ```
