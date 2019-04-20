@@ -54,12 +54,12 @@ define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
 .PHONY: $(1).package
 $(1).package: $(1).prepare
 	# momo を package モードでビルドし直す
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) package $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
@@ -101,7 +101,7 @@ $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(pa
 
 .PHONY: macos
 macos: macos.prepare
-	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos momo
+	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
 
 .PHONY: macos.package
 macos.package: macos.prepare
@@ -129,4 +129,4 @@ macos.prepare:
 .PHONY: macos.clean
 macos.clean:
 	make -C macos clean
-	make -C .. clean
+	make -C .. PACKAGE_NAME=macos clean

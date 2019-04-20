@@ -38,7 +38,11 @@ include VERSION
 #
 # BUILD_ROOT: ビルド用ディレクトリ。デフォルトでは ../momo-build になる。
 #
+# MOMO_VERSION: バージョン情報。設定しなければ internal-build になる
+#
 # MOMO_CFLAGS: C コンパイラに追加で渡すフラグ。最適化フラグやデバッグフラグを入れることを想定している。
+#
+# MOMO_LDFLAGS: C リンカーに追加で渡すフラグ。サニタイズフラグや追加のリンクオブジェクトを入れることを想定している。
 
 ifeq ($(PACKAGE_NAME),raspbian-stretch_armv6)
   TARGET_OS ?= linux
@@ -193,6 +197,9 @@ endif
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++11 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
 LDFLAGS += -L$(BUILD_ROOT) -lpthread
+ifdef MOMO_VERSION
+  CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
+endif
 
 LDFLAGS += -lwebrtc
 
@@ -294,8 +301,7 @@ ifeq ($(TARGET_OS),linux)
           -DUSE_IL_ENCODER=1 \
           $(IL_CFLAGS) \
           -I$(VC_PATH)/include/ \
-          -Ilibs/ilclient/ \
-          -I.
+          -Ilibs/ilclient/
         LDFLAGS += \
           -L$(VC_PATH)/lib/ \
           -lbrcmGLESv2 \
@@ -305,7 +311,7 @@ ifeq ($(TARGET_OS),linux)
           -lvcos \
           -lvchiq_arm \
           -lm
-        SOURCES += $(shell find hwenc_il -maxdepth 1 -name '*.cpp')
+        SOURCES += $(shell find src/hwenc_il -maxdepth 1 -name '*.cpp')
         LDFLAGS += -lilclient
         LIBILCLIENT = $(BUILD_ROOT)/libilclient.a
       endif
@@ -314,11 +320,21 @@ ifeq ($(TARGET_OS),linux)
 endif
 
 ifeq ($(TARGET_OS),macos)
+  CC = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang
+  CXX = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang++
+  # brew でインストールした ar コマンドを使うとエラーになるので、明示的にフルパスを指定する
+  AR = /usr/bin/ar
+
+  SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
+  CC += --sysroot=$(SDK_PATH)
+  CXX += --sysroot=$(SDK_PATH)
+
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
   CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
+  CFLAGS += -fvisibility=hidden
   LDFLAGS += \
     -ObjC \
-    -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks \
+    -F$(SDK_PATH)/System/Library/Frameworks \
     -ldl \
     -framework Foundation \
     -framework AVFoundation \
@@ -350,6 +366,12 @@ else
   CFLAGS += -nostdinc++ -isystem$(WEBRTC_SRC_ROOT)/buildtools/third_party/libc++/trunk/include
 endif
 
+SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
+SOURCES += $(shell find src/p2p -name '*.cpp')
+SOURCES += $(shell find src/rtc -name '*.cpp')
+SOURCES += $(shell find src/sora -name '*.cpp')
+SOURCES += $(shell find src/ws -name '*.cpp')
+
 ifeq ($(USE_ROS),1)
   CFLAGS += -DHAVE_JPEG=1 -DUSE_ROS=1 -I$(SYSROOT)/opt/ros/$(ROS_VERSION)/include
   LDFLAGS += \
@@ -364,9 +386,7 @@ ifeq ($(USE_ROS),1)
     -lcpp_common \
     -lrosconsole_log4cxx \
     -lrosconsole_backend_interface
-  SOURCES += $(shell find src -name '*.cpp')
-else
-  SOURCES += $(shell find src -type d -name 'ros' -prune -o -type f -name '*.cpp' -print)
+  SOURCES += $(shell find src/ros -name '*.cpp')
 endif
 
 OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(SOURCES))))
@@ -396,6 +416,9 @@ CFLAGS += -MMD -MP
 
 # ユーザ指定のフラグを追加
 CFLAGS += $(MOMO_CFLAGS)
+
+# ユーザ指定のフラグを追加
+LDFLAGS += $(MOMO_LDFLAGS)
 
 .PHONY: help
 help:
@@ -429,14 +452,9 @@ ifdef WEBRTC_LIB_ROOT
 
 $(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
-	$(AR) -r -c -s -D $@ $^
+	$(AR) -rcT $@ $^
 
 endif
-
-# hwenc_il 以下のソースのビルドルール
-$(BUILD_ROOT)/hwenc_il/%.o: hwenc_il/%.cpp | $(BUILD_ROOT)
-	@mkdir -p `dirname $@`
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # src 以下のソースのビルドルール
 $(BUILD_ROOT)/src/%.o: src/%.cpp | $(BUILD_ROOT)
