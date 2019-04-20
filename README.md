@@ -33,6 +33,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 - Ubuntu 16.04 ARMv7 ROS Kinetic で動作
     - Raspberry Pi 3 B+ で動作
 - macOS 10.14 x86_64
+    - バイナリの提供は行いません
 
 ## 使ってみる
 
