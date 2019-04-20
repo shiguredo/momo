@@ -3,14 +3,16 @@
 ビルドにはマシンパワーにもよりますが、少なくとも 30 分以上かかり、さらに 20GB 以上のダウンロードが必要です。
 そのため、覚悟を持って make コマンドを叩いてください。
 
-Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
-また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
-
 まずは momo のリポジトリをダウンロードします。git submodule を利用しているため --recursive を忘れないでください。
 
 ```shell
 $ git clone --recursive git@github.com:shiguredo/momo.git
 ```
+
+## Docker の利用について
+
+Rspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
+また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
 
 ## Raspbian June 2018 (armv7) 向けバイナリを作成する
 
@@ -22,7 +24,7 @@ build ディレクトリ以下で make raspbian-stretch_armv7 と打つことで
 $ make raspbian-stretch_armv7
 ```
 
-うまくいかない場合は `make clean && make raspbian-stretch_armv7` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make raspbian-stretch_armv7.clean && make raspbian-stretch_armv7` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Raspbian June 2018 (armv6) 向けバイナリを作成する
 
@@ -32,7 +34,7 @@ build ディレクトリ以下で make raspbian-stretch_armv6 と打つことで
 $ make raspbian-stretch_armv6
 ```
 
-うまくいかない場合は `make clean && make raspbian-stretch_armv6` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make raspbian-stretch_armv6.clean && make raspbian-stretch_armv6` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Ubuntu 16.04 (armv8) 向けバイナリを作成する
 
@@ -42,7 +44,7 @@ build ディレクトリ以下で make ubuntu-16.04_armv8 と打つことで Mom
 $ make ubuntu-16.04_armv8
 ```
 
-うまくいかない場合は `make clean && make ubuntu-16.04_armv8` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make ubuntu-16.04_armv8.clean && make ubuntu-16.04_armv8` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
@@ -107,3 +109,12 @@ $ make macos
 ## Windows 10
 
 **現在準備中です**
+
+
+## 中間ファイルのクリーンアップ
+
+ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して make _ターゲット_.clean を実行することでクリーンアップできます。例えば raspbian-stretch_armv7 をターゲットにしている場合は、build ディレクトリ以下で次のようクリーンアップします。
+
+```shell
+$ make raspbian-stretch_armv7.clean
+```
