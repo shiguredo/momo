@@ -3,7 +3,7 @@
 MOMO_VERSION=19.02.0
 WEBRTC_VERSION=73
 WEBRTC_COMMIT=2a1d802a35ad3d7c2a8371ce0d4263ee2476e81e
-BOOST_VERSION=1.69.0
+BOOST_VERSION=1.70.0
 JSON_VERSION=3.6.1
 CLI11_VERSION=1.7.1
 
@@ -13,5 +13,6 @@ PACKAGE_NAMES= \
   raspbian-stretch_armv7 \
   ubuntu-16.04_armv7_ros \
   ubuntu-16.04_armv8 \
+  ubuntu-18.04_armv8 \
   ubuntu-16.04_x86_64_ros \
   ubuntu-18.04_x86_64

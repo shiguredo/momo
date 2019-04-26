@@ -8,7 +8,7 @@
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/core/multi_buffer.hpp>
-#include <boost/beast/websocket/stream_fwd.hpp>
+#include <boost/beast/websocket/stream.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <functional>
 #include <memory>
@@ -29,7 +29,7 @@ private:
     std::unique_ptr<websocket_t> ws_;
     std::unique_ptr<ssl_websocket_t> wss_;
 
-    boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+    boost::asio::strand<websocket_t::executor_type> strand_;
 
     boost::beast::multi_buffer read_buffer_;
     std::vector<boost::beast::flat_buffer> write_buffer_;
@@ -48,7 +48,7 @@ public:
     websocket_t& nativeSocket();
     ssl_websocket_t& nativeSecureSocket();
 
-    boost::asio::strand<boost::asio::io_context::executor_type>& strand();
+    boost::asio::strand<websocket_t::executor_type>& strand();
 
 public:
     // Websocket からの読み込みを開始する。
