@@ -3,10 +3,10 @@
 ビルドにはマシンパワーにもよりますが、少なくとも 30 分以上かかり、さらに 20GB 以上のダウンロードが必要です。
 そのため、覚悟を持って make コマンドを叩いてください。
 
-まずは momo のリポジトリをダウンロードします。git submodule を利用しているため --recursive を忘れないでください。
+まずは momo のリポジトリをダウンロードします。
 
 ```shell
-$ git clone --recursive git@github.com:shiguredo/momo.git
+$ git clone git@github.com:shiguredo/momo.git
 ```
 
 ## macOS 10.14
