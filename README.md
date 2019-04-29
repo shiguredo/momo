@@ -49,11 +49,11 @@ ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS
 
 ## ビルドに挑戦する
 
-Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
+Linux 版 Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
 
 ### macOS 版 Momo のビルドに挑戦する
 
-macOS 向け Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
+macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
 ### Windows 版 Momo のビルドに挑戦する
 
