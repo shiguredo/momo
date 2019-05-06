@@ -93,6 +93,7 @@ $(1).prepare:
 $(1).clean:
 	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
 	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
+	docker builder prune -f --filter=label=jp.shiguredo.momo=$(1)
 
 endef
 
