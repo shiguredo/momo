@@ -14,6 +14,8 @@
 - [UPDATE] CLI11 を v1.7.1 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
+- [UPDATE] doc/CACHE.md を削除
+    - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
 
 ## 19.02.0
 
