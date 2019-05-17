@@ -66,6 +66,13 @@ macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_M
 
 **準備中です**
 
+## Pull-Request について
+
+Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
+そのため Pull-Request を頂いても採用できない場合があります。
+
+まずは Discord にて気軽に話しかけてもらえれば。
+
 ## ライセンス
 
 Apache License 2.0
