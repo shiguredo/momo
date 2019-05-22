@@ -31,8 +31,8 @@ namespace
 
 const uint32_t kFramerate = 30;
 const float kLimitToAverageBitRateFactor = 1.5f;
-const int kLowH264QpThreshold = 28;
-const int kHighH264QpThreshold = 39;
+const int kLowH264QpThreshold = 24;
+const int kHighH264QpThreshold = 37;
 
 // Used by histograms. Values of entries should not be changed.
 enum ILH264EncoderEvent
@@ -473,16 +473,15 @@ int32_t ILH264Encoder::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t ILH264Encoder::SetRateAllocation(const webrtc::VideoBitrateAllocation &bitrate_allocation,
-                                          uint32_t framerate)
+void ILH264Encoder::SetRates(const RateControlParameters& parameters)
 {
-  if (bitrate_allocation.get_sum_bps() <= 0 || framerate <= 0)
-    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
+    return;
 
-  target_bitrate_bps_ = bitrate_allocation.get_sum_bps();
+  target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
-  return WEBRTC_VIDEO_CODEC_OK;
+  return;
 }
 
 void ILH264Encoder::SetBitrateBps(uint32_t bitrate_bps)
@@ -511,9 +510,21 @@ void ILH264Encoder::SetEncoderBitrateBps(uint32_t bitrate_bps)
   encoder_bitrate_bps_ = bitrate_bps;
 }
 
+webrtc::VideoEncoder::EncoderInfo ILH264Encoder::GetEncoderInfo() const
+{
+  EncoderInfo info;
+  info.supports_native_handle = true;
+  info.implementation_name = "Open MAX IL H264";
+  info.scaling_settings =
+    VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  info.is_hardware_accelerated = true;
+  info.has_internal_source = false;
+  return info;
+}
+
 int32_t ILH264Encoder::Encode(
-    const webrtc::VideoFrame &input_frame, const webrtc::CodecSpecificInfo *codec_specific_info,
-    const std::vector<webrtc::FrameType> *frame_types)
+    const webrtc::VideoFrame &input_frame,
+    const std::vector<webrtc::VideoFrameType> *frame_types)
 {
   if (!IsInitialized())
   {
@@ -558,12 +569,12 @@ int32_t ILH264Encoder::Encode(
     // We only support a single stream.
     RTC_DCHECK_EQ(frame_types->size(), static_cast<size_t>(1));
     // Skip frame?
-    if ((*frame_types)[0] == webrtc::kEmptyFrame)
+    if ((*frame_types)[0] == webrtc::VideoFrameType::kEmptyFrame)
     {
       return WEBRTC_VIDEO_CODEC_OK;
     }
     // Force key frame?
-    force_key_frame = (*frame_types)[0] == webrtc::kVideoFrameKey;
+    force_key_frame = (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
 
   OMX_ERRORTYPE err;
@@ -683,12 +694,12 @@ int32_t ILH264Encoder::DrainEncodedData()
 
       if (out->nFlags & OMX_BUFFERFLAG_SYNCFRAME)
       {
-        encoded_image_._frameType = webrtc::kVideoFrameKey;
+        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
         required_size = sps_length_ + pps_length_ + out->nFilledLen;
       }
       else
       {
-        encoded_image_._frameType = webrtc::kVideoFrameDelta;
+        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
         required_size = out->nFilledLen;
       }
 
