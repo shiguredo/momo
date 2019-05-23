@@ -83,23 +83,10 @@ private:
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
 
-  uint8_t lastSPS_[255];
-  uint8_t sps_length_;
-  uint8_t lastPPS_[255];
-  uint8_t pps_length_;
-
   bool omx_configured_;
   bool omx_reconfigure_;
 
   bool drop_next_frame_;
-};
-
-static const uint8_t kNALStartCode[] = {0x00, 0x00, 0x00, 0x01};
-enum
-{
-  kNALTypeIDR = 5,
-  kNALTypeSPS = 7,
-  kNALTypePPS = 8,
 };
 
 #endif // IL_H264_ENCODER_H_
