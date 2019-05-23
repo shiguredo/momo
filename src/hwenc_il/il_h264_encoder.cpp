@@ -38,22 +38,20 @@ const uint32_t kFramerate = 30;
 const int kLowH264QpThreshold = 24;
 const int kHighH264QpThreshold = 37;
 
-} // namespace
-
 int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
 {
   return frame_buffer.StrideY() * frame_buffer.height() + (frame_buffer.StrideU() + frame_buffer.StrideV()) * ((frame_buffer.height() + 1) / 2);
 }
 
+} // namespace
+
 ILH264Encoder::ILH264Encoder(const cricket::VideoCodec &codec)
     : callback_(nullptr),
       ilclient_(nullptr),
       video_encode_(nullptr),
-      bitrate_adjuster_(.5, .95),
-      packetization_mode_(webrtc::H264PacketizationMode::NonInterleaved),
-      omx_configured_(false),
-      omx_reconfigure_(false),
-      drop_next_frame_(false) {}
+      bitrate_adjuster_(.5, .95)
+{
+}
 
 ILH264Encoder::~ILH264Encoder()
 {
@@ -127,6 +125,9 @@ int32_t ILH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   encoded_image_.set_size(0);
   encoded_image_.content_type_ = webrtc::VideoContentType::UNSPECIFIED;
   encoded_image_.timing_.flags = webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
+  encoded_image_.content_type_ = (codec_settings->mode == webrtc::VideoCodecMode::kScreensharing)
+    ? webrtc::VideoContentType::SCREENSHARE
+    : webrtc::VideoContentType::UNSPECIFIED;
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -381,7 +382,7 @@ void ILH264Encoder::SetRates(const RateControlParameters &parameters)
 
 void ILH264Encoder::SetBitrateBps(uint32_t bitrate_bps)
 {
-  if (encoder_bitrate_bps_ == bitrate_bps)
+  if (configured_bitrate_bps_ == bitrate_bps)
   {
     return;
   }
@@ -398,7 +399,7 @@ void ILH264Encoder::SetBitrateBps(uint32_t bitrate_bps)
   {
     RTC_LOG(LS_ERROR) << "Failed to set bitrate parameter ErrorType: " << err;
   }
-  encoder_bitrate_bps_ = bitrate_bps;
+  configured_bitrate_bps_ = bitrate_bps;
 }
 
 webrtc::VideoEncoder::EncoderInfo ILH264Encoder::GetEncoderInfo() const
@@ -436,23 +437,11 @@ int32_t ILH264Encoder::Encode(
     RTC_LOG(LS_INFO) << "Encoder reinitialized from " << configured_width_
                      << "x" << configured_height_ << " to "
                      << frame_buffer->width() << "x" << frame_buffer->height();
-    omx_reconfigure_ = true;
+    OMX_Release();
+    OMX_Configure();
   }
 
   bool force_key_frame = false;
-
-  if (!omx_configured_ || omx_reconfigure_)
-  {
-    if (omx_configured_)
-    {
-      omx_configured_ = false;
-    }
-    omx_reconfigure_ = false;
-    OMX_Release();
-    OMX_Configure();
-    omx_configured_ = true;
-  }
-
   if (frame_types != nullptr)
   {
     // We only support a single stream.
@@ -500,7 +489,8 @@ int32_t ILH264Encoder::Encode(
   err = OMX_EmptyThisBuffer(ILC_GET_HANDLE(video_encode_), buf);
   if (err != OMX_ErrorNone)
   {
-    drop_next_frame_ = true;
+    RTC_LOG(LS_ERROR) << "Failed to empty input buffer";
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   encoded_image_._encodedWidth = frame_buffer->width();
@@ -510,23 +500,34 @@ int32_t ILH264Encoder::Encode(
   encoded_image_.capture_time_ms_ = input_frame.render_time_ms();
   encoded_image_.rotation_ = input_frame.rotation();
   encoded_image_.SetColorSpace(input_frame.color_space());
-  return DrainEncodedData();
-}
 
-int32_t ILH264Encoder::DrainEncodedData()
-{
-  OMX_ERRORTYPE err;
   OMX_BUFFERHEADERTYPE *out;
   out = ilclient_get_output_buffer(video_encode_, 201, 1);
+  int32_t result = WEBRTC_VIDEO_CODEC_ERROR;
+  if (out == nullptr)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to get output buffer";
+  }
+  else
+  {
+    result = SendFrame(out);
+  }
+  out->nFilledLen = 0;
+  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
+  if (err != OMX_ErrorNone)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to fill output buffer";
+  }
+  return result;
+}
 
+int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
+{
   unsigned char *buffer = out->pBuffer + out->nOffset;
   size_t size = out->nFilledLen;
 
   encoded_image_.set_buffer(buffer, size);
   encoded_image_.set_size(size);
-  encoded_image_._completeFrame = true;
-  encoded_image_.content_type_ = webrtc::VideoContentType::UNSPECIFIED;
-  encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
   encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
   //RTC_LOG(LS_ERROR) << __FUNCTION__ << " size:" << size;
 
@@ -596,12 +597,8 @@ int32_t ILH264Encoder::DrainEncodedData()
   if (result.error != webrtc::EncodedImageCallback::Result::OK)
   {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << " OnEncodedImage failed error:" << result.error;
-  out->nFilledLen = 0;
-  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   bitrate_adjuster_.Update(size);
-  out->nFilledLen = 0;
-  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
   return WEBRTC_VIDEO_CODEC_OK;
 }
