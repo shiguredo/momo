@@ -46,24 +46,21 @@ public:
   int32_t Release() override;
   int32_t Encode(const webrtc::VideoFrame &frame,
                  const std::vector<webrtc::VideoFrameType> *frame_types) override;
-  void SetRates(const RateControlParameters& parameters) override;
+  void SetRates(const RateControlParameters &parameters) override;
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
 private:
   int32_t OMX_Configure();
   void OMX_Release();
-
   void SetBitrateBps(uint32_t bitrate_bps);
-
-  int32_t DrainEncodedData();
+  int32_t SendFrame(OMX_BUFFERHEADERTYPE *out);
 
   webrtc::EncodedImageCallback *callback_;
   ILCLIENT_T *ilclient_;
   COMPONENT_T *video_encode_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
-  webrtc::H264PacketizationMode packetization_mode_;
   uint32_t target_bitrate_bps_;
-  uint32_t encoder_bitrate_bps_;
+  uint32_t configured_bitrate_bps_;
   int32_t width_;
   int32_t height_;
   int32_t configured_width_;
@@ -75,11 +72,6 @@ private:
 
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
-
-  bool omx_configured_;
-  bool omx_reconfigure_;
-
-  bool drop_next_frame_;
 };
 
 #endif // IL_H264_ENCODER_H_
