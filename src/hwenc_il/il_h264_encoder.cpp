@@ -381,15 +381,11 @@ void ILH264Encoder::SetRates(const RateControlParameters &parameters)
 
 void ILH264Encoder::SetBitrateBps(uint32_t bitrate_bps)
 {
-  if (encoder_bitrate_bps_ != bitrate_bps)
+  if (encoder_bitrate_bps_ == bitrate_bps)
   {
-    SetEncoderBitrateBps(bitrate_bps);
+    return;
   }
-}
-
-void ILH264Encoder::SetEncoderBitrateBps(uint32_t bitrate_bps)
-{
-  RTC_LOG(LS_ERROR) << "SetEncoderBitrateBps　" << bitrate_bps << "bit/sec";
+  RTC_LOG(LS_INFO) << "SetBitrateBps" << bitrate_bps << "bit/sec";
   OMX_VIDEO_CONFIG_BITRATETYPE bitrateType;
   memset(&bitrateType, 0, sizeof(OMX_VIDEO_CONFIG_BITRATETYPE));
   bitrateType.nSize = sizeof(OMX_VIDEO_CONFIG_BITRATETYPE);

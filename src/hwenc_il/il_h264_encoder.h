@@ -54,7 +54,6 @@ private:
   void OMX_Release();
 
   void SetBitrateBps(uint32_t bitrate_bps);
-  void SetEncoderBitrateBps(uint32_t bitrate_bps);
 
   int32_t DrainEncodedData();
 
