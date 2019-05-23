@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:1.0.0-experimental
+# syntax = docker/dockerfile:1.1.1-experimental
 FROM ubuntu:16.04
 
 ARG PACKAGE_NAME
