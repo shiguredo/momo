@@ -49,7 +49,6 @@ ILH264Encoder::ILH264Encoder(const cricket::VideoCodec &codec)
     : callback_(nullptr),
       ilclient_(nullptr),
       video_encode_(nullptr),
-      fill_buffer_event_(false, false),
       bitrate_adjuster_(.5, .95),
       packetization_mode_(webrtc::H264PacketizationMode::NonInterleaved),
       omx_configured_(false),
@@ -96,8 +95,6 @@ int32_t ILH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
     ilclient_destroy(ilclient_);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-
-  ilclient_set_fill_buffer_done_callback(ilclient_, FillBufferDoneFunction, this);
 
   if (ilclient_create_component(ilclient_, &video_encode_, (char *)"video_encode",
                                 (ILCLIENT_CREATE_FLAGS_T)(ILCLIENT_DISABLE_ALL_PORTS |
@@ -364,19 +361,6 @@ void ILH264Encoder::OMX_Release()
   }
 }
 
-void ILH264Encoder::FillBufferDoneFunction(void *data, COMPONENT_T *comp)
-{
-  if (comp == static_cast<ILH264Encoder *>(data)->video_encode_)
-  {
-    static_cast<ILH264Encoder *>(data)->FillBufferDone();
-  }
-}
-
-void ILH264Encoder::FillBufferDone()
-{
-  fill_buffer_event_.Set();
-}
-
 int32_t ILH264Encoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback *callback)
 {
@@ -437,7 +421,7 @@ int32_t ILH264Encoder::Encode(
     const webrtc::VideoFrame &input_frame,
     const std::vector<webrtc::VideoFrameType> *frame_types)
 {
-  if (!IsInitialized())
+  if (ilclient_ == nullptr)
   {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
@@ -539,14 +523,6 @@ int32_t ILH264Encoder::DrainEncodedData()
   OMX_BUFFERHEADERTYPE *out;
   out = ilclient_get_output_buffer(video_encode_, 201, 1);
 
-  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
-  if (err != OMX_ErrorNone)
-  {
-    drop_next_frame_ = true;
-  }
-
-  fill_buffer_event_.Wait(rtc::Event::kForever);
-
   unsigned char *buffer = out->pBuffer + out->nOffset;
   size_t size = out->nFilledLen;
 
@@ -624,13 +600,12 @@ int32_t ILH264Encoder::DrainEncodedData()
   if (result.error != webrtc::EncodedImageCallback::Result::OK)
   {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << " OnEncodedImage failed error:" << result.error;
+  out->nFilledLen = 0;
+  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   bitrate_adjuster_.Update(size);
+  out->nFilledLen = 0;
+  err = OMX_FillThisBuffer(ILC_GET_HANDLE(video_encode_), out);
   return WEBRTC_VIDEO_CODEC_OK;
-}
-
-bool ILH264Encoder::IsInitialized() const
-{
-  return ilclient_ != nullptr;
 }
