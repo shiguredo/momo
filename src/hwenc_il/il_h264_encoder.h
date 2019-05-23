@@ -59,7 +59,6 @@ private:
   void SetEncoderBitrateBps(uint32_t bitrate_bps);
 
   int32_t DrainEncodedData();
-  void SendEncodedDataToCallback(webrtc::EncodedImage encoded_image);
 
   static void FillBufferDoneFunction(void *data, COMPONENT_T *comp);
   void FillBufferDone();
