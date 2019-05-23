@@ -50,8 +50,6 @@ public:
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
 private:
-  bool IsInitialized() const;
-
   int32_t OMX_Configure();
   void OMX_Release();
 
@@ -60,13 +58,9 @@ private:
 
   int32_t DrainEncodedData();
 
-  static void FillBufferDoneFunction(void *data, COMPONENT_T *comp);
-  void FillBufferDone();
-
   webrtc::EncodedImageCallback *callback_;
   ILCLIENT_T *ilclient_;
   COMPONENT_T *video_encode_;
-  rtc::Event fill_buffer_event_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   webrtc::H264PacketizationMode packetization_mode_;
   uint32_t target_bitrate_bps_;
