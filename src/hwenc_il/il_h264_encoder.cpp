@@ -28,23 +28,15 @@
 
 namespace
 {
-  struct nal_entry
-  {
-    size_t offset;
-    size_t size;
-  };
+struct nal_entry
+{
+  size_t offset;
+  size_t size;
+};
 
 const uint32_t kFramerate = 30;
 const int kLowH264QpThreshold = 24;
 const int kHighH264QpThreshold = 37;
-
-// Used by histograms. Values of entries should not be changed.
-enum ILH264EncoderEvent
-{
-  kH264EncoderEventInit = 0,
-  kH264EncoderEventError = 1,
-  kH264EncoderEventMax = 16,
-};
 
 } // namespace
 
@@ -60,8 +52,6 @@ ILH264Encoder::ILH264Encoder(const cricket::VideoCodec &codec)
       fill_buffer_event_(false, false),
       bitrate_adjuster_(.5, .95),
       packetization_mode_(webrtc::H264PacketizationMode::NonInterleaved),
-      sps_length_(0),
-      pps_length_(0),
       omx_configured_(false),
       omx_reconfigure_(false),
       drop_next_frame_(false) {}
