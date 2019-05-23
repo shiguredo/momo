@@ -28,6 +28,11 @@
 
 namespace
 {
+  struct nal_entry
+  {
+    size_t offset;
+    size_t size;
+  };
 
 const uint32_t kFramerate = 30;
 const int kLowH264QpThreshold = 24;
@@ -46,91 +51,6 @@ enum ILH264EncoderEvent
 int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
 {
   return frame_buffer.StrideY() * frame_buffer.height() + (frame_buffer.StrideU() + frame_buffer.StrideV()) * ((frame_buffer.height() + 1) / 2);
-}
-
-// https://android.googlesource.com/platform/frameworks/av/+/master/media/libstagefright/avc_utils.cpp#257
-static bool getNextNALUnit(const uint8_t **_data, size_t *_size,
-                           const uint8_t **nalStart, size_t *nalSize,
-                           bool startCodeFollows)
-{
-  const uint8_t *data = *_data;
-  size_t size = *_size;
-
-  *nalStart = NULL;
-  *nalSize = 0;
-
-  if (size < 3)
-  {
-    return false;
-  }
-
-  size_t offset = 0;
-
-  // A valid startcode consists of at least two 0x00 bytes followed by 0x01.
-  for (; offset + 2 < size; ++offset)
-  {
-    if (data[offset + 2] == 0x01 && data[offset] == 0x00 && data[offset + 1] == 0x00)
-    {
-      break;
-    }
-  }
-  if (offset + 2 >= size)
-  {
-    *_data = &data[offset];
-    *_size = 2;
-    return false;
-  }
-  offset += 3;
-
-  size_t startOffset = offset;
-
-  for (;;)
-  {
-    while (offset < size && data[offset] != 0x01)
-    {
-      ++offset;
-    }
-
-    if (offset == size)
-    {
-      if (startCodeFollows)
-      {
-        offset = size + 2;
-        break;
-      }
-
-      return false;
-    }
-
-    if (data[offset - 1] == 0x00 && data[offset - 2] == 0x00)
-    {
-      break;
-    }
-
-    ++offset;
-  }
-
-  size_t endOffset = offset - 2;
-  while (endOffset > startOffset + 1 && data[endOffset - 1] == 0x00)
-  {
-    --endOffset;
-  }
-
-  *nalStart = &data[startOffset];
-  *nalSize = endOffset - startOffset;
-
-  if (offset + 2 < size)
-  {
-    *_data = &data[offset - 2];
-    *_size = size - offset + 2;
-  }
-  else
-  {
-    *_data = NULL;
-    *_size = 0;
-  }
-
-  return true;
 }
 
 ILH264Encoder::ILH264Encoder(const cricket::VideoCodec &codec)
@@ -152,8 +72,8 @@ ILH264Encoder::~ILH264Encoder()
 }
 
 int32_t ILH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
-                                   int32_t number_of_cores,
-                                   size_t max_payload_size)
+                                  int32_t number_of_cores,
+                                  size_t max_payload_size)
 {
   RTC_DCHECK(codec_settings);
   RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
@@ -474,7 +394,7 @@ int32_t ILH264Encoder::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void ILH264Encoder::SetRates(const RateControlParameters& parameters)
+void ILH264Encoder::SetRates(const RateControlParameters &parameters)
 {
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
@@ -517,7 +437,7 @@ webrtc::VideoEncoder::EncoderInfo ILH264Encoder::GetEncoderInfo() const
   info.supports_native_handle = true;
   info.implementation_name = "Open MAX IL H264";
   info.scaling_settings =
-    VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+      VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
   info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
@@ -619,6 +539,7 @@ int32_t ILH264Encoder::Encode(
   encoded_image_.ntp_time_ms_ = input_frame.ntp_time_ms();
   encoded_image_.capture_time_ms_ = input_frame.render_time_ms();
   encoded_image_.rotation_ = input_frame.rotation();
+  encoded_image_.SetColorSpace(input_frame.color_space());
   return DrainEncodedData();
 }
 
@@ -636,148 +557,87 @@ int32_t ILH264Encoder::DrainEncodedData()
 
   fill_buffer_event_.Wait(rtc::Event::kForever);
 
-  if (out != NULL && out->nFilledLen > 0)
+  unsigned char *buffer = out->pBuffer + out->nOffset;
+  size_t size = out->nFilledLen;
+
+  encoded_image_.set_buffer(buffer, size);
+  encoded_image_.set_size(size);
+  encoded_image_._completeFrame = true;
+  encoded_image_.content_type_ = webrtc::VideoContentType::UNSPECIFIED;
+  encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
+  encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+  //RTC_LOG(LS_ERROR) << __FUNCTION__ << " size:" << size;
+
+  uint8_t zero_count = 0;
+  size_t nal_start_idx = 0;
+  std::vector<nal_entry> nals;
+  for (size_t i = 0; i < size; i++)
   {
-    if (out->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
+    uint8_t data = buffer[i];
+    //if (i < 100) printf(" %02x", data);
+    if ((i != 0) && (i == nal_start_idx))
     {
-      size_t num_nals = 0;
-      const uint8_t *data = out->pBuffer + out->nOffset;
-      size_t size = out->nFilledLen;
-
-#if H264HWENC_HEADER_DEBUG
-      for (uint32_t i = 0; i < out->nFilledLen; i++)
-        printf("%02x ", *(data + i));
-      printf("\n");
-#endif
-
-      const uint8_t *nalStart = nullptr;
-      size_t nalSize = 0;
-      while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true))
+      //printf("-header");
+      if ((data & 0x1F) == 0x05)
       {
-        if ((*nalStart & 0x1f) == kNALTypeSPS)
-        {
-          sps_length_ = nalSize + sizeof(kNALStartCode);
-          memcpy(lastSPS_,
-                 nalStart - sizeof(kNALStartCode),
-                 sps_length_);
-          lastSPS_[4] |= 0x40;
-        }
-        else if ((*nalStart & 0x1f) == kNALTypePPS)
-        {
-          pps_length_ = nalSize + sizeof(kNALStartCode);
-          memcpy(lastPPS_,
-                 nalStart - sizeof(kNALStartCode),
-                 pps_length_);
-          lastPPS_[4] |= 0x40;
-        }
-        num_nals++;
+        //printf("-IDR(%02x)", (data & 0x1F));
+        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
       }
-      out->nFilledLen = 0;
-      return DrainEncodedData();
+    }
+    if (data == 0x01 && zero_count == 3)
+    {
+      if (nal_start_idx != 0)
+      {
+        nals.push_back({nal_start_idx, i - nal_start_idx + 1 - 4});
+        //printf(" nal_size: %d ", i - nal_start_idx + 1 - 4);
+      }
+      nal_start_idx = i + 1;
+      //printf(" nal_start_idx: %d\n", nal_start_idx);
+    }
+    if (data == 0x00)
+    {
+      zero_count++;
     }
     else
     {
-      size_t required_size = 0;
-      size_t writtenSize = 0;
-      uint64_t buf_time = (((((uint64_t)out->nTimeStamp.nHighPart << 32) & 0xFFFFFFFF00000000) + (uint64_t)out->nTimeStamp.nLowPart)) / 1000ll;
-      if (buf_time != encoded_image_.Timestamp())
-      {
-        RTC_LOG(LS_ERROR) << "Error timestamp is not match. timestamp:" << encoded_image_.Timestamp() << " buf_time:" << buf_time;
-      }
-      if (buf_time < encoded_image_.Timestamp())
-      {
-        RTC_LOG(LS_ERROR) << "buf_time is yanger than timestamp. retry get buffer.";
-        out->nFilledLen = 0;
-        return DrainEncodedData();
-      }
-
-      if (out->nFlags & OMX_BUFFERFLAG_SYNCFRAME)
-      {
-        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
-        required_size = sps_length_ + pps_length_ + out->nFilledLen;
-      }
-      else
-      {
-        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-        required_size = out->nFilledLen;
-      }
-
-      if (encoded_image_.capacity() < required_size)
-      {
-        size_t new_capacity = CalcBufferSize(
-            webrtc::VideoType::kI420, encoded_image_._encodedWidth, encoded_image_._encodedHeight);
-        if (new_capacity < required_size)
-        {
-          new_capacity = required_size;
-        }
-        encoded_image_buffer_.reset(new uint8_t[new_capacity]);
-        encoded_image_.set_buffer(encoded_image_buffer_.get(), new_capacity);
-      }
-
-      if (out->nFlags & OMX_BUFFERFLAG_SYNCFRAME)
-      {
-        memcpy(encoded_image_.data(),
-               lastSPS_,
-               sps_length_);
-        writtenSize += sps_length_;
-        memcpy(encoded_image_.data() + writtenSize,
-               lastPPS_,
-               pps_length_);
-        writtenSize += pps_length_;
-      }
-      out->pBuffer[out->nOffset + 4] |= 0x40;
-      memcpy(encoded_image_.data() + writtenSize,
-             out->pBuffer + out->nOffset,
-             out->nFilledLen);
-      encoded_image_.set_size(writtenSize + out->nFilledLen);
-
-      SendEncodedDataToCallback(encoded_image_);
-      out->nFilledLen = 0;
+      zero_count = 0;
     }
   }
-  return WEBRTC_VIDEO_CODEC_OK;
-}
-
-void ILH264Encoder::SendEncodedDataToCallback(webrtc::EncodedImage encoded_image)
-{
-  struct nal_entry
+  if (nal_start_idx != 0)
   {
-    uint32_t offset;
-    uint32_t size;
-  };
-  std::vector<nal_entry> nals;
-
-  const uint8_t *data = encoded_image.data();
-  size_t size = encoded_image.size();
-  const uint8_t *nalStart = nullptr;
-  size_t nalSize = 0;
-  while (getNextNALUnit(&data, &size, &nalStart, &nalSize, true))
-  {
-    nal_entry nal = {((uint32_t)(nalStart - encoded_image.data())), (uint32_t)nalSize};
-    nals.push_back(nal);
+    nals.push_back({nal_start_idx, size - nal_start_idx});
+    //printf(" nal_size: %d size: %d \n", size - nal_start_idx , size);
   }
+  //printf("\n");
 
-  size_t num_nals = nals.size();
+  //RTC_LOG(LS_ERROR) << __FUNCTION__ << "  nals.size():" << nals.size();
+
   webrtc::RTPFragmentationHeader frag_header;
-  frag_header.VerifyAndAllocateFragmentationHeader(num_nals);
-  for (size_t i = 0; i < num_nals; i++)
+  frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
+  for (size_t i = 0; i < nals.size(); i++)
   {
     frag_header.fragmentationOffset[i] = nals[i].offset;
     frag_header.fragmentationLength[i] = nals[i].size;
+    frag_header.fragmentationPlType[i] = 0;
+    frag_header.fragmentationTimeDiff[i] = 0;
+    //RTC_LOG(LS_ERROR) << __FUNCTION__ << " i:" << i << " offset:" << nals[i].offset << " size:" << nals[i].size;
   }
 
   webrtc::CodecSpecificInfo codec_specific;
   codec_specific.codecType = webrtc::kVideoCodecH264;
-  codec_specific.codecSpecific.H264.packetization_mode = packetization_mode_;
+  codec_specific.codecSpecific.H264.packetization_mode = webrtc::H264PacketizationMode::NonInterleaved;
 
-  h264_bitstream_parser_.ParseBitstream(data, size);
-  h264_bitstream_parser_.GetLastSliceQp(&encoded_image.qp_);
+  h264_bitstream_parser_.ParseBitstream(buffer, size);
+  h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
 
-  if (callback_->OnEncodedImage(encoded_image, &codec_specific, &frag_header).error != webrtc::EncodedImageCallback::Result::OK)
+  webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(encoded_image_, &codec_specific, &frag_header);
+  if (result.error != webrtc::EncodedImageCallback::Result::OK)
   {
-    return;
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << " OnEncodedImage failed error:" << result.error;
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
   bitrate_adjuster_.Update(size);
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 bool ILH264Encoder::IsInitialized() const
