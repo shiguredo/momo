@@ -1,5 +1,7 @@
 # Momo を使ってみる
 
+**macOS 版と Windows 版のバイナリ提供はしていません、自力でのビルドをお願いします**
+
 https://github.com/shiguredo/momo/releases にて利用したい環境のバイナリをダウンロードしてください。
 
 必要なライブラリをインストールしてご利用ください。
@@ -89,7 +91,7 @@ WebRTC Native Client Momo version 19.02.0
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p 
+$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。

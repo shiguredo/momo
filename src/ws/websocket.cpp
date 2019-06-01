@@ -10,17 +10,17 @@
 Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc))
     , strand_(ws_->get_executor()) {
-  ws_->write_buffer_size(8192);
+  ws_->write_buffer_bytes(8192);
 }
 Websocket::Websocket(boost::asio::io_context& ioc, boost::asio::ssl::context ssl_ctx)
     : wss_(new ssl_websocket_t(ioc, ssl_ctx))
     , strand_(wss_->get_executor()) {
-  wss_->write_buffer_size(8192);
+  wss_->write_buffer_bytes(8192);
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
     : ws_(new websocket_t(std::move(socket)))
     , strand_(ws_->get_executor()) {
-  ws_->write_buffer_size(8192);
+  ws_->write_buffer_bytes(8192);
 }
 
 Websocket::~Websocket() {
@@ -31,7 +31,7 @@ bool Websocket::isSSL() const { return wss_ != nullptr; }
 Websocket::websocket_t& Websocket::nativeSocket() { return *ws_; }
 Websocket::ssl_websocket_t& Websocket::nativeSecureSocket() { return *wss_; }
 
-boost::asio::strand<boost::asio::io_context::executor_type>& Websocket::strand() { return strand_; }
+boost::asio::strand<Websocket::websocket_t::executor_type>& Websocket::strand() { return strand_; }
 
 void Websocket::startToRead(read_callback_t on_read) {
     boost::asio::post(

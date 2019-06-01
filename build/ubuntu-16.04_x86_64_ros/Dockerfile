@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:experimental
+# syntax = docker/dockerfile:1.0.0-experimental
 FROM ros:kinetic-ros-core-xenial
 
 ARG PACKAGE_NAME

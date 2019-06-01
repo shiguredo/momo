@@ -70,15 +70,18 @@ rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
+    RTC_LOG(LS_WARNING) << "Failed to CreateDeviceInfo";
     return nullptr;
   }
   int num_devices = info->NumberOfDevices();
   for (int i = 0; i < num_devices; ++i) {
     capturer = Create(width, height, target_fps, i);
     if (capturer) {
+      RTC_LOG(LS_WARNING) << "Get Capture";
       return capturer;
     }
   }
+  RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer";
 
   return nullptr;
 }

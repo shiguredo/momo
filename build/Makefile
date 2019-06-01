@@ -129,4 +129,4 @@ macos.prepare:
 .PHONY: macos.clean
 macos.clean:
 	make -C macos clean
-	make -C .. clean
+	make -C .. PACKAGE_NAME=macos clean

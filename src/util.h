@@ -4,7 +4,7 @@
 #include <boost/beast/core/string.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/message.hpp>
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
 #include "connection_settings.h"
 
 class Util

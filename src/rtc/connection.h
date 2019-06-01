@@ -1,6 +1,6 @@
 #ifndef CONNECTION_H_
 #define CONNECTION_H_
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
 
 #include "observer.h"
 

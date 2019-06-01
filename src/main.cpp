@@ -9,7 +9,7 @@
 #include <string>
 #include <csignal>
 
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"

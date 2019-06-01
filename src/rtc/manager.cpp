@@ -4,15 +4,15 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/create_peerconnection_factory.h"
+#include "api/task_queue/global_task_queue_factory.h"
 #include "api/video_track_source_proxy.h"
-#include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "logging/rtc_event_log/rtc_event_log_factory.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
-#include "rtc_base/ssladapter.h"
+#include "rtc_base/ssl_adapter.h"
 #include "rtc_base/logging.h"
 
 #include "scalable_track_source.h"
@@ -50,16 +50,13 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
-  std::unique_ptr<webrtc::VideoBitrateAllocatorFactory> videoBitrateAllocatorFactory =
-      webrtc::CreateBuiltinVideoBitrateAllocatorFactory();
-
   std::unique_ptr<cricket::MediaEngineInterface> media_engine = cricket::WebRtcMediaEngineFactory::Create(
 #if USE_ROS
       ROSAudioDeviceModule::Create(_conn_settings),
-#elif __APPLE__
-      webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kPlatformDefaultAudio),
+#elif __linux__
+	  webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kLinuxAlsaAudio, &webrtc::GlobalTaskQueueFactory()),
 #else
-      webrtc::AudioDeviceModule::Create(0, webrtc::AudioDeviceModule::kLinuxAlsaAudio),
+	  webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, &webrtc::GlobalTaskQueueFactory()),
 #endif
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),
@@ -74,7 +71,6 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
 #endif
       webrtc::CreateBuiltinVideoDecoderFactory(),
 #endif
-      std::move(videoBitrateAllocatorFactory),
       nullptr /* audio_mixer */,
       webrtc::AudioProcessingBuilder().Create());
 

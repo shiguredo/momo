@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.0.0-experimental
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ARG PACKAGE_NAME
 
@@ -9,13 +9,14 @@ COPY script/docker.sh /root/
 
 # RootFS の構築
 
-COPY patch/rpi-xenial-ros.conf /root/
+COPY patch/arm64.conf /root/
 
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /bin/bash -c " \
     set -ex \
     && source /root/docker.sh \
-    && init_rootfs_armhf /root/rootfs /root/rpi-xenial-ros.conf \
+    && noninteractive_tzdata \
+    && init_rootfs_arm64 /root/rootfs /root/arm64.conf \
   "
 
 COPY patch/4k.patch /root/
@@ -41,7 +42,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false use_rtti=true is_component_build=false is_desktop_linux=false use_custom_libcxx=false use_custom_libcxx_for_host=false rtc_build_json=true' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=false rtc_include_tests=false rtc_build_json=true use_rtti=true is_desktop_linux=false' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
@@ -57,21 +58,22 @@ RUN \
     && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
     && ./b2 \
       cxxflags=' \
-        --target=arm-linux-gnueabihf \
+        -D_LIBCPP_ABI_UNSTABLE \
+        -nostdinc++ \
+        -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
+        --target=aarch64-linux-gnu \
         --sysroot=/root/rootfs \
-        -march=armv7-a \
-        -mfloat-abi=hard \
-        -mtune=generic-armv7-a \
-        -mfpu=neon \
-        -mthumb \
+        -I/root/rootfs/usr/include/aarch64-linux-gnu \
       ' \
       linkflags=' \
+        -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+        -B/root/rootfs/usr/lib/aarch64-linux-gnu \
       ' \
       toolset=clang \
       visibility=global \
       target-os=linux \
       architecture=arm \
-      address-model=32 \
+      address-model=64 \
       link=static \
       variant=release \
       install \
