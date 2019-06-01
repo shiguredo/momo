@@ -11,7 +11,10 @@ $ git clone git@github.com:shiguredo/momo.git
 
 ## Docker の利用について
 
-Rspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
+Rspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。
+
+Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
+
 また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
 
 ## Raspbian June 2018 (armv7) 向けバイナリを作成する
@@ -46,6 +49,17 @@ $ make ubuntu-16.04_armv8
 
 うまくいかない場合は `make ubuntu-16.04_armv8.clean && make ubuntu-16.04_armv8` を試してみてください。それでもだめな場合は issues にお願いします。
 
+## Ubuntu 18.04 (armv8) 向けバイナリを作成する
+
+build ディレクトリ以下で make ubuntu-18.04_armv8 と打つことで Momo のバイナリが生成されます。
+
+```shell
+$ make ubuntu-16.04_armv8
+```
+
+うまくいかない場合は `make ubuntu-18.04_armv8.clean && make ubuntu-18.04_armv8` を試してみてください。それでもだめな場合は issues にお願いします。
+
+
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
 build ディレクトリ以下で make ubuntu-18.04_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
@@ -53,3 +67,5 @@ build ディレクトリ以下で make ubuntu-18.04_x86_64 と打つことで Mo
 ```shell
 $ make ubuntu-18.04_x86_64
 ```
+
+うまくいかない場合は `make ubuntu-18.04_x86_64.clean && make ubuntu-18.04_x86_64` を試してみてください。それでもだめな場合は issues にお願いします。
