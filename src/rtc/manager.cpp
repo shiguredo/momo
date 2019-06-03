@@ -21,7 +21,7 @@
 #include "util.h"
 
 #ifdef __APPLE__
-#include "objc_codec_factory_helper.h"
+#include "mac_helper/objc_codec_factory_helper.h"
 #else
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
