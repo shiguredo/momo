@@ -529,7 +529,6 @@ int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
   encoded_image_.set_buffer(buffer, size);
   encoded_image_.set_size(size);
   encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-  //RTC_LOG(LS_ERROR) << __FUNCTION__ << " size:" << size;
 
   uint8_t zero_count = 0;
   size_t nal_start_idx = 0;
@@ -537,13 +536,10 @@ int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
   for (size_t i = 0; i < size; i++)
   {
     uint8_t data = buffer[i];
-    //if (i < 100) printf(" %02x", data);
     if ((i != 0) && (i == nal_start_idx))
     {
-      //printf("-header");
       if ((data & 0x1F) == 0x05)
       {
-        //printf("-IDR(%02x)", (data & 0x1F));
         encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
       }
     }
@@ -552,10 +548,8 @@ int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
       if (nal_start_idx != 0)
       {
         nals.push_back({nal_start_idx, i - nal_start_idx + 1 - 4});
-        //printf(" nal_size: %d ", i - nal_start_idx + 1 - 4);
       }
       nal_start_idx = i + 1;
-      //printf(" nal_start_idx: %d\n", nal_start_idx);
     }
     if (data == 0x00)
     {
@@ -569,11 +563,7 @@ int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
   if (nal_start_idx != 0)
   {
     nals.push_back({nal_start_idx, size - nal_start_idx});
-    //printf(" nal_size: %d size: %d \n", size - nal_start_idx , size);
   }
-  //printf("\n");
-
-  //RTC_LOG(LS_ERROR) << __FUNCTION__ << "  nals.size():" << nals.size();
 
   webrtc::RTPFragmentationHeader frag_header;
   frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
@@ -583,7 +573,6 @@ int32_t ILH264Encoder::SendFrame(OMX_BUFFERHEADERTYPE *out)
     frag_header.fragmentationLength[i] = nals[i].size;
     frag_header.fragmentationPlType[i] = 0;
     frag_header.fragmentationTimeDiff[i] = 0;
-    //RTC_LOG(LS_ERROR) << __FUNCTION__ << " i:" << i << " offset:" << nals[i].offset << " size:" << nals[i].size;
   }
 
   webrtc::CodecSpecificInfo codec_specific;
