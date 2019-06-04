@@ -1,5 +1,5 @@
-#ifndef IL_ENCODER_FACTORY_H_
-#define IL_ENCODER_FACTORY_H_
+#ifndef HW_VIDEO_ENCODER_FACTORY_H_
+#define HW_VIDEO_ENCODER_FACTORY_H_
 
 #include <memory>
 #include <vector>
@@ -8,11 +8,11 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 
-class ILVideoEncoderFactory : public webrtc::VideoEncoderFactory
+class HWVideoEncoderFactory : public webrtc::VideoEncoderFactory
 {
   public:
-    ILVideoEncoderFactory() {}
-    virtual ~ILVideoEncoderFactory() {}
+    HWVideoEncoderFactory() {}
+    virtual ~HWVideoEncoderFactory() {}
 
     std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
@@ -22,4 +22,4 @@ class ILVideoEncoderFactory : public webrtc::VideoEncoderFactory
       const webrtc::SdpVideoFormat& format) override;
 };
 
-#endif // IL_ENCODER_FACTORY_H_
+#endif // HW_VIDEO_ENCODER_FACTORY_H_
