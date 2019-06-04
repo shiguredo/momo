@@ -31,7 +31,7 @@
 #include "ros/ros_audio_device_module.h"
 #endif
 
-#if USE_IL_ENCODER
+#if USE_MMAL_ENCODER
 #include "hw_video_encoder_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "absl/memory/memory.h"
@@ -64,7 +64,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
       CreateObjCEncoderFactory(),
       CreateObjCDecoderFactory(),
 #else
-#if USE_IL_ENCODER
+#if USE_MMAL_ENCODER
       std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<HWVideoEncoderFactory>()),
 #else
       webrtc::CreateBuiltinVideoEncoderFactory(),

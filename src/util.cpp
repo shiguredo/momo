@@ -18,10 +18,10 @@
 #endif
 
 // HWA を効かせる場合は 1 になる
-#if USE_IL_ENCODER
-  #define MOMO_USE_IL_ENCODER 1
+#if USE_MMAL_ENCODER
+  #define MOMO_USE_MMAL_ENCODER 1
 #else
-  #define MOMO_USE_IL_ENCODER 0
+  #define MOMO_USE_MMAL_ENCODER 0
 #endif
 
 // H264 を有効にする場合は 1 になる
@@ -219,7 +219,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   if (version)
   {
-    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION " USE_IL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_IL_ENCODER) << std::endl;
+    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER) << std::endl;
     exit(0);
   }
 

@@ -22,7 +22,7 @@ include VERSION
 # USE_ROS: ROS を使っているかどうか
 #   有効な値は 0, 1
 #
-# USE_IL_ENCODER: ハードウェアエンコーダを利用するかどうか
+# USE_MMAL_ENCODER: ハードウェアエンコーダを利用するかどうか
 #   有効な値は 0, 1
 #
 # BOOST_ROOT: Boost のインストール先ディレクトリ
@@ -50,7 +50,7 @@ ifeq ($(PACKAGE_NAME),raspbian-stretch_armv6)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv6
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 1
+  USE_MMAL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-stretch_armv6
@@ -61,7 +61,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-stretch_armv7)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 1
+  USE_MMAL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-stretch_armv7
@@ -72,7 +72,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 1
-  USE_IL_ENCODER ?= 1
+  USE_MMAL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -83,7 +83,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv8)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv8
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 0
+  USE_MMAL_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv8
@@ -94,7 +94,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv8
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 0
+  USE_MMAL_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
@@ -104,7 +104,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   TARGET_OS_LINUX ?= ubuntu-16.04
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 1
-  USE_IL_ENCODER ?= 0
+  USE_MMAL_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
@@ -113,7 +113,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   TARGET_OS_LINUX ?= ubuntu-18.04
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 0
+  USE_MMAL_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
@@ -121,7 +121,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   TARGET_OS ?= macos
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 0
-  USE_IL_ENCODER ?= 0
+  USE_MMAL_ENCODER ?= 0
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
@@ -163,8 +163,8 @@ else
     HAS_ERROR = 1
   endif
 
-  ifndef USE_IL_ENCODER
-    $(info - USE_IL_ENCODER が指定されていません)
+  ifndef USE_MMAL_ENCODER
+    $(info - USE_MMAL_ENCODER が指定されていません)
     HAS_ERROR = 1
   endif
 
@@ -273,16 +273,14 @@ ifeq ($(TARGET_OS),linux)
       endif
 
       # ilclient の設定
-      ifeq ($(USE_IL_ENCODER),1)
+      ifeq ($(USE_MMAL_ENCODER),1)
         ifeq ($(TARGET_OS_LINUX),raspbian-stretch)
           VC_PATH = $(SYSROOT)/opt/vc
         else
           VC_PATH = $(SYSROOT)/usr
         endif
 
-        IL_SOURCES = $(wildcard libs/ilclient/*.c)
-        IL_OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.c,%.o,$(IL_SOURCES)))
-        IL_CFLAGS = \
+        MMAL_CFLAGS = \
           -DSTANDALONE \
           -D__STDC_CONSTANT_MACROS \
           -D__STDC_LIMIT_MACROS \
@@ -304,27 +302,26 @@ ifeq ($(TARGET_OS),linux)
           -DHAVE_LIBBCM_HOST \
           -DUSE_EXTERNAL_LIBBCM_HOST \
           -DUSE_VCHIQ_ARM
-        IL_INCLUDES = \
-          -I$(VC_PATH)/include/ \
-          -I$(VC_PATH)/include/interface/vcos/pthreads \
-          -I$(VC_PATH)/include/interface/vmcs_host/linux
         CFLAGS += \
-          -DUSE_IL_ENCODER=1 \
-          $(IL_CFLAGS) \
-          -I$(VC_PATH)/include/ \
-          -Ilibs/ilclient/
+          -DUSE_MMAL_ENCODER=1 \
+          $(MMAL_CFLAGS) \
+          -I$(VC_PATH)/include/
         LDFLAGS += \
           -L$(VC_PATH)/lib/ \
           -lbrcmGLESv2 \
           -lbrcmEGL \
-          -lopenmaxil \
           -lbcm_host \
+          -lcontainers \
           -lvcos \
+          -lvcsm \
           -lvchiq_arm \
+          -lmmal \
+          -lmmal_core \
+          -lmmal_components \
+          -lmmal_util \
+          -lmmal_vc_client \
           -lm
-        SOURCES += $(shell find src/hwenc_il -maxdepth 1 -name '*.cpp')
-        LDFLAGS += -lilclient
-        LIBILCLIENT = $(BUILD_ROOT)/libilclient.a
+        SOURCES += $(shell find src/hwenc_mmal -maxdepth 1 -name '*.cpp')
       endif
     endif
   endif
@@ -449,14 +446,6 @@ $(BUILD_ROOT):
 	# ビルド用ディレクトリを作っておく
 	mkdir -p $(BUILD_ROOT)
 
-# libs/ilclient 以下のソースのビルドルール
-$(BUILD_ROOT)/libs/ilclient/%.o: libs/ilclient/%.c | $(BUILD_ROOT)
-	@mkdir -p `dirname $@`
-	$(CC) $(IL_CFLAGS) $(IL_INCLUDES) -c $< -o $@ -Wno-deprecated-declarations
-
-$(BUILD_ROOT)/libilclient.a: $(IL_OBJECTS) | $(BUILD_ROOT)
-	$(AR) -rcT $@ $^
-
 # WEBRTC_LIB_ROOT が空の時に find するとエラーになるので、
 # WEBRTC_LIB_ROOT が定義されている時だけルールを定義する
 ifdef WEBRTC_LIB_ROOT
@@ -476,7 +465,7 @@ $(BUILD_ROOT)/src/%.o: src/%.mm | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(BUILD_ROOT)/momo: $(LIBILCLIENT) $(BUILD_ROOT)/libwebrtc.a $(OBJECTS) | $(BUILD_ROOT)
+$(BUILD_ROOT)/momo: $(BUILD_ROOT)/libwebrtc.a $(OBJECTS) | $(BUILD_ROOT)
 	$(CXX) -o $(BUILD_ROOT)/momo $(OBJECTS) $(LDFLAGS)
 
 .PHONY: momo

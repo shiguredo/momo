@@ -9,13 +9,18 @@
  *
  */
 
-#ifndef IL_H264_ENCODER_H_
-#define IL_H264_ENCODER_H_
+#ifndef MMAL_H264_ENCODER_H_
+#define MMAL_H264_ENCODER_H_
 
 extern "C"
 {
 #include "bcm_host.h"
-#include "ilclient.h"
+#include "interface/mmal/mmal.h"
+#include "interface/mmal/mmal_format.h"
+#include "interface/mmal/util/mmal_default_components.h"
+#include "interface/mmal/util/mmal_util_params.h"
+#include "interface/mmal/util/mmal_util.h"
+#include "interface/vcos/vcos.h"
 }
 
 #include <memory>
@@ -32,11 +37,11 @@ extern "C"
 
 class ProcessThread;
 
-class ILH264Encoder : public webrtc::VideoEncoder
+class MMALH264Encoder : public webrtc::VideoEncoder
 {
 public:
-  explicit ILH264Encoder(const cricket::VideoCodec &codec);
-  ~ILH264Encoder() override;
+  explicit MMALH264Encoder(const cricket::VideoCodec &codec);
+  ~MMALH264Encoder() override;
 
   int32_t InitEncode(const webrtc::VideoCodec *codec_settings,
                      int32_t number_of_cores,
@@ -50,14 +55,21 @@ public:
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
 private:
-  int32_t OMX_Configure();
-  void OMX_Release();
+  int32_t MMALConfigure();
+  void MMALRelease();
+  static void MMALInputCallbackFunction(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  void MMALInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  static void MMALOutputCallbackFunction(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  void MMALOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
   void SetBitrateBps(uint32_t bitrate_bps);
-  int32_t SendFrame(OMX_BUFFERHEADERTYPE *out);
+  int32_t SendFrame(unsigned char *buffer, size_t size);
 
   webrtc::EncodedImageCallback *callback_;
-  ILCLIENT_T *ilclient_;
-  COMPONENT_T *video_encode_;
+  MMAL_COMPONENT_T* encoder_;
+  VCOS_SEMAPHORE_T semaphore_;
+  MMAL_QUEUE_T *queue_;
+  MMAL_POOL_T *pool_in_;
+  MMAL_POOL_T *pool_out_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
@@ -65,13 +77,14 @@ private:
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
+  int32_t stride_width_;
+  int32_t stride_height_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
-  COMPONENT_T *list_[5];
-
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
+  size_t buffer_size_;
 };
 
-#endif // IL_H264_ENCODER_H_
+#endif // MMAL_H264_ENCODER_H_
