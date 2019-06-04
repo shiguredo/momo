@@ -80,6 +80,11 @@ int main(int argc, char* argv[])
   rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
+  if (!capturer)
+  {
+    std::cerr << "failed to create capturer" << std::endl;
+    return 1;
+  }
 #endif
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
