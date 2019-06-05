@@ -35,7 +35,6 @@ struct nal_entry
   size_t size;
 };
 
-const uint32_t kFramerate = 30;
 const int kLowH264QpThreshold = 24;
 const int kHighH264QpThreshold = 37;
 
@@ -52,6 +51,7 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
       queue_(nullptr),
       pool_out_(nullptr),
       bitrate_adjuster_(.5, .95),
+      configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
       buffer_size_(0)
@@ -95,9 +95,14 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   height_ = codec_settings->height;
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
+  framerate_ = codec_settings->maxFramerate;
+  if (framerate_ > 30)
+  {
+    framerate_ = 30;
+  }
 
-  RTC_LOG(LS_ERROR) << "InitEncode " << (uint32_t)(codec_settings->maxFramerate) << "fps "
-                    << (uint32_t)(target_bitrate_bps_) << "bit/sec";
+  RTC_LOG(LS_ERROR) << "InitEncode " << framerate_ << "fps "
+                    << target_bitrate_bps_ << "bit/sec";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
   buffer_size_ = CalcBufferSize(
@@ -145,7 +150,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   format_in->es->video.crop.y = 0;
   format_in->es->video.crop.width = width_;
   format_in->es->video.crop.height = height_;
-  format_in->es->video.frame_rate.num = 30;
+  format_in->es->video.frame_rate.num = framerate_;
   format_in->es->video.frame_rate.den = 1;
   format_in->es->video.par.num = 1;
   format_in->es->video.par.den = 1;
@@ -242,6 +247,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  configured_framerate_ = framerate_;
   configured_width_ = width_;
   configured_height_ = height_;
   stride_width_ = stride_width;
@@ -323,6 +329,11 @@ void MMALH264Encoder::SetRates(const RateControlParameters &parameters)
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
 
+  framerate_ = parameters.framerate_fps;
+  if (framerate_ > 30)
+  {
+    framerate_ = 30;
+  }
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
@@ -375,14 +386,17 @@ int32_t MMALH264Encoder::Encode(
   rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer;
   frame_buffer = input_frame.video_frame_buffer()->ToI420();
 
-  if (frame_buffer->width() != configured_width_ || frame_buffer->height() != configured_height_)
+  if (frame_buffer->width() != configured_width_ ||
+      frame_buffer->height() != configured_height_ ||
+      framerate_ != configured_framerate_)
   {
     RTC_LOG(LS_INFO) << "Encoder reinitialized from " << configured_width_
                      << "x" << configured_height_ << " to "
                      << frame_buffer->width() << "x" << frame_buffer->height()
                      << " strideY:" << frame_buffer->StrideY()
                      << " strideU:" << frame_buffer->StrideU()
-                     << " strideV:" << frame_buffer->StrideV();
+                     << " strideV:" << frame_buffer->StrideV()
+                     << " framerate:" << framerate_;
     MMALRelease();
     if (MMALConfigure() != WEBRTC_VIDEO_CODEC_OK)
     {
@@ -453,7 +467,7 @@ int32_t MMALH264Encoder::Encode(
 
     buffer->length = buffer->alloc_size = stride_width_ * stride_height_ * 3 / 2;
     //RTC_LOG(LS_ERROR) << "buffer->length: " << buffer->length;
-    buffer->pts = MMAL_TIME_UNKNOWN; //input_frame.timestamp_us();
+    buffer->pts = input_frame.timestamp_us();
     buffer->offset = 0;
     if (mmal_port_send_buffer(encoder_->input[0], buffer) != MMAL_SUCCESS)
     {

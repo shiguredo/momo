@@ -71,6 +71,8 @@ private:
   MMAL_POOL_T *pool_in_;
   MMAL_POOL_T *pool_out_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
+  uint32_t framerate_;
+  int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
   int32_t width_;
