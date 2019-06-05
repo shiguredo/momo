@@ -281,12 +281,18 @@ void MMALH264Encoder::MMALRelease()
     {
       mmal_buffer_header_release(buffer);
     }
+    if (pool_in_ != nullptr)
+    {
+      mmal_pool_destroy(pool_in_);
+      pool_in_ = nullptr;
+    }
     if (pool_out_ != nullptr)
     {
       if (!vcos_verify(mmal_queue_length(pool_out_->queue) == pool_out_->headers_num))
       {
         RTC_LOG(LS_ERROR) << "Failed to release all output buffers";
       }
+      mmal_pool_destroy(pool_out_);
       pool_out_ = nullptr;
     }
     queue_ = nullptr;
