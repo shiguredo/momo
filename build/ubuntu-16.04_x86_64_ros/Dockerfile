@@ -1,7 +1,9 @@
-# syntax = docker/dockerfile:1.0.0-experimental
+# syntax = docker/dockerfile:1.1.1-experimental
 FROM ros:kinetic-ros-core-xenial
 
 ARG PACKAGE_NAME
+
+LABEL jp.shiguredo.momo=$PACKAGE_NAME
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 

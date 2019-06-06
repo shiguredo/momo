@@ -26,9 +26,18 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 - Raspberry Pi のハードウェアエンコーダを利用した場合に落ちる可能性があることがわかっています
     - MMAL 対応にて修正予定です
 
+## 19.02 以降のバイナリ提供に関して
+
+今後は Raspberry Pi 向けのバイナリのみの提供を行います。
+
+H.264 のライセンスが不透明ということもあり、
+バイナリでの提供はライセンスが明確になっている Raspberry Pi のみとさせていただくことにしました。
+
 ## 動作環境
 
 - Ubuntu 18.04 x86_64
+- Ubuntu 18.04 ARMv8
+    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/) で動作
 - Ubuntu 16.04 ARMv8
     - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) で動作
 - Raspbian Stretch ARMv7
@@ -40,7 +49,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 - Ubuntu 16.04 ARMv7 ROS Kinetic で動作
     - Raspberry Pi 3 B+ で動作
 - macOS 10.14 x86_64
-    - バイナリの提供は行いません
+
 
 ## 使ってみる
 
@@ -54,17 +63,24 @@ Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS
 
 ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
 
-## ビルドに挑戦する
+## ビルドする
 
-Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
+Linux 版 Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
 
-### macOS 版 Momo のビルドに挑戦する
+### macOS 版 Momo のビルドする
 
-macOS 向け Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
+macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
-### Windows 版 Momo のビルドに挑戦する
+### Windows 版 Momo のビルドする
 
 **準備中です**
+
+## Pull-Request について
+
+Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
+そのため Pull-Request を頂いても採用できない場合があります。
+
+まずは Discord にて気軽に話しかけてください。
 
 ## ライセンス
 
@@ -113,3 +129,5 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 - [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
+- [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
+
