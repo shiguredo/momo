@@ -1,0 +1,10 @@
+version: 2
+jobs:
+ build:
+   machine: true
+   steps:
+     - checkout
+     - run:
+         command: make raspbian-stretch_armv6
+         working_directory: build
+         no_output_timeout: 4h
