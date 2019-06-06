@@ -5,6 +5,6 @@ jobs:
    steps:
      - checkout
      - run:
-         command: make raspbian-stretch_armv7
+         command: NOMOUNT=1 make raspbian-stretch_armv7
          working_directory: build
          no_output_timeout: 4h
