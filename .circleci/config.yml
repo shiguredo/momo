@@ -5,7 +5,7 @@ jobs:
    steps:
      - checkout
      - setup_remote_docker:
-         version: 18.09.6
+         version: 18.09.3
      - run:
          command: NOMOUNT=1 make raspbian-stretch_armv7
          working_directory: build
