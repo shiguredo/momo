@@ -7,6 +7,8 @@ jobs:
      - checkout
      - setup_remote_docker
      - run:
+         command: apk add make
+     - run:
          command: NOMOUNT=1 make raspbian-stretch_armv7
          working_directory: build
          no_output_timeout: 4h
