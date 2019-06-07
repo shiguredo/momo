@@ -11,7 +11,6 @@
 
 #include "mmal_h264_encoder.h"
 
-#include <chrono>
 #include <limits>
 #include <string>
 
@@ -43,6 +42,25 @@ int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
   return frame_buffer.StrideY() * frame_buffer.height() + (frame_buffer.StrideU() + frame_buffer.StrideV()) * ((frame_buffer.height() + 1) / 2);
 }
 
+struct RTCFrameEncodeParams {
+  RTCFrameEncodeParams(int32_t w,
+                       int32_t h,
+                       int64_t rtms,
+                       int64_t ntpms,
+                       int64_t ts,
+                       webrtc::VideoRotation r,
+                       absl::optional<webrtc::ColorSpace> c)
+      : width(w), height(h), render_time_ms(rtms), ntp_time_ms(ntpms), timestamp(ts), rotation(r), color_space(c) {}
+
+  int32_t width;
+  int32_t height;
+  int64_t render_time_ms;
+  int64_t ntp_time_ms;
+  int64_t timestamp;
+  webrtc::VideoRotation rotation;
+  absl::optional<webrtc::ColorSpace> color_space;
+};
+
 } // namespace
 
 MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
@@ -53,9 +71,9 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
       bitrate_adjuster_(.5, .95),
       configured_framerate_(30),
       configured_width_(0),
-      configured_height_(0),
-      buffer_size_(0)
+      configured_height_(0)
 {
+  start_ = std::chrono::system_clock::now();
 }
 
 MMALH264Encoder::~MMALH264Encoder()
@@ -105,10 +123,6 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
                     << target_bitrate_bps_ << "bit/sec";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
-  buffer_size_ = CalcBufferSize(
-      webrtc::VideoType::kI420, codec_settings->width, codec_settings->height);
-  encoded_image_buffer_.reset(new uint8_t[buffer_size_]);
-  encoded_image_.set_buffer(encoded_image_buffer_.get(), buffer_size_);
   encoded_image_._completeFrame = true;
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
@@ -130,8 +144,6 @@ int32_t MMALH264Encoder::Release()
     encoder_ = nullptr;
   }
   vcos_semaphore_delete(&semaphore_);
-  encoded_image_buffer_.reset();
-  buffer_size_ = 0;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -150,7 +162,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   format_in->es->video.crop.y = 0;
   format_in->es->video.crop.width = width_;
   format_in->es->video.crop.height = height_;
-  format_in->es->video.frame_rate.num = framerate_;
+  format_in->es->video.frame_rate.num = 30;
   format_in->es->video.frame_rate.den = 1;
   format_in->es->video.par.num = 1;
   format_in->es->video.par.den = 1;
@@ -180,11 +192,11 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  /*if (mmal_port_parameter_set_boolean(encoder_->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE) != MMAL_SUCCESS)
+  if (mmal_port_parameter_set_boolean(encoder_->output[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set output zero copy";
     return WEBRTC_VIDEO_CODEC_ERROR;
-  }*/
+  }
 
   MMAL_PARAMETER_VIDEO_PROFILE_T video_profile;
   video_profile.hdr.id = MMAL_PARAMETER_PROFILE;
@@ -205,7 +217,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_RATECONTROL, MMAL_VIDEO_RATECONTROL_CONSTANT_SKIP_FRAMES) != MMAL_SUCCESS)
+  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_RATECONTROL, MMAL_VIDEO_RATECONTROL_CONSTANT) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set rate control";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -317,8 +329,22 @@ void MMALH264Encoder::MMALOutputCallbackFunction(MMAL_PORT_T *port, MMAL_BUFFER_
 
 void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
-  mmal_queue_put(queue_, buffer);
-  vcos_semaphore_post(&semaphore_);
+  std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+  RTC_LOG(LS_INFO) << "duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start_).count();
+  RTCFrameEncodeParams* params =(RTCFrameEncodeParams *)buffer->user_data;
+
+  encoded_image_._encodedWidth = params->width;
+  encoded_image_._encodedHeight = params->height;
+  encoded_image_.capture_time_ms_ = params->render_time_ms;
+  encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
+  encoded_image_.SetTimestamp(params->timestamp);
+  encoded_image_.rotation_ = params->rotation;
+  encoded_image_.SetColorSpace(params->color_space);
+
+  delete params;
+
+  int32_t result = SendFrame(buffer->data, buffer->length);
+  mmal_buffer_header_release(buffer);
 }
 
 int32_t MMALH264Encoder::RegisterEncodeCompleteCallback(
@@ -377,7 +403,6 @@ int32_t MMALH264Encoder::Encode(
     const webrtc::VideoFrame &input_frame,
     const std::vector<webrtc::VideoFrameType> *frame_types)
 {
-  std::chrono::system_clock::time_point start, end;
   if (encoder_ == nullptr)
   {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
@@ -438,6 +463,13 @@ int32_t MMALH264Encoder::Encode(
   MMAL_BUFFER_HEADER_T *buffer;
   while ((buffer = mmal_queue_get(pool_out_->queue)) != nullptr)
   {
+    buffer->user_data = new RTCFrameEncodeParams(frame_buffer->width(),
+                                                 frame_buffer->height(),
+                                                 input_frame.render_time_ms(),
+                                                 input_frame.ntp_time_ms(),
+                                                 input_frame.timestamp(),
+                                                 input_frame.rotation(),
+                                                 input_frame.color_space());
     if (mmal_port_send_buffer(encoder_->output[0], buffer) != MMAL_SUCCESS)
     {
       RTC_LOG(LS_ERROR) << "Failed to send output buffer";
@@ -482,29 +514,8 @@ int32_t MMALH264Encoder::Encode(
     }
   }
 
-  start = std::chrono::system_clock::now();
-  vcos_semaphore_wait(&semaphore_);
-
-  if ((buffer = mmal_queue_get(queue_)) == nullptr)
-  {
-    RTC_LOG(LS_ERROR) << "Failed to get output buffer";
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-
-  end = std::chrono::system_clock::now();
-  RTC_LOG(LS_INFO) << "duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-  encoded_image_._encodedWidth = frame_buffer->width();
-  encoded_image_._encodedHeight = frame_buffer->height();
-  encoded_image_.SetTimestamp(input_frame.timestamp());
-  encoded_image_.ntp_time_ms_ = input_frame.ntp_time_ms();
-  encoded_image_.capture_time_ms_ = input_frame.render_time_ms();
-  encoded_image_.rotation_ = input_frame.rotation();
-  encoded_image_.SetColorSpace(input_frame.color_space());
-
-  int32_t result = SendFrame(buffer->data, buffer->length);
-  mmal_buffer_header_release(buffer);
-  return result;
+  start_ = std::chrono::system_clock::now();
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t MMALH264Encoder::SendFrame(unsigned char *buffer, size_t size)

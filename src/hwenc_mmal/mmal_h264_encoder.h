@@ -23,6 +23,7 @@ extern "C"
 #include "interface/vcos/vcos.h"
 }
 
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <list>
@@ -85,8 +86,8 @@ private:
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
   webrtc::EncodedImage encoded_image_;
-  std::unique_ptr<uint8_t[]> encoded_image_buffer_;
-  size_t buffer_size_;
+
+  std::chrono::system_clock::time_point start_;
 };
 
 #endif // MMAL_H264_ENCODER_H_
