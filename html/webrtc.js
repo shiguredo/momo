@@ -364,3 +364,7 @@ function removeCodec(orgsdp, codec) {
   }
   return internalFunc(orgsdp);
 }
+
+function play() {
+  remoteVideo.play();
+}
