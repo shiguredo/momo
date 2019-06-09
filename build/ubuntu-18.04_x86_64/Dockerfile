@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.1.1-experimental
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ARG PACKAGE_NAME
 
@@ -15,6 +15,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
   /bin/bash -c " \
     set -ex \
     && source /root/docker.sh \
+    && noninteractive_tzdata \
     && apt_install_ubuntu_x86_64 \
   "
 
