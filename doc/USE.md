@@ -182,3 +182,6 @@ $ ./momo --no-audio --video-codec VP8 --video-bitrate 500 \
          sora --auto wss://example.com/signaing open-momo
 ```
 
+## うまく動作しない時
+
+- カメラを uv4l など他のプロセスが利用していないか確認してください
