@@ -88,6 +88,7 @@ private:
   webrtc::EncodedImage encoded_image_;
 
   std::chrono::system_clock::time_point start_;
+  int64_t initial_timestamp_;
 };
 
 #endif // MMAL_H264_ENCODER_H_
