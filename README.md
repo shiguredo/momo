@@ -35,19 +35,19 @@ H.264 のライセンスが不透明ということもあり、
 
 ## 動作環境
 
-- Ubuntu 18.04 x86_64
-- Ubuntu 18.04 ARMv8
-    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/) で動作
-- Ubuntu 16.04 ARMv8
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) で動作
 - Raspbian Stretch ARMv7
     - Raspberry Pi 3 B/B+ で動作
 - Raspbian Stretch ARMv6
     - Raspberry Pi Zero W/WH で動作
-- Ubuntu 16.04 x86_64 ROS Kinetic で動作
+- Ubuntu 18.04 x86_64
+- Ubuntu 18.04 ARMv8
+    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+- Ubuntu 16.04 ARMv8
+    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) 
+- Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
-- Ubuntu 16.04 ARMv7 ROS Kinetic で動作
-    - Raspberry Pi 3 B+ で動作
+- Ubuntu 16.04 ARMv7 ROS Kinetic
+    - Raspberry Pi 3 B+
 - macOS 10.14 x86_64
 
 
