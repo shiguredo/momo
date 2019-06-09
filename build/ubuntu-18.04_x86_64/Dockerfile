@@ -1,7 +1,9 @@
-# syntax = docker/dockerfile:1.0.0-experimental
-FROM ubuntu:16.04
+# syntax = docker/dockerfile:1.1.1-experimental
+FROM ubuntu:18.04
 
 ARG PACKAGE_NAME
+
+LABEL jp.shiguredo.momo=$PACKAGE_NAME
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -13,6 +15,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
   /bin/bash -c " \
     set -ex \
     && source /root/docker.sh \
+    && noninteractive_tzdata \
     && apt_install_ubuntu_x86_64 \
   "
 

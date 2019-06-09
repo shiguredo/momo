@@ -11,9 +11,13 @@
 
 ## develop
 
+- [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
+- [UPDATE] libwebrtc を M75 に上げる
 - [UPDATE] CLI11 を v1.7.1 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
+- [UPDATE] doc/CACHE.md を削除
+    - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
 
 ## 19.02.0
 
