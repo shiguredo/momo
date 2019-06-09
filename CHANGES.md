@@ -11,6 +11,7 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を M75 に上げる
 - [UPDATE] CLI11 を v1.7.1 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
