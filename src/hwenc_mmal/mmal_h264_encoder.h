@@ -86,6 +86,8 @@ private:
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
   webrtc::EncodedImage encoded_image_;
+  std::unique_ptr<uint8_t[]> encoded_image_buffer_;
+  size_t encoded_buffer_length_;
 
   std::chrono::system_clock::time_point start_;
   int64_t initial_timestamp_;
