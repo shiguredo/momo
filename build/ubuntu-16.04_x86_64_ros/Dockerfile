@@ -69,6 +69,7 @@ RUN \
       variant=release \
       install \
       -j`nproc` \
+      --ignore-site-config \
       --prefix=/root/boost-$BOOST_VERSION \
       --with-filesystem \
   "
