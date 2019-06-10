@@ -11,7 +11,7 @@ $ git clone git@github.com:shiguredo/momo.git
 
 ## Docker の利用について
 
-Rspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。
+Raspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。
 
 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
 
