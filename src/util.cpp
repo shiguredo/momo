@@ -169,14 +169,6 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-#if MOMO_USE_H264
-  app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
-#else
-  app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9"}));
-#endif
-  app.add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")->check(Enum({"OPUS", "PCMU"}));
-  app.add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")->check(CLI::Range(1, 30000));
-  app.add_option("--audio-bitrate", cs.audio_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
   app.add_option("--resolution", cs.resolution, "解像度")->check(Enum({"QVGA", "VGA", "HD", "FHD", "4K"}));
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
@@ -194,6 +186,22 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+#if MOMO_USE_H264
+  sora_app->add_option("--video-codec", cs.video_codec, "ビデオコーデック")
+      ->check(Enum({"VP8", "VP9", "H264"}));
+#else
+  sora_app->add_option("--video-codec", cs.video_codec, "ビデオコーデック")
+      ->check(Enum({"VP8", "VP9"}));
+#endif
+  sora_app->add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")
+      ->check(Enum({"OPUS", "PCMU"}));
+  sora_app
+      ->add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")
+      ->check(CLI::Range(1, 30000));
+  sora_app
+      ->add_option("--audio-bitrate", cs.audio_bitrate,
+                   "オーディオのビットレート")
+      ->check(CLI::Range(6, 510));
 
   // 隠しオプション
   std::string sora_metadata;
