@@ -163,10 +163,8 @@ int32_t MMALH264Encoder::MMALConfigure()
   format_in->es->video.crop.y = 0;
   format_in->es->video.crop.width = width_;
   format_in->es->video.crop.height = height_;
-  format_in->es->video.frame_rate.num = 30;
+  format_in->es->video.frame_rate.num = framerate_;
   format_in->es->video.frame_rate.den = 1;
-  format_in->es->video.par.num = 1;
-  format_in->es->video.par.den = 1;
 
   if (mmal_port_format_commit(encoder_->input[0]) != MMAL_SUCCESS)
   {
@@ -187,7 +185,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (mmal_port_parameter_set_boolean(encoder_->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE) != MMAL_SUCCESS)
+  /*if (mmal_port_parameter_set_boolean(encoder_->input[0], MMAL_PARAMETER_ZERO_COPY, MMAL_TRUE) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set input zero copy";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -197,13 +195,13 @@ int32_t MMALH264Encoder::MMALConfigure()
   {
     RTC_LOG(LS_ERROR) << "Failed to set output zero copy";
     return WEBRTC_VIDEO_CODEC_ERROR;
-  }
+  }*/
 
   MMAL_PARAMETER_VIDEO_PROFILE_T video_profile;
   video_profile.hdr.id = MMAL_PARAMETER_PROFILE;
   video_profile.hdr.size = sizeof(video_profile);
 
-  video_profile.profile[0].profile = MMAL_VIDEO_PROFILE_H264_MAIN;
+  video_profile.profile[0].profile = MMAL_VIDEO_PROFILE_H264_HIGH;
   video_profile.profile[0].level = MMAL_VIDEO_LEVEL_H264_4;
 
   if (mmal_port_parameter_set(encoder_->output[0], &video_profile.hdr) != MMAL_SUCCESS)
@@ -224,15 +222,15 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }*/
 
-  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_RATECONTROL, MMAL_VIDEO_RATECONTROL_CONSTANT) != MMAL_SUCCESS)
+  /*if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_RATECONTROL, MMAL_VIDEO_RATECONTROL_CONSTANT) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set rate control";
     return WEBRTC_VIDEO_CODEC_ERROR;
-  }
+  }*/
 
   queue_ = mmal_queue_create();
 
-  encoder_->input[0]->buffer_size = encoder_->input[0]->buffer_size_recommended;
+  encoder_->input[0]->buffer_size = encoder_->input[0]->buffer_size_recommended * 2;
   if (encoder_->input[0]->buffer_size < encoder_->input[0]->buffer_size_min)
     encoder_->input[0]->buffer_size = encoder_->input[0]->buffer_size_min;
   encoder_->input[0]->buffer_num = 1;
@@ -342,6 +340,13 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
   RTC_LOG(LS_INFO) << "Encode duration: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start_).count();
   RTCFrameEncodeParams* params =(RTCFrameEncodeParams *)buffer->user_data;
 
+
+  RTC_LOG(LS_ERROR) << "timestamp:" << params->timestamp
+                    << " duration:" << buffer->pts - initial_timestamp_
+                    << " pts:" << buffer->pts
+                    << " flags:" << buffer->flags
+                    << " planes:" << buffer->type->video.planes
+                    << " length:" << buffer->length;
   if (buffer->length == 0) {
     delete params;
     mmal_buffer_header_release(buffer);
@@ -356,13 +361,6 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
     RTC_LOG(LS_ERROR) << "MMAL_BUFFER_HEADER_FLAG_CONFIG";
     return;
   }
-
-  RTC_LOG(LS_ERROR) << "timestamp:" << params->timestamp
-                    << " duration:" << buffer->pts - initial_timestamp_
-                    << " pts:" << buffer->pts
-                    << " flags:" << buffer->flags
-                    << " planes:" << buffer->type->video.planes
-                    << " length:" << buffer->length;
   initial_timestamp_ = buffer->pts;
   
   encoded_image_._encodedWidth = params->width;
@@ -388,6 +386,7 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
   }
   
   mmal_buffer_header_release(buffer);
+  vcos_semaphore_post(&semaphore_);
 }
 
 int32_t MMALH264Encoder::RegisterEncodeCompleteCallback(
@@ -407,7 +406,7 @@ void MMALH264Encoder::SetRates(const RateControlParameters &parameters)
   RTC_LOG(LS_ERROR) << __FUNCTION__ 
                     << " framerate:" << parameters.framerate_fps
                     << " bitrate:" << parameters.bitrate.get_sum_bps();
-  framerate_ = parameters.framerate_fps;
+  //framerate_ = parameters.framerate_fps;
   if (framerate_ > 30)
   {
     framerate_ = 30;
@@ -419,7 +418,7 @@ void MMALH264Encoder::SetRates(const RateControlParameters &parameters)
 
 void MMALH264Encoder::SetBitrateBps(uint32_t bitrate_bps)
 {
-  if (configured_bitrate_bps_ == bitrate_bps)
+  if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps)
   {
     return;
   }
@@ -529,14 +528,14 @@ int32_t MMALH264Encoder::Encode(
     for (size_t i = 0; i < frame_buffer->height(); i++)
     {
       memcpy(buffer->data + offset,
-             frame_buffer->DataY() + (frame_buffer->StrideY() * i),
+             frame_buffer->DataY() + (frame_buffer->width() * i),
              frame_buffer->width());
       offset += stride_width_;
     }
     offset = 0;
     size_t offset_y = stride_width_ * stride_height_;
     size_t width_uv = stride_width_ / 2;
-    size_t offset_v = (frame_buffer->height() / 2) * width_uv;
+    size_t offset_v = (stride_height_ / 2) * width_uv;
     for (size_t i = 0; i < ((frame_buffer->height() + 1) / 2); i++)
     {
       memcpy(buffer->data + offset_y + offset,
@@ -549,7 +548,7 @@ int32_t MMALH264Encoder::Encode(
     }
 
     buffer->length = buffer->alloc_size = stride_width_ * stride_height_ * 3 / 2;
-    //RTC_LOG(LS_ERROR) << "buffer->length: " << buffer->length;
+    RTC_LOG(LS_ERROR) << "buffer->length: " << buffer->length;
     buffer->pts = buffer->dts = input_frame.timestamp();
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
@@ -560,6 +559,7 @@ int32_t MMALH264Encoder::Encode(
     }
   }
 
+  //vcos_semaphore_wait(&semaphore_);
   start_ = std::chrono::system_clock::now();
   return WEBRTC_VIDEO_CODEC_OK;
 }
