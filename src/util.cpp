@@ -74,7 +74,7 @@ struct JsonValue : public CLI::Validator
     func = [](std::string input) {
       try
       {
-        json::parse(input);
+        auto _ = json::parse(input);
         return std::string();
       }
       catch (json::parse_error &e)
