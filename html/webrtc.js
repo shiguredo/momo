@@ -164,18 +164,10 @@ function prepareNewConnection() {
         break;
     }
   };
-
-  if (isUnifiedPlan(peer)) {
-    peer.addTransceiver('video', {direction: 'recvonly'});
-    peer.addTransceiver('audio', {direction: 'recvonly'});
-  }
+  peer.addTransceiver('video', {direction: 'recvonly'});
+  peer.addTransceiver('audio', {direction: 'recvonly'});
 
   return peer;
-}
-
-function isUnifiedPlan(peer) {
-  const config = peer.getConfiguration();
-  return ('addTransceiver' in peer) && (!('sdpSemantics' in config) || config.sdpSemantics === "unified-plan");
 }
 
 function browser() {
