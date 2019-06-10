@@ -67,7 +67,6 @@ private:
 
   webrtc::EncodedImageCallback *callback_;
   MMAL_COMPONENT_T* encoder_;
-  VCOS_SEMAPHORE_T semaphore_;
   MMAL_QUEUE_T *queue_;
   MMAL_POOL_T *pool_in_;
   MMAL_POOL_T *pool_out_;
@@ -88,9 +87,6 @@ private:
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
   size_t encoded_buffer_length_;
-
-  std::chrono::system_clock::time_point start_;
-  int64_t initial_timestamp_;
 };
 
 #endif // MMAL_H264_ENCODER_H_
