@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "api/video/i420_buffer.h"
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 #include "third_party/libyuv/include/libyuv.h"
 #include "sensor_msgs/image_encodings.h"
 

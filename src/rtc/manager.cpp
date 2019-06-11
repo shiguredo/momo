@@ -62,7 +62,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
 
   std::unique_ptr<cricket::MediaEngineInterface> media_engine = cricket::WebRtcMediaEngineFactory::Create(
 #if USE_ROS
-      ROSAudioDeviceModule::Create(_conn_settings),
+      ROSAudioDeviceModule::Create(_conn_settings, &webrtc::GlobalTaskQueueFactory()),
 #else
 	  webrtc::AudioDeviceModule::Create(audio_layer, &webrtc::GlobalTaskQueueFactory()),
 #endif

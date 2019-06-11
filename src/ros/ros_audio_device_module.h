@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/include/audio_device.h"
 
 #include "ros_audio_device.h"
@@ -27,10 +28,12 @@
 class ROSAudioDeviceModule : public webrtc::AudioDeviceModule
 {
 public:
-  static rtc::scoped_refptr<webrtc::AudioDeviceModule> Create(ConnectionSettings conn_settings);
+  static rtc::scoped_refptr<webrtc::AudioDeviceModule> Create(ConnectionSettings conn_settings,
+                                                              webrtc::TaskQueueFactory* task_queue_factory);
   int32_t AttachAudioBuffer();
 
-  ROSAudioDeviceModule(ConnectionSettings conn_settings);
+  ROSAudioDeviceModule(ConnectionSettings conn_settings,
+                       webrtc::TaskQueueFactory* task_queue_factory);
   ~ROSAudioDeviceModule() override;
 
   // Retrieve the currently utilized audio layer
@@ -130,6 +133,7 @@ public:
 #endif // WEBRTC_IOS
 private:
   ConnectionSettings _conn_settings;
+  webrtc::TaskQueueFactory* task_queue_factory_;
   bool initialized_ = false;
   std::unique_ptr<ROSAudioDevice> audio_device_;
   std::unique_ptr<webrtc::AudioDeviceBuffer> audio_device_buffer_;
