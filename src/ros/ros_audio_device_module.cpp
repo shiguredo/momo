@@ -14,19 +14,22 @@
 #include "modules/audio_device/audio_device_generic.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/refcount.h"
-#include "rtc_base/refcountedobject.h"
+#include "rtc_base/ref_count.h"
+#include "rtc_base/ref_counted_object.h"
 #include "system_wrappers/include/metrics.h"
 
-ROSAudioDeviceModule::ROSAudioDeviceModule(ConnectionSettings conn_settings) : _conn_settings(conn_settings)
+ROSAudioDeviceModule::ROSAudioDeviceModule(ConnectionSettings conn_settings,
+                                           webrtc::TaskQueueFactory* task_queue_factory)
+    : _conn_settings(conn_settings), task_queue_factory_(task_queue_factory)
 {
   RTC_LOG(INFO) << "Current setting use ROS Audio";
 }
 
-rtc::scoped_refptr<webrtc::AudioDeviceModule> ROSAudioDeviceModule::Create(ConnectionSettings conn_settings)
+rtc::scoped_refptr<webrtc::AudioDeviceModule> ROSAudioDeviceModule::Create(ConnectionSettings conn_settings,
+                                                                           webrtc::TaskQueueFactory* task_queue_factory)
 {
   RTC_LOG(INFO) << __FUNCTION__;
-  return new rtc::RefCountedObject<ROSAudioDeviceModule>(conn_settings);
+  return new rtc::RefCountedObject<ROSAudioDeviceModule>(conn_settings, task_queue_factory);
 }
 
 int32_t ROSAudioDeviceModule::AttachAudioBuffer()
@@ -59,7 +62,7 @@ int32_t ROSAudioDeviceModule::Init()
   if (initialized_)
     return 0;
 
-  audio_device_buffer_.reset(new webrtc::AudioDeviceBuffer());
+  audio_device_buffer_.reset(new webrtc::AudioDeviceBuffer(task_queue_factory_));
   audio_device_.reset(new ROSAudioDevice(_conn_settings));
   RTC_CHECK(audio_device_);
 

@@ -61,7 +61,7 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
       _networkThread.get(), _workerThread.get(), _signalingThread.get(),
 
 #if USE_ROS
-      ROSAudioDeviceModule::Create(_conn_settings),
+      ROSAudioDeviceModule::Create(_conn_settings, &webrtc::GlobalTaskQueueFactory()),
 #else
 	  webrtc::AudioDeviceModule::Create(audio_layer, &webrtc::GlobalTaskQueueFactory()),
 #endif
