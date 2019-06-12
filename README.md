@@ -21,8 +21,6 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 ## develop ブランチにおける既知の問題
 
-- 現在 macOS 版でカメラを認識できない事がわかっています
-    - Unified Plan 対応にて修正予定です
 - Raspberry Pi のハードウェアエンコーダを利用した場合に落ちる可能性があることがわかっています
     - MMAL 対応にて修正予定です
 
