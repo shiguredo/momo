@@ -1,5 +1,5 @@
 ---
-name: バグレポート
+name: Bug report
 about: 改善に役立つレポートを作成する
 title: ''
 labels: bug
