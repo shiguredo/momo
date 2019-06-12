@@ -19,6 +19,13 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
+## 開発について
+
+Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
+そのためコメントやプルリクエストを頂いてもすぐには採用はしません。
+
+まずは Discord にてご連絡ください。
+
 ## develop ブランチにおける既知の問題
 
 - 現在 macOS 版でカメラを認識できない事がわかっています
@@ -43,7 +50,7 @@ H.264 のライセンスが不透明ということもあり、
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
 - Ubuntu 16.04 ARMv8
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) 
+    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
@@ -74,13 +81,6 @@ macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_M
 ### Windows 版 Momo のビルドする
 
 **準備中です**
-
-## Pull-Request について
-
-Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
-そのため Pull-Request を頂いても採用できない場合があります。
-
-まずは Discord にて気軽に話しかけてください。
 
 ## ライセンス
 
