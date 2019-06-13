@@ -18,7 +18,13 @@
 - [UPDATE] macOS のビルドドキュメントを独立させる
 - [UPDATE] doc/CACHE.md を削除
     - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
-
+- [UPDATE] audio/video の共通オプションを sora のオプションに移動する
+    - Momo 側ではコーデックやビットレートは指定できない
+    - p2p の場合は HTML で sdp を切り替えている
+    - --audio-codec
+    - --audio-bitrate
+    - --video-codec
+    - --video-bitrate
 ## 19.02.0
 
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
