@@ -11,6 +11,7 @@
 
 ## develop
 
+- [UPDATE] Unified Plan に対応する
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
 - [UPDATE] libwebrtc を M75 に上げる
 - [UPDATE] CLI11 を v1.7.1 にアップデートする
@@ -25,6 +26,9 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [FIX] macOS でデバイスがつかめなくなっていたのを修正する
+- [FIX] ROS 対応がビルドできなくなっていたのを修正する
+
 ## 19.02.0
 
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
