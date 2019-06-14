@@ -11,9 +11,10 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を M75 に上げる
+    - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
 - [UPDATE] Unified Plan に対応する
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
-- [UPDATE] libwebrtc を M75 に上げる
 - [UPDATE] CLI11 を v1.8.0 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
