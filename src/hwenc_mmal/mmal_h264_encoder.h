@@ -25,16 +25,13 @@ extern "C"
 
 #include <chrono>
 #include <memory>
-#include <vector>
-#include <list>
+#include <queue>
 
 #include "api/video_codecs/video_encoder.h"
 #include "rtc_base/critical_section.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/utility/quality_scaler.h"
-#include "rtc_base/event.h"
 
 class ProcessThread;
 
@@ -56,6 +53,25 @@ public:
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
 private:
+  struct FrameParams {
+    FrameParams(int32_t w,
+                        int32_t h,
+                        int64_t rtms,
+                        int64_t ntpms,
+                        int64_t ts,
+                        webrtc::VideoRotation r,
+                        absl::optional<webrtc::ColorSpace> c)
+        : width(w), height(h), render_time_ms(rtms), ntp_time_ms(ntpms), timestamp(ts), rotation(r), color_space(c) {}
+
+    int32_t width;
+    int32_t height;
+    int64_t render_time_ms;
+    int64_t ntp_time_ms;
+    int64_t timestamp;
+    webrtc::VideoRotation rotation;
+    absl::optional<webrtc::ColorSpace> color_space;
+  };
+
   int32_t MMALConfigure();
   void MMALRelease();
   static void MMALInputCallbackFunction(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
@@ -84,6 +100,9 @@ private:
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
+
+  rtc::CriticalSection frame_params_lock_;
+  std::queue<std::unique_ptr<FrameParams>> frame_params_;
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
   size_t encoded_buffer_length_;

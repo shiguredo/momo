@@ -42,25 +42,6 @@ int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
   return frame_buffer.StrideY() * frame_buffer.height() + (frame_buffer.StrideU() + frame_buffer.StrideV()) * ((frame_buffer.height() + 1) / 2);
 }
 
-struct RTCFrameEncodeParams {
-  RTCFrameEncodeParams(int32_t w,
-                       int32_t h,
-                       int64_t rtms,
-                       int64_t ntpms,
-                       int64_t ts,
-                       webrtc::VideoRotation r,
-                       absl::optional<webrtc::ColorSpace> c)
-      : width(w), height(h), render_time_ms(rtms), ntp_time_ms(ntpms), timestamp(ts), rotation(r), color_space(c) {}
-
-  int32_t width;
-  int32_t height;
-  int64_t render_time_ms;
-  int64_t ntp_time_ms;
-  int64_t timestamp;
-  webrtc::VideoRotation rotation;
-  absl::optional<webrtc::ColorSpace> color_space;
-};
-
 } // namespace
 
 MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
@@ -312,10 +293,7 @@ void MMALH264Encoder::MMALOutputCallbackFunction(MMAL_PORT_T *port, MMAL_BUFFER_
 
 void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
-  RTCFrameEncodeParams* params =(RTCFrameEncodeParams *)buffer->user_data;
-
   if (buffer->length == 0) {
-    delete params;
     mmal_buffer_header_release(buffer);
     return;
   }
@@ -323,7 +301,6 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
   if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) {
     memcpy(encoded_image_buffer_.get(), buffer->data, buffer->length);
     encoded_buffer_length_ = buffer->length;
-    delete params;
     mmal_buffer_header_release(buffer);
     RTC_LOG(LS_INFO) << "MMAL_BUFFER_HEADER_FLAG_CONFIG";
     return;
@@ -333,6 +310,29 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
                    << " flags:" << buffer->flags
                    << " planes:" << buffer->type->video.planes
                    << " length:" << buffer->length;
+
+  std::unique_ptr<FrameParams> params;
+  {
+    rtc::CritScope lock(&frame_params_lock_);
+    do {
+      if (frame_params_.empty())
+      {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ 
+                            << "Frame parameter is not found. SkipFrame pts:"
+                            << buffer->pts;
+        return;
+      }
+      params = std::move(frame_params_.front());
+      frame_params_.pop();
+    } while (params->timestamp < buffer->pts);
+    if (params->timestamp != buffer->pts)
+    {
+      RTC_LOG(LS_WARNING) << __FUNCTION__ 
+                          << "Frame parameter is not found. SkipFrame pts:"
+                          << buffer->pts;
+      return;
+    }
+  }
   
   encoded_image_._encodedWidth = params->width;
   encoded_image_._encodedHeight = params->height;
@@ -341,8 +341,6 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
   encoded_image_.SetTimestamp(buffer->pts);
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
-
-  delete params;
 
   if (encoded_buffer_length_ == 0)
   {
@@ -470,17 +468,21 @@ int32_t MMALH264Encoder::Encode(
   }
 
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
+  {
+    rtc::CritScope lock(&frame_params_lock_);
+    frame_params_.push(
+      absl::make_unique<FrameParams>(frame_buffer->width(),
+                                    frame_buffer->height(),
+                                    input_frame.render_time_ms(),
+                                    input_frame.ntp_time_ms(),
+                                    input_frame.timestamp(),
+                                    input_frame.rotation(),
+                                    input_frame.color_space()));
+  }
 
   MMAL_BUFFER_HEADER_T *buffer;
   while ((buffer = mmal_queue_get(pool_out_->queue)) != nullptr)
   {
-    buffer->user_data = new RTCFrameEncodeParams(frame_buffer->width(),
-                                                 frame_buffer->height(),
-                                                 input_frame.render_time_ms(),
-                                                 input_frame.ntp_time_ms(),
-                                                 input_frame.timestamp(),
-                                                 input_frame.rotation(),
-                                                 input_frame.color_space());
     if (mmal_port_send_buffer(encoder_->output[0], buffer) != MMAL_SUCCESS)
     {
       RTC_LOG(LS_ERROR) << "Failed to send output buffer";
