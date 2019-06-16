@@ -10,8 +10,8 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "rtc_base/logging.h"
 
-#if USE_IL_ENCODER
-#include "hwenc_il/il_h264_encoder.h"
+#if USE_MMAL_ENCODER
+#include "hwenc_mmal/mmal_h264_encoder.h"
 #endif
 
 std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
@@ -46,8 +46,8 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-#if USE_IL_ENCODER
-    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<ILH264Encoder>(cricket::VideoCodec(format)));
+#if USE_MMAL_ENCODER
+    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
 #endif
   }
 
