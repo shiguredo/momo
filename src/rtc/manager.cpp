@@ -50,13 +50,21 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
+#if __linux__
+  webrtc::AudioDeviceModule::AudioLayer audio_layer = webrtc::AudioDeviceModule::kLinuxAlsaAudio;
+#else
+  webrtc::AudioDeviceModule::AudioLayer audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
+#endif
+  if (_conn_settings.no_audio)
+  {
+    audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
+  }
+
   std::unique_ptr<cricket::MediaEngineInterface> media_engine = cricket::WebRtcMediaEngineFactory::Create(
 #if USE_ROS
-      ROSAudioDeviceModule::Create(_conn_settings),
-#elif __linux__
-	  webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kLinuxAlsaAudio, &webrtc::GlobalTaskQueueFactory()),
+      ROSAudioDeviceModule::Create(_conn_settings, &webrtc::GlobalTaskQueueFactory()),
 #else
-	  webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, &webrtc::GlobalTaskQueueFactory()),
+	  webrtc::AudioDeviceModule::Create(audio_layer, &webrtc::GlobalTaskQueueFactory()),
 #endif
       webrtc::CreateBuiltinAudioEncoderFactory(),
       webrtc::CreateBuiltinAudioDecoderFactory(),

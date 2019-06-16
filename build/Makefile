@@ -25,8 +25,7 @@ help:
 	@echo "make <パッケージ名>.edit は、WebRTC のソースを変更して、カスタマイズされた WebRTC を使って momo バイナリを生成するための機能です。"
 	@echo "詳細は doc/PATCH_WEBRTC.md を参照して下さい。"
 	@echo ""
-	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
-	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は doc/CACHE.md を参照して下さい。"
+	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージやビルドキャッシュを削除します。"
 	@echo ""
 	@echo "[オプション] は、make NOCACHE=1 <パッケージ名> のように指定します。"
 	@echo ""
@@ -93,6 +92,7 @@ $(1).prepare:
 $(1).clean:
 	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
 	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
+	docker builder prune -f --filter=label=jp.shiguredo.momo=$(1)
 
 endef
 
