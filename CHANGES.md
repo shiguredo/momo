@@ -11,13 +11,25 @@
 
 ## develop
 
-- [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
 - [UPDATE] libwebrtc を M75 に上げる
-- [UPDATE] CLI11 を v1.7.1 にアップデートする
+    - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+- [UPDATE] Unified Plan に対応する
+- [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
+- [UPDATE] CLI11 を v1.8.0 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
 - [UPDATE] doc/CACHE.md を削除
     - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
+- [UPDATE] audio/video の共通オプションを sora のオプションに移動する
+    - Momo 側ではコーデックやビットレートは指定できない
+    - p2p の場合は HTML で sdp を切り替えている
+    - --audio-codec
+    - --audio-bitrate
+    - --video-codec
+    - --video-bitrate
+- [FIX] macOS でデバイスがつかめなくなっていたのを修正する
+    - ただし --fixed-resolution 必須
+- [FIX] ROS 対応がビルドできなくなっていたのを修正する
 
 ## 19.02.0
 
