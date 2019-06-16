@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "api/video/i420_buffer.h"
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 #include "third_party/libyuv/include/libyuv.h"
 #include "sensor_msgs/image_encodings.h"
 
@@ -32,10 +32,6 @@ ROSVideoCapture::~ROSVideoCapture()
 void ROSVideoCapture::Destroy()
 {
   spinner_->stop();
-}
-
-void ROSVideoCapture::OnFrame(const webrtc::VideoFrame& frame) {
-  VideoCapturer::OnFrame(frame);
 }
 
 void ROSVideoCapture::ROSCallbackRaw(const sensor_msgs::ImageConstPtr &image)
@@ -97,5 +93,5 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
               .set_rotation(webrtc::kVideoRotation_0)
               .set_timestamp_us((int64_t)(ros_time.toNSec() / 1000))
               .build();
-  OnFrame(captureFrame);
+  OnCapturedFrame(captureFrame);
 }

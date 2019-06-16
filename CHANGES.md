@@ -11,9 +11,11 @@
 
 ## develop
 
-- [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
 - [UPDATE] libwebrtc を M75 に上げる
-- [UPDATE] CLI11 を v1.7.1 にアップデートする
+    - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+- [UPDATE] Unified Plan に対応する
+- [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
+- [UPDATE] CLI11 を v1.8.0 にアップデートする
 - [UPDATE] JSON v3.6.1 にアップデートする
 - [UPDATE] macOS のビルドドキュメントを独立させる
 - [UPDATE] doc/CACHE.md を削除
@@ -25,6 +27,10 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [FIX] macOS でデバイスがつかめなくなっていたのを修正する
+    - ただし --fixed-resolution 必須
+- [FIX] ROS 対応がビルドできなくなっていたのを修正する
+
 ## 19.02.0
 
 - [UPDATE] webrtc.js / p2p.html のリファクタリング
