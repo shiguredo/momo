@@ -78,10 +78,6 @@ macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_M
 
 macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
 
-### Windows 版 Momo のビルドする
-
-**準備中です**
-
 ## ライセンス
 
 Apache License 2.0
@@ -104,7 +100,7 @@ limitations under the License.
 
 ## サポートについて
 
-WebRTC Native Client に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
+WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
 
 ### バグ報告
 
@@ -119,6 +115,10 @@ https://discord.gg/gmEuZye
 ### 有料サポートについて
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+
+## Windows 版対応について
+
+WebRTC Native Client Momo の Windows 版対応についてはソースコードを販売予定です。
 
 ## H.264 のライセンス費用について
 
