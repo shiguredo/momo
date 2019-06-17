@@ -321,6 +321,7 @@ ifeq ($(TARGET_OS),linux)
           -lmmal_util \
           -lmmal_vc_client \
           -lm
+        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_mmal -maxdepth 1 -name '*.cpp')
       endif
     endif
