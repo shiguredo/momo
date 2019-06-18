@@ -14,15 +14,16 @@ jobs:
         working_directory: build
         no_output_timeout: 6h
 
-workflows:
-  version: 2
-  schedule_workflow:
-    triggers:
-      - schedule:
-          cron: "1 11 * * *" # UTCで記述。-9
-          filters:
-            branches:
-              only:
-                - develop
-    jobs:
-      - build
+# workflows:
+#   version: 2
+#   schedule_workflow:
+#     triggers:
+#       - schedule:
+#         # UTCで記述。-9
+#         cron: "0 8 * * *"
+#         filters:
+#           branches:
+#             only:
+#               - develop
+#     jobs:
+#       - build
