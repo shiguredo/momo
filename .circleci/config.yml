@@ -12,6 +12,8 @@ jobs:
       - run:
           command: (env; pwd; ls -lha; ls -lha script; cat script/docker_run.sh) || true
       - run:
+          command: ../script/docker_run.sh `pwd` `pwd`/.. nomount raspbian-stretch_armv7 momo/raspbian-stretch_armv7:m75-159c16f3 build 19.07.0-rc0 1.8.0 3.6.1
+      - run:
           command: cd build && DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
       # - run:
       #     # command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
