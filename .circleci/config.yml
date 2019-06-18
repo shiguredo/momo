@@ -10,8 +10,9 @@ jobs:
       - run:
           command: apk add make
       - run:
-          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
-          working_directory: build
+          # command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+          command: cd build && DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+          # working_directory: build
           no_output_timeout: 2h
   build_raspbian-stretch_armv6:
     docker:
@@ -65,13 +66,13 @@ jobs:
 
 workflows:
   version: 2
-  # build_workflow:
-  #   jobs:
-  #     - build_raspbian-stretch_armv6
-  #     - build_raspbian-stretch_armv7
-  #     - build_ubuntu-18.04_armv8
-  #     - build_ubuntu-18.04_x86_64
-  #     - build_macos
+  build_workflow:
+    jobs:
+      # - build_raspbian-stretch_armv6
+      - build_raspbian-stretch_armv7
+      # - build_ubuntu-18.04_armv8
+      # - build_ubuntu-18.04_x86_64
+      # - build_macos
 
   daily_build_workflow:
     triggers:
