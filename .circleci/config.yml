@@ -1,15 +1,28 @@
 version: 2
 jobs:
- build:
-   docker:
-     - image: docker:18.09.6
-   steps:
-     - checkout
-     - setup_remote_docker:
-         version: 18.09.3
-     - run:
-         command: apk add make
-     - run:
-         command: DOCKER_BUILDKIT=1 NOMOUNT=1 make raspbian-stretch_armv7
-         working_directory: build
-         no_output_timeout: 6h
+  build:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+        version: 18.09.3
+      - run:
+        command: apk add make
+      - run:
+        command: DOCKER_BUILDKIT=1 NOTIFY=1 NOMOUNT=1 make raspbian-stretch_armv7
+        working_directory: build
+        no_output_timeout: 6h
+
+workflows:
+  version: 2
+  schedule_workflow:
+    triggers:
+      - schedule:
+          cron: "1 11 * * *" # UTCで記述。-9
+          filters:
+            branches:
+              only:
+                - develop
+    jobs:
+      - build
