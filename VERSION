@@ -12,7 +12,6 @@ PACKAGE_NAMES= \
   raspbian-stretch_armv6 \
   raspbian-stretch_armv7 \
   ubuntu-16.04_armv7_ros \
-  ubuntu-16.04_armv8 \
   ubuntu-18.04_armv8 \
   ubuntu-16.04_x86_64_ros \
   ubuntu-18.04_x86_64
