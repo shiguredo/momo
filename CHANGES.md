@@ -29,6 +29,8 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
+- [ADD] Circle CI で macOS 版を毎週日曜日 22:00 に自動ビルドする
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する
