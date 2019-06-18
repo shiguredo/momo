@@ -8,7 +8,7 @@ jobs:
       - setup_remote_docker:
           version: 18.09.3
       - run:
-          command: apk add make
+          command: apk add make bash
       - run:
           command: (env; pwd; ls -lha; ls -lha script; cat script/docker_run.sh) || true
       - run:
