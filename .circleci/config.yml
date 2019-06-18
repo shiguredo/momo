@@ -26,6 +26,19 @@ jobs:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv6
           working_directory: build
           no_output_timeout: 2h
+  build_ubuntu-18.04_armv8:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
+          working_directory: build
+          no_output_timeout: 2h
   build_macos:
     macos:
       xcode: "10.2.1"
@@ -43,13 +56,14 @@ workflows:
   #   jobs:
   #     - build_raspbian-stretch_armv6
   #     - build_raspbian-stretch_armv7
+  #     - build_ubuntu-18.04_armv8
   #     - build_macos
 
   nightly_build_workflow:
     triggers:
       - schedule:
-          # UTCで記述。この場合は朝10時
-          cron: "0 6 * * *"
+          # UTCで記述する事、この場合は日本時間 22 時にしたいので -9 して 13 にしてある
+          cron: "0 13 * * *"
           filters:
             branches:
               only:
@@ -57,4 +71,5 @@ workflows:
     jobs:
       - build_raspbian-stretch_armv6
       - build_raspbian-stretch_armv7
+      - build_ubuntu-18.04_armv8
       - build_macos
