@@ -8,7 +8,7 @@ jobs:
       - setup_remote_docker:
           version: 18.09.3
       - run:
-          command: apk add make bash
+          command: apk add make bash git
       - run:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
           working_directory: build
