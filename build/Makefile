@@ -61,7 +61,6 @@ define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	ls -lha ../script
 	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
 .PHONY: $(1).package
@@ -87,21 +86,14 @@ $(1).edit: $(1).prepare
 
 .PHONY: $(1).prepare
 $(1).prepare:
-	ls -lha ../script
 	rm -rf $(1)/patch
-	ls -lha ../script
 	rm -rf $(1)/script
-	ls -lha ../script
 	cp -r ../patch $(1)/patch
-	ls -lha ../script
 	cp -r ../script $(1)/script
-	ls -lha ../script
 
 	# DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) $(DOCKER_BUILD_FLAGS) --build-arg WEBRTC_VERSION=$$(WEBRTC_VERSION) --build-arg WEBRTC_COMMIT=$$(WEBRTC_COMMIT) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
 
-	ls -lha ../script
 	rm -r $(1)/patch
-	ls -lha ../script
 	rm -r $(1)/script
 
 .PHONY: $(1).clean
