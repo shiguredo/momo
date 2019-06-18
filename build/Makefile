@@ -17,6 +17,7 @@ help:
 	@echo "[オプション]:"
 	@echo "  - NOCACHE=1"
 	@echo "  - NOMOUNT=1"
+	@echo "  - NOTTY=1"
 	@echo ""
 	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
 	@echo ""
@@ -35,6 +36,9 @@ help:
 	@echo "NOMOUNT=1 オプションは、マウントを利用しないモードで動作させることができます。"
 	@echo "何らかの理由でマウントがうまく動作しない場合に使って下さい。"
 	@echo ""
+	@echo "NOTTY=1 オプションは、tty を利用しないモードで動作させることができます。"
+	@echo "具体的には docker build コマンドに --progress=plain を指定します。"
+	@echo ""
 
 WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
 
@@ -46,6 +50,10 @@ ifeq ($(NOMOUNT),1)
   DOCKER_MOUNT = nomount
 else
   DOCKER_MOUNT = mount
+endif
+
+ifeq ($(NOTTY),1)
+  DOCKER_BUILD_FLAGS += --progress=plain
 endif
 
 # パッケージ名からルールを自動生成する
