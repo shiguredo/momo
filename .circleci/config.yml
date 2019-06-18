@@ -41,7 +41,7 @@ workflows:
           filters:
             branches:
               only:
-                - develop
+                - feature/circleci
     jobs:
       - raspbian_stretch_armv6
       - raspbian_stretch_armv7
