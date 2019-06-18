@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
+    - 720p 30fps や 1080p 20fps を可能にする
 - [UPDATE] libwebrtc を M75 に上げる
     - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
 - [UPDATE] Unified Plan に対応する
@@ -27,6 +29,8 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
+- [ADD] Circle CI で macOS 版を毎週日曜日 22:00 に自動ビルドする
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する

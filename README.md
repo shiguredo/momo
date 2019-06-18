@@ -2,6 +2,7 @@
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CircleCI](https://circleci.com/gh/shiguredo/momo.svg?style=svg)](https://circleci.com/gh/shiguredo/momo)
 
 ## WebRTC Native Client Momo について
 
@@ -26,17 +27,11 @@ Momo はオープンソースソフトウェアですが、開発については
 
 まずは Discord にてご連絡ください。
 
-## develop ブランチにおける既知の問題
+## バイナリ提供について
 
-- Raspberry Pi のハードウェアエンコーダを利用した場合に落ちる可能性があることがわかっています
-    - MMAL 対応にて修正予定です
+Raspberry Pi 向けのバイナリのみ提供を行っています。
 
-## 19.02 以降のバイナリ提供に関して
-
-今後は Raspberry Pi 向けのバイナリのみの提供を行います。
-
-H.264 のライセンスが不透明ということもあり、
-バイナリでの提供はライセンスが明確になっている Raspberry Pi のみとさせていただくことにしました。
+H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以外は不透明というのが理由です。
 
 ## 動作環境
 
@@ -47,14 +42,12 @@ H.264 のライセンスが不透明ということもあり、
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-- Ubuntu 16.04 ARMv8
     - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
     - Raspberry Pi 3 B+
 - macOS 10.14 x86_64
-
 
 ## 使ってみる
 
@@ -78,10 +71,6 @@ macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_M
 
 macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
 
-### Windows 版 Momo のビルドする
-
-**準備中です**
-
 ## ライセンス
 
 Apache License 2.0
@@ -104,7 +93,7 @@ limitations under the License.
 
 ## サポートについて
 
-WebRTC Native Client に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
+WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
 
 ### バグ報告
 
@@ -120,6 +109,10 @@ https://discord.gg/gmEuZye
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
+## Windows 版対応について
+
+WebRTC Native Client Momo の Windows 版対応についてはソースコードを販売予定です。
+
 ## H.264 のライセンス費用について
 
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
@@ -130,4 +123,4 @@ WebRTC Native Client に対する有料でのサポート契約については W
 - [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
-
+- [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)

@@ -77,17 +77,6 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
   SYSROOT ?= /root/rootfs
-else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv8)
-  TARGET_OS ?= linux
-  TARGET_OS_LINUX ?= ubuntu-16.04
-  TARGET_ARCH ?= arm
-  TARGET_ARCH_ARM ?= armv8
-  USE_ROS ?= 0
-  USE_MMAL_ENCODER ?= 0
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv8
-  SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   TARGET_OS ?= linux
   TARGET_OS_LINUX ?= ubuntu-18.04
