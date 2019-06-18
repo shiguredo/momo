@@ -80,7 +80,7 @@ workflows:
           filters:
             branches:
               only:
-                - feature/circleci
+                - develop
     jobs:
       - build_raspbian-stretch_armv6
       - build_raspbian-stretch_armv7
@@ -95,7 +95,7 @@ workflows:
           filters:
             branches:
               only:
-                - feature/circleci
+                - develop
     jobs:
       - build_macos
 
