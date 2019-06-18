@@ -10,10 +10,12 @@ jobs:
       - run:
           command: apk add make
       - run:
-          # command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
-          command: cd build && DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
-          # working_directory: build
-          no_output_timeout: 2h
+          command: (env; pwd; ls -lha; ls -lha script; cat script/docker_run.sh) || true
+      # - run:
+      #     # command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+      #     command: cd build && DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+      #     # working_directory: build
+      #     no_output_timeout: 2h
   build_raspbian-stretch_armv6:
     docker:
       - image: docker:18.09.6
