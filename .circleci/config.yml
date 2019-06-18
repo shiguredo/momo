@@ -39,6 +39,19 @@ jobs:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
           working_directory: build
           no_output_timeout: 2h
+  build_ubuntu-18.04_x86_64:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
+          working_directory: build
+          no_output_timeout: 2h
   build_macos:
     macos:
       xcode: "10.2.1"
@@ -57,6 +70,7 @@ workflows:
   #     - build_raspbian-stretch_armv6
   #     - build_raspbian-stretch_armv7
   #     - build_ubuntu-18.04_armv8
+  #     - build_ubuntu-18.04_x86_64
   #     - build_macos
 
   nightly_build_workflow:
@@ -72,4 +86,5 @@ workflows:
       - build_raspbian-stretch_armv6
       - build_raspbian-stretch_armv7
       - build_ubuntu-18.04_armv8
+      - build_ubuntu-18.04_x86_64
       - build_macos
