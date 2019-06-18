@@ -47,20 +47,6 @@ bcm2835-v4l2
 
 を追加して再起動してください。
 
-## Ubuntu 16.04 で ARMv8 対応のバイナリを利用する場合
-
-下記を実行してください。
-
-```
-$ sudo apt-get install libx11-dev libnss3 libxext6
-```
-
-上手く動かない場合は下記のライブラリもインストールしてみてください。
-
-```
-$ sudo apt-get install libx11-6 libxau6 libxdmcp6 libxcb1 libnspr4 libexpat1 libasound2
-```
-
 ## 注意
 
 ### 4K を利用する場合
@@ -91,7 +77,7 @@ WebRTC Native Client Momo version 19.02.0
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p
+$ momo --no-audio p2p --port 8080
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
@@ -121,14 +107,6 @@ Options:
   -h,--help                   Print this help message and exit
   --no-video                  ビデオを表示しない
   --no-audio                  オーディオを出さない
-  --video-codec STR in [VP8,VP9,H264]
-                              ビデオコーデック
-  --audio-codec STR in [OPUS,PCMU]
-                              オーディオコーデック
-  --video-bitrate INT in [1 - 30000]
-                              ビデオのビットレート
-  --audio-bitrate INT in [6 - 510]
-                              オーディオのビットレート
   --resolution STR in [QVGA,VGA,HD,FHD,4K]
                               解像度
   --framerate INT in [1 - 60] フレームレート
@@ -158,8 +136,7 @@ Options:
 
 
 ```
-$ ./momo --no-audio --video-codec VP8 --video-bitrate 1500 \
-         p2p --port 8080
+$ ./momo --no-audio p2p --port 8080
 ```
 
 
@@ -173,12 +150,23 @@ Positionals:
   CHANNEL-ID TEXT REQUIRED    チャンネルID
 
 Options:
+  --video-codec STR in [VP8,VP9,H264]
+                              ビデオコーデック
+  --audio-codec STR in [OPUS,PCMU]
+                              オーディオコーデック
+  --video-bitrate INT in [1 - 30000]
+                              ビデオのビットレート
+  --audio-bitrate INT in [6 - 510]
+                              オーディオのビットレート
   -h,--help                   Print this help message and exit
   --auto                      自動接続する
 ```
 
 ```
-$ ./momo --no-audio --video-codec VP8 --video-bitrate 500 \
-         sora --auto wss://example.com/signaing open-momo
+$ ./momo --no-audio sora --auto --video-codec H264 --video-bitrate 500 \
+        wss://example.com/signaing open-momo
 ```
 
+## うまく動作しない時
+
+- カメラを uv4l など他のプロセスが利用していないか確認してください

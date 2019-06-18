@@ -1,4 +1,4 @@
-#include "il_encoder_factory.h"
+#include "hw_video_encoder_factory.h"
 
 #include "absl/strings/match.h"
 #include "absl/memory/memory.h"
@@ -10,9 +10,11 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "rtc_base/logging.h"
 
-#include "il_h264_encoder.h"
+#if USE_MMAL_ENCODER
+#include "hwenc_mmal/mmal_h264_encoder.h"
+#endif
 
-std::vector<webrtc::SdpVideoFormat> ILVideoEncoderFactory::GetSupportedFormats()
+std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
     const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
@@ -24,7 +26,7 @@ std::vector<webrtc::SdpVideoFormat> ILVideoEncoderFactory::GetSupportedFormats()
   return supported_codecs;
 }
 
-webrtc::VideoEncoderFactory::CodecInfo ILVideoEncoderFactory::QueryVideoEncoder(
+webrtc::VideoEncoderFactory::CodecInfo HWVideoEncoderFactory::QueryVideoEncoder(
     const webrtc::SdpVideoFormat& format) const {
   CodecInfo info;
   info.has_internal_source = false;
@@ -35,7 +37,7 @@ webrtc::VideoEncoderFactory::CodecInfo ILVideoEncoderFactory::QueryVideoEncoder(
   return info;
 }
 
-std::unique_ptr<webrtc::VideoEncoder> ILVideoEncoderFactory::CreateVideoEncoder(
+std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
     return webrtc::VP8Encoder::Create();
@@ -43,8 +45,11 @@ std::unique_ptr<webrtc::VideoEncoder> ILVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
 
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
-    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<ILH264Encoder>(cricket::VideoCodec(format)));
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+#if USE_MMAL_ENCODER
+    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
+#endif
+  }
 
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;

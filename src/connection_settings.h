@@ -5,7 +5,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-#include "api/rtpparameters.h"
+#include "api/rtp_parameters.h"
 
 struct ConnectionSettings
 {

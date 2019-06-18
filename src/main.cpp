@@ -9,14 +9,18 @@
 #include <string>
 #include <csignal>
 
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
 #else
+#ifdef __APPLE__
+#include "mac_helper/mac_capturer.h"
+#else
 #include "rtc/device_video_capturer.h"
+#endif
 #endif
 
 #include "connection_settings.h"
@@ -57,7 +61,8 @@ int main(int argc, char* argv[])
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<ROSVideoCapture> capturer(new ROSVideoCapture(cs));
+  rtc::scoped_refptr<ROSVideoCapture> capturer(
+    new rtc::RefCountedObject<ROSVideoCapture>(cs));
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize, 10));
@@ -68,8 +73,18 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer =
+#ifdef __APPLE__
+  rtc::scoped_refptr<MacCapturer> capturer =
+          MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, 0);
+#else
+  rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
+#endif
+  if (!capturer)
+  {
+    std::cerr << "failed to create capturer" << std::endl;
+    return 1;
+  }
 #endif
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));

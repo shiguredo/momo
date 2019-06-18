@@ -37,16 +37,17 @@ $(LIBWEBRTC): check
 	prepare_webrtc_macos "" $(WEBRTC_COMMIT) $(CURDIR)/webrtc && \
 	cd $(CURDIR)/webrtc/src && \
 	patch -p2 < $(CURDIR)/../../patch/4k.patch && \
-	gn gen $(CURDIR)/webrtc-build/macos --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true' && \
+	gn gen $(CURDIR)/webrtc-build/macos --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true libcxx_abi_unstable=false' && \
 	ninja -C $(CURDIR)/webrtc-build/macos && \
 	ninja -C $(CURDIR)/webrtc-build/macos \
 	  builtin_audio_decoder_factory \
 	  native_api \
 	  default_codec_factory_objc \
-	  peerconnection
+	  peerconnection \
+	  videocapture_objc
 
 $(BOOST):
 	source ../../script/docker.sh && \
 	setup_boost $(BOOST_VERSION) $(CURDIR)/boost && \
 	cd $(CURDIR)/boost/source && \
-	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --with-filesystem
+	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --ignore-site-config --with-filesystem
