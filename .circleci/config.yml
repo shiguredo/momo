@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  raspbian_stretch_armv7:
+  build_raspbian-stretch_armv7:
     docker:
       - image: docker:18.09.6
     steps:
@@ -13,7 +13,7 @@ jobs:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
           working_directory: build
           no_output_timeout: 2h
-  raspbian_stretch_armv6:
+  build_raspbian-stretch_armv6:
     docker:
       - image: docker:18.09.6
     steps:
@@ -26,22 +26,35 @@ jobs:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
           working_directory: build
           no_output_timeout: 2h
+  build_macos:
+    macos:
+      xcode: "10.2.1"
+    steps:
+      - checkout
+      - run:
+          command: make macos
+          working_directory: build
+          no_output_timeout: 2h
+
 
 workflows:
   version: 2
-  test_workflow:
-    jobs:
-      - raspbian_stretch_armv6
-      - raspbian_stretch_armv7
+  # build_workflow:
+  #   jobs:
+  #     - build_raspbian-stretch_armv6
+  #     - build_raspbian-stretch_armv7
+  #     - build_macos
 
-  nightly_workflow:
+  nightly_build_workflow:
     triggers:
       - schedule:
-          cron: "0 6 * * *" # UTCで記述。この場合は朝10時
+          # UTCで記述。この場合は朝10時
+          cron: "0 6 * * *"
           filters:
             branches:
               only:
                 - feature/circleci
     jobs:
-      - raspbian_stretch_armv6
-      - raspbian_stretch_armv7
+      - build_raspbian-stretch_armv6
+      - build_raspbian-stretch_armv7
+      - build_macos
