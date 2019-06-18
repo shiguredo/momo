@@ -150,7 +150,7 @@ Options:
 
 
 ```
-$ ./momo --no-audio p2p --port 8080
+$ ./momo --no-audio --port 8080 p2p
 ```
 
 
