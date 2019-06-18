@@ -1,0 +1,101 @@
+version: 2
+jobs:
+  build_raspbian-stretch_armv7:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make bash git
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+          working_directory: build
+          no_output_timeout: 2h
+  build_raspbian-stretch_armv6:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make bash git
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv6
+          working_directory: build
+          no_output_timeout: 2h
+  build_ubuntu-18.04_armv8:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make bash git
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
+          working_directory: build
+          no_output_timeout: 2h
+  build_ubuntu-18.04_x86_64:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make bash git
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
+          working_directory: build
+          no_output_timeout: 2h
+  build_macos:
+    macos:
+      xcode: "10.2.1"
+    steps:
+      - checkout
+      - run:
+          command: make macos
+          working_directory: build
+          no_output_timeout: 2h
+
+workflows:
+  version: 2
+  # build_workflow:
+  #   jobs:
+  #     - build_raspbian-stretch_armv6
+  #     - build_raspbian-stretch_armv7
+  #     - build_ubuntu-18.04_armv8
+  #     - build_ubuntu-18.04_x86_64
+  #     - build_macos
+
+  daily_build_workflow:
+    triggers:
+      - schedule:
+          # UTCで記述する事、この場合は日本時間 22 時にしたいので -9 して 13 にしてある
+          cron: "0 13 * * *"
+          filters:
+            branches:
+              only:
+                - feature/circleci
+    jobs:
+      - build_raspbian-stretch_armv6
+      - build_raspbian-stretch_armv7
+      - build_ubuntu-18.04_armv8
+      - build_ubuntu-18.04_x86_64
+  weekly_build_workflow:
+    triggers:
+      - schedule:
+          # macOS はリソースが限られてるので週 1 、日曜日のみビルドする
+          # UTCで記述する事、この場合は日本時間 22 時にしたいので -9 して 13 にしてある
+          cron: "0 13 * * 0"
+          filters:
+            branches:
+              only:
+                - feature/circleci
+    jobs:
+      - build_macos
+
