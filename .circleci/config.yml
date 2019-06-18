@@ -23,7 +23,7 @@ jobs:
       - run:
           command: apk add make
       - run:
-          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv6
           working_directory: build
           no_output_timeout: 2h
   build_macos:
