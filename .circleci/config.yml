@@ -12,4 +12,4 @@ jobs:
      - run:
          command: DOCKER_BUILDKIT=1 NOMOUNT=1 make raspbian-stretch_armv7
          working_directory: build
-         no_output_timeout: 4h
+         no_output_timeout: 6h
