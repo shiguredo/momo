@@ -47,20 +47,6 @@ bcm2835-v4l2
 
 を追加して再起動してください。
 
-## Ubuntu 16.04 で ARMv8 対応のバイナリを利用する場合
-
-下記を実行してください。
-
-```
-$ sudo apt-get install libx11-dev libnss3 libxext6
-```
-
-上手く動かない場合は下記のライブラリもインストールしてみてください。
-
-```
-$ sudo apt-get install libx11-6 libxau6 libxdmcp6 libxcb1 libnspr4 libexpat1 libasound2
-```
-
 ## 注意
 
 ### 4K を利用する場合
@@ -91,7 +77,7 @@ WebRTC Native Client Momo version 19.02.0
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 800 --port 8080 p2p
+$ momo --no-audio p2p --port 8080
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。

@@ -35,8 +35,7 @@ Momo はオープンソースソフトウェアですが、開発については
 
 今後は Raspberry Pi 向けのバイナリのみの提供を行います。
 
-H.264 のライセンスが不透明ということもあり、
-バイナリでの提供はライセンスが明確になっている Raspberry Pi のみとさせていただくことにしました。
+H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以外は不透明というのが理由です。
 
 ## 動作環境
 
@@ -47,14 +46,12 @@ H.264 のライセンスが不透明ということもあり、
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-- Ubuntu 16.04 ARMv8
     - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
     - Raspberry Pi 3 B+
 - macOS 10.14 x86_64
-
 
 ## 使ってみる
 
