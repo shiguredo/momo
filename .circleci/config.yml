@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  raspbian_stretch_armv7:
     docker:
       - image: docker:18.09.6
     steps:
@@ -12,4 +12,36 @@ jobs:
       - run:
           command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
           working_directory: build
-          no_output_timeout: 6h
+          no_output_timeout: 2h
+  raspbian_stretch_armv6:
+    docker:
+      - image: docker:18.09.6
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 18.09.3
+      - run:
+          command: apk add make
+      - run:
+          command: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-stretch_armv7
+          working_directory: build
+          no_output_timeout: 2h
+
+workflows:
+  version: 2
+  test_workflow:
+    jobs:
+      - raspbian_stretch_armv6
+      - raspbian_stretch_armv7
+
+  nightly_workflow:
+    triggers:
+      - schedule:
+          cron: "0 6 * * *" # UTCで記述。この場合は朝10時
+          filters:
+            branches:
+              only:
+                - develop
+    jobs:
+      - raspbian_stretch_armv6
+      - raspbian_stretch_armv7
