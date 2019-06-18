@@ -71,9 +71,9 @@ workflows:
       # - build_raspbian-stretch_armv7
       # - build_ubuntu-18.04_armv8
       # - build_ubuntu-18.04_x86_64
-      - build_macos
+      # - build_macos
 
-  nightly_build_workflow:
+  daily_build_workflow:
     triggers:
       - schedule:
           # UTCで記述する事、この場合は日本時間 22 時にしたいので -9 して 13 にしてある
@@ -87,4 +87,16 @@ workflows:
       - build_raspbian-stretch_armv7
       - build_ubuntu-18.04_armv8
       - build_ubuntu-18.04_x86_64
+  weekly_build_workflow:
+    triggers:
+      - schedule:
+          # macOS はリソースが限られてるので週 1 、日曜日のみビルドする
+          # UTCで記述する事、この場合は日本時間 22 時にしたいので -9 して 13 にしてある
+          cron: "0 13 * * 0"
+          filters:
+            branches:
+              only:
+                - feature/circleci
+    jobs:
       - build_macos
+
