@@ -9,6 +9,10 @@
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/websocket/rfc6455.hpp>
 
+#ifdef _WIN32
+#include <codecvt>
+#endif
+
 #include "util.h"
 
 P2PSession::P2PSession(
@@ -98,10 +102,13 @@ void P2PSession::handleRequest() {
     if (req.target().back() == '/')
         path.append("index.html");
 
+#ifdef _WIN32
+    path.imbue(std::locale(std::locale(), new std::codecvt_utf8_utf16<wchar_t>()));
+#endif
     // Attempt to open the file
     boost::beast::error_code ec;
     boost::beast::http::file_body::value_type body;
-    body.open(path.c_str(), boost::beast::file_mode::scan, ec);
+    body.open(path.string().c_str(), boost::beast::file_mode::scan, ec);
 
     // Handle the case where the file doesn't exist
     if(ec == boost::system::errc::no_such_file_or_directory)
