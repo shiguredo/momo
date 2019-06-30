@@ -19,6 +19,10 @@
 
 DeviceVideoCapturer::DeviceVideoCapturer() : vcm_(nullptr) {}
 
+DeviceVideoCapturer::~DeviceVideoCapturer() {
+  Destroy();
+}
+
 bool DeviceVideoCapturer::Init(size_t width,
                        size_t height,
                        size_t target_fps,
@@ -58,39 +62,43 @@ bool DeviceVideoCapturer::Init(size_t width,
   return true;
 }
 
-std::unique_ptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width,
+rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width,
                                  size_t height,
                                  size_t target_fps)
 {
-  std::unique_ptr<DeviceVideoCapturer> capturer;
+  rtc::scoped_refptr<DeviceVideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
+    RTC_LOG(LS_WARNING) << "Failed to CreateDeviceInfo";
     return nullptr;
   }
   int num_devices = info->NumberOfDevices();
   for (int i = 0; i < num_devices; ++i) {
-    capturer = absl::WrapUnique(Create(width, height, target_fps, i));
+    capturer = Create(width, height, target_fps, i);
     if (capturer) {
+      RTC_LOG(LS_WARNING) << "Get Capture";
       return capturer;
     }
   }
+  RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer";
 
   return nullptr;
 }
 
-DeviceVideoCapturer* DeviceVideoCapturer::Create(size_t width,
+rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width,
                                  size_t height,
                                  size_t target_fps,
                                  size_t capture_device_index) {
-  std::unique_ptr<DeviceVideoCapturer> vcm_capturer(new DeviceVideoCapturer());
+  rtc::scoped_refptr<DeviceVideoCapturer> vcm_capturer(
+    new rtc::RefCountedObject<DeviceVideoCapturer>());
   if (!vcm_capturer->Init(width, height, target_fps, capture_device_index)) {
     RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer(w = " << width
                         << ", h = " << height << ", fps = " << target_fps
                         << ")";
     return nullptr;
   }
-  return vcm_capturer.release();
+  return vcm_capturer;
 }
 
 void DeviceVideoCapturer::Destroy() {
@@ -103,10 +111,7 @@ void DeviceVideoCapturer::Destroy() {
   vcm_ = nullptr;
 }
 
-DeviceVideoCapturer::~DeviceVideoCapturer() {
-  Destroy();
-}
-
-void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
-  VideoCapturer::OnFrame(frame);
+void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame &frame)
+{
+  OnCapturedFrame(frame);
 }

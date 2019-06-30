@@ -20,26 +20,34 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
-## develop ブランチにおける既知の問題
+## 開発について
 
-- Raspberry Pi のハードウェアエンコーダを利用した場合に落ちる可能性があることがわかっています
-    - MMAL 対応にて修正予定です
+Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
+そのためコメントやプルリクエストを頂いてもすぐには採用はしません。
+
+まずは Discord にてご連絡ください。
+
+## バイナリ提供について
+
+Raspberry Pi 向けのバイナリのみ提供を行っています。
+
+H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以外は不透明というのが理由です。
 
 ## 動作環境
 
-- Ubuntu 18.04 x86_64
-- Ubuntu 16.04 ARMv8
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147) で動作
 - Raspbian Stretch ARMv7
     - Raspberry Pi 3 B/B+ で動作
 - Raspbian Stretch ARMv6
     - Raspberry Pi Zero W/WH で動作
-- Ubuntu 16.04 x86_64 ROS Kinetic で動作
+- Ubuntu 18.04 x86_64
+- Ubuntu 18.04 ARMv8
+    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
+- Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
-- Ubuntu 16.04 ARMv7 ROS Kinetic で動作
-    - Raspberry Pi 3 B+ で動作
+- Ubuntu 16.04 ARMv7 ROS Kinetic
+    - Raspberry Pi 3 B+
 - macOS 10.14 x86_64
-    - バイナリの提供は行いません
 
 ## 使ってみる
 
@@ -53,24 +61,15 @@ Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS
 
 ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
 
-## ビルドに挑戦する
+## ビルドする
 
 Linux 版 Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
 
-### macOS 版 Momo のビルドに挑戦する
+### macOS 版 Momo のビルドする
 
 macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
-### Windows 版 Momo のビルドに挑戦する
-
-**準備中です**
-
-## Pull-Request について
-
-Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
-そのため Pull-Request を頂いても採用できない場合があります。
-
-まずは Discord にて気軽に話しかけてください。
+macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
 
 ## ライセンス
 
@@ -94,7 +93,7 @@ limitations under the License.
 
 ## サポートについて
 
-WebRTC Native Client に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
+WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
 
 ### バグ報告
 
@@ -109,6 +108,10 @@ https://discord.gg/gmEuZye
 ### 有料サポートについて
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+
+## Windows 版対応について
+
+WebRTC Native Client Momo の Windows 版対応についてはソースコードを販売予定です。
 
 ## H.264 のライセンス費用について
 

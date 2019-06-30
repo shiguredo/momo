@@ -34,10 +34,6 @@ void ROSVideoCapture::Destroy()
   spinner_->stop();
 }
 
-void ROSVideoCapture::OnFrame(const webrtc::VideoFrame& frame) {
-  VideoCapturer::OnFrame(frame);
-}
-
 void ROSVideoCapture::ROSCallbackRaw(const sensor_msgs::ImageConstPtr &image)
 {
   ROSCallback(image->header.stamp, image->data.data(), image->data.size(), image->width, image->height, ConvertEncodingType(image->encoding));
@@ -97,5 +93,5 @@ void ROSVideoCapture::ROSCallback(ros::Time ros_time, const uint8_t *sample, siz
               .set_rotation(webrtc::kVideoRotation_0)
               .set_timestamp_us((int64_t)(ros_time.toNSec() / 1000))
               .build();
-  OnFrame(captureFrame);
+  OnCapturedFrame(captureFrame);
 }
