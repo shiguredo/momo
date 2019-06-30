@@ -245,7 +245,7 @@ void AyameWebsocketClient::doSendPong() {
     ws_->sendText(json_message.dump());
 }
 
-// TODO(kdxu): iceServers などの設定を外出しする
+// TODO(kdxu): ayame が iceServers の払い出しをするようになり次第対応する
 void AyameWebsocketClient::createPeerConnection()
 {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;

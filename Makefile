@@ -366,6 +366,7 @@ endif
 SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
 SOURCES += $(shell find src/p2p -name '*.cpp')
 SOURCES += $(shell find src/rtc -name '*.cpp')
+SOURCES += $(shell find src/ayame -name '*.cpp')
 SOURCES += $(shell find src/sora -name '*.cpp')
 SOURCES += $(shell find src/ws -name '*.cpp')
 

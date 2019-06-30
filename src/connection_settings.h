@@ -36,7 +36,6 @@ struct ConnectionSettings
 
   std::string p2p_document_root;
 
-
   std::string ayame_signaling_host;
   std::string ayame_client_id;
   std::string ayame_room_id;
