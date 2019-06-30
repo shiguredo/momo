@@ -82,6 +82,13 @@ $ momo --no-audio --port 8080 p2p
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
 
+### WebRTC Signaling Server Ayame で動作を確認する
+
+```shell
+$ ./momo --no-audio \
+         ayame wss://example.com/ws open-momo ayame-client-ud
+```
+
 ### WebRTC SFU Sora で動作を確認する
 
 **この機能を利用する場合は WebRTC SFU Sora のライセンス契約が必要です**
@@ -120,6 +127,7 @@ Options:
 
 Subcommands:
   p2p                         P2P
+  ayame                       WebRTC Signaling Server Ayame
   sora                        WebRTC SFU Sora
 ```
 
@@ -139,6 +147,18 @@ Options:
 $ ./momo --no-audio --port 8080 p2p
 ```
 
+ ```
+$ ./momo ayame --help
+WebRTC Signaling Server Ayame
+Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID CLIENT-ID
+ Positionals:
+  SIGNALING-URL TEXT REQUIRED シグナリングホスト
+  ROOM-ID TEXT REQUIRED       ルーム ID
+  CLIENT-ID TEXT REQUIRED     クライアント ID
+ Options:
+  -k,--key                    キー
+  -h,--help                   Print this help message and exit
+```
 
 ```
 $ ./momo sora --help

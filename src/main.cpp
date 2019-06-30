@@ -28,6 +28,7 @@
 #include "rtc/manager.h"
 #include "sora/sora_server.h"
 #include "p2p/p2p_server.h"
+#include "ayame/ayame_server.h"
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
@@ -37,11 +38,11 @@ int main(int argc, char* argv[])
 
   bool is_daemon = false;
   bool use_p2p = false;
-  bool use_sora = false;
   bool use_ayame = false;
+  bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, use_ayame, log_level, cs);
+  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_ayame, use_sora, log_level, cs);
 
 #ifndef _MSC_VER
   if (is_daemon)

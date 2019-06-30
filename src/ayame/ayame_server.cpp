@@ -60,9 +60,7 @@ void AyameServer::run()
     if (!acceptor_.is_open())
         return;
 
-    // if (conn_settings_.ayame_auto_connect) {
-        ws_client_->connect();
-   //  }
+    ws_client_->connect();
     doAccept();
 }
 
