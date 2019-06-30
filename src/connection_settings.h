@@ -36,6 +36,11 @@ struct ConnectionSettings
 
   std::string p2p_document_root;
 
+
+  std::string ayame_signaling_host;
+  std::string ayame_client_id;
+  std::string ayame_room_id;
+
   int getWidth() {
     if (resolution == "QVGA") {
       return 480;
@@ -88,6 +93,9 @@ struct ConnectionSettings
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";
     os << "sora_metadata: " << cs.sora_metadata << "\n";
+    os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
+    os << "ayame_client_id: " << cs.ayame_client_id << "\n";
+    os << "ayame_room_id: " << cs.ayame_room_id << "\n";
     os << "p2p_document_root: " << cs.p2p_document_root << "\n";
     return os;
   }

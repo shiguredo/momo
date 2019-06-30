@@ -166,6 +166,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
   ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
 
+  ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
+  ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
+
   try
   {
     app.parse(argc, argv);
