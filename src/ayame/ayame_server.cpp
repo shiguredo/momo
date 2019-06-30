@@ -80,11 +80,6 @@ void AyameServer::onAccept(boost::system::error_code ec)
     {
         MOMO_BOOST_ERROR(ec, "accept");
     }
-    else
-    {
-        // Create the session and run it
-        std::make_shared<AyameSession>(std::move(socket_), rtc_manager_, ws_client_, conn_settings_)->run();
-    }
 
     // Accept another connection
     doAccept();

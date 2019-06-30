@@ -16,7 +16,7 @@ bool AyameWebsocketClient::parseURL(URLParts& parts) const {
     }
 
     std::string default_port;
-    if (parts.scheme =d= "wss") {
+    if (parts.scheme == "wss") {
         return true;
     } else if (parts.scheme == "ws") {
         return false;
@@ -250,21 +250,10 @@ void AyameWebsocketClient::createPeerConnection()
 {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
+  webrtc::PeerConnectionInterface::IceServer ice_server;
 
-  auto jservers = {
-    "urls": ["stun:stun.l.google.com:19302"]
-  };
-  for (auto jserver : jservers)
-  {
-    auto jurls = jserver["urls"];
-    for (const std::string url : jurls)
-    {
-      webrtc::PeerConnectionInterface::IceServer ice_server;
-      ice_server.uri = url;
-      ice_servers.push_back(ice_server);
-    }
-  }
-
+  ice_server.uri = "stun:stun.l.google.com:19302";
+  ice_servers.push_back(ice_server);
   rtc_config.servers = ice_servers;
 
   connection_ = manager_->createConnection(rtc_config, this);
@@ -327,6 +316,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
       }
       const std::string sdp = json_message["sdp"];
       connection_->setOffer(sdp);
+    }
     else if (type == "answer") {
         if (!connection_) {
             return;
