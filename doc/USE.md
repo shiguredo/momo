@@ -1,6 +1,6 @@
 # Momo を使ってみる
 
-**macOS 版と Windows 版のバイナリ提供はしていません、自力でのビルドをお願いします**
+**Linux 版 Raspberry Pi 向けバイナリのみ提供しています**
 
 https://github.com/shiguredo/momo/releases にて利用したい環境のバイナリをダウンロードしてください。
 
@@ -63,9 +63,19 @@ bcm2835-v4l2
 
 ## 利用方法
 
-Momo はモードを ２ つ持っています。一つが P2P モードで Momo 自体がシグナリングサーバの機能も持つモードです。
+Momo はモードを 3 つ持っています。
 
-もう一つは WebRTC SFU Sora と接続する方法です。
+### P2P モード
+
+Momo 自体がシグナリングサーバの機能も持つモードです。
+
+### Ayame モード
+
+オープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用するモードです。
+
+### Sora モード
+
+商用 WebRTC SFU の [WebRTC SFU Sora](https://sora.shiguredo.jp/) を利用するモードです。
 
 ### バージョン確認
 
@@ -131,7 +141,7 @@ Subcommands:
   sora                        WebRTC SFU Sora
 ```
 
-#### Momo 内蔵のシグナリングサーバを利用する
+#### p2p
 
 
 ```
@@ -149,7 +159,7 @@ Options:
 $ ./momo --no-audio --port 8080 p2p
 ```
 
-#### WebRTC Signaling Server Ayame を利用する
+#### ayame
 
 
  ```
@@ -165,7 +175,7 @@ Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID CLIENT-ID
   -h,--help                   Print this help message and exit
 ```
 
-#### WebRTC SFU Sora を利用する
+#### sora
 
 ```
 $ ./momo sora --help
@@ -197,3 +207,9 @@ $ ./momo --no-audio sora --auto --video-codec H264 --video-bitrate 500 \
 ## うまく動作しない時
 
 - カメラを uv4l など他のプロセスが利用していないか確認してください
+
+## Q&A
+
+### コーデックの指定やビットレートを利用したい
+
+指定は WebRTC SFU Sora を利用したときだけ可能です。ただし受信側の SDP を動的に書き換えることで対応可能です。
