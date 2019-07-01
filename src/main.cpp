@@ -28,6 +28,7 @@
 #include "rtc/manager.h"
 #include "sora/sora_server.h"
 #include "p2p/p2p_server.h"
+#include "ayame/ayame_server.h"
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
@@ -37,10 +38,11 @@ int main(int argc, char* argv[])
 
   bool is_daemon = false;
   bool use_p2p = false;
+  bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
+  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_ayame, use_sora, log_level, cs);
 
 #ifndef _MSC_VER
   if (is_daemon)
@@ -105,6 +107,11 @@ int main(int argc, char* argv[])
       if (use_p2p) {
         const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.port)};
         std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.p2p_document_root), rtc_manager.get(), cs)->run();
+      }
+
+      if (use_ayame) {
+        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("127.0.0.1"), static_cast<unsigned short>(cs.port)};
+        std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
       }
 
       ioc.run();

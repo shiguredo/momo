@@ -36,7 +36,7 @@ using json = nlohmann::json;
 #if USE_ROS
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_sora, 
+                        bool &use_p2p, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
@@ -49,6 +49,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
 
   local_nh.param<bool>("use_p2p", use_p2p, use_p2p);
+  local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
@@ -81,6 +82,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     }
   } else if (use_p2p) {
     local_nh.param<std::string>("document_root", cs.p2p_document_root, get_current_dir_name());
+  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID") && && local_nh.hasParam("CLIENT_ID")) {
+    local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
+    local_nh.getParam("ROOM_ID", cs.ayame_room_id);
+    local_nh.getParam("CLIENT_ID", cs.ayame_client_id);
   } else {
     exit(1);
   }
@@ -89,7 +94,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 #else
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_sora, 
+                        bool &use_p2p, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   CLI::App app("Momo - WebRTC ネイティブクライアント");
@@ -115,10 +120,15 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
 
   p2p_app
       ->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")
       ->check(CLI::ExistingDirectory);
+
+  ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
+  ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
@@ -180,7 +190,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     exit(0);
   }
 
-  if (!p2p_app->parsed() && !sora_app->parsed())
+  if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
   {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -192,6 +202,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   if (p2p_app->parsed()) {
     use_p2p = true;
+  }
+
+  if (ayame_app->parsed()) {
+    use_ayame = true;
   }
 }
 
