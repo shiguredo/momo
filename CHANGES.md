@@ -15,6 +15,8 @@
     - 720p 30fps や 1080p 20fps を可能にする
 - [UPDATE] libwebrtc を M75 に上げる
     - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+- [UPDATE] libwebrtc を M76 に上げる
+    - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
 - [UPDATE] Unified Plan に対応する
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
 - [UPDATE] CLI11 を v1.8.0 にアップデートする
@@ -36,8 +38,6 @@
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する
-- [UPDATE] libwebrtc を M76 に上げる
-    - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
 
 ## 19.02.0
 
