@@ -157,7 +157,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     component_in = encoder_;
   }
   
-  format_in->es->video.frame_rate.num = framerate_;
+  format_in->es->video.frame_rate.num = 0;
   format_in->es->video.frame_rate.den = 1;
 
   if (mmal_port_format_commit(component_in->input[0]) != MMAL_SUCCESS)
@@ -196,7 +196,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   video_profile.hdr.size = sizeof(video_profile);
 
   video_profile.profile[0].profile = MMAL_VIDEO_PROFILE_H264_HIGH;
-  video_profile.profile[0].level = MMAL_VIDEO_LEVEL_H264_4;
+  video_profile.profile[0].level = MMAL_VIDEO_LEVEL_H264_42;
 
   if (mmal_port_parameter_set(encoder_->output[0], &video_profile.hdr) != MMAL_SUCCESS)
   {
@@ -216,7 +216,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   if (component_in->input[0]->buffer_size < component_in->input[0]->buffer_size_min)
     component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_min;
   if (use_mjpeg_)
-    component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_recommended * 6;
+    component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_recommended * 8;
   component_in->input[0]->buffer_num = 1;
   component_in->input[0]->userdata = (MMAL_PORT_USERDATA_T *)this;
 
@@ -231,7 +231,7 @@ int32_t MMALH264Encoder::MMALConfigure()
 
   if (use_mjpeg_)
   {
-    if (mmal_connection_create(&conn_, decoder_->output[0], encoder_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING) != MMAL_SUCCESS)
+    if (mmal_connection_create(&conn_, decoder_->output[0], encoder_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_DIRECT) != MMAL_SUCCESS)
     {
       RTC_LOG(LS_ERROR) << "Failed to connect decoder to encoder";
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -246,7 +246,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   encoder_->output[0]->buffer_size = encoder_->output[0]->buffer_size_recommended * 4;
   if (encoder_->output[0]->buffer_size < encoder_->output[0]->buffer_size_min)
     encoder_->output[0]->buffer_size = encoder_->output[0]->buffer_size_min;
-  encoder_->output[0]->buffer_num = 8;
+  encoder_->output[0]->buffer_num = 12;
   encoder_->output[0]->userdata = (MMAL_PORT_USERDATA_T *)this;
 
   encoded_image_buffer_.reset(new uint8_t[encoder_->output[0]->buffer_size]);
@@ -285,6 +285,9 @@ void MMALH264Encoder::MMALRelease()
     {
       RTC_LOG(LS_ERROR) << "Failed to disable input port";
     }
+    mmal_port_flush(decoder_->input[0]);
+    mmal_port_flush(decoder_->output[0]);
+    mmal_port_flush(decoder_->control); 
   }
   if (encoder_->input[0]->is_enabled)
   {
@@ -292,6 +295,8 @@ void MMALH264Encoder::MMALRelease()
     {
       RTC_LOG(LS_ERROR) << "Failed to disable input port";
     }
+    mmal_port_flush(encoder_->input[0]);
+    mmal_port_flush(encoder_->control); 
   }
   if (encoder_->output[0]->is_enabled)
   {
@@ -299,10 +304,25 @@ void MMALH264Encoder::MMALRelease()
     {
       RTC_LOG(LS_ERROR) << "Failed to disable output port";
     }
+    mmal_port_flush(encoder_->output[0]);
   }
   if (conn_)
   {
+    RTC_LOG(LS_ERROR) << "mmal_connection_disable Start";
     mmal_connection_disable(conn_);
+    mmal_connection_destroy(conn_);
+    conn_ = nullptr;
+    RTC_LOG(LS_ERROR) << "mmal_connection_disable End";
+  }
+  if (encoder_)
+  {
+    mmal_component_destroy(encoder_);
+    encoder_ = nullptr;
+  }
+  if (decoder_)
+  {
+    mmal_component_destroy(decoder_);
+    decoder_ = nullptr;
   }
   if (queue_ != nullptr)
   {
@@ -318,29 +338,10 @@ void MMALH264Encoder::MMALRelease()
     }
     if (pool_out_ != nullptr)
     {
-      if (!vcos_verify(mmal_queue_length(pool_out_->queue) == pool_out_->headers_num))
-      {
-        RTC_LOG(LS_ERROR) << "Failed to release all output buffers";
-      }
       mmal_pool_destroy(pool_out_);
       pool_out_ = nullptr;
     }
     queue_ = nullptr;
-  }
-  if (encoder_)
-  {
-    mmal_component_destroy(encoder_);
-    encoder_ = nullptr;
-  }
-  if (decoder_)
-  {
-    mmal_component_destroy(decoder_);
-    decoder_ = nullptr;
-  }
-  if (conn_)
-  {
-    mmal_connection_destroy(conn_);
-    conn_ = nullptr;
   }
   RTC_LOG(LS_ERROR) << __FUNCTION__ << " End";
 }
