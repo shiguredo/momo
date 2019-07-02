@@ -36,6 +36,8 @@
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する
+- [UPDATE] libwebrtc を M76 に上げる
+    - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
 
 ## 19.02.0
 
