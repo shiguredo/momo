@@ -95,6 +95,7 @@ workflows:
           filters:
             branches:
               only:
+                - feature/upgrade-m76
                 - develop
     jobs:
       - build_macos
