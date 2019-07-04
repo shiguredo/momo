@@ -31,6 +31,7 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
 - [ADD] WebRTC Signaling Server Ayame に対応しました
     - https://github.com/OpenAyame/ayame
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする

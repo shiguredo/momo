@@ -233,8 +233,8 @@ void AyameWebsocketClient::doRegister()
 {
     json json_message = {
         {"type", "register"},
-        {"client_id", conn_settings_.ayame_client_id},
-        {"room_id", conn_settings_.ayame_room_id}
+        {"clientId", conn_settings_.ayame_client_id},
+        {"roomId", conn_settings_.ayame_room_id}
     };
     ws_->sendText(json_message.dump());
 }
