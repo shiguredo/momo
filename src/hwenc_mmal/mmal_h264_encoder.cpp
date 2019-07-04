@@ -36,8 +36,8 @@ struct nal_entry
   size_t size;
 };
 
-const int kLowH264QpThreshold = 24;
-const int kHighH264QpThreshold = 37;
+const int kLowH264QpThreshold = 34;
+const int kHighH264QpThreshold = 40;
 
 int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
 {
@@ -161,7 +161,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     format_resize->es->video.crop.y = 0;
     format_resize->es->video.crop.width = width_;
     format_resize->es->video.crop.height = height_;
-    format_resize->es->video.frame_rate.num = 0;
+    format_resize->es->video.frame_rate.num = framerate_;
     format_resize->es->video.frame_rate.den = 1;
     if (mmal_port_format_commit(resizer_->output[0]) != MMAL_SUCCESS)
     {
@@ -183,7 +183,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     component_in = encoder_;
   }
   
-  format_in->es->video.frame_rate.num = 0;
+  format_in->es->video.frame_rate.num = framerate_;
   format_in->es->video.frame_rate.den = 1;
 
   if (mmal_port_format_commit(component_in->input[0]) != MMAL_SUCCESS)
@@ -197,6 +197,8 @@ int32_t MMALH264Encoder::MMALConfigure()
   mmal_format_copy(format_out, format_in);
   encoder_->output[0]->format->type = MMAL_ES_TYPE_VIDEO;
   encoder_->output[0]->format->encoding = MMAL_ENCODING_H264;
+  encoder_->output[0]->format->es->video.frame_rate.num = framerate_;
+  encoder_->output[0]->format->es->video.frame_rate.den = 1;
   encoder_->output[0]->format->bitrate = bitrate_adjuster_.GetAdjustedBitrateBps();
 
   if (mmal_port_format_commit(encoder_->output[0]) != MMAL_SUCCESS)
@@ -751,6 +753,8 @@ int32_t MMALH264Encoder::SendFrame(unsigned char *buffer, size_t size)
 
   h264_bitstream_parser_.ParseBitstream(buffer, size);
   h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
+  RTC_LOG(LS_ERROR) << __FUNCTION__ 
+                    << " last slice qp:" << encoded_image_.qp_;
 
   webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(encoded_image_, &codec_specific, &frag_header);
   if (result.error != webrtc::EncodedImageCallback::Result::OK)
