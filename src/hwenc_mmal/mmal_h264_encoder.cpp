@@ -49,8 +49,10 @@ int I420DataSize(const webrtc::I420BufferInterface &frame_buffer)
 MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
     : callback_(nullptr),
       decoder_(nullptr),
+      resizer_(nullptr),
       encoder_(nullptr),
-      conn_(nullptr),
+      conn1_(nullptr),
+      conn2_(nullptr),
       queue_(nullptr),
       pool_out_(nullptr),
       bitrate_adjuster_(.5, .95),
@@ -139,9 +141,33 @@ int32_t MMALH264Encoder::MMALConfigure()
     format_in = decoder_->input[0]->format;
     format_in->type = MMAL_ES_TYPE_VIDEO;
     format_in->encoding = MMAL_ENCODING_MJPEG;
-    format_in->es->video.width = width_;
-    format_in->es->video.height = height_;
+    format_in->es->video.width = raw_width_;
+    format_in->es->video.height = raw_height_;
     component_in = decoder_;
+
+    if (mmal_component_create("vc.ril.resize", &resizer_) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to create mmal resizer";
+      Release();
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    MMAL_ES_FORMAT_T *format_resize;
+    format_resize = resizer_->output[0]->format;
+    mmal_format_copy(format_resize, resizer_->input[0]->format);
+    format_resize->es->video.width = stride_width;
+    format_resize->es->video.height = stride_height;
+    format_resize->es->video.crop.x = 0;
+    format_resize->es->video.crop.y = 0;
+    format_resize->es->video.crop.width = width_;
+    format_resize->es->video.crop.height = height_;
+    format_resize->es->video.frame_rate.num = 0;
+    format_resize->es->video.frame_rate.den = 1;
+    if (mmal_port_format_commit(resizer_->output[0]) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to commit output port format";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   }
   else
   {
@@ -204,6 +230,12 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_INTRAPERIOD, 0) != MMAL_SUCCESS)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to set intra period";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   if (mmal_port_parameter_set_boolean(encoder_->output[0], MMAL_PARAMETER_VIDEO_ENCODE_INLINE_HEADER, MMAL_TRUE) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set enable inline header";
@@ -231,14 +263,39 @@ int32_t MMALH264Encoder::MMALConfigure()
 
   if (use_mjpeg_)
   {
-    if (mmal_connection_create(&conn_, decoder_->output[0], encoder_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_DIRECT) != MMAL_SUCCESS)
+    if (mmal_connection_create(&conn1_, decoder_->output[0], resizer_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT) != MMAL_SUCCESS)
     {
-      RTC_LOG(LS_ERROR) << "Failed to connect decoder to encoder";
+      RTC_LOG(LS_ERROR) << "Failed to connect decoder to resizer";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    if (mmal_connection_enable(conn_) != MMAL_SUCCESS)
+
+    if (mmal_connection_create(&conn2_, resizer_->output[0], encoder_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING) != MMAL_SUCCESS)
     {
-      RTC_LOG(LS_ERROR) << "Failed to enable connection decoder to encoder";
+      RTC_LOG(LS_ERROR) << "Failed to connect resizer to encoder";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    if (mmal_component_enable(resizer_) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to enable component";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    if (mmal_component_enable(decoder_) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to enable component";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    if (mmal_connection_enable(conn1_) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to enable connection decoder to resizer";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    if (mmal_connection_enable(conn2_) != MMAL_SUCCESS)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to enable connection resizer to encoder";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
@@ -288,6 +345,9 @@ void MMALH264Encoder::MMALRelease()
     mmal_port_flush(decoder_->input[0]);
     mmal_port_flush(decoder_->output[0]);
     mmal_port_flush(decoder_->control); 
+    mmal_port_flush(resizer_->input[0]);
+    mmal_port_flush(resizer_->output[0]);
+    mmal_port_flush(resizer_->control); 
   }
   if (encoder_->input[0]->is_enabled)
   {
@@ -306,12 +366,20 @@ void MMALH264Encoder::MMALRelease()
     }
     mmal_port_flush(encoder_->output[0]);
   }
-  if (conn_)
+  if (conn1_)
   {
     RTC_LOG(LS_ERROR) << "mmal_connection_disable Start";
-    mmal_connection_disable(conn_);
-    mmal_connection_destroy(conn_);
-    conn_ = nullptr;
+    mmal_connection_disable(conn1_);
+    mmal_connection_destroy(conn1_);
+    conn1_ = nullptr;
+    RTC_LOG(LS_ERROR) << "mmal_connection_disable End";
+  }
+  if (conn2_)
+  {
+    RTC_LOG(LS_ERROR) << "mmal_connection_disable Start";
+    mmal_connection_disable(conn2_);
+    mmal_connection_destroy(conn2_);
+    conn2_ = nullptr;
     RTC_LOG(LS_ERROR) << "mmal_connection_disable End";
   }
   if (encoder_)
@@ -321,6 +389,8 @@ void MMALH264Encoder::MMALRelease()
   }
   if (decoder_)
   {
+    mmal_component_destroy(resizer_);
+    resizer_ = nullptr;
     mmal_component_destroy(decoder_);
     decoder_ = nullptr;
   }
@@ -495,17 +565,7 @@ int32_t MMALH264Encoder::Encode(
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer = input_frame.video_frame_buffer();
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative)
   {
-    NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
-    if (frame_buffer->width() == native_buffer->raw_width() &&
-        frame_buffer->height() == native_buffer->raw_height())
-    {
-      use_mjpeg_ = true;
-    }
-    else
-    {
-      use_mjpeg_ = false;
-    }
-    
+    use_mjpeg_ = true;
   }
   else
   {
@@ -522,6 +582,12 @@ int32_t MMALH264Encoder::Encode(
                      << frame_buffer->width() << "x" << frame_buffer->height()
                      << " framerate:" << framerate_;
     MMALRelease();
+    if (use_mjpeg_)
+    {
+      NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
+      raw_width_ = native_buffer->raw_width();
+      raw_height_ = native_buffer->raw_height();
+    }
     if (MMALConfigure() != WEBRTC_VIDEO_CODEC_OK)
     {
       RTC_LOG(LS_ERROR) << "Failed to MMALConfigure";
