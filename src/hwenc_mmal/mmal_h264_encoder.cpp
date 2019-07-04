@@ -305,7 +305,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   encoder_->output[0]->buffer_size = encoder_->output[0]->buffer_size_recommended * 4;
   if (encoder_->output[0]->buffer_size < encoder_->output[0]->buffer_size_min)
     encoder_->output[0]->buffer_size = encoder_->output[0]->buffer_size_min;
-  encoder_->output[0]->buffer_num = 12;
+  encoder_->output[0]->buffer_num = 4;
   encoder_->output[0]->userdata = (MMAL_PORT_USERDATA_T *)this;
 
   encoded_image_buffer_.reset(new uint8_t[encoder_->output[0]->buffer_size]);
