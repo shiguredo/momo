@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.07.0
+
 - [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
     - 720p 30fps や 1080p 20fps を可能にする
 - [UPDATE] libwebrtc を M75 に上げる
