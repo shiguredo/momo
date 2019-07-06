@@ -85,5 +85,3 @@ $ make ubuntu-16.04_x86_64_ros
 ```
 
 うまくいかない場合は `make ubuntu-16.04_x86_64_ros.clean && make ubuntu-16.04_x86_64_ros` を試してみてください。それでもだめな場合は issues にお願いします。
-
-

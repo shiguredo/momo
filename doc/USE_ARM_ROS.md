@@ -13,10 +13,10 @@
 
 ### Momo のビルド
 
-[BUILD.md](./BUILD.md)を参考にしていただき、build ディレクトリ以下で make armv7_ros と打つことで Momo の ARM ROS 向けバイナリが生成されます。
+[BUILD.md](./BUILD.md)を確認してUbuntu 16.04 (armv7) 向け ROS 対応パッケージを作成してください。
 
 ```shell
-$ make armv7_ros
+$ make ubuntu-16.04_armv7_ros.package
 ```
 
 #### Raspberry Pi への配置

@@ -8,26 +8,14 @@ ROS 環境を用意しておきます。
 
 - ROS Kinetic のインストール方法: http://wiki.ros.org/kinetic/Installation/Ubuntu
 
-
 ## Momo の準備
 
 ### Momo のビルド
 
-https://github.com/shiguredo/momo/releases にて ROS 版 Momo のバイナリをダウンロードしてください。
+[BUILD.md](./BUILD.md)を確認して Ubuntu 16.04 (x86_64) 向け ROS 対応バイナリをビルドしてください。
 
-必要なライブラリをインストールしてご利用ください。
-
-#### 解凍後の構成
-
-```
-$ tree
-.
-├── html
-│   ├── p2p.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
+```shell
+$ make ubuntu-16.04_x86_64_ros
 ```
 
 #### ライブラリのインストール
