@@ -117,7 +117,6 @@ int32_t MMALH264Encoder::Release()
 
 int32_t MMALH264Encoder::MMALConfigure()
 {
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
   int32_t stride_width = VCOS_ALIGN_UP(width_, 32);
   int32_t stride_height = VCOS_ALIGN_UP(height_, 16);
 
@@ -254,8 +253,6 @@ int32_t MMALH264Encoder::MMALConfigure()
   component_in->input[0]->buffer_num = 1;
   component_in->input[0]->userdata = (MMAL_PORT_USERDATA_T *)this;
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " input buffer_size:" << component_in->input[0]->buffer_size;
-
   if (mmal_port_enable(component_in->input[0], MMALInputCallbackFunction) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to enable input port";
@@ -329,13 +326,11 @@ int32_t MMALH264Encoder::MMALConfigure()
   stride_width_ = stride_width;
   stride_height_ = stride_height;
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 void MMALH264Encoder::MMALRelease()
 {
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
   if (!encoder_)
     return;
   if (decoder_ && decoder_->input[0]->is_enabled)
@@ -370,19 +365,15 @@ void MMALH264Encoder::MMALRelease()
   }
   if (conn1_)
   {
-    RTC_LOG(LS_ERROR) << "mmal_connection_disable Start";
     mmal_connection_disable(conn1_);
     mmal_connection_destroy(conn1_);
     conn1_ = nullptr;
-    RTC_LOG(LS_ERROR) << "mmal_connection_disable End";
   }
   if (conn2_)
   {
-    RTC_LOG(LS_ERROR) << "mmal_connection_disable Start";
     mmal_connection_disable(conn2_);
     mmal_connection_destroy(conn2_);
     conn2_ = nullptr;
-    RTC_LOG(LS_ERROR) << "mmal_connection_disable End";
   }
   if (encoder_)
   {
@@ -415,7 +406,6 @@ void MMALH264Encoder::MMALRelease()
     }
     queue_ = nullptr;
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " End";
 }
 
 void MMALH264Encoder::MMALInputCallbackFunction(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
@@ -647,7 +637,6 @@ int32_t MMALH264Encoder::Encode(
     if (use_mjpeg_)
     {
       NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Set NativeBuffer Start length:" << native_buffer->length();
       memcpy(buffer->data,
              native_buffer->Data(),
              native_buffer->length());
@@ -657,7 +646,6 @@ int32_t MMALH264Encoder::Encode(
         RTC_LOG(LS_ERROR) << "Failed to send input native buffer";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Set NativeBuffer End";
     }
     else
     {
@@ -753,8 +741,8 @@ int32_t MMALH264Encoder::SendFrame(unsigned char *buffer, size_t size)
 
   h264_bitstream_parser_.ParseBitstream(buffer, size);
   h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
-  RTC_LOG(LS_ERROR) << __FUNCTION__ 
-                    << " last slice qp:" << encoded_image_.qp_;
+  RTC_LOG(LS_INFO) << __FUNCTION__ 
+                   << " last slice qp:" << encoded_image_.qp_;
 
   webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(encoded_image_, &codec_specific, &frag_header);
   if (result.error != webrtc::EncodedImageCallback::Result::OK)
