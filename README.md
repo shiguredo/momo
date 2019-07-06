@@ -57,9 +57,9 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
 
-### ARM ROS 版
+### ROS ノード ARM 対応版
 
-ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
+ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
 
 ## ビルドする
 
@@ -108,10 +108,6 @@ https://discord.gg/gmEuZye
 ### 有料サポートについて
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
-
-## Windows 版対応について
-
-WebRTC Native Client Momo の Windows 版対応についてはソースコードを販売予定です。
 
 ## H.264 のライセンス費用について
 
