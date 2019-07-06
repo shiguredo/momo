@@ -8,13 +8,16 @@
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
-特に Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
 
-また [ROS](http://www.ros.org/) ノードとしても利用可能です。
+また、macOS 環境でも macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+
+[ROS](http://www.ros.org/) ノードとしても利用可能です。
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、
+継続的に開発を行うことで、ブラウザやスマートフォン以外からの WebRTC 利用を知ってもらうプロジェクトです。
 
 詳細については下記をご確認ください。
 
