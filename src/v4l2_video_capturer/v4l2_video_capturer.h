@@ -25,10 +25,16 @@
 
 class V4L2VideoCapture : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(size_t width,
-                             size_t height,
-                             size_t target_fps,
-                             size_t capture_device_index);
+  static rtc::scoped_refptr<V4L2VideoCapture> Create(
+      size_t width,
+      size_t height,
+      size_t target_fps);
+  static rtc::scoped_refptr<V4L2VideoCapture> Create(
+      webrtc::VideoCaptureModule::DeviceInfo* device_info,
+      size_t width,
+      size_t height,
+      size_t target_fps,
+      size_t capture_device_index);
   V4L2VideoCapture();
   ~V4L2VideoCapture();
   int32_t Init(const char* deviceUniqueId);

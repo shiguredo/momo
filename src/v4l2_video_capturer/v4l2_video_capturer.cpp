@@ -36,18 +36,39 @@
 
 rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(size_t width,
                                                               size_t height,
-                                                              size_t target_fps,
-                                                              size_t capture_device_index) {
-  
+                                                              size_t target_fps) {
+  rtc::scoped_refptr<V4L2VideoCapture> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
+  if (!device_info) {
+    RTC_LOG(LS_ERROR) << "Failed to CreateDeviceInfo";
+    return nullptr;
+  }
+  int num_devices = device_info->NumberOfDevices();
+  for (int i = 0; i < num_devices; ++i) {
+    capturer = Create(device_info.get(), width, height, target_fps, i);
+    if (capturer) {
+      RTC_LOG(LS_INFO) << "Get Capture";
+      return capturer;
+    }
+  }
+  RTC_LOG(LS_ERROR) << "Failed to create V4L2VideoCapture";
+  return nullptr;
+}
 
+rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
+    webrtc::VideoCaptureModule::DeviceInfo* device_info,
+    size_t width,
+    size_t height,
+    size_t target_fps,
+    size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
   if (device_info->GetDeviceName(static_cast<uint32_t>(capture_device_index),
                                  device_name, sizeof(device_name), unique_name,
                                  sizeof(unique_name)) != 0)
   {
+    RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }                          
   rtc::scoped_refptr<V4L2VideoCapture> v4l2_capturer(
