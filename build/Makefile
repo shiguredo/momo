@@ -17,6 +17,7 @@ help:
 	@echo "[オプション]:"
 	@echo "  - NOCACHE=1"
 	@echo "  - NOMOUNT=1"
+	@echo "  - NOTTY=1"
 	@echo ""
 	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
 	@echo ""
@@ -25,8 +26,7 @@ help:
 	@echo "make <パッケージ名>.edit は、WebRTC のソースを変更して、カスタマイズされた WebRTC を使って momo バイナリを生成するための機能です。"
 	@echo "詳細は doc/PATCH_WEBRTC.md を参照して下さい。"
 	@echo ""
-	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージを削除します。"
-	@echo "ただしビルドキャッシュは削除しないため、更に綺麗にしたい場合は doc/CACHE.md を参照して下さい。"
+	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージやビルドキャッシュを削除します。"
 	@echo ""
 	@echo "[オプション] は、make NOCACHE=1 <パッケージ名> のように指定します。"
 	@echo ""
@@ -35,6 +35,9 @@ help:
 	@echo ""
 	@echo "NOMOUNT=1 オプションは、マウントを利用しないモードで動作させることができます。"
 	@echo "何らかの理由でマウントがうまく動作しない場合に使って下さい。"
+	@echo ""
+	@echo "NOTTY=1 オプションは、tty を利用しないモードで動作させることができます。"
+	@echo "具体的には docker build コマンドに --progress=plain を指定します。"
 	@echo ""
 
 WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
@@ -47,6 +50,10 @@ ifeq ($(NOMOUNT),1)
   DOCKER_MOUNT = nomount
 else
   DOCKER_MOUNT = mount
+endif
+
+ifeq ($(NOTTY),1)
+  DOCKER_BUILD_FLAGS += --progress=plain
 endif
 
 # パッケージ名からルールを自動生成する
@@ -93,6 +100,7 @@ $(1).prepare:
 $(1).clean:
 	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
 	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
+	docker builder prune -f --filter=label=jp.shiguredo.momo=$(1)
 
 endef
 
@@ -129,4 +137,4 @@ macos.prepare:
 .PHONY: macos.clean
 macos.clean:
 	make -C macos clean
-	make -C .. clean
+	make -C .. PACKAGE_NAME=macos clean

@@ -1,8 +1,8 @@
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index 8d46071..e77de9c 100644
+index 051b3ed..4b8eecd 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
-@@ -86,7 +86,11 @@ if (is_win && !is_msan && current_cpu != "arm64") {
+@@ -89,7 +89,11 @@ if (is_win && !is_msan && current_cpu != "arm64") {
        }
      } else if (current_cpu == "arm") {
        if (is_linux || is_android) {
@@ -29,7 +29,7 @@ index 4c17124..a0d7bf7 100644
  #endif
  
 diff --git a/third_party/opus/BUILD.gn b/third_party/opus/BUILD.gn
-index b54f856..a5c7d19 100644
+index b54f856..4c7d262 100644
 --- a/third_party/opus/BUILD.gn
 +++ b/third_party/opus/BUILD.gn
 @@ -21,7 +21,7 @@ use_opus_x86_optimization =
@@ -37,7 +37,7 @@ index b54f856..a5c7d19 100644
  # Based on the conditions in celt/arm/armcpu.c:
  # defined(_MSC_VER) || defined(__linux__).
 -use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux)
-+use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux) && (arm_version >= 7)
++use_opus_arm_rtcd = current_cpu == "arm" && arm_version >= 7 && (is_win || is_android || is_linux)
  
  config("opus_config") {
    include_dirs = [ "src/include" ]

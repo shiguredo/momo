@@ -9,14 +9,18 @@
 #include <string>
 #include <csignal>
 
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
 #else
+#ifdef __APPLE__
+#include "mac_helper/mac_capturer.h"
+#else
 #include "rtc/device_video_capturer.h"
+#endif
 #endif
 
 #include "connection_settings.h"
@@ -24,6 +28,7 @@
 #include "rtc/manager.h"
 #include "sora/sora_server.h"
 #include "p2p/p2p_server.h"
+#include "ayame/ayame_server.h"
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
@@ -33,10 +38,11 @@ int main(int argc, char* argv[])
 
   bool is_daemon = false;
   bool use_p2p = false;
+  bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_sora, log_level, cs);
+  Util::parseArgs(argc, argv, is_daemon, use_p2p, use_ayame, use_sora, log_level, cs);
 
 #ifndef _MSC_VER
   if (is_daemon)
@@ -57,7 +63,8 @@ int main(int argc, char* argv[])
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<ROSVideoCapture> capturer(new ROSVideoCapture(cs));
+  rtc::scoped_refptr<ROSVideoCapture> capturer(
+    new rtc::RefCountedObject<ROSVideoCapture>(cs));
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize, 10));
@@ -68,8 +75,18 @@ int main(int argc, char* argv[])
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  std::unique_ptr<rtc::VideoSourceInterface<webrtc::VideoFrame>> capturer =
+#ifdef __APPLE__
+  rtc::scoped_refptr<MacCapturer> capturer =
+          MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, 0);
+#else
+  rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
+#endif
+  if (!capturer)
+  {
+    std::cerr << "failed to create capturer" << std::endl;
+    return 1;
+  }
 #endif
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(cs, std::move(capturer)));
@@ -90,6 +107,11 @@ int main(int argc, char* argv[])
       if (use_p2p) {
         const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.port)};
         std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.p2p_document_root), rtc_manager.get(), cs)->run();
+      }
+
+      if (use_ayame) {
+        const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("127.0.0.1"), static_cast<unsigned short>(cs.port)};
+        std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
       }
 
       ioc.run();

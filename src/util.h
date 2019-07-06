@@ -4,14 +4,14 @@
 #include <boost/beast/core/string.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/message.hpp>
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
 #include "connection_settings.h"
 
 class Util
 {
   public:
     static void parseArgs(int argc, char *argv[], bool &is_daemon,
-                          bool &use_p2p, bool &use_sora,
+                          bool &use_p2p, bool &use_ayame, bool &use_sora,
                           int &log_level, ConnectionSettings &cs);
     static std::string generateRundomChars();
     static std::string generateRundomChars(size_t length);

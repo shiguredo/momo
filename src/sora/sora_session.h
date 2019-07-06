@@ -24,7 +24,7 @@
 class SoraSession : public std::enable_shared_from_this<SoraSession>
 {
     boost::asio::ip::tcp::socket socket_;
-    boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+    boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> strand_;
     boost::beast::flat_buffer buffer_;
     boost::beast::http::request<boost::beast::http::string_body> req_;
     std::shared_ptr<void> res_;

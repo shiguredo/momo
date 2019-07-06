@@ -2,7 +2,7 @@
 #define RTC_MESSAGESENDER_H_
 
 #include <string>
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
 
 class RTCMessageSender
 {

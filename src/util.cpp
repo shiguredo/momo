@@ -18,10 +18,10 @@
 #endif
 
 // HWA を効かせる場合は 1 になる
-#if USE_IL_ENCODER
-  #define MOMO_USE_IL_ENCODER 1
+#if USE_MMAL_ENCODER
+  #define MOMO_USE_MMAL_ENCODER 1
 #else
-  #define MOMO_USE_IL_ENCODER 0
+  #define MOMO_USE_MMAL_ENCODER 0
 #endif
 
 // H264 を有効にする場合は 1 になる
@@ -33,81 +33,10 @@
 
 using json = nlohmann::json;
 
-// 列挙した文字列のみを許可するバリデータ
-struct Enum : public CLI::Validator
-{
-  Enum(std::vector<std::string> xs)
-  {
-    std::stringstream out;
-
-    bool first = true;
-    for (auto x : xs)
-    {
-      if (!first)
-      {
-        out << ",";
-      }
-      first = false;
-
-      out << x;
-    }
-    std::string name = out.str();
-
-    tname = "STR in [" + name + "]";
-    func = [xs, name](std::string input) {
-      auto it = std::find(std::begin(xs), std::end(xs), input);
-      if (it == std::end(xs))
-      {
-        return "Value " + input + " not in range [" + name + "]";
-      }
-      return std::string();
-    };
-  }
-};
-
-// JSON Value のみを許可するバリデータ
-struct JsonValue : public CLI::Validator
-{
-  JsonValue()
-  {
-    tname = "JSON Value";
-    func = [](std::string input) {
-      try
-      {
-        json::parse(input);
-        return std::string();
-      }
-      catch (json::parse_error &e)
-      {
-        return "Value " + input + " is not JSON Value";
-      }
-    };
-  }
-};
-
-// ディレクトリが存在するか確認するバリデータ
-struct DirectoryExists : public CLI::Validator {
-  DirectoryExists() {
-    tname = "Directory";
-    func = [](std::string input) {
-      auto path = boost::filesystem::path(input);
-      auto st = boost::filesystem::status(path);
-      if (!boost::filesystem::exists(st)) {
-        return "Path " + input + " not exists";
-      }
-      if (!boost::filesystem::is_directory(st)) {
-        return "Path " + input + " is not directory";
-      }
-
-      return std::string();
-    };
-  }
-};
-
 #if USE_ROS
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_sora, 
+                        bool &use_p2p, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
@@ -120,6 +49,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
 
   local_nh.param<bool>("use_p2p", use_p2p, use_p2p);
+  local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
@@ -152,6 +82,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     }
   } else if (use_p2p) {
     local_nh.param<std::string>("document_root", cs.p2p_document_root, get_current_dir_name());
+  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID") && && local_nh.hasParam("CLIENT_ID")) {
+    local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
+    local_nh.getParam("ROOM_ID", cs.ayame_room_id);
+    local_nh.getParam("CLIENT_ID", cs.ayame_client_id);
   } else {
     exit(1);
   }
@@ -160,7 +94,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 #else
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_sora, 
+                        bool &use_p2p, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   CLI::App app("Momo - WebRTC ネイティブクライアント");
@@ -169,35 +103,68 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-#if MOMO_USE_H264
-  app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9", "H264"}));
-#else
-  app.add_option("--video-codec", cs.video_codec, "ビデオコーデック")->check(Enum({"VP8", "VP9"}));
-#endif
-  app.add_option("--audio-codec", cs.audio_codec, "オーディオコーデック")->check(Enum({"OPUS", "PCMU"}));
-  app.add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")->check(CLI::Range(1, 30000));
-  app.add_option("--audio-bitrate", cs.audio_bitrate, "オーディオのビットレート")->check(CLI::Range(6, 510));
-  app.add_option("--resolution", cs.resolution, "解像度")->check(Enum({"QVGA", "VGA", "HD", "FHD", "4K"}));
+  app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
+              "解像度");
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
-  app.add_option("--priority", cs.priority, "優先設定 (Experimental)")->check(Enum({"BALANCE", "FRAMERATE", "RESOLUTION"}));
-  app.add_option("--port", cs.port, "ポート番号")->check(CLI::Range(0, 65535));
+  app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
+              "優先設定 (Experimental)");
+  app.add_option("--port", cs.port, "ポート番号(デフォルト:8080)")
+      ->check(CLI::Range(0, 65535));
   app.add_flag("--daemon", is_daemon, "デーモン化する");
   app.add_flag("--version", version, "バージョン情報の表示");
-  app.add_option("--log-level", log_level, "ログレベル")->check(CLI::Range(0, 5));
+  auto log_level_map = std::vector<std::pair<std::string, int>>(
+      {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
+  app.add_option("--log-level", log_level, "ログレベル")
+      ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
 
-  p2p_app->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")->check(DirectoryExists());
+  p2p_app
+      ->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")
+      ->check(CLI::ExistingDirectory);
+
+  ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
+  ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+#if MOMO_USE_H264
+  sora_app->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
+                    "ビデオコーデック");
+#else
+  sora_app->add_set("--video-codec", cs.video_codec, {"VP8", "VP9"},
+                    "ビデオコーデック");
+#endif
+  sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
+                    "オーディオコーデック");
+  sora_app
+      ->add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")
+      ->check(CLI::Range(1, 30000));
+  sora_app
+      ->add_option("--audio-bitrate", cs.audio_bitrate,
+                   "オーディオのビットレート")
+      ->check(CLI::Range(6, 510));
 
   // 隠しオプション
+  auto is_json = CLI::Validator(
+      [](std::string input) -> std::string {
+        try {
+          auto _ = json::parse(input);
+          return std::string();
+        } catch (json::parse_error &e) {
+          return "Value " + input + " is not JSON Value";
+        }
+      },
+      "JSON Value");
   std::string sora_metadata;
-  sora_app->add_option("--metadata", sora_metadata, "メタデータ")->group("")->check(JsonValue());
+  sora_app->add_option("--metadata", sora_metadata, "メタデータ")
+      ->group("")
+      ->check(is_json);
 
   try
   {
@@ -219,11 +186,11 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   if (version)
   {
-    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION " USE_IL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_IL_ENCODER) << std::endl;
+    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER) << std::endl;
     exit(0);
   }
 
-  if (!p2p_app->parsed() && !sora_app->parsed())
+  if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
   {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -235,6 +202,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   if (p2p_app->parsed()) {
     use_p2p = true;
+  }
+
+  if (ayame_app->parsed()) {
+    use_ayame = true;
   }
 }
 

@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 
 #include "rtc_base/logging.h"
-#include "rtc_base/logsinks.h"
+#include "rtc_base/log_sinks.h"
 
 class ROSLogSink : public rtc::LogSink
 {

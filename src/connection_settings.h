@@ -5,7 +5,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-#include "api/rtpparameters.h"
+#include "api/rtp_parameters.h"
 
 struct ConnectionSettings
 {
@@ -35,6 +35,10 @@ struct ConnectionSettings
   nlohmann::json sora_metadata;
 
   std::string p2p_document_root;
+
+  std::string ayame_signaling_host;
+  std::string ayame_client_id;
+  std::string ayame_room_id;
 
   int getWidth() {
     if (resolution == "QVGA") {
@@ -84,6 +88,9 @@ struct ConnectionSettings
     os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false") << "\n";
     os << "priority: " << cs.priority << "\n";
     os << "port: " << cs.port << "\n";
+    os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
+    os << "ayame_client_id: " << cs.ayame_client_id << "\n";
+    os << "ayame_room_id: " << cs.ayame_room_id << "\n";
     os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";

@@ -1,7 +1,7 @@
 #ifndef PEERCONNECTIONOBSERVER_H_
 #define PEERCONNECTIONOBSERVER_H_
 
-#include "api/peerconnectioninterface.h"
+#include "api/peer_connection_interface.h"
 
 #include "messagesender.h"
 

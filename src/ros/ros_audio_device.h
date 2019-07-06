@@ -15,9 +15,9 @@
 
 #include "modules/audio_device/audio_device_generic.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/criticalsection.h"
+#include "rtc_base/critical_section.h"
 #include "rtc_base/system/file_wrapper.h"
-#include "rtc_base/timeutils.h"
+#include "rtc_base/time_utils.h"
 
 #include "ros/ros.h"
 #include "audio_common_msgs/AudioData.h"
