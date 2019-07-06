@@ -81,10 +81,14 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
 #endif
       nullptr /* audio_mixer */,
       webrtc::AudioProcessingBuilder().Create());
-
-  _factory = webrtc::CreateModularPeerConnectionFactory(
-        _networkThread.get(), _workerThread.get(), _signalingThread.get(),
-        std::move(media_engine), webrtc::CreateCallFactory(), webrtc::CreateRtcEventLogFactory());
+  webrtc::PeerConnectionFactoryDependencies dependencies;
+  dependencies.network_thread = _networkThread.get();
+  dependencies.worker_thread = _workerThread.get();
+  dependencies.signaling_thread = _signalingThread.get();
+  dependencies.media_engine = std::move(media_engine);
+  dependencies.call_factory = webrtc::CreateCallFactory();
+  dependencies.event_log_factory = webrtc::CreateRtcEventLogFactory();
+  _factory = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   if (!_factory.get())
   {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to initialize PeerConnectionFactory";

@@ -731,8 +731,6 @@ int32_t MMALH264Encoder::SendFrame(unsigned char *buffer, size_t size)
   {
     frag_header.fragmentationOffset[i] = nals[i].offset;
     frag_header.fragmentationLength[i] = nals[i].size;
-    frag_header.fragmentationPlType[i] = 0;
-    frag_header.fragmentationTimeDiff[i] = 0;
   }
 
   webrtc::CodecSpecificInfo codec_specific;

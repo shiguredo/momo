@@ -11,10 +11,14 @@
 
 ## develop
 
+## 19.07.0
+
 - [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
     - 720p 30fps や 1080p 20fps を可能にする
 - [UPDATE] libwebrtc を M75 に上げる
     - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+- [UPDATE] libwebrtc を M76 に上げる
+    - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
 - [UPDATE] Unified Plan に対応する
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
 - [UPDATE] CLI11 を v1.8.0 にアップデートする
@@ -29,6 +33,9 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+- [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
+- [ADD] WebRTC Signaling Server Ayame に対応しました
+    - https://github.com/OpenAyame/ayame
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
 - [ADD] Circle CI で macOS 版を毎週日曜日 22:00 に自動ビルドする
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する

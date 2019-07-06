@@ -8,13 +8,16 @@
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
-特に Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
 
-また [ROS](http://www.ros.org/) ノードとしても利用可能です。
+また、macOS 環境でも macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+
+[ROS](http://www.ros.org/) ノードとしても利用可能です。
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、継続的に開発を行うことで、ブラウザ以外での WebRTC 利用を推進していくプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、
+継続的に開発を行うことで、ブラウザやスマートフォン以外からの WebRTC 利用を知ってもらうプロジェクトです。
 
 詳細については下記をご確認ください。
 
@@ -53,23 +56,31 @@ H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-## ROS ノードとして使ってみる
+### ROS ノードとして使ってみる
+
+**自前でのビルドが必要になります**
 
 Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
 
-### ARM ROS 版
+###  ARM 対応版 ROS ノードとして使ってみる
 
-ARM ROS 版 Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
+**自前でのビルドが必要になります**
+
+ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
 
 ## ビルドする
 
-Linux 版 Momo のビルドに挑戦したい人は [BUILD.md](doc/BUILD.md) をお読みください。
+Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください。
 
 ### macOS 版 Momo のビルドする
 
 macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
 macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
+
+## パッケージを作成する
+
+パッケージ作成に挑戦したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
 ## ライセンス
 
@@ -109,14 +120,14 @@ https://discord.gg/gmEuZye
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
-## Windows 版対応について
-
-WebRTC Native Client Momo の Windows 版対応についてはソースコードを販売予定です。
-
 ## H.264 のライセンス費用について
 
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
     - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+- NVIDIA Jetson Nano のハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
+    - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
+- Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要
+    - [QuickSync \- H\.264 patent licensing fees](https://software.intel.com/en-us/forums/intel-media-sdk/topic/494720)
 
 ## 利用例
 
