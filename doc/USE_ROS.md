@@ -11,7 +11,7 @@ ROS 環境を用意しておきます。
 
 ## Momo の準備
 
-### Momo のダウンロード
+### Momo のビルド
 
 https://github.com/shiguredo/momo/releases にて ROS 版 Momo のバイナリをダウンロードしてください。
 

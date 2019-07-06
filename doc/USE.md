@@ -1,8 +1,8 @@
 # Momo を使ってみる
 
-**Linux 版 Raspberry Pi 向けバイナリのみ提供しています**
+**バイナリの提供は Raspberry Pi 向けのみのため、それ以外を利用する場合は自前でのビルドをお願いします。**
 
-https://github.com/shiguredo/momo/releases にて利用したい環境のバイナリをダウンロードしてください。
+https://github.com/shiguredo/momo/releases にてバイナリをダウンロードしてください。
 
 必要なライブラリをインストールしてご利用ください。
 

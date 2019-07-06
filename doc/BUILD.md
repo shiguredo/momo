@@ -15,7 +15,8 @@ Raspbian/Ubuntu をターゲットにビルドする際には Docker 18.09 以�
 
 Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
 
-また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
+また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、
+マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
 
 ## Raspbian June 2018 (armv6) 向けバイナリを作成する
 
@@ -59,3 +60,30 @@ $ make ubuntu-18.04_x86_64
 ```
 
 うまくいかない場合は `make ubuntu-18.04_x86_64.clean && make ubuntu-18.04_x86_64` を試してみてください。それでもだめな場合は issues にお願いします。
+
+
+ubuntu-16.04_armv7_ros
+
+
+## Ubuntu 16.04 (armv7) 向け ROS 対応バイナリを作成する
+
+build ディレクトリ以下で make ubuntu-16.04_armv7_ros と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+
+```shell
+$ make ubuntu-16.04_armv7_ros
+```
+
+うまくいかない場合は `make ubuntu-16.04_armv7_ros.clean && make ubuntu-16.04_armv7_ros` を試してみてください。それでもだめな場合は issues にお願いします。
+
+
+## Ubuntu 16.04 (armv7) 向け ROS 対応バイナリを作成する
+
+build ディレクトリ以下で make ubuntu-16.04_x86_64_ros と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+
+```shell
+$ make ubuntu-16.04_x86_64_ros
+```
+
+うまくいかない場合は `make ubuntu-16.04_x86_64_ros.clean && make ubuntu-16.04_x86_64_ros` を試してみてください。それでもだめな場合は issues にお願いします。
+
+
