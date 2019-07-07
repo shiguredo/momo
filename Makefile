@@ -11,7 +11,7 @@ include VERSION
 #   有効な値は linux, macos
 #
 # TARGET_OS_LINUX: TARGET_OS が linux の場合の詳細な OS の情報
-#   有効な値は raspbian-stretch, ubuntu-16.04, ubuntu-18.04
+#   有効な値は raspbian-buster, ubuntu-16.04, ubuntu-18.04
 #
 # TARGET_ARCH: ビルド対象の動作する CPU
 #   有効な値は x86_64, arm
@@ -44,27 +44,27 @@ include VERSION
 #
 # MOMO_LDFLAGS: C リンカーに追加で渡すフラグ。サニタイズフラグや追加のリンクオブジェクトを入れることを想定している。
 
-ifeq ($(PACKAGE_NAME),raspbian-stretch_armv6)
+ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   TARGET_OS ?= linux
-  TARGET_OS_LINUX ?= raspbian-stretch
+  TARGET_OS_LINUX ?= raspbian-buster
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv6
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-stretch_armv6
+  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
   SYSROOT ?= /root/rootfs
-else ifeq ($(PACKAGE_NAME),raspbian-stretch_armv7)
+else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   TARGET_OS ?= linux
-  TARGET_OS_LINUX ?= raspbian-stretch
+  TARGET_OS_LINUX ?= raspbian-buster
   TARGET_ARCH ?= arm
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-stretch_armv7
+  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_OS ?= linux
@@ -263,7 +263,7 @@ ifeq ($(TARGET_OS),linux)
 
       # ilclient の設定
       ifeq ($(USE_MMAL_ENCODER),1)
-        ifeq ($(TARGET_OS_LINUX),raspbian-stretch)
+        ifeq ($(TARGET_OS_LINUX),raspbian-buster)
           VC_PATH = $(SYSROOT)/opt/vc
         else
           VC_PATH = $(SYSROOT)/usr

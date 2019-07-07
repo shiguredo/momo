@@ -20,25 +20,25 @@ Windows の docker は未検証です。Linux 版、または macOS 版の Docke
 
 ## Raspbian June 2018 (armv6) 向けバイナリを作成する
 
-build ディレクトリ以下で make raspbian-stretch_armv6 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make raspbian-buster_armv6 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make raspbian-stretch_armv6
+$ make raspbian-buster_armv6
 ```
 
-うまくいかない場合は `make raspbian-stretch_armv6.clean && make raspbian-stretch_armv6` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make raspbian-buster_armv6.clean && make raspbian-buster_armv6` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Raspbian June 2018 (armv7) 向けバイナリを作成する
 
 Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
 
-build ディレクトリ以下で make raspbian-stretch_armv7 と打つことで Momo のバイナリが生成されます。
+build ディレクトリ以下で make raspbian-buster_armv7 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make raspbian-stretch_armv7
+$ make raspbian-buster_armv7
 ```
 
-うまくいかない場合は `make raspbian-stretch_armv7.clean && make raspbian-stretch_armv7` を試してみてください。それでもだめな場合は issues にお願いします。
+うまくいかない場合は `make raspbian-buster_armv7.clean && make raspbian-buster_armv7` を試してみてください。それでもだめな場合は issues にお願いします。
 
 ## Ubuntu 18.04 (armv8) 向けバイナリを作成する
 
