@@ -68,9 +68,6 @@ workflows:
     jobs:
       - build_raspbian-buster_armv6
       - build_raspbian-buster_armv7
-      - build_ubuntu-18.04_armv8
-      - build_ubuntu-18.04_x86_64
-      - build_macos
 
   daily_build_workflow:
     triggers:
@@ -82,10 +79,9 @@ workflows:
               only:
                 - develop
     jobs:
-      - build_raspbian-buster_armv6
-      - build_raspbian-buster_armv7
       - build_ubuntu-18.04_armv8
       - build_ubuntu-18.04_x86_64
+
   weekly_build_workflow:
     triggers:
       - schedule:
@@ -98,4 +94,3 @@ workflows:
                 - develop
     jobs:
       - build_macos
-
