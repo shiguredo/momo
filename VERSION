@@ -9,8 +9,8 @@ CLI11_VERSION=1.8.0
 
 # パッケージ名の一覧
 PACKAGE_NAMES= \
-  raspbian-stretch_armv6 \
-  raspbian-stretch_armv7 \
+  raspbian-buster_armv6 \
+  raspbian-buster_armv7 \
   ubuntu-16.04_armv7_ros \
   ubuntu-18.04_armv8 \
   ubuntu-16.04_x86_64_ros \

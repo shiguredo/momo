@@ -38,9 +38,9 @@ H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以
 
 ## 動作環境
 
-- Raspbian Stretch ARMv7
+- Raspbian Buster ARMv7
     - Raspberry Pi 3 B/B+ で動作
-- Raspbian Stretch ARMv6
+- Raspbian Buster ARMv6
     - Raspberry Pi Zero W/WH で動作
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
