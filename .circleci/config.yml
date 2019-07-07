@@ -6,6 +6,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
+          docker_layer_caching: true
           version: 18.09.3
       - run:
           command: apk add make bash git
@@ -19,6 +20,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
+          docker_layer_caching: true
           version: 18.09.3
       - run:
           command: apk add make bash git
@@ -32,6 +34,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
+          docker_layer_caching: true
           version: 18.09.3
       - run:
           command: apk add make bash git
@@ -45,6 +48,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
+          docker_layer_caching: true
           version: 18.09.3
       - run:
           command: apk add make bash git
