@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Raspbian Buster に対応
+
 ## 19.07.0
 
 - [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
