@@ -147,10 +147,10 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
   INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
 
-  ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
+  ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 10, true, false);
   INIT_ERROR(ret < 0, "Failed to setupPlane at output_plane");
 
-  ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
+  ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 10, true, false);
   INIT_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
   ret = encoder_->subscribeEvent(V4L2_EVENT_EOS, 0, 0);
@@ -230,14 +230,6 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
     return false;
   }
 
-  /*if (buffer->flags & Jetson_BUFFER_HEADER_FLAG_CONFIG) {
-    memcpy(encoded_image_buffer_.get(), buffer->data, buffer->length);
-    encoded_buffer_length_ = buffer->length;
-    mmal_buffer_header_release(buffer);
-    RTC_LOG(LS_INFO) << "Jetson_BUFFER_HEADER_FLAG_CONFIG";
-    return;
-  }*/
-
   uint64_t pts = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec
                + v4l2_buf->timestamp.tv_usec;
   RTC_LOG(LS_INFO) << __FUNCTION__ << "pts:" << pts
@@ -274,17 +266,7 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
-  /* if (encoded_buffer_length_ == 0)
-  {*/
-    SendFrame(buffer->planes[0].data, buffer->planes[0].bytesused);
-  /* }
-  else
-  {
-    memcpy(encoded_image_buffer_.get() + encoded_buffer_length_, buffer->planes[0].data, buffer->planes[0].bytesused);
-    encoded_buffer_length_ += buffer->length;
-    SendFrame(encoded_image_buffer_.get(), encoded_buffer_length_);
-    encoded_buffer_length_ = 0;
-  }*/
+  SendFrame(buffer->planes[0].data, buffer->planes[0].bytesused);
   
   if (encoder_->capture_plane.qBuffer(*v4l2_buf, NULL) < 0)
   {
