@@ -153,11 +153,11 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
   INIT_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
-  ret = encoder_->output_plane.setStreamStatus(true);
-  INIT_ERROR(ret < 0, "Failed to setStreamStatus");
+  ret = encoder_->subscribeEvent(V4L2_EVENT_EOS, 0, 0);
+  INIT_ERROR(ret < 0, "Failed to subscribeEvent V4L2_EVENT_EOS");
 
-  ret = encoder_->capture_plane.setStreamStatus(true);
-  INIT_ERROR(ret < 0, "Failed to setStreamStatus");
+  ret = encoder_->setEncoderCommand(V4L2_ENC_CMD_START, 0);
+  INIT_ERROR(ret < 0, "Failed to setEncoderCommand START");
 
   encoder_->capture_plane.setDQThreadCallback(JetsonOutputCallbackFunction);
   encoder_->capture_plane.startDQThread(this);
@@ -185,6 +185,10 @@ void JetsonH264Encoder::JetsonRelease()
 {
   if (!encoder_)
     return;
+  if (encoder_->setEncoderCommand(V4L2_ENC_CMD_STOP, 1) < 0)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to setEncoderCommand STOP";
+  }
   encoder_->capture_plane.waitForDQThread(2000);
   if (encoder_->isInError())
   {
@@ -211,6 +215,15 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
     return false;
   }
+  if(v4l2_buf->flags & V4L2_BUF_FLAG_LAST)
+  {
+    struct v4l2_event ev;
+    memset(&ev, 0, sizeof(struct v4l2_event));
+    if (encoder_->dqEvent(ev, 1000) < 0)
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to dqEvent";
+    if(ev.type == V4L2_EVENT_EOS)
+      return false;
+  }
   if (buffer->planes[0].bytesused == 0)
   {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "buffer size is zero";
@@ -227,7 +240,7 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
 
   uint64_t pts = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec
                + v4l2_buf->timestamp.tv_usec;
-  RTC_LOG(LS_INFO) << "pts:" << pts
+  RTC_LOG(LS_INFO) << __FUNCTION__ << "pts:" << pts
                    << " bytesused:" << buffer->planes[0].bytesused;
 
   std::unique_ptr<FrameParams> params;
