@@ -209,7 +209,7 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
                                              NvBuffer * buffer,
                                              NvBuffer * shared_buffer)
 {
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   if (v4l2_buf == nullptr)
   {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
@@ -274,7 +274,7 @@ bool JetsonH264Encoder::JetsonOutputCallback(struct v4l2_buffer *v4l2_buf,
     return false;
   }
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " End";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return true;
 }
 
@@ -351,7 +351,7 @@ int32_t JetsonH264Encoder::Encode(
     const webrtc::VideoFrame &input_frame,
     const std::vector<webrtc::VideoFrameType> *frame_types)
 {
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   if (!callback_)
   {
     RTC_LOG(LS_WARNING) << "InitEncode() has been called, but a callback function "
@@ -432,7 +432,7 @@ int32_t JetsonH264Encoder::Encode(
   memset(planes, 0, sizeof(planes));
   v4l2_buf.m.planes = planes;
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__
+  RTC_LOG(LS_INFO) << __FUNCTION__
                     << " output_plane.getNumBuffers: " << encoder_->output_plane.getNumBuffers()
                     << " output_plane.getNumQueuedBuffers: " << encoder_->output_plane.getNumQueuedBuffers();
 
@@ -449,7 +449,7 @@ int32_t JetsonH264Encoder::Encode(
     buffer = encoder_->output_plane.getNthBuffer(encoder_->output_plane.getNumQueuedBuffers());
     v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Check 2";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 2";
 
   rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer = frame_buffer->ToI420();
   for (uint32_t i = 0; i < buffer->n_planes; i++)
@@ -483,7 +483,7 @@ int32_t JetsonH264Encoder::Encode(
     plane.bytesused = plane.fmt.stride * plane.fmt.height;
   }
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Check 3";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 3";
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   v4l2_buf.timestamp.tv_sec = input_frame.timestamp_us() / rtc::kNumMicrosecsPerSec;
   v4l2_buf.timestamp.tv_usec = input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
@@ -496,7 +496,7 @@ int32_t JetsonH264Encoder::Encode(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " Check 4";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 4";
 
   if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0)
   {
@@ -504,7 +504,7 @@ int32_t JetsonH264Encoder::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " End";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
