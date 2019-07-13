@@ -51,6 +51,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   TARGET_ARCH_ARM ?= armv6
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
@@ -62,6 +63,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
@@ -73,6 +75,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_ARCH_ARM ?= armv7
   USE_ROS ?= 1
   USE_MMAL_ENCODER ?= 1
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -84,6 +87,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   TARGET_ARCH_ARM ?= armv8
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
@@ -94,6 +98,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 1
   USE_MMAL_ENCODER ?= 0
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
@@ -103,6 +108,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
@@ -111,6 +117,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   TARGET_ARCH ?= x86_64
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
+  USE_JETSON_ENCODER ?= 0
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
@@ -154,6 +161,11 @@ else
 
   ifndef USE_MMAL_ENCODER
     $(info - USE_MMAL_ENCODER が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef USE_JETSON_ENCODER
+    $(info - USE_JETSON_ENCODER が指定されていません)
     HAS_ERROR = 1
   endif
 
@@ -251,7 +263,24 @@ ifeq ($(TARGET_OS),linux)
       LDFLAGS += -L$(SYSROOT)/usr/lib/$(ARCH_NAME)
     endif
 
-    ifneq ($(TARGET_ARCH_ARM),armv8)
+    ifeq ($(TARGET_ARCH_ARM),armv8)
+      # Jetson の設定
+      ifeq ($(USE_JETSON_ENCODER),1)
+        CFLAGS += \
+          -DUSE_JETSON_ENCODER=1 \
+          -I../../tegra_multimedia_api/include/
+        LDFLAGS += \
+          -L/mnt/jetson/usr/lib/aarch64-linux-gnu \
+          -lv4l2 \
+          -L/mnt/jetson/usr/lib/aarch64-linux-gnu/tegra \
+          -lnvbuf_utils \
+          -lnvddk_vic \
+          -lnvrm \
+          -lnvrm_graphics \
+          -lnvos
+        SOURCES += $(shell find src/hwenc_jetson -maxdepth 1 -name '*.cpp')
+      endif
+    else
       # armv6, armv7 用
 
       CFLAGS += -mfloat-abi=hard
