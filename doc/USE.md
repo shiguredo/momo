@@ -16,11 +16,8 @@ https://github.com/shiguredo/momo/releases にてバイナリをダウンロー�
 $ tree
 .
 ├── html
-│   ├── p2p.html
-│   ├── p2p.js
-│   ├── ayame.html
-│   └── assets/
-│        └── ayame.js
+│   ├── p2p.html
+│   └── webrtc.js
 ├── LICENSE
 ├── momo
 └── NOTICE
@@ -105,9 +102,6 @@ http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてくだ
 $ ./momo --no-audio \
          ayame wss://example.com/ws open-momo ayame-client-ud
 ```
-
-
-http://[momo の IP アドレス]:8080/html/ayame.html にアクセスしてください。
 
 ### WebRTC SFU Sora で動作を確認する
 
