@@ -268,16 +268,20 @@ ifeq ($(TARGET_OS),linux)
       ifeq ($(USE_JETSON_ENCODER),1)
         CFLAGS += \
           -DUSE_JETSON_ENCODER=1 \
-          -I../../tegra_multimedia_api/include/
+          -I../../tegra_multimedia_api/include/ \
+          -I/mnt/jetson/usr/src/nvidia/tegra_multimedia_api/include/libjpeg-8b/
         LDFLAGS += \
           -L/mnt/jetson/usr/lib/aarch64-linux-gnu \
           -lv4l2 \
           -L/mnt/jetson/usr/lib/aarch64-linux-gnu/tegra \
           -lnvbuf_utils \
           -lnvddk_vic \
+          -lnvddk_2d_v2 \
+          -lnvjpeg \
           -lnvrm \
           -lnvrm_graphics \
           -lnvos
+        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_jetson -maxdepth 1 -name '*.cpp')
       endif
     else
