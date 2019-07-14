@@ -56,9 +56,7 @@ JetsonH264Encoder::JetsonH264Encoder(const cricket::VideoCodec &codec)
       configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
-      use_mjpeg_(false),
-      running_(false),
-      encoded_buffer_length_(0)
+      use_mjpeg_(false)
 {
 }
 
@@ -126,11 +124,12 @@ int32_t JetsonH264Encoder::Release()
 
 int32_t JetsonH264Encoder::JetsonConfigure()
 {
-  running_ = true;
   int ret = 0;
 
   if (use_mjpeg_)
   {
+    enc0_buffer_queue_ = new std::queue<NvBuffer *>;
+
     converter_ = NvVideoConverter::createVideoConverter("conv");
     INIT_ERROR(!decoder_, "Failed to createVideoConverter");
 
@@ -191,6 +190,9 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->setFrameRate(framerate_, 1);
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
+  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_ULTRAFAST);
+  INIT_ERROR(ret < 0, "Failed to setFrameRate");
+
   ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
   INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
 
@@ -211,8 +213,11 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->subscribeEvent(V4L2_EVENT_EOS, 0, 0);
   INIT_ERROR(ret < 0, "Failed to subscribeEvent V4L2_EVENT_EOS");
 
-  ret = encoder_->setEncoderCommand(V4L2_ENC_CMD_START, 0);
-  INIT_ERROR(ret < 0, "Failed to setEncoderCommand START");
+  ret = encoder_->output_plane.setStreamStatus(true);
+  INIT_ERROR(ret < 0, "Failed to setStreamStatus at encoder output_plane");
+
+  ret = encoder_->capture_plane.setStreamStatus(true);
+  INIT_ERROR(ret < 0, "Failed to setStreamStatus at encoder capture_plane");
 
   if (use_mjpeg_)
   {
@@ -232,7 +237,7 @@ int32_t JetsonH264Encoder::JetsonConfigure()
 
     for (uint32_t i = 0; i < encoder_->output_plane.getNumBuffers(); i++)
     {
-      enc0_buffer_queue_.push(encoder_->output_plane.getNthBuffer(i));
+      enc0_buffer_queue_->push(encoder_->output_plane.getNthBuffer(i));
     }
     encoder_->output_plane.setDQThreadCallback(EncodeOutputCallbackFunction);
   }
@@ -264,54 +269,58 @@ int32_t JetsonH264Encoder::JetsonConfigure()
 
 void JetsonH264Encoder::JetsonRelease()
 {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
-  running_ = false;
-
   if (!encoder_)
     return;
-
-  while (!enc0_buffer_queue_.empty()) enc0_buffer_queue_.pop();
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Chack 1";
-  if (encoder_->setEncoderCommand(V4L2_ENC_CMD_STOP, 1) < 0)
-  {
-    RTC_LOG(LS_ERROR) << "Failed to setEncoderCommand STOP";
-  }
-  //encoder_->capture_plane.waitForDQThread(2000);
-  delete encoder_;
-  encoder_ = nullptr;
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Chack 2";
-
-  struct v4l2_buffer v4l2_buf;
-  struct v4l2_plane planes[MAX_PLANES];
-  NvBuffer *buffer;
-
-  memset(&v4l2_buf, 0, sizeof(v4l2_buf));
-  memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
-  v4l2_buf.m.planes = planes;
-
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Chack 3";
   if (converter_)
   {
-    if (converter_->output_plane.getNumQueuedBuffers() == converter_->output_plane.getNumBuffers())
-    {
-      if (converter_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0)
-      {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Encoder is in error";
-      }
-    }
-    planes[0].bytesused = 0;
-    if (converter_->output_plane.qBuffer(v4l2_buf, NULL) < 0)
-    {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "Encoder is in error";
-    }
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " Chack 4";
+    SendEOS(converter_);
+  }
+  else
+  {
+    SendEOS(encoder_);
+  }
+  encoder_->capture_plane.waitForDQThread(2000);
+  encoder_->capture_plane.deinitPlane();
+  encoder_->output_plane.deinitPlane();
+  if (converter_)
+  {
+    delete enc0_buffer_queue_;
+  }
+  delete encoder_;
+  encoder_ = nullptr;
+  if (converter_)
+  {
     converter_->capture_plane.waitForDQThread(2000);
-
-
     delete converter_;
     converter_ = nullptr;
   }
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
+}
+
+void JetsonH264Encoder::SendEOS(NvV4l2Element *element)
+{
+  if (element->output_plane.getStreamStatus())
+  {
+    struct v4l2_buffer v4l2_buf;
+    struct v4l2_plane planes[MAX_PLANES];
+    NvBuffer *buffer;
+
+    memset(&v4l2_buf, 0, sizeof(v4l2_buf));
+    memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
+    v4l2_buf.m.planes = planes;
+
+    if (element->output_plane.getNumQueuedBuffers() == element->output_plane.getNumBuffers())
+    {
+      if (element->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
+      }
+    }
+    planes[0].bytesused = 0;
+    if (element->output_plane.qBuffer(v4l2_buf, NULL) < 0)
+    {
+        RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
+    }
+  }
 }
 
 bool JetsonH264Encoder::ConvertFinishedCallbackFunction(struct v4l2_buffer *v4l2_buf,
@@ -329,8 +338,6 @@ bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer *v4l2_buf,
   NvBuffer *enc0_buffer;
   struct v4l2_buffer enc0_qbuf;
   struct v4l2_plane planes[MAX_PLANES];
-
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   
   if (!v4l2_buf)
   {
@@ -339,15 +346,13 @@ bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer *v4l2_buf,
   }
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
-    while (enc0_buffer_queue_.empty())
+    while (enc0_buffer_queue_->empty())
     {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << " wait";
       enc0_buffer_cond_.wait(lock, [this] { return enc0_buffer_ready_; });
       enc0_buffer_ready_ = false;
-      RTC_LOG(LS_INFO) << __FUNCTION__ << " end";
     }
-    enc0_buffer = enc0_buffer_queue_.front();
-    enc0_buffer_queue_.pop();
+    enc0_buffer = enc0_buffer_queue_->front();
+    enc0_buffer_queue_->pop();
   }
 
   memset(&enc0_qbuf, 0, sizeof(enc0_qbuf));
@@ -355,6 +360,11 @@ bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer *v4l2_buf,
 
   enc0_qbuf.index = enc0_buffer->index;
   enc0_qbuf.m.planes = planes;
+
+  for (int i = 0; i < MAX_PLANES; i++)
+  {
+    enc0_qbuf.m.planes[i].bytesused = v4l2_buf->m.planes[i].bytesused;
+  }
 
   enc0_qbuf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   enc0_qbuf.timestamp.tv_sec = v4l2_buf->timestamp.tv_sec;
@@ -368,11 +378,10 @@ bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer *v4l2_buf,
   
   if (v4l2_buf->m.planes[0].bytesused == 0)
   {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " buffer size is zero";
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
     return false;
   }
-  
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
+
   return true;
 }
 
@@ -391,8 +400,6 @@ bool JetsonH264Encoder::EncodeOutputCallback(struct v4l2_buffer *v4l2_buf,
   struct v4l2_buffer conv_qbuf;
   struct v4l2_plane planes[MAX_PLANES];
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
-
   if (!v4l2_buf)
   {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
@@ -406,21 +413,23 @@ bool JetsonH264Encoder::EncodeOutputCallback(struct v4l2_buffer *v4l2_buf,
   conv_qbuf.m.planes = planes;
 
   {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " lock";
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " qBuffer";
     if (converter_->capture_plane.qBuffer(conv_qbuf, nullptr) < 0)
     {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to qBuffer at converter capture_plane";
       return false;
     }
-    enc0_buffer_queue_.push(buffer);
+    enc0_buffer_queue_->push(buffer);
     enc0_buffer_ready_ = true;
     enc0_buffer_cond_.notify_all();
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " lock end";
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End bytesused:"  << v4l2_buf->m.planes[0].bytesused;
+  if (conv_qbuf.m.planes[0].bytesused == 0)
+  {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
+    return false;
+  }
+
   return true;
 }
 
@@ -436,15 +445,14 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer *v4l2_buf,
                                              NvBuffer * buffer,
                                              NvBuffer * shared_buffer)
 {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   if (!v4l2_buf)
   {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
     return false;
   }
-  if (buffer->planes[0].bytesused == 0 || !running_)
+  if (buffer->planes[0].bytesused == 0)
   {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " buffer size is zero";
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
     return false;
   }
 
@@ -492,7 +500,6 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer *v4l2_buf,
     return false;
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return true;
 }
 
@@ -569,7 +576,6 @@ int32_t JetsonH264Encoder::Encode(
     const webrtc::VideoFrame &input_frame,
     const std::vector<webrtc::VideoFrameType> *frame_types)
 {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   if (!callback_)
   {
     RTC_LOG(LS_WARNING) << "InitEncode() has been called, but a callback function "
@@ -690,7 +696,7 @@ int32_t JetsonH264Encoder::Encode(
     {
       if (encoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0)
       {
-        RTC_LOG(LS_ERROR) << "Failed to dqBuffer at output_plane";
+        RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
     }
@@ -733,7 +739,6 @@ int32_t JetsonH264Encoder::Encode(
       plane.bytesused = plane.fmt.stride * plane.fmt.height;
     }
 
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 3";
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
     v4l2_buf.timestamp.tv_sec = input_frame.timestamp_us() / rtc::kNumMicrosecsPerSec;
     v4l2_buf.timestamp.tv_usec = input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
@@ -746,7 +751,6 @@ int32_t JetsonH264Encoder::Encode(
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
     }
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 4";
 
     if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0)
     {
@@ -755,7 +759,6 @@ int32_t JetsonH264Encoder::Encode(
     }
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

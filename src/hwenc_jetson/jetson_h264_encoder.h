@@ -49,12 +49,12 @@ public:
 private:
   struct FrameParams {
     FrameParams(int32_t w,
-                        int32_t h,
-                        int64_t rtms,
-                        int64_t ntpms,
-                        int64_t ts,
-                        webrtc::VideoRotation r,
-                        absl::optional<webrtc::ColorSpace> c)
+                int32_t h,
+                int64_t rtms,
+                int64_t ntpms,
+                int64_t ts,
+                webrtc::VideoRotation r,
+                absl::optional<webrtc::ColorSpace> c)
         : width(w), height(h), render_time_ms(rtms), ntp_time_ms(ntpms), timestamp(ts), rotation(r), color_space(c) {}
 
     int32_t width;
@@ -68,27 +68,28 @@ private:
 
   int32_t JetsonConfigure();
   void JetsonRelease();
+  void SendEOS(NvV4l2Element *element);
   static bool ConvertFinishedCallbackFunction(struct v4l2_buffer *v4l2_buf,
-                                           NvBuffer * buffer,
-                                           NvBuffer * shared_buffer,
+                                           NvBuffer *buffer,
+                                           NvBuffer *shared_buffer,
                                            void *data);
   bool ConvertFinishedCallback(struct v4l2_buffer *v4l2_buf,
-                            NvBuffer * buffer,
-                            NvBuffer * shared_buffer);
+                            NvBuffer *buffer,
+                            NvBuffer *shared_buffer);
   static bool EncodeOutputCallbackFunction(struct v4l2_buffer *v4l2_buf,
-                                           NvBuffer * buffer,
-                                           NvBuffer * shared_buffer,
+                                           NvBuffer *buffer,
+                                           NvBuffer *shared_buffer,
                                            void *data);
   bool EncodeOutputCallback(struct v4l2_buffer *v4l2_buf,
-                            NvBuffer * buffer,
-                            NvBuffer * shared_buffer);
+                            NvBuffer *buffer,
+                            NvBuffer *shared_buffer);
   static bool EncodeFinishedCallbackFunction(struct v4l2_buffer *v4l2_buf,
-                                           NvBuffer * buffer,
-                                           NvBuffer * shared_buffer,
+                                           NvBuffer *buffer,
+                                           NvBuffer *shared_buffer,
                                            void *data);
   bool EncodeFinishedCallback(struct v4l2_buffer *v4l2_buf,
-                            NvBuffer * buffer,
-                            NvBuffer * shared_buffer);
+                            NvBuffer *buffer,
+                            NvBuffer *shared_buffer);
   void SetFramerate(uint32_t framerate);
   void SetBitrateBps(uint32_t bitrate_bps);
   int32_t SendFrame(unsigned char *buffer, size_t size);
@@ -96,7 +97,7 @@ private:
   webrtc::EncodedImageCallback *callback_;
   NvJPEGDecoder *decoder_;
   NvVideoConverter *converter_;
-  NvVideoEncoder * encoder_;
+  NvVideoEncoder *encoder_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t framerate_;
   int32_t configured_framerate_;
@@ -110,7 +111,6 @@ private:
   int32_t configured_width_;
   int32_t configured_height_;
   bool use_mjpeg_;
-  bool running_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
@@ -119,10 +119,8 @@ private:
   std::mutex enc0_buffer_mtx_;
   std::condition_variable enc0_buffer_cond_;
   bool enc0_buffer_ready_ = false;
-  std::queue<NvBuffer *> enc0_buffer_queue_;
+  std::queue<NvBuffer *> *enc0_buffer_queue_;
   webrtc::EncodedImage encoded_image_;
-  std::unique_ptr<uint8_t[]> encoded_image_buffer_;
-  size_t encoded_buffer_length_;
 };
 
 #endif // Jetson_H264_ENCODER_H_
