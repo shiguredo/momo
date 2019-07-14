@@ -229,6 +229,8 @@ endif
 ifeq ($(TARGET_OS),linux)
   ifeq ($(TARGET_ARCH),x86_64)
     CFLAGS += -DUSE_H264=0
+  else ifeq ($(USE_JETSON_ENCODER),1)
+    CFLAGS += -DUSE_H264=1
   else ifeq ($(TARGET_ARCH_ARM),armv8)
     CFLAGS += -DUSE_H264=0
   else
