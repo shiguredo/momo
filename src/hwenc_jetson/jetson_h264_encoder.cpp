@@ -90,7 +90,8 @@ int32_t JetsonH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   }
 
   RTC_LOG(LS_INFO) << "InitEncode " << framerate_ << "fps "
-                    << target_bitrate_bps_ << "bit/sec";
+                    << target_bitrate_bps_ << "bit/sec　"
+                    << codec_settings->maxBitrate << "kbit/sec　";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
   encoded_image_._completeFrame = true;
@@ -190,8 +191,13 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->setFrameRate(framerate_, 1);
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
-  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_ULTRAFAST);
+  //V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
+  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
+
+  //この設定を入れればフレームレートより画質が優先されるが動くとフレームレートが激しく落ちる
+  //ret = encoder_->setConstantQp(30);
+  //INIT_ERROR(ret < 0, "Failed to setConstantQp");
 
   ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
   INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
