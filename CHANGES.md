@@ -12,8 +12,8 @@
 ## develop
 
 - [UPDATE] Raspbian Buster に対応
-- [UPDATE] libwebrtc M75 コミットポジションを 3 にする
-    - 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
+- [UPDATE] libwebrtc M76 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
 
 ## 19.07.0
 
