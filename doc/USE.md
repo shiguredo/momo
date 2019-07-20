@@ -99,8 +99,7 @@ http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてくだ
 ### WebRTC Signaling Server Ayame で動作を確認する
 
 ```shell
-$ ./momo --no-audio \
-         ayame wss://example.com/ws open-momo ayame-client-ud
+$ ./momo --no-audio ayame wss://example.com/ws open-momo ayame-client-ud
 ```
 
 ### WebRTC SFU Sora で動作を確認する
@@ -158,10 +157,6 @@ Options:
 ```
 
 
-```
-$ ./momo --no-audio --port 8080 p2p
-```
-
 #### ayame
 
 
@@ -200,11 +195,6 @@ Options:
                               オーディオのビットレート
   -h,--help                   Print this help message and exit
   --auto                      自動接続する
-```
-
-```
-$ ./momo --no-audio sora --auto --video-codec H264 --video-bitrate 500 \
-        wss://example.com/signaing open-momo
 ```
 
 ## うまく動作しない時
