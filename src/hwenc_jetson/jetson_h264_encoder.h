@@ -103,6 +103,7 @@ private:
   int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
+  int key_frame_interval_;
   uint32_t decode_pixfmt_;
   uint32_t raw_width_;
   uint32_t raw_height_;

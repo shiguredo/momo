@@ -82,12 +82,9 @@ int32_t JetsonH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   width_ = codec_settings->width;
   height_ = codec_settings->height;
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
+  key_frame_interval_ = codec_settings->H264().keyFrameInterval;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   framerate_ = codec_settings->maxFramerate;
-  if (framerate_ > 30)
-  {
-    framerate_ = 30;
-  }
 
   RTC_LOG(LS_INFO) << "InitEncode " << framerate_ << "fps "
                     << target_bitrate_bps_ << "bit/sec　"
@@ -163,7 +160,7 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   INIT_ERROR(!encoder_, "Failed to createVideoEncoder");
 
   ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_H264, 
-                                        width_, height_, 2 * 1024 * 1024);
+                                        width_, height_, 4 * 1024 * 1024);
   INIT_ERROR(ret < 0, "Failed to encoder setCapturePlaneFormat");
 
   ret = encoder_->setOutputPlaneFormat(V4L2_PIX_FMT_YUV420M,
@@ -182,10 +179,10 @@ int32_t JetsonH264Encoder::JetsonConfigure()
   ret = encoder_->setRateControlMode(V4L2_MPEG_VIDEO_BITRATE_MODE_CBR);
   INIT_ERROR(ret < 0, "Failed to setRateControlMode");
 
-  ret = encoder_->setIDRInterval((1<<31) + 1);
+  ret = encoder_->setIDRInterval(key_frame_interval_);
   INIT_ERROR(ret < 0, "Failed to setIDRInterval");
 
-  ret = encoder_->setIFrameInterval((1<<31) + 1);
+  ret = encoder_->setIFrameInterval(key_frame_interval_);
   INIT_ERROR(ret < 0, "Failed to setIFrameInterval");
 
   ret = encoder_->setFrameRate(framerate_, 1);
@@ -193,13 +190,19 @@ int32_t JetsonH264Encoder::JetsonConfigure()
 
   //V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
   ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
-  INIT_ERROR(ret < 0, "Failed to setFrameRate");
+  INIT_ERROR(ret < 0, "Failed to setHWPresetType");
+
+  ret = encoder_->setNumBFrames(0);
+  INIT_ERROR(ret < 0, "Failed to setNumBFrames");
 
   //この設定を入れればフレームレートより画質が優先されるが動くとフレームレートが激しく落ちる
   //ret = encoder_->setConstantQp(30);
   //INIT_ERROR(ret < 0, "Failed to setConstantQp");
 
   ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
+  INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
+
+  ret = encoder_->setInsertVuiEnabled(true);
   INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
 
   if (use_mjpeg_)
@@ -527,10 +530,6 @@ void JetsonH264Encoder::SetRates(const RateControlParameters &parameters)
                    << " framerate:" << parameters.framerate_fps
                    << " bitrate:" << parameters.bitrate.get_sum_bps();
   framerate_ = parameters.framerate_fps;
-  if (framerate_ > 60)
-  {
-    framerate_ = 60;
-  }
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   return;
@@ -538,6 +537,14 @@ void JetsonH264Encoder::SetRates(const RateControlParameters &parameters)
 
 void JetsonH264Encoder::SetFramerate(uint32_t framerate)
 {
+  if (width_ <= 1920 && height_ <= 1080 && framerate > 60)
+  {
+    framerate = 60;
+  }
+  else if (framerate > 30)
+  {
+    framerate = 30;
+  }
   if (configured_framerate_ == framerate)
   {
     return;
@@ -632,14 +639,12 @@ int32_t JetsonH264Encoder::Encode(
     {
       return WEBRTC_VIDEO_CODEC_OK;
     }
-    force_key_frame = (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
-  }
-
-  if (force_key_frame)
-  {
-    if (encoder_->forceIDR() < 0)
+    if((*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey)
     {
-      RTC_LOG(LS_ERROR) << "Failed to forceIDR";
+      if (encoder_->forceIDR() < 0)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to forceIDR";
+      }
     }
   }
 
@@ -711,7 +716,6 @@ int32_t JetsonH264Encoder::Encode(
       buffer = encoder_->output_plane.getNthBuffer(encoder_->output_plane.getNumQueuedBuffers());
       v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " Check 2";
 
     rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer = frame_buffer->ToI420();
     for (uint32_t i = 0; i < buffer->n_planes; i++)
