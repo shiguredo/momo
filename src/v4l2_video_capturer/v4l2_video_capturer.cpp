@@ -34,9 +34,7 @@
 
 #include "rtc/native_buffer.h"
 
-rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(size_t width,
-                                                              size_t height,
-                                                              size_t target_fps) {
+rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(ConnectionSettings cs) {
   rtc::scoped_refptr<V4L2VideoCapture> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -46,7 +44,7 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(size_t width,
   }
   int num_devices = device_info->NumberOfDevices();
   for (int i = 0; i < num_devices; ++i) {
-    capturer = Create(device_info.get(), width, height, target_fps, i);
+    capturer = Create(device_info.get(), cs, i);
     if (capturer) {
       RTC_LOG(LS_INFO) << "Get Capture";
       return capturer;
@@ -58,9 +56,7 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(size_t width,
 
 rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    size_t width,
-    size_t height,
-    size_t target_fps,
+    ConnectionSettings cs,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -79,10 +75,10 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
                         << ")";
     return nullptr;
   }
-  if (v4l2_capturer->StartCapture(width, height, target_fps) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = " << width
-                        << ", h = " << height << ", fps = " << target_fps
-                        << ")";
+  if (v4l2_capturer->StartCapture(cs) < 0) {
+    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = " << cs.getWidth()
+                        << ", h = " << cs.getHeight()
+                        << ", fps = " << cs.framerate << ")";
     return nullptr;
   }
   return v4l2_capturer;
@@ -95,6 +91,7 @@ V4L2VideoCapture::V4L2VideoCapture()
       _currentWidth(-1),
       _currentHeight(-1),
       _currentFrameRate(-1),
+      _useNative(false),
       _captureStarted(false),
       _captureVideoType(webrtc::VideoType::kI420),
       _pool(NULL) {}
@@ -141,19 +138,17 @@ V4L2VideoCapture::~V4L2VideoCapture() {
     close(_deviceFd);
 }
 
-int32_t V4L2VideoCapture::StartCapture(int32_t width,
-                                       int32_t height,
-                                       int32_t frameRate) {
+int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   if (_captureStarted) {
-    if (width == _currentWidth &&
-        height == _currentHeight) {
+    if (cs.getWidth() == _currentWidth &&
+        cs.getHeight() == _currentHeight) {
       return 0;
     } else {
       StopCapture();
     }
   }
 
-  rtc::CritScope cs(&_captureCritSect);
+  rtc::CritScope critScope(&_captureCritSect);
   // first open /dev/video device
   char device[20];
   sprintf(device, "/dev/video%d", (int)_deviceId);
@@ -168,7 +163,7 @@ int32_t V4L2VideoCapture::StartCapture(int32_t width,
   // I420 otherwise.
   const int nFormats = 5;
   unsigned int fmts[nFormats];
-  if (width > 640 || height > 480) {
+  if (!cs.force_i420 && (cs.getWidth() > 640 || cs.getHeight() > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YUYV;
@@ -214,8 +209,8 @@ int32_t V4L2VideoCapture::StartCapture(int32_t width,
   memset(&video_fmt, 0, sizeof(struct v4l2_format));
   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   video_fmt.fmt.pix.sizeimage = 0;
-  video_fmt.fmt.pix.width = width;
-  video_fmt.fmt.pix.height = height;
+  video_fmt.fmt.pix.width = cs.getWidth();
+  video_fmt.fmt.pix.height = cs.getHeight();
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
@@ -254,12 +249,12 @@ int32_t V4L2VideoCapture::StartCapture(int32_t width,
       memset(&streamparms, 0, sizeof(streamparms));
       streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       streamparms.parm.capture.timeperframe.numerator = 1;
-      streamparms.parm.capture.timeperframe.denominator = frameRate;
+      streamparms.parm.capture.timeperframe.denominator = cs.framerate;
       if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
         RTC_LOG(LS_INFO) << "Failed to set the framerate. errno=" << errno;
         driver_framerate_support = false;
       } else {
-        _currentFrameRate = frameRate;
+        _currentFrameRate = cs.framerate;
       }
     }
   }
@@ -295,6 +290,7 @@ int32_t V4L2VideoCapture::StartCapture(int32_t width,
     return -1;
   }
 
+  _useNative = cs.use_native;
   _captureStarted = true;
   return 0;
 }
@@ -443,7 +439,7 @@ bool V4L2VideoCapture::CaptureProcess() {
       }
 
       rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-      if (_captureVideoType == webrtc::VideoType::kMJPEG)
+      if (_useNative && _captureVideoType == webrtc::VideoType::kMJPEG)
       {
         rtc::scoped_refptr<NativeBuffer> native_buffer(
             NativeBuffer::Create(

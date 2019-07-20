@@ -25,20 +25,15 @@
 
 class V4L2VideoCapture : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(
-      size_t width,
-      size_t height,
-      size_t target_fps);
+  static rtc::scoped_refptr<V4L2VideoCapture> Create(ConnectionSettings cs);
   static rtc::scoped_refptr<V4L2VideoCapture> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      size_t width,
-      size_t height,
-      size_t target_fps,
+      ConnectionSettings cs,
       size_t capture_device_index);
   V4L2VideoCapture();
   ~V4L2VideoCapture();
   int32_t Init(const char* deviceUniqueId);
-  int32_t StartCapture(int32_t width, int32_t height, int32_t frameRate);
+  int32_t StartCapture(ConnectionSettings cs);
 
  private:
   enum { kNoOfV4L2Bufffers = 4 };
@@ -60,6 +55,7 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
   int32_t _currentWidth;
   int32_t _currentHeight;
   int32_t _currentFrameRate;
+  bool _useNative;
   bool _captureStarted;
   webrtc::VideoType _captureVideoType;
   struct Buffer {

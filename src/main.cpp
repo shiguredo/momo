@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 #else
 #if USE_MMAL_ENCODER
   rtc::scoped_refptr<V4L2VideoCapture> capturer =
-          V4L2VideoCapture::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
+          V4L2VideoCapture::Create(cs);
 #else
   rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
