@@ -107,7 +107,7 @@ $ ./momo --no-audio ayame wss://example.com/ws open-momo ayame-client-ud
 **この機能を利用する場合は WebRTC SFU Sora のライセンス契約が必要です**
 
 ```shell
-$ momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://example.com/signaing open-momo
+$ momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://example.com/signaling open-momo
 ```
 
 ### コマンド
