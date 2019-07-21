@@ -135,12 +135,12 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     return nullptr;
   }
 
-  std::string stream_id = Util::generateRundomChars();
+  std::string stream_id = Util::generateRandomChars();
 
   if (!_conn_settings.no_audio)
   {
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        _factory->CreateAudioTrack(Util::generateRundomChars(),
+        _factory->CreateAudioTrack(Util::generateRandomChars(),
                                    _factory->CreateAudioSource(cricket::AudioOptions())));
     if (audio_track)
     {
@@ -157,7 +157,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 
   if (_video_source) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-            _factory->CreateVideoTrack(Util::generateRundomChars(), _video_source));
+            _factory->CreateVideoTrack(Util::generateRandomChars(), _video_source));
     if (video_track)
     {
       if (_conn_settings.fixed_resolution) {

@@ -13,8 +13,9 @@ class Util
     static void parseArgs(int argc, char *argv[], bool &is_daemon,
                           bool &use_p2p, bool &use_ayame, bool &use_sora,
                           int &log_level, ConnectionSettings &cs);
-    static std::string generateRundomChars();
-    static std::string generateRundomChars(size_t length);
+    static std::string generateRandomChars();
+    static std::string generateRandomChars(size_t length);
+    static std::string generateRandomNumericChars(size_t length);
     static std::string iceConnectionStateToString(
             webrtc::PeerConnectionInterface::IceConnectionState state) ;
 
