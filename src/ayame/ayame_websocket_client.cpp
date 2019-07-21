@@ -199,7 +199,6 @@ void AyameWebsocketClient::onConnect(boost::system::error_code ec) {
         reconnectAfter();
         return MOMO_BOOST_ERROR(ec, "connect");
     }
-
     // Websocket のハンドシェイク
     ws_->nativeSocket().async_handshake(parts_.host, parts_.path_query_fragment,
         boost::asio::bind_executor(
@@ -370,12 +369,14 @@ void AyameWebsocketClient::onIceConnectionStateChange(webrtc::PeerConnectionInte
             new_state));
 }
 void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid, const int sdp_mlineindex, const std::string sdp) {
+    // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
     json json_message = {
       {"type", "candidate"},
-      {"candidate", sdp}
+      {"ice", sdp}
     };
     ws_->sendText(json_message.dump());
 }
+
 void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::string sdp) {
     json json_message = {
       {"type", "answer"},
@@ -383,6 +384,7 @@ void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::
     };
     ws_->sendText(json_message.dump());
 }
+
 void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
   if (type == webrtc::SdpType::kOffer) {

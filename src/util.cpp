@@ -86,10 +86,12 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     }
   } else if (use_p2p) {
     local_nh.param<std::string>("document_root", cs.p2p_document_root, get_current_dir_name());
-  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID") && && local_nh.hasParam("CLIENT_ID")) {
+  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
     local_nh.getParam("ROOM_ID", cs.ayame_room_id);
-    local_nh.getParam("CLIENT_ID", cs.ayame_client_id);
+    // デフォルトはランダムな数値 17 桁
+    std::string default_ayame_client_id = generateRandomNumericChars(17);
+    local_nh.param<std::string>("client_id", cs.ayame_client_id, default_ayame_client_id);
   } else {
     exit(1);
   }
@@ -136,7 +138,9 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
   ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
-  ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
+  // デフォルトはランダムな数値 17 桁
+  cs.ayame_client_id = generateRandomNumericChars(17);
+  ayame_app ->add_option("--client-id", cs.ayame_client_id, "クライアントID");
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
@@ -219,16 +223,28 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
 #endif
 
-std::string Util::generateRundomChars()
+std::string Util::generateRandomChars()
 {
-  return generateRundomChars(32);
+  return generateRandomChars(32);
 }
 
-std::string Util::generateRundomChars(size_t length)
+std::string Util::generateRandomChars(size_t length)
 {
   std::string result;
   rtc::CreateRandomString(length, &result);
   return result;
+}
+
+std::string Util::generateRandomNumericChars(size_t length) {
+    auto randomNumerics = []() -> char
+    {
+        const char charset[] = "0123456789";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[ rand() % max_index ];
+    };
+    std::string result(length, 0);
+    std::generate_n(result.begin(), length, randomNumerics);
+    return result;
 }
 
 std::string Util::iceConnectionStateToString(
