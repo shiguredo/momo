@@ -54,6 +54,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
   local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+#if USE_MMAL_ENCODER
+  local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
+  local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
+#endif
   local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
   local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
   local_nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
@@ -105,6 +109,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
+#if USE_MMAL_ENCODER
+  app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
+  app.add_flag("--use-native", cs.use_native, "MJPEGをハードウェアデコードする");
+#endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));

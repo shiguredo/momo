@@ -14,6 +14,10 @@
 - [UPDATE] Raspbian Buster に対応
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
     - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
+- [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
+    - USB カメラ用で MJPEG をハードウェアデコードします
+- [ADD] Raspberry Pi 向けに --force-i420 オプションを追加しました
+    - Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします
 
 ## 19.07.0
 

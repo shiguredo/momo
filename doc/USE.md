@@ -63,7 +63,7 @@ bcm2835-v4l2
 
 下記はプレビュー版の機能です
 
-- --fixed-resolution          固定解像度
+- 固定解像度 --fixed-resolution
 
 ## 利用方法
 
@@ -143,6 +143,40 @@ Subcommands:
   sora                        WebRTC SFU Sora
 ```
 
+#### Raspberry Pi 向けビルドのみ追加のオプションが存在します
+
+- --use-native は USB カメラ用で MJPEG をハードウェアデコードします
+- --force-i420 は Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします
+
+```
+$ ./momo --help
+Momo - WebRTC ネイティブクライアント
+Usage: ./momo [OPTIONS] [SUBCOMMAND]
+
+Options:
+  -h,--help                   Print this help message and exit
+  --no-video                  ビデオを表示しない
+  --no-audio                  オーディオを出さない
+  --force-i420                強制的にI420にする");
+  --use-native                MJPEGをハードウェアデコードする
+  --resolution STR in [QVGA,VGA,HD,FHD,4K]
+                              解像度
+  --framerate INT in [1 - 60] フレームレート
+  --fixed-resolution          固定解像度
+  --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
+                              優先設定 (Experimental)
+  --port INT in [0 - 65535]   ポート番号
+  --daemon                    デーモン化する
+  --version                   バージョン情報の表示
+  --log-level INT in [0 - 5]  ログレベル
+
+Subcommands:
+  p2p                         P2P
+  ayame                       WebRTC Signaling Server Ayame
+  sora                        WebRTC SFU Sora
+
+```
+
 #### p2p
 
 
@@ -155,7 +189,6 @@ Options:
   -h,--help                   Print this help message and exit
   --document-root Directory   配信ディレクトリ
 ```
-
 
 #### ayame
 
