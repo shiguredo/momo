@@ -383,8 +383,10 @@ void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid, const int s
 }
 
 void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::string sdp) {
+    // sora と異なり ayame モードでは answer 以外 (offer) type の description を送信する場合もある
+    // なので type は "answer" 固定にしない
     json json_message = {
-      {"type", "answer"},
+      {"type", webrtc::SdpTypeToString(type)},
       {"sdp", sdp}
     };
     ws_->sendText(json_message.dump());
