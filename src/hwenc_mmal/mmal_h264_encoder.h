@@ -17,6 +17,7 @@ extern "C"
 #include "bcm_host.h"
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_format.h"
+#include "interface/mmal/util/mmal_connection.h"
 #include "interface/mmal/util/mmal_default_components.h"
 #include "interface/mmal/util/mmal_util_params.h"
 #include "interface/mmal/util/mmal_util.h"
@@ -82,7 +83,11 @@ private:
   int32_t SendFrame(unsigned char *buffer, size_t size);
 
   webrtc::EncodedImageCallback *callback_;
+  MMAL_COMPONENT_T* decoder_;
+  MMAL_COMPONENT_T* resizer_;
   MMAL_COMPONENT_T* encoder_;
+  MMAL_CONNECTION_T *conn1_;
+  MMAL_CONNECTION_T *conn2_;
   MMAL_QUEUE_T *queue_;
   MMAL_POOL_T *pool_in_;
   MMAL_POOL_T *pool_out_;
@@ -91,12 +96,15 @@ private:
   int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
+  int32_t raw_width_;
+  int32_t raw_height_;
   int32_t width_;
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
   int32_t stride_width_;
   int32_t stride_height_;
+  bool use_mjpeg_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
