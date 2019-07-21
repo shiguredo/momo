@@ -63,7 +63,7 @@ bcm2835-v4l2
 
 下記はプレビュー版の機能です
 
-- --fixed-resolution          固定解像度
+- 固定解像度 --fixed-resolution
 
 ## 利用方法
 
