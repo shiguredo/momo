@@ -163,14 +163,15 @@ Options:
  ```
 $ ./momo ayame --help
 WebRTC Signaling Server Ayame
-Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID CLIENT-ID
- Positionals:
+Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID
+
+Positionals:
   SIGNALING-URL TEXT REQUIRED シグナリングホスト
-  ROOM-ID TEXT REQUIRED       ルーム ID
-  CLIENT-ID TEXT REQUIRED     クライアント ID
- Options:
-  -k,--key                    キー
+  ROOM-ID TEXT REQUIRED       ルームID
+
+Options:
   -h,--help                   Print this help message and exit
+  --client-id TEXT            クライアントID
 ```
 
 #### sora
