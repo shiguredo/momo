@@ -38,9 +38,9 @@ H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以
 
 ## 動作環境
 
-- Raspbian Stretch ARMv7
+- Raspbian Buster ARMv7
     - Raspberry Pi 3 B/B+ で動作
-- Raspbian Stretch ARMv6
+- Raspbian Buster ARMv6
     - Raspberry Pi Zero W/WH で動作
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
@@ -135,3 +135,9 @@ WebRTC Native Client に対する有料でのサポート契約については W
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
 - [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)
+
+## Windows 版について
+
+Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
+
+[Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)

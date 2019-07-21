@@ -84,14 +84,14 @@ Momo 自体がシグナリングサーバの機能も持つモードです。
 ### バージョン確認
 
 ```shell
-$ momo --version
+$ ./momo --version
 WebRTC Native Client Momo version 19.07.0
 ```
 
 ### P2P で動作を確認する
 
 ```shell
-$ momo --no-audio --port 8080 p2p
+$ ./momo --no-audio --port 8080 p2p
 ```
 
 http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
@@ -99,8 +99,7 @@ http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてくだ
 ### WebRTC Signaling Server Ayame で動作を確認する
 
 ```shell
-$ ./momo --no-audio \
-         ayame wss://example.com/ws open-momo ayame-client-ud
+$ ./momo --no-audio ayame wss://example.com/ws open-momo ayame-client-ud
 ```
 
 ### WebRTC SFU Sora で動作を確認する
@@ -108,8 +107,7 @@ $ ./momo --no-audio \
 **この機能を利用する場合は WebRTC SFU Sora のライセンス契約が必要です**
 
 ```shell
-$ momo --no-audio --video-codec VP8 --video-bitrate 500 \
-       sora --auto wss://example.com/signaing open-momo
+$ ./momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://example.com/signaling open-momo
 ```
 
 ### コマンド
@@ -230,11 +228,6 @@ Options:
                               オーディオのビットレート
   -h,--help                   Print this help message and exit
   --auto                      自動接続する
-```
-
-```
-$ ./momo --no-audio sora --auto --video-codec H264 --video-bitrate 500 \
-        wss://example.com/signaing open-momo
 ```
 
 ## うまく動作しない時

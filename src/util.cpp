@@ -127,8 +127,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   auto p2p_app = app.add_subcommand("p2p", "P2P");
-  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
+  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
   p2p_app
       ->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")
