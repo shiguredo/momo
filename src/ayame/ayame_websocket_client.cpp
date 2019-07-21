@@ -372,7 +372,12 @@ void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid, const int s
     // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
     json json_message = {
       {"type", "candidate"},
-      {"ice", sdp}
+    };
+    // ice プロパティの中に object で candidate 情報をセットして送信する
+    json_message["ice"] = {
+      {"candidate", sdp},
+      {"sdpMLineIndex", sdp_mlineindex},
+      {"sdpMid", sdp_mid}
     };
     ws_->sendText(json_message.dump());
 }
