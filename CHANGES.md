@@ -12,31 +12,47 @@
 ## develop
 
 - [UPDATE] Raspbian Buster に対応
+    - @voluntas
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
     - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
+    - @voluntas
 - [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
     - USB カメラ用で MJPEG をハードウェアデコードします
+    - @tnoho
 - [ADD] Raspberry Pi 向けに --force-i420 オプションを追加しました
     - Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします
+    - @tnoho
 - [CHANGE] Ayame のサブコマンドで client id を optional に指定できるように修正する
+    - @kdxu
 - [FIX] Ayame の candidate 交換の際の JSON スキーマが間違っていたのを修正する
+    - @kdxu
 - [FIX] Ayame の sdp 交換の際の type が answer 固定になっていたのを修正する
+    - @kdxu
 
 ## 19.07.0
 
 - [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
     - 720p 30fps や 1080p 20fps を可能にする
+    - @tnoho
 - [UPDATE] libwebrtc を M75 に上げる
     - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+    - @tnoho
 - [UPDATE] libwebrtc を M76 に上げる
     - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
+    - @kdxu
 - [UPDATE] Unified Plan に対応する
+    - @tnoho
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
+    - @tnoho
 - [UPDATE] CLI11 を v1.8.0 にアップデートする
+    - @melpon
 - [UPDATE] JSON v3.6.1 にアップデートする
+    - @melpon
 - [UPDATE] macOS のビルドドキュメントを独立させる
+    - @voluntas
 - [UPDATE] doc/CACHE.md を削除
     - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
+    - @melpon
 - [UPDATE] audio/video の共通オプションを sora のオプションに移動する
     - Momo 側ではコーデックやビットレートは指定できない
     - p2p の場合は HTML で sdp を切り替えている
@@ -44,14 +60,21 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+    - @melpon
 - [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
+    - @kdxu
 - [ADD] WebRTC Signaling Server Ayame に対応しました
     - https://github.com/OpenAyame/ayame
+    - @kdxu
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
+    - @voluntas
 - [ADD] Circle CI で macOS 版を毎週日曜日 22:00 に自動ビルドする
+    - @voluntas
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
+    - @tnoho
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する
+    - @tnoho
 
 ## 19.02.0
 
