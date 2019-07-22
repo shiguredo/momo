@@ -87,7 +87,7 @@ macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed
 Apache License 2.0
 
 ```
-Copyright 2018-2019, Shiguredo Inc, tnoho and melpon
+Copyright 2018-2019, Shiguredo Inc, tnoho and melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
