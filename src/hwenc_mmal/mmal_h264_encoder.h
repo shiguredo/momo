@@ -104,7 +104,8 @@ private:
   int32_t configured_height_;
   int32_t stride_width_;
   int32_t stride_height_;
-  bool use_mjpeg_;
+  bool use_native_;
+  bool use_decoder_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 

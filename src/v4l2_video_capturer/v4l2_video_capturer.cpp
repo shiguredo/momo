@@ -439,7 +439,9 @@ bool V4L2VideoCapture::CaptureProcess() {
       }
 
       rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-      if (_useNative && _captureVideoType == webrtc::VideoType::kMJPEG)
+      if (_useNative &&
+          (_captureVideoType == webrtc::VideoType::kMJPEG ||
+           _captureVideoType == webrtc::VideoType::kI420))
       {
         rtc::scoped_refptr<NativeBuffer> native_buffer(
             NativeBuffer::Create(
