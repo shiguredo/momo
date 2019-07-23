@@ -306,6 +306,8 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
     {
       if (!connection_) {
         createPeerConnection();
+        // peer connection を生成したら offer SDP を生成して送信する
+        connection_->createOffer();
       }
     }
     if (type == "offer") {
@@ -332,24 +334,18 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
         connection_->setAnswer(sdp);
     }
     else if (type == "candidate") {
-        if (!connection_) {
+        if (!getRTCConnection()) {
             return;
         }
-        if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected) {
-          int sdp_mlineindex = 0;
-          std::string sdp_mid, candidate;
-          json ice = json_message["ice"];
-          sdp_mid = ice["sdpMid"];
-          sdp_mlineindex = ice["sdpMLineIndex"];
-          candidate = ice["candidate"];
-          connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-        }
+        int sdp_mlineindex = 0;
+        std::string sdp_mid, candidate;
+        json ice = json_message["ice"];
+        sdp_mid = ice["sdpMid"];
+        sdp_mlineindex = ice["sdpMLineIndex"];
+        candidate = ice["candidate"];
+        connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
     } else if (type == "ping") {
       if (!connection_) {
-        return;
-      }
-      if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected)
-      {
         return;
       }
       watchdog_.reset();
