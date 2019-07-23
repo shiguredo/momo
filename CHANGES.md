@@ -28,6 +28,8 @@
     - @kdxu
 - [FIX] Ayame の sdp 交換の際の type が answer 固定になっていたのを修正する
     - @kdxu
+- [FIX] Ayame で peer connection 生成後に createOffer して send する実装が漏れていたので追加する
+    - @kdxu
 
 ## 19.07.0
 
