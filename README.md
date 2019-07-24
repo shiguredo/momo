@@ -23,6 +23,11 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
+## 既知の問題
+
+- develop ブランチにて macOS 版をビルドし利用しようとするとセグメンテーションフォルトが発生し動作しない
+    - native 対応が影響していると思われます、そのうち修正します
+
 ## 開発について
 
 Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
