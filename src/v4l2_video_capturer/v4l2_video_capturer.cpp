@@ -261,7 +261,7 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   // If driver doesn't support framerate control, need to hardcode.
   // Hardcoding the value based on the frame size.
   if (!driver_framerate_support) {
-    if (_currentWidth >= 800 && _captureVideoType != webrtc::VideoType::kMJPEG) {
+    if (!_useNative && _currentWidth >= 800 && _captureVideoType != webrtc::VideoType::kMJPEG) {
       _currentFrameRate = 15;
     } else {
       _currentFrameRate = 30;
