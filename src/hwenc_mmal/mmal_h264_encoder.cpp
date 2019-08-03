@@ -56,10 +56,10 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
       queue_(nullptr),
       pool_out_(nullptr),
       bitrate_adjuster_(.5, .95),
-      configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
-      use_mjpeg_(false),
+      use_native_(false),
+      use_decoder_(false),
       encoded_buffer_length_(0)
 {
 }
@@ -88,14 +88,8 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
   height_ = codec_settings->height;
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
-  framerate_ = codec_settings->maxFramerate;
-  if (framerate_ > 30)
-  {
-    framerate_ = 30;
-  }
 
-  RTC_LOG(LS_INFO) << "InitEncode " << framerate_ << "fps "
-                    << target_bitrate_bps_ << "bit/sec";
+  RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
   encoded_image_._completeFrame = true;
@@ -112,14 +106,12 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
 
 int32_t MMALH264Encoder::Release()
 {
+  MMALRelease();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t MMALH264Encoder::MMALConfigure()
 {
-  int32_t stride_width = VCOS_ALIGN_UP(width_, 32);
-  int32_t stride_height = VCOS_ALIGN_UP(height_, 16);
-
   if (mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_ENCODER, &encoder_) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to create mmal encoder";
@@ -129,21 +121,8 @@ int32_t MMALH264Encoder::MMALConfigure()
 
   MMAL_COMPONENT_T* component_in;
   MMAL_ES_FORMAT_T *format_in;
-  if (use_mjpeg_)
+  if (use_native_)
   {
-    if (mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_DECODER, &decoder_) != MMAL_SUCCESS)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to create mmal decoder";
-      Release();
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    format_in = decoder_->input[0]->format;
-    format_in->type = MMAL_ES_TYPE_VIDEO;
-    format_in->encoding = MMAL_ENCODING_MJPEG;
-    format_in->es->video.width = raw_width_;
-    format_in->es->video.height = raw_height_;
-    component_in = decoder_;
-
     if (mmal_component_create("vc.ril.resize", &resizer_) != MMAL_SUCCESS)
     {
       RTC_LOG(LS_ERROR) << "Failed to create mmal resizer";
@@ -151,16 +130,46 @@ int32_t MMALH264Encoder::MMALConfigure()
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
+    if (use_decoder_)
+    {
+      if (mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_DECODER, &decoder_) != MMAL_SUCCESS)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to create mmal decoder";
+        Release();
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+
+      format_in = decoder_->input[0]->format;
+      format_in->type = MMAL_ES_TYPE_VIDEO;
+      format_in->encoding = MMAL_ENCODING_MJPEG;
+      format_in->es->video.width = raw_width_;
+      format_in->es->video.height = raw_height_;
+      component_in = decoder_;
+    }
+    else
+    {
+      format_in = resizer_->input[0]->format;
+      format_in->type = MMAL_ES_TYPE_VIDEO;
+      format_in->encoding = MMAL_ENCODING_I420;
+      format_in->es->video.width = VCOS_ALIGN_UP(raw_width_, 32);
+      format_in->es->video.height = VCOS_ALIGN_UP(raw_height_, 16);
+      format_in->es->video.crop.x = 0;
+      format_in->es->video.crop.y = 0;
+      format_in->es->video.crop.width = raw_width_;
+      format_in->es->video.crop.height = raw_height_;
+      component_in = resizer_;
+    }
+
     MMAL_ES_FORMAT_T *format_resize;
     format_resize = resizer_->output[0]->format;
     mmal_format_copy(format_resize, resizer_->input[0]->format);
-    format_resize->es->video.width = stride_width;
-    format_resize->es->video.height = stride_height;
+    format_resize->es->video.width = VCOS_ALIGN_UP(width_, 32);
+    format_resize->es->video.height = VCOS_ALIGN_UP(height_, 16);
     format_resize->es->video.crop.x = 0;
     format_resize->es->video.crop.y = 0;
     format_resize->es->video.crop.width = width_;
     format_resize->es->video.crop.height = height_;
-    format_resize->es->video.frame_rate.num = framerate_;
+    format_resize->es->video.frame_rate.num = 30;
     format_resize->es->video.frame_rate.den = 1;
     if (mmal_port_format_commit(resizer_->output[0]) != MMAL_SUCCESS)
     {
@@ -173,8 +182,8 @@ int32_t MMALH264Encoder::MMALConfigure()
     format_in = encoder_->input[0]->format;
     format_in->type = MMAL_ES_TYPE_VIDEO;
     format_in->encoding = MMAL_ENCODING_I420;
-    format_in->es->video.width = stride_width;
-    format_in->es->video.height = stride_height;
+    format_in->es->video.width = VCOS_ALIGN_UP(width_, 32);
+    format_in->es->video.height = VCOS_ALIGN_UP(height_, 16);
     format_in->es->video.crop.x = 0;
     format_in->es->video.crop.y = 0;
     format_in->es->video.crop.width = width_;
@@ -182,7 +191,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     component_in = encoder_;
   }
   
-  format_in->es->video.frame_rate.num = framerate_;
+  format_in->es->video.frame_rate.num = 30;
   format_in->es->video.frame_rate.den = 1;
 
   if (mmal_port_format_commit(component_in->input[0]) != MMAL_SUCCESS)
@@ -196,7 +205,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   mmal_format_copy(format_out, format_in);
   encoder_->output[0]->format->type = MMAL_ES_TYPE_VIDEO;
   encoder_->output[0]->format->encoding = MMAL_ENCODING_H264;
-  encoder_->output[0]->format->es->video.frame_rate.num = framerate_;
+  encoder_->output[0]->format->es->video.frame_rate.num = 30;
   encoder_->output[0]->format->es->video.frame_rate.den = 1;
   encoder_->output[0]->format->bitrate = bitrate_adjuster_.GetAdjustedBitrateBps();
 
@@ -231,7 +240,7 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_INTRAPERIOD, 0) != MMAL_SUCCESS)
+  if (mmal_port_parameter_set_uint32(encoder_->output[0], MMAL_PARAMETER_INTRAPERIOD, 500) != MMAL_SUCCESS)
   {
     RTC_LOG(LS_ERROR) << "Failed to set intra period";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -248,7 +257,7 @@ int32_t MMALH264Encoder::MMALConfigure()
   component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_recommended;
   if (component_in->input[0]->buffer_size < component_in->input[0]->buffer_size_min)
     component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_min;
-  if (use_mjpeg_)
+  if (use_decoder_)
     component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_recommended * 8;
   component_in->input[0]->buffer_num = 1;
   component_in->input[0]->userdata = (MMAL_PORT_USERDATA_T *)this;
@@ -260,12 +269,15 @@ int32_t MMALH264Encoder::MMALConfigure()
   }
   pool_in_ = mmal_port_pool_create(component_in->input[0], component_in->input[0]->buffer_num, component_in->input[0]->buffer_size);
 
-  if (use_mjpeg_)
+  if (use_native_)
   {
-    if (mmal_connection_create(&conn1_, decoder_->output[0], resizer_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT) != MMAL_SUCCESS)
+    if (use_decoder_)
     {
-      RTC_LOG(LS_ERROR) << "Failed to connect decoder to resizer";
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      if (mmal_connection_create(&conn1_, decoder_->output[0], resizer_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING | MMAL_CONNECTION_FLAG_ALLOCATION_ON_INPUT) != MMAL_SUCCESS)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to connect decoder to resizer";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
     }
 
     if (mmal_connection_create(&conn2_, resizer_->output[0], encoder_->input[0], MMAL_CONNECTION_FLAG_TUNNELLING) != MMAL_SUCCESS)
@@ -280,16 +292,19 @@ int32_t MMALH264Encoder::MMALConfigure()
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
-    if (mmal_component_enable(decoder_) != MMAL_SUCCESS)
+    if (use_decoder_)
     {
-      RTC_LOG(LS_ERROR) << "Failed to enable component";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+      if (mmal_component_enable(decoder_) != MMAL_SUCCESS)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to enable component";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
 
-    if (mmal_connection_enable(conn1_) != MMAL_SUCCESS)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to enable connection decoder to resizer";
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      if (mmal_connection_enable(conn1_) != MMAL_SUCCESS)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to enable connection decoder to resizer";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
     }
 
     if (mmal_connection_enable(conn2_) != MMAL_SUCCESS)
@@ -320,11 +335,18 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  configured_framerate_ = framerate_;
   configured_width_ = width_;
   configured_height_ = height_;
-  stride_width_ = stride_width;
-  stride_height_ = stride_height;
+  if (use_native_)
+  {
+    stride_width_ = VCOS_ALIGN_UP(raw_width_, 32);
+    stride_height_ = VCOS_ALIGN_UP(raw_height_, 16);
+  }
+  else
+  {
+    stride_width_ = VCOS_ALIGN_UP(width_, 32);
+    stride_height_ = VCOS_ALIGN_UP(height_, 16);
+  }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -342,6 +364,16 @@ void MMALH264Encoder::MMALRelease()
     mmal_port_flush(decoder_->input[0]);
     mmal_port_flush(decoder_->output[0]);
     mmal_port_flush(decoder_->control); 
+  }
+  if (resizer_ && resizer_->input[0]->is_enabled)
+  {
+    if (!decoder_)
+    {
+      if (mmal_port_disable(resizer_->input[0]) != MMAL_SUCCESS)
+      {
+        RTC_LOG(LS_ERROR) << "Failed to disable input port";
+      }
+    }
     mmal_port_flush(resizer_->input[0]);
     mmal_port_flush(resizer_->output[0]);
     mmal_port_flush(resizer_->control); 
@@ -366,12 +398,18 @@ void MMALH264Encoder::MMALRelease()
   if (conn1_)
   {
     mmal_connection_disable(conn1_);
+  }
+  if (conn2_)
+  {
+    mmal_connection_disable(conn2_);
+  }
+  if (conn1_)
+  {
     mmal_connection_destroy(conn1_);
     conn1_ = nullptr;
   }
   if (conn2_)
   {
-    mmal_connection_disable(conn2_);
     mmal_connection_destroy(conn2_);
     conn2_ = nullptr;
   }
@@ -380,10 +418,13 @@ void MMALH264Encoder::MMALRelease()
     mmal_component_destroy(encoder_);
     encoder_ = nullptr;
   }
-  if (decoder_)
+  if (resizer_)
   {
     mmal_component_destroy(resizer_);
     resizer_ = nullptr;
+  }
+  if (decoder_)
+  {
     mmal_component_destroy(decoder_);
     decoder_ = nullptr;
   }
@@ -406,6 +447,9 @@ void MMALH264Encoder::MMALRelease()
     }
     queue_ = nullptr;
   }
+  while (!frame_params_.empty()) frame_params_.pop();
+  encoded_image_buffer_.reset();
+  encoded_buffer_length_ = 0;
 }
 
 void MMALH264Encoder::MMALInputCallbackFunction(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
@@ -452,6 +496,7 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
         RTC_LOG(LS_WARNING) << __FUNCTION__ 
                             << "Frame parameter is not found. SkipFrame pts:"
                             << buffer->pts;
+        mmal_buffer_header_release(buffer);
         return;
       }
       params = std::move(frame_params_.front());
@@ -462,6 +507,7 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
       RTC_LOG(LS_WARNING) << __FUNCTION__ 
                           << "Frame parameter is not found. SkipFrame pts:"
                           << buffer->pts;
+      mmal_buffer_header_release(buffer);
       return;
     }
   }
@@ -503,14 +549,7 @@ void MMALH264Encoder::SetRates(const RateControlParameters &parameters)
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ 
-                   << " framerate:" << parameters.framerate_fps
-                   << " bitrate:" << parameters.bitrate.get_sum_bps();
-  framerate_ = parameters.framerate_fps;
-  if (framerate_ > 30)
-  {
-    framerate_ = 30;
-  }
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " bitrate:" << parameters.bitrate.get_sum_bps();
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   return;
@@ -555,30 +594,25 @@ int32_t MMALH264Encoder::Encode(
   }
 
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer = input_frame.video_frame_buffer();
-  if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative)
-  {
-    use_mjpeg_ = true;
-  }
-  else
-  {
-    use_mjpeg_ = false;
-  }
-  
 
   if (frame_buffer->width() != configured_width_ ||
-      frame_buffer->height() != configured_height_ ||
-      framerate_ != configured_framerate_)
+      frame_buffer->height() != configured_height_)
   {
     RTC_LOG(LS_INFO) << "Encoder reinitialized from " << configured_width_
                      << "x" << configured_height_ << " to "
-                     << frame_buffer->width() << "x" << frame_buffer->height()
-                     << " framerate:" << framerate_;
+                     << frame_buffer->width() << "x" << frame_buffer->height();
     MMALRelease();
-    if (use_mjpeg_)
+    if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative)
     {
       NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
       raw_width_ = native_buffer->raw_width();
       raw_height_ = native_buffer->raw_height();
+      use_native_ = true;
+      use_decoder_ = native_buffer->VideoType() == webrtc::VideoType::kMJPEG;
+    }
+    else
+    {
+      use_native_ = false;
     }
     if (MMALConfigure() != WEBRTC_VIDEO_CODEC_OK)
     {
@@ -634,7 +668,7 @@ int32_t MMALH264Encoder::Encode(
     buffer->pts = buffer->dts = input_frame.timestamp();
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
-    if (use_mjpeg_)
+    if (use_decoder_)
     {
       NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
       memcpy(buffer->data,
@@ -649,31 +683,54 @@ int32_t MMALH264Encoder::Encode(
     }
     else
     {
-      rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer = frame_buffer->ToI420();
-      size_t offset = 0;
-      for (size_t i = 0; i < i420_buffer->height(); i++)
+      MMAL_COMPONENT_T* component_in;
+      size_t width, height, stride_y, stride_u, stride_v;
+      uint8_t *data_y, *data_u, *data_v;
+      if (use_native_)
       {
-        memcpy(buffer->data + offset,
-               i420_buffer->DataY() + (i420_buffer->width() * i),
-               i420_buffer->width());
+        NativeBuffer* native_buffer = dynamic_cast<NativeBuffer*>(frame_buffer.get());
+        width = native_buffer->raw_width();
+        height = native_buffer->raw_height();
+        stride_y = width;
+        stride_u = stride_v = width / 2;
+        data_y = (uint8_t *)native_buffer->Data();
+        data_u = data_y + (width * height);
+        data_v = data_u + (stride_u * (height / 2));
+        component_in = resizer_;
+      }
+      else
+      {
+        rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer = frame_buffer->ToI420();
+        width = i420_buffer->width();
+        height = i420_buffer->height();
+        stride_y = i420_buffer->StrideY();
+        stride_u = i420_buffer->StrideU();
+        stride_v = i420_buffer->StrideV();
+        data_y = (uint8_t *)i420_buffer->DataY();
+        data_u = (uint8_t *)i420_buffer->DataU();
+        data_v = (uint8_t *)i420_buffer->DataV();
+        component_in = encoder_;
+      }
+      size_t offset = 0;
+      for (size_t i = 0; i < height; i++)
+      {
+        memcpy(buffer->data + offset, data_y + (stride_y * i), stride_y);
         offset += stride_width_;
       }
       offset = 0;
       size_t offset_y = stride_width_ * stride_height_;
       size_t width_uv = stride_width_ / 2;
       size_t offset_v = (stride_height_ / 2) * width_uv;
-      for (size_t i = 0; i < ((i420_buffer->height() + 1) / 2); i++)
+      for (size_t i = 0; i < ((height + 1) / 2); i++)
       {
         memcpy(buffer->data + offset_y + offset,
-               i420_buffer->DataU() + (i420_buffer->StrideU() * i),
-               width_uv);
+               data_u + (stride_u * i), width_uv);
         memcpy(buffer->data + offset_y + offset_v + offset,
-               i420_buffer->DataV() + (i420_buffer->StrideV() * i),
-               width_uv);
+               data_v + (stride_v * i), width_uv);
         offset += width_uv;
       }
       buffer->length = buffer->alloc_size = stride_width_ * stride_height_ * 3 / 2;
-      if (mmal_port_send_buffer(encoder_->input[0], buffer) != MMAL_SUCCESS)
+      if (mmal_port_send_buffer(component_in->input[0], buffer) != MMAL_SUCCESS)
       {
         RTC_LOG(LS_ERROR) << "Failed to send input i420 buffer";
         return WEBRTC_VIDEO_CODEC_ERROR;
