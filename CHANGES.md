@@ -16,6 +16,9 @@
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
     - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
     - @voluntas
+- [UPDATE] I420 の時にもハードウェアでリサイズする
+    - @tnoho
+    
 - [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
     - USB カメラ用で MJPEG をハードウェアデコードします
     - @tnoho
