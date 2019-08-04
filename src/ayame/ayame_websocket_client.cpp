@@ -311,10 +311,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
       }
     }
     if (type == "offer") {
-      if (!connection_) {
-        // accept よりあとに来るので、この時点で peer connection は生成されているべき
-        return;
-      }
+      createPeerConnection();
       const std::string sdp = json_message["sdp"];
       connection_->setOffer(sdp);
     }
