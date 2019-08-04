@@ -33,6 +33,8 @@
     - @kdxu
 - [FIX] Ayame で peer connection 生成後に createOffer して send する実装が漏れていたので追加する
     - @kdxu
+- [FIX] Ayame で momo を起動したあとに映像を受信できない場合が発生するのバグを修正する
+    - @kdxu
 
 ## 19.07.0
 
