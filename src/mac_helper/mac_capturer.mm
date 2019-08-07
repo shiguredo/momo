@@ -60,17 +60,15 @@ MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
                          size_t capture_device_index) {
-  RTCVideoSourceAdapter *adapter = [[RTCVideoSourceAdapter alloc] init];
-  adapter_ = (__bridge_retained void *)adapter;
-  adapter.capturer = this;
+  adapter_ = [[RTCVideoSourceAdapter alloc] init];
+  adapter_.capturer = this;
 
-  RTCCameraVideoCapturer *capturer = [[RTCCameraVideoCapturer alloc] initWithDelegate:adapter];
-  capturer_ = (__bridge_retained void *)capturer;
+  capturer_ = [[RTCCameraVideoCapturer alloc] initWithDelegate:adapter_];
 
   AVCaptureDevice *device =
       [[RTCCameraVideoCapturer captureDevices] objectAtIndex:capture_device_index];
   AVCaptureDeviceFormat *format = SelectClosestFormat(device, width, height);
-  [capturer startCaptureWithDevice:device format:format fps:target_fps];
+  [capturer_ startCaptureWithDevice:device format:format fps:target_fps];
 }
 
 rtc::scoped_refptr<MacCapturer> MacCapturer::Create(size_t width,
@@ -81,12 +79,7 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(size_t width,
 }
 
 void MacCapturer::Destroy() {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
-  RTCVideoSourceAdapter *adapter = (__bridge_transfer RTCVideoSourceAdapter *)adapter_;
-  RTCCameraVideoCapturer *capturer = (__bridge_transfer RTCCameraVideoCapturer *)capturer_;
-  [capturer stopCapture];
-#pragma clang diagnostic pop
+  [capturer_ stopCapture];
 }
 
 MacCapturer::~MacCapturer() {

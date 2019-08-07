@@ -109,12 +109,12 @@ $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(pa
 
 .PHONY: macos
 macos: macos.prepare
-	make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
+	make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
 
 .PHONY: macos.package
 macos.package: macos.prepare
 	# momo を package モードでビルドし直す
-	rm -f ../_build/macos/momo && make -C .. MOMO_CFLAGS="-O2" PACKAGE_NAME=macos BUILD_MODE=package momo
+	rm -f ../_build/macos/momo && make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos BUILD_MODE=package momo
 
 	# パッケージのバイナリを作る
 	rm -rf package/momo-$(MOMO_VERSION)_macos
