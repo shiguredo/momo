@@ -56,7 +56,7 @@ void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) 
     return;
   }
 
-  if (frame.video_frame_buffer()->type() == webrtc::VideoFrameBuffer::Type::kNative)
+  if (useNativeBuffer() && frame.video_frame_buffer()->type() == webrtc::VideoFrameBuffer::Type::kNative)
   {
     NativeBuffer* frame_buffer = dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     frame_buffer->SetScaledSize(adapted_width, adapted_height);

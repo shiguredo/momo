@@ -35,6 +35,8 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
   int32_t Init(const char* deviceUniqueId);
   int32_t StartCapture(ConnectionSettings cs);
 
+  bool useNativeBuffer() override;
+
  private:
   enum { kNoOfV4L2Bufffers = 4 };
 
