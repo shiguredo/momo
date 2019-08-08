@@ -318,6 +318,12 @@ int32_t V4L2VideoCapture::StopCapture() {
   return 0;
 }
 
+bool V4L2VideoCapture::useNativeBuffer() {
+  return _useNative &&
+          (_captureVideoType == webrtc::VideoType::kMJPEG ||
+           _captureVideoType == webrtc::VideoType::kI420);
+}
+
 // critical section protected by the caller
 
 bool V4L2VideoCapture::AllocateVideoBuffers() {
@@ -439,9 +445,7 @@ bool V4L2VideoCapture::CaptureProcess() {
       }
 
       rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-      if (_useNative &&
-          (_captureVideoType == webrtc::VideoType::kMJPEG ||
-           _captureVideoType == webrtc::VideoType::kI420))
+      if (useNativeBuffer())
       {
         rtc::scoped_refptr<NativeBuffer> native_buffer(
             NativeBuffer::Create(
