@@ -59,7 +59,7 @@ AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc, RTCMana
 void AyameWebsocketClient::reset() {
     connection_ = nullptr;
     connected_ = false;
-    ice_servers_ = nullptr;
+    ice_servers_.clear();
 
     if (parseURL(parts_)) {
         auto ssl_ctx = createSSLContext();
@@ -237,7 +237,7 @@ void AyameWebsocketClient::doRegister()
         {"roomId", conn_settings_.ayame_room_id},
     };
     if (conn_settings_.ayame_signaling_key != "") {
-      json_message["key"] = conn_settings_.ayame_signaling_key
+      json_message["key"] = conn_settings_.ayame_signaling_key;
     }
     ws_->sendText(json_message.dump());
 }
@@ -248,9 +248,9 @@ void AyameWebsocketClient::doSendPong() {
     ws_->sendText(json_message.dump());
 }
 
-void AyameWebsocketClient::createPeerConection()
+void AyameWebsocketClient::createPeerConnection()
 {
-  if (!ice_servers_) {
+  if (ice_servers_.empty()) {
     return;
   }
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
@@ -312,15 +312,15 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
           auto jservers = json_message["iceServers"];
           for (auto jserver : jservers)
           {
-            const std::string username = jserver["username"];
-            const std::string credential = jserver["credential"];
+            const std::string username = jserver.value("username", "");
+            const std::string credential = jserver.value("credential", "");
             auto jurls = jserver["urls"];
             for (const std::string url : jurls)
             {
               webrtc::PeerConnectionInterface::IceServer ice_server;
               ice_server.uri = url;
-              ice_server.username = username;
-              ice_server.password = credential;
+              if (username.length() != 0) ice_server.username = username;
+              if (credential.length() != 0) ice_server.password = credential;
               ice_servers_.push_back(ice_server);
             }
           }
