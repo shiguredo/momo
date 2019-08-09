@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] nlohmann/json を v3.7.0 にアップデートする
+    - @melpon
 - [UPDATE] Raspbian Buster に対応
     - @voluntas
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
