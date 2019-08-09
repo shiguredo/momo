@@ -312,17 +312,19 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
           auto jservers = json_message["iceServers"];
           for (auto jserver : jservers)
           {
-            const std::string username = jserver.value("username", "");
-            const std::string credential = jserver.value("credential", "");
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            if (jserver.contains("username")) {
+              ice_server.username = jserver["username"];
+            }
+            if (jserver.contains("credential")) {
+              ice_server.password = jserver["credential"];
+            }
             auto jurls = jserver["urls"];
             for (const std::string url : jurls)
             {
-              webrtc::PeerConnectionInterface::IceServer ice_server;
-              ice_server.uri = url;
-              if (username.length() != 0) ice_server.username = username;
-              if (credential.length() != 0) ice_server.password = credential;
-              ice_servers_.push_back(ice_server);
+              ice_server.urls.push_back(url);
             }
+            ice_servers_.push_back(ice_server);
           }
         }
         catch (json::type_error &e)
@@ -358,7 +360,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
         connection_->setAnswer(sdp);
     }
     else if (type == "candidate") {
-        if (!getRTCConnection()) {
+        if (!connection_) {
             return;
         }
         int sdp_mlineindex = 0;
