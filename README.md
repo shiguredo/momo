@@ -23,17 +23,16 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
-## 既知の問題
-
-- develop ブランチにて macOS 版をビルドし利用しようとするとセグメンテーションフォルトが発生し動作しない
-    - native 対応が影響していると思われます、そのうち修正します
-
 ## 開発について
 
 Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
 そのためコメントやプルリクエストを頂いてもすぐには採用はしません。
 
 まずは Discord にてご連絡ください。
+
+## 既知の問題について
+
+[既知の問題に対する解決方針](https://github.com/shiguredo/momo/issues/89)
 
 ## バイナリ提供について
 
@@ -79,9 +78,9 @@ Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_L
 
 ### macOS 版 Momo のビルドする
 
-macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
+**macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定してください**
 
-macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
+macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
 ## パッケージを作成する
 
