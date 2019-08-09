@@ -92,7 +92,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     // デフォルトはランダムな数値 17 桁
     std::string default_ayame_client_id = generateRandomNumericChars(17);
     local_nh.param<std::string>("client_id", cs.ayame_client_id, default_ayame_client_id);
-    local_nh.param<std::string>("key", cs.ayame_signaling_key, cs.ayame_signaling_key);
+    local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key, cs.ayame_signaling_key);
   } else {
     exit(1);
   }
@@ -142,7 +142,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   // デフォルトはランダムな数値 17 桁
   cs.ayame_client_id = generateRandomNumericChars(17);
   ayame_app ->add_option("--client-id", cs.ayame_client_id, "クライアントID");
-  ayame_app ->add_option("--key", cs.ayame_signaling_key, "シグナリングキー");
+  ayame_app ->add_option("--signaling-key", cs.ayame_signaling_key, "シグナリングキー");
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
