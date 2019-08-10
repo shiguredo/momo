@@ -72,22 +72,22 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
 #if USE_ROS
-  media_dependencies.task_queue_factory = ROSAudioDeviceModule::Create(_conn_settings, &webrtc::DefaultTaskQueueFactory());
+    media_dependencies.task_queue_factory = ROSAudioDeviceModule::Create(_conn_settings, &webrtc::DefaultTaskQueueFactory());
 #else
-	media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
+    media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #endif
   media_dependencies.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
 #ifdef __APPLE__
-  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
-  media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+    media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
+    media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
 #else
 #if USE_MMAL_ENCODER
-  media_dependencies.video_encoder_factory = std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<HWVideoEncoderFactory>());
+    media_dependencies.video_encoder_factory = std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<HWVideoEncoderFactory>());
 #else
-  media_dependencies_video_encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+    media_dependencies.video_encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
 #endif
-  media_dependencies_video_decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
+    media_dependencies.video_decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
 #endif
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
