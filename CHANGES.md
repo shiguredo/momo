@@ -20,13 +20,18 @@
     - @voluntas
 - [UPDATE] I420 の時にもハードウェアでリサイズする
     - @tnoho
-    
+
 - [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
     - USB カメラ用で MJPEG をハードウェアデコードします
     - @tnoho
 - [ADD] Raspberry Pi 向けに --force-i420 オプションを追加しました
-    - Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします
+    - Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーする
     - @tnoho
+- [ADD] Ayame のサブコマンドに --signaling-key を追加する
+    - @kdxu @tnoho
+- [ADD] Ayame 利用時に iceServers の払い出しに対応する
+    - 独自の STUN/TURN が利用可能になる
+    - @kdxu @tnoho
 - [CHANGE] Ayame のサブコマンドで client id を optional に指定できるように修正する
     - @kdxu
 - [FIX] Ayame の candidate 交換の際の JSON スキーマが間違っていたのを修正する
