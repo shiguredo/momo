@@ -4,9 +4,9 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/create_peerconnection_factory.h"
-#include "api/task_queue/global_task_queue_factory.h"
+#include "api/task_queue/default_task_queue_factory.h"
 #include "api/video_track_source_proxy.h"
-#include "logging/rtc_event_log/rtc_event_log_factory.h"
+#include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -60,34 +60,41 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
     audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
   }
 
-  std::unique_ptr<cricket::MediaEngineInterface> media_engine = cricket::WebRtcMediaEngineFactory::Create(
-#if USE_ROS
-      ROSAudioDeviceModule::Create(_conn_settings, &webrtc::GlobalTaskQueueFactory()),
-#else
-	  webrtc::AudioDeviceModule::Create(audio_layer, &webrtc::GlobalTaskQueueFactory()),
-#endif
-      webrtc::CreateBuiltinAudioEncoderFactory(),
-      webrtc::CreateBuiltinAudioDecoderFactory(),
-#ifdef __APPLE__
-      CreateObjCEncoderFactory(),
-      CreateObjCDecoderFactory(),
-#else
-#if USE_MMAL_ENCODER
-      std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<HWVideoEncoderFactory>()),
-#else
-      webrtc::CreateBuiltinVideoEncoderFactory(),
-#endif
-      webrtc::CreateBuiltinVideoDecoderFactory(),
-#endif
-      nullptr /* audio_mixer */,
-      webrtc::AudioProcessingBuilder().Create());
   webrtc::PeerConnectionFactoryDependencies dependencies;
   dependencies.network_thread = _networkThread.get();
   dependencies.worker_thread = _workerThread.get();
   dependencies.signaling_thread = _signalingThread.get();
-  dependencies.media_engine = std::move(media_engine);
+  dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
   dependencies.call_factory = webrtc::CreateCallFactory();
-  dependencies.event_log_factory = webrtc::CreateRtcEventLogFactory();
+  dependencies.event_log_factory = absl::make_unique<webrtc::RtcEventLogFactory>(
+      dependencies.task_queue_factory.get());
+
+  // media_dependencies
+  cricket::MediaEngineDependencies media_dependencies;
+#if USE_ROS
+  media_dependencies.task_queue_factory = ROSAudioDeviceModule::Create(_conn_settings, &webrtc::DefaultTaskQueueFactory());
+#else
+	media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
+#endif
+  media_dependencies.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
+  media_dependencies.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
+#ifdef __APPLE__
+  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
+  media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+#else
+#if USE_MMAL_ENCODER
+  media_dependencies.video_encoder_factory = std::unique_ptr<webrtc::VideoEncoderFactory>(absl::make_unique<HWVideoEncoderFactory>());
+#else
+  media_dependencies_video_encoder_factory = webrtc::CreateBuiltinVideoEncoderFactory();
+#endif
+  media_dependencies_video_decoder_factory = webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
+  media_dependencies.audio_mixer = nullptr;
+  media_dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
+
+  dependencies.media_engine =
+      cricket::CreateMediaEngine(std::move(media_dependencies));
+
   _factory = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   if (!_factory.get())
   {
