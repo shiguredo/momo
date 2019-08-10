@@ -59,6 +59,7 @@ AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc, RTCMana
 void AyameWebsocketClient::reset() {
     connection_ = nullptr;
     connected_ = false;
+    ice_servers_.clear();
 
     if (parseURL(parts_)) {
         auto ssl_ctx = createSSLContext();
@@ -233,8 +234,11 @@ void AyameWebsocketClient::doRegister()
     json json_message = {
         {"type", "register"},
         {"clientId", conn_settings_.ayame_client_id},
-        {"roomId", conn_settings_.ayame_room_id}
+        {"roomId", conn_settings_.ayame_room_id},
     };
+    if (conn_settings_.ayame_signaling_key != "") {
+      json_message["key"] = conn_settings_.ayame_signaling_key;
+    }
     ws_->sendText(json_message.dump());
 }
 void AyameWebsocketClient::doSendPong() {
@@ -244,16 +248,14 @@ void AyameWebsocketClient::doSendPong() {
     ws_->sendText(json_message.dump());
 }
 
-// TODO(kdxu): ayame が iceServers の払い出しをするようになり次第対応する
 void AyameWebsocketClient::createPeerConnection()
 {
+  if (ice_servers_.empty()) {
+    return;
+  }
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
-  webrtc::PeerConnectionInterface::IceServers ice_servers;
-  webrtc::PeerConnectionInterface::IceServer ice_server;
 
-  ice_server.uri = "stun:stun.l.google.com:19302";
-  ice_servers.push_back(ice_server);
-  rtc_config.servers = ice_servers;
+  rtc_config.servers = ice_servers_;
 
   connection_ = manager_->createConnection(rtc_config, this);
 }
@@ -305,6 +307,33 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
     if (type == "accept")
     {
       if (!connection_) {
+        // 返却されてきた iceServers を セットする
+        try {
+          auto jservers = json_message["iceServers"];
+          for (auto jserver : jservers)
+          {
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            if (jserver.contains("username")) {
+              ice_server.username = jserver["username"];
+            }
+            if (jserver.contains("credential")) {
+              ice_server.password = jserver["credential"];
+            }
+            auto jurls = jserver["urls"];
+            for (const std::string url : jurls)
+            {
+              ice_server.urls.push_back(url);
+            }
+            ice_servers_.push_back(ice_server);
+          }
+        }
+        catch (json::type_error &e)
+        {
+          // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
+          webrtc::PeerConnectionInterface::IceServer ice_server;
+          ice_server.uri = "stun:stun.l.google.com:19302";
+          ice_servers_.push_back(ice_server);
+        }
         createPeerConnection();
         // peer connection を生成したら offer SDP を生成して送信する
         connection_->createOffer();
@@ -331,7 +360,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
         connection_->setAnswer(sdp);
     }
     else if (type == "candidate") {
-        if (!getRTCConnection()) {
+        if (!connection_) {
             return;
         }
         int sdp_mlineindex = 0;
