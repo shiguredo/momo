@@ -32,8 +32,8 @@
 #endif
 
 #if USE_MMAL_ENCODER
+#include "api/video_codecs/video_encoder_factory.h"
 #include "hw_video_encoder_factory.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "absl/memory/memory.h"
 #endif
 
