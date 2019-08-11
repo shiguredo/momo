@@ -20,7 +20,9 @@
     - @voluntas
 - [UPDATE] I420 の時にもハードウェアでリサイズする
     - @tnoho
-
+- [UPDATE] libwebrtc M77 に対応する
+    - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
+    - @kdxu
 - [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
     - USB カメラ用で MJPEG をハードウェアデコードします
     - @tnoho
