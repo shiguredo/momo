@@ -41,6 +41,7 @@ $(LIBWEBRTC): check
 	ninja -C $(CURDIR)/webrtc-build/macos && \
 	ninja -C $(CURDIR)/webrtc-build/macos \
 	  builtin_audio_decoder_factory \
+	  default_task_queue_factory \
 	  native_api \
 	  default_codec_factory_objc \
 	  peerconnection \
