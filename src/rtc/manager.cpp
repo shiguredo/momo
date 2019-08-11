@@ -14,6 +14,7 @@
 #include "modules/video_capture/video_capture_factory.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/logging.h"
+#include "absl/memory/memory.h"
 
 #include "scalable_track_source.h"
 #include "manager.h"
@@ -34,7 +35,6 @@
 #if USE_MMAL_ENCODER
 #include "api/video_codecs/video_encoder_factory.h"
 #include "hw_video_encoder_factory.h"
-#include "absl/memory/memory.h"
 #endif
 
 RTCManager::RTCManager(ConnectionSettings conn_settings,
@@ -71,10 +71,11 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
 
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
+  media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #if USE_ROS
-    media_dependencies.task_queue_factory = ROSAudioDeviceModule::Create(_conn_settings, &webrtc::DefaultTaskQueueFactory());
+    media_dependencies.adm = ROSAudioDeviceModule::Create(_conn_settings, dependencies.task_queue_factory.get());
 #else
-    media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
+    media_dependencies.adm = webrtc::AudioDeviceModule::Create(audio_layer, dependencies.task_queue_factory.get());
 #endif
   media_dependencies.audio_encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory = webrtc::CreateBuiltinAudioDecoderFactory();
