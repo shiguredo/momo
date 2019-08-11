@@ -99,7 +99,7 @@ http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてくだ
 ### WebRTC Signaling Server Ayame で動作を確認する
 
 ```shell
-$ ./momo --no-audio ayame wss://example.com/ws open-momo ayame-client-ud
+$ ./momo --no-audio ayame wss://example.com/ws open-momo
 ```
 
 ### WebRTC SFU Sora で動作を確認する
