@@ -106,7 +106,6 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
 
 int32_t MMALH264Encoder::Release()
 {
-  MMALRelease();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
