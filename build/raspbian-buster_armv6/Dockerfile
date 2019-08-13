@@ -28,14 +28,18 @@ COPY patch/nacl_armv6.patch /root/
 ARG WEBRTC_VERSION
 ARG WEBRTC_COMMIT
 
+# nacl_armv6.patch - 4k.patch の間は M77 で armv6 バイナリが動かない問題の暫定対処のため解決後は要削除
+
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt --mount=type=cache,id=$PACKAGE_NAME,target=/root/webrtc-cache \
   /bin/bash -c " \
     set -ex \
     && source /root/docker.sh \
     && prepare_webrtc_arm /root/webrtc-cache $WEBRTC_COMMIT /root/webrtc \
     && cd /root/webrtc/src \
-    && patch -p2 < /root/4k.patch \
     && patch -p1 < /root/nacl_armv6.patch \
+    && rm /root/webrtc/src/third_party/llvm-build/cr_build_revision \
+    && gclient sync \
+    && patch -p2 < /root/4k.patch \
   "
 
 # WebRTC のビルド

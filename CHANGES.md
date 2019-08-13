@@ -46,6 +46,8 @@
     - @kdxu
 - [FIX] Raspberry Pi でハードウェアエンコーダを利用した際に再接続できなくなることがある問題の修正
     - @tnoho
+- [FIX] libwebrtc M77 で作成した armv6 バイナリがクラッシュしてしまう問題の対策
+    - @tnoho
 
 ## 19.07.0
 
