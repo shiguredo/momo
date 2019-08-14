@@ -37,7 +37,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
     && prepare_webrtc_arm /root/webrtc-cache $WEBRTC_COMMIT /root/webrtc \
     && cd /root/webrtc/src \
     && patch -p1 < /root/nacl_armv6.patch \
-    && rm /root/webrtc/src/third_party/llvm-build/cr_build_revision \
+    && rm -f /root/webrtc/src/third_party/llvm-build/cr_build_revision \
     && gclient sync \
     && patch -p2 < /root/4k.patch \
   "
