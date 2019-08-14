@@ -15,6 +15,9 @@
     - @melpon
 - [UPDATE] Raspbian Buster に対応
     - @voluntas
+- [UPDATE] libwebrtc M77 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
+    - @voluntas
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
     - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
     - @voluntas
@@ -48,6 +51,10 @@
     - @tnoho
 - [FIX] libwebrtc M77 で作成した armv6 バイナリがクラッシュしてしまう問題の対策
     - @tnoho
+- [FIX] macOS 版 Momo で VideoToolbox 利用時の解像度変更時に落ちる問題の修正
+    - @hakobera
+- [FIX] macOS 版がビルドは成功するが動作させようとするとセグメンテーションフォルトする問題の修正
+    - @hakobera
 
 ## 19.07.0
 
