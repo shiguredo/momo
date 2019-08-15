@@ -26,6 +26,7 @@ extern "C"
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <queue>
 
 #include "api/video_codecs/video_encoder.h"
@@ -82,13 +83,13 @@ private:
   void SetBitrateBps(uint32_t bitrate_bps);
   int32_t SendFrame(unsigned char *buffer, size_t size);
 
+  std::mutex mtx_;
   webrtc::EncodedImageCallback *callback_;
   MMAL_COMPONENT_T* decoder_;
   MMAL_COMPONENT_T* resizer_;
   MMAL_COMPONENT_T* encoder_;
   MMAL_CONNECTION_T *conn1_;
   MMAL_CONNECTION_T *conn2_;
-  MMAL_QUEUE_T *queue_;
   MMAL_POOL_T *pool_in_;
   MMAL_POOL_T *pool_out_;
   webrtc::BitrateAdjuster bitrate_adjuster_;

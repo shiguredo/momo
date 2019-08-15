@@ -53,7 +53,6 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
       encoder_(nullptr),
       conn1_(nullptr),
       conn2_(nullptr),
-      queue_(nullptr),
       pool_out_(nullptr),
       bitrate_adjuster_(.5, .95),
       configured_width_(0),
@@ -66,7 +65,6 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec &codec)
 
 MMALH264Encoder::~MMALH264Encoder()
 {
-  Release();
 }
 
 int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
@@ -106,6 +104,8 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec *codec_settings,
 
 int32_t MMALH264Encoder::Release()
 {
+  std::lock_guard<std::mutex> lock(mtx_);
+  MMALRelease();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -251,8 +251,6 @@ int32_t MMALH264Encoder::MMALConfigure()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  queue_ = mmal_queue_create();
-
   component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_recommended;
   if (component_in->input[0]->buffer_size < component_in->input[0]->buffer_size_min)
     component_in->input[0]->buffer_size = component_in->input[0]->buffer_size_min;
@@ -354,53 +352,40 @@ void MMALH264Encoder::MMALRelease()
 {
   if (!encoder_)
     return;
+  if (encoder_)
+  {
+    mmal_component_disable(encoder_);
+  }
+  if (resizer_)
+  {
+    mmal_component_disable(resizer_);
+  }
+  if (decoder_)
+  {
+    mmal_component_disable(decoder_);
+  }
   if (decoder_ && decoder_->input[0]->is_enabled)
   {
-    if (mmal_port_disable(decoder_->input[0]) != MMAL_SUCCESS)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to disable input port";
-    }
-    mmal_port_flush(decoder_->input[0]);
-    mmal_port_flush(decoder_->output[0]);
-    mmal_port_flush(decoder_->control); 
+    mmal_port_disable(decoder_->input[0]);
+    mmal_port_pool_destroy(decoder_->input[0], pool_in_);
   }
   if (resizer_ && resizer_->input[0]->is_enabled)
   {
     if (!decoder_)
     {
-      if (mmal_port_disable(resizer_->input[0]) != MMAL_SUCCESS)
-      {
-        RTC_LOG(LS_ERROR) << "Failed to disable input port";
-      }
+      mmal_port_disable(resizer_->input[0]);
+      mmal_port_pool_destroy(resizer_->input[0], pool_in_);
     }
-    mmal_port_flush(resizer_->input[0]);
-    mmal_port_flush(resizer_->output[0]);
-    mmal_port_flush(resizer_->control); 
   }
   if (encoder_->input[0]->is_enabled)
   {
-    if (mmal_port_disable(encoder_->input[0]) != MMAL_SUCCESS)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to disable input port";
-    }
-    mmal_port_flush(encoder_->input[0]);
-    mmal_port_flush(encoder_->control); 
+    mmal_port_disable(encoder_->input[0]);
+    mmal_port_pool_destroy(encoder_->input[0], pool_in_);
   }
   if (encoder_->output[0]->is_enabled)
   {
-    if (mmal_port_disable(encoder_->output[0]) != MMAL_SUCCESS)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to disable output port";
-    }
-    mmal_port_flush(encoder_->output[0]);
-  }
-  if (conn1_)
-  {
-    mmal_connection_disable(conn1_);
-  }
-  if (conn2_)
-  {
-    mmal_connection_disable(conn2_);
+    mmal_port_disable(encoder_->output[0]);
+    mmal_port_pool_destroy(encoder_->output[0], pool_out_);
   }
   if (conn1_)
   {
@@ -426,25 +411,6 @@ void MMALH264Encoder::MMALRelease()
   {
     mmal_component_destroy(decoder_);
     decoder_ = nullptr;
-  }
-  if (queue_ != nullptr)
-  {
-    MMAL_BUFFER_HEADER_T *buffer;
-    while ((buffer = mmal_queue_get(queue_)) != nullptr)
-    {
-      mmal_buffer_header_release(buffer);
-    }
-    if (pool_in_ != nullptr)
-    {
-      mmal_pool_destroy(pool_in_);
-      pool_in_ = nullptr;
-    }
-    if (pool_out_ != nullptr)
-    {
-      mmal_pool_destroy(pool_out_);
-      pool_out_ = nullptr;
-    }
-    queue_ = nullptr;
   }
   while (!frame_params_.empty()) frame_params_.pop();
   encoded_image_buffer_.reset();
@@ -537,6 +503,7 @@ void MMALH264Encoder::MMALOutputCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T
 int32_t MMALH264Encoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback *callback)
 {
+  std::lock_guard<std::mutex> lock(mtx_);
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -585,6 +552,7 @@ int32_t MMALH264Encoder::Encode(
     const webrtc::VideoFrame &input_frame,
     const std::vector<webrtc::VideoFrameType> *frame_types)
 {
+  std::lock_guard<std::mutex> lock(mtx_);
   if (!callback_)
   {
     RTC_LOG(LS_WARNING) << "InitEncode() has been called, but a callback function "
