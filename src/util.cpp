@@ -112,7 +112,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
 #if USE_MMAL_ENCODER
   app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
-  app.add_flag("--use-native", cs.use_native, "MJPEGをハードウェアデコードする");
+  app.add_flag("--use-native", cs.use_native, "MJPEGのデコードとビデオのリサイズをハードウェアで行う");
 #endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");

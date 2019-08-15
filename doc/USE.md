@@ -40,13 +40,13 @@ raspi-config で Camera を Enable にしてください。
 さらに、以下のコマンドか
 
 ```
-$ sudo modprobe bcm2835-v4l2
+$ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
 
 /etc/modules に
 
 ```
-bcm2835-v4l2
+bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
 
 を追加して再起動してください。
@@ -145,8 +145,8 @@ Subcommands:
 
 #### Raspberry Pi 向けビルドのみ追加のオプションが存在します
 
-- --use-native は USB カメラ用で MJPEG をハードウェアデコードします
-- --force-i420 は Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします
+- --use-native は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
+- --force-i420 は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。USBカメラでは逆にフレームレートが落ちるため使わないでください。
 
 ```
 $ ./momo --help
@@ -157,8 +157,8 @@ Options:
   -h,--help                   Print this help message and exit
   --no-video                  ビデオを表示しない
   --no-audio                  オーディオを出さない
-  --force-i420                強制的にI420にする");
-  --use-native                MJPEGをハードウェアデコードする
+  --force-i420                強制的にI420にする
+  --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う
   --resolution STR in [QVGA,VGA,HD,FHD,4K]
                               解像度
   --framerate INT in [1 - 60] フレームレート
@@ -240,3 +240,15 @@ Options:
 ### コーデックの指定やビットレートを利用したい
 
 指定は WebRTC SFU Sora を利用したときだけ可能です。ただし受信側の SDP を動的に書き換えることで対応可能です。
+
+### Raspberry Pi 専用カメラでパフォーマンスが出ない
+
+[Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合](#raspbian-で-raspberry-pi-の-raspberry-pi-用カメラを利用する場合)通りに設定されているか確認してください。特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
+
+Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 RaspberryPi Zero の場合には
+
+```shell
+$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native p2p
+```
+
+がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
