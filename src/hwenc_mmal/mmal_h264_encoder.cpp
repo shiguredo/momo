@@ -352,38 +352,29 @@ void MMALH264Encoder::MMALRelease()
 {
   if (!encoder_)
     return;
-  if (encoder_)
-  {
-    mmal_component_disable(encoder_);
-  }
   if (resizer_)
   {
     mmal_component_disable(resizer_);
-  }
-  if (decoder_)
-  {
-    mmal_component_disable(decoder_);
-  }
-  if (decoder_ && decoder_->input[0]->is_enabled)
-  {
-    mmal_port_disable(decoder_->input[0]);
-    mmal_port_pool_destroy(decoder_->input[0], pool_in_);
-  }
-  if (resizer_ && resizer_->input[0]->is_enabled)
-  {
-    if (!decoder_)
+    if (decoder_)
+    {
+      mmal_component_disable(decoder_);
+      mmal_port_disable(decoder_->input[0]);
+      mmal_port_pool_destroy(decoder_->input[0], pool_in_);
+    }
+    else
     {
       mmal_port_disable(resizer_->input[0]);
       mmal_port_pool_destroy(resizer_->input[0], pool_in_);
     }
   }
-  if (encoder_->input[0]->is_enabled)
+  if (encoder_)
   {
-    mmal_port_disable(encoder_->input[0]);
-    mmal_port_pool_destroy(encoder_->input[0], pool_in_);
-  }
-  if (encoder_->output[0]->is_enabled)
-  {
+    mmal_component_disable(encoder_);
+    if (!resizer_)
+    {
+      mmal_port_disable(encoder_->input[0]);
+      mmal_port_pool_destroy(encoder_->input[0], pool_in_);
+    }
     mmal_port_disable(encoder_->output[0]);
     mmal_port_pool_destroy(encoder_->output[0], pool_out_);
   }
