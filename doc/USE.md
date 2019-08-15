@@ -43,7 +43,7 @@ raspi-config で Camera を Enable にしてください。
 $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
 
-/etc/modules に
+/etc/modules の末尾に
 
 ```
 bcm2835-v4l2 max_video_width=2592 max_video_height=1944
@@ -252,3 +252,15 @@ $ ./momo --resolution=HD --framerate=20 --force-i420 --use-native p2p
 ```
 
 がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
+
+### Raspberry Pi で USB カメラ利用時に use-native を使ってもフレームレートが出ない
+
+USB カメラ利用時には `--use-native` を使わない方がフレームレートは出ます。しかし `--use-native` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
+
+```
+gpu_mem=128
+force_turbo=1
+avoid_warnings=2
+```
+
+この設定であれば HD は 30fps, FHD では 15fps 程度の性能を発揮します。
