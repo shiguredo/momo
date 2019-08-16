@@ -27,7 +27,7 @@ $ make ubuntu-16.04_armv7_ros.package
 $ tree
 .
 ├── html
-│   ├── dev.html
+│   ├── test.html
 │   └── webrtc.js
 └── ビルドした momo
 ```
@@ -39,7 +39,7 @@ Momo のパッケージを https://github.com/shiguredo/momo/releases からダ�
 $ tree
 .
 ├── html
-│   ├── dev.html
+│   ├── test.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -81,12 +81,12 @@ Raspberry Pi の場合は非常にリソースが限られていますので、I
 $ rosrun audio_capture audio_capture _format:=wave _channels=1 _same_rate:=16000
 ```
 
-### Dev で動作を確認する
+### Test で動作を確認する
 
 - 実行例
 
 ```shell
-$ ./momo  _use_dev:=true \
+$ ./momo  _use_test:=true \
           _compressed:=false \
           image:=/usb_cam/image_raw \
           audio:=/audio \
@@ -95,7 +95,7 @@ $ ./momo  _use_dev:=true \
           _port:=8080
 ```
 
-http://[momo の IP アドレス]:8080/html/dev.html にアクセスしてください。
+http://[momo の IP アドレス]:8080/html/test.html にアクセスしてください。
 
 image には Web カメラから送られてくる画像データの topic を指定してください。
 audio にはマイクから送られてくる音声データの topic を指定してください。
