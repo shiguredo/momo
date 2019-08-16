@@ -36,7 +36,7 @@ struct ConnectionSettings
   bool sora_auto_connect = false;
   nlohmann::json sora_metadata;
 
-  std::string p2p_document_root;
+  std::string dev_document_root;
 
   std::string ayame_signaling_host;
   std::string ayame_room_id;
@@ -98,7 +98,7 @@ struct ConnectionSettings
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";
     os << "sora_metadata: " << cs.sora_metadata << "\n";
-    os << "p2p_document_root: " << cs.p2p_document_root << "\n";
+    os << "dev_document_root: " << cs.dev_document_root << "\n";
     return os;
   }
 };
