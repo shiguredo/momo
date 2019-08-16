@@ -15,6 +15,9 @@
     - @melpon
 - [UPDATE] Raspbian Buster に対応
     - @voluntas
+- [UPDATE] libwebrtc M77 コミットポジションを 6 にする
+    - libwebrtc のハッシュは 71e2db7296a26c6d9b18269668d74b764a320680
+    - @voluntas
 - [UPDATE] libwebrtc M77 コミットポジションを 3 にする
     - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
     - @voluntas
