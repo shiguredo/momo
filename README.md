@@ -78,8 +78,6 @@ Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_L
 
 ### macOS 版 Momo のビルドする
 
-**macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定してください**
-
 macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
 ## パッケージを作成する
