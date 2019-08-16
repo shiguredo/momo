@@ -85,7 +85,7 @@ Momo 自体がシグナリングサーバの機能も持つ開発モードです
 
 ```shell
 $ ./momo --version
-WebRTC Native Client Momo version 19.07.0
+WebRTC Native Client Momo version 19.08.0
 ```
 
 ### 開発モードで動作を確認する
@@ -114,7 +114,7 @@ $ ./momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://exam
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 19.07.0
+WebRTC Native Client Momo 19.08.0
 ```
 
 ```
