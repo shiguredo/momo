@@ -39,6 +39,8 @@ class AyameWebsocketClient : public std::enable_shared_from_this<AyameWebsocketC
 
     bool connected_;
 
+    webrtc::PeerConnectionInterface::IceServers ice_servers_;
+
 private:
     bool parseURL(URLParts& parts) const;
     boost::asio::ssl::context createSSLContext() const;

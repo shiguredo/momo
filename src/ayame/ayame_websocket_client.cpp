@@ -59,6 +59,7 @@ AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc, RTCMana
 void AyameWebsocketClient::reset() {
     connection_ = nullptr;
     connected_ = false;
+    ice_servers_.clear();
 
     if (parseURL(parts_)) {
         auto ssl_ctx = createSSLContext();
@@ -199,7 +200,6 @@ void AyameWebsocketClient::onConnect(boost::system::error_code ec) {
         reconnectAfter();
         return MOMO_BOOST_ERROR(ec, "connect");
     }
-
     // Websocket のハンドシェイク
     ws_->nativeSocket().async_handshake(parts_.host, parts_.path_query_fragment,
         boost::asio::bind_executor(
@@ -234,8 +234,11 @@ void AyameWebsocketClient::doRegister()
     json json_message = {
         {"type", "register"},
         {"clientId", conn_settings_.ayame_client_id},
-        {"roomId", conn_settings_.ayame_room_id}
+        {"roomId", conn_settings_.ayame_room_id},
     };
+    if (conn_settings_.ayame_signaling_key != "") {
+      json_message["key"] = conn_settings_.ayame_signaling_key;
+    }
     ws_->sendText(json_message.dump());
 }
 void AyameWebsocketClient::doSendPong() {
@@ -245,16 +248,14 @@ void AyameWebsocketClient::doSendPong() {
     ws_->sendText(json_message.dump());
 }
 
-// TODO(kdxu): ayame が iceServers の払い出しをするようになり次第対応する
 void AyameWebsocketClient::createPeerConnection()
 {
+  if (ice_servers_.empty()) {
+    return;
+  }
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
-  webrtc::PeerConnectionInterface::IceServers ice_servers;
-  webrtc::PeerConnectionInterface::IceServer ice_server;
 
-  ice_server.uri = "stun:stun.l.google.com:19302";
-  ice_servers.push_back(ice_server);
-  rtc_config.servers = ice_servers;
+  rtc_config.servers = ice_servers_;
 
   connection_ = manager_->createConnection(rtc_config, this);
 }
@@ -306,14 +307,40 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
     if (type == "accept")
     {
       if (!connection_) {
+        // 返却されてきた iceServers を セットする
+        try {
+          auto jservers = json_message["iceServers"];
+          for (auto jserver : jservers)
+          {
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            if (jserver.contains("username")) {
+              ice_server.username = jserver["username"];
+            }
+            if (jserver.contains("credential")) {
+              ice_server.password = jserver["credential"];
+            }
+            auto jurls = jserver["urls"];
+            for (const std::string url : jurls)
+            {
+              ice_server.urls.push_back(url);
+            }
+            ice_servers_.push_back(ice_server);
+          }
+        }
+        catch (json::type_error &e)
+        {
+          // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
+          webrtc::PeerConnectionInterface::IceServer ice_server;
+          ice_server.uri = "stun:stun.l.google.com:19302";
+          ice_servers_.push_back(ice_server);
+        }
         createPeerConnection();
+        // peer connection を生成したら offer SDP を生成して送信する
+        connection_->createOffer();
       }
     }
     if (type == "offer") {
-      if (!connection_) {
-        // accept よりあとに来るので、この時点で peer connection は生成されているべき
-        return;
-      }
+      createPeerConnection();
       const std::string sdp = json_message["sdp"];
       connection_->setOffer(sdp);
     }
@@ -336,21 +363,15 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t byte
         if (!connection_) {
             return;
         }
-        if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected) {
-          int sdp_mlineindex = 0;
-          std::string sdp_mid, candidate;
-          json ice = json_message["ice"];
-          sdp_mid = ice["sdpMid"];
-          sdp_mlineindex = ice["sdpMLineIndex"];
-          candidate = ice["candidate"];
-          connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-        }
+        int sdp_mlineindex = 0;
+        std::string sdp_mid, candidate;
+        json ice = json_message["ice"];
+        sdp_mid = ice["sdpMid"];
+        sdp_mlineindex = ice["sdpMLineIndex"];
+        candidate = ice["candidate"];
+        connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
     } else if (type == "ping") {
       if (!connection_) {
-        return;
-      }
-      if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected)
-      {
         return;
       }
       watchdog_.reset();
@@ -370,19 +391,29 @@ void AyameWebsocketClient::onIceConnectionStateChange(webrtc::PeerConnectionInte
             new_state));
 }
 void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid, const int sdp_mlineindex, const std::string sdp) {
+    // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
     json json_message = {
       {"type", "candidate"},
-      {"candidate", sdp}
+    };
+    // ice プロパティの中に object で candidate 情報をセットして送信する
+    json_message["ice"] = {
+      {"candidate", sdp},
+      {"sdpMLineIndex", sdp_mlineindex},
+      {"sdpMid", sdp_mid}
     };
     ws_->sendText(json_message.dump());
 }
+
 void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::string sdp) {
+    // sora と異なり ayame モードでは answer 以外 (offer) type の description を送信する場合もある
+    // なので type は "answer" 固定にしない
     json json_message = {
-      {"type", "answer"},
+      {"type", webrtc::SdpTypeToString(type)},
       {"sdp", sdp}
     };
     ws_->sendText(json_message.dump());
 }
+
 void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
   if (type == webrtc::SdpType::kOffer) {

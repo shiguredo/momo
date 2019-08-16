@@ -30,6 +30,10 @@ Momo はオープンソースソフトウェアですが、開発については
 
 まずは Discord にてご連絡ください。
 
+## 既知の問題について
+
+[既知の問題に対する解決方針](https://github.com/shiguredo/momo/issues/89)
+
 ## バイナリ提供について
 
 Raspberry Pi 向けのバイナリのみ提供を行っています。
@@ -38,9 +42,9 @@ H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以
 
 ## 動作環境
 
-- Raspbian Stretch ARMv7
+- Raspbian Buster ARMv7
     - Raspberry Pi 3 B/B+ で動作
-- Raspbian Stretch ARMv6
+- Raspbian Buster ARMv6
     - Raspberry Pi Zero W/WH で動作
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
@@ -76,8 +80,6 @@ Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_L
 
 macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
-macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed-resolution を必ず指定するようにしてください
-
 ## パッケージを作成する
 
 パッケージ作成に挑戦したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
@@ -87,7 +89,7 @@ macOS 版 Momo でハードウェアエンコーダを利用する際は --fixed
 Apache License 2.0
 
 ```
-Copyright 2018-2019, Shiguredo Inc, tnoho and melpon
+Copyright 2018-2019, Shiguredo Inc, tnoho and melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -135,3 +137,9 @@ WebRTC Native Client に対する有料でのサポート契約については W
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
 - [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)
+
+## Windows 版について
+
+Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
+
+[Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)

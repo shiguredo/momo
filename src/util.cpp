@@ -36,7 +36,7 @@ using json = nlohmann::json;
 #if USE_ROS
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_ayame, bool &use_sora,
+                        bool &use_test, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
@@ -48,12 +48,16 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   ros::NodeHandle local_nh("~");
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
 
-  local_nh.param<bool>("use_p2p", use_p2p, use_p2p);
+  local_nh.param<bool>("use_test", use_test, use_test);
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
   local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+#if USE_MMAL_ENCODER
+  local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
+  local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
+#endif
   local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
   local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
   local_nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
@@ -80,12 +84,15 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     {
       cs.sora_metadata = json::parse(sora_metadata);
     }
-  } else if (use_p2p) {
-    local_nh.param<std::string>("document_root", cs.p2p_document_root, get_current_dir_name());
-  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID") && && local_nh.hasParam("CLIENT_ID")) {
+  } else if (use_test) {
+    local_nh.param<std::string>("document_root", cs.test_document_root, get_current_dir_name());
+  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
     local_nh.getParam("ROOM_ID", cs.ayame_room_id);
-    local_nh.getParam("CLIENT_ID", cs.ayame_client_id);
+    // デフォルトはランダムな数値 17 桁
+    std::string default_ayame_client_id = generateRandomNumericChars(17);
+    local_nh.param<std::string>("client_id", cs.ayame_client_id, default_ayame_client_id);
+    local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key, cs.ayame_signaling_key);
   } else {
     exit(1);
   }
@@ -94,7 +101,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 #else
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_p2p, bool &use_ayame, bool &use_sora,
+                        bool &use_test, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   CLI::App app("Momo - WebRTC ネイティブクライアント");
@@ -103,6 +110,10 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
+#if USE_MMAL_ENCODER
+  app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
+  app.add_flag("--use-native", cs.use_native, "MJPEGのデコードとビデオのリサイズをハードウェアで行う");
+#endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
   app.add_option("--framerate", cs.framerate, "フレームレート")->check(CLI::Range(1, 60));
@@ -118,17 +129,20 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   app.add_option("--log-level", log_level, "ログレベル")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
-  auto p2p_app = app.add_subcommand("p2p", "P2P");
-  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
+  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
-  p2p_app
-      ->add_option("--document-root", cs.p2p_document_root, "配信ディレクトリ")
+  test_app
+      ->add_option("--document-root", cs.test_document_root, "配信ディレクトリ")
       ->check(CLI::ExistingDirectory);
 
   ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
   ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
-  ayame_app->add_option("CLIENT-ID", cs.ayame_client_id, "クライアントID")->required();
+  // デフォルトはランダムな数値 17 桁
+  cs.ayame_client_id = generateRandomNumericChars(17);
+  ayame_app ->add_option("--client-id", cs.ayame_client_id, "クライアントID");
+  ayame_app ->add_option("--signaling-key", cs.ayame_signaling_key, "シグナリングキー");
 
   sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "シグナリングホスト")->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")->required();
@@ -180,8 +194,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     cs.sora_metadata = json::parse(sora_metadata);
   }
 
-  if (cs.p2p_document_root.empty()) {
-    cs.p2p_document_root = boost::filesystem::current_path().string();
+  if (cs.test_document_root.empty()) {
+    cs.test_document_root = boost::filesystem::current_path().string();
   }
 
   if (version)
@@ -190,7 +204,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     exit(0);
   }
 
-  if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
+  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
   {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -200,8 +214,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     use_sora = true;
   }
 
-  if (p2p_app->parsed()) {
-    use_p2p = true;
+  if (test_app->parsed()) {
+    use_test = true;
   }
 
   if (ayame_app->parsed()) {
@@ -211,16 +225,28 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 
 #endif
 
-std::string Util::generateRundomChars()
+std::string Util::generateRandomChars()
 {
-  return generateRundomChars(32);
+  return generateRandomChars(32);
 }
 
-std::string Util::generateRundomChars(size_t length)
+std::string Util::generateRandomChars(size_t length)
 {
   std::string result;
   rtc::CreateRandomString(length, &result);
   return result;
+}
+
+std::string Util::generateRandomNumericChars(size_t length) {
+    auto randomNumerics = []() -> char
+    {
+        const char charset[] = "0123456789";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[ rand() % max_index ];
+    };
+    std::string result(length, 0);
+    std::generate_n(result.begin(), length, randomNumerics);
+    return result;
 }
 
 std::string Util::iceConnectionStateToString(

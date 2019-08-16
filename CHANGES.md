@@ -11,21 +11,84 @@
 
 ## develop
 
+## 19.08.0
+
+- [UPDATE] nlohmann/json を v3.7.0 にアップデートする
+    - @melpon
+- [UPDATE] Raspbian Buster に対応
+    - @voluntas
+- [UPDATE] libwebrtc M77 コミットポジションを 6 にする
+    - libwebrtc のハッシュは 71e2db7296a26c6d9b18269668d74b764a320680
+    - @voluntas
+- [UPDATE] libwebrtc M77 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
+    - @voluntas
+- [UPDATE] libwebrtc M76 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
+    - @voluntas
+- [UPDATE] I420 の時にもハードウェアでリサイズする
+    - @tnoho
+- [UPDATE] libwebrtc M77 に対応する
+    - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
+    - @kdxu
+- [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
+    - USB カメラ用で MJPEG をハードウェアデコードします
+    - @tnoho
+- [ADD] Raspberry Pi 向けに --force-i420 オプションを追加しました
+    - Raspberry Pi 専用カメラ用で MJPEG を使えないため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーする
+    - @tnoho
+- [ADD] Ayame のサブコマンドに --signaling-key を追加する
+    - @kdxu @tnoho
+- [ADD] Ayame 利用時に iceServers の払い出しに対応する
+    - 独自の STUN/TURN が利用可能になる
+    - @kdxu @tnoho
+- [CHANGE] Ayame のサブコマンドで client id を optional に指定できるように修正する
+    - @kdxu
+- [CHANGE] ./momo p2p を ./momo test に変更する
+    - @melpon
+- [FIX] Ayame の candidate 交換の際の JSON スキーマが間違っていたのを修正する
+    - @kdxu
+- [FIX] Ayame の sdp 交換の際の type が answer 固定になっていたのを修正する
+    - @kdxu
+- [FIX] Ayame で peer connection 生成後に createOffer して send する実装が漏れていたので追加する
+    - @kdxu
+- [FIX] Ayame で momo を起動したあとに映像を受信できない場合が発生するのバグを修正する
+    - @kdxu
+- [FIX] Raspberry Pi でハードウェアエンコーダを利用した際に再接続できなくなることがある問題の修正
+    - @tnoho
+- [FIX] libwebrtc M77 で作成した armv6 バイナリがクラッシュしてしまう問題の対策
+    - @tnoho
+- [FIX] macOS 版 Momo で VideoToolbox 利用時の解像度変更時に落ちる問題の修正
+    - @hakobera
+- [FIX] macOS 版がビルドは成功するが動作させようとするとセグメンテーションフォルトする問題の修正
+    - @hakobera
+- [FIX] Raspberry Pi でハードウェアエンコーダを利用した際にGPUのメモリを食いつぶしてしまう問題の修正
+    - @tnoho
+
 ## 19.07.0
 
 - [UPDATE] Raspberry Pi の H.264 を MMAL を利用したハードウェアエンコードに変更する
     - 720p 30fps や 1080p 20fps を可能にする
+    - @tnoho
 - [UPDATE] libwebrtc を M75 に上げる
     - libwebrtc のハッシュは 159c16f3ceea1d02d08d51fc83d843019d773ec6
+    - @tnoho
 - [UPDATE] libwebrtc を M76 に上げる
     - libwebrtc のハッシュは d91cdbd2dd2969889a1affce28c89b8c0f8bcdb7
+    - @kdxu
 - [UPDATE] Unified Plan に対応する
+    - @tnoho
 - [UPDATE] no-audio 時に AudioDevice を無効化するよう変更
+    - @tnoho
 - [UPDATE] CLI11 を v1.8.0 にアップデートする
+    - @melpon
 - [UPDATE] JSON v3.6.1 にアップデートする
+    - @melpon
 - [UPDATE] macOS のビルドドキュメントを独立させる
+    - @voluntas
 - [UPDATE] doc/CACHE.md を削除
     - make PACKAGE.clean にてビルドキャッシュの削除が可能になったため
+    - @melpon
 - [UPDATE] audio/video の共通オプションを sora のオプションに移動する
     - Momo 側ではコーデックやビットレートは指定できない
     - p2p の場合は HTML で sdp を切り替えている
@@ -33,14 +96,21 @@
     - --audio-bitrate
     - --video-codec
     - --video-bitrate
+    - @melpon
 - [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
+    - @kdxu
 - [ADD] WebRTC Signaling Server Ayame に対応しました
     - https://github.com/OpenAyame/ayame
+    - @kdxu
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
+    - @voluntas
 - [ADD] Circle CI で macOS 版を毎週日曜日 22:00 に自動ビルドする
+    - @voluntas
 - [FIX] macOS でデバイスがつかめなくなっていたのを修正する
     - ただし --fixed-resolution 必須
+    - @tnoho
 - [FIX] ROS 対応がビルドできなくなっていたのを修正する
+    - @tnoho
 
 ## 19.02.0
 

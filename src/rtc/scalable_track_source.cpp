@@ -18,6 +18,8 @@
 #include "api/video/video_rotation.h"
 #include "rtc_base/logging.h"
 
+#include "native_buffer.h"
+
 ScalableVideoTrackSource::ScalableVideoTrackSource() : AdaptedVideoTrackSource(4) {}
 ScalableVideoTrackSource::~ScalableVideoTrackSource() {}
 
@@ -51,6 +53,14 @@ void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) 
   if (!AdaptFrame(frame.width(), frame.height(), timestamp_us,
                   &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
+    return;
+  }
+
+  if (useNativeBuffer() && frame.video_frame_buffer()->type() == webrtc::VideoFrameBuffer::Type::kNative)
+  {
+    NativeBuffer* frame_buffer = dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
+    frame_buffer->SetScaledSize(adapted_width, adapted_height);
+    OnFrame(frame);
     return;
   }
 

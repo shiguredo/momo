@@ -28,6 +28,7 @@ class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
   webrtc::MediaSourceInterface::SourceState state() const override;
   bool remote() const override;
   void OnCapturedFrame(const webrtc::VideoFrame& frame);
+  virtual bool useNativeBuffer() { return false; }
 
  private:
   rtc::TimestampAligner timestamp_aligner_;

@@ -2,18 +2,18 @@
 
 ## Raspbian June 2018 (armv6) 向けパッケージの作成例
 
-raspbian-stretch_armv6 パッケージを作成する場合は raspbian-stretch_armv6.package と打つことでパッケージが作成されます。
+raspbian-buster_armv6 パッケージを作成する場合は raspbian-buster_armv6.package と打つことでパッケージが作成されます。
 
 ```shell
-$ make raspbian-stretch_armv6.package
+$ make raspbian-buster_armv6.package
 ```
 
 パッケージは build/package 以下に作成されます。
 
 ### 作成可能なパッケージ一覧
 
-- raspbian-stretch_armv6
-- raspbian-stretch_armv7
+- raspbian-buster_armv6
+- raspbian-buster_armv7
 - ubuntu-18.04_armv8
 - ubuntu-18.04_x86_64
 - macos
@@ -26,7 +26,7 @@ $ make raspbian-stretch_armv6.package
 $ tree
 .
 ├── html
-│   ├── p2p.html
+│   ├── test.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
