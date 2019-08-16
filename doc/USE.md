@@ -16,7 +16,7 @@ https://github.com/shiguredo/momo/releases にてバイナリをダウンロー�
 $ tree
 .
 ├── html
-│   ├── p2p.html
+│   ├── test.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -69,9 +69,9 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 Momo はモードを 3 つ持っています。
 
-### P2P モード
+### Test モード
 
-Momo 自体がシグナリングサーバの機能も持つモードです。
+Momo 自体がシグナリングサーバの機能も持つ開発モードです。
 
 ### Ayame モード
 
@@ -88,13 +88,13 @@ $ ./momo --version
 WebRTC Native Client Momo version 19.07.0
 ```
 
-### P2P で動作を確認する
+### 開発モードで動作を確認する
 
 ```shell
-$ ./momo --no-audio --port 8080 p2p
+$ ./momo --no-audio --port 8080 test
 ```
 
-http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
+http://[momo の IP アドレス]:8080/html/test.html にアクセスしてください。
 
 ### WebRTC Signaling Server Ayame で動作を確認する
 
@@ -126,19 +126,22 @@ Options:
   -h,--help                   Print this help message and exit
   --no-video                  ビデオを表示しない
   --no-audio                  オーディオを出さない
-  --resolution STR in [QVGA,VGA,HD,FHD,4K]
+  --resolution TEXT:{4K,FHD,HD,QVGA,VGA}
                               解像度
-  --framerate INT in [1 - 60] フレームレート
+  --framerate INT:INT in [1 - 60]
+                              フレームレート
   --fixed-resolution          固定解像度
-  --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
+  --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
                               優先設定 (Experimental)
-  --port INT in [0 - 65535]   ポート番号
+  --port INT:INT in [0 - 65535]
+                              ポート番号(デフォルト:8080)
   --daemon                    デーモン化する
   --version                   バージョン情報の表示
-  --log-level INT in [0 - 5]  ログレベル
+  --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
+                              ログレベル
 
 Subcommands:
-  p2p                         P2P
+  test                        開発向け
   ayame                       WebRTC Signaling Server Ayame
   sora                        WebRTC SFU Sora
 ```
@@ -171,23 +174,23 @@ Options:
   --log-level INT in [0 - 5]  ログレベル
 
 Subcommands:
-  p2p                         P2P
+  test                        開発向け
   ayame                       WebRTC Signaling Server Ayame
   sora                        WebRTC SFU Sora
 
 ```
 
-#### p2p
+#### test
 
 
 ```
-$ ./momo p2p --help
-P2P
-Usage: ./momo p2p [OPTIONS]
+$ ./momo test --help
+開発向け
+Usage: ./momo test [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
-  --document-root Directory   配信ディレクトリ
+  --document-root TEXT:DIR    配信ディレクトリ
 ```
 
 #### ayame
@@ -205,6 +208,7 @@ Positionals:
 Options:
   -h,--help                   Print this help message and exit
   --client-id TEXT            クライアントID
+  --signaling-key TEXT        シグナリングキー
 ```
 
 #### sora
@@ -219,16 +223,16 @@ Positionals:
   CHANNEL-ID TEXT REQUIRED    チャンネルID
 
 Options:
-  --video-codec STR in [VP8,VP9,H264]
-                              ビデオコーデック
-  --audio-codec STR in [OPUS,PCMU]
-                              オーディオコーデック
-  --video-bitrate INT in [1 - 30000]
-                              ビデオのビットレート
-  --audio-bitrate INT in [6 - 510]
-                              オーディオのビットレート
   -h,--help                   Print this help message and exit
   --auto                      自動接続する
+  --video-codec TEXT:{H264,VP8,VP9}
+                              ビデオコーデック
+  --audio-codec TEXT:{OPUS,PCMU}
+                              オーディオコーデック
+  --video-bitrate INT:INT in [1 - 30000]
+                              ビデオのビットレート
+  --audio-bitrate INT:INT in [6 - 510]
+                              オーディオのビットレート
 ```
 
 ## うまく動作しない時
@@ -248,7 +252,7 @@ Options:
 Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 RaspberryPi Zero の場合には
 
 ```shell
-$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native p2p
+$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native test
 ```
 
 がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
