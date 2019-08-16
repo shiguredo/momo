@@ -42,7 +42,7 @@
     - @kdxu @tnoho
 - [CHANGE] Ayame のサブコマンドで client id を optional に指定できるように修正する
     - @kdxu
-- [CHANGE] ./momo p2p を ./momo dev に変更する
+- [CHANGE] ./momo p2p を ./momo test に変更する
     - @melpon
 - [FIX] Ayame の candidate 交換の際の JSON スキーマが間違っていたのを修正する
     - @kdxu

@@ -11,7 +11,7 @@ class Util
 {
   public:
     static void parseArgs(int argc, char *argv[], bool &is_daemon,
-                          bool &use_dev, bool &use_ayame, bool &use_sora,
+                          bool &use_test, bool &use_ayame, bool &use_sora,
                           int &log_level, ConnectionSettings &cs);
     static std::string generateRandomChars();
     static std::string generateRandomChars(size_t length);

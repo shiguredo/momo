@@ -36,7 +36,7 @@ using json = nlohmann::json;
 #if USE_ROS
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_dev, bool &use_ayame, bool &use_sora,
+                        bool &use_test, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
@@ -48,7 +48,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   ros::NodeHandle local_nh("~");
   local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
 
-  local_nh.param<bool>("use_dev", use_dev, use_dev);
+  local_nh.param<bool>("use_test", use_test, use_test);
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
@@ -84,8 +84,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     {
       cs.sora_metadata = json::parse(sora_metadata);
     }
-  } else if (use_dev) {
-    local_nh.param<std::string>("document_root", cs.dev_document_root, get_current_dir_name());
+  } else if (use_test) {
+    local_nh.param<std::string>("document_root", cs.test_document_root, get_current_dir_name());
   } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("ROOM_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
     local_nh.getParam("ROOM_ID", cs.ayame_room_id);
@@ -101,7 +101,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 #else
 
 void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
-                        bool &use_dev, bool &use_ayame, bool &use_sora,
+                        bool &use_test, bool &use_ayame, bool &use_sora,
                         int &log_level, ConnectionSettings &cs)
 {
   CLI::App app("Momo - WebRTC ネイティブクライアント");
@@ -129,12 +129,12 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   app.add_option("--log-level", log_level, "ログレベル")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
-  auto dev_app = app.add_subcommand("dev", "開発向け");
+  auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
   auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
 
-  dev_app
-      ->add_option("--document-root", cs.dev_document_root, "配信ディレクトリ")
+  test_app
+      ->add_option("--document-root", cs.test_document_root, "配信ディレクトリ")
       ->check(CLI::ExistingDirectory);
 
   ayame_app->add_option("SIGNALING-URL", cs.ayame_signaling_host, "シグナリングホスト")->required();
@@ -194,8 +194,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     cs.sora_metadata = json::parse(sora_metadata);
   }
 
-  if (cs.dev_document_root.empty()) {
-    cs.dev_document_root = boost::filesystem::current_path().string();
+  if (cs.test_document_root.empty()) {
+    cs.test_document_root = boost::filesystem::current_path().string();
   }
 
   if (version)
@@ -204,7 +204,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     exit(0);
   }
 
-  if (!dev_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
+  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed())
   {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -214,8 +214,8 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     use_sora = true;
   }
 
-  if (dev_app->parsed()) {
-    use_dev = true;
+  if (test_app->parsed()) {
+    use_test = true;
   }
 
   if (ayame_app->parsed()) {

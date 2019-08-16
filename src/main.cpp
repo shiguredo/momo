@@ -41,12 +41,12 @@ int main(int argc, char* argv[])
   ConnectionSettings cs;
 
   bool is_daemon = false;
-  bool use_dev = false;
+  bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_dev, use_ayame, use_sora, log_level, cs);
+  Util::parseArgs(argc, argv, is_daemon, use_test, use_ayame, use_sora, log_level, cs);
 
 #ifndef _MSC_VER
   if (is_daemon)
@@ -113,9 +113,9 @@ int main(int argc, char* argv[])
         std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
       }
 
-      if (use_dev) {
+      if (use_test) {
         const boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::make_address("0.0.0.0"), static_cast<unsigned short>(cs.port)};
-        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.dev_document_root), rtc_manager.get(), cs)->run();
+        std::make_shared<P2PServer>(ioc, endpoint, std::make_shared<std::string>(cs.test_document_root), rtc_manager.get(), cs)->run();
       }
 
       if (use_ayame) {
