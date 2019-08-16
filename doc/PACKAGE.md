@@ -26,7 +26,7 @@ $ make raspbian-buster_armv6.package
 $ tree
 .
 ├── html
-│   ├── p2p.html
+│   ├── dev.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo

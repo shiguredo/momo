@@ -16,7 +16,7 @@ https://github.com/shiguredo/momo/releases にてバイナリをダウンロー�
 $ tree
 .
 ├── html
-│   ├── p2p.html
+│   ├── dev.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -69,9 +69,9 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 Momo はモードを 3 つ持っています。
 
-### P2P モード
+### Dev モード
 
-Momo 自体がシグナリングサーバの機能も持つモードです。
+Momo 自体がシグナリングサーバの機能も持つ開発モードです。
 
 ### Ayame モード
 
@@ -88,13 +88,13 @@ $ ./momo --version
 WebRTC Native Client Momo version 19.07.0
 ```
 
-### P2P で動作を確認する
+### 開発モードでで動作を確認する
 
 ```shell
-$ ./momo --no-audio --port 8080 p2p
+$ ./momo --no-audio --port 8080 dev
 ```
 
-http://[momo の IP アドレス]:8080/html/p2p.html にアクセスしてください。
+http://[momo の IP アドレス]:8080/html/dev.html にアクセスしてください。
 
 ### WebRTC Signaling Server Ayame で動作を確認する
 
@@ -138,7 +138,7 @@ Options:
   --log-level INT in [0 - 5]  ログレベル
 
 Subcommands:
-  p2p                         P2P
+  dev                         dev
   ayame                       WebRTC Signaling Server Ayame
   sora                        WebRTC SFU Sora
 ```
@@ -171,19 +171,19 @@ Options:
   --log-level INT in [0 - 5]  ログレベル
 
 Subcommands:
-  p2p                         P2P
+  dev                         開発向け
   ayame                       WebRTC Signaling Server Ayame
   sora                        WebRTC SFU Sora
 
 ```
 
-#### p2p
+#### dev
 
 
 ```
-$ ./momo p2p --help
-P2P
-Usage: ./momo p2p [OPTIONS]
+$ ./momo dev --help
+dev
+Usage: ./momo dev [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
@@ -248,7 +248,7 @@ Options:
 Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 RaspberryPi Zero の場合には
 
 ```shell
-$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native p2p
+$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native dev
 ```
 
 がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
