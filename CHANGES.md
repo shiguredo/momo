@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.08.0
+
 - [UPDATE] nlohmann/json を v3.7.0 にアップデートする
     - @melpon
 - [UPDATE] Raspbian Buster に対応
