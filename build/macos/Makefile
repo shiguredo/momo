@@ -20,7 +20,17 @@ clean:
 	rm -rf boost
 	rm -rf boost-*
 
-$(LIBWEBRTC):
+.PHONY: check
+check:
+	@if [ "`python --version 2>&1 | cut -d' ' -f2 | cut -b1-3`" != "2.7" ]; then \
+	  echo ""; \
+	  echo "Python 3 では WebRTC をビルドできません。Python 2.7 を利用して下さい。"; \
+	  echo "macOS でのビルド方法については doc/BUILD.md を確認して下さい。"; \
+	  echo ""; \
+	  exit 1; \
+	fi
+
+$(LIBWEBRTC): check
 	source ../../script/docker.sh && \
 	export PATH="$(CURDIR)/webrtc/depot_tools:$(PATH)" && \
 	export GYP_DEFINES="OS=mac target_arch=x64" && \
