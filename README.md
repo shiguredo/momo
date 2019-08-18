@@ -60,25 +60,9 @@ H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-### ROS ノードとして使ってみる
-
-**自前でのビルドが必要になります**
-
-Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
-
-###  ARM 対応版 ROS ノードとして使ってみる
-
-**自前でのビルドが必要になります**
-
-ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
-
 ## ビルドする
 
 Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください。
-
-### macOS 版 Momo のビルドする
-
-macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください。
 
 ## パッケージを作成する
 

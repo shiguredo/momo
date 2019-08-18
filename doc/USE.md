@@ -1,121 +1,42 @@
 # Momo を使ってみる
 
-## Raspberry Pi 向けのバイナリは以下にて提供しています
+## Raspberry Pi で Momo を使ってみる
 
-https://github.com/shiguredo/momo/releases にてバイナリをダウンロードしてください。
+[USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
 
-必要なライブラリをインストールしてご利用ください。
+## Mac で Momo を使ってみる
 
-### それ以外のバイナリは自前でビルドしていただく必要があります。
+[USE_MAC.md](USE_MAC.md) をお読みください。
 
-[BUILD.md](doc/BUILD.md) をお読みください。
+## WebRTC Signaling Server Ayame を使って Momo を動かしてみる
 
-## ダウンロードしたパッケージ、解凍後の構成
+時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-```
-$ tree
-.
-├── html
-│   ├── test.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
-```
+[USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-## Raspbian で Raspberry Pi を利用する場合
+## WebRTC SFU Sora を使って Momo を動かしてみる
 
-Raspbian にて下記を実行してください。
+時雨堂が開発、販売している商用の WebRTC SFU Sora を利用します。
 
-```
-$ sudo apt-get install libnspr4 libnss3
-```
+この機能を利用する場合は事前に Sora のライセンスを購入する必要がありますので、ご注意ください。
 
-## Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
+[USE_SORA.md](USE_SORA.md) をお読みください。
 
-これは USB カメラを利用する場合は不要なオプションです。
+## ROS ノードとして Momo を使ってみる
 
-raspi-config で Camera を Enable にしてください。
+- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
+- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
-さらに、以下のコマンドか
+## コマンド
 
-```
-$ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
-```
-
-/etc/modules の末尾に
-
-```
-bcm2835-v4l2 max_video_width=2592 max_video_height=1944
-```
-
-を追加して再起動してください。
-
-## 注意
-
-### 4K を利用する場合
-
-- 4K を利用可能なのは現時点で x86_64 のみです
-    - arm 系でも指定はできるようになっていますが、マシンリソースが足らず動作しません
-- ロジクールの BRIO 4K のみ動作確認しています
-
-### プレビュー版の機能
-
-下記はプレビュー版の機能です
-
-- 固定解像度 --fixed-resolution
-
-## 利用方法
-
-Momo はモードを 3 つ持っています。
-
-### Test モード
-
-Momo 自体がシグナリングサーバの機能も持つ開発モードです。
-
-### Ayame モード
-
-オープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用するモードです。
-
-### Sora モード
-
-商用 WebRTC SFU の [WebRTC SFU Sora](https://sora.shiguredo.jp/) を利用するモードです。
-
-### バージョン確認
-
-```shell
-$ ./momo --version
-WebRTC Native Client Momo version 19.08.0
-```
-
-### 開発モードで動作を確認する
-
-```shell
-$ ./momo --no-audio --port 8080 test
-```
-
-http://[momo の IP アドレス]:8080/html/test.html にアクセスしてください。
-
-### WebRTC Signaling Server Ayame で動作を確認する
-
-```shell
-$ ./momo --no-audio ayame wss://example.com/ws open-momo
-```
-
-### WebRTC SFU Sora で動作を確認する
-
-**この機能を利用する場合は WebRTC SFU Sora のライセンス契約が必要です**
-
-```shell
-$ ./momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://example.com/signaling open-momo
-```
-
-### コマンド
+### バージョン情報
 
 ```
 $ ./momo --version
 WebRTC Native Client Momo 19.08.0
 ```
+
+### ヘルプ
 
 ```
 $ ./momo --help
@@ -146,41 +67,7 @@ Subcommands:
   sora                        WebRTC SFU Sora
 ```
 
-#### Raspberry Pi 向けビルドのみ追加のオプションが存在します
-
-- --use-native は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
-- --force-i420 は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。USBカメラでは逆にフレームレートが落ちるため使わないでください。
-
-```
-$ ./momo --help
-Momo - WebRTC ネイティブクライアント
-Usage: ./momo [OPTIONS] [SUBCOMMAND]
-
-Options:
-  -h,--help                   Print this help message and exit
-  --no-video                  ビデオを表示しない
-  --no-audio                  オーディオを出さない
-  --force-i420                強制的にI420にする
-  --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う
-  --resolution STR in [QVGA,VGA,HD,FHD,4K]
-                              解像度
-  --framerate INT in [1 - 60] フレームレート
-  --fixed-resolution          固定解像度
-  --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
-                              優先設定 (Experimental)
-  --port INT in [0 - 65535]   ポート番号
-  --daemon                    デーモン化する
-  --version                   バージョン情報の表示
-  --log-level INT in [0 - 5]  ログレベル
-
-Subcommands:
-  test                        開発向け
-  ayame                       WebRTC Signaling Server Ayame
-  sora                        WebRTC SFU Sora
-
-```
-
-#### test
+### test モードヘルプ
 
 
 ```
@@ -193,7 +80,7 @@ Options:
   --document-root TEXT:DIR    配信ディレクトリ
 ```
 
-#### ayame
+### ayame モードヘルプ
 
 
  ```
@@ -211,7 +98,7 @@ Options:
   --signaling-key TEXT        シグナリングキー
 ```
 
-#### sora
+### sora モードヘルプ
 
 ```
 $ ./momo sora --help
@@ -243,28 +130,4 @@ Options:
 
 ### コーデックの指定やビットレートを利用したい
 
-指定は WebRTC SFU Sora を利用したときだけ可能です。ただし受信側の SDP を動的に書き換えることで対応可能です。
-
-### Raspberry Pi 専用カメラでパフォーマンスが出ない
-
-[Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合](#raspbian-で-raspberry-pi-の-raspberry-pi-用カメラを利用する場合)通りに設定されているか確認してください。特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
-
-Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 RaspberryPi Zero の場合には
-
-```shell
-$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native test
-```
-
-がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
-
-### Raspberry Pi で USB カメラ利用時に use-native を使ってもフレームレートが出ない
-
-USB カメラ利用時には `--use-native` を使わない方がフレームレートは出ます。しかし `--use-native` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
-
-```
-gpu_mem=128
-force_turbo=1
-avoid_warnings=2
-```
-
-この設定であれば HD は 30fps, FHD では 15fps 程度の性能を発揮します。
+Momo 側からの指定は WebRTC SFU Sora を利用したときだけ可能です。ただし受信側で指定する指定することで対応可能です。
