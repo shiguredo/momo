@@ -47,19 +47,9 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 を追加して再起動してください。
 
-## まずは動かしてみる
+## 動かしてみる
 
-Momo 自体がシグナリングサーバの機能を持つ test モードを利用して動かしてみてください。
-
-```shell
-$ ./momo --no-audio --port 8080 test
-```
-
-http://[momo の IP アドレス]:8080/html/test.html にアクセスして接続してみてください。
-
-うまく接続できたら、次は是非 Ayame を利用して動かしてみてください。
-
-Ayame を利用する場合は [USE_AYAME.md](doc/USE_AYAME.md) をご確認ください。
+動かし方については [USE_TEST.md](USE_TEST.md) をご確認ください。
 
 ## Raspberry Pi 向けビルド向けの追加のオプション
 
@@ -106,12 +96,3 @@ avoid_warnings=2
 この設定であれば HD は 30fps, FHD では 15fps 程度の性能を発揮します。
 
 
-## Sora モードで確認する
-
-商用 WebRTC SFU の [WebRTC SFU Sora](https://sora.shiguredo.jp/) を利用するモードです。
-
-**この機能を利用する場合は WebRTC SFU Sora のライセンス契約が必要です**
-
-```shell
-$ ./momo --no-audio sora --auto --video-codec VP8 --video-bitrate 500 wss://example.com/signaling open-momo
-```
