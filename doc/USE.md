@@ -2,17 +2,17 @@
 
 ## Raspberry Pi で Momo を使ってみる
 
-[USE_RASPBERRY_PI.md](doc/USE_RASPBERRY_PI.md) をお読みください。
+[USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
 
 ## Mac で Momo を使ってみる
 
-[USE_MAC.md](doc/USE_MAC.md) をお読みください。
+[USE_MAC.md](USE_MAC.md) をお読みください。
 
 ## WebRTC Signaling Server Ayame を使って Momo を動かしてみる
 
 時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-[USE_AYAME.md](doc/USE_AYAME.md) をお読みください。
+[USE_AYAME.md](USE_AYAME.md) をお読みください。
 
 ## WebRTC SFU Sora を使って Momo を動かしてみる
 
@@ -20,12 +20,12 @@
 
 この機能を利用する場合は事前に Sora のライセンスを購入する必要がありますので、ご注意ください。
 
-[USE_SORA.md](doc/USE_SORA.md) をお読みください。
+[USE_SORA.md](USE_SORA.md) をお読みください。
 
 ## ROS ノードとして Momo を使ってみる
 
-- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](doc/USE_ROS.md) をお読みください。
-- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](doc/USE_ARM_ROS.md) をお読みください。
+- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
+- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
 ## コマンド
 
