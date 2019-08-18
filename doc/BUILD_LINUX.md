@@ -13,7 +13,7 @@ $ git clone git@github.com:shiguredo/momo.git
 
 Linux 版 Momo をビルドする際には Docker 18.09 以降が必要になりますので、事前にインストールしておいてください。
 
-Windows の docker は未検証です。Linux 版、または macOS 版の Docker をご利用ください。
+Windows の docker では未検証です。Linux 版、または macOS 版の Docker をご利用ください。
 
 また、make コマンド実行時に NOMOUNT=1 オプションを指定することで、
 マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
