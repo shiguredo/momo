@@ -33,7 +33,9 @@ $ yarn serve
 
 URL の引数にルーム ID を指定してアクセスします。
 
+```
 http://localhost:3000/recvonly.html?roomId=open-momo
+```
 
 
 ### サインアップする場合
@@ -61,4 +63,6 @@ $ yarn serve
 
 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。
 
+```
 http://localhost:3000/recvonly.html?roomId=shiguredo@ayame-lite&key=fW7LX2hv4k9AnB-S69L1HpaApcXYSp-mrxBhJgqulEHAr7BK
+```
