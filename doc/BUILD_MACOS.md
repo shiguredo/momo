@@ -43,16 +43,6 @@ $ xcode-select --print-path
 $ sudo xcode-select -s /Applications/Xcode.app
 ```
 
-また、libwebrtc のビルド中にいくつかの Python スクリプトが呼び出されますが、そこでは Python 2 系が入っていることが期待されています。
-macOS に同梱されている Python 以外の python を入れている場合は、バージョンを確認して、必要に応じてバージョンを切り替えておいてください。
-例えば `pyenv` を利用している場合は、ビルド前に system を利用するように指定し、Python 2 が利用されること確認してください。
-
-```shell
-$ pyenv local system
-$ python --version
-Python 2.7.10
-```
-
 ### ビルド方法
 
 build ディレクトリ以下で make macos と打つことで Momo の macOS 向けバイナリが生成されます。
