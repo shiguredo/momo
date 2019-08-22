@@ -51,7 +51,35 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 動かし方については [USE_TEST.md](USE_TEST.md) をご確認ください。
 
-## Raspberry Pi 向けビルド向けの追加のオプション
+## Raspberry Pi 向けの追加のオプション
+
+```
+$ ./momo --help
+Momo - WebRTC ネイティブクライアント
+Usage: ./momo [OPTIONS] [SUBCOMMAND]
+Options:
+  -h,--help                   Print this help message and exit
+  --no-video                  ビデオを表示しない
+  --no-audio                  オーディオを出さない
+  --force-i420                強制的にI420にする
+  --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う
+  --video-device              ビデオデバイス指定
+  --resolution STR in [QVGA,VGA,HD,FHD,4K]
+                              解像度
+  --framerate INT in [1 - 60] フレームレート
+  --fixed-resolution          固定解像度
+  --priority STR in [BALANCE,FRAMERATE,RESOLUTION]
+                              優先設定 (Experimental)
+  --port INT in [0 - 65535]   ポート番号
+  --daemon                    デーモン化する
+  --version                   バージョン情報の表示
+  --log-level INT in [0 - 5]  ログレベル
+Subcommands:
+  test                        開発向け
+  ayame                       WebRTC Signaling Server Ayame
+  sora                        WebRTC SFU Sora
+```
+
 
 ### --use-native
 
