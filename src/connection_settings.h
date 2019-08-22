@@ -21,6 +21,7 @@ struct ConnectionSettings
   bool no_audio = false;
   bool force_i420 = false;
   bool use_native = false;
+  std::string video_device = "";
   std::string video_codec = "VP8";
   std::string audio_codec = "OPUS";
   int video_bitrate = 0;

@@ -113,6 +113,7 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
 #if USE_MMAL_ENCODER
   app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
   app.add_flag("--use-native", cs.use_native, "MJPEGのデコードとビデオのリサイズをハードウェアで行う");
+  app.add_option("--video-device", cs.video_device, "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")->check(CLI::ExistingFile);
 #endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
