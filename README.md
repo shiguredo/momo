@@ -115,12 +115,16 @@ WebRTC Native Client に対する有料でのサポート契約については W
 - Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要
     - [QuickSync \- H\.264 patent licensing fees](https://software.intel.com/en-us/forums/intel-media-sdk/topic/494720)
 
-## 利用例
+## 利用例など
 
 - [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
 - [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)
+- [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
+- [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
+- [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
+
 
 ## Windows 版について
 
