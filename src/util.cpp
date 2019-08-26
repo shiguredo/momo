@@ -75,7 +75,6 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
     local_nh.getParam("CHANNEL_ID", cs.sora_channel_id);
     local_nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
 
-    // 隠しオプション
     std::string sora_metadata;
     local_nh.param<std::string>("metadata", sora_metadata, "");
 
@@ -165,7 +164,6 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
                    "オーディオのビットレート")
       ->check(CLI::Range(6, 510));
 
-  // 隠しオプション
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
         try {
@@ -178,7 +176,6 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
       "JSON Value");
   std::string sora_metadata;
   sora_app->add_option("--metadata", sora_metadata, "メタデータ")
-      ->group("")
       ->check(is_json);
 
   try
