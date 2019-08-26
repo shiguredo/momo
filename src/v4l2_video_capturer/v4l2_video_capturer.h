@@ -32,12 +32,14 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
       size_t capture_device_index);
   V4L2VideoCapture();
   ~V4L2VideoCapture();
-  int32_t Init(const char* deviceUniqueId);
+  int32_t Init(const char* deviceUniqueId, const std::string& specifiedVideoDevice);
   int32_t StartCapture(ConnectionSettings cs);
 
   bool useNativeBuffer() override;
 
  private:
+  bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
+
   enum { kNoOfV4L2Bufffers = 4 };
 
   int32_t StopCapture();
@@ -50,7 +52,7 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
   std::unique_ptr<rtc::PlatformThread> _captureThread;
   rtc::CriticalSection _captureCritSect;
   bool quit_ RTC_GUARDED_BY(_captureCritSect);
-  int32_t _deviceId;
+  std::string _videoDevice;
   int32_t _deviceFd;
 
   int32_t _buffersAllocatedByDevice;

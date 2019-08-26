@@ -42,7 +42,22 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(ConnectionSettings
     RTC_LOG(LS_ERROR) << "Failed to CreateDeviceInfo";
     return nullptr;
   }
+
+  // 便利なのでデバイスの一覧をログに出力しておく
   int num_devices = device_info->NumberOfDevices();
+  for (int i = 0; i < num_devices; ++i) {
+    char device_name[256];
+    char unique_name[256];
+    if (device_info->GetDeviceName(static_cast<uint32_t>(i),
+                                   device_name, sizeof(device_name),
+                                   unique_name, sizeof(unique_name)) != 0)
+    {
+      RTC_LOG(LS_WARNING) << "Failed to GetDeviceName(" << i << ")";
+      continue;
+    }
+    RTC_LOG(LS_INFO) << "GetDeviceName(" << i << "): device_name=" << device_name << ", unique_name=" << unique_name;
+  }
+
   for (int i = 0; i < num_devices; ++i) {
     capturer = Create(device_info.get(), cs, i);
     if (capturer) {
@@ -69,7 +84,7 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
   }                          
   rtc::scoped_refptr<V4L2VideoCapture> v4l2_capturer(
     new rtc::RefCountedObject<V4L2VideoCapture>());
-  if (v4l2_capturer->Init((const char*)&unique_name) < 0) {
+  if (v4l2_capturer->Init((const char*)&unique_name, cs.video_device) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapture("
                         << unique_name 
                         << ")";
@@ -85,8 +100,7 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
 }
 
 V4L2VideoCapture::V4L2VideoCapture()
-    : _deviceId(-1),
-      _deviceFd(-1),
+    : _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
       _currentWidth(-1),
       _currentHeight(-1),
@@ -96,39 +110,57 @@ V4L2VideoCapture::V4L2VideoCapture()
       _captureVideoType(webrtc::VideoType::kI420),
       _pool(NULL) {}
 
-int32_t V4L2VideoCapture::Init(const char* deviceUniqueIdUTF8) {
+bool V4L2VideoCapture::FindDevice(const char* deviceUniqueIdUTF8, const std::string& device) {
   int fd;
-  char device[32];
-  bool found = false;
-
-  /* detect /dev/video [0-63] entries */
-  int n;
-  for (n = 0; n < 64; n++) {
-    sprintf(device, "/dev/video%d", n);
-    if ((fd = open(device, O_RDONLY)) != -1) {
-      // query device capabilities
-      struct v4l2_capability cap;
-      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-        if (cap.bus_info[0] != 0) {
-          if (strncmp((const char*)cap.bus_info,
-                      (const char*)deviceUniqueIdUTF8,
-                      strlen((const char*)deviceUniqueIdUTF8)) ==
-              0)  // match with device id
-          {
-            close(fd);
-            found = true;
-            break;  // fd matches with device unique id supplied
-          }
+  if ((fd = open(device.c_str(), O_RDONLY)) != -1) {
+    // query device capabilities
+    struct v4l2_capability cap;
+    if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
+      if (cap.bus_info[0] != 0) {
+        if (strncmp((const char*)cap.bus_info,
+                    (const char*)deviceUniqueIdUTF8,
+                    strlen((const char*)deviceUniqueIdUTF8)) ==
+            0)  // match with device id
+        {
+          close(fd);
+          return true;
         }
       }
-      close(fd);  // close since this is not the matching device
+    }
+    close(fd);  // close since this is not the matching device
+  }
+  return false;
+}
+
+int32_t V4L2VideoCapture::Init(const char* deviceUniqueIdUTF8, const std::string& specifiedVideoDevice) {
+  int fd;
+  bool found = false;
+
+  if (!specifiedVideoDevice.empty()) {
+    // specifiedVideoDevice が指定されてる場合はそれだけ調べる
+    if (FindDevice(deviceUniqueIdUTF8, specifiedVideoDevice)) {
+      found = true;
+      _videoDevice = specifiedVideoDevice;
+    }
+  } else {
+    // specifiedVideoDevice が指定されてない場合は頑張って探す
+    /* detect /dev/video [0-63] entries */
+    char device[32];
+    int n;
+    for (n = 0; n < 64; n++) {
+      sprintf(device, "/dev/video%d", n);
+      if (FindDevice(deviceUniqueIdUTF8, device)) {
+        found = true;
+        _videoDevice = device;  // store the video device
+        break;
+      }
     }
   }
+
   if (!found) {
     RTC_LOG(LS_INFO) << "no matching device found";
     return -1;
   }
-  _deviceId = n;  // store the device id
   return 0;
 }
 
@@ -150,11 +182,8 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
 
   rtc::CritScope critScope(&_captureCritSect);
   // first open /dev/video device
-  char device[20];
-  sprintf(device, "/dev/video%d", (int)_deviceId);
-
-  if ((_deviceFd = open(device, O_RDWR | O_NONBLOCK, 0)) < 0) {
-    RTC_LOG(LS_INFO) << "error in opening " << device << " errono = " << errno;
+  if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
+    RTC_LOG(LS_INFO) << "error in opening " << _videoDevice << " errono = " << errno;
     return -1;
   }
 

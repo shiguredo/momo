@@ -99,11 +99,20 @@ USBカメラでは逆にフレームレートが落ちるため使わないで�
 $ ./momo --force-i420 --no-audio --port 8080 test
 ```
 
+### --video-device
+
+`--video-device` は Raspberry Pi でビデオデバイス（つまりカメラ）を指定する機能です。 1 台の Raspberry Pi で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれここに割り当てたい時に利用できます。
+
+
+```shell
+$ ./momo --video-device /dev/video0 test
+```
+
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない
 
 [Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合](#raspbian-で-raspberry-pi-の-raspberry-pi-用カメラを利用する場合)通りに設定されているか確認してください。特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
 
-Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 RaspberryPi Zero の場合には
+Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
 ```shell
 $ ./momo --resolution=HD --framerate=20 --force-i420 --use-native test
@@ -122,5 +131,3 @@ avoid_warnings=2
 ```
 
 この設定であれば HD は 30fps, FHD では 15fps 程度の性能を発揮します。
-
-
