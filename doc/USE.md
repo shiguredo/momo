@@ -120,6 +120,7 @@ Options:
                               ビデオのビットレート
   --audio-bitrate INT:INT in [6 - 510]
                               オーディオのビットレート
+  --metadata TEXT:JSON Value  メタデータ
 ```
 
 ## うまく動作しない時
