@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.08.1
+
 - [ADD] Raspberry Pi 用に `--video-device` オプションを追加
     - @melpon
 - [UPDATE] sora の metadata オプションを公開する
