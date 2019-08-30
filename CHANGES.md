@@ -11,6 +11,13 @@
 
 ## develop
 
+## 19.08.1
+
+- [ADD] Raspberry Pi 用に `--video-device` オプションを追加
+    - @melpon
+- [UPDATE] sora の metadata オプションを公開する
+    - @melpon
+
 ## 19.08.0
 
 - [UPDATE] nlohmann/json を v3.7.0 にアップデートする
@@ -22,15 +29,12 @@
     - @voluntas
 - [UPDATE] libwebrtc M77 コミットポジションを 3 にする
     - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
-    - @voluntas
+    - @kdxu @voluntas
 - [UPDATE] libwebrtc M76 コミットポジションを 3 にする
     - libwebrtc のハッシュは 9863f3d246e2da7a2e1f42bbc5757f6af5ec5682
     - @voluntas
 - [UPDATE] I420 の時にもハードウェアでリサイズする
     - @tnoho
-- [UPDATE] libwebrtc M77 に対応する
-    - libwebrtc のハッシュは 3d8e627cb5893714a66082544d562cbf4a561515
-    - @kdxu
 - [ADD] Raspberry Pi 向けに --use-native オプションを追加しました
     - USB カメラ用で MJPEG をハードウェアデコードします
     - @tnoho
