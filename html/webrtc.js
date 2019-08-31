@@ -308,6 +308,8 @@ function getOffer() {
 }
 */
 
+// Stack Overflow より引用: https://stackoverflow.com/a/52760103
+// https://stackoverflow.com/questions/52738290/how-to-remove-video-codecs-in-webrtc-sdp
 function removeCodec(orgsdp, codec) {
   const internalFunc = (sdp) => {
     const codecre = new RegExp('(a=rtpmap:(\\d*) ' + codec + '\/90000\\r\\n)');
