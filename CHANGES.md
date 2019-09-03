@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M77 コミットポジションを 10 にする
+    - libwebrtc のハッシュは ad73985e75684cb4ac4dadb9d3d86ad0d66612a0
+    - @voluntas
+
 ## 19.08.1
 
 - [ADD] Raspberry Pi 用に `--video-device` オプションを追加
