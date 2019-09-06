@@ -99,7 +99,8 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   _factory = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   if (!_factory.get())
   {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to initialize PeerConnectionFactory";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << ": Failed to initialize PeerConnectionFactory";
     exit(1);
   }
 
@@ -139,7 +140,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
           rtc_config, nullptr, nullptr, observer);
   if (!connection)
   {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "CreatePeerConnection failed";
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
   }
 
@@ -147,19 +148,31 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 
   if (!_conn_settings.no_audio)
   {
+    cricket::AudioOptions ao;
+    if (_conn_settings.disable_echo_cancellation)
+      ao.echo_cancellation = false;
+    if (_conn_settings.disable_auto_gain_control)
+      ao.auto_gain_control = false;
+    if (_conn_settings.disable_noise_suppression)
+      ao.noise_suppression = false;
+    if (_conn_settings.disable_highpass_filter)
+      ao.highpass_filter = false;
+    if (_conn_settings.disable_typing_detection)
+      ao.typing_detection = false;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
     rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
         _factory->CreateAudioTrack(Util::generateRandomChars(),
-                                   _factory->CreateAudioSource(cricket::AudioOptions())));
+                                   _factory->CreateAudioSource(ao)));
     if (audio_track)
     {
       webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > audio_sender =
           connection->AddTrack(audio_track, {stream_id});
       if (!audio_sender.ok())
       {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot add audio_track";
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track";
       }
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot create audio_track";
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
     }
   }
 
@@ -181,10 +194,10 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
         parameters.degradation_preference = _conn_settings.getPriority();
         video_sender->SetParameters(parameters);
       } else {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot add video_track";
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track";
       }
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << "Cannot create video_track";
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
     }
   }
 
