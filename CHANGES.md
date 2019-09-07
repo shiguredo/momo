@@ -11,8 +11,18 @@
 
 ## develop
 
-
+- [ADD] --disable-echo-cancellation オプションを追加
+    - @melpon
+- [ADD] --disable-auto-gain-control オプションを追加
+    - @melpon
+- [ADD] --disable-noise-suppression オプションを追加
+    - @melpon
+- [ADD] --disable-highpass-filter オプションを追加
+    - @melpon
+- [ADD] --disable-typing-detection オプションを追加
+    - @melpon
 - [UPDATE] Boost 1.71.0 にアップデートする
+    - @voluntas
 - [UPDATE] libwebrtc M77 コミットポジションを 10 にする
     - libwebrtc のハッシュは ad73985e75684cb4ac4dadb9d3d86ad0d66612a0
     - @voluntas
