@@ -70,6 +70,21 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
   local_nh.param<int>("port", cs.port, cs.port);
   local_nh.param<int>("log_level", log_level, log_level);
 
+  // オーディオフラグ
+  local_nh.param<bool>("disable_echo_cancellation",
+                       cs.disable_echo_cancellation,
+                       cs.disable_echo_cancellation);
+  local_nh.param<bool>("disable_auto_gain_control",
+                       cs.disable_auto_gain_control,
+                       cs.disable_auto_gain_control);
+  local_nh.param<bool>("disable_noise_suppression",
+                       cs.disable_noise_suppression,
+                       cs.disable_noise_suppression);
+  local_nh.param<bool>("disable_highpass_filter", cs.disable_highpass_filter,
+                       cs.disable_highpass_filter);
+  local_nh.param<bool>("disable_typing_detection", cs.disable_typing_detection,
+                       cs.disable_typing_detection);
+
   if (use_sora && local_nh.hasParam("SIGNALING_URL") && local_nh.hasParam("CHANNEL_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
     local_nh.getParam("CHANNEL_ID", cs.sora_channel_id);
@@ -128,6 +143,18 @@ void Util::parseArgs(int argc, char *argv[], bool &is_daemon,
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "ログレベル")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
+
+  // オーディオフラグ
+  app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
+               "エコーキャンセルを無効");
+  app.add_flag("--disable-auto-gain-control", cs.disable_auto_gain_control,
+               "オートゲインコントロール無効");
+  app.add_flag("--disable-noise-suppression", cs.disable_noise_suppression,
+               "ノイズサプレッション無効");
+  app.add_flag("--disable-highpass-filter", cs.disable_highpass_filter,
+               "ハイパスフィルター無効");
+  app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
+               "タイピングディテクション無効");
 
   auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
