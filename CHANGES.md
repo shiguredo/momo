@@ -31,6 +31,8 @@
     - @voluntas
 - [FIX] Track を複数の PeerConnection で共有するよう修正
     - @tnoho
+- [FIX] --no-audio 設定時にも capturer をチェックしていたので修正
+    - @tnoho
 
 ## 19.08.1
 

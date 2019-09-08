@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
           DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
 #endif
-  if (!capturer)
+  if (!capturer && !cs.no_video)
   {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
