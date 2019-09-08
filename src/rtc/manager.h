@@ -19,7 +19,8 @@ public:
 
 private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
-  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _video_source;
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> _audio_track;
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> _video_track;
   std::unique_ptr<rtc::Thread> _networkThread;
   std::unique_ptr<rtc::Thread> _workerThread;
   std::unique_ptr<rtc::Thread> _signalingThread;

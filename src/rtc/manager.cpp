@@ -110,17 +110,53 @@ RTCManager::RTCManager(ConnectionSettings conn_settings,
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
+
+  if (!_conn_settings.no_audio)
+  {
+    cricket::AudioOptions ao;
+    if (_conn_settings.disable_echo_cancellation)
+      ao.echo_cancellation = false;
+    if (_conn_settings.disable_auto_gain_control)
+      ao.auto_gain_control = false;
+    if (_conn_settings.disable_noise_suppression)
+      ao.noise_suppression = false;
+    if (_conn_settings.disable_highpass_filter)
+      ao.highpass_filter = false;
+    if (_conn_settings.disable_typing_detection)
+      ao.typing_detection = false;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
+    _audio_track = _factory->CreateAudioTrack(Util::generateRandomChars(),
+                                              _factory->CreateAudioSource(ao));
+    if (!_audio_track)
+    {
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
+    }
+  }
+
+
   if (video_track_source && !_conn_settings.no_video)
   {
-    _video_source = webrtc::VideoTrackSourceProxy::Create(
-          _signalingThread.get(), _workerThread.get(), video_track_source);
+    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source = 
+        webrtc::VideoTrackSourceProxy::Create(_signalingThread.get(), _workerThread.get(), video_track_source);
+    _video_track = _factory->CreateVideoTrack(Util::generateRandomChars(), video_source);
+    if (_video_track)
+    {
+      if (_conn_settings.fixed_resolution) {
+        _video_track->set_content_hint(webrtc::VideoTrackInterface::ContentHint::kText);
+      }
+    }
+    else
+    {
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
+    }
   }
 }
 
 RTCManager::~RTCManager()
 {
-  _video_source = NULL;
-  _factory = NULL;
+  _audio_track = nullptr;
+  _video_track = nullptr;
+  _factory = nullptr;
   _networkThread->Stop();
   _workerThread->Stop();
   _signalingThread->Stop();
@@ -146,58 +182,28 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 
   std::string stream_id = Util::generateRandomChars();
 
-  if (!_conn_settings.no_audio)
+  if (_audio_track)
   {
-    cricket::AudioOptions ao;
-    if (_conn_settings.disable_echo_cancellation)
-      ao.echo_cancellation = false;
-    if (_conn_settings.disable_auto_gain_control)
-      ao.auto_gain_control = false;
-    if (_conn_settings.disable_noise_suppression)
-      ao.noise_suppression = false;
-    if (_conn_settings.disable_highpass_filter)
-      ao.highpass_filter = false;
-    if (_conn_settings.disable_typing_detection)
-      ao.typing_detection = false;
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        _factory->CreateAudioTrack(Util::generateRandomChars(),
-                                   _factory->CreateAudioSource(ao)));
-    if (audio_track)
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > audio_sender =
+        connection->AddTrack(_audio_track, {stream_id});
+    if (!audio_sender.ok())
     {
-      webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > audio_sender =
-          connection->AddTrack(audio_track, {stream_id});
-      if (!audio_sender.ok())
-      {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track";
-      }
-    } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add _audio_track";
     }
   }
 
-  if (_video_source) {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-            _factory->CreateVideoTrack(Util::generateRandomChars(), _video_source));
-    if (video_track)
+  if (_video_track)
+  {
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > video_add_result =
+        connection->AddTrack(_video_track, {stream_id});
+    if (video_add_result.ok())
     {
-      if (_conn_settings.fixed_resolution) {
-        video_track->set_content_hint(webrtc::VideoTrackInterface::ContentHint::kText);
-      }
-
-      webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> > video_add_result =
-          connection->AddTrack(video_track, {stream_id});
-      if (video_add_result.ok())
-      {
-        rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender = video_add_result.value();
-        webrtc::RtpParameters parameters = video_sender->GetParameters();
-        parameters.degradation_preference = _conn_settings.getPriority();
-        video_sender->SetParameters(parameters);
-      } else {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track";
-      }
+      rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender = video_add_result.value();
+      webrtc::RtpParameters parameters = video_sender->GetParameters();
+      parameters.degradation_preference = _conn_settings.getPriority();
+      video_sender->SetParameters(parameters);
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add _video_track";
     }
   }
 
