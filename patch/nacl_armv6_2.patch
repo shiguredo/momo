@@ -1,0 +1,60 @@
+diff --git a/build/config/compiler/BUILD.gn b/config/compiler/BUILD.gn
+index d1a9bfa..153ba50 100644
+--- a/build/config/compiler/BUILD.gn
++++ b/build/config/compiler/BUILD.gn
+@@ -1502,10 +1502,10 @@ config("default_warnings") {
+           "-Wno-ignored-pragma-optimize",
+ 
+           # TODO(https://crbug.com/989932): Evaluate and possibly enable.
+-          "-Wno-implicit-int-float-conversion",
++          #"-Wno-implicit-int-float-conversion",
+ 
+           # TODO(https://crbug.com/995200): Clean up and enable.
+-          "-Wno-xor-used-as-pow",
++          #"-Wno-xor-used-as-pow",
+         ]
+         cflags_c += [
+           # TODO(https://crbug.com/995993): Clean up and enable.
+diff --git a/build/toolchain/toolchain.gni b/build/toolchain/toolchain.gni
+index 3edc976..c909607 100644
+--- a/build/toolchain/toolchain.gni
++++ b/build/toolchain/toolchain.gni
+@@ -37,7 +37,7 @@ if (generate_linker_map) {
+ declare_args() {
+   if (is_clang) {
+     # Clang compiler version. Clang files are placed at version-dependent paths.
+-    clang_version = "10.0.0"
++    clang_version = "9.0.0"
+   }
+ }
+
+diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
+index 250ed85..a38a7d8 100644
+--- a/third_party/boringssl/BUILD.gn
++++ b/third_party/boringssl/BUILD.gn
+@@ -89,7 +89,11 @@ if (is_win && !is_msan && current_cpu != "arm64") {
+       }
+     } else if (current_cpu == "arm") {
+       if (is_linux || is_android) {
+-        sources += crypto_sources_linux_arm
++        if (arm_version <= 6) {
++          public_configs = [ ":no_asm_config" ]
++        } else {
++          sources += crypto_sources_linux_arm
++        }
+       } else if (is_ios) {
+         sources += crypto_sources_ios_arm
+       } else {
+diff --git a/third_party/opus/BUILD.gn b/third_party/opus/BUILD.gn
+index b54f856..a5c7d19 100644
+--- a/third_party/opus/BUILD.gn
++++ b/third_party/opus/BUILD.gn
+@@ -21,7 +21,7 @@ use_opus_x86_optimization =
+ # If OPUS Run Time CPU Detections (RTCD) shall be used.
+ # Based on the conditions in celt/arm/armcpu.c:
+ # defined(_MSC_VER) || defined(__linux__).
+-use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux)
++use_opus_arm_rtcd = current_cpu == "arm" && (is_win || is_android || is_linux) && (arm_version >= 7)
+ 
+ config("opus_config") {
+   include_dirs = [ "src/include" ]

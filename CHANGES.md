@@ -23,6 +23,9 @@
     - @melpon
 - [UPDATE] Boost 1.71.0 にアップデートする
     - @voluntas
+- [UPDATE] libwebrtc M78 コミットポジションを 0 にする
+    - libwebrtc のハッシュは 5b728cca77c46ed47ae589acba676485a957070b
+    - @tnoho
 - [UPDATE] libwebrtc M77 コミットポジションを 10 にする
     - libwebrtc のハッシュは ad73985e75684cb4ac4dadb9d3d86ad0d66612a0
     - @voluntas
