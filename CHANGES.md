@@ -33,6 +33,8 @@
     - @tnoho
 - [FIX] --no-audio 設定時にも capturer をチェックしていたので修正
     - @tnoho
+- [FIX] PeerConnectionObserver の解放がなかったため修正
+    - @tnoho
 
 ## 19.08.1
 

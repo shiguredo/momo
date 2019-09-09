@@ -170,10 +170,10 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 {
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-  PeerConnectionObserver *observer = new PeerConnectionObserver(sender);
+  std::unique_ptr<PeerConnectionObserver> observer(new PeerConnectionObserver(sender));
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection = 
       _factory->CreatePeerConnection(
-          rtc_config, nullptr, nullptr, observer);
+          rtc_config, nullptr, nullptr, observer.get());
   if (!connection)
   {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
@@ -207,5 +207,5 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     }
   }
 
-  return std::make_shared<RTCConnection>(sender, connection);
+  return std::make_shared<RTCConnection>(sender, std::move(observer), connection);
 }
