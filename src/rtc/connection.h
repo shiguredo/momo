@@ -8,8 +8,9 @@ class RTCConnection
 {
 public:
   RTCConnection(RTCMessageSender *sender,
+          std::unique_ptr<PeerConnectionObserver> observer,
           rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
-          : _sender(sender), _connection(connection) {};
+          : _sender(sender), _observer(std::move(observer)), _connection(connection) {};
   ~RTCConnection();
   void createOffer();
   void setOffer(const std::string sdp);
@@ -33,6 +34,7 @@ private:
           rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
 
   RTCMessageSender *_sender;
+  std::unique_ptr<PeerConnectionObserver> _observer;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> _connection;
 };
 #endif

@@ -44,6 +44,12 @@ struct ConnectionSettings
   std::string ayame_client_id;
   std::string ayame_signaling_key = "";
 
+  bool disable_echo_cancellation = false;
+  bool disable_auto_gain_control = false;
+  bool disable_noise_suppression = false;
+  bool disable_highpass_filter = false;
+  bool disable_typing_detection = false;
+
   int getWidth() {
     if (resolution == "QVGA") {
       return 480;

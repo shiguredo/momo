@@ -11,6 +11,33 @@
 
 ## develop
 
+## 19.09.0
+
+- [ADD] --disable-echo-cancellation オプションを追加
+    - @melpon
+- [ADD] --disable-auto-gain-control オプションを追加
+    - @melpon
+- [ADD] --disable-noise-suppression オプションを追加
+    - @melpon
+- [ADD] --disable-highpass-filter オプションを追加
+    - @melpon
+- [ADD] --disable-typing-detection オプションを追加
+    - @melpon
+- [UPDATE] Boost 1.71.0 にアップデートする
+    - @voluntas
+- [UPDATE] libwebrtc M78 コミットポジションを 0 にする
+    - libwebrtc のハッシュは 5b728cca77c46ed47ae589acba676485a957070b
+    - @tnoho
+- [UPDATE] libwebrtc M77 コミットポジションを 10 にする
+    - libwebrtc のハッシュは ad73985e75684cb4ac4dadb9d3d86ad0d66612a0
+    - @voluntas
+- [FIX] Track を複数の PeerConnection で共有するよう修正
+    - @tnoho
+- [FIX] --no-audio 設定時にも capturer をチェックしていたので修正
+    - @tnoho
+- [FIX] PeerConnectionObserver の解放がなかったため修正
+    - @tnoho
+
 ## 19.08.1
 
 - [ADD] Raspberry Pi 用に `--video-device` オプションを追加
