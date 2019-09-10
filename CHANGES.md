@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.09.0
+
 - [ADD] --disable-echo-cancellation オプションを追加
     - @melpon
 - [ADD] --disable-auto-gain-control オプションを追加
