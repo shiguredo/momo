@@ -1,0 +1,34 @@
+name: Build workflow
+on:
+  push:
+    # 現状 GitHub Actions には [ci skip] 相当の機能がないので、ドキュメント関連は最初からビルド監視対象から除いておく
+    # ただし、再帰的に全ファイルにマッチするワイルドカード表現が書けないので、全ファイルを監視対象にするには、
+    # 監視が必要なディレクトリ階層分だけ指定しないといけない
+    # https://help.github.com/en/articles/workflow-syntax-for-github-actions#onpushpull_requestpaths 
+    paths:
+      - '*'
+      - '*/*'
+      - '*/*/*'
+      - '!*.md'
+      - '!doc/*'
+      - '!html/*'
+      - '!.github/ISSUE_TEMPLATE/*'
+      - '!.circleci/*'
+
+jobs:
+  build_raspbian-buster_armv6:
+    name: Build momo for raspbian-buster_armv6
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
+        working-directory: build
+        timeout-minutes: 120
+  build_raspbian-buster_armv7:
+    name: Build momo for raspbian-buster_armv7
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
+        working-directory: build
+        timeout-minutes: 120
