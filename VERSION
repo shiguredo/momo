@@ -1,6 +1,6 @@
 # 各種ライブラリのバージョン情報
 # 項目を変更してビルドすれば各環境へ反映される（ように作る）
-MOMO_VERSION=19.09.0
+MOMO_VERSION=19.09.1-rc0
 WEBRTC_VERSION=78
 WEBRTC_COMMIT=68c715dc01cd8cd0ad2726453e7376b5f353fcd1
 BOOST_VERSION=1.71.0
