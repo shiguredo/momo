@@ -22,7 +22,13 @@ include VERSION
 # USE_ROS: ROS を使っているかどうか
 #   有効な値は 0, 1
 #
-# USE_MMAL_ENCODER: ハードウェアエンコーダを利用するかどうか
+# USE_MMAL_ENCODER: MMAL ハードウェアエンコーダを利用するかどうか
+#   有効な値は 0, 1
+#
+# USE_JETSON_ENCODER: Jetson のハードウェアエンコーダを利用するかどうか
+#   有効な値は 0, 1
+#
+# USE_H264: H264 を利用するかどうか
 #   有効な値は 0, 1
 #
 # BOOST_ROOT: Boost のインストール先ディレクトリ
@@ -52,6 +58,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
@@ -64,6 +71,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
@@ -76,6 +84,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   USE_ROS ?= 1
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -88,9 +97,23 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
+  SYSROOT ?= /root/rootfs
+else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
+  TARGET_OS ?= linux
+  TARGET_OS_LINUX ?= ubuntu-18.04
+  TARGET_ARCH ?= arm
+  TARGET_ARCH_ARM ?= armv8
+  USE_ROS ?= 0
+  USE_MMAL_ENCODER ?= 0
+  USE_JETSON_ENCODER ?= 1
+  USE_H264 ?= 1
+  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  WEBRTC_SRC_ROOT ?= /root/webrtc/src
+  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   TARGET_OS ?= linux
@@ -99,6 +122,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   USE_ROS ?= 1
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
@@ -109,6 +133,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
@@ -118,6 +143,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_ROS ?= 0
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
+  USE_H264 ?= 1
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
@@ -166,6 +192,11 @@ else
 
   ifndef USE_JETSON_ENCODER
     $(info - USE_JETSON_ENCODER が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef USE_H264
+    $(info - USE_H264 が指定されていません)
     HAS_ERROR = 1
   endif
 
@@ -225,20 +256,7 @@ ifeq ($(USE_ROS),1)
   endif
 endif
 
-# x86_64/armv8 の場合は H264 を使わない
-ifeq ($(TARGET_OS),linux)
-  ifeq ($(TARGET_ARCH),x86_64)
-    CFLAGS += -DUSE_H264=0
-  else ifeq ($(USE_JETSON_ENCODER),1)
-    CFLAGS += -DUSE_H264=1
-  else ifeq ($(TARGET_ARCH_ARM),armv8)
-    CFLAGS += -DUSE_H264=0
-  else
-    CFLAGS += -DUSE_H264=1
-  endif
-else ifeq ($(TARGET_OS),macos)
-  CFLAGS += -DUSE_H264=1
-endif
+CFLAGS += -DUSE_H264=$(USE_H264)
 
 ifeq ($(TARGET_OS),linux)
   CFLAGS += -fpic
