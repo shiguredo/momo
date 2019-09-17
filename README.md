@@ -109,6 +109,12 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
     - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+- Apple のライセンス費用は個人利用および非商用利用目的に限る
+    - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
+- AMD ビデオカードのハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
+    - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
+- NVIDIA ビデオカードのハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
+    - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
 - NVIDIA Jetson Nano のハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
     - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要
