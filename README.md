@@ -2,7 +2,6 @@
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![CircleCI](https://circleci.com/gh/shiguredo/momo.svg?style=svg)](https://circleci.com/gh/shiguredo/momo)
 
 ## WebRTC Native Client Momo について
 
@@ -36,9 +35,7 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-Raspberry Pi 向けのバイナリのみ提供を行っています。
-
-H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以外は不透明というのが理由です。
+Raspberry Pi 向けのバイナリのみ提供を行っています。今後は macOS や Jetson Nano 向けのバイナリ配布も行っていく予定です。
 
 ## 動作環境
 
@@ -108,8 +105,20 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 ## H.264 のライセンス費用について
 
+H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+
+ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、配布時にライセンス費用を支払う必要はありません。
+
+詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
+
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
     - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+- Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
+    - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
+- AMD ビデオカードのハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
+    - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
+- NVIDIA ビデオカードのハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
+    - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
 - NVIDIA Jetson Nano のハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
     - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要

@@ -1,0 +1,33 @@
+name: Daily build workflow
+on:
+  schedule:
+    # UTCで記述する事、この場合は日本時間 9 時にしたいので -9 して 0 にしてある
+    - cron: "0 0 * * *"
+    # 明示的な branch の指定はできず、デフォルト branch の latest commit に対して実行される
+    # https://help.github.com/en/articles/workflow-syntax-for-github-actions#onschedule
+
+jobs:
+  build_ubuntu-18_04_armv8:
+    name: Build momo for build_ubuntu-18.04_armv8
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
+        working-directory: build
+        timeout-minutes: 120
+  build_ubuntu-18_04_x86_64:
+    name: Build momo for build_ubuntu-18.04_x86_64
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
+        working-directory: build
+        timeout-minutes: 120
+  build_macos:
+    name: Build momo for macOS 10.14
+    runs-on: macos-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - run: make macos
+        working-directory: build
+        timeout-minutes: 120
