@@ -17,6 +17,7 @@
     - @melpon
 - [ADD] CI を CircleCI から GitHub Actions へ切り替える
     - macOS の時間制限が OSS の場合はないため Weekly build から Daily build のみにきりかえる
+    - @hakobera
 - [UPDATE] libwebrtc M78 コミットポジションを 3 にする
     - libwebrtc のハッシュは 68c715dc01cd8cd0ad2726453e7376b5f353fcd1
     - @voluntas
