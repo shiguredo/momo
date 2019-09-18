@@ -15,6 +15,14 @@ jobs:
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
         working-directory: build
         timeout-minutes: 120
+  build_ubuntu-18_04_armv8_jetson_nano:
+    name: Build momo for build_ubuntu-18.04_armv8_jetson_nano
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8_jetson_nano
+        working-directory: build
+        timeout-minutes: 120
   build_ubuntu-18_04_x86_64:
     name: Build momo for build_ubuntu-18.04_x86_64
     runs-on: ubuntu-18.04
