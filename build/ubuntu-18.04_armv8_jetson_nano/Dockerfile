@@ -1,8 +1,6 @@
 # syntax = docker/dockerfile:1.1.1-experimental
 FROM ubuntu:18.04
 
-#### ---- ここから ubuntu-18.04_armv8 のコピー -----
-
 ARG PACKAGE_NAME
 
 LABEL jp.shiguredo.momo=$PACKAGE_NAME
@@ -23,9 +21,14 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
     && init_rootfs_arm64 /root/rootfs /root/arm64.conf \
   "
 
-COPY patch/4k.patch /root/
+# 構築した RootFS を Jetson Nano のファイルで上書きする
+
+COPY jetson.sh /root/
+RUN /root/jetson.sh
 
 # WebRTC の準備
+
+COPY patch/4k.patch /root/
 
 ARG WEBRTC_VERSION
 ARG WEBRTC_COMMIT
@@ -46,7 +49,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=false rtc_include_tests=false rtc_build_json=true use_rtti=true is_desktop_linux=false' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false rtc_build_json=true use_rtti=true is_desktop_linux=false' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
@@ -86,7 +89,3 @@ RUN \
       --prefix=/root/boost-$BOOST_VERSION \
       --with-filesystem \
   "
-
-#### ---- ここまで ubuntu-18.04_armv8 のコピー -----
-
-
