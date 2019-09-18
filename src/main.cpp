@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
   rtc::scoped_refptr<MacCapturer> capturer =
       MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, 0);
 #else
-#if USE_MMAL_ENCODER | USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
 #else
   rtc::scoped_refptr<DeviceVideoCapturer> capturer =

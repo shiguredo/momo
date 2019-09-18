@@ -58,7 +58,7 @@ void Util::parseArgs(int argc,
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
   local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
-#if USE_MMAL_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
   local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
 #endif
@@ -137,7 +137,7 @@ void Util::parseArgs(int argc,
 
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-#if USE_MMAL_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
   app.add_flag("--use-native", cs.use_native,
                "MJPEGのデコードとビデオのリサイズをハードウェアで行う");
