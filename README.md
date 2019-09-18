@@ -35,9 +35,7 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-Raspberry Pi 向けのバイナリのみ提供を行っています。
-
-H.264 ハードウェアエンコーダーのライセンスが Raspberry Pi 以外は不透明というのが理由です。
+Raspberry Pi 向けのバイナリのみ提供を行っています。今後は macOS や Jetson Nano 向けのバイナリ配布も行っていく予定です。
 
 ## 動作環境
 
@@ -107,9 +105,15 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 ## H.264 のライセンス費用について
 
+H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+
+ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、配布時にライセンス費用を支払う必要はありません。
+
+詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
+
 - Raspberry Pi のハードウェアエンコーダのライセンス費用は Raspberry Pi の価格に含まれています
     - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
-- Apple のライセンス費用は個人利用および非商用利用目的に限る
+- Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
     - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
 - AMD ビデオカードのハードウェアエンコーダのライセンス費用は別途、団体との契約が必要
     - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
