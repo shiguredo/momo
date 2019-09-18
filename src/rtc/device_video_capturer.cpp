@@ -24,9 +24,9 @@ DeviceVideoCapturer::~DeviceVideoCapturer() {
 }
 
 bool DeviceVideoCapturer::Init(size_t width,
-                       size_t height,
-                       size_t target_fps,
-                       size_t capture_device_index) {
+                               size_t height,
+                               size_t target_fps,
+                               size_t capture_device_index) {
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
 
@@ -62,10 +62,8 @@ bool DeviceVideoCapturer::Init(size_t width,
   return true;
 }
 
-rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width,
-                                 size_t height,
-                                 size_t target_fps)
-{
+rtc::scoped_refptr<DeviceVideoCapturer>
+DeviceVideoCapturer::Create(size_t width, size_t height, size_t target_fps) {
   rtc::scoped_refptr<DeviceVideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -86,12 +84,13 @@ rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width
   return nullptr;
 }
 
-rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(size_t width,
-                                 size_t height,
-                                 size_t target_fps,
-                                 size_t capture_device_index) {
+rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
+    size_t width,
+    size_t height,
+    size_t target_fps,
+    size_t capture_device_index) {
   rtc::scoped_refptr<DeviceVideoCapturer> vcm_capturer(
-    new rtc::RefCountedObject<DeviceVideoCapturer>());
+      new rtc::RefCountedObject<DeviceVideoCapturer>());
   if (!vcm_capturer->Init(width, height, target_fps, capture_device_index)) {
     RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer(w = " << width
                         << ", h = " << height << ", fps = " << target_fps
@@ -111,7 +110,6 @@ void DeviceVideoCapturer::Destroy() {
   vcm_ = nullptr;
 }
 
-void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame &frame)
-{
+void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
   OnCapturedFrame(frame);
 }

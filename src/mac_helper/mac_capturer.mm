@@ -16,13 +16,14 @@
 #import "sdk/objc/native/src/objc_frame_buffer.h"
 
 @interface RTCVideoSourceAdapter : NSObject <RTCVideoCapturerDelegate>
-@property(nonatomic) MacCapturer *capturer;
+@property(nonatomic) MacCapturer* capturer;
 @end
 
 @implementation RTCVideoSourceAdapter
 @synthesize capturer = _capturer;
 
-- (void)capturer:(RTCVideoCapturer *)capturer didCaptureVideoFrame:(RTCVideoFrame *)frame {
+- (void)capturer:(RTCVideoCapturer*)capturer
+    didCaptureVideoFrame:(RTCVideoFrame*)frame {
   const int64_t timestamp_us = frame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
       new rtc::RefCountedObject<webrtc::ObjCFrameBuffer>(frame.buffer);
@@ -37,15 +38,18 @@
 
 namespace {
 
-AVCaptureDeviceFormat *SelectClosestFormat(AVCaptureDevice *device, size_t width, size_t height) {
-  NSArray<AVCaptureDeviceFormat *> *formats =
+AVCaptureDeviceFormat* SelectClosestFormat(AVCaptureDevice* device,
+                                           size_t width,
+                                           size_t height) {
+  NSArray<AVCaptureDeviceFormat*>* formats =
       [RTCCameraVideoCapturer supportedFormatsForDevice:device];
-  AVCaptureDeviceFormat *selectedFormat = nil;
+  AVCaptureDeviceFormat* selectedFormat = nil;
   int currentDiff = INT_MAX;
-  for (AVCaptureDeviceFormat *format in formats) {
-    CMVideoDimensions dimension = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
-    int diff =
-        std::abs((int64_t)width - dimension.width) + std::abs((int64_t)height - dimension.height);
+  for (AVCaptureDeviceFormat* format in formats) {
+    CMVideoDimensions dimension =
+        CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+    int diff = std::abs((int64_t)width - dimension.width) +
+               std::abs((int64_t)height - dimension.height);
     if (diff < currentDiff) {
       selectedFormat = format;
       currentDiff = diff;
@@ -65,17 +69,19 @@ MacCapturer::MacCapturer(size_t width,
 
   capturer_ = [[RTCCameraVideoCapturer alloc] initWithDelegate:adapter_];
 
-  AVCaptureDevice *device =
-      [[RTCCameraVideoCapturer captureDevices] objectAtIndex:capture_device_index];
-  AVCaptureDeviceFormat *format = SelectClosestFormat(device, width, height);
+  AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices]
+      objectAtIndex:capture_device_index];
+  AVCaptureDeviceFormat* format = SelectClosestFormat(device, width, height);
   [capturer_ startCaptureWithDevice:device format:format fps:target_fps];
 }
 
-rtc::scoped_refptr<MacCapturer> MacCapturer::Create(size_t width,
-                                 size_t height,
-                                 size_t target_fps,
-                                 size_t capture_device_index) {
-  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps, capture_device_index);
+rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
+    size_t width,
+    size_t height,
+    size_t target_fps,
+    size_t capture_device_index) {
+  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps,
+                                                capture_device_index);
 }
 
 void MacCapturer::Destroy() {
@@ -86,6 +92,6 @@ MacCapturer::~MacCapturer() {
   Destroy();
 }
 
-void MacCapturer::OnFrame(const webrtc::VideoFrame &frame) {
+void MacCapturer::OnFrame(const webrtc::VideoFrame& frame) {
   OnCapturedFrame(frame);
 }

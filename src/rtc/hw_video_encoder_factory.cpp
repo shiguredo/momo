@@ -1,7 +1,7 @@
 #include "hw_video_encoder_factory.h"
 
-#include "absl/strings/match.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/match.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
@@ -50,10 +50,12 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
 #if USE_MMAL_ENCODER
-    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
 #endif
 #if USE_JETSON_ENCODER
-    return std::unique_ptr<webrtc::VideoEncoder>(absl::make_unique<JetsonH264Encoder>(cricket::VideoCodec(format)));
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        absl::make_unique<JetsonH264Encoder>(cricket::VideoCodec(format)));
 #endif
   }
 

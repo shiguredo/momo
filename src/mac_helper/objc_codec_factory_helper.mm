@@ -16,9 +16,11 @@
 #include "sdk/objc/native/api/video_encoder_factory.h"
 
 std::unique_ptr<webrtc::VideoEncoderFactory> CreateObjCEncoderFactory() {
-  return webrtc::ObjCToNativeVideoEncoderFactory([[RTCDefaultVideoEncoderFactory alloc] init]);
+  return webrtc::ObjCToNativeVideoEncoderFactory(
+      [[RTCDefaultVideoEncoderFactory alloc] init]);
 }
 
 std::unique_ptr<webrtc::VideoDecoderFactory> CreateObjCDecoderFactory() {
-  return webrtc::ObjCToNativeVideoDecoderFactory([[RTCDefaultVideoDecoderFactory alloc] init]);
+  return webrtc::ObjCToNativeVideoDecoderFactory(
+      [[RTCDefaultVideoDecoderFactory alloc] init]);
 }

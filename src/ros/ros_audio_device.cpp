@@ -35,51 +35,43 @@ ROSAudioDevice::ROSAudioDevice(ConnectionSettings conn_settings)
       _lastCallPlayoutMillis(0),
       _lastCallRecordMillis(0) {}
 
-ROSAudioDevice::~ROSAudioDevice()
-{
+ROSAudioDevice::~ROSAudioDevice() {
   Terminate();
 }
 
 int32_t ROSAudioDevice::ActiveAudioLayer(
-    webrtc::AudioDeviceModule::AudioLayer &audioLayer) const
-{
+    webrtc::AudioDeviceModule::AudioLayer& audioLayer) const {
   return -1;
 }
 
-webrtc::AudioDeviceGeneric::InitStatus ROSAudioDevice::Init()
-{
+webrtc::AudioDeviceGeneric::InitStatus ROSAudioDevice::Init() {
   return webrtc::AudioDeviceGeneric::InitStatus::OK;
 }
 
-int32_t ROSAudioDevice::Terminate()
-{
+int32_t ROSAudioDevice::Terminate() {
   StopRecording();
   return 0;
 }
 
-bool ROSAudioDevice::Initialized() const
-{
+bool ROSAudioDevice::Initialized() const {
   return true;
 }
 
-int16_t ROSAudioDevice::PlayoutDevices()
-{
+int16_t ROSAudioDevice::PlayoutDevices() {
   return 1;
 }
 
-int16_t ROSAudioDevice::RecordingDevices()
-{
+int16_t ROSAudioDevice::RecordingDevices() {
   return 1;
 }
 
-int32_t ROSAudioDevice::PlayoutDeviceName(uint16_t index,
-                                           char name[webrtc::kAdmMaxDeviceNameSize],
-                                           char guid[webrtc::kAdmMaxGuidSize])
-{
-  const char *kName = "dummy_device";
-  const char *kGuid = "dummy_device_unique_id";
-  if (index < 1)
-  {
+int32_t ROSAudioDevice::PlayoutDeviceName(
+    uint16_t index,
+    char name[webrtc::kAdmMaxDeviceNameSize],
+    char guid[webrtc::kAdmMaxGuidSize]) {
+  const char* kName = "dummy_device";
+  const char* kGuid = "dummy_device_unique_id";
+  if (index < 1) {
     memset(name, 0, webrtc::kAdmMaxDeviceNameSize);
     memset(guid, 0, webrtc::kAdmMaxGuidSize);
     memcpy(name, kName, strlen(kName));
@@ -89,14 +81,13 @@ int32_t ROSAudioDevice::PlayoutDeviceName(uint16_t index,
   return -1;
 }
 
-int32_t ROSAudioDevice::RecordingDeviceName(uint16_t index,
-                                             char name[webrtc::kAdmMaxDeviceNameSize],
-                                             char guid[webrtc::kAdmMaxGuidSize])
-{
-  const char *kName = "dummy_device";
-  const char *kGuid = "dummy_device_unique_id";
-  if (index < 1)
-  {
+int32_t ROSAudioDevice::RecordingDeviceName(
+    uint16_t index,
+    char name[webrtc::kAdmMaxDeviceNameSize],
+    char guid[webrtc::kAdmMaxGuidSize]) {
+  const char* kName = "dummy_device";
+  const char* kGuid = "dummy_device_unique_id";
+  if (index < 1) {
     memset(name, 0, webrtc::kAdmMaxDeviceNameSize);
     memset(guid, 0, webrtc::kAdmMaxGuidSize);
     memcpy(name, kName, strlen(kName));
@@ -106,10 +97,8 @@ int32_t ROSAudioDevice::RecordingDeviceName(uint16_t index,
   return -1;
 }
 
-int32_t ROSAudioDevice::SetPlayoutDevice(uint16_t index)
-{
-  if (index == 0)
-  {
+int32_t ROSAudioDevice::SetPlayoutDevice(uint16_t index) {
+  if (index == 0) {
     _playout_index = index;
     return 0;
   }
@@ -117,15 +106,12 @@ int32_t ROSAudioDevice::SetPlayoutDevice(uint16_t index)
 }
 
 int32_t ROSAudioDevice::SetPlayoutDevice(
-    webrtc::AudioDeviceModule::WindowsDeviceType device)
-{
+    webrtc::AudioDeviceModule::WindowsDeviceType device) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SetRecordingDevice(uint16_t index)
-{
-  if (index == 0)
-  {
+int32_t ROSAudioDevice::SetRecordingDevice(uint16_t index) {
+  if (index == 0) {
     _record_index = index;
     return _record_index;
   }
@@ -133,15 +119,12 @@ int32_t ROSAudioDevice::SetRecordingDevice(uint16_t index)
 }
 
 int32_t ROSAudioDevice::SetRecordingDevice(
-    webrtc::AudioDeviceModule::WindowsDeviceType device)
-{
+    webrtc::AudioDeviceModule::WindowsDeviceType device) {
   return -1;
 }
 
-int32_t ROSAudioDevice::PlayoutIsAvailable(bool &available)
-{
-  if (_playout_index == 0)
-  {
+int32_t ROSAudioDevice::PlayoutIsAvailable(bool& available) {
+  if (_playout_index == 0) {
     available = true;
     return _playout_index;
   }
@@ -149,34 +132,28 @@ int32_t ROSAudioDevice::PlayoutIsAvailable(bool &available)
   return -1;
 }
 
-int32_t ROSAudioDevice::InitPlayout()
-{
+int32_t ROSAudioDevice::InitPlayout() {
   rtc::CritScope lock(&_critSect);
 
-  if (_playing)
-  {
+  if (_playing) {
     return -1;
   }
 
   _playoutFramesIn10MS = static_cast<size_t>(kPlayoutFixedSampleRate / 100);
 
-  if (_ptrAudioBuffer)
-  {
+  if (_ptrAudioBuffer) {
     _ptrAudioBuffer->SetPlayoutSampleRate(kPlayoutFixedSampleRate);
     _ptrAudioBuffer->SetPlayoutChannels(kPlayoutNumChannels);
   }
   return 0;
 }
 
-bool ROSAudioDevice::PlayoutIsInitialized() const
-{
+bool ROSAudioDevice::PlayoutIsInitialized() const {
   return _playoutFramesIn10MS != 0;
 }
 
-int32_t ROSAudioDevice::RecordingIsAvailable(bool &available)
-{
-  if (_record_index == 0)
-  {
+int32_t ROSAudioDevice::RecordingIsAvailable(bool& available) {
+  if (_record_index == 0) {
     available = true;
     return _record_index;
   }
@@ -184,46 +161,39 @@ int32_t ROSAudioDevice::RecordingIsAvailable(bool &available)
   return -1;
 }
 
-int32_t ROSAudioDevice::InitRecording()
-{
+int32_t ROSAudioDevice::InitRecording() {
   rtc::CritScope lock(&_critSect);
 
-  if (_recording)
-  {
+  if (_recording) {
     return -1;
   }
 
-  _recordingFramesIn10MS = static_cast<size_t>(_conn_settings.audio_topic_rate / 100);
+  _recordingFramesIn10MS =
+      static_cast<size_t>(_conn_settings.audio_topic_rate / 100);
 
-  if (_ptrAudioBuffer)
-  {
+  if (_ptrAudioBuffer) {
     _ptrAudioBuffer->SetRecordingSampleRate(_conn_settings.audio_topic_rate);
     _ptrAudioBuffer->SetRecordingChannels(_conn_settings.audio_topic_ch);
   }
   return 0;
 }
 
-bool ROSAudioDevice::RecordingIsInitialized() const
-{
+bool ROSAudioDevice::RecordingIsInitialized() const {
   return _recordingFramesIn10MS != 0;
 }
 
-int32_t ROSAudioDevice::StartPlayout()
-{
-  if (_playing)
-  {
+int32_t ROSAudioDevice::StartPlayout() {
+  if (_playing) {
     return 0;
   }
 
   _playing = true;
   _playoutFramesLeft = 0;
 
-  if (!_playoutBuffer)
-  {
+  if (!_playoutBuffer) {
     _playoutBuffer = new int8_t[kPlayoutBufferSize];
   }
-  if (!_playoutBuffer)
-  {
+  if (!_playoutBuffer) {
     _playing = false;
     return -1;
   }
@@ -237,15 +207,13 @@ int32_t ROSAudioDevice::StartPlayout()
   return 0;
 }
 
-int32_t ROSAudioDevice::StopPlayout()
-{
+int32_t ROSAudioDevice::StopPlayout() {
   {
     rtc::CritScope lock(&_critSect);
     _playing = false;
   }
 
-  if (_ptrThreadPlay)
-  {
+  if (_ptrThreadPlay) {
     _ptrThreadPlay->Stop();
     _ptrThreadPlay.reset();
   }
@@ -260,13 +228,11 @@ int32_t ROSAudioDevice::StopPlayout()
   return 0;
 }
 
-bool ROSAudioDevice::Playing() const
-{
+bool ROSAudioDevice::Playing() const {
   return _playing;
 }
 
-int32_t ROSAudioDevice::StartRecording()
-{
+int32_t ROSAudioDevice::StartRecording() {
   if (_recording) {
     return -1;
   }
@@ -275,11 +241,10 @@ int32_t ROSAudioDevice::StartRecording()
   // Make sure we only create the buffer once.
   _recordingBufferSizeIn10MS =
       _recordingFramesIn10MS * _conn_settings.audio_topic_ch * 2;
-  if (!_recordingBuffer)
-  {
+  if (!_recordingBuffer) {
     _recordingBuffer = new int8_t[_recordingBufferSizeIn10MS];
   }
-  
+
   ros::NodeHandle nh;
   _sub = nh.subscribe<audio_common_msgs::AudioData>(
       _conn_settings.audio_topic_name, 1,
@@ -294,8 +259,7 @@ int32_t ROSAudioDevice::StartRecording()
   return 0;
 }
 
-int32_t ROSAudioDevice::StopRecording()
-{
+int32_t ROSAudioDevice::StopRecording() {
   {
     rtc::CritScope lock(&_critSect);
     if (!_recording) {
@@ -304,15 +268,13 @@ int32_t ROSAudioDevice::StopRecording()
     _recording = false;
   }
 
-  if (_spinner)
-  {
+  if (_spinner) {
     _spinner->stop();
   }
 
   rtc::CritScope lock(&_critSect);
   _recordingFramesLeft = 0;
-  if (_recordingBuffer)
-  {
+  if (_recordingBuffer) {
     delete[] _recordingBuffer;
     _recordingBuffer = NULL;
   }
@@ -321,151 +283,122 @@ int32_t ROSAudioDevice::StopRecording()
   return 0;
 }
 
-bool ROSAudioDevice::Recording() const
-{
+bool ROSAudioDevice::Recording() const {
   return _recording;
 }
 
-int32_t ROSAudioDevice::InitSpeaker()
-{
+int32_t ROSAudioDevice::InitSpeaker() {
   return 0;
 }
 
-bool ROSAudioDevice::SpeakerIsInitialized() const
-{
+bool ROSAudioDevice::SpeakerIsInitialized() const {
   return true;
 }
 
-int32_t ROSAudioDevice::InitMicrophone()
-{
+int32_t ROSAudioDevice::InitMicrophone() {
   return 0;
 }
 
-bool ROSAudioDevice::MicrophoneIsInitialized() const
-{
+bool ROSAudioDevice::MicrophoneIsInitialized() const {
   return true;
 }
 
-int32_t ROSAudioDevice::SpeakerVolumeIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::SpeakerVolumeIsAvailable(bool& available) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SetSpeakerVolume(uint32_t volume)
-{
+int32_t ROSAudioDevice::SetSpeakerVolume(uint32_t volume) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SpeakerVolume(uint32_t &volume) const
-{
+int32_t ROSAudioDevice::SpeakerVolume(uint32_t& volume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MaxSpeakerVolume(uint32_t &maxVolume) const
-{
+int32_t ROSAudioDevice::MaxSpeakerVolume(uint32_t& maxVolume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MinSpeakerVolume(uint32_t &minVolume) const
-{
+int32_t ROSAudioDevice::MinSpeakerVolume(uint32_t& minVolume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MicrophoneVolumeIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::MicrophoneVolumeIsAvailable(bool& available) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SetMicrophoneVolume(uint32_t volume)
-{
+int32_t ROSAudioDevice::SetMicrophoneVolume(uint32_t volume) {
   return -1;
 }
 
-int32_t ROSAudioDevice::MicrophoneVolume(uint32_t &volume) const
-{
+int32_t ROSAudioDevice::MicrophoneVolume(uint32_t& volume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MaxMicrophoneVolume(uint32_t &maxVolume) const
-{
+int32_t ROSAudioDevice::MaxMicrophoneVolume(uint32_t& maxVolume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MinMicrophoneVolume(uint32_t &minVolume) const
-{
+int32_t ROSAudioDevice::MinMicrophoneVolume(uint32_t& minVolume) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::SpeakerMuteIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::SpeakerMuteIsAvailable(bool& available) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SetSpeakerMute(bool enable)
-{
+int32_t ROSAudioDevice::SetSpeakerMute(bool enable) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SpeakerMute(bool &enabled) const
-{
+int32_t ROSAudioDevice::SpeakerMute(bool& enabled) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::MicrophoneMuteIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::MicrophoneMuteIsAvailable(bool& available) {
   return -1;
 }
 
-int32_t ROSAudioDevice::SetMicrophoneMute(bool enable)
-{
+int32_t ROSAudioDevice::SetMicrophoneMute(bool enable) {
   return -1;
 }
 
-int32_t ROSAudioDevice::MicrophoneMute(bool &enabled) const
-{
+int32_t ROSAudioDevice::MicrophoneMute(bool& enabled) const {
   return -1;
 }
 
-int32_t ROSAudioDevice::StereoPlayoutIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::StereoPlayoutIsAvailable(bool& available) {
   available = true;
   return 0;
 }
-int32_t ROSAudioDevice::SetStereoPlayout(bool enable)
-{
+int32_t ROSAudioDevice::SetStereoPlayout(bool enable) {
   return 0;
 }
 
-int32_t ROSAudioDevice::StereoPlayout(bool &enabled) const
-{
+int32_t ROSAudioDevice::StereoPlayout(bool& enabled) const {
   enabled = true;
   return 0;
 }
 
-int32_t ROSAudioDevice::StereoRecordingIsAvailable(bool &available)
-{
+int32_t ROSAudioDevice::StereoRecordingIsAvailable(bool& available) {
   available = _conn_settings.audio_topic_ch == 2;
   return 0;
 }
 
-int32_t ROSAudioDevice::SetStereoRecording(bool enable)
-{
+int32_t ROSAudioDevice::SetStereoRecording(bool enable) {
   return ((_conn_settings.audio_topic_ch == 2) == enable) ? 0 : -1;
 }
 
-int32_t ROSAudioDevice::StereoRecording(bool &enabled) const
-{
+int32_t ROSAudioDevice::StereoRecording(bool& enabled) const {
   enabled = _conn_settings.audio_topic_ch == 2;
   return 0;
 }
 
-int32_t ROSAudioDevice::PlayoutDelay(uint16_t &delayMS) const
-{
+int32_t ROSAudioDevice::PlayoutDelay(uint16_t& delayMS) const {
   return 0;
 }
 
-void ROSAudioDevice::AttachAudioBuffer(webrtc::AudioDeviceBuffer *audioBuffer)
-{
+void ROSAudioDevice::AttachAudioBuffer(webrtc::AudioDeviceBuffer* audioBuffer) {
   rtc::CritScope lock(&_critSect);
 
   _ptrAudioBuffer = audioBuffer;
@@ -480,34 +413,32 @@ void ROSAudioDevice::AttachAudioBuffer(webrtc::AudioDeviceBuffer *audioBuffer)
 }
 
 #if defined(WEBRTC_IOS)
-int ROSAudioDevice::GetPlayoutAudioParameters(webrtc::AudioParameters* params) const {
+int ROSAudioDevice::GetPlayoutAudioParameters(
+    webrtc::AudioParameters* params) const {
   RTC_LOG(INFO) << __FUNCTION__;
   return 0;
 }
 
-int ROSAudioDevice::GetRecordAudioParameters(webrtc::AudioParameters* params) const {
+int ROSAudioDevice::GetRecordAudioParameters(
+    webrtc::AudioParameters* params) const {
   RTC_LOG(INFO) << __FUNCTION__;
   return 0;
 }
-#endif // WEBRTC_IOS
+#endif  // WEBRTC_IOS
 
-bool ROSAudioDevice::PlayThreadFunc(void *pThis)
-{
-  return (static_cast<ROSAudioDevice *>(pThis)->PlayThreadProcess());
+bool ROSAudioDevice::PlayThreadFunc(void* pThis) {
+  return (static_cast<ROSAudioDevice*>(pThis)->PlayThreadProcess());
 }
 
-bool ROSAudioDevice::PlayThreadProcess()
-{
-  if (!_playing)
-  {
+bool ROSAudioDevice::PlayThreadProcess() {
+  if (!_playing) {
     return false;
   }
   int64_t currentTime = rtc::TimeMillis();
   _critSect.Enter();
 
   if (_lastCallPlayoutMillis == 0 ||
-      currentTime - _lastCallPlayoutMillis >= 5)
-  {
+      currentTime - _lastCallPlayoutMillis >= 5) {
     _critSect.Leave();
     _ptrAudioBuffer->RequestPlayoutData(_playoutFramesIn10MS);
     _critSect.Enter();
@@ -520,36 +451,38 @@ bool ROSAudioDevice::PlayThreadProcess()
   _critSect.Leave();
 
   int64_t deltaTimeMillis = rtc::TimeMillis() - currentTime;
-  if (deltaTimeMillis < 5)
-  {
+  if (deltaTimeMillis < 5) {
     webrtc::SleepMs(5 - deltaTimeMillis);
   }
 
   return true;
 }
 
-bool ROSAudioDevice::RecROSCallback(const audio_common_msgs::AudioDataConstPtr &msg)
-{
+bool ROSAudioDevice::RecROSCallback(
+    const audio_common_msgs::AudioDataConstPtr& msg) {
   size_t copyedDataSize = 0;
   _critSect.Enter();
-  while (_recording && copyedDataSize != msg->data.size())
-  {
-    RTC_LOG(LS_VERBOSE) << "RecROSCallback _recordingBufferSizeIn10MS:" << _recordingBufferSizeIn10MS
-                    << " _writtenBufferSize" << _writtenBufferSize
-                    << " msg->data.size()" << msg->data.size()
-                    << " copyedDataSize" << copyedDataSize;
-    if (_recordingBufferSizeIn10MS - _writtenBufferSize <= msg->data.size() - copyedDataSize)
-    {
-      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize], _recordingBufferSizeIn10MS - _writtenBufferSize);
+  while (_recording && copyedDataSize != msg->data.size()) {
+    RTC_LOG(LS_VERBOSE) << "RecROSCallback _recordingBufferSizeIn10MS:"
+                        << _recordingBufferSizeIn10MS << " _writtenBufferSize"
+                        << _writtenBufferSize << " msg->data.size()"
+                        << msg->data.size() << " copyedDataSize"
+                        << copyedDataSize;
+    if (_recordingBufferSizeIn10MS - _writtenBufferSize <=
+        msg->data.size() - copyedDataSize) {
+      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize],
+             _recordingBufferSizeIn10MS - _writtenBufferSize);
       copyedDataSize += _recordingBufferSizeIn10MS - _writtenBufferSize;
       _writtenBufferSize = 0;
-      _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer, _recordingFramesIn10MS);
+      _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,
+                                         _recordingFramesIn10MS);
       _critSect.Leave();
       _ptrAudioBuffer->DeliverRecordedData();
       webrtc::SleepMs(10);
       _critSect.Enter();
     } else {
-      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize], msg->data.size() - copyedDataSize);
+      memcpy(_recordingBuffer + _writtenBufferSize, &msg->data[copyedDataSize],
+             msg->data.size() - copyedDataSize);
       _writtenBufferSize += msg->data.size() - copyedDataSize;
       copyedDataSize += msg->data.size() - copyedDataSize;
     }

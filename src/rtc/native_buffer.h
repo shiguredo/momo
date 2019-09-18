@@ -6,10 +6,11 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "rtc_base/memory/aligned_malloc.h"
 
-class NativeBuffer : public webrtc::VideoFrameBuffer
-{
-public:
-  static rtc::scoped_refptr<NativeBuffer> Create(webrtc::VideoType video_type, int width, int height);
+class NativeBuffer : public webrtc::VideoFrameBuffer {
+ public:
+  static rtc::scoped_refptr<NativeBuffer> Create(webrtc::VideoType video_type,
+                                                 int width,
+                                                 int height);
 
   void InitializeData();
 
@@ -27,11 +28,11 @@ public:
   const uint8_t* Data() const;
   uint8_t* MutableData();
 
-protected:
+ protected:
   NativeBuffer(webrtc::VideoType video_type, int width, int height);
   ~NativeBuffer() override;
 
-private:
+ private:
   const int raw_width_;
   const int raw_height_;
   int scaled_width_;
@@ -40,4 +41,4 @@ private:
   const webrtc::VideoType video_type_;
   const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
 };
-#endif // NATIVE_BUFFER_H_
+#endif  // NATIVE_BUFFER_H_

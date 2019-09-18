@@ -32,7 +32,8 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
       size_t capture_device_index);
   V4L2VideoCapture();
   ~V4L2VideoCapture();
-  int32_t Init(const char* deviceUniqueId, const std::string& specifiedVideoDevice);
+  int32_t Init(const char* deviceUniqueId,
+               const std::string& specifiedVideoDevice);
   int32_t StartCapture(ConnectionSettings cs);
 
   bool useNativeBuffer() override;
@@ -70,4 +71,3 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
 };
 
 #endif  // V4L2_VIDEO_CAPTURE_H_
-                                                                                

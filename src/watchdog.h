@@ -11,16 +11,14 @@ enable() を呼び出した後、一定時間が経過するとコールバッ�
 コールバックが発生する時 WatchDog は無効になるので、必要であれば再度 enable() や reset() を呼び出すこと。
 マルチスレッド下では動作しないので注意。
 */
-class WatchDog
-{
-public:
+class WatchDog {
+ public:
   WatchDog(boost::asio::io_context& ioc, std::function<void()> callback);
   void enable(int timeout);
   void disable();
   void reset();
 
-private:
-
+ private:
   int timeout_;
   boost::asio::deadline_timer timer_;
   std::function<void()> callback_;

@@ -7,17 +7,16 @@
 #include "connection_settings.h"
 #include "scalable_track_source.h"
 
-class RTCManager
-{
-public:
+class RTCManager {
+ public:
   RTCManager(ConnectionSettings conn_settings,
              rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source);
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
-          webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
-          RTCMessageSender *sender);
+      webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
+      RTCMessageSender* sender);
 
-private:
+ private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> _audio_track;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> _video_track;

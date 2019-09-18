@@ -1,14 +1,13 @@
 #ifndef CONNECTION_SETTINGS_H_
 #define CONNECTION_SETTINGS_H_
 
-#include <string>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "api/rtp_parameters.h"
 
-struct ConnectionSettings
-{
+struct ConnectionSettings {
   std::string camera_name = "";
 #if USE_ROS
   bool image_compressed = false;
@@ -86,7 +85,8 @@ struct ConnectionSettings
     return webrtc::DegradationPreference::BALANCED;
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const ConnectionSettings& cs) {
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const ConnectionSettings& cs) {
     os << "no_video: " << (cs.no_video ? "true" : "false") << "\n";
     os << "no_audio: " << (cs.no_audio ? "true" : "false") << "\n";
     os << "video_codec: " << cs.video_codec << "\n";
@@ -95,7 +95,8 @@ struct ConnectionSettings
     os << "audio_bitrate: " << cs.audio_bitrate << "\n";
     os << "resolution: " << cs.resolution << "\n";
     os << "framerate: " << cs.framerate << "\n";
-    os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false") << "\n";
+    os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false")
+       << "\n";
     os << "priority: " << cs.priority << "\n";
     os << "port: " << cs.port << "\n";
     os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
@@ -103,7 +104,8 @@ struct ConnectionSettings
     os << "ayame_client_id: " << cs.ayame_client_id << "\n";
     os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
     os << "sora_channel_id: " << cs.sora_channel_id << "\n";
-    os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false") << "\n";
+    os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false")
+       << "\n";
     os << "sora_metadata: " << cs.sora_metadata << "\n";
     os << "test_document_root: " << cs.test_document_root << "\n";
     return os;
