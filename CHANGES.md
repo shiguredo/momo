@@ -11,6 +11,13 @@
 
 ## develop
 
+## xx.yy.zz
+
+- [ADD] Jetson Nano のハードウェアエンコーダを利用する機能を実装
+    - @tnoho
+- [ADD] Jetson Nano のビルドを追加
+    - @melpon
+
 ## 19.09.0
 
 - [ADD] --disable-echo-cancellation オプションを追加
