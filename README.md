@@ -134,7 +134,6 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
 
-
 ## Windows 版について
 
 Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
