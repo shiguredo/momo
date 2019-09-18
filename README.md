@@ -7,9 +7,13 @@
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
-Raspberry Pi 環境では Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+### ハードウェアエンコーダへの対応
 
-また、macOS 環境でも macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+
+macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+
+Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です。
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
