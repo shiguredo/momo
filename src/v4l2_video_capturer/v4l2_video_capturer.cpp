@@ -513,6 +513,7 @@ bool V4L2VideoCapture::CaptureProcess() {
                 .set_video_frame_buffer(dst_buffer)
                 .set_timestamp_rtp(0)
                 .set_timestamp_ms(rtc::TimeMillis())
+                .set_timestamp_us(rtc::TimeMicros())
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build();
         OnCapturedFrame(video_frame);

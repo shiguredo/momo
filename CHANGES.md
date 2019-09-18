@@ -11,6 +11,10 @@
 
 ## develop
 
+- [ADD] Jetson Nano のハードウェアエンコーダを利用する機能を実装
+    - @tnoho
+- [ADD] Jetson Nano のビルドを追加
+    - @melpon
 - [ADD] CI を CircleCI から GitHub Actions へ切り替える
     - macOS の時間制限が OSS の場合はないため Weekly build から Daily build のみにきりかえる
 - [UPDATE] libwebrtc M78 コミットポジションを 3 にする
