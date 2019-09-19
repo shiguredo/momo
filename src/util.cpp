@@ -58,9 +58,10 @@ void Util::parseArgs(int argc,
 
   local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
   local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
   local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+  local_nh.param<std::string>("video_device", cs.video_device, cs.video_device);
 #endif
   local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
   local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
@@ -135,12 +136,45 @@ void Util::parseArgs(int argc,
 
   bool version = false;
 
+  auto is_valid_force_i420 = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+        return std::string();
+#else
+        return "このデバイスは --force-i420 に対応していません。";
+#endif
+      },
+      "");
+  auto is_valid_use_native = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+        return std::string();
+#else
+        return "このデバイスは --use-native に対応していません。";
+#endif
+      },
+      "");
+
+  auto is_valid_h264 = CLI::Validator(
+      [](std::string input) -> std::string {
+#if MOMO_USE_H264
+        return std::string();
+#else
+        return "このデバイスは --video-codec=H264 に対応していません。";
+#endif
+      },
+      "");
+
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  app.add_flag("--force-i420", cs.force_i420, "強制的にI420にする");
+  app.add_flag("--force-i420", cs.force_i420,
+               "強制的にI420にする（対応デバイスのみ）")
+      ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
-               "MJPEGのデコードとビデオのリサイズをハードウェアで行う");
+               "MJPEGのデコードとビデオのリサイズをハードウェアで行う"
+               "（対応デバイスのみ）")
+      ->check(is_valid_use_native);
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   app.add_option("--video-device", cs.video_device,
                  "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
       ->check(CLI::ExistingFile);
@@ -199,13 +233,10 @@ void Util::parseArgs(int argc,
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")
       ->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
-#if MOMO_USE_H264
-  sora_app->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
-                    "ビデオコーデック");
-#else
-  sora_app->add_set("--video-codec", cs.video_codec, {"VP8", "VP9"},
-                    "ビデオコーデック");
-#endif
+  sora_app
+      ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
+                "ビデオコーデック")
+      ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
                     "オーディオコーデック");
   sora_app
