@@ -1,4 +1,4 @@
-name: Daily build workflow
+name: daily-build-workflow
 on:
   schedule:
     # UTCで記述する事、この場合は日本時間 9 時にしたいので -9 して 0 にしてある
