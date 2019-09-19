@@ -21,6 +21,8 @@
 - [UPDATE] libwebrtc M78 コミットポジションを 3 にする
     - libwebrtc のハッシュは 68c715dc01cd8cd0ad2726453e7376b5f353fcd1
     - @voluntas
+- [UPDATE] コマンドオプションをできるだけ共通化する
+    - @melpon
 
 ## 19.09.0
 
