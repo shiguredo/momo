@@ -40,7 +40,12 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-Raspberry Pi 向けのバイナリのみ提供を行っています。今後は macOS や Jetson Nano 向けのバイナリ配布も行っていく予定です。
+4 種類のバイナリを配布しています。
+
+- Raspberry Buster ARMv7
+- Raspberry Buster ARMv6
+- NVIDIA Jetson Nano ARMv8
+- macOS 10.15 x86_64
 
 ## 動作環境
 
