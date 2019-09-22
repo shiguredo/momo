@@ -1,4 +1,4 @@
-# NVIDIA Jetson Nano で Momo を使ってみる
+# Jetson Nano で Momo を使ってみる
 
 ## Jetson Nano を購入する
 
@@ -14,8 +14,8 @@
 
 以下は上のタイプのケースありやレンズが色々選べるタイプです。
 
-- [ケースパターン 1](https://ja.aliexpress.com/item/33013268769.html)
-- [ケースパターン 2](https://ja.aliexpress.com/item/33016603918.html)
+- https://ja.aliexpress.com/item/33013268769.html
+- https://ja.aliexpress.com/item/33016603918.html
 
 色々 4K@30 が出せるカメラを試してきましたが、このカメラが一番安定しています。
 
