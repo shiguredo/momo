@@ -149,3 +149,19 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
 
 [Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)
+
+## カスタマイズなど
+
+公開可能なカスタマイズであれば、お仕事としてお受けすることが可能です。
+
+非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能なコミッターを紹介することが可能です。
+
+まずは momo at shiguredo.jp までお問い合わせください。
+
+- @tnoho
+    - Momo のコアコミッターです
+- @melpon
+    - Momo のビルド全般のリードコミッターです
+- @kdxu
+    - Momo の Ayame 機能のリードコミッターです
+    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコアコミッターです
