@@ -44,8 +44,8 @@ Momo はオープンソースソフトウェアですが、開発については
 
 - Raspberry Buster ARMv7
 - Raspberry Buster ARMv6
-- NVIDIA Jetson Nano ARMv8
-- macOS 10.15 x86_64
+- Jetson Nano ARMv8
+- macOS 10.14 x86_64
 
 ## 動作環境
 
