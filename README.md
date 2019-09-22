@@ -144,6 +144,12 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
 
+## Momo についての電子書籍
+
+Momo のコア開発者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+
+[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+
 ## Windows 版について
 
 Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
