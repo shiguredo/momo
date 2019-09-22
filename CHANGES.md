@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.09.1
+
 - [ADD] Jetson Nano のハードウェアエンコーダを利用する機能を実装
     - @tnoho
 - [ADD] Jetson Nano のビルドを追加
