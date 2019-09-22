@@ -28,9 +28,9 @@ class MacCapturer : public ScalableVideoTrackSource,
                     public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   static rtc::scoped_refptr<MacCapturer> Create(size_t width,
-                             size_t height,
-                             size_t target_fps,
-                             size_t capture_device_index);
+                                                size_t height,
+                                                size_t target_fps,
+                                                size_t capture_device_index);
   MacCapturer(size_t width,
               size_t height,
               size_t target_fps,

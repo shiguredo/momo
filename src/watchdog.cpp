@@ -1,15 +1,10 @@
 #include "watchdog.h"
 #include <iostream>
 
-
 WatchDog::WatchDog(boost::asio::io_context& ioc, std::function<void()> callback)
-  : timer_(ioc)
-  , callback_(callback)
-  , timeout_(0) {
-}
+    : timer_(ioc), callback_(callback), timeout_(0) {}
 
-void WatchDog::enable(int timeout)
-{
+void WatchDog::enable(int timeout) {
   timeout_ = timeout;
   timer_.cancel();
   timer_.expires_from_now(boost::posix_time::seconds(timeout));
@@ -22,12 +17,10 @@ void WatchDog::enable(int timeout)
   });
 }
 
-void WatchDog::disable()
-{
+void WatchDog::disable() {
   timer_.cancel();
 }
 
-void WatchDog::reset()
-{
+void WatchDog::reset() {
   enable(timeout_);
 }

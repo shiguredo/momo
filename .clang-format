@@ -1,0 +1,8 @@
+---
+Language:       Cpp
+BasedOnStyle:   Chromium
+ReflowComments: false
+---
+Language:       ObjC
+BasedOnStyle:   Chromium
+ReflowComments: false

@@ -9,23 +9,16 @@
  *
  */
 
-#ifndef MMAL_H264_ENCODER_H_
-#define MMAL_H264_ENCODER_H_
+#ifndef Jetson_H264_ENCODER_H_
+#define Jetson_H264_ENCODER_H_
 
-extern "C" {
-#include "bcm_host.h"
-#include "interface/mmal/mmal.h"
-#include "interface/mmal/mmal_format.h"
-#include "interface/mmal/util/mmal_connection.h"
-#include "interface/mmal/util/mmal_default_components.h"
-#include "interface/mmal/util/mmal_util.h"
-#include "interface/mmal/util/mmal_util_params.h"
-#include "interface/vcos/vcos.h"
-}
+#include "NvJpegDecoder.h"
+#include "NvVideoConverter.h"
+#include "NvVideoEncoder.h"
 
+#include <linux/videodev2.h>
 #include <chrono>
 #include <memory>
-#include <mutex>
 #include <queue>
 
 #include "api/video_codecs/video_encoder.h"
@@ -36,10 +29,10 @@ extern "C" {
 
 class ProcessThread;
 
-class MMALH264Encoder : public webrtc::VideoEncoder {
+class JetsonH264Encoder : public webrtc::VideoEncoder {
  public:
-  explicit MMALH264Encoder(const cricket::VideoCodec& codec);
-  ~MMALH264Encoder() override;
+  explicit JetsonH264Encoder(const cricket::VideoCodec& codec);
+  ~JetsonH264Encoder() override;
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -79,47 +72,62 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
     absl::optional<webrtc::ColorSpace> color_space;
   };
 
-  int32_t MMALConfigure();
-  void MMALRelease();
-  static void MMALInputCallbackFunction(MMAL_PORT_T* port,
-                                        MMAL_BUFFER_HEADER_T* buffer);
-  void MMALInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-  static void MMALOutputCallbackFunction(MMAL_PORT_T* port,
-                                         MMAL_BUFFER_HEADER_T* buffer);
-  void MMALOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  int32_t JetsonConfigure();
+  void JetsonRelease();
+  void SendEOS(NvV4l2Element* element);
+  static bool ConvertFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
+                                              NvBuffer* buffer,
+                                              NvBuffer* shared_buffer,
+                                              void* data);
+  bool ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
+                               NvBuffer* buffer,
+                               NvBuffer* shared_buffer);
+  static bool EncodeOutputCallbackFunction(struct v4l2_buffer* v4l2_buf,
+                                           NvBuffer* buffer,
+                                           NvBuffer* shared_buffer,
+                                           void* data);
+  bool EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
+                            NvBuffer* buffer,
+                            NvBuffer* shared_buffer);
+  static bool EncodeFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
+                                             NvBuffer* buffer,
+                                             NvBuffer* shared_buffer,
+                                             void* data);
+  bool EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
+                              NvBuffer* buffer,
+                              NvBuffer* shared_buffer);
+  void SetFramerate(uint32_t framerate);
   void SetBitrateBps(uint32_t bitrate_bps);
   int32_t SendFrame(unsigned char* buffer, size_t size);
 
-  std::mutex mtx_;
   webrtc::EncodedImageCallback* callback_;
-  MMAL_COMPONENT_T* decoder_;
-  MMAL_COMPONENT_T* resizer_;
-  MMAL_COMPONENT_T* encoder_;
-  MMAL_CONNECTION_T* conn1_;
-  MMAL_CONNECTION_T* conn2_;
-  MMAL_POOL_T* pool_in_;
-  MMAL_POOL_T* pool_out_;
+  NvJPEGDecoder* decoder_;
+  NvVideoConverter* converter_;
+  NvVideoEncoder* encoder_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
+  uint32_t framerate_;
+  int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
-  int32_t raw_width_;
-  int32_t raw_height_;
+  int key_frame_interval_;
+  uint32_t decode_pixfmt_;
+  uint32_t raw_width_;
+  uint32_t raw_height_;
   int32_t width_;
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
-  int32_t stride_width_;
-  int32_t stride_height_;
-  bool use_native_;
-  bool use_decoder_;
+  bool use_mjpeg_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
   rtc::CriticalSection frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
+  std::mutex enc0_buffer_mtx_;
+  std::condition_variable enc0_buffer_cond_;
+  bool enc0_buffer_ready_ = false;
+  std::queue<NvBuffer*>* enc0_buffer_queue_;
   webrtc::EncodedImage encoded_image_;
-  std::unique_ptr<uint8_t[]> encoded_image_buffer_;
-  size_t encoded_buffer_length_;
 };
 
-#endif  // MMAL_H264_ENCODER_H_
+#endif  // Jetson_H264_ENCODER_H_

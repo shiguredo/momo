@@ -8,18 +8,18 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 
-class HWVideoEncoderFactory : public webrtc::VideoEncoderFactory
-{
-  public:
-    HWVideoEncoderFactory() {}
-    virtual ~HWVideoEncoderFactory() {}
+class HWVideoEncoderFactory : public webrtc::VideoEncoderFactory {
+ public:
+  HWVideoEncoderFactory() {}
+  virtual ~HWVideoEncoderFactory() {}
 
-    std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
+  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
-    CodecInfo QueryVideoEncoder(const webrtc::SdpVideoFormat& format) const override;
+  CodecInfo QueryVideoEncoder(
+      const webrtc::SdpVideoFormat& format) const override;
 
-    std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
+  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
       const webrtc::SdpVideoFormat& format) override;
 };
 
-#endif // HW_VIDEO_ENCODER_FACTORY_H_
+#endif  // HW_VIDEO_ENCODER_FACTORY_H_

@@ -9,247 +9,231 @@
 using json = nlohmann::json;
 
 bool AyameWebsocketClient::parseURL(URLParts& parts) const {
-    std::string url = conn_settings_.ayame_signaling_host;
+  std::string url = conn_settings_.ayame_signaling_host;
 
-    if (!URLParts::parse(url, parts)) {
-        throw std::exception();
-    }
+  if (!URLParts::parse(url, parts)) {
+    throw std::exception();
+  }
 
-    std::string default_port;
-    if (parts.scheme == "wss") {
-        return true;
-    } else if (parts.scheme == "ws") {
-        return false;
-    } else {
-        throw std::exception();
-    }
+  std::string default_port;
+  if (parts.scheme == "wss") {
+    return true;
+  } else if (parts.scheme == "ws") {
+    return false;
+  } else {
+    throw std::exception();
+  }
 }
 
 boost::asio::ssl::context AyameWebsocketClient::createSSLContext() const {
-    boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
-    ctx.set_default_verify_paths();
-    ctx.set_options(boost::asio::ssl::context::default_workarounds |
-                    boost::asio::ssl::context::no_sslv2 |
-                    boost::asio::ssl::context::no_sslv3 |
-                    boost::asio::ssl::context::single_dh_use);
-    return ctx;
+  boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+  ctx.set_default_verify_paths();
+  ctx.set_options(boost::asio::ssl::context::default_workarounds |
+                  boost::asio::ssl::context::no_sslv2 |
+                  boost::asio::ssl::context::no_sslv3 |
+                  boost::asio::ssl::context::single_dh_use);
+  return ctx;
 }
 
-webrtc::PeerConnectionInterface::IceConnectionState AyameWebsocketClient::getRTCConnectionState() const { return rtc_state_; }
+webrtc::PeerConnectionInterface::IceConnectionState
+AyameWebsocketClient::getRTCConnectionState() const {
+  return rtc_state_;
+}
 
 std::shared_ptr<RTCConnection> AyameWebsocketClient::getRTCConnection() const {
-  if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected) {
+  if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
+                        kIceConnectionConnected) {
     return connection_;
   } else {
     return nullptr;
   }
 }
 
-AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc, RTCManager* manager, ConnectionSettings conn_settings)
-    : ioc_(ioc)
-    , resolver_(ioc)
-    , manager_(manager)
-    , retry_count_(0)
-    , conn_settings_(conn_settings)
-    , watchdog_(ioc, std::bind(&AyameWebsocketClient::onWatchdogExpired, this))
-{
-    reset();
+AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc,
+                                           RTCManager* manager,
+                                           ConnectionSettings conn_settings)
+    : ioc_(ioc),
+      resolver_(ioc),
+      manager_(manager),
+      retry_count_(0),
+      conn_settings_(conn_settings),
+      watchdog_(ioc,
+                std::bind(&AyameWebsocketClient::onWatchdogExpired, this)) {
+  reset();
 }
 
 void AyameWebsocketClient::reset() {
-    connection_ = nullptr;
-    connected_ = false;
-    ice_servers_.clear();
+  connection_ = nullptr;
+  connected_ = false;
+  ice_servers_.clear();
 
-    if (parseURL(parts_)) {
-        auto ssl_ctx = createSSLContext();
-        boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> wss(ioc_, ssl_ctx);
-        ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
-        // SNI の設定を行う
-        if (!SSL_set_tlsext_host_name(ws_->nativeSecureSocket().next_layer().native_handle(), parts_.host.c_str()))
-        {
-            boost::system::error_code ec{static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category()};
-            MOMO_BOOST_ERROR(ec, "SSL_set_tlsext_host_name");
-        }
-    } else {
-        boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws(ioc_);
-        ws_.reset(new Websocket(ioc_));
+  if (parseURL(parts_)) {
+    auto ssl_ctx = createSSLContext();
+    boost::beast::websocket::stream<
+        boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>
+        wss(ioc_, ssl_ctx);
+    ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
+    // SNI の設定を行う
+    if (!SSL_set_tlsext_host_name(
+            ws_->nativeSecureSocket().next_layer().native_handle(),
+            parts_.host.c_str())) {
+      boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
+                                   boost::asio::error::get_ssl_category()};
+      MOMO_BOOST_ERROR(ec, "SSL_set_tlsext_host_name");
     }
+  } else {
+    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws(ioc_);
+    ws_.reset(new Websocket(ioc_));
+  }
 }
 
 void AyameWebsocketClient::release() {
-    connection_ = nullptr;
+  connection_ = nullptr;
 }
 
-bool AyameWebsocketClient::connect()
-{
-    RTC_LOG(LS_INFO) << __FUNCTION__;
+bool AyameWebsocketClient::connect() {
+  RTC_LOG(LS_INFO) << __FUNCTION__;
 
-    if (connected_) {
-        return false;
-    }
+  if (connected_) {
+    return false;
+  }
 
-    std::string port;
-    if (parts_.port.empty()) {
-        port = ws_->isSSL() ? "443" : "80";
-    } else {
-        port = parts_.port;
-    }
+  std::string port;
+  if (parts_.port.empty()) {
+    port = ws_->isSSL() ? "443" : "80";
+  } else {
+    port = parts_.port;
+  }
 
-    // DNS ルックアップ
-    resolver_.async_resolve(
-        parts_.host,
-        port,
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(
-                &AyameWebsocketClient::onResolve,
-                shared_from_this(),
-                std::placeholders::_1,
-                std::placeholders::_2)));
+  // DNS ルックアップ
+  resolver_.async_resolve(
+      parts_.host, port,
+      boost::asio::bind_executor(
+          ws_->strand(),
+          std::bind(&AyameWebsocketClient::onResolve, shared_from_this(),
+                    std::placeholders::_1, std::placeholders::_2)));
 
-    watchdog_.enable(30);
+  watchdog_.enable(30);
 
-    return true;
+  return true;
 }
 
-void AyameWebsocketClient::reconnectAfter()
-{
+void AyameWebsocketClient::reconnectAfter() {
   int interval = 5 * (2 * retry_count_ + 1);
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval <<" sec";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.enable(interval);
   retry_count_++;
 }
 
 void AyameWebsocketClient::onWatchdogExpired() {
-    RTC_LOG(LS_WARNING) << __FUNCTION__;
+  RTC_LOG(LS_WARNING) << __FUNCTION__;
 
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
-    reset();
-    connect();
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
+  reset();
+  connect();
 }
 
-void AyameWebsocketClient::onResolve(boost::system::error_code ec, boost::asio::ip::tcp::resolver::results_type results) {
-    if (ec) {
-        reconnectAfter();
-        return MOMO_BOOST_ERROR(ec, "resolve");
-    }
+void AyameWebsocketClient::onResolve(
+    boost::system::error_code ec,
+    boost::asio::ip::tcp::resolver::results_type results) {
+  if (ec) {
+    reconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "resolve");
+  }
 
-    // DNS ルックアップで得られたエンドポイントに対して接続する
-    if (ws_->isSSL()) {
-        boost::asio::async_connect(
-            ws_->nativeSecureSocket().next_layer().next_layer(),
-            results.begin(),
-            results.end(),
-            boost::asio::bind_executor(
-                ws_->strand(),
-                std::bind(
-                    &AyameWebsocketClient::onSSLConnect,
-                    shared_from_this(),
-                    std::placeholders::_1)));
-    } else {
-        boost::asio::async_connect(
-            ws_->nativeSocket().next_layer(),
-            results.begin(),
-            results.end(),
-            boost::asio::bind_executor(
-                ws_->strand(),
-                std::bind(
-                    &AyameWebsocketClient::onConnect,
-                    shared_from_this(),
-                    std::placeholders::_1)));
-    }
+  // DNS ルックアップで得られたエンドポイントに対して接続する
+  if (ws_->isSSL()) {
+    boost::asio::async_connect(
+        ws_->nativeSecureSocket().next_layer().next_layer(), results.begin(),
+        results.end(),
+        boost::asio::bind_executor(
+            ws_->strand(),
+            std::bind(&AyameWebsocketClient::onSSLConnect, shared_from_this(),
+                      std::placeholders::_1)));
+  } else {
+    boost::asio::async_connect(
+        ws_->nativeSocket().next_layer(), results.begin(), results.end(),
+        boost::asio::bind_executor(
+            ws_->strand(),
+            std::bind(&AyameWebsocketClient::onConnect, shared_from_this(),
+                      std::placeholders::_1)));
+  }
 }
 
 void AyameWebsocketClient::onSSLConnect(boost::system::error_code ec) {
-    if (ec) {
-        reconnectAfter();
-        return MOMO_BOOST_ERROR(ec, "SSLConnect");
-    }
+  if (ec) {
+    reconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "SSLConnect");
+  }
 
-    // SSL のハンドシェイク
-    ws_->nativeSecureSocket().next_layer().async_handshake(
-        boost::asio::ssl::stream_base::client,
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(
-                &AyameWebsocketClient::onSSLHandshake,
-                shared_from_this(),
-                std::placeholders::_1)));
+  // SSL のハンドシェイク
+  ws_->nativeSecureSocket().next_layer().async_handshake(
+      boost::asio::ssl::stream_base::client,
+      boost::asio::bind_executor(
+          ws_->strand(), std::bind(&AyameWebsocketClient::onSSLHandshake,
+                                   shared_from_this(), std::placeholders::_1)));
 }
 
 void AyameWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
-    if (ec) {
-        reconnectAfter();
-        return MOMO_BOOST_ERROR(ec, "SSLHandshake");
-    }
+  if (ec) {
+    reconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "SSLHandshake");
+  }
 
-    // Websocket のハンドシェイク
-    ws_->nativeSecureSocket().async_handshake(parts_.host, parts_.path_query_fragment,
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(
-                &AyameWebsocketClient::onHandshake,
-                shared_from_this(),
-                std::placeholders::_1)));
+  // Websocket のハンドシェイク
+  ws_->nativeSecureSocket().async_handshake(
+      parts_.host, parts_.path_query_fragment,
+      boost::asio::bind_executor(
+          ws_->strand(), std::bind(&AyameWebsocketClient::onHandshake,
+                                   shared_from_this(), std::placeholders::_1)));
 }
 
 void AyameWebsocketClient::onConnect(boost::system::error_code ec) {
-    if (ec) {
-        reconnectAfter();
-        return MOMO_BOOST_ERROR(ec, "connect");
-    }
-    // Websocket のハンドシェイク
-    ws_->nativeSocket().async_handshake(parts_.host, parts_.path_query_fragment,
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(
-                &AyameWebsocketClient::onHandshake,
-                shared_from_this(),
-                std::placeholders::_1)));
+  if (ec) {
+    reconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "connect");
+  }
+  // Websocket のハンドシェイク
+  ws_->nativeSocket().async_handshake(
+      parts_.host, parts_.path_query_fragment,
+      boost::asio::bind_executor(
+          ws_->strand(), std::bind(&AyameWebsocketClient::onHandshake,
+                                   shared_from_this(), std::placeholders::_1)));
 }
 
-void AyameWebsocketClient::onHandshake(boost::system::error_code ec)
-{
-    if (ec) {
-        reconnectAfter();
-        return MOMO_BOOST_ERROR(ec, "Handshake");
-    }
+void AyameWebsocketClient::onHandshake(boost::system::error_code ec) {
+  if (ec) {
+    reconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "Handshake");
+  }
 
-    connected_ = true;
+  connected_ = true;
 
-    ws_->startToRead(std::bind(
-        &AyameWebsocketClient::onRead,
-        this,
-        std::placeholders::_1,
-        std::placeholders::_2,
-        std::placeholders::_3));
+  ws_->startToRead(std::bind(&AyameWebsocketClient::onRead, this,
+                             std::placeholders::_1, std::placeholders::_2,
+                             std::placeholders::_3));
 
-    doRegister();
+  doRegister();
 }
 
-void AyameWebsocketClient::doRegister()
-{
-    json json_message = {
-        {"type", "register"},
-        {"clientId", conn_settings_.ayame_client_id},
-        {"roomId", conn_settings_.ayame_room_id},
-    };
-    if (conn_settings_.ayame_signaling_key != "") {
-      json_message["key"] = conn_settings_.ayame_signaling_key;
-    }
-    ws_->sendText(json_message.dump());
+void AyameWebsocketClient::doRegister() {
+  json json_message = {
+      {"type", "register"},
+      {"clientId", conn_settings_.ayame_client_id},
+      {"roomId", conn_settings_.ayame_room_id},
+  };
+  if (conn_settings_.ayame_signaling_key != "") {
+    json_message["key"] = conn_settings_.ayame_signaling_key;
+  }
+  ws_->sendText(json_message.dump());
 }
 void AyameWebsocketClient::doSendPong() {
-    json json_message = {
-      {"type", "pong"}
-    };
-    ws_->sendText(json_message.dump());
+  json json_message = {{"type", "pong"}};
+  ws_->sendText(json_message.dump());
 }
 
-void AyameWebsocketClient::createPeerConnection()
-{
+void AyameWebsocketClient::createPeerConnection() {
   if (ice_servers_.empty()) {
     return;
   }
@@ -260,180 +244,168 @@ void AyameWebsocketClient::createPeerConnection()
   connection_ = manager_->createConnection(rtc_config, this);
 }
 
-void AyameWebsocketClient::close()
-{
-    if (ws_->isSSL()) {
-        ws_->nativeSecureSocket().async_close(boost::beast::websocket::close_code::normal,
-            boost::asio::bind_executor(
-                ws_->strand(),
-                std::bind(
-                    &AyameWebsocketClient::onClose,
-                    shared_from_this(),
-                    std::placeholders::_1)));
-    } else {
-        ws_->nativeSocket().async_close(boost::beast::websocket::close_code::normal,
-            boost::asio::bind_executor(
-                ws_->strand(),
-                std::bind(
-                    &AyameWebsocketClient::onClose,
-                    shared_from_this(),
-                    std::placeholders::_1)));
-    }
+void AyameWebsocketClient::close() {
+  if (ws_->isSSL()) {
+    ws_->nativeSecureSocket().async_close(
+        boost::beast::websocket::close_code::normal,
+        boost::asio::bind_executor(
+            ws_->strand(),
+            std::bind(&AyameWebsocketClient::onClose, shared_from_this(),
+                      std::placeholders::_1)));
+  } else {
+    ws_->nativeSocket().async_close(
+        boost::beast::websocket::close_code::normal,
+        boost::asio::bind_executor(
+            ws_->strand(),
+            std::bind(&AyameWebsocketClient::onClose, shared_from_this(),
+                      std::placeholders::_1)));
+  }
 }
 
-void AyameWebsocketClient::onClose(boost::system::error_code ec)
-{
-    if (ec)
-        return MOMO_BOOST_ERROR(ec, "close");
+void AyameWebsocketClient::onClose(boost::system::error_code ec) {
+  if (ec)
+    return MOMO_BOOST_ERROR(ec, "close");
 }
 
-void AyameWebsocketClient::onRead(boost::system::error_code ec, std::size_t bytes_transferred, std::string text)
-{
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+void AyameWebsocketClient::onRead(boost::system::error_code ec,
+                                  std::size_t bytes_transferred,
+                                  std::string text) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
 
-    boost::ignore_unused(bytes_transferred);
+  boost::ignore_unused(bytes_transferred);
 
-    // 書き込みのために読み込み処理がキャンセルされた時にこのエラーになるので、これはエラーとして扱わない
-    if (ec == boost::asio::error::operation_aborted)
-        return;
+  // 書き込みのために読み込み処理がキャンセルされた時にこのエラーになるので、これはエラーとして扱わない
+  if (ec == boost::asio::error::operation_aborted)
+    return;
 
-    if (ec)
-        return MOMO_BOOST_ERROR(ec, "Read");
+  if (ec)
+    return MOMO_BOOST_ERROR(ec, "Read");
 
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
-    auto json_message = json::parse(text);
-    const std::string type = json_message["type"];
-    if (type == "accept")
-    {
-      if (!connection_) {
-        // 返却されてきた iceServers を セットする
-        try {
-          auto jservers = json_message["iceServers"];
-          for (auto jserver : jservers)
-          {
-            webrtc::PeerConnectionInterface::IceServer ice_server;
-            if (jserver.contains("username")) {
-              ice_server.username = jserver["username"];
-            }
-            if (jserver.contains("credential")) {
-              ice_server.password = jserver["credential"];
-            }
-            auto jurls = jserver["urls"];
-            for (const std::string url : jurls)
-            {
-              ice_server.urls.push_back(url);
-            }
-            ice_servers_.push_back(ice_server);
-          }
-        }
-        catch (json::type_error &e)
-        {
-          // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
+  auto json_message = json::parse(text);
+  const std::string type = json_message["type"];
+  if (type == "accept") {
+    if (!connection_) {
+      // 返却されてきた iceServers を セットする
+      try {
+        auto jservers = json_message["iceServers"];
+        for (auto jserver : jservers) {
           webrtc::PeerConnectionInterface::IceServer ice_server;
-          ice_server.uri = "stun:stun.l.google.com:19302";
+          if (jserver.contains("username")) {
+            ice_server.username = jserver["username"];
+          }
+          if (jserver.contains("credential")) {
+            ice_server.password = jserver["credential"];
+          }
+          auto jurls = jserver["urls"];
+          for (const std::string url : jurls) {
+            ice_server.urls.push_back(url);
+          }
           ice_servers_.push_back(ice_server);
         }
-        createPeerConnection();
-        // peer connection を生成したら offer SDP を生成して送信する
-        connection_->createOffer();
+      } catch (json::type_error& e) {
+        // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
+        webrtc::PeerConnectionInterface::IceServer ice_server;
+        ice_server.uri = "stun:stun.l.google.com:19302";
+        ice_servers_.push_back(ice_server);
       }
-    }
-    if (type == "offer") {
       createPeerConnection();
-      const std::string sdp = json_message["sdp"];
-      connection_->setOffer(sdp);
+      // peer connection を生成したら offer SDP を生成して送信する
+      connection_->createOffer();
     }
-    else if (type == "answer") {
-        if (!connection_) {
-            return;
-        }
-        std::string sdp;
-        try
-        {
-            sdp = json_message["sdp"];
-        }
-        catch (json::type_error &e)
-        {
-            return;
-        }
-        connection_->setAnswer(sdp);
+  }
+  if (type == "offer") {
+    createPeerConnection();
+    const std::string sdp = json_message["sdp"];
+    connection_->setOffer(sdp);
+  } else if (type == "answer") {
+    if (!connection_) {
+      return;
     }
-    else if (type == "candidate") {
-        if (!connection_) {
-            return;
-        }
-        int sdp_mlineindex = 0;
-        std::string sdp_mid, candidate;
-        json ice = json_message["ice"];
-        sdp_mid = ice["sdpMid"];
-        sdp_mlineindex = ice["sdpMLineIndex"];
-        candidate = ice["candidate"];
-        connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-    } else if (type == "ping") {
-      if (!connection_) {
-        return;
-      }
-      watchdog_.reset();
-      doSendPong();
+    std::string sdp;
+    try {
+      sdp = json_message["sdp"];
+    } catch (json::type_error& e) {
+      return;
     }
+    connection_->setAnswer(sdp);
+  } else if (type == "candidate") {
+    if (!connection_) {
+      return;
+    }
+    int sdp_mlineindex = 0;
+    std::string sdp_mid, candidate;
+    json ice = json_message["ice"];
+    sdp_mid = ice["sdpMid"];
+    sdp_mlineindex = ice["sdpMLineIndex"];
+    candidate = ice["candidate"];
+    connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
+  } else if (type == "ping") {
+    if (!connection_) {
+      return;
+    }
+    watchdog_.reset();
+    doSendPong();
+  }
 }
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void AyameWebsocketClient::onIceConnectionStateChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
-    boost::asio::post(
-        ws_->strand(),
-        std::bind(
-            &AyameWebsocketClient::doIceConnectionStateChange,
-            shared_from_this(),
-            new_state));
+void AyameWebsocketClient::onIceConnectionStateChange(
+    webrtc::PeerConnectionInterface::IceConnectionState new_state) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
+  boost::asio::post(ws_->strand(),
+                    std::bind(&AyameWebsocketClient::doIceConnectionStateChange,
+                              shared_from_this(), new_state));
 }
-void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid, const int sdp_mlineindex, const std::string sdp) {
-    // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
-    json json_message = {
+void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid,
+                                          const int sdp_mlineindex,
+                                          const std::string sdp) {
+  // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
+  json json_message = {
       {"type", "candidate"},
-    };
-    // ice プロパティの中に object で candidate 情報をセットして送信する
-    json_message["ice"] = {
-      {"candidate", sdp},
-      {"sdpMLineIndex", sdp_mlineindex},
-      {"sdpMid", sdp_mid}
-    };
-    ws_->sendText(json_message.dump());
+  };
+  // ice プロパティの中に object で candidate 情報をセットして送信する
+  json_message["ice"] = {{"candidate", sdp},
+                         {"sdpMLineIndex", sdp_mlineindex},
+                         {"sdpMid", sdp_mid}};
+  ws_->sendText(json_message.dump());
 }
 
-void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type, const std::string sdp) {
-    // sora と異なり ayame モードでは answer 以外 (offer) type の description を送信する場合もある
-    // なので type は "answer" 固定にしない
-    json json_message = {
-      {"type", webrtc::SdpTypeToString(type)},
-      {"sdp", sdp}
-    };
-    ws_->sendText(json_message.dump());
+void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type,
+                                               const std::string sdp) {
+  // sora と異なり ayame モードでは answer 以外 (offer) type の description を送信する場合もある
+  // なので type は "answer" 固定にしない
+  json json_message = {{"type", webrtc::SdpTypeToString(type)}, {"sdp", sdp}};
+  ws_->sendText(json_message.dump());
 }
 
 void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " SdpType: " << webrtc::SdpTypeToString(type);
+  RTC_LOG(LS_INFO) << __FUNCTION__
+                   << " SdpType: " << webrtc::SdpTypeToString(type);
   if (type == webrtc::SdpType::kOffer) {
     connection_->createAnswer();
   }
 }
 
-void AyameWebsocketClient::doIceConnectionStateChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState=" << Util::iceConnectionStateToString(new_state);
+void AyameWebsocketClient::doIceConnectionStateChange(
+    webrtc::PeerConnectionInterface::IceConnectionState new_state) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
+                   << Util::iceConnectionStateToString(new_state);
 
-    switch (new_state) {
-      case webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionConnected:
-        retry_count_ = 0;
-        watchdog_.enable(60);
-        break;
-      case webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionFailed:
-        reconnectAfter();
-        break;
-      default:
-        break;
-    }
-    rtc_state_ = new_state;
+  switch (new_state) {
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionConnected:
+      retry_count_ = 0;
+      watchdog_.enable(60);
+      break;
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionFailed:
+      reconnectAfter();
+      break;
+    default:
+      break;
+  }
+  rtc_state_ = new_state;
 }

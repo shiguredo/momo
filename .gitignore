@@ -44,3 +44,5 @@ webrtc_logs_0
 /build/package
 /build/momo/
 /build/momo.tar.gz
+
+/src/hwenc_jetson/Nv*

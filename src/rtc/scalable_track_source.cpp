@@ -20,7 +20,8 @@
 
 #include "native_buffer.h"
 
-ScalableVideoTrackSource::ScalableVideoTrackSource() : AdaptedVideoTrackSource(4) {}
+ScalableVideoTrackSource::ScalableVideoTrackSource()
+    : AdaptedVideoTrackSource(4) {}
 ScalableVideoTrackSource::~ScalableVideoTrackSource() {}
 
 bool ScalableVideoTrackSource::is_screencast() const {
@@ -31,7 +32,8 @@ absl::optional<bool> ScalableVideoTrackSource::needs_denoising() const {
   return false;
 }
 
-webrtc::MediaSourceInterface::SourceState ScalableVideoTrackSource::state() const {
+webrtc::MediaSourceInterface::SourceState ScalableVideoTrackSource::state()
+    const {
   return SourceState::kLive;
 }
 
@@ -39,7 +41,8 @@ bool ScalableVideoTrackSource::remote() const {
   return false;
 }
 
-void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) {
+void ScalableVideoTrackSource::OnCapturedFrame(
+    const webrtc::VideoFrame& frame) {
   const int64_t timestamp_us = frame.timestamp_us();
   const int64_t translated_timestamp_us =
       timestamp_aligner_.TranslateTimestamp(timestamp_us, rtc::TimeMicros());
@@ -50,26 +53,29 @@ void ScalableVideoTrackSource::OnCapturedFrame(const webrtc::VideoFrame& frame) 
   int crop_height;
   int crop_x;
   int crop_y;
-  if (!AdaptFrame(frame.width(), frame.height(), timestamp_us,
-                  &adapted_width, &adapted_height,
-                  &crop_width, &crop_height, &crop_x, &crop_y)) {
+  if (!AdaptFrame(frame.width(), frame.height(), timestamp_us, &adapted_width,
+                  &adapted_height, &crop_width, &crop_height, &crop_x,
+                  &crop_y)) {
     return;
   }
 
-  if (useNativeBuffer() && frame.video_frame_buffer()->type() == webrtc::VideoFrameBuffer::Type::kNative)
-  {
-    NativeBuffer* frame_buffer = dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
+  if (useNativeBuffer() && frame.video_frame_buffer()->type() ==
+                               webrtc::VideoFrameBuffer::Type::kNative) {
+    NativeBuffer* frame_buffer =
+        dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     frame_buffer->SetScaledSize(adapted_width, adapted_height);
     OnFrame(frame);
     return;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer = frame.video_frame_buffer();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
+      frame.video_frame_buffer();
 
   if (adapted_width != frame.width() || adapted_height != frame.height()) {
     // Video adapter has requested a down-scale. Allocate a new buffer and
     // return scaled version.
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer = webrtc::I420Buffer::Create(adapted_width, adapted_height);
+    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+        webrtc::I420Buffer::Create(adapted_width, adapted_height);
     i420_buffer->ScaleFrom(*buffer->ToI420());
     buffer = i420_buffer;
   }

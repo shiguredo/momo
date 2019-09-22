@@ -1,8 +1,8 @@
 # 各種ライブラリのバージョン情報
 # 項目を変更してビルドすれば各環境へ反映される（ように作る）
-MOMO_VERSION=19.09.0
+MOMO_VERSION=19.09.1
 WEBRTC_VERSION=78
-WEBRTC_COMMIT=5b728cca77c46ed47ae589acba676485a957070b
+WEBRTC_COMMIT=68c715dc01cd8cd0ad2726453e7376b5f353fcd1
 BOOST_VERSION=1.71.0
 JSON_VERSION=3.7.0
 CLI11_VERSION=1.8.0
@@ -13,5 +13,6 @@ PACKAGE_NAMES= \
   raspbian-buster_armv7 \
   ubuntu-16.04_armv7_ros \
   ubuntu-18.04_armv8 \
+  ubuntu-18.04_armv8_jetson_nano \
   ubuntu-16.04_x86_64_ros \
   ubuntu-18.04_x86_64

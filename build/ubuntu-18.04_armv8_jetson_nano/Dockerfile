@@ -11,19 +11,24 @@ COPY script/docker.sh /root/
 
 # RootFS の構築
 
-COPY patch/rpi-raspbian.conf /root/
+COPY patch/arm64.conf /root/
 
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /bin/bash -c " \
     set -ex \
     && source /root/docker.sh \
     && noninteractive_tzdata \
-    && init_rootfs_armhf /root/rootfs /root/rpi-raspbian.conf \
+    && init_rootfs_arm64 /root/rootfs /root/arm64.conf \
   "
 
-COPY patch/4k.patch /root/
+# 構築した RootFS を Jetson Nano のファイルで上書きする
+
+COPY jetson.sh /root/
+RUN /root/jetson.sh
 
 # WebRTC の準備
+
+COPY patch/4k.patch /root/
 
 ARG WEBRTC_VERSION
 ARG WEBRTC_COMMIT
@@ -44,7 +49,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false is_desktop_linux=false rtc_build_json=true use_rtti=true' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false rtc_build_json=true use_rtti=true is_desktop_linux=false' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
@@ -63,19 +68,19 @@ RUN \
         -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
         -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
-        --target=arm-linux-gnueabihf \
+        --target=aarch64-linux-gnu \
         --sysroot=/root/rootfs \
-        -I/root/rootfs/usr/include/arm-linux-gnueabihf \
+        -I/root/rootfs/usr/include/aarch64-linux-gnu \
       ' \
       linkflags=' \
-        -L/root/rootfs/usr/lib/arm-linux-gnueabihf \
-        -B/root/rootfs/usr/lib/arm-linux-gnueabihf \
+        -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+        -B/root/rootfs/usr/lib/aarch64-linux-gnu \
       ' \
       toolset=clang \
       visibility=global \
       target-os=linux \
       architecture=arm \
-      address-model=32 \
+      address-model=64 \
       link=static \
       variant=release \
       install \

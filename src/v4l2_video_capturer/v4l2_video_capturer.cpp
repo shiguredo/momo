@@ -34,7 +34,8 @@
 
 #include "rtc/native_buffer.h"
 
-rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(ConnectionSettings cs) {
+rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
+    ConnectionSettings cs) {
   rtc::scoped_refptr<V4L2VideoCapture> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -48,14 +49,15 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(ConnectionSettings
   for (int i = 0; i < num_devices; ++i) {
     char device_name[256];
     char unique_name[256];
-    if (device_info->GetDeviceName(static_cast<uint32_t>(i),
-                                   device_name, sizeof(device_name),
-                                   unique_name, sizeof(unique_name)) != 0)
-    {
+    if (device_info->GetDeviceName(static_cast<uint32_t>(i), device_name,
+                                   sizeof(device_name), unique_name,
+                                   sizeof(unique_name)) != 0) {
       RTC_LOG(LS_WARNING) << "Failed to GetDeviceName(" << i << ")";
       continue;
     }
-    RTC_LOG(LS_INFO) << "GetDeviceName(" << i << "): device_name=" << device_name << ", unique_name=" << unique_name;
+    RTC_LOG(LS_INFO) << "GetDeviceName(" << i
+                     << "): device_name=" << device_name
+                     << ", unique_name=" << unique_name;
   }
 
   for (int i = 0; i < num_devices; ++i) {
@@ -77,22 +79,20 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
   char unique_name[256];
   if (device_info->GetDeviceName(static_cast<uint32_t>(capture_device_index),
                                  device_name, sizeof(device_name), unique_name,
-                                 sizeof(unique_name)) != 0)
-  {
+                                 sizeof(unique_name)) != 0) {
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
-  }                          
+  }
   rtc::scoped_refptr<V4L2VideoCapture> v4l2_capturer(
-    new rtc::RefCountedObject<V4L2VideoCapture>());
+      new rtc::RefCountedObject<V4L2VideoCapture>());
   if (v4l2_capturer->Init((const char*)&unique_name, cs.video_device) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapture("
-                        << unique_name 
+    RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapture(" << unique_name
                         << ")";
     return nullptr;
   }
   if (v4l2_capturer->StartCapture(cs) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = " << cs.getWidth()
-                        << ", h = " << cs.getHeight()
+    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = "
+                        << cs.getWidth() << ", h = " << cs.getHeight()
                         << ", fps = " << cs.framerate << ")";
     return nullptr;
   }
@@ -110,15 +110,15 @@ V4L2VideoCapture::V4L2VideoCapture()
       _captureVideoType(webrtc::VideoType::kI420),
       _pool(NULL) {}
 
-bool V4L2VideoCapture::FindDevice(const char* deviceUniqueIdUTF8, const std::string& device) {
+bool V4L2VideoCapture::FindDevice(const char* deviceUniqueIdUTF8,
+                                  const std::string& device) {
   int fd;
   if ((fd = open(device.c_str(), O_RDONLY)) != -1) {
     // query device capabilities
     struct v4l2_capability cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
       if (cap.bus_info[0] != 0) {
-        if (strncmp((const char*)cap.bus_info,
-                    (const char*)deviceUniqueIdUTF8,
+        if (strncmp((const char*)cap.bus_info, (const char*)deviceUniqueIdUTF8,
                     strlen((const char*)deviceUniqueIdUTF8)) ==
             0)  // match with device id
         {
@@ -132,7 +132,8 @@ bool V4L2VideoCapture::FindDevice(const char* deviceUniqueIdUTF8, const std::str
   return false;
 }
 
-int32_t V4L2VideoCapture::Init(const char* deviceUniqueIdUTF8, const std::string& specifiedVideoDevice) {
+int32_t V4L2VideoCapture::Init(const char* deviceUniqueIdUTF8,
+                               const std::string& specifiedVideoDevice) {
   int fd;
   bool found = false;
 
@@ -172,8 +173,7 @@ V4L2VideoCapture::~V4L2VideoCapture() {
 
 int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   if (_captureStarted) {
-    if (cs.getWidth() == _currentWidth &&
-        cs.getHeight() == _currentHeight) {
+    if (cs.getWidth() == _currentWidth && cs.getHeight() == _currentHeight) {
       return 0;
     } else {
       StopCapture();
@@ -183,7 +183,8 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   rtc::CritScope critScope(&_captureCritSect);
   // first open /dev/video device
   if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
-    RTC_LOG(LS_INFO) << "error in opening " << _videoDevice << " errono = " << errno;
+    RTC_LOG(LS_INFO) << "error in opening " << _videoDevice
+                     << " errono = " << errno;
     return -1;
   }
 
@@ -290,7 +291,8 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   // If driver doesn't support framerate control, need to hardcode.
   // Hardcoding the value based on the frame size.
   if (!driver_framerate_support) {
-    if (!_useNative && _currentWidth >= 800 && _captureVideoType != webrtc::VideoType::kMJPEG) {
+    if (!_useNative && _currentWidth >= 800 &&
+        _captureVideoType != webrtc::VideoType::kMJPEG) {
       _currentFrameRate = 15;
     } else {
       _currentFrameRate = 30;
@@ -348,9 +350,8 @@ int32_t V4L2VideoCapture::StopCapture() {
 }
 
 bool V4L2VideoCapture::useNativeBuffer() {
-  return _useNative &&
-          (_captureVideoType == webrtc::VideoType::kMJPEG ||
-           _captureVideoType == webrtc::VideoType::kI420);
+  return _useNative && (_captureVideoType == webrtc::VideoType::kMJPEG ||
+                        _captureVideoType == webrtc::VideoType::kI420);
 }
 
 // critical section protected by the caller
@@ -474,50 +475,43 @@ bool V4L2VideoCapture::CaptureProcess() {
       }
 
       rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-      if (useNativeBuffer())
-      {
-        rtc::scoped_refptr<NativeBuffer> native_buffer(
-            NativeBuffer::Create(
-                _captureVideoType, _currentWidth, _currentHeight));
+      if (useNativeBuffer()) {
+        rtc::scoped_refptr<NativeBuffer> native_buffer(NativeBuffer::Create(
+            _captureVideoType, _currentWidth, _currentHeight));
         memcpy(native_buffer->MutableData(),
-               (unsigned char*)_pool[buf.index].start,
-               buf.bytesused);
+               (unsigned char*)_pool[buf.index].start, buf.bytesused);
         native_buffer->SetLength(buf.bytesused);
         dst_buffer = native_buffer;
-      }
-      else
-      {
+      } else {
         rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
             webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
         i420_buffer->InitializeData();
-        if (libyuv::ConvertToI420((unsigned char*)_pool[buf.index].start, buf.bytesused,
-                                  i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
-                                  i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
-                                  i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(),
-                                  0, 0, _currentWidth, _currentHeight,
-                                  _currentWidth, _currentHeight,
-                                  libyuv::kRotate0, ConvertVideoType(_captureVideoType)) < 0)
-        {
+        if (libyuv::ConvertToI420(
+                (unsigned char*)_pool[buf.index].start, buf.bytesused,
+                i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
+                i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
+                i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(),
+                0, 0, _currentWidth, _currentHeight, _currentWidth,
+                _currentHeight, libyuv::kRotate0,
+                ConvertVideoType(_captureVideoType)) < 0) {
           RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
-        }
-        else
-        {
+        } else {
           dst_buffer = i420_buffer;
         }
       }
 
-      if (dst_buffer)
-      {
+      if (dst_buffer) {
         webrtc::VideoFrame video_frame =
             webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(dst_buffer)
                 .set_timestamp_rtp(0)
                 .set_timestamp_ms(rtc::TimeMillis())
+                .set_timestamp_us(rtc::TimeMicros())
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build();
         OnCapturedFrame(video_frame);
       }
-      
+
       // enqueue the buffer again
       if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
         RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";

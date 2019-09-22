@@ -1,0 +1,20 @@
+name: build-workflow
+on: push
+
+jobs:
+  build_raspbian-buster_armv6:
+    name: Build momo for raspbian-buster_armv6
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
+        working-directory: build
+        timeout-minutes: 120
+  build_raspbian-buster_armv7:
+    name: Build momo for raspbian-buster_armv7
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
+        working-directory: build
+        timeout-minutes: 120

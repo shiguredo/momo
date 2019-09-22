@@ -20,4 +20,3 @@ std::unique_ptr<webrtc::VideoEncoderFactory> CreateObjCEncoderFactory();
 std::unique_ptr<webrtc::VideoDecoderFactory> CreateObjCDecoderFactory();
 
 #endif  // MODULES_VIDEO_CODING_CODECS_TEST_OBJC_CODEC_FACTORY_HELPER_H_
-                                                                                
