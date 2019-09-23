@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M78 コミットポジションを 5 にする
+    - libwebrtc のハッシュは dfa0b46737036e347acbd3b47f0f58ff6c8350c8
+    - @voluntas
+
 ## 19.09.1
 
 - [ADD] Jetson Nano のハードウェアエンコーダを利用する機能を実装
