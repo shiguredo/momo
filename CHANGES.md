@@ -11,10 +11,12 @@
 
 ## develop
 
+## 19.09.2
+
 - [UPDATE] libwebrtc M78 コミットポジションを 5 にする
     - libwebrtc のハッシュは dfa0b46737036e347acbd3b47f0f58ff6c8350c8
     - @voluntas
-- [FIX] iceServers がjsonプロパティかつarrayの場合のみice_servers_ にセットするよう修正する
+- [FIX] iceServers が json プロパティかつ array の場合のみ ice_servers_ にセットするよう修正する
     - @kdxu
 
 ## 19.09.1
