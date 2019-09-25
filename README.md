@@ -103,6 +103,10 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 
 https://github.com/shiguredo/momo/issues
 
+#### 理想的なバグ報告例
+
+- [ローカルネット上のAyameを使用して接続した場合にSEGVが発生する · Issue \#100 · shiguredo/momo](https://github.com/shiguredo/momo/issues/100)
+
 ### Discord
 
 ベストエフォートで運用しています。
