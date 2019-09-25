@@ -1,8 +1,8 @@
-# Mac で Momo を使ってみる
+# macOS で Momo を使ってみる
 
-Mac で Momo を利用する場合は自力でビルドする必要があります。
+## macOS 向けのバイナリは以下にて提供しています
 
-まずは [BUILD_MACOS.md](BUILD_MACOS.md) を読んでビルドしてみてください。
+https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
 ## 動かしてみる
 

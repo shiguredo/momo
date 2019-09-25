@@ -234,9 +234,11 @@ void AyameWebsocketClient::doSendPong() {
 }
 
 void AyameWebsocketClient::createPeerConnection() {
+  // ここで ice_servers_ が空なのはおかしい
   if (ice_servers_.empty()) {
     return;
   }
+
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
 
   rtc_config.servers = ice_servers_;
@@ -288,23 +290,28 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   if (type == "accept") {
     if (!connection_) {
       // 返却されてきた iceServers を セットする
-      try {
+      if (json_message.contains("iceServers")) {
         auto jservers = json_message["iceServers"];
-        for (auto jserver : jservers) {
-          webrtc::PeerConnectionInterface::IceServer ice_server;
-          if (jserver.contains("username")) {
-            ice_server.username = jserver["username"];
+        if (jservers.is_array()) {
+          for (auto jserver : jservers) {
+            webrtc::PeerConnectionInterface::IceServer ice_server;
+            if (jserver.contains("username")) {
+              ice_server.username = jserver["username"];
+            }
+            if (jserver.contains("credential")) {
+              ice_server.password = jserver["credential"];
+            }
+            auto jurls = jserver["urls"];
+            for (const std::string url : jurls) {
+              ice_server.urls.push_back(url);
+              RTC_LOG(LS_INFO)
+                  << __FUNCTION__ << ": iceserver.url=" << std::string(url);
+            }
+            ice_servers_.push_back(ice_server);
           }
-          if (jserver.contains("credential")) {
-            ice_server.password = jserver["credential"];
-          }
-          auto jurls = jserver["urls"];
-          for (const std::string url : jurls) {
-            ice_server.urls.push_back(url);
-          }
-          ice_servers_.push_back(ice_server);
         }
-      } catch (json::type_error& e) {
+      }
+      if (ice_servers_.empty()) {
         // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
         webrtc::PeerConnectionInterface::IceServer ice_server;
         ice_server.uri = "stun:stun.l.google.com:19302";

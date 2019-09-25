@@ -4,6 +4,10 @@
 
 [USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
 
+## NVIDIA Jetson Nano で Momo を使ってみる
+
+[USE_JETSON_NANO.md](USE_JETSON_NANO.md) をお読みください。
+
 ## Mac で Momo を使ってみる
 
 [USE_MAC.md](USE_MAC.md) をお読みください。

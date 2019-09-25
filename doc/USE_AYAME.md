@@ -19,22 +19,13 @@ https://ayame-lite.shiguredo.jp/beta
 Ayame Lite はサインアップせずにそのままシグナリングサーバだけでも利用可能です。
 
 ```shell
-$ ./momo --no-audio ayame wss://example.com/ws open-momo
+$ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
 ```
 
-Ayame SDK のサンプルを起動する
-
-```shell
-$ git clone git@github.com:OpenAyame/ayame-web-sdk-samples.git
-$ cd ayame-web-sdk-samples
-$ yarn install
-$ yarn serve
-```
-
-URL の引数にルーム ID を指定してアクセスします。
+Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID を指定してアクセスします。
 
 ```
-http://localhost:3000/recvonly.html?roomId=open-momo
+https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
 ```
 
 
@@ -52,17 +43,9 @@ $ ./momo --no-audio ayame \
     --key fW7LX2hv4k9AnB-S69L1HpaApcXYSp-mrxBhJgqulEHAr7BK
 ```
 
-Ayame SDK のサンプルを起動する
-
-```shell
-$ git clone git@github.com:OpenAyame/ayame-web-sdk-samples.git
-$ cd ayame-web-sdk-samples
-$ yarn install
-$ yarn serve
-```
-
-URL の引数にルーム ID とシグナリングキーを指定してアクセスします。
+Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。
 
 ```
-http://localhost:3000/recvonly.html?roomId=shiguredo@ayame-lite&key=fW7LX2hv4k9AnB-S69L1HpaApcXYSp-mrxBhJgqulEHAr7BK
+https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=shiguredo@open-momo&key=fW7LX2hv4k9AnB-S69L1HpaApcXYSp-mrxBhJgqulEHAr7BK
+
 ```

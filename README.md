@@ -20,8 +20,8 @@ Jetson Nano に搭載されている H.264 ハードウェアエンコーダー�
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し、
-継続的に開発を行うことで、ブラウザやスマートフォン以外からの WebRTC 利用を知ってもらうプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
+ブラウザやスマートフォン以外からの WebRTC をいろいろな用途で使ってもらえればと思っています。
 
 詳細については下記をご確認ください。
 
@@ -40,7 +40,12 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-Raspberry Pi 向けのバイナリのみ提供を行っています。今後は macOS や Jetson Nano 向けのバイナリ配布も行っていく予定です。
+4 種類のバイナリを配布しています。
+
+- Raspberry Buster ARMv7
+- Raspberry Buster ARMv6
+- Jetson Nano ARMv8
+- macOS 10.14 x86_64
 
 ## 動作環境
 
@@ -139,8 +144,30 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
 
+## Momo についての電子書籍
+
+Momo のコア開発者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+
+[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+
 ## Windows 版について
 
 Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
 
 [Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)
+
+## カスタマイズなど
+
+OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
+
+非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能なコミッターを紹介することが可能です。
+
+まずは momo at shiguredo.jp までお問い合わせください。
+
+- @tnoho
+    - Momo のコアコミッターです
+- @melpon
+    - Momo のビルド全般のリードコミッターです
+- @kdxu
+    - Momo の Ayame 機能のリードコミッターです
+    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコアコミッターです
