@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: docker volume rm $(docker volume ls -qf dangling=true)
       - run: NOTTY=1 make raspbian-buster_armv6
         working-directory: build
         timeout-minutes: 120
@@ -16,7 +15,6 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: docker volume rm $(docker volume ls -qf dangling=true)
       - run: NOTTY=1 make raspbian-buster_armv7
         working-directory: build
         timeout-minutes: 120
