@@ -90,10 +90,10 @@ if [ "$MOUNT_TYPE" = "mount" ]; then
   # マウントする場合は、単純にマウントしてビルドするだけ
   if [ "$BUILD_MODE" = "build" ]; then
     # build
-    docker run -it --rm --ulimit nofile=65535 -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME MOMO_VERSION=$MOMO_VERSION                    momo"
+    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME MOMO_VERSION=$MOMO_VERSION                    momo"
   else
     # package
-    docker run -it --rm --ulimit nofile=65535 -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION momo"
+    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION momo"
   fi
 else
   # マウントしない場合は、コンテナを起動して、コンテナに必要なファイルを転送して、コンテナ上でビルドして、生成されたファイルをコンテナから戻して、コンテナを終了する

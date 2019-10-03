@@ -7,11 +7,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - run: ulimit -n
-      - run: sudo sh -c "ulimit -n 65535 && exec su $LOGNAME"
-      - run: ulimit -n
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
+      - run: NOTTY=1 make raspbian-buster_armv6
         working-directory: build
         timeout-minutes: 120
   build_raspbian-buster_armv7:
@@ -19,25 +15,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - run: ulimit -n
-      - run: sudo sh -c "ulimit -n 65535 && exec su $LOGNAME"
-      - run: ulimit -n
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
+      - run: NOTTY=1 make raspbian-buster_armv7
         working-directory: build
         timeout-minutes: 120
   
-  # エラーが修正されたかどうかを確認するために暫定的に追加
-  build_ubuntu-18_04_x86_64:
-    name: Build momo for build_ubuntu-18.04_x86_64
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - run: ulimit -n
-      - run: sudo sh -c "ulimit -n 65535 && exec su $LOGNAME"
-      - run: ulimit -n
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
-        working-directory: build
-        timeout-minutes: 120
-
