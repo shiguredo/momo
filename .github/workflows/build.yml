@@ -8,6 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - run: ulimit -n
+      - run: ulimit -n 65535
+      - run: ulimit -n
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
         working-directory: build
         timeout-minutes: 120
@@ -17,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - run: ulimit -n
+      - run: ulimit -n 65535
+      - run: ulimit -n
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
         working-directory: build
         timeout-minutes: 120
@@ -28,6 +34,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - run: ulimit -n
+      - run: ulimit -n 65535
+      - run: ulimit -n
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
         working-directory: build
         timeout-minutes: 120
