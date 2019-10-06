@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
+    - @hakobera
+
 ## 19.09.2
 
 - [UPDATE] libwebrtc M78 コミットポジションを 5 にする
