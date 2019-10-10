@@ -454,6 +454,9 @@ ifeq ($(USE_ROS),1)
   SOURCES += $(shell find src/ros -name '*.cpp')
 endif
 
+LDFLAGS += -lSDL2
+SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
+
 OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(SOURCES))))
 
 # Boost

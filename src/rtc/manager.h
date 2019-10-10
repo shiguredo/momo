@@ -6,6 +6,7 @@
 #include "connection.h"
 #include "connection_settings.h"
 #include "scalable_track_source.h"
+#include "sdl_renderer/sdl_renderer.h"
 
 class RTCManager {
  public:
@@ -24,5 +25,6 @@ class RTCManager {
   std::unique_ptr<rtc::Thread> _workerThread;
   std::unique_ptr<rtc::Thread> _signalingThread;
   ConnectionSettings _conn_settings;
+  std::unique_ptr<SDLRenderer> _renderer;
 };
 #endif

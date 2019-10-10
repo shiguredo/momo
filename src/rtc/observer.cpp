@@ -3,9 +3,20 @@
 
 #include "observer.h"
 
-void PeerConnectionObserver::OnIceConnectionChange(
+void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  _sender->onIceConnectionStateChange(new_state);
+  RTC_LOG(LS_ERROR) << __FUNCTION__ << " :" << new_state;
+  if (_recieve_track_handler != nullptr &&
+      new_state == webrtc::PeerConnectionInterface::
+        IceConnectionState::kIceConnectionDisconnected) {
+    for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
+      _recieve_track_handler->RemoveTrack(video_track);
+    }
+    _video_tracks.clear();
+  }
+  if (_sender != nullptr) {
+    _sender->onIceConnectionStateChange(new_state);
+  }
 }
 
 void PeerConnectionObserver::OnIceCandidate(
@@ -18,6 +29,34 @@ void PeerConnectionObserver::OnIceCandidate(
     }
   } else {
     RTC_LOG(LS_ERROR) << "Failed to serialize candidate";
+  }
+}
+
+void PeerConnectionObserver::OnTrack(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  if (_recieve_track_handler == nullptr) return;
+  webrtc::MediaStreamTrackInterface* track = transceiver->receiver()->track().release();
+  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
+    _video_tracks.push_back(video_track);
+    _recieve_track_handler->AddTrack(video_track);
+  }
+}
+
+void PeerConnectionObserver::OnRemoveTrack(
+    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
+  if (_recieve_track_handler == nullptr) return;
+  webrtc::MediaStreamTrackInterface* track = receiver->track().release();
+  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
+    _video_tracks.erase(
+      std::remove_if(
+          _video_tracks.begin(), _video_tracks.end(),
+          [video_track](const webrtc::VideoTrackInterface* track) {
+            return track == video_track;
+          }),
+      _video_tracks.end());
+    _recieve_track_handler->RemoveTrack(video_track);
   }
 }
 

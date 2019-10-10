@@ -220,6 +220,8 @@ void SoraWebsocketClient::doSendConnect() {
   json json_message = {
       {"type", "connect"},
       {"role", "upstream"},
+      {"spotlight", 2},
+      {"multistream", true},
       {"channel_id", conn_settings_.sora_channel_id},
   };
 

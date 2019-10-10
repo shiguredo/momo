@@ -4,30 +4,35 @@
 #include "api/peer_connection_interface.h"
 
 #include "messagesender.h"
+#include "recieve_track_handler.h"
 
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
  public:
-  PeerConnectionObserver(RTCMessageSender* sender) : _sender(sender){};
+  PeerConnectionObserver(RTCMessageSender* sender,
+                         RTCRecieveTrackHandler *recieve_track_handler)
+                         : _sender(sender),
+                           _recieve_track_handler(recieve_track_handler) {};
 
  protected:
   void OnSignalingChange(
       webrtc::PeerConnectionInterface::SignalingState new_state) override {}
-  void OnAddStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
-  void OnRemoveStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
   void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {}
   void OnRenegotiationNeeded() override {}
-  void OnIceConnectionChange(
+  void OnStandardizedIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
   void OnIceGatheringChange(
       webrtc::PeerConnectionInterface::IceGatheringState new_state) override{};
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-  void OnIceConnectionReceivingChange(bool receiving) override {}
+  void OnTrack(
+      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+  void OnRemoveTrack(
+      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
 
  private:
   RTCMessageSender* _sender;
+  RTCRecieveTrackHandler *_recieve_track_handler;
+  std::vector<webrtc::VideoTrackInterface*> _video_tracks;
 };
 
 class CreateSessionDescriptionObserver
