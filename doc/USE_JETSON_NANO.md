@@ -47,10 +47,6 @@ Jetson Nano のライブラリにバグがあるため、 `/usr/lib/aarch64-linu
 
 一番多いのは暗い場所で利用しているパターンです。カメラが自動的に露光時間を伸ばすためフレームレートが下がります。部屋を明るくする。もしくはカメラの設定変更が可能な場合はフレームレート優先設定に変更してください。
 
-### Logicool BRIO をご利用の場合
-
-Logicool BRIO ULTRA HD PRO WEBCAM は所有していないためフレームレートが出ない原因については `--fixed-resolution` を外して `libnvjpeg.so` を差し替えたうえで、 `--use-native` をつけて実行して試してもらえればと思います。
-
 ### [IMX317を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) をご利用の場合
 
 > v4l2-ctl --set-ctrl=exposure_auto=1
