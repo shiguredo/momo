@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M78 コミットポジションを 8 にする
+    - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
+    - @voluntas
 - [UPDATE] libwebrtc M78 コミットポジションを 6 にする
     - libwebrtc のハッシュは 3498a292ecfae6d0abaaa3d078670184710ce65b
     - @voluntas
