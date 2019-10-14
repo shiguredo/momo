@@ -154,7 +154,7 @@ RTCManager::RTCManager(
         _video_track->set_content_hint(
             webrtc::VideoTrackInterface::ContentHint::kText);
       }
-      //_reciever->AddTrack(_video_track);
+      _reciever->AddTrack(_video_track);
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
     }

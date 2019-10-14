@@ -394,13 +394,16 @@ ifeq ($(TARGET_OS),macos)
   CXX += --sysroot=$(SDK_PATH)
 
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I/usr/local/include/SDL2 -D_THREAD_SAFE
+  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I/Users/tnoho/rtc-osx/SDL2-2.0.10/include -D_THREAD_SAFE
   CFLAGS += -fvisibility=hidden
   LDFLAGS += \
-    -L/usr/local/lib \
+    -L/Users/tnoho/rtc-osx/SDL2-2.0.10/build/build/.libs/ -lSDL2 \
     -ObjC \
     -F$(SDK_PATH)/System/Library/Frameworks \
-    -ldl \
+    -ldl -liconv\
+    -framework Carbon \
+    -framework IOKit \
+    -framework ForceFeedback \
     -framework Foundation \
     -framework AVFoundation \
     -framework CoreServices \
@@ -455,7 +458,6 @@ ifeq ($(USE_ROS),1)
   SOURCES += $(shell find src/ros -name '*.cpp')
 endif
 
-LDFLAGS += -lSDL2
 SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
 
 OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(SOURCES))))

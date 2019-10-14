@@ -13,7 +13,8 @@
 #define FRAME_INTERVAL (1000 / 30)
 
 SDLRenderer::SDLRenderer() 
-      : running_(true),
+      : ioc_(nullptr),
+        running_(true),
         window_(nullptr),
         renderer_(nullptr),
         width_(640), height_(480),
@@ -25,11 +26,10 @@ SDLRenderer::SDLRenderer()
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_Init failed " << SDL_GetError();
     return;
   }
-  SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_PING, "0");
 
   window_ = SDL_CreateWindow("Momo WebRTC Native Client",
                             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                            width_, height_, SDL_WINDOW_SHOWN );
+                            width_, height_, SDL_WINDOW_OPENGL );
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed " << SDL_GetError();
     return;
@@ -51,15 +51,14 @@ SDLRenderer::~SDLRenderer() {
   SDL_Quit();
 }
 
-void SDLRenderer::PollEvent(boost::asio::io_context *ioc) {
+void SDLRenderer::PollEvent() {
   SDL_Event e;
   SDL_PollEvent(&e);
-
-  Run(ioc);
 }
 
-void SDLRenderer::Run(boost::asio::io_context *ioc) {
-  boost::asio::dispatch(ioc->get_executor(), std::bind(&SDLRenderer::PollEvent, this, ioc));
+void SDLRenderer::SetIOContext(boost::asio::io_context *ioc) {
+  rtc::CritScope lock(&sinks_lock_);
+  ioc_ = ioc;
 }
 
 int SDLRenderer::RenderThreadExec(void *data) {
@@ -110,6 +109,9 @@ int SDLRenderer::RenderThread() {
     }
     duration = SDL_GetTicks() - start_time;
     SDL_Delay(FRAME_INTERVAL - (duration % FRAME_INTERVAL));
+    if (ioc_ != nullptr) {
+      boost::asio::dispatch(ioc_->get_executor(), std::bind(&SDLRenderer::PollEvent, this));
+    }
   }
 
   SDL_DestroyRenderer(renderer_);

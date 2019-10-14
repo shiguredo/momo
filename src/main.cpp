@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
           ->run();
     }
 
-    sdl_renderer->Run(&ioc);
+    sdl_renderer->SetIOContext(&ioc);
 
     ioc.run();
   }
