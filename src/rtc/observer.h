@@ -4,14 +4,14 @@
 #include "api/peer_connection_interface.h"
 
 #include "messagesender.h"
-#include "recieve_track_handler.h"
+#include "video_track_reciever.h"
 
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
  public:
   PeerConnectionObserver(RTCMessageSender* sender,
-                         RTCRecieveTrackHandler *recieve_track_handler)
+                         VideoTrackReciever *reciever)
                          : _sender(sender),
-                           _recieve_track_handler(recieve_track_handler) {};
+                           _reciever(reciever) {};
 
  protected:
   void OnSignalingChange(
@@ -31,7 +31,7 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
 
  private:
   RTCMessageSender* _sender;
-  RTCRecieveTrackHandler *_recieve_track_handler;
+  VideoTrackReciever *_reciever;
   std::vector<webrtc::VideoTrackInterface*> _video_tracks;
 };
 

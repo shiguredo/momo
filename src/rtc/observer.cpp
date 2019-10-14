@@ -6,11 +6,11 @@
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_ERROR) << __FUNCTION__ << " :" << new_state;
-  if (_recieve_track_handler != nullptr &&
+  if (_reciever != nullptr &&
       new_state == webrtc::PeerConnectionInterface::
         IceConnectionState::kIceConnectionDisconnected) {
     for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
-      _recieve_track_handler->RemoveTrack(video_track);
+      _reciever->RemoveTrack(video_track);
     }
     _video_tracks.clear();
   }
@@ -34,18 +34,18 @@ void PeerConnectionObserver::OnIceCandidate(
 
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
-  if (_recieve_track_handler == nullptr) return;
+  if (_reciever == nullptr) return;
   webrtc::MediaStreamTrackInterface* track = transceiver->receiver()->track().release();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
     _video_tracks.push_back(video_track);
-    _recieve_track_handler->AddTrack(video_track);
+    _reciever->AddTrack(video_track);
   }
 }
 
 void PeerConnectionObserver::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
-  if (_recieve_track_handler == nullptr) return;
+  if (_reciever == nullptr) return;
   webrtc::MediaStreamTrackInterface* track = receiver->track().release();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
@@ -56,7 +56,7 @@ void PeerConnectionObserver::OnRemoveTrack(
             return track == video_track;
           }),
       _video_tracks.end());
-    _recieve_track_handler->RemoveTrack(video_track);
+    _reciever->RemoveTrack(video_track);
   }
 }
 

@@ -6,12 +6,13 @@
 #include "connection.h"
 #include "connection_settings.h"
 #include "scalable_track_source.h"
-#include "sdl_renderer/sdl_renderer.h"
+#include "video_track_reciever.h"
 
 class RTCManager {
  public:
   RTCManager(ConnectionSettings conn_settings,
-             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source);
+             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+             VideoTrackReciever* reciever);
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
@@ -25,6 +26,6 @@ class RTCManager {
   std::unique_ptr<rtc::Thread> _workerThread;
   std::unique_ptr<rtc::Thread> _signalingThread;
   ConnectionSettings _conn_settings;
-  std::unique_ptr<SDLRenderer> _renderer;
+  VideoTrackReciever* _reciever;
 };
 #endif

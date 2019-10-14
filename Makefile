@@ -394,9 +394,10 @@ ifeq ($(TARGET_OS),macos)
   CXX += --sysroot=$(SDK_PATH)
 
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
+  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I/usr/local/include/SDL2 -D_THREAD_SAFE
   CFLAGS += -fvisibility=hidden
   LDFLAGS += \
+    -L/usr/local/lib \
     -ObjC \
     -F$(SDK_PATH)/System/Library/Frameworks \
     -ldl \

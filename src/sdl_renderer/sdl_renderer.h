@@ -5,7 +5,9 @@
 #include <string>
 #include <vector>
 
-#include <SDL2/SDL.h>
+#include <boost/asio.hpp>
+
+#include <SDL.h>
 
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"
@@ -13,12 +15,14 @@
 #include "api/video/video_sink_interface.h"
 #include "rtc_base/critical_section.h"
 
-#include "rtc/recieve_track_handler.h"
+#include "rtc/video_track_reciever.h"
 
-class SDLRenderer : public RTCRecieveTrackHandler {
+class SDLRenderer : public VideoTrackReciever {
  public:
   SDLRenderer();
   ~SDLRenderer();
+
+  void Run(boost::asio::io_context *ioc);
 
   static int RenderThreadExec(void *data);
   int RenderThread();
@@ -65,6 +69,8 @@ class SDLRenderer : public RTCRecieveTrackHandler {
   };
 
  private:
+  void PollEvent(boost::asio::io_context *ioc);
+
   rtc::CriticalSection sinks_lock_;
   typedef std::vector<std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink> > >
       VideoTrackSinkVector;

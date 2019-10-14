@@ -25,6 +25,7 @@
 #include "rtc/device_video_capturer.h"
 #endif
 #endif
+#include "sdl_renderer/sdl_renderer.h"
 #endif
 
 #include "ayame/ayame_server.h"
@@ -93,8 +94,10 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
+  std::unique_ptr<SDLRenderer> sdl_renderer(new SDLRenderer());
+
   std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer)));
+      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
 
   {
     boost::asio::io_context ioc{1};
@@ -127,6 +130,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)
           ->run();
     }
+
+    sdl_renderer->Run(&ioc);
 
     ioc.run();
   }
