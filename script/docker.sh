@@ -218,6 +218,34 @@ function setup_boost() {
   fi
 }
 
+# 指定した SDL2 のバージョンをダウンロードして、make を実行できる状態にする
+#
+# ソースコードは $2/source に配置されるので、ここに cd した上で make を実行してビルドすること
+#
+# 引数:
+#   $1: SDL2 のバージョン
+#   $2: 出力ディレクトリ
+function setup_sdl2() {
+  local sdl2_version=$1
+  local output_dir=$2
+
+  mkdir -p $output_dir
+  cd $output_dir || return 1
+  if [ ! -e SDL2-$sdl2_version.tar.gz ]; then
+    curl -LO http://www.libsdl.org/release/SDL2-$sdl2_version.tar.gz || return 1
+  fi
+  if [ ! -e source ]; then
+    tar xf SDL2-$sdl2_version.tar.gz || return 1
+    mv SDL2-$sdl2_version source || return 1
+  fi
+
+  cd source || return 
+  if [ ! -e build ]; then
+    mkdir build
+    cd build
+  fi
+}
+
 # ROS Kinetic 用のパッケージをインストールする
 #
 # 引数: なし

@@ -7,7 +7,7 @@
 
 #include <boost/asio.hpp>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"

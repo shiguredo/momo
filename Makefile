@@ -145,6 +145,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
+  SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2-$(SDL2_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
   WEBRTC_SRC_ROOT ?= build/macos/webrtc/src
@@ -394,10 +395,10 @@ ifeq ($(TARGET_OS),macos)
   CXX += --sysroot=$(SDK_PATH)
 
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I/Users/tnoho/rtc-osx/SDL2-2.0.10/include -D_THREAD_SAFE
+  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I$(SDL2_ROOT)/include -D_THREAD_SAFE
   CFLAGS += -fvisibility=hidden
   LDFLAGS += \
-    -L/Users/tnoho/rtc-osx/SDL2-2.0.10/build/build/.libs/ -lSDL2 \
+    -L$(SDL2_ROOT)/lib/ -lSDL2 \
     -ObjC \
     -F$(SDK_PATH)/System/Library/Frameworks \
     -ldl -liconv\
