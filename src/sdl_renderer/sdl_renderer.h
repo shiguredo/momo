@@ -22,7 +22,8 @@ class SDLRenderer : public VideoTrackReciever {
   SDLRenderer();
   ~SDLRenderer();
 
-  void SetIOContext(boost::asio::io_context *ioc);
+  void SetDispatchFunction(
+      std::function<void (std::function<void ()>)> dispatch);
 
   static int RenderThreadExec(void *data);
   int RenderThread();
@@ -75,11 +76,11 @@ class SDLRenderer : public VideoTrackReciever {
   typedef std::vector<std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink> > >
       VideoTrackSinkVector;
   VideoTrackSinkVector sinks_;
-  bool running_;
-  boost::asio::io_context *ioc_;
+  std::atomic<bool> running_;
   SDL_Thread *thread_;
   SDL_Window* window_;
   SDL_Renderer *renderer_;
+  std::function<void (std::function<void ()>)> dispatch_;
   int width_;
   int height_;
   int rows_;

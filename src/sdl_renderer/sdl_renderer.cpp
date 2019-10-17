@@ -13,10 +13,10 @@
 #define FRAME_INTERVAL (1000 / 30)
 
 SDLRenderer::SDLRenderer() 
-      : ioc_(nullptr),
-        running_(true),
+      : running_(true),
         window_(nullptr),
         renderer_(nullptr),
+        dispatch_(nullptr),
         width_(640), height_(480),
         rows_(1), cols_(1) {
   window_aspect_ = (float)width_ / (float)height_;
@@ -53,12 +53,14 @@ SDLRenderer::~SDLRenderer() {
 
 void SDLRenderer::PollEvent() {
   SDL_Event e;
+  // 必ずメインスレッドから呼び出す
   SDL_PollEvent(&e);
 }
 
-void SDLRenderer::SetIOContext(boost::asio::io_context *ioc) {
+void SDLRenderer::SetDispatchFunction(
+    std::function<void (std::function<void ()>)> dispatch) {
   rtc::CritScope lock(&sinks_lock_);
-  ioc_ = ioc;
+  dispatch_ = std::move(dispatch);
 }
 
 int SDLRenderer::RenderThreadExec(void *data) {
@@ -106,12 +108,13 @@ int SDLRenderer::RenderThread() {
         SDL_DestroyTexture(texture);
       }
       SDL_RenderPresent(renderer_);
+      
+      if (dispatch_) {
+        dispatch_(std::bind(&SDLRenderer::PollEvent, this));
+      }
     }
     duration = SDL_GetTicks() - start_time;
     SDL_Delay(FRAME_INTERVAL - (duration % FRAME_INTERVAL));
-    if (ioc_ != nullptr) {
-      boost::asio::dispatch(ioc_->get_executor(), std::bind(&SDLRenderer::PollEvent, this));
-    }
   }
 
   SDL_DestroyRenderer(renderer_);
@@ -249,7 +252,7 @@ void SDLRenderer::SetOutlines() {
       }
     }
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__
+  RTC_LOG(LS_VERBOSE) << __FUNCTION__
                     << " rows:" << rows
                     << " cols:" << cols;
   int outline_width = std::floor(width_ / cols);
@@ -261,7 +264,7 @@ void SDLRenderer::SetOutlines() {
     int offset_y = outline_height * std::floor(i / cols);
     sink->SetOutlineRect(
           offset_x, offset_y, outline_width, outline_height);
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_VERBOSE) << __FUNCTION__
                       << " offset_x:" << offset_x
                       << " offset_y:" << offset_y
                       << " outline_width:" << outline_width

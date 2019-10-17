@@ -35,9 +35,9 @@ void PeerConnectionObserver::OnIceCandidate(
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   if (_reciever == nullptr) return;
-  webrtc::MediaStreamTrackInterface* track = transceiver->receiver()->track().release();
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
+    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
     _video_tracks.push_back(video_track);
     _reciever->AddTrack(video_track);
   }
@@ -46,9 +46,9 @@ void PeerConnectionObserver::OnTrack(
 void PeerConnectionObserver::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   if (_reciever == nullptr) return;
-  webrtc::MediaStreamTrackInterface* track = receiver->track().release();
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
+    webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
     _video_tracks.erase(
       std::remove_if(
           _video_tracks.begin(), _video_tracks.end(),

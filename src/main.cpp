@@ -131,11 +131,19 @@ int main(int argc, char* argv[]) {
           ->run();
     }
 
-    sdl_renderer->SetIOContext(&ioc);
+    sdl_renderer->SetDispatchFunction(
+      [&ioc](std::function<void ()> f) {
+        if (ioc.stopped()) return;
+        boost::asio::dispatch(ioc.get_executor(), f);
+      });
 
     ioc.run();
+
+    sdl_renderer->SetDispatchFunction(nullptr);
   }
 
+  //この順番は綺麗に落ちるけど、あまり安全ではない
+  sdl_renderer = nullptr;
   rtc_manager = nullptr;
 
   return 0;

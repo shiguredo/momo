@@ -61,6 +61,6 @@ $(SDL2):
 	source ../../script/docker.sh && \
 	setup_sdl2 $(SDL2_VERSION) $(CURDIR)/sdl2 && \
 	cd $(CURDIR)/sdl2/source/build && \
-	CC=/usr/bin/gcc ../configure --disable-shared --prefix=$(CURDIR)/sdl2-$(SDL2_VERSION) && \
+	../configure --disable-shared --prefix=$(CURDIR)/sdl2-$(SDL2_VERSION) && \
 	make && \
 	make install
