@@ -72,7 +72,8 @@ function apt_install_ubuntu_x86_64() {
     python \
     sudo \
     vim \
-    wget
+    wget \
+    libsdl2-dev
 }
 
 # Ubuntu 18.04 では tzdata を noninteractive にしないと実行が止まってしまう

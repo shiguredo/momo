@@ -31,6 +31,11 @@ include VERSION
 # USE_H264: H264 を利用するかどうか
 #   有効な値は 0, 1
 #
+# USE_SDL2: SDL2 による画面出力を利用するかどうか
+#   有効な値は 0, 1
+#
+# SDL2_ROOT: SDL2 のインストール先ディレクトリ
+#
 # BOOST_ROOT: Boost のインストール先ディレクトリ
 #
 # WEBRTC_SRC_ROOT: WebRTC のソースディレクトリ
@@ -59,6 +64,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
@@ -72,6 +78,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
@@ -85,6 +92,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -98,6 +106,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
@@ -111,6 +120,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 1
   USE_H264 ?= 1
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
@@ -123,6 +133,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
@@ -134,6 +145,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
@@ -144,8 +156,9 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
-  BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
+  USE_SDL2 ?= 1
   SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2-$(SDL2_VERSION)
+  BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
   WEBRTC_SRC_ROOT ?= build/macos/webrtc/src
@@ -198,6 +211,11 @@ else
 
   ifndef USE_H264
     $(info - USE_H264 が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifndef USE_SDL2
+    $(info - USE_SDL2 が指定されていません)
     HAS_ERROR = 1
   endif
 
@@ -395,10 +413,9 @@ ifeq ($(TARGET_OS),macos)
   CXX += --sysroot=$(SDK_PATH)
 
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base -I$(SDL2_ROOT)/include -D_THREAD_SAFE
+  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
   CFLAGS += -fvisibility=hidden
   LDFLAGS += \
-    -L$(SDL2_ROOT)/lib/ -lSDL2 \
     -ObjC \
     -F$(SDK_PATH)/System/Library/Frameworks \
     -ldl -liconv\
@@ -435,6 +452,16 @@ else
   CFLAGS += -nostdinc++ -isystem$(WEBRTC_SRC_ROOT)/buildtools/third_party/libc++/trunk/include
 endif
 
+ifeq ($(USE_SDL2),1)
+  ifdef SDL2_ROOT
+    CFLAGS += -I$(SDL2_ROOT)/include
+    LDFLAGS += -L$(SDL2_ROOT)/lib
+  endif
+  CFLAGS += -D_THREAD_SAFE
+  LDFLAGS += -lSDL2
+  SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
+endif
+
 SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
 SOURCES += $(shell find src/p2p -name '*.cpp')
 SOURCES += $(shell find src/rtc -name '*.cpp')
@@ -458,8 +485,6 @@ ifeq ($(USE_ROS),1)
     -lrosconsole_backend_interface
   SOURCES += $(shell find src/ros -name '*.cpp')
 endif
-
-SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
 
 OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(SOURCES))))
 
