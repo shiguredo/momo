@@ -12,6 +12,7 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
                          VideoTrackReciever *reciever)
                          : _sender(sender),
                            _reciever(reciever) {};
+  ~PeerConnectionObserver();
 
  protected:
   void OnSignalingChange(
@@ -30,6 +31,8 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
       rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
 
  private:
+  void ClearAllRegisteredTracks();
+
   RTCMessageSender* _sender;
   VideoTrackReciever *_reciever;
   std::vector<webrtc::VideoTrackInterface*> _video_tracks;

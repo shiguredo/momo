@@ -3,16 +3,18 @@
 
 #include "observer.h"
 
+PeerConnectionObserver::~PeerConnectionObserver() {
+  // Ayame 再接続時などには kIceConnectionDisconnected の前に破棄されているため
+  ClearAllRegisteredTracks();
+}
+
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_ERROR) << __FUNCTION__ << " :" << new_state;
   if (_reciever != nullptr &&
       new_state == webrtc::PeerConnectionInterface::
         IceConnectionState::kIceConnectionDisconnected) {
-    for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
-      _reciever->RemoveTrack(video_track);
-    }
-    _video_tracks.clear();
+    ClearAllRegisteredTracks();
   }
   if (_sender != nullptr) {
     _sender->onIceConnectionStateChange(new_state);
@@ -58,6 +60,13 @@ void PeerConnectionObserver::OnRemoveTrack(
       _video_tracks.end());
     _reciever->RemoveTrack(video_track);
   }
+}
+
+void PeerConnectionObserver::ClearAllRegisteredTracks() {
+  for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
+    _reciever->RemoveTrack(video_track);
+  }
+  _video_tracks.clear();
 }
 
 void CreateSessionDescriptionObserver::OnSuccess(
