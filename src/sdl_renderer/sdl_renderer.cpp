@@ -1,6 +1,7 @@
 #include "sdl_renderer.h"
 
 #include <cmath>
+#include <csignal>
 
 #include "api/video/i420_buffer.h"
 #include "rtc_base/logging.h"
@@ -12,12 +13,12 @@
 #define WIDE_ASPECT 1.78
 #define FRAME_INTERVAL (1000 / 30)
 
-SDLRenderer::SDLRenderer() 
+SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
       : running_(true),
         window_(nullptr),
         renderer_(nullptr),
         dispatch_(nullptr),
-        width_(640), height_(480),
+        width_(width), height_(height),
         rows_(1), cols_(1) {
   window_aspect_ = (float)width_ / (float)height_;
   is_wide_ = window_aspect_ > ((STD_ASPECT + WIDE_ASPECT) / 2.0);
@@ -33,6 +34,10 @@ SDLRenderer::SDLRenderer()
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed " << SDL_GetError();
     return;
+  }
+
+  if (fullscreen) {
+    SetFullScreen(true);
   }
 
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
@@ -51,10 +56,40 @@ SDLRenderer::~SDLRenderer() {
   SDL_Quit();
 }
 
+bool SDLRenderer::IsFullScreen() {
+  return SDL_GetWindowFlags(window_) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+}
+
+void SDLRenderer::SetFullScreen(bool fullscreen) {
+  SDL_SetWindowFullscreen(window_, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+  SDL_ShowCursor(fullscreen ? SDL_DISABLE : SDL_ENABLE);
+}
+
 void SDLRenderer::PollEvent() {
   SDL_Event e;
   // 必ずメインスレッドから呼び出す
   SDL_PollEvent(&e);
+  if (e.type == SDL_WINDOWEVENT &&
+      e.window.event == SDL_WINDOWEVENT_RESIZED &&
+      e.window.windowID == SDL_GetWindowID(window_)) {
+    rtc::CritScope lock(&sinks_lock_);
+    width_ = e.window.data1;
+    height_ = e.window.data2;
+    SetOutlines();
+  }
+  if (e.type == SDL_KEYUP) {
+    switch (e.key.keysym.sym) {
+      case SDLK_f:
+        SetFullScreen(!IsFullScreen());
+        break;
+      case SDLK_q:
+        std::raise(SIGTERM);
+        break;
+    }
+  }
+  if(e.type == SDL_QUIT) {
+    std::raise(SIGTERM);
+  }
 }
 
 void SDLRenderer::SetDispatchFunction(

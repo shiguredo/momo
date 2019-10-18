@@ -94,7 +94,11 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  std::unique_ptr<SDLRenderer> sdl_renderer(new SDLRenderer());
+  std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
+  if (cs.use_sdl) {
+    sdl_renderer.reset(
+        new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
+  }
 
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
@@ -131,15 +135,19 @@ int main(int argc, char* argv[]) {
           ->run();
     }
 
-    sdl_renderer->SetDispatchFunction(
-      [&ioc](std::function<void ()> f) {
-        if (ioc.stopped()) return;
-        boost::asio::dispatch(ioc.get_executor(), f);
-      });
+    if (sdl_renderer) {
+      sdl_renderer->SetDispatchFunction(
+        [&ioc](std::function<void ()> f) {
+          if (ioc.stopped()) return;
+          boost::asio::dispatch(ioc.get_executor(), f);
+        });
 
-    ioc.run();
+      ioc.run();
 
-    sdl_renderer->SetDispatchFunction(nullptr);
+      sdl_renderer->SetDispatchFunction(nullptr);
+    } else {
+      ioc.run();
+    }
   }
 
   //この順番は綺麗に落ちるけど、あまり安全ではない

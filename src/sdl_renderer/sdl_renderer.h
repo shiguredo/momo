@@ -19,7 +19,7 @@
 
 class SDLRenderer : public VideoTrackReciever {
  public:
-  SDLRenderer();
+  SDLRenderer(int width, int height, bool fullscreen);
   ~SDLRenderer();
 
   void SetDispatchFunction(
@@ -70,6 +70,8 @@ class SDLRenderer : public VideoTrackReciever {
   };
 
  private:
+  bool IsFullScreen();
+  void SetFullScreen(bool fullscreen);
   void PollEvent();
 
   rtc::CriticalSection sinks_lock_;

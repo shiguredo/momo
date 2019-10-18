@@ -220,10 +220,17 @@ void SoraWebsocketClient::doSendConnect() {
   json json_message = {
       {"type", "connect"},
       {"role", "upstream"},
-      {"spotlight", 2},
-      {"multistream", true},
       {"channel_id", conn_settings_.sora_channel_id},
   };
+
+  if (conn_settings_.sora_multistream) {
+    json_message["multistream"] = true;
+  }
+
+  if (conn_settings_.sora_spotlight > 0) {
+    json_message["multistream"] = true;
+    json_message["spotlight"] = conn_settings_.sora_spotlight;
+  }
 
   if (!conn_settings_.sora_metadata.is_null()) {
     json_message["metadata"] = conn_settings_.sora_metadata;
