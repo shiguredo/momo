@@ -583,7 +583,7 @@ momo:
 	# momo 本体のビルド
 	$(MAKE) $(BUILD_ROOT)/momo
 
-	# ビルド後に ./momo p2p で動作確認できるようにしたいので、生成されたバイナリをルートディレクトリにコピーする
+	# ビルド後に ./momo test で動作確認できるようにしたいので、生成されたバイナリをルートディレクトリにコピーする
 	cp $(BUILD_ROOT)/momo momo
 
 .PHONY: clean

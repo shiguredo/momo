@@ -318,6 +318,7 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "offer") {
+    answer_sent_ = false;
     createPeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
@@ -370,8 +371,15 @@ void SoraWebsocketClient::onIceCandidate(const std::string sdp_mid,
 }
 void SoraWebsocketClient::onCreateDescription(webrtc::SdpType type,
                                               const std::string sdp) {
-  json json_message = {{"type", "answer"}, {"sdp", sdp}};
-  ws_->sendText(json_message.dump());
+  // 最初の１回目は answer、以降は update にする
+  if (!answer_sent_) {
+    answer_sent_ = true;
+    json json_message = {{"type", "answer"}, {"sdp", sdp}};
+    ws_->sendText(json_message.dump());
+  } else {
+    json json_message = {{"type", "update"}, {"sdp", sdp}};
+    ws_->sendText(json_message.dump());
+  }
 }
 void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
