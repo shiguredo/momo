@@ -30,7 +30,7 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
 
   window_ = SDL_CreateWindow("Momo WebRTC Native Client",
                             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                            width_, height_, SDL_WINDOW_OPENGL );
+                            width_, height_, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed " << SDL_GetError();
     return;
