@@ -418,10 +418,7 @@ ifeq ($(TARGET_OS),macos)
   LDFLAGS += \
     -ObjC \
     -F$(SDK_PATH)/System/Library/Frameworks \
-    -ldl -liconv\
-    -framework Carbon \
-    -framework IOKit \
-    -framework ForceFeedback \
+    -ldl \
     -framework Foundation \
     -framework AVFoundation \
     -framework CoreServices \
@@ -437,6 +434,13 @@ ifeq ($(TARGET_OS),macos)
     -framework Metal \
     -framework MetalKit \
     -framework OpenGL
+  ifeq ($(USE_SDL2),1)
+    LDFLAGS += \
+      -liconv \
+      -framework Carbon \
+      -framework IOKit \
+      -framework ForceFeedback
+  endif
   SOURCES += $(shell find src -name '*.mm')
 else
   ifeq ($(USE_ROS),0)
