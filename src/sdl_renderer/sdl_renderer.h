@@ -15,9 +15,9 @@
 #include "api/video/video_sink_interface.h"
 #include "rtc_base/critical_section.h"
 
-#include "rtc/video_track_reciever.h"
+#include "rtc/video_track_receiver.h"
 
-class SDLRenderer : public VideoTrackReciever {
+class SDLRenderer : public VideoTrackReceiver {
  public:
   SDLRenderer(int width, int height, bool fullscreen);
   ~SDLRenderer();

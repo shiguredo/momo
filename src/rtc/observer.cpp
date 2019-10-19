@@ -11,7 +11,7 @@ PeerConnectionObserver::~PeerConnectionObserver() {
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_ERROR) << __FUNCTION__ << " :" << new_state;
-  if (_reciever != nullptr &&
+  if (_receiver != nullptr &&
       new_state == webrtc::PeerConnectionInterface::
         IceConnectionState::kIceConnectionDisconnected) {
     ClearAllRegisteredTracks();
@@ -36,18 +36,18 @@ void PeerConnectionObserver::OnIceCandidate(
 
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
-  if (_reciever == nullptr) return;
+  if (_receiver == nullptr) return;
   rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
     _video_tracks.push_back(video_track);
-    _reciever->AddTrack(video_track);
+    _receiver->AddTrack(video_track);
   }
 }
 
 void PeerConnectionObserver::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
-  if (_reciever == nullptr) return;
+  if (_receiver == nullptr) return;
   rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track = receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
@@ -58,13 +58,13 @@ void PeerConnectionObserver::OnRemoveTrack(
             return track == video_track;
           }),
       _video_tracks.end());
-    _reciever->RemoveTrack(video_track);
+    _receiver->RemoveTrack(video_track);
   }
 }
 
 void PeerConnectionObserver::ClearAllRegisteredTracks() {
   for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
-    _reciever->RemoveTrack(video_track);
+    _receiver->RemoveTrack(video_track);
   }
   _video_tracks.clear();
 }

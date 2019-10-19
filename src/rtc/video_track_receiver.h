@@ -1,10 +1,10 @@
-#ifndef VIDEO_TRACK_RECIEVER_HANDLER_H_
-#define VIDEO_TRACK_RECIEVER_HANDLER_H_
+#ifndef VIDEO_TRACK_RECEIVER_HANDLER_H_
+#define VIDEO_TRACK_RECEIVER_HANDLER_H_
 
 #include <string>
-#include "api/video/video_sink_interface.h"
+#include "api/media_stream_interface.h"
 
-class VideoTrackReciever {
+class VideoTrackReceiver {
  public:
   virtual void AddTrack(webrtc::VideoTrackInterface* track) = 0;
   virtual void RemoveTrack(webrtc::VideoTrackInterface* track) = 0;
