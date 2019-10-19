@@ -31,7 +31,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 ./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me ayame wss://ayame-lite.shiguredo.jp/signaling momo-sdl-ayame
 ```
 
-[![Image from Gyazo](https://i.gyazo.com/85bdd959cd893eb5adf5f2e58fbcff58.png)](https://gyazo.com/85bdd959cd893eb5adf5f2e58fbcff58)
+[![Image from Gyazo](https://i.gyazo.com/4d7f0b3f3445bb2934fb693f286cad4b.png)](https://gyazo.com/4d7f0b3f3445bb2934fb693f286cad4b)
 
 ## Sora を利用したマルチストリームでの双方向
 
