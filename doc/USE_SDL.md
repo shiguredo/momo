@@ -1,5 +1,7 @@
 # SDL を利用した双方向
 
+**この機能は実験的機能です**
+
 ## 概要
 
 SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信した音声や映像を出力することができるようになります。
@@ -31,7 +33,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 ./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me ayame wss://ayame-lite.shiguredo.jp/signaling momo-sdl-ayame
 ```
 
-[![Image from Gyazo](https://i.gyazo.com/4d7f0b3f3445bb2934fb693f286cad4b.png)](https://gyazo.com/4d7f0b3f3445bb2934fb693f286cad4b)
+[![Image from Gyazo](https://i.gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07.png)](https://gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07)
 
 ## Sora を利用したマルチストリームでの双方向
 
