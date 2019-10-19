@@ -321,7 +321,28 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
     createPeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
+  } else if (type == "update") {
+    const std::string sdp = json_message["sdp"];
+    connection_->setOffer(sdp);
   } else if (type == "notify") {
+    const std::string event_type = json_message["event_type"];
+    if (event_type == "connection.created" ||
+        event_type == "connection.destroyed") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": client_id=" << json_message["client_id"]
+                        << ": connection_id=" << json_message["connection_id"];
+    } else if (event_type == "network.status") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": unstable_level=" << json_message["unstable_level"];
+    } else if (event_type == "spotlight.changed") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": client_id=" << json_message["client_id"]
+                        << ": connection_id=" << json_message["connection_id"]
+                        << ": spotlight_id=" << json_message["spotlight_id"];
+    }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
