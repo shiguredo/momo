@@ -11,6 +11,17 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M78 コミットポジションを 8 にする
+    - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
+    - @voluntas
+- [UPDATE] libwebrtc M78 コミットポジションを 6 にする
+    - libwebrtc のハッシュは 3498a292ecfae6d0abaaa3d078670184710ce65b
+    - @voluntas
+- [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
+    - @tnoho @voluntas
+- [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
+    - @hakobera
+
 ## 19.09.2
 
 - [UPDATE] libwebrtc M78 コミットポジションを 5 にする
