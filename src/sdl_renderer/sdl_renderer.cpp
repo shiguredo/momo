@@ -123,8 +123,8 @@ int SDLRenderer::RenderThread() {
 
         if (!sink->GetOutlineChanged()) continue;
 
-        int width = sink->GetWidth();
-        int height = sink->GetHeight();
+        int width = sink->GetInputWidth();
+        int height = sink->GetInputHeight();
 
         if (width == 0 || height == 0) continue;
 
@@ -134,7 +134,7 @@ int SDLRenderer::RenderThread() {
         SDL_FreeSurface(surface);
 
         SDL_Rect image_rect = (SDL_Rect){ 0, 0, width, height};
-        SDL_Rect draw_rect = (SDL_Rect){ sink->GetOffsetX(), sink->GetOffsetY(), width, height};
+        SDL_Rect draw_rect = (SDL_Rect){ sink->GetOffsetX(), sink->GetOffsetY(), sink->GetWidth(), sink->GetHeight()};
 
         // flip (自画像とか？)
         //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
@@ -196,23 +196,18 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     if (width_ != width || height_ != height) {
       width_ = width;
       height_ = height;
-      image_.reset(new uint8_t[width_ * height_ * 4]);
     }
     input_width_ = frame.width();
     input_height_ = frame.height();
+    image_.reset(new uint8_t[input_width_ * input_height_ * 4]);
     outline_changed_ = false;
   }
-  rtc::scoped_refptr<webrtc::I420Buffer> buffer =
-      webrtc::I420Buffer::Create(width_, height_);
-  buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
-  if (frame.rotation() != webrtc::kVideoRotation_0) {
-    buffer = webrtc::I420Buffer::Rotate(*buffer, frame.rotation());
-  }
+  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer = frame.video_frame_buffer()->ToI420();
   libyuv::ConvertFromI420(
       buffer->DataY(), buffer->StrideY(),
       buffer->DataU(), buffer->StrideU(),
       buffer->DataV(), buffer->StrideV(),
-      image_.get(), width_ * 4,
+      image_.get(), input_width_ * 4,
       buffer->width(), buffer->height(),
       libyuv::FOURCC_ARGB);
 }
@@ -246,6 +241,14 @@ int SDLRenderer::Sink::GetOffsetX() {
 
 int SDLRenderer::Sink::GetOffsetY() {
   return outline_offset_y_ + offset_y_;
+}
+
+int SDLRenderer::Sink::GetInputWidth() {
+  return input_width_;
+}
+
+int SDLRenderer::Sink::GetInputHeight() {
+  return input_height_;
 }
 
 int SDLRenderer::Sink::GetWidth() {

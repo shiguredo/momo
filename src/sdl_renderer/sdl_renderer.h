@@ -46,6 +46,8 @@ class SDLRenderer : public VideoTrackReceiver {
     bool GetOutlineChanged();
     int GetOffsetX();
     int GetOffsetY();
+    int GetInputWidth();
+    int GetInputHeight();
     int GetWidth();
     int GetHeight();
     uint8_t* GetImage();
