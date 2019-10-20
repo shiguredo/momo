@@ -46,8 +46,8 @@ class SDLRenderer : public VideoTrackReceiver {
     bool GetOutlineChanged();
     int GetOffsetX();
     int GetOffsetY();
-    int GetInputWidth();
-    int GetInputHeight();
+    int GetFrameWidth();
+    int GetFrameHeight();
     int GetWidth();
     int GetHeight();
     uint8_t* GetImage();
@@ -64,6 +64,7 @@ class SDLRenderer : public VideoTrackReceiver {
     float outline_aspect_;
     int input_width_;
     int input_height_;
+    bool scaled_;
     std::unique_ptr<uint8_t[]> image_;
     int offset_x_;
     int offset_y_;

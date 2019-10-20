@@ -123,8 +123,8 @@ int SDLRenderer::RenderThread() {
 
         if (!sink->GetOutlineChanged()) continue;
 
-        int width = sink->GetInputWidth();
-        int height = sink->GetInputHeight();
+        int width = sink->GetFrameWidth();
+        int height = sink->GetFrameHeight();
 
         if (width == 0 || height == 0) continue;
 
@@ -168,6 +168,7 @@ SDLRenderer::Sink::Sink(SDLRenderer* renderer,
                            outline_changed_(false),
                            input_width_(0),
                            input_height_(0),
+                           scaled_(false),
                            width_(0),
                            height_(0) {
   track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
@@ -199,16 +200,32 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     }
     input_width_ = frame.width();
     input_height_ = frame.height();
-    image_.reset(new uint8_t[input_width_ * input_height_ * 4]);
+    scaled_ = width_ < input_width_;
+    if (scaled_) {
+      image_.reset(new uint8_t[width_ * height_ * 4]);
+    } else {
+      image_.reset(new uint8_t[input_width_ * input_height_ * 4]);
+    }
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": scaled_=" << scaled_;
     outline_changed_ = false;
   }
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer = frame.video_frame_buffer()->ToI420();
+  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer_if;
+  if (scaled_) {
+    rtc::scoped_refptr<webrtc::I420Buffer> buffer = webrtc::I420Buffer::Create(width_, height_);
+    buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
+    if (frame.rotation() != webrtc::kVideoRotation_0) {
+      buffer = webrtc::I420Buffer::Rotate(*buffer, frame.rotation());
+    }
+    buffer_if = buffer;
+  } else {
+    buffer_if = frame.video_frame_buffer()->ToI420();
+  }
   libyuv::ConvertFromI420(
-      buffer->DataY(), buffer->StrideY(),
-      buffer->DataU(), buffer->StrideU(),
-      buffer->DataV(), buffer->StrideV(),
-      image_.get(), input_width_ * 4,
-      buffer->width(), buffer->height(),
+      buffer_if->DataY(), buffer_if->StrideY(),
+      buffer_if->DataU(), buffer_if->StrideU(),
+      buffer_if->DataV(), buffer_if->StrideV(),
+      image_.get(), (scaled_ ? width_ : input_width_) * 4,
+      buffer_if->width(), buffer_if->height(),
       libyuv::FOURCC_ARGB);
 }
 
@@ -243,12 +260,12 @@ int SDLRenderer::Sink::GetOffsetY() {
   return outline_offset_y_ + offset_y_;
 }
 
-int SDLRenderer::Sink::GetInputWidth() {
-  return input_width_;
+int SDLRenderer::Sink::GetFrameWidth() {
+  return scaled_ ? width_ : input_width_;
 }
 
-int SDLRenderer::Sink::GetInputHeight() {
-  return input_height_;
+int SDLRenderer::Sink::GetFrameHeight() {
+  return scaled_ ? height_ : input_height_;
 }
 
 int SDLRenderer::Sink::GetWidth() {
