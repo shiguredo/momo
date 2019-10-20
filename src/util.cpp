@@ -190,9 +190,9 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(0, 65535));
   app.add_flag("--use-sdl", cs.use_sdl, "SDLを使い映像を表示する");
   app.add_flag("--show-me", cs.show_me, "自分のカメラも表示する");
-  app.add_option("--window_width", cs.window_width, "映像を表示するウィンドウの横幅")
+  app.add_option("--window-width", cs.window_width, "映像を表示するウィンドウの横幅")
       ->check(CLI::Range(180, 16384));
-  app.add_option("--window_height", cs.window_height, "映像を表示するウィンドウの縦幅")
+  app.add_option("--window-height", cs.window_height, "映像を表示するウィンドウの縦幅")
       ->check(CLI::Range(180, 16384));
   app.add_flag("--fullscreen", cs.fullscreen, "映像を表示するウィンドウをフルスクリーンにする");
   app.add_flag("--daemon", is_daemon, "デーモン化する");
