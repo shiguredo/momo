@@ -10,7 +10,7 @@ PeerConnectionObserver::~PeerConnectionObserver() {
 
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " :" << new_state;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " :" << new_state;
   if (_receiver != nullptr &&
       new_state == webrtc::PeerConnectionInterface::
         IceConnectionState::kIceConnectionDisconnected) {

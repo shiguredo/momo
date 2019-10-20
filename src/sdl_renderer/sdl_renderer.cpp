@@ -206,7 +206,7 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     } else {
       image_.reset(new uint8_t[input_width_ * input_height_ * 4]);
     }
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": scaled_=" << scaled_;
+    RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": scaled_=" << scaled_;
     outline_changed_ = false;
   }
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer_if;
