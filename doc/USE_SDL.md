@@ -45,3 +45,9 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/abdb1802bd66440ef32e75da6842f0cf.png)](https://gyazo.com/abdb1802bd66440ef32e75da6842f0cf)
+
+
+## 全画面
+
+- f を押すと全画面になります、もう一度 f を押すと戻ります
+- q を押すと Momo 自体を終了します
