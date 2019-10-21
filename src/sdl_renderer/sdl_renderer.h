@@ -90,8 +90,6 @@ class SDLRenderer : public VideoTrackReceiver {
   int height_;
   int rows_;
   int cols_;
-  float window_aspect_;
-  bool is_wide_;
 };
 
 #endif

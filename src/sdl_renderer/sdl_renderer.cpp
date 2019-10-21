@@ -20,9 +20,6 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
         dispatch_(nullptr),
         width_(width), height_(height),
         rows_(1), cols_(1) {
-  window_aspect_ = (float)width_ / (float)height_;
-  is_wide_ = window_aspect_ > ((STD_ASPECT + WIDE_ASPECT) / 2.0);
-
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_Init failed " << SDL_GetError();
     return;
@@ -281,11 +278,13 @@ uint8_t* SDLRenderer::Sink::GetImage() {
 }
 
 void SDLRenderer::SetOutlines() {
-  float frame_aspect = is_wide_ ? WIDE_ASPECT : STD_ASPECT;
+  float window_aspect = (float)width_ / (float)height_;
+  bool window_is_wide = window_aspect > ((STD_ASPECT + WIDE_ASPECT) / 2.0);
+  float frame_aspect = window_is_wide ? WIDE_ASPECT : STD_ASPECT;
   int rows = 1;
   int cols = 1;
-  if (window_aspect_ >= 1.0) {
-    int times = std::floor(window_aspect_ / frame_aspect);
+  if (window_aspect >= frame_aspect) {
+    int times = std::floor(window_aspect / frame_aspect);
     if (times < 1) times = 1;
     while (rows * cols < sinks_.size()) {
       if (times < (cols / rows))
@@ -296,7 +295,7 @@ void SDLRenderer::SetOutlines() {
       }
     }
   } else {
-    int times = std::floor(frame_aspect / window_aspect_);
+    int times = std::floor(frame_aspect / window_aspect);
     if (times < 1) times = 1;
     while (rows * cols < sinks_.size()) {
       if (times < (rows / cols))
