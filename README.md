@@ -4,6 +4,10 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
 
+## About Support
+
+Support for WebRTC Native Client Momo by Shiguredo Inc. are limited ONLY in JAPANESE through GitHub Issues and there is no guarantee such as response time or resolution.
+
 ## WebRTC Native Client Momo について
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
