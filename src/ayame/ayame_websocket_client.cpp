@@ -289,6 +289,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   const std::string type = json_message["type"];
   if (type == "accept") {
     if (!connection_) {
+
       // 返却されてきた iceServers を セットする
       if (json_message.contains("iceServers")) {
         auto jservers = json_message["iceServers"];
@@ -311,6 +312,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
           }
         }
       }
+
       if (ice_servers_.empty()) {
         // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
         webrtc::PeerConnectionInterface::IceServer ice_server;
@@ -318,12 +320,18 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
         ice_servers_.push_back(ice_server);
       }
       createPeerConnection();
-      // peer connection を生成したら offer SDP を生成して送信する
-      connection_->createOffer();
+      // peer connection を生成して、すでにユーザがいる場合 offer SDP を生成して送信する
+      if (json_message.contains("isExistUser")) {
+        auto is_exist_user = json_message["isExistUser"];
+        if (is_exist_user == true) {
+          RTC_LOG(LS_INFO)
+            << __FUNCTION__ << ": exist_user";
+          connection_->createOffer();
+        }
+      }
     }
   }
   if (type == "offer") {
-    createPeerConnection();
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
   } else if (type == "answer") {
