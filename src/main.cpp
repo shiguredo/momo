@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 #ifdef __APPLE__
   rtc::scoped_refptr<MacCapturer> capturer =
-      MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, 0);
+      MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
 #else
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);

@@ -10,6 +10,8 @@
 
 #include "mac_capturer.h"
 
+#include "rtc_base/logging.h"
+
 #import "sdk/objc/base/RTCVideoCapturer.h"
 #import "sdk/objc/components/capturer/RTCCameraVideoCapturer.h"
 #import "sdk/objc/native/api/video_capturer.h"
@@ -63,14 +65,11 @@ AVCaptureDeviceFormat* SelectClosestFormat(AVCaptureDevice* device,
 MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
-                         size_t capture_device_index) {
+                         AVCaptureDevice* device) {
   adapter_ = [[RTCVideoSourceAdapter alloc] init];
   adapter_.capturer = this;
 
   capturer_ = [[RTCCameraVideoCapturer alloc] initWithDelegate:adapter_];
-
-  AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices]
-      objectAtIndex:capture_device_index];
   AVCaptureDeviceFormat* format = SelectClosestFormat(device, width, height);
   [capturer_ startCaptureWithDevice:device format:format fps:target_fps];
 }
@@ -79,9 +78,58 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     size_t width,
     size_t height,
     size_t target_fps,
-    size_t capture_device_index) {
-  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps,
-                                                capture_device_index);
+    const std::string& specifiedVideoDevice) {
+  AVCaptureDevice* device = FindVideoDevice(specifiedVideoDevice);
+  if (!device) {
+    RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
+    return nullptr;
+  }
+  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps, device);
+}
+
+AVCaptureDevice* MacCapturer::FindVideoDevice(const std::string& specifiedVideoDevice) {
+  // Device の決定ロジックは ffmpeg の avfoundation と同じ仕様にする
+  // https://www.ffmpeg.org/ffmpeg-devices.html#avfoundation
+
+  size_t capture_device_index = SIZE_T_MAX;
+  NSArray<AVCaptureDevice *>* devices = [RTCCameraVideoCapturer captureDevices];
+  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice *device, NSUInteger i, BOOL *stop) {
+    // 便利なのでデバイスの一覧をログに出力しておく
+    RTC_LOG(LS_INFO) << "video device found: [" << i << "] device_name=" << [device.localizedName UTF8String];
+  }];
+
+  // video-device オプション未指定、空白、"default", "0" の場合はデフォルトデバイスを返す
+  if (specifiedVideoDevice.empty() || specifiedVideoDevice == "default" || specifiedVideoDevice == "0") {
+    capture_device_index = 0;
+  } else {
+    NSUInteger selected_index = [devices indexOfObjectPassingTest:^BOOL(AVCaptureDevice *device, NSUInteger i, BOOL *stop) {
+      // デバイス番号を優先して検索
+      if (specifiedVideoDevice == [@(i).stringValue UTF8String]) {
+        return YES;
+      }
+
+      // デバイス名は前方一致検索
+      std::string device_name = [device.localizedName UTF8String];
+      if (device_name.find(specifiedVideoDevice) == 0) {
+        return YES;
+      }
+
+      return NO;
+    }];
+
+    if (selected_index != NSNotFound) {
+      capture_device_index = selected_index;
+    }
+  }
+
+  if (capture_device_index != SIZE_T_MAX) {
+    AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices] objectAtIndex:capture_device_index];
+    RTC_LOG(LS_INFO) << "selected video device: [" << capture_device_index << "] device_name=" << [device.localizedName UTF8String];
+    return device;
+  }
+
+  RTC_LOG(LS_INFO) << "no matching video device found";
+  return nullptr;
 }
 
 void MacCapturer::Destroy() {
