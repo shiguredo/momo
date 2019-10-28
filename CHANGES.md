@@ -9,6 +9,12 @@
 - FIX
     - バグ修正
 
+## feature/m79
+
+- [UPDATE] libwebrtc M79 コミットポジションを 1 にする
+    - libwebrtc のハッシュは af0d179d484f330ffe686421415f36d87fa5cbbc
+    - @voluntas
+
 ## develop
 
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
