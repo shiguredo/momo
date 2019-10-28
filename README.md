@@ -2,7 +2,12 @@
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Actions Status](https://github.com/shiguredo/momo/workflows/build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
+[![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
+
+## About Support
+
+We check PRs or Issues only when written in JAPANESE.
+In other languages, we won't be able to deal with them. Thank you for your understanding.
 
 ## WebRTC Native Client Momo について
 

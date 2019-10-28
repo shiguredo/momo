@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"
@@ -21,6 +22,7 @@
 
 #include "rtc/scalable_track_source.h"
 
+RTC_FWD_DECL_OBJC_CLASS(AVCaptureDevice);
 RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
 RTC_FWD_DECL_OBJC_CLASS(RTCVideoSourceAdapter);
 
@@ -30,17 +32,19 @@ class MacCapturer : public ScalableVideoTrackSource,
   static rtc::scoped_refptr<MacCapturer> Create(size_t width,
                                                 size_t height,
                                                 size_t target_fps,
-                                                size_t capture_device_index);
+                                                const std::string& specifiedVideoDevice);
   MacCapturer(size_t width,
               size_t height,
               size_t target_fps,
-              size_t capture_device_index);
+              AVCaptureDevice* device);
   virtual ~MacCapturer();
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
  private:
   void Destroy();
+
+  static AVCaptureDevice* FindVideoDevice(const std::string& specifiedVideoDevice);
 
   RTCCameraVideoCapturer* capturer_;
   RTCVideoSourceAdapter* adapter_;
