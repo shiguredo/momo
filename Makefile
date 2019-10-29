@@ -106,7 +106,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
-  USE_SDL2 ?= 1
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
@@ -120,7 +120,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 1
   USE_H264 ?= 1
-  USE_SDL2 ?= 0
+  USE_SDL2 ?= 1
+  SDL2_ROOT ?= /root/sdl2-$(SDL2_VERSION)
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
