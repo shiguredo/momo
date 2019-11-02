@@ -335,7 +335,8 @@ ifeq ($(TARGET_OS),linux)
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2Element.cpp \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoConverter.cpp \
-          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
+          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp \
+          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
       endif
     else
       # armv6, armv7 用

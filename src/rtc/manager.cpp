@@ -36,6 +36,10 @@
 #include "api/video_codecs/video_encoder_factory.h"
 #include "hw_video_encoder_factory.h"
 #endif
+#if USE_JETSON_ENCODER
+#include "api/video_codecs/video_decoder_factory.h"
+#include "hw_video_decoder_factory.h"
+#endif
 
 RTCManager::RTCManager(
     ConnectionSettings conn_settings,
@@ -99,8 +103,14 @@ RTCManager::RTCManager(
   media_dependencies.video_encoder_factory =
       webrtc::CreateBuiltinVideoEncoderFactory();
 #endif
+#if USE_JETSON_ENCODER
+  media_dependencies.video_decoder_factory =
+      std::unique_ptr<webrtc::VideoDecoderFactory>(
+          absl::make_unique<HWVideoDecoderFactory>());
+#else
   media_dependencies.video_decoder_factory =
       webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
 #endif
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing =
