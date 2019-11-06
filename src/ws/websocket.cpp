@@ -65,7 +65,9 @@ void Websocket::doRead(read_callback_t on_read) {
 void Websocket::onRead(read_callback_t on_read,
                        boost::system::error_code ec,
                        std::size_t bytes_transferred) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
+  if (ec) {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
+  }
 
   // エラーだろうが何だろうが on_read コールバック関数は必ず呼ぶ
 
@@ -145,7 +147,9 @@ void Websocket::doWrite() {
 
 void Websocket::onWrite(boost::system::error_code ec,
                         std::size_t bytes_transferred) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
+  if (ec) {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
+  }
 
   // エラーだろうが何だろうが on_write_ コールバック関数は必ず呼ぶ
   // on_write(ec, bytes_transferred);
