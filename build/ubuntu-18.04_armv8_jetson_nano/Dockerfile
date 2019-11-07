@@ -89,3 +89,27 @@ RUN \
       --prefix=/root/boost-$BOOST_VERSION \
       --with-filesystem \
   "
+
+
+# SDL2 のビルド
+
+ARG SDL2_VERSION
+
+RUN \
+  /bin/bash -c " \
+    set -ex \
+    && source /root/docker.sh \
+    && setup_sdl2 $SDL2_VERSION /root/sdl2-source \
+    && cd /root/sdl2-source/source/build \
+    && CC='/root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang --target=aarch64-linux-gnu --sysroot=/root/rootfs' \
+        CFLAGS=' \
+          -I/root/rootfs/usr/include/aarch64-linux-gnu \
+        ' \
+        LDFLAGS=' \
+          -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+          -B/root/rootfs/usr/lib/aarch64-linux-gnu \
+        ' \
+        ../configure --disable-shared --prefix=/root/sdl2-$SDL2_VERSION --host=aarch64-linux-gnu --with-sysroot=/root/rootfs --disable-pulseaudio --disable-esd --disable-video-wayland \
+    && make \
+    && make install \
+  "

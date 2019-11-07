@@ -9,6 +9,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 ## 注意
 
 - この機能は ayame と sora モードでのみ利用できます
+    - test モードでは test.html が HTTPS ではないため getUserMedia を使用できません
 - この機能は macOS または Linux でのみ利用できます
 
   - 当たり前ですが CUI 環境では利用できませんのでご注意下さい

@@ -178,6 +178,9 @@ void Util::parseArgs(int argc,
   app.add_option("--video-device", cs.video_device,
                  "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
       ->check(CLI::ExistingFile);
+#elif __APPLE__
+  app.add_option("--video-device", cs.video_device,
+                 "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス番号が0）のビデオデバイスを自動検出");
 #endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
