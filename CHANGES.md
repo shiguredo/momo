@@ -21,6 +21,8 @@
     - @tnoho @voluntas
 - [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
     - @hakobera
+- [FIX] ayame の client id を指定していない場合のランダム生成がうまくいっていなかったので修正する
+    - @kdxu
 
 ## 19.09.2
 
