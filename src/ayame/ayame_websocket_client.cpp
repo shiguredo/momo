@@ -221,9 +221,12 @@ void AyameWebsocketClient::onHandshake(boost::system::error_code ec) {
 void AyameWebsocketClient::doRegister() {
   json json_message = {
       {"type", "register"},
-      {"clientId", conn_settings_.ayame_client_id},
+      {"clientId", Util::generateRandomChars()},
       {"roomId", conn_settings_.ayame_room_id},
   };
+  if (conn_settings_.ayame_client_id != "") {
+    json_message["clientId"] = conn_settings_.ayame_client_id;
+  }
   if (conn_settings_.ayame_signaling_key != "") {
     json_message["key"] = conn_settings_.ayame_signaling_key;
   }

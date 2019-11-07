@@ -95,6 +95,9 @@ class AyameWebsocketClient
               std::string text);
 
  private:
+  std::string generateRandomClientId();
+
+ private:
   // WebRTC からのコールバック
   // これらは別スレッドからやってくるので取り扱い注意
   void onIceConnectionStateChange(
