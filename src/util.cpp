@@ -111,14 +111,8 @@ void Util::parseArgs(int argc,
              local_nh.hasParam("ROOM_ID")) {
     local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
     local_nh.getParam("ROOM_ID", cs.ayame_room_id);
-    if (local_nh.hasParam("client_id")) {
-      local_nh.param<std::string>("client_id", cs.ayame_client_id,
-                                  cs.ayame_client_id);
-    } else {
-      // デフォルトはランダムな数値 17 桁
-      std::string default_ayame_client_id = generateRandomNumericChars(17);
-      cs.ayame_client_id = default_ayame_client_id;
-    }
+    local_nh.param<std::string>("client_id", cs.ayame_client_id,
+        cs.ayame_client_id);
     local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key,
                                 cs.ayame_signaling_key);
   } else {
@@ -227,8 +221,6 @@ void Util::parseArgs(int argc,
                    "シグナリングホスト")
       ->required();
   ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
-  // デフォルトはランダムな数値 17 桁
-  cs.ayame_client_id = generateRandomNumericChars(17);
   ayame_app->add_option("--client-id", cs.ayame_client_id, "クライアントID");
   ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
                         "シグナリングキー");
