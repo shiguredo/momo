@@ -35,7 +35,7 @@ jobs:
         working-directory: build
         timeout-minutes: 120
   build_macos:
-    name: Build momo for macOS 10.14
+    name: Build momo for macOS 10.1
     runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v1
