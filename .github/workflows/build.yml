@@ -24,3 +24,21 @@ jobs:
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
         working-directory: build
         timeout-minutes: 120
+  build_ubuntu-18_04_armv8_jetson_nano:
+    name: Build momo for build_ubuntu-18.04_armv8_jetson_nano
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: .github/workflows/script/disk_cleanup.sh
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8_jetson_nano
+        working-directory: build
+        timeout-minutes: 120
+  build_macos:
+    name: Build momo for macOS 10.14
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v1
+      - run: make macos
+        working-directory: build
+        timeout-minutes: 120
+

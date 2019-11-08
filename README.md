@@ -61,7 +61,6 @@ Momo はオープンソースソフトウェアですが、開発については
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
@@ -169,14 +168,14 @@ Windows 版 Momo をビルドするツールを販売しております。興味
 
 OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
 
-非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能なコミッターを紹介することが可能です。
+非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
 
 まずは momo at shiguredo.jp までお問い合わせください。
 
 - @tnoho
-    - Momo のコアコミッターです
+    - Momo のコア開発者です
 - @melpon
-    - Momo のビルド全般のリードコミッターです
+    - Momo のビルド全般のリード開発者です
 - @kdxu
-    - Momo の Ayame 機能のリードコミッターです
-    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコアコミッターです
+    - Momo の Ayame 機能のリード開発者です
+    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコア開発者です
