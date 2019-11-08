@@ -61,7 +61,6 @@ Momo はオープンソースソフトウェアですが、開発については
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
