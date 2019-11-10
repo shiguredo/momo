@@ -20,6 +20,8 @@
 - [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
+- [ADD] macOS 用に --video-device オプションを追加
+    - @hakobera
 - [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
     - @hakobera
 - [FIX] ayame の client id を指定していない場合のランダム生成がうまくいっていなかったので修正する
