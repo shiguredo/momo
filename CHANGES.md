@@ -21,7 +21,9 @@
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
     - @voluntas
 - [ADD] GitHub Actions のデイリービルドに ROS を追加する
+    - @voluntas
 - [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
+    - @voluntas
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
 - [ADD] macOS 用に --video-device オプションを追加
