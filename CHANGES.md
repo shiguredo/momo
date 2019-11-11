@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.11.0
+
 - [UPDATE] json を 3.7.1 に上げる
 - [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
