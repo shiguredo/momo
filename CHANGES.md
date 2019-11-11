@@ -14,7 +14,9 @@
 ## 19.11.0
 
 - [UPDATE] json を 3.7.1 に上げる
+    - @voluntas
 - [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
+    - @voluntas
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
     - @voluntas
