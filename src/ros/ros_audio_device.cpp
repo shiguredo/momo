@@ -199,9 +199,9 @@ int32_t ROSAudioDevice::StartPlayout() {
   }
 
   _ptrThreadPlay.reset(new rtc::PlatformThread(
-      PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
+      PlayThreadFunc, this, "webrtc_audio_module_play_thread",
+      rtc::kRealtimePriority));
   _ptrThreadPlay->Start();
-  _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Started playout capture";
   return 0;
@@ -426,13 +426,13 @@ int ROSAudioDevice::GetRecordAudioParameters(
 }
 #endif  // WEBRTC_IOS
 
-bool ROSAudioDevice::PlayThreadFunc(void* pThis) {
-  return (static_cast<ROSAudioDevice*>(pThis)->PlayThreadProcess());
+void ROSAudioDevice::PlayThreadFunc(void* pThis) {
+  (static_cast<ROSAudioDevice*>(pThis)->PlayThreadProcess());
 }
 
-bool ROSAudioDevice::PlayThreadProcess() {
+void ROSAudioDevice::PlayThreadProcess() {
   if (!_playing) {
-    return false;
+    return;
   }
   int64_t currentTime = rtc::TimeMillis();
   _critSect.Enter();
@@ -454,8 +454,6 @@ bool ROSAudioDevice::PlayThreadProcess() {
   if (deltaTimeMillis < 5) {
     webrtc::SleepMs(5 - deltaTimeMillis);
   }
-
-  return true;
 }
 
 bool ROSAudioDevice::RecROSCallback(

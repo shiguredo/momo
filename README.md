@@ -2,7 +2,12 @@
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Actions Status](https://github.com/shiguredo/momo/workflows/build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
+[![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
+
+## About Support
+
+We check PRs or Issues only when written in JAPANESE.
+In other languages, we won't be able to deal with them. Thank you for your understanding.
 
 ## WebRTC Native Client Momo について
 
@@ -56,7 +61,6 @@ Momo はオープンソースソフトウェアですが、開発については
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
@@ -102,6 +106,10 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 ### バグ報告
 
 https://github.com/shiguredo/momo/issues
+
+#### 理想的なバグ報告例
+
+- [ローカルネット上のAyameを使用して接続した場合にSEGVが発生する · Issue \#100 · shiguredo/momo](https://github.com/shiguredo/momo/issues/100)
 
 ### Discord
 
@@ -160,14 +168,6 @@ Windows 版 Momo をビルドするツールを販売しております。興味
 
 OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
 
-非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能なコミッターを紹介することが可能です。
+非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
 
 まずは momo at shiguredo.jp までお問い合わせください。
-
-- @tnoho
-    - Momo のコアコミッターです
-- @melpon
-    - Momo のビルド全般のリードコミッターです
-- @kdxu
-    - Momo の Ayame 機能のリードコミッターです
-    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコアコミッターです
