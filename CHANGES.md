@@ -11,17 +11,19 @@
 
 ## develop
 
-- [UPDATE] GitHub Actions の macOS ビルドを 10.15 に変更する
+## 19.11.0
+
+- [UPDATE] json を 3.7.1 に上げる
+- [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
-    - @voluntas
-- [UPDATE] libwebrtc M78 コミットポジションを 6 にする
-    - libwebrtc のハッシュは 3498a292ecfae6d0abaaa3d078670184710ce65b
     - @voluntas
 - [ADD] GitHub Actions のデイリービルドに ROS を追加する
 - [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
+- [ADD] macOS 用に --video-device オプションを追加
+    - @hakobera
 - [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
     - @hakobera
 - [FIX] ayame の client id を指定していない場合のランダム生成がうまくいっていなかったので修正する

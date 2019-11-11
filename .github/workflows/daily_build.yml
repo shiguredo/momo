@@ -42,20 +42,21 @@ jobs:
       - run: make macos
         working-directory: build
         timeout-minutes: 120
-  build_ubuntu-16.04_armv7_ros:
+  build_ubuntu-16_04_armv7_ros:
     name: Build momo for Ubuntu 16.04 armv7 ROS
     runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v1
-      - run: make ubuntu-16.04_armv7_ros
+      - run: .github/workflows/script/disk_cleanup.sh
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-16.04_armv7_ros
         working-directory: build
         timeout-minutes: 120
-  build_ubuntu-16.04_x86_64_ros:
+  build_ubuntu-16_04_x86_64_ros:
     name: Build momo for Ubuntu 16.04 x86_64 ROS
     runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v1
-      - run: make ubuntu-16.04_x86_64_ros
+      - run: .github/workflows/script/disk_cleanup.sh
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-16.04_x86_64_ros
         working-directory: build
         timeout-minutes: 120
-
