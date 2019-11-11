@@ -171,11 +171,3 @@ OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと�
 非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
 
 まずは momo at shiguredo.jp までお問い合わせください。
-
-- @tnoho
-    - Momo のコア開発者です
-- @melpon
-    - Momo のビルド全般のリード開発者です
-- @kdxu
-    - Momo の Ayame 機能のリード開発者です
-    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコア開発者です
