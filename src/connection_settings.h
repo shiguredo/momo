@@ -40,7 +40,7 @@ struct ConnectionSettings {
 
   std::string ayame_signaling_host;
   std::string ayame_room_id;
-  std::string ayame_client_id;
+  std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
 
   bool disable_echo_cancellation = false;
