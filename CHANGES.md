@@ -9,17 +9,27 @@
 - FIX
     - バグ修正
 
+## feature/m79
+
+- [UPDATE] libwebrtc M79 コミットポジションを 2 にする
+    - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
+    - @voluntas
+
 ## develop
 
 ## 19.11.0
 
 - [UPDATE] json を 3.7.1 に上げる
+    - @voluntas
 - [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
+    - @voluntas
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
     - @voluntas
 - [ADD] GitHub Actions のデイリービルドに ROS を追加する
+    - @voluntas
 - [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
+    - @voluntas
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
 - [ADD] macOS 用に --video-device オプションを追加
