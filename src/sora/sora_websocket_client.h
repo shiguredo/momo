@@ -39,6 +39,7 @@ class SoraWebsocketClient
   WatchDog watchdog_;
 
   bool connected_;
+  bool answer_sent_ = false;
 
  private:
   bool parseURL(URLParts& parts) const;
