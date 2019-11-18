@@ -11,18 +11,54 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M79 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 2958d0d691526c60f755eaa364abcdbcda6adc39
+    - @voluntas
+- [UPDATE] libwebrtc M79 コミットポジションを 2 にする
+    - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
+    - @voluntas
+- [ADD] SDL を利用した音声と映像の受信可能にする `--use-sdl` を追加する
+    - [Simple DirectMedia Layer](https://www.libsdl.org/)
+    - @tnoho
+- [ADD] SDL を Sora のマルチストリームに対応する `--multistream` を追加する
+    - @tnoho
+- [ADD] SDL を Sora のスポットライトに対応する `--spotlight` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に Jetson Nano では H.264 ハードウェアデコーダを利用するようにする
+    - @tnoho
+- [ADD] SDL 利用時に自分のカメラ映像を表示する `--show-me` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウの幅を `--window-width` と `--window-height` で指定可能にする
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
+    - f を押すと全画面、もう一度 f を押すと戻る
+    - @tnoho
+- [FIX] C++14 にする
+    - @melpon
+
+## 19.11.0
+
+- [UPDATE] json を 3.7.1 に上げる
+    - @voluntas
+- [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
+    - @voluntas
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
     - @voluntas
-- [UPDATE] libwebrtc M78 コミットポジションを 6 にする
-    - libwebrtc のハッシュは 3498a292ecfae6d0abaaa3d078670184710ce65b
+- [ADD] GitHub Actions のデイリービルドに ROS を追加する
+    - @voluntas
+- [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
     - @voluntas
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
+- [ADD] macOS 用に --video-device オプションを追加
+    - @hakobera
 - [FIX] GitHub Actions のビルドがディスク容量不足でエラーになっていたのを修正する
     - @hakobera
 - [FIX] ayame の client id を指定していない場合のランダム生成がうまくいっていなかったので修正する
     - @kdxu
+- [FIX] ROS バージョンが正常にビルドできていなかったのを修正する
+    - @melpon
 
 ## 19.09.2
 

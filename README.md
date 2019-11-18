@@ -15,11 +15,15 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアエンコーダへの対応
 
-Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+- Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
+- macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) の H.264 ハードウェアエンコーダー機能を利用することが可能です
+- Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで H.264 を 4K@30 での配信が可能です。
 
-macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+### SDL を利用した音声や映像の受信
 
-Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です。
+Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
+
+### ROS への対応
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
@@ -47,10 +51,10 @@ Momo はオープンソースソフトウェアですが、開発については
 
 4 種類のバイナリを配布しています。
 
-- Raspberry Buster ARMv7
-- Raspberry Buster ARMv6
-- Jetson Nano ARMv8
-- macOS 10.14 x86_64
+- Raspberry Raspbian Buster ARMv7
+- Raspberry Raspbian Buster ARMv6
+- Jetson Nano Ubuntu 18.04 ARMv8
+- macOS 10.15 x86_64
 
 ## 動作環境
 
@@ -61,7 +65,6 @@ Momo はオープンソースソフトウェアですが、開発については
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [ROCK64 –PINE64](https://www.pine64.org/?page_id=7147)
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
@@ -72,13 +75,14 @@ Momo はオープンソースソフトウェアですが、開発については
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-## ビルドする
+## ビルドにチャレンジする
 
-Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください。
+- Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
+- macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
 ## パッケージを作成する
 
-パッケージ作成に挑戦したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
+パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
 ## ライセンス
 
@@ -169,14 +173,6 @@ Windows 版 Momo をビルドするツールを販売しております。興味
 
 OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
 
-非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能なコミッターを紹介することが可能です。
+非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
 
 まずは momo at shiguredo.jp までお問い合わせください。
-
-- @tnoho
-    - Momo のコアコミッターです
-- @melpon
-    - Momo のビルド全般のリードコミッターです
-- @kdxu
-    - Momo の Ayame 機能のリードコミッターです
-    - [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) のコアコミッターです

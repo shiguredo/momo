@@ -121,9 +121,9 @@ class ROSAudioDevice : public webrtc::AudioDeviceGeneric {
 #endif  // WEBRTC_IOS
 
  private:
-  static bool PlayThreadFunc(void*);
+  static void PlayThreadFunc(void*);
   bool RecROSCallback(const audio_common_msgs::AudioDataConstPtr& msg);
-  bool PlayThreadProcess();
+  void PlayThreadProcess();
 
   ConnectionSettings _conn_settings;
 

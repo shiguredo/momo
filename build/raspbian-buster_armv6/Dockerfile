@@ -22,7 +22,6 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
   "
 
 COPY patch/4k.patch /root/
-COPY patch/nacl_armv6_1.patch /root/
 COPY patch/nacl_armv6_2.patch /root/
 
 # WebRTC の準備
@@ -38,7 +37,6 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
     && source /root/docker.sh \
     && prepare_webrtc_arm /root/webrtc-cache $WEBRTC_COMMIT /root/webrtc \
     && cd /root/webrtc/src \
-    && patch -p1 < /root/nacl_armv6_1.patch \
     && rm -f /root/webrtc/src/third_party/llvm-build/cr_build_revision \
     && gclient sync \
     && patch -p1 < /root/nacl_armv6_2.patch \
