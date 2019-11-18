@@ -14,6 +14,22 @@
 - [UPDATE] libwebrtc M79 コミットポジションを 2 にする
     - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
     - @voluntas
+- [ADD] SDL を利用した音声と映像の受信可能にする `--use-sdl` を追加する
+    - [Simple DirectMedia Layer](https://www.libsdl.org/)
+    - @tnoho
+- [ADD] SDL を Sora のマルチストリームに対応する `--multistream` を追加する
+    - @tnoho
+- [ADD] SDL を Sora のスポットライトに対応する `--spotlight` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に Jetson Nano では H.264 ハードウェアデコーダを利用するようにする
+    - @tnoho
+- [ADD] SDL 利用時に自分のカメラ映像を表示する `--show-me` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウの幅を `--window-width` と `--window-height` で指定可能にする
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
+    - f を押すと全画面、もう一度 f を押すと戻る
+    - @tnoho
 
 ## 19.11.0
 
