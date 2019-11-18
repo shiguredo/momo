@@ -1,7 +1,8 @@
 name: build-workflow
-on: push:
-  paths-ignore:
-    - '**.md'
+
+on:
+  push:
+    paths-ignore:
     - 'doc/**'
 
 jobs:
