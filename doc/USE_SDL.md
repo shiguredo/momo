@@ -20,11 +20,19 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
     - SDL 機能を使う場合は指定します
 - --show-me
     - Momo が取得した映像を出力します
+- --window-width
+    - 映像を表示するウインドウの横幅を指定します
+- --window-height
+    - 映像を表示するウインドウの縦幅を指定します
+- --fullscreen
+    - 映像を表示するウインドウをフルスクリーンにします
 
 ### Sora モード
 
 - --multistream
-    - Sora でマルチストリーム機能を利用する場合は指定します
+    - Sora でマルチストリーム機能を利用する場合に指定します
+- --spotlight
+    - Sora でスポットライト機能を利用する場合に指定します
 
 ## Ayame を利用した 1:1 の双方向
 

@@ -31,6 +31,12 @@
 - Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
 - ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
+## SDL を利用した双方向機能を利用してみる
+
+Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力することが可能になります。
+
+[USE_SDL.md](USE_SDL.md) をお読みください。
+
 ## コマンド
 
 ### バージョン情報
