@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M79 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 2958d0d691526c60f755eaa364abcdbcda6adc39
+    - @voluntas
 - [UPDATE] libwebrtc M79 コミットポジションを 2 にする
     - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
     - @voluntas
@@ -30,6 +33,8 @@
 - [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
     - f を押すと全画面、もう一度 f を押すと戻る
     - @tnoho
+- [FIX] C++14 にする
+    - @melpon
 
 ## 19.11.0
 
