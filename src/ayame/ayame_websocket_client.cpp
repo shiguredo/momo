@@ -66,6 +66,8 @@ void AyameWebsocketClient::reset() {
   connection_ = nullptr;
   connected_ = false;
   is_send_offer_ = false;
+  is_exist_user_ = false;
+  has_is_exist_user_flag_ = false;
   ice_servers_.clear();
 
   if (parseURL(parts_)) {
@@ -238,7 +240,7 @@ void AyameWebsocketClient::doSendPong() {
   ws_->sendText(json_message.dump());
 }
 
-void AyameWebsocketClient::createPeerConnection(json json_message) {
+void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
   // 返却されてきた iceServers を セットする
   if (json_message.contains("iceServers")) {
     auto jservers = json_message["iceServers"];
@@ -261,26 +263,23 @@ void AyameWebsocketClient::createPeerConnection(json json_message) {
       }
     }
   }
-
   if (ice_servers_.empty()) {
     // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     ice_servers_.push_back(ice_server);
   }
+  if (json_message.contains("isExistUser")) {
+    has_is_exist_user_flag_ = true;
+    is_exist_user_ = json_message["isExistUser"];
+  }
+}
+
+void AyameWebsocketClient::createPeerConnection() {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
 
   rtc_config.servers = ice_servers_;
   connection_ = manager_->createConnection(rtc_config, this);
-  // peer connection を生成して、すでにユーザがいる場合 offer SDP を生成して送信する
-  if (json_message.contains("isExistUser")) {
-    auto is_exist_user = json_message["isExistUser"];
-    if (is_exist_user == true) {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
-      is_send_offer_ = true;
-      connection_->createOffer();
-    }
-  }
 }
 
 void AyameWebsocketClient::close() {
@@ -325,8 +324,23 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "accept") {
-    createPeerConnection(json_message);
+    setIceServersFromConfig(json_message);
+    createPeerConnection();
+    // isExistUser フラグが存在するか確認する
+    // peer connection を生成して、すでにユーザがいる場合 offer SDP を生成して送信する
+    if (is_exist_user_ == true) {
+      RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
+      is_send_offer_ = true;
+      connection_->createOffer();
+    } else if (!has_is_exist_user_flag_){
+      // フラグがない場合とりあえず送信
+      connection_->createOffer();
+    }
   } else if (type == "offer") {
+    // isExistUser フラグがなかった場合二回 peer connection を生成する
+    if (!has_is_exist_user_flag_) {
+      createPeerConnection();
+    }
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
   } else if (type == "answer") {
@@ -381,7 +395,7 @@ void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
   if (type == webrtc::SdpType::kOffer) {
-    if (!is_send_offer_) {
+    if (!is_send_offer_ || !has_is_exist_user_flag_) {
       connection_->createAnswer();
     }
     is_send_offer_ = false;
