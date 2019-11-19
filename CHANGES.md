@@ -33,6 +33,8 @@
 - [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
     - f を押すと全画面、もう一度 f を押すと戻る
     - @tnoho
+- [CHANGE] ayame の `accept` 時に返却される `isExistUser` フラグによって offer を送るかどうかを決めるよう変更する
+    - @kdxu
 - [FIX] C++14 にする
     - @melpon
 

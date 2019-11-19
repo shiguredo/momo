@@ -39,6 +39,7 @@ class AyameWebsocketClient
   WatchDog watchdog_;
 
   bool connected_;
+  bool is_send_offer_;
 
   webrtc::PeerConnectionInterface::IceServers ice_servers_;
 
@@ -79,7 +80,8 @@ class AyameWebsocketClient
   void onHandshake(boost::system::error_code ec);
   void doRegister();
   void doSendPong();
-  void createPeerConnection();
+  void createPeerConnection(nlohmann::json json_message);
+  ;
 
  public:
   void close();
