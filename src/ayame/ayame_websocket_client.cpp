@@ -332,7 +332,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
       is_send_offer_ = true;
       connection_->createOffer();
-    } else if (!has_is_exist_user_flag_){
+    } else if (!has_is_exist_user_flag_) {
       // フラグがない場合とりあえず送信
       connection_->createOffer();
     }
