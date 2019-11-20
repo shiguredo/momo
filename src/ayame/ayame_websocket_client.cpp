@@ -66,7 +66,6 @@ void AyameWebsocketClient::reset() {
   connection_ = nullptr;
   connected_ = false;
   is_send_offer_ = false;
-  is_exist_user_ = false;
   has_is_exist_user_flag_ = false;
   ice_servers_.clear();
 
@@ -269,10 +268,6 @@ void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
     ice_server.uri = "stun:stun.l.google.com:19302";
     ice_servers_.push_back(ice_server);
   }
-  if (json_message.contains("isExistUser")) {
-    has_is_exist_user_flag_ = true;
-    is_exist_user_ = json_message["isExistUser"];
-  }
 }
 
 void AyameWebsocketClient::createPeerConnection() {
@@ -327,8 +322,13 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     setIceServersFromConfig(json_message);
     createPeerConnection();
     // isExistUser フラグが存在するか確認する
-    // peer connection を生成して、すでにユーザがいる場合 offer SDP を生成して送信する
-    if (is_exist_user_ == true) {
+    auto is_exist_user = false;
+    if (json_message.contains("isExistUser")) {
+      has_is_exist_user_flag_ = true;
+      is_exist_user = json_message["isExistUser"];
+    }
+    // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
+    if (is_exist_user) {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
       is_send_offer_ = true;
       connection_->createOffer();
@@ -394,12 +394,10 @@ void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type,
 void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
-  if (type == webrtc::SdpType::kOffer) {
-    if (!is_send_offer_ || !has_is_exist_user_flag_) {
-      connection_->createAnswer();
-    }
-    is_send_offer_ = false;
-  }
+
+  boost::asio::post(ws_->strand(),
+                    std::bind(&AyameWebsocketClient::doSetDescription,
+                              shared_from_this(), type));
 }
 
 void AyameWebsocketClient::doIceConnectionStateChange(
@@ -421,4 +419,13 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       break;
   }
   rtc_state_ = new_state;
+}
+
+void doSetDescription(webrtc::SdpType type) {
+  if (type == webrtc::SdpType::kOffer) {
+    if (!is_send_offer_ || !has_is_exist_user_flag_) {
+      connection_->createAnswer();
+    }
+    is_send_offer_ = false;
+  }
 }
