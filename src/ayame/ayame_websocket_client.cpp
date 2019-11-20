@@ -421,7 +421,7 @@ void AyameWebsocketClient::doIceConnectionStateChange(
   rtc_state_ = new_state;
 }
 
-void doSetDescription(webrtc::SdpType type) {
+void AyameWebSocketClient::doSetDescription(webrtc::SdpType type) {
   if (type == webrtc::SdpType::kOffer) {
     if (!is_send_offer_ || !has_is_exist_user_flag_) {
       connection_->createAnswer();
