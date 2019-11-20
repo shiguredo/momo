@@ -40,6 +40,7 @@ class AyameWebsocketClient
 
   bool connected_;
   bool is_send_offer_;
+  bool has_is_exist_user_flag_;
 
   webrtc::PeerConnectionInterface::IceServers ice_servers_;
 
@@ -80,8 +81,8 @@ class AyameWebsocketClient
   void onHandshake(boost::system::error_code ec);
   void doRegister();
   void doSendPong();
-  void createPeerConnection(nlohmann::json json_message);
-  ;
+  void setIceServersFromConfig(nlohmann::json json_message);
+  void createPeerConnection();
 
  public:
   void close();
@@ -112,6 +113,7 @@ class AyameWebsocketClient
  private:
   void doIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state);
+  void doSetDescription(webrtc::SdpType type);
 };
 
 #endif  // AYAME_WEBSOCKET_CLIENT_
