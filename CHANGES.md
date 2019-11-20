@@ -17,6 +17,7 @@
 - [UPDATE] libwebrtc M79 コミットポジションを 2 にする
     - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
     - @voluntas
+- [UPDATE] Ayame で isExistUser フラグが accept 時に返却されなかった場合 2 回 peer connection を生成する
 - [ADD] SDL を利用した音声と映像の受信可能にする `--use-sdl` を追加する
     - [Simple DirectMedia Layer](https://www.libsdl.org/)
     - @tnoho
