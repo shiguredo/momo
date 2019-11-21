@@ -38,6 +38,8 @@
     - @kdxu
 - [FIX] C++14 にする
     - @melpon
+- [FIX] USE_H264が定義されない場合でも--video-codecが使えるように修正する
+    - @msnoigrs
 
 ## 19.11.0
 
