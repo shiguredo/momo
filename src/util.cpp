@@ -158,7 +158,10 @@ void Util::parseArgs(int argc,
 #if MOMO_USE_H264
         return std::string();
 #else
-        return "このデバイスは --video-codec=H264 に対応していません。";
+        if (input == "H264") {
+          return "このデバイスは --video-codec=H264 に対応していません。";
+        }
+        return std::string();
 #endif
       },
       "");
