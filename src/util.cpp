@@ -255,7 +255,10 @@ void Util::parseArgs(int argc,
       ->add_option("--audio-bitrate", cs.audio_bitrate,
                    "オーディオのビットレート")
       ->check(CLI::Range(6, 510));
-  sora_app->add_flag("--multistream", cs.sora_multistream, "マルチストリームを使用する");
+  sora_app->add_flag("--multistream", cs.sora_multistream,
+                     "マルチストリームかどうか");
+  sora_app->add_set("--role", cs.sora_role, {"upstream", "downstream"},
+                    "ロール（デフォルトは upstream）");
   sora_app
       ->add_option("--spotlight", cs.sora_spotlight,
                    "スポットライトの配信数")
