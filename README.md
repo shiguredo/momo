@@ -59,6 +59,7 @@ Momo はオープンソースソフトウェアですが、開発については
 ## 動作環境
 
 - Raspbian Buster ARMv7
+    - Raspberry Pi 4 B で動作
     - Raspberry Pi 3 B/B+ で動作
 - Raspbian Buster ARMv6
     - Raspberry Pi Zero W/WH で動作

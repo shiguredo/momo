@@ -11,6 +11,8 @@
 
 ## develop
 
+- [ADD] Raspberry Pi 4 での動作を確認
+    - @voluntas @Hexa
 - [UPDATE] libwebrtc M79 コミットポジションを 3 にする
     - libwebrtc のハッシュは 2958d0d691526c60f755eaa364abcdbcda6adc39
     - @voluntas
