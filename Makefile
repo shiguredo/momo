@@ -467,6 +467,7 @@ ifeq ($(USE_SDL2),1)
   LDFLAGS += -lSDL2
   SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
 endif
+CFLAGS += -DUSE_SDL2=$(USE_SDL2)
 
 SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
 SOURCES += $(shell find src/p2p -name '*.cpp')

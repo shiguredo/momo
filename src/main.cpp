@@ -25,6 +25,9 @@
 #include "rtc/device_video_capturer.h"
 #endif
 #endif
+#endif
+
+#if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"
 #endif
 
@@ -94,6 +97,7 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
+#if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (cs.use_sdl) {
     sdl_renderer.reset(
@@ -102,6 +106,10 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+#else
+  std::unique_ptr<RTCManager> rtc_manager(
+      new RTCManager(cs, std::move(capturer), nullptr));
+#endif
 
   {
     boost::asio::io_context ioc{1};
@@ -135,6 +143,7 @@ int main(int argc, char* argv[]) {
           ->run();
     }
 
+#if USE_SDL2
     if (sdl_renderer) {
       sdl_renderer->SetDispatchFunction(
         [&ioc](std::function<void ()> f) {
@@ -148,10 +157,15 @@ int main(int argc, char* argv[]) {
     } else {
       ioc.run();
     }
+#else
+    ioc.run();
+#endif
   }
 
   //この順番は綺麗に落ちるけど、あまり安全ではない
+#if USE_SDL2
   sdl_renderer = nullptr;
+#endif
   rtc_manager = nullptr;
 
   return 0;
