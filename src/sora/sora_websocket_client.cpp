@@ -219,7 +219,7 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
 void SoraWebsocketClient::doSendConnect() {
   json json_message = {
       {"type", "connect"},
-      {"role", "upstream"},
+      {"role", conn_settings_.sora_role},
       {"channel_id", conn_settings_.sora_channel_id},
   };
 
