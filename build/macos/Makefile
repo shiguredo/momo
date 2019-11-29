@@ -2,6 +2,7 @@ include ../../VERSION
 
 LIBWEBRTC = $(CURDIR)/webrtc-build/obj/libwebrtc.a
 BOOST = $(CURDIR)/boost-$(BOOST_VERSION)
+SDL2 = $(CURDIR)/sdl2-$(SDL2_VERSION)
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -11,7 +12,7 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-all: $(LIBWEBRTC) $(BOOST)
+all: $(LIBWEBRTC) $(BOOST) $(SDL2)
 
 .PHONY: clean
 clean:
@@ -19,6 +20,8 @@ clean:
 	rm -rf webrtc-build
 	rm -rf boost
 	rm -rf boost-*
+	rm -rf sdl2
+	rm -rf sdl2-*
 
 .PHONY: check
 check:
@@ -53,3 +56,11 @@ $(BOOST):
 	setup_boost $(BOOST_VERSION) $(CURDIR)/boost && \
 	cd $(CURDIR)/boost/source && \
 	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --ignore-site-config --with-filesystem
+
+$(SDL2):
+	source ../../script/docker.sh && \
+	setup_sdl2 $(SDL2_VERSION) $(CURDIR)/sdl2 && \
+	cd $(CURDIR)/sdl2/source/build && \
+	../configure --disable-shared --prefix=$(CURDIR)/sdl2-$(SDL2_VERSION) && \
+	make && \
+	make install

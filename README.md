@@ -15,11 +15,15 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアエンコーダへの対応
 
-Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です。
+- Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
+- macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) の H.264 ハードウェアエンコーダー機能を利用することが可能です
+- Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで H.264 を 4K@30 での配信が可能です。
 
-macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) に対応しており、こちらも H.264 ハードウェアエンコーダー機能を利用することが可能です。
+### SDL を利用した音声や映像の受信
 
-Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です。
+Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
+
+### ROS への対応
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
@@ -47,14 +51,15 @@ Momo はオープンソースソフトウェアですが、開発については
 
 4 種類のバイナリを配布しています。
 
-- Raspberry Buster ARMv7
-- Raspberry Buster ARMv6
-- Jetson Nano ARMv8
-- macOS 10.14 x86_64
+- Raspberry Raspbian Buster ARMv7
+- Raspberry Raspbian Buster ARMv6
+- Jetson Nano Ubuntu 18.04 ARMv8
+- macOS 10.15 x86_64
 
 ## 動作環境
 
 - Raspbian Buster ARMv7
+    - Raspberry Pi 4 B で動作
     - Raspberry Pi 3 B/B+ で動作
 - Raspbian Buster ARMv6
     - Raspberry Pi Zero W/WH で動作
@@ -71,13 +76,14 @@ Momo はオープンソースソフトウェアですが、開発については
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-## ビルドする
+## ビルドにチャレンジする
 
-Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください。
+- Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
+- macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
 ## パッケージを作成する
 
-パッケージ作成に挑戦したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
+パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
 ## ライセンス
 

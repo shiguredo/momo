@@ -30,11 +30,20 @@ struct ConnectionSettings {
   bool fixed_resolution = false;
   std::string priority = "BALANCE";
   int port = 8080;
+  bool use_sdl = false;
+  bool show_me = false;
+  int window_width = 640;
+  int window_height = 480;
+  bool fullscreen = false;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
   bool sora_auto_connect = false;
   nlohmann::json sora_metadata;
+  // upstream or downstream
+  std::string sora_role = "upstream";
+  bool sora_multistream = false;
+  int sora_spotlight = -1;
 
   std::string test_document_root;
 

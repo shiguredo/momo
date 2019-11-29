@@ -9,7 +9,7 @@
 $ git clone git@github.com:shiguredo/momo.git
 ```
 
-## macOS 10.14
+## macOS 10.15
 
 ### 事前確認
 
@@ -50,7 +50,7 @@ macOS に同梱されている Python 以外の python を入れている場合�
 ```shell
 $ pyenv local system
 $ python --version
-Python 2.7.10
+Python 2.7.16
 ```
 
 ### ビルド方法

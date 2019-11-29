@@ -2,6 +2,8 @@
 /webrtc-build
 /boost
 /boost*
+/sdl2
+/sdl2*
 /src
 /.cipd
 /.gclient

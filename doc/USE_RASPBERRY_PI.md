@@ -24,7 +24,7 @@ $ tree
 下記を実行してください。
 
 ```
-$ sudo apt-get install libnspr4 libnss3
+$ sudo apt-get install libnspr4 libnss3 libsdl2-dev
 ```
 
 ### Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合

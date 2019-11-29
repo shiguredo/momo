@@ -13,13 +13,53 @@
 
 ## 19.11.0
 
+- [ADD] Raspberry Pi 4 での動作を確認
+    - @voluntas @Hexa
+- [UPDATE] libwebrtc M79 コミットポジションを 3 にする
+    - libwebrtc のハッシュは 2958d0d691526c60f755eaa364abcdbcda6adc39
+    - @voluntas
+- [UPDATE] libwebrtc M79 コミットポジションを 2 にする
+    - libwebrtc のハッシュは 8e36cc906e5e1c16486e60e62acbf79c1c691879
+    - @voluntas
+- [UPDATE] Ayame で isExistUser フラグが accept 時に返却されなかった場合 2 回 peer connection を生成する
+- [ADD] SDL を利用した音声と映像の受信可能にする `--use-sdl` を追加する
+    - [Simple DirectMedia Layer](https://www.libsdl.org/)
+    - @tnoho
+- [ADD] SDL を Sora のマルチストリームに対応する `--multistream` を追加する
+    - @tnoho
+- [ADD] SDL を Sora のスポットライトに対応する `--spotlight` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に Jetson Nano では H.264 ハードウェアデコーダを利用するようにする
+    - @tnoho
+- [ADD] SDL 利用時に自分のカメラ映像を表示する `--show-me` を追加する
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウの幅を `--window-width` と `--window-height` で指定可能にする
+    - @tnoho
+- [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
+    - f を押すと全画面、もう一度 f を押すと戻る
+    - @tnoho
+- [ADD] sora 利用時に `--role upstream` または `--role downstream` を指定できるようにする
+    - @melpon
+- [CHANGE] ayame の `accept` 時に返却される `isExistUser` フラグによって offer を送るかどうかを決めるよう変更する
+    - @kdxu
+- [FIX] C++14 にする
+    - @melpon
+- [FIX] USE_H264が定義されない場合でも--video-codecが使えるように修正する
+    - @msnoigrs
+
+## 19.11.0
+
 - [UPDATE] json を 3.7.1 に上げる
+    - @voluntas
 - [UPDATE] GitHub Actions の macOS ビルドを macos-latest に変更する
+    - @voluntas
 - [UPDATE] libwebrtc M78 コミットポジションを 8 にする
     - libwebrtc のハッシュは 0b2302e5e0418b6716fbc0b3927874fd3a842caf
     - @voluntas
 - [ADD] GitHub Actions のデイリービルドに ROS を追加する
+    - @voluntas
 - [ADD] GitHub Actions のビルドに Jetson Nano と macOS を追加する
+    - @voluntas
 - [ADD] Jetson Nano で 4K@30 出すためのドキュメントを追加
     - @tnoho @voluntas
 - [ADD] macOS 用に --video-device オプションを追加

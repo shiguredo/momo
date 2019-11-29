@@ -31,6 +31,11 @@ include VERSION
 # USE_H264: H264 を利用するかどうか
 #   有効な値は 0, 1
 #
+# USE_SDL2: SDL2 による画面出力を利用するかどうか
+#   有効な値は 0, 1
+#
+# SDL2_ROOT: SDL2 のインストール先ディレクトリ
+#
 # BOOST_ROOT: Boost のインストール先ディレクトリ
 #
 # WEBRTC_SRC_ROOT: WebRTC のソースディレクトリ
@@ -59,6 +64,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
@@ -72,6 +78,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
@@ -85,6 +92,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
@@ -98,6 +106,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
@@ -111,6 +120,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 1
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
+  SDL2_ROOT ?= /root/sdl2-$(SDL2_VERSION)
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
@@ -123,6 +134,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
@@ -134,6 +146,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
+  USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
@@ -144,6 +157,8 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_MMAL_ENCODER ?= 0
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
+  USE_SDL2 ?= 1
+  SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2-$(SDL2_VERSION)
   BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
   # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
   # 相対パスで指定する。
@@ -200,6 +215,11 @@ else
     HAS_ERROR = 1
   endif
 
+  ifndef USE_SDL2
+    $(info - USE_SDL2 が指定されていません)
+    HAS_ERROR = 1
+  endif
+
   ifndef BOOST_ROOT
     $(info - BOOST_ROOT が指定されていません)
     HAS_ERROR = 1
@@ -237,7 +257,7 @@ else
   BUILD_ROOT ?= _build/local
 endif
 
-CFLAGS += -Wno-macro-redefined -fno-lto -std=c++11 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+CFLAGS += -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
 LDFLAGS += -L$(BUILD_ROOT) -lpthread
 ifdef MOMO_VERSION
@@ -315,7 +335,8 @@ ifeq ($(TARGET_OS),linux)
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2Element.cpp \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoConverter.cpp \
-          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
+          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp \
+          $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
       endif
     else
       # armv6, armv7 用
@@ -415,6 +436,13 @@ ifeq ($(TARGET_OS),macos)
     -framework Metal \
     -framework MetalKit \
     -framework OpenGL
+  ifeq ($(USE_SDL2),1)
+    LDFLAGS += \
+      -liconv \
+      -framework Carbon \
+      -framework IOKit \
+      -framework ForceFeedback
+  endif
   SOURCES += $(shell find src -name '*.mm')
 else
   ifeq ($(USE_ROS),0)
@@ -429,6 +457,17 @@ else
   # USE_ROS=0 の場合は libc++ を使う
   CFLAGS += -nostdinc++ -isystem$(WEBRTC_SRC_ROOT)/buildtools/third_party/libc++/trunk/include
 endif
+
+ifeq ($(USE_SDL2),1)
+  ifdef SDL2_ROOT
+    CFLAGS += -I$(SDL2_ROOT)/include
+    LDFLAGS += -L$(SDL2_ROOT)/lib
+  endif
+  CFLAGS += -D_THREAD_SAFE
+  LDFLAGS += -lSDL2
+  SOURCES += $(shell find src/sdl_renderer -name '*.cpp')
+endif
+CFLAGS += -DUSE_SDL2=$(USE_SDL2)
 
 SOURCES += $(shell find src -maxdepth 1 -name '*.cpp')
 SOURCES += $(shell find src/p2p -name '*.cpp')

@@ -219,9 +219,18 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
 void SoraWebsocketClient::doSendConnect() {
   json json_message = {
       {"type", "connect"},
-      {"role", "upstream"},
+      {"role", conn_settings_.sora_role},
       {"channel_id", conn_settings_.sora_channel_id},
   };
+
+  if (conn_settings_.sora_multistream) {
+    json_message["multistream"] = true;
+  }
+
+  if (conn_settings_.sora_spotlight > 0) {
+    json_message["multistream"] = true;
+    json_message["spotlight"] = conn_settings_.sora_spotlight;
+  }
 
   if (!conn_settings_.sora_metadata.is_null()) {
     json_message["metadata"] = conn_settings_.sora_metadata;
@@ -309,10 +318,32 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "offer") {
+    answer_sent_ = false;
     createPeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
+  } else if (type == "update") {
+    const std::string sdp = json_message["sdp"];
+    connection_->setOffer(sdp);
   } else if (type == "notify") {
+    const std::string event_type = json_message["event_type"];
+    if (event_type == "connection.created" ||
+        event_type == "connection.destroyed") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": client_id=" << json_message["client_id"]
+                        << ": connection_id=" << json_message["connection_id"];
+    } else if (event_type == "network.status") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": unstable_level=" << json_message["unstable_level"];
+    } else if (event_type == "spotlight.changed") {
+      RTC_LOG(LS_INFO) << __FUNCTION__ 
+                        << ": event_type=" << event_type
+                        << ": client_id=" << json_message["client_id"]
+                        << ": connection_id=" << json_message["connection_id"]
+                        << ": spotlight_id=" << json_message["spotlight_id"];
+    }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
@@ -340,8 +371,15 @@ void SoraWebsocketClient::onIceCandidate(const std::string sdp_mid,
 }
 void SoraWebsocketClient::onCreateDescription(webrtc::SdpType type,
                                               const std::string sdp) {
-  json json_message = {{"type", "answer"}, {"sdp", sdp}};
-  ws_->sendText(json_message.dump());
+  // 最初の１回目は answer、以降は update にする
+  if (!answer_sent_) {
+    answer_sent_ = true;
+    json json_message = {{"type", "answer"}, {"sdp", sdp}};
+    ws_->sendText(json_message.dump());
+  } else {
+    json json_message = {{"type", "update"}, {"sdp", sdp}};
+    ws_->sendText(json_message.dump());
+  }
 }
 void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__

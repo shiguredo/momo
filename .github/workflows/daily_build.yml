@@ -7,13 +7,22 @@ on:
     # https://help.github.com/en/articles/workflow-syntax-for-github-actions#onschedule
 
 jobs:
-  build_ubuntu-18_04_armv8:
-    name: Build momo for build_ubuntu-18.04_armv8
+  build_raspbian-buster_armv6:
+    name: Build momo for raspbian-buster_armv6
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - run: .github/workflows/script/disk_cleanup.sh
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
+        working-directory: build
+        timeout-minutes: 120
+  build_raspbian-buster_armv7:
+    name: Build momo for raspbian-buster_armv7
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: .github/workflows/script/disk_cleanup.sh
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
         working-directory: build
         timeout-minutes: 120
   build_ubuntu-18_04_armv8_jetson_nano:
@@ -25,6 +34,14 @@ jobs:
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8_jetson_nano
         working-directory: build
         timeout-minutes: 120
+  build_macos:
+    name: Build momo for macOS 10.15
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: make macos
+        working-directory: build
+        timeout-minutes: 120
   build_ubuntu-18_04_x86_64:
     name: Build momo for build_ubuntu-18.04_x86_64
     runs-on: ubuntu-18.04
@@ -34,12 +51,13 @@ jobs:
       - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_x86_64
         working-directory: build
         timeout-minutes: 120
-  build_macos:
-    name: Build momo for macOS 10.15
-    runs-on: macos-latest
+  build_ubuntu-18_04_armv8:
+    name: Build momo for build_ubuntu-18.04_armv8
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: make macos
+      - run: .github/workflows/script/disk_cleanup.sh
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8
         working-directory: build
         timeout-minutes: 120
   build_ubuntu-16_04_armv7_ros:

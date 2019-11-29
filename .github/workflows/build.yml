@@ -1,5 +1,9 @@
 name: build-workflow
-on: push
+
+on:
+  push:
+    paths-ignore:
+    - 'doc/**'
 
 jobs:
   build_raspbian-buster_armv6:

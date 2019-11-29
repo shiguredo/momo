@@ -158,7 +158,10 @@ void Util::parseArgs(int argc,
 #if MOMO_USE_H264
         return std::string();
 #else
-        return "このデバイスは --video-codec=H264 に対応していません。";
+        if (input == "H264") {
+          return "このデバイスは --video-codec=H264 に対応していません。";
+        }
+        return std::string();
 #endif
       },
       "");
@@ -189,6 +192,13 @@ void Util::parseArgs(int argc,
               "優先設定 (Experimental)");
   app.add_option("--port", cs.port, "ポート番号(デフォルト:8080)")
       ->check(CLI::Range(0, 65535));
+  app.add_flag("--use-sdl", cs.use_sdl, "SDLを使い映像を表示する");
+  app.add_flag("--show-me", cs.show_me, "自分のカメラも表示する");
+  app.add_option("--window-width", cs.window_width, "映像を表示するウィンドウの横幅")
+      ->check(CLI::Range(180, 16384));
+  app.add_option("--window-height", cs.window_height, "映像を表示するウィンドウの縦幅")
+      ->check(CLI::Range(180, 16384));
+  app.add_flag("--fullscreen", cs.fullscreen, "映像を表示するウィンドウをフルスクリーンにする");
   app.add_flag("--daemon", is_daemon, "デーモン化する");
   app.add_flag("--version", version, "バージョン情報の表示");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
@@ -245,6 +255,14 @@ void Util::parseArgs(int argc,
       ->add_option("--audio-bitrate", cs.audio_bitrate,
                    "オーディオのビットレート")
       ->check(CLI::Range(6, 510));
+  sora_app->add_flag("--multistream", cs.sora_multistream,
+                     "マルチストリームかどうか");
+  sora_app->add_set("--role", cs.sora_role, {"upstream", "downstream"},
+                    "ロール（デフォルトは upstream）");
+  sora_app
+      ->add_option("--spotlight", cs.sora_spotlight,
+                   "スポットライトの配信数")
+      ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
