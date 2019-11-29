@@ -72,7 +72,7 @@ Momo はオープンソースソフトウェアですが、開発については
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
     - Raspberry Pi 3 B+
-- macOS 10.14 x86_64
+- macOS 10.1 x86_64
 
 ## 使ってみる
 
