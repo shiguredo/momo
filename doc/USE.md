@@ -20,11 +20,11 @@
 
 ## WebRTC SFU Sora を使って Momo を動かしてみる
 
-時雨堂が開発、販売している商用の WebRTC SFU Sora を利用します。
+時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
-この機能を利用する場合は事前に Sora のライセンスを購入する必要がありますので、ご注意ください。
+[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を購入せずに無料で試すことが可能です。
 
-[USE_SORA.md](USE_SORA.md) をお読みください。
+Sora Labo での使い方も書いてありますので、まずは [USE_SORA.md](USE_SORA.md) をお読みください。
 
 ## ROS ノードとして Momo を使ってみる
 
