@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.11.0
+
 - [ADD] Raspberry Pi 4 での動作を確認
     - @voluntas @Hexa
 - [UPDATE] libwebrtc M79 コミットポジションを 3 にする
@@ -36,6 +38,8 @@
 - [ADD] SDL 利用時に映像を表示するウインドウをフルスクリーンにする `--fullscreen` を追加する
     - f を押すと全画面、もう一度 f を押すと戻る
     - @tnoho
+- [ADD] sora 利用時に `--role upstream` または `--role downstream` を指定できるようにする
+    - @melpon
 - [CHANGE] ayame の `accept` 時に返却される `isExistUser` フラグによって offer を送るかどうかを決めるよう変更する
     - @kdxu
 - [FIX] C++14 にする
