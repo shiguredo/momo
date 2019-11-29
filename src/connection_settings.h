@@ -40,6 +40,8 @@ struct ConnectionSettings {
   std::string sora_channel_id;
   bool sora_auto_connect = false;
   nlohmann::json sora_metadata;
+  // upstream or downstream
+  std::string sora_role = "upstream";
   bool sora_multistream = false;
   int sora_spotlight = -1;
 

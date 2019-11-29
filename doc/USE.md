@@ -43,7 +43,7 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 19.08.0
+WebRTC Native Client Momo version 19.11.0 USE_MMAL_ENCODER=0
 ```
 
 ### ヘルプ
@@ -57,6 +57,9 @@ Options:
   -h,--help                   Print this help message and exit
   --no-video                  ビデオを表示しない
   --no-audio                  オーディオを出さない
+  --force-i420                強制的にI420にする（対応デバイスのみ）
+  --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う（対応デバイスのみ）
+  --video-device TEXT         デバイス番号、またはデバイス名。省略時はデフォルト（デバイス番号が0）のビデオデバイスを自動検出
   --resolution TEXT:{4K,FHD,HD,QVGA,VGA}
                               解像度
   --framerate INT:INT in [1 - 60]
@@ -66,10 +69,22 @@ Options:
                               優先設定 (Experimental)
   --port INT:INT in [0 - 65535]
                               ポート番号(デフォルト:8080)
+  --use-sdl                   SDLを使い映像を表示する
+  --show-me                   自分のカメラも表示する
+  --window-width INT:INT in [180 - 16384]
+                              映像を表示するウィンドウの横幅
+  --window-height INT:INT in [180 - 16384]
+                              映像を表示するウィンドウの縦幅
+  --fullscreen                映像を表示するウィンドウをフルスクリーンにする
   --daemon                    デーモン化する
   --version                   バージョン情報の表示
   --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
                               ログレベル
+  --disable-echo-cancellation エコーキャンセルを無効
+  --disable-auto-gain-control オートゲインコントロール無効
+  --disable-noise-suppression ノイズサプレッション無効
+  --disable-highpass-filter   ハイパスフィルター無効
+  --disable-typing-detection  タイピングディテクション無効
 
 Subcommands:
   test                        開発向け
@@ -93,7 +108,7 @@ Options:
 ### ayame モードヘルプ
 
 
- ```
+```
 $ ./momo ayame --help
 WebRTC Signaling Server Ayame
 Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID
@@ -130,6 +145,11 @@ Options:
                               ビデオのビットレート
   --audio-bitrate INT:INT in [6 - 510]
                               オーディオのビットレート
+  --multistream               マルチストリームかどうか
+  --role TEXT:{downstream,upstream}
+                              ロール（デフォルトは upstream）
+  --spotlight INT:INT in [1 - 10]
+                              スポットライトの配信数
   --metadata TEXT:JSON Value  メタデータ
 ```
 
