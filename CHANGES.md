@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] libwebrtc M79 コミットポジションを 5 にする
+    - libwebrtc のハッシュは b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b
+    - @voluntas
+
 ## 19.11.0
 
 - [ADD] Raspberry Pi 4 での動作を確認
