@@ -60,7 +60,7 @@ struct ConnectionSettings {
 
   int getWidth() {
     if (resolution == "QVGA") {
-      return 480;
+      return 320;
     } else if (resolution == "HD") {
       return 1280;
     } else if (resolution == "FHD") {
@@ -73,7 +73,7 @@ struct ConnectionSettings {
 
   int getHeight() {
     if (resolution == "QVGA") {
-      return 320;
+      return 240;
     } else if (resolution == "HD") {
       return 720;
     } else if (resolution == "FHD") {
