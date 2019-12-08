@@ -16,6 +16,10 @@
     - @voluntas
 - [FIX] QVGA の指定を 320x240 にする
     - @melpon @Bugfire
+- [FIX] ayame モードで再接続時に segmentation fault が起こる場合があるのを修正する
+   - ただし、互いに接続を確立するまでping-pongを送らない/ping timeoutで再接続するまで数秒かかることがある」ので、再接続によって受信側が数秒待つ必要が出てくる可能性がある
+   - 上記の問題はこの修正では未解決
+   - @kdxu
 
 ## 19.11.0
 
