@@ -7,109 +7,91 @@ LABEL jp.shiguredo.momo=$PACKAGE_NAME
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
-COPY script/docker.sh /root/
+# パッケージのインストール
+
+COPY script/apt_install_arm.sh /root/
+RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
+  /root/apt_install_arm.sh
 
 # RootFS の構築
 
+COPY script/init_rootfs_arm64.sh /root/
 COPY patch/arm64.conf /root/
-
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && noninteractive_tzdata \
-    && init_rootfs_arm64 /root/rootfs /root/arm64.conf \
-  "
+  /root/init_rootfs_arm64.sh /root/rootfs /root/arm64.conf
 
 # 構築した RootFS を Jetson Nano のファイルで上書きする
 
 COPY jetson.sh /root/
 RUN /root/jetson.sh
 
-# WebRTC の準備
+# WebRTC の取得
 
-COPY patch/4k.patch /root/
+ARG WEBRTC_BUILD_VERSION
 
-ARG WEBRTC_VERSION
-ARG WEBRTC_COMMIT
+COPY script/get_webrtc.sh /root/
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8 /root
 
-RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt --mount=type=cache,id=$PACKAGE_NAME,target=/root/webrtc-cache \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && prepare_webrtc_arm /root/webrtc-cache $WEBRTC_COMMIT /root/webrtc \
-    && cd /root/webrtc/src \
-    && patch -p2 < /root/4k.patch \
-  "
+# コンパイラの取得
 
-# WebRTC のビルド
-
-ENV PATH /root/webrtc/depot_tools:$PATH
-
-RUN \
-  set -ex \
-  && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm64" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false rtc_build_json=true use_rtti=true is_desktop_linux=false' \
-  && ninja -C /root/webrtc-build/$PACKAGE_NAME
+COPY script/get_llvm.sh /root/
+RUN /root/get_llvm.sh /root/webrtc /root
 
 # Boost のビルド
 
 ARG BOOST_VERSION
 
+COPY script/setup_boost.sh /root/
 RUN \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && setup_boost $BOOST_VERSION /root/boost-source \
-    && cd /root/boost-source/source \
-    && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
-    && ./b2 \
-      cxxflags=' \
-        -D_LIBCPP_ABI_UNSTABLE \
-        -nostdinc++ \
-        -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
-        --target=aarch64-linux-gnu \
-        --sysroot=/root/rootfs \
-        -I/root/rootfs/usr/include/aarch64-linux-gnu \
-      ' \
-      linkflags=' \
-        -L/root/rootfs/usr/lib/aarch64-linux-gnu \
-        -B/root/rootfs/usr/lib/aarch64-linux-gnu \
-      ' \
-      toolset=clang \
-      visibility=global \
-      target-os=linux \
-      architecture=arm \
-      address-model=64 \
-      link=static \
-      variant=release \
-      install \
-      -j`nproc` \
-      --ignore-site-config \
-      --prefix=/root/boost-$BOOST_VERSION \
-      --with-filesystem \
-  "
+  set -ex \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && cd /root/boost-source/source \
+  && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
+  && ./b2 \
+    cxxflags=' \
+      -D_LIBCPP_ABI_UNSTABLE \
+      -nostdinc++ \
+      -isystem/root/llvm/libcxx/include \
+      --target=aarch64-linux-gnu \
+      --sysroot=/root/rootfs \
+      -I/root/rootfs/usr/include/aarch64-linux-gnu \
+    ' \
+    linkflags=' \
+      -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+      -B/root/rootfs/usr/lib/aarch64-linux-gnu \
+    ' \
+    toolset=clang \
+    visibility=global \
+    target-os=linux \
+    architecture=arm \
+    address-model=64 \
+    link=static \
+    variant=release \
+    install \
+    -j`nproc` \
+    --ignore-site-config \
+    --prefix=/root/boost \
+    --with-filesystem
 
 
 # SDL2 のビルド
 
 ARG SDL2_VERSION
 
+COPY script/setup_sdl2.sh /root/
 RUN \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && setup_sdl2 $SDL2_VERSION /root/sdl2-source \
-    && cd /root/sdl2-source/source/build \
-    && CC='/root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang --target=aarch64-linux-gnu --sysroot=/root/rootfs' \
-        CFLAGS=' \
-          -I/root/rootfs/usr/include/aarch64-linux-gnu \
-        ' \
-        LDFLAGS=' \
-          -L/root/rootfs/usr/lib/aarch64-linux-gnu \
-          -B/root/rootfs/usr/lib/aarch64-linux-gnu \
-        ' \
-        ../configure --disable-shared --prefix=/root/sdl2-$SDL2_VERSION --host=aarch64-linux-gnu --with-sysroot=/root/rootfs --disable-pulseaudio --disable-esd --disable-video-wayland \
-    && make \
-    && make install \
-  "
+  set -ex \
+  && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
+  && mkdir -p /root/sdl2-source/build \
+  && cd /root/sdl2-source/build \
+  && CC='/root/llvm/clang/bin/clang --target=aarch64-linux-gnu --sysroot=/root/rootfs' \
+      CFLAGS=' \
+        -I/root/rootfs/usr/include/aarch64-linux-gnu \
+      ' \
+      LDFLAGS=' \
+        -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+        -B/root/rootfs/usr/lib/aarch64-linux-gnu \
+      ' \
+      ../source/configure --disable-shared --prefix=/root/sdl2 --host=aarch64-linux-gnu --with-sysroot=/root/rootfs --disable-pulseaudio --disable-esd --disable-video-wayland \
+  && make \
+  && make install

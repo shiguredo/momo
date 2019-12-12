@@ -121,8 +121,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   USE_JETSON_ENCODER ?= 1
   USE_H264 ?= 1
   USE_SDL2 ?= 1
-  SDL2_ROOT ?= /root/sdl2-$(SDL2_VERSION)
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  SDL2_ROOT ?= /root/sdl2
+  BOOST_ROOT ?= /root/boost
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
   SYSROOT ?= /root/rootfs
@@ -258,8 +258,8 @@ else
 endif
 
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
-CFLAGS += -I$(WEBRTC_SRC_ROOT) -I$(WEBRTC_SRC_ROOT)/third_party/libyuv/include -I$(WEBRTC_SRC_ROOT)/third_party/abseil-cpp
-LDFLAGS += -L$(BUILD_ROOT) -lpthread
+CFLAGS += -I/root/webrtc/include -I/root/webrtc/include/third_party/libyuv/include -I/root/webrtc/include/third_party/abseil-cpp
+LDFLAGS += -L/root/webrtc/lib -lpthread
 ifdef MOMO_VERSION
   CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
@@ -282,9 +282,9 @@ ifeq ($(TARGET_OS),linux)
   CFLAGS += -fpic
   LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt
 
-  CC = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang
-  CXX = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang++
-  AR = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/llvm-ar
+  CC = /root/llvm/clang/bin/clang
+  CXX = /root/llvm/clang/bin/clang++
+  AR = /root/llvm/clang/bin/llvm-ar
 
   ifeq ($(TARGET_ARCH),arm)
     ifeq ($(TARGET_ARCH_ARM),armv8)
@@ -455,7 +455,7 @@ ifeq ($(USE_ROS),1)
   # USE_ROS=1 の場合は libstdc++ を使う（追加オプション無し）
 else
   # USE_ROS=0 の場合は libc++ を使う
-  CFLAGS += -nostdinc++ -isystem$(WEBRTC_SRC_ROOT)/buildtools/third_party/libc++/trunk/include
+  CFLAGS += -nostdinc++ -isystem/root/llvm/libcxx/include
 endif
 
 ifeq ($(USE_SDL2),1)
@@ -499,8 +499,8 @@ OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(
 CFLAGS += -I$(BOOST_ROOT)/include
 LDFLAGS += -L$(BOOST_ROOT)/lib -lboost_filesystem
 # Boost.Beast で BoringSSL を使うので、そのあたりも追加する
-CFLAGS += -I$(WEBRTC_SRC_ROOT)/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
+CFLAGS += -I/root/webrtc/include/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
+#LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
 
 # JSON
 CFLAGS += -Ilibs/json-$(JSON_VERSION)/include
@@ -546,9 +546,9 @@ $(BUILD_ROOT):
 # WEBRTC_LIB_ROOT が定義されている時だけルールを定義する
 ifdef WEBRTC_LIB_ROOT
 
-$(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
-	@mkdir -p `dirname $@`
-	$(AR) -rcT $@ $^
+#$(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
+#	@mkdir -p `dirname $@`
+#	$(AR) -rcT $@ $^
 
 endif
 
@@ -573,13 +573,13 @@ $(BUILD_ROOT)/src/%.o: src/%.mm | $(BUILD_ROOT)
 	@mkdir -p `dirname $@`
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(BUILD_ROOT)/momo: $(BUILD_ROOT)/libwebrtc.a $(OBJECTS) | $(BUILD_ROOT)
+$(BUILD_ROOT)/momo: $(OBJECTS) | $(BUILD_ROOT)
 	$(CXX) -o $(BUILD_ROOT)/momo $(OBJECTS) $(LDFLAGS)
 
 .PHONY: momo
 momo:
 	# 依存ライブラリのビルドと取得
-	cd $(WEBRTC_LIB_ROOT) && ninja
+	#cd $(WEBRTC_LIB_ROOT) && ninja
 	if [ ! -e libs/json-$(JSON_VERSION)/include ]; then git clone --branch v$(JSON_VERSION) --depth 1 https://github.com/nlohmann/json.git libs/json-$(JSON_VERSION); fi
 	if [ ! -e libs/CLI11-$(CLI11_VERSION)/include ]; then git clone --branch v$(CLI11_VERSION) --depth 1 https://github.com/CLIUtils/CLI11.git libs/CLI11-$(CLI11_VERSION); fi
 
