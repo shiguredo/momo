@@ -503,10 +503,10 @@ CFLAGS += -I/root/webrtc/include/third_party/boringssl/src/include -DOPENSSL_IS_
 #LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
 
 # JSON
-CFLAGS += -Ilibs/json-$(JSON_VERSION)/include
+CFLAGS += -I/root/json/include
 
 # CLI11
-CFLAGS += -Ilibs/CLI11-$(CLI11_VERSION)/include
+CFLAGS += -I/root/CLI11/include
 
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)
@@ -578,11 +578,6 @@ $(BUILD_ROOT)/momo: $(OBJECTS) | $(BUILD_ROOT)
 
 .PHONY: momo
 momo:
-	# 依存ライブラリのビルドと取得
-	#cd $(WEBRTC_LIB_ROOT) && ninja
-	if [ ! -e libs/json-$(JSON_VERSION)/include ]; then git clone --branch v$(JSON_VERSION) --depth 1 https://github.com/nlohmann/json.git libs/json-$(JSON_VERSION); fi
-	if [ ! -e libs/CLI11-$(CLI11_VERSION)/include ]; then git clone --branch v$(CLI11_VERSION) --depth 1 https://github.com/CLIUtils/CLI11.git libs/CLI11-$(CLI11_VERSION); fi
-
 	# momo 本体のビルド
 	$(MAKE) $(BUILD_ROOT)/momo
 

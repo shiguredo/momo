@@ -91,7 +91,16 @@ $(1).prepare:
 	cp -r ../patch $(1)/patch
 	cp -r ../script $(1)/script
 
-	DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_BUILD_VERSION) $(DOCKER_BUILD_FLAGS) --build-arg WEBRTC_BUILD_VERSION=$$(WEBRTC_BUILD_VERSION) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg SDL2_VERSION=$$(SDL2_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
+	DOCKER_BUILDKIT=1 docker build \
+		-t momo/$(1):m$$(WEBRTC_BUILD_VERSION) \
+		$(DOCKER_BUILD_FLAGS) \
+		--build-arg WEBRTC_BUILD_VERSION=$$(WEBRTC_BUILD_VERSION) \
+		--build-arg BOOST_VERSION=$$(BOOST_VERSION) \
+		--build-arg SDL2_VERSION=$$(SDL2_VERSION) \
+		--build-arg JSON_VERSION=$$(JSON_VERSION) \
+		--build-arg CLI11_VERSION=$$(CLI11_VERSION) \
+		--build-arg PACKAGE_NAME=$(1) \
+		$(1)
 
 	rm -r $(1)/patch
 	rm -r $(1)/script

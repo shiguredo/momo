@@ -95,3 +95,13 @@ RUN \
       ../source/configure --disable-shared --prefix=/root/sdl2 --host=aarch64-linux-gnu --with-sysroot=/root/rootfs --disable-pulseaudio --disable-esd --disable-video-wayland \
   && make \
   && make install
+
+# nlohmann/json の取得
+
+ARG JSON_VERSION
+RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git /root/json
+
+# CLI11 の取得
+
+ARG CLI11_VERSION
+RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
