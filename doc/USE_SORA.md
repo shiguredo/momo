@@ -6,10 +6,11 @@
 
 GitHub アカウントを用意して https://sora-labo.shiguredo.jp/ にサインアップしてください。
 
---metadata を利用し取得したシグナリングキーを signaling_key を指定することで簡単に利用できます。
+- チャネル ID に `GitHubUsername@好きな文字列` を指定してください
+- --metadata を利用し取得したシグナリングキーを signaling_key を指定することで簡単に利用できます
 
 ```shell
-$ ./momo --no-audio --port 0 sora --auto --video-codec VP8 --video-bitrate 500 wss://sora-labo.shiguredo.jp/signaling sora-labo-open-momo --metadata '{"signaling_key": "ここにシグナリングキーを指定して下さい"}'
+$ ./momo --no-audio --port 0 sora --auto --video-codec VP8 --video-bitrate 500 wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo-open-momo --metadata '{"signaling_key": "ここにシグナリングキーを指定して下さい"}'
 ```
 
 ### マルチストリームで使ってみる
@@ -21,5 +22,5 @@ $ ./momo --no-audio --port 0 sora --auto --video-codec VP8 --video-bitrate 500 w
 - Raspbian
 
 ```
-./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me sora --auto --video-codec VP8 --video-bitrate 1000 wss://sora-labo.shiguredo.jp/signaling momo-sdl-sora --multistream --role upstream --metadata '{"signaling_key": "ここにシグナリングキーを指定して下さい"}'
+./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me sora --auto --video-codec VP8 --video-bitrate 1000 wss://sora-labo.shiguredo.jp/signaling shiguredo@momo-sdl-sora --multistream --role upstream --metadata '{"signaling_key": "ここにシグナリングキーを指定して下さい"}'
 ```
