@@ -10,6 +10,8 @@ dpkg-reconfigure -f noninteractive tzdata
 
 apt-get -y install \
   binutils-aarch64-linux-gnu \
+  binutils-arm-linux-gnueabi \
+  binutils-arm-linux-gnueabihf \
   build-essential \
   curl \
   git \

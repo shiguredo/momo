@@ -38,9 +38,18 @@ include VERSION
 #
 # BOOST_ROOT: Boost のインストール先ディレクトリ
 #
-# WEBRTC_SRC_ROOT: WebRTC のソースディレクトリ
+# JSON_ROOT: nlohmann/json のインストール先ディレクトリ
+#
+# CLI11_ROOT: CLI11 のインストール先ディレクトリ
+#
+# WEBRTC_INCLUDE_DIR: WebRTC のインクルードディレクトリ
 #
 # WEBRTC_LIB_ROOT: WebRTC のビルドディレクトリ
+#
+# USE_LIBCXX: libstdc++ の代わりに libc++ を使うかどうか
+#   有効な値は 0, 1
+#
+# LIBCXX_INCLUDE_DIR: libc++ を使う場合の libc++ のインクルードディレクトリ
 #
 # SYSROOT: TARGET_ARCH が arm の場合のクロスビルド用の RootFS ディレクトリ
 #
@@ -65,9 +74,13 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
   USE_SDL2 ?= 1
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv6
+  BOOST_ROOT ?= /root/boost
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 1
+  LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   TARGET_OS ?= linux
@@ -79,9 +92,13 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
   USE_SDL2 ?= 1
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/raspbian-buster_armv7
+  BOOST_ROOT ?= /root/boost
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 1
+  LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   TARGET_OS ?= linux
@@ -94,6 +111,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   USE_H264 ?= 1
   USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
   SYSROOT ?= /root/rootfs
@@ -108,6 +127,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   USE_H264 ?= 0
   USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8
   SYSROOT ?= /root/rootfs
@@ -123,8 +144,12 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   USE_SDL2 ?= 1
   SDL2_ROOT ?= /root/sdl2
   BOOST_ROOT ?= /root/boost
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_armv8_jetson_nano
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 1
+  LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   TARGET_OS ?= linux
@@ -136,6 +161,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   USE_H264 ?= 0
   USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
@@ -148,6 +175,8 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   USE_H264 ?= 0
   USE_SDL2 ?= 1
   BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  JSON_ROOT ?= /root/json
+  CLI11_ROOT ?= /root/CLI11
   WEBRTC_SRC_ROOT ?= /root/webrtc/src
   WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
 else ifeq ($(PACKAGE_NAME),macos)
@@ -158,16 +187,18 @@ else ifeq ($(PACKAGE_NAME),macos)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
   USE_SDL2 ?= 1
-  SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2-$(SDL2_VERSION)
-  BOOST_ROOT ?= $(CURDIR)/build/macos/boost-$(BOOST_VERSION)
-  # CURDIR を付けると、ar に渡す時に引数が長すぎるって怒られたので、
-  # 相対パスで指定する。
-  WEBRTC_SRC_ROOT ?= build/macos/webrtc/src
-  WEBRTC_LIB_ROOT ?= build/macos/webrtc-build/macos
+  SDL2_ROOT ?= $(CURDIR)/build/macos/sdl2
+  BOOST_ROOT ?= $(CURDIR)/build/macos/boost
+  JSON_ROOT ?= $(CURDIR)/build/macos/json
+  CLI11_ROOT ?= $(CURDIR)/build/macos/CLI11
+  WEBRTC_INCLUDE_DIR ?= $(CURDIR)/build/macos/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= $(CURDIR)/build/macos/webrtc/lib
+  USE_LIBCXX ?= 1
+  LIBCXX_INCLUDE_DIR ?= $(CURDIR)/build/macos/llvm/libcxx/include
 
   # depot_tools へのパスを通しておく
   # (Docker から実行するタイプのビルドでは事前に通してあるが、こっちは通してない可能性があるので)
-  export PATH := $(CURDIR)/build/macos/webrtc/depot_tools:$(PATH)
+  # export PATH := $(CURDIR)/build/macos/webrtc/depot_tools:$(PATH)
 else
   # 各変数がちゃんと設定されているか確認する
 
@@ -225,14 +256,26 @@ else
     HAS_ERROR = 1
   endif
 
-  ifndef WEBRTC_SRC_ROOT
-    $(info - WEBRTC_SRC_ROOT が指定されていません)
+  ifndef WEBRTC_INCLUDE_DIR
+    $(info - WEBRTC_INCLUDE_DIR が指定されていません)
     HAS_ERROR = 1
   endif
 
-  ifndef WEBRTC_LIB_ROOT
-    $(info - WEBRTC_LIB_ROOT が指定されていません)
+  ifndef WEBRTC_LIBRARY_DIR
+    $(info - WEBRTC_LIBRARY_DIR が指定されていません)
     HAS_ERROR = 1
+  endif
+
+  ifndef USE_LIBCXX
+    $(info - USE_LIBCXX が指定されていません)
+    HAS_ERROR = 1
+  endif
+
+  ifeq ($(USE_LIBCXX),1)
+    ifndef LIBCXX_INCLUDE_DIR
+      $(info - LIBCXX_INCLUDE_DIR が指定されていません)
+      HAS_ERROR = 1
+    endif
   endif
 
   ifeq ($(TARGET_ARCH),arm)
@@ -258,8 +301,8 @@ else
 endif
 
 CFLAGS += -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
-CFLAGS += -I/root/webrtc/include -I/root/webrtc/include/third_party/libyuv/include -I/root/webrtc/include/third_party/abseil-cpp
-LDFLAGS += -L/root/webrtc/lib -lpthread
+CFLAGS += -I$(WEBRTC_INCLUDE_DIR) -I$(WEBRTC_INCLUDE_DIR)/third_party/libyuv/include -I$(WEBRTC_INCLUDE_DIR)/third_party/abseil-cpp
+LDFLAGS += -L$(WEBRTC_LIBRARY_DIR) -lpthread
 ifdef MOMO_VERSION
   CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
@@ -405,8 +448,8 @@ ifeq ($(TARGET_OS),linux)
 endif
 
 ifeq ($(TARGET_OS),macos)
-  CC = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang
-  CXX = $(WEBRTC_SRC_ROOT)/third_party/llvm-build/Release+Asserts/bin/clang++
+  CC = $(CURDIR)/build/macos/llvm/clang/bin/clang
+  CXX = $(CURDIR)/build/macos/llvm/clang/bin/clang++
   # brew でインストールした ar コマンドを使うとエラーになるので、明示的にフルパスを指定する
   AR = /usr/bin/ar
 
@@ -415,7 +458,7 @@ ifeq ($(TARGET_OS),macos)
   CXX += --sysroot=$(SDK_PATH)
 
   CFLAGS += -DWEBRTC_POSIX -DWEBRTC_MAC
-  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_SRC_ROOT)/sdk/objc -I$(WEBRTC_SRC_ROOT)/sdk/objc/base
+  CFLAGS += -fconstant-string-class=NSConstantString -I$(WEBRTC_INCLUDE_DIR)/sdk/objc -I$(WEBRTC_INCLUDE_DIR)/sdk/objc/base
   CFLAGS += -fvisibility=hidden
   LDFLAGS += \
     -ObjC \
@@ -451,11 +494,9 @@ else
   endif
 endif
 
-ifeq ($(USE_ROS),1)
-  # USE_ROS=1 の場合は libstdc++ を使う（追加オプション無し）
-else
-  # USE_ROS=0 の場合は libc++ を使う
-  CFLAGS += -nostdinc++ -isystem/root/llvm/libcxx/include
+ifeq ($(USE_LIBCXX),1)
+  # libc++ を使う
+  CFLAGS += -nostdinc++ -isystem$(LIBCXX_INCLUDE_DIR)
 endif
 
 ifeq ($(USE_SDL2),1)
@@ -499,14 +540,13 @@ OBJECTS = $(addprefix $(BUILD_ROOT)/,$(patsubst %.mm,%.o,$(patsubst %.cpp,%.o,$(
 CFLAGS += -I$(BOOST_ROOT)/include
 LDFLAGS += -L$(BOOST_ROOT)/lib -lboost_filesystem
 # Boost.Beast で BoringSSL を使うので、そのあたりも追加する
-CFLAGS += -I/root/webrtc/include/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
-#LDFLAGS += -L$(WEBRTC_LIB_ROOT)/obj/third_party/boringssl -lboringssl
+CFLAGS += -I$(WEBRTC_INCLUDE_DIR)/third_party/boringssl/src/include -DOPENSSL_IS_BORINGSSL
 
 # JSON
-CFLAGS += -I/root/json/include
+CFLAGS += -I$(JSON_ROOT)/include
 
 # CLI11
-CFLAGS += -I/root/CLI11/include
+CFLAGS += -I$(CLI11_ROOT)/include
 
 # パッケージ用のフラグ
 ifeq ($(BUILD_MODE),package)
@@ -541,16 +581,6 @@ help:
 $(BUILD_ROOT):
 	# ビルド用ディレクトリを作っておく
 	mkdir -p $(BUILD_ROOT)
-
-# WEBRTC_LIB_ROOT が空の時に find するとエラーになるので、
-# WEBRTC_LIB_ROOT が定義されている時だけルールを定義する
-ifdef WEBRTC_LIB_ROOT
-
-#$(BUILD_ROOT)/libwebrtc.a: $(shell find $(WEBRTC_LIB_ROOT)/obj -name '*.o') | $(BUILD_ROOT)
-#	@mkdir -p `dirname $@`
-#	$(AR) -rcT $@ $^
-
-endif
 
 # Jetson Nano を利用する場合の追加ソースのコンパイル
 ifeq ($(USE_JETSON_ENCODER),1)
