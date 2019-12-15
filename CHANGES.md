@@ -26,7 +26,7 @@
 - [FIX] OpenH264 を明示的にビルドしないようにする
     - @melpon
 
-## 19.11.0
+## 19.11.1
 
 - [ADD] Raspberry Pi 4 での動作を確認
     - @voluntas @Hexa
