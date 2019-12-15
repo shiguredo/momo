@@ -311,6 +311,13 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   if (ec == boost::asio::error::operation_aborted)
     return;
 
+  // EOF(WebSocket の Close Frame) の場合すぐにWebSocket の再接続を行う
+  if (ec == boost::asio::error::eof) {
+    retry_count_ = 0;
+    reconnectAfter();
+    return;
+  }
+
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Read");
 
