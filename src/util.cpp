@@ -257,8 +257,10 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(6, 510));
   sora_app->add_flag("--multistream", cs.sora_multistream,
                      "マルチストリームかどうか");
-  sora_app->add_set("--role", cs.sora_role, {"upstream", "downstream"},
-                    "ロール（デフォルトは upstream）");
+  sora_app->add_set(
+      "--role", cs.sora_role,
+      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
+      "ロール（デフォルトは upstream）");
   sora_app
       ->add_option("--spotlight", cs.sora_spotlight,
                    "スポットライトの配信数")
