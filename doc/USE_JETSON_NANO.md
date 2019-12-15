@@ -2,9 +2,14 @@
 
 ## Jetson Nano を購入する
 
-**スイッチサイエンスからの購入をおすすめします**
-
-[Jetson Nano 開発者キット \- スイッチサイエンス](https://www.switch-science.com/catalog/5433/)
+- [Jetson Nano 開発者キット \- スイッチサイエンス](https://www.switch-science.com/catalog/5433/)
+    - 単体はこちらがおすすめ
+- [NVIDIA NV\-JT\-N001\-CSK32 NVIDIA Jetson Nanoコンプリートスターターキット\(32GB\)](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-5FXJ)
+    - 全部入はこちらがおすすめ
+- [【OLIOSPECオリジナル】NVIDIA Jetson Nano Developer kit用ケース\(長尾製作所製\) \| すべての商品 \| OLIOSPEC](https://www.oliospec.com/shopdetail/000000008491/)
+    - ケースはこちらがおすすめ
+- [Noctua NF-A4x10 5V PWMサイレントファン40 mmプレミアムブラウン/ベージュ](https://amazon.co.jp/dp/B07DXS86G7)
+    - ファンはこちらがおすすめ
 
 ## 4K@30 出るカメラの購入する
 
