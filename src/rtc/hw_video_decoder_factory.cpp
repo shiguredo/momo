@@ -24,6 +24,8 @@
 #include "hwenc_jetson/jetson_video_decoder.h"
 #endif
 
+#include "h264_format.h"
+
 namespace {
 
 bool IsFormatSupported(
@@ -47,8 +49,20 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
   formats.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     formats.push_back(format);
-  for (const webrtc::SdpVideoFormat& h264_format : webrtc::SupportedH264Codecs())
+
+  std::vector<webrtc::SdpVideoFormat> h264_codecs = {
+      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
+                       "1"),
+      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
+                       "0"),
+      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
+                       webrtc::H264::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
+                       webrtc::H264::kLevel3_1, "0")};
+
+  for (const webrtc::SdpVideoFormat& h264_format : h264_codecs)
     formats.push_back(h264_format);
+
   return formats;
 }
 

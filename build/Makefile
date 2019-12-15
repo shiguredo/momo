@@ -113,22 +113,23 @@ macos: macos.prepare
 
 .PHONY: macos.package
 macos.package: macos.prepare
+	$(eval MACOS_VERSION := $(shell sw_vers -productVersion | cut -d '.' -f-2))
 	# momo を package モードでビルドし直す
 	rm -f ../_build/macos/momo && make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos BUILD_MODE=package momo
 
 	# パッケージのバイナリを作る
-	rm -rf package/momo-$(MOMO_VERSION)_macos
-	rm -f package/momo-$(MOMO_VERSION)_macos.tar.gz
-	mkdir -p package/momo-$(MOMO_VERSION)_macos
-	cp    ../_build/macos/momo package/momo-$(MOMO_VERSION)_macos/
-	cp    ../LICENSE           package/momo-$(MOMO_VERSION)_macos/
-	cp    ../NOTICE            package/momo-$(MOMO_VERSION)_macos/
-	cp -r ../html              package/momo-$(MOMO_VERSION)_macos/html
-	cd package && tar czf momo-$(MOMO_VERSION)_macos.tar.gz momo-$(MOMO_VERSION)_macos
+	rm -rf package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)
+	rm -f package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION).tar.gz
+	mkdir -p package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)
+	cp    ../_build/macos/momo package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)/
+	cp    ../LICENSE           package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)/
+	cp    ../NOTICE            package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)/
+	cp -r ../html              package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)/html
+	cd package && tar czf momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION).tar.gz momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)
 
-	rm -rf package/momo-$(MOMO_VERSION)_macos
+	rm -rf package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION)
 	@echo ""
-	@echo "パッケージが package/momo-$(MOMO_VERSION)_macos.tar.gz に生成されました。"
+	@echo "パッケージが package/momo-$(MOMO_VERSION)_macos-$(MACOS_VERSION).tar.gz に生成されました。"
 
 .PHONY: macos.prepare
 macos.prepare:

@@ -1,8 +1,8 @@
 #include "ayame_websocket_client.h"
 
 #include <boost/beast/websocket/stream.hpp>
-
 #include <nlohmann/json.hpp>
+
 #include "url_parts.h"
 #include "util.h"
 
@@ -355,6 +355,10 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     candidate = ice["candidate"];
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
+    if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
+                          kIceConnectionConnected) {
+      return;
+    }
     watchdog_.reset();
     doSendPong();
   }

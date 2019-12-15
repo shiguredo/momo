@@ -9,9 +9,24 @@
 - FIX
     - バグ修正
 
-## develop
+## 19.12.0
 
-## 19.11.0
+- [UPDATE] libwebrtc M79 コミットポジションを 5 にする
+    - libwebrtc のハッシュは b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b
+    - @voluntas
+- [UPDATE] json を 3.7.3 に上げる
+- [ADD] sora モード利用時の --role に sendrecv | sendonly | recvonly を指定できるようにする
+    - @melpon
+- [FIX] QVGA の指定を 320x240 にする
+    - @melpon @Bugfire
+- [FIX] ayame モードで再接続時に segmentation fault が起こる場合があるのを修正する
+   - ただし、互いに接続を確立するまでping-pongを送らない/ping timeoutで再接続するまで数秒かかることがある」ので、再接続によって受信側が数秒待つ必要が出てくる可能性がある
+   - 上記の問題はこの修正では未解決
+   - @kdxu
+- [FIX] OpenH264 を明示的にビルドしないようにする
+    - @melpon
+
+## 19.11.1
 
 - [ADD] Raspberry Pi 4 での動作を確認
     - @voluntas @Hexa

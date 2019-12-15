@@ -45,7 +45,7 @@ ENV PATH /root/webrtc/depot_tools:$PATH
 RUN \
   set -ex \
   && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=true rtc_include_tests=false use_rtti=true is_component_build=false is_desktop_linux=false use_custom_libcxx=false use_custom_libcxx_for_host=false dcheck_always_on=false' \
+  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" target_cpu="arm" is_debug=false target_sysroot="/root/rootfs" rtc_use_h264=false rtc_include_tests=false use_rtti=true is_component_build=false is_desktop_linux=false use_custom_libcxx=false use_custom_libcxx_for_host=false dcheck_always_on=false' \
   && ninja -C /root/webrtc-build/$PACKAGE_NAME
 
 # Boost のビルド
