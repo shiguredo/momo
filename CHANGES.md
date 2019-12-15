@@ -9,7 +9,7 @@
 - FIX
     - バグ修正
 
-## develop
+## 19.12.0
 
 - [UPDATE] libwebrtc M79 コミットポジションを 5 にする
     - libwebrtc のハッシュは b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b
