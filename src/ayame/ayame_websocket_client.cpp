@@ -363,10 +363,6 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     candidate = ice["candidate"];
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
-    if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
-                          kIceConnectionConnected) {
-      return;
-    }
     watchdog_.reset();
     doSendPong();
   }
