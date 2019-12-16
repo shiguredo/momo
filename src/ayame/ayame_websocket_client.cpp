@@ -314,7 +314,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     return;
 
   // WebSocket の Close Frame の場合すぐにWebSocket の再接続を行う
-  if (ec == boost::beast::websocket::error::closed){
+  if (ec == boost::beast::websocket::error::closed) {
     close();
     return;
   }
