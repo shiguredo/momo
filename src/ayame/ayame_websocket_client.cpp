@@ -298,6 +298,8 @@ void AyameWebsocketClient::close() {
 void AyameWebsocketClient::onClose(boost::system::error_code ec) {
   if (ec)
     return MOMO_BOOST_ERROR(ec, "close");
+  retry_count_ = 0;
+  reconnectAfter();
 }
 
 void AyameWebsocketClient::onRead(boost::system::error_code ec,
@@ -311,10 +313,9 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   if (ec == boost::asio::error::operation_aborted)
     return;
 
-  // EOF(WebSocket の Close Frame) の場合すぐにWebSocket の再接続を行う
-  if (ec == boost::asio::error::eof) {
-    retry_count_ = 0;
-    reconnectAfter();
+  // WebSocket の Close Frame の場合すぐにWebSocket の再接続を行う
+  if (ec == boost::beast::websocket::error::closed){
+    close();
     return;
   }
 
@@ -424,7 +425,7 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       break;
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:
-      reconnectAfter();
+      close();
       break;
     default:
       break;
