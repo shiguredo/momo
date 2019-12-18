@@ -160,11 +160,12 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
   USE_SDL2 ?= 0
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_x86_64_ros
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 0
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   TARGET_OS ?= linux
   TARGET_OS_LINUX ?= ubuntu-18.04
@@ -174,11 +175,13 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 0
   USE_SDL2 ?= 1
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-18.04_x86_64
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 1
+  LIBCXX_INCLUDE_DIR ?= $(CURDIR)/build/macos/llvm/libcxx/include
 else ifeq ($(PACKAGE_NAME),macos)
   TARGET_OS ?= macos
   TARGET_ARCH ?= x86_64
@@ -307,7 +310,12 @@ ifdef MOMO_VERSION
   CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
 endif
 
-LDFLAGS += -lwebrtc
+ifeq ($(USE_LIBCXX),1)
+  LDFLAGS += -lwebrtc
+else
+  # libc++ を使わないバージョンの libwebrtc.a を利用する
+  LDFLAGS += -lwebrtc_nolibcxx
+endif
 
 ifeq ($(USE_ROS),1)
   ifeq ($(TARGET_OS_LINUX),ubuntu-16.04)
