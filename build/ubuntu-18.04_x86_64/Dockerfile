@@ -7,72 +7,61 @@ LABEL jp.shiguredo.momo=$PACKAGE_NAME
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
-COPY script/docker.sh /root/
+# パッケージのインストール
 
-# 依存パッケージ
-
+COPY script/apt_install_x86_64.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && noninteractive_tzdata \
-    && apt_install_ubuntu_x86_64 \
-  "
+  /root/apt_install_x86_64.sh
 
-# WebRTC の準備
+# WebRTC の取得
 
-COPY patch/4k.patch /root/
+ARG WEBRTC_BUILD_VERSION
 
-ARG WEBRTC_VERSION
-ARG WEBRTC_COMMIT
+COPY script/get_webrtc.sh /root/
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_x86_64 /root
+# COPY webrtc/ /root/webrtc/
 
-RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt --mount=type=cache,id=$PACKAGE_NAME,target=/root/webrtc-cache \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && prepare_webrtc_x86_64 /root/webrtc-cache $WEBRTC_COMMIT /root/webrtc \
-    && cd /root/webrtc/src \
-    && patch -p2 < /root/4k.patch \
-  "
+# コンパイラの取得
 
-# WebRTC のビルド
-
-ENV PATH /root/webrtc/depot_tools:$PATH
-
-RUN \
-  set -ex \
-  && cd /root/webrtc/src \
-  && gn gen /root/webrtc-build/$PACKAGE_NAME --args='target_os="linux" is_debug=false rtc_include_tests=false rtc_use_h264=false is_component_build=false use_rtti=true' \
-  && ninja -C /root/webrtc-build/$PACKAGE_NAME
+COPY script/get_llvm.sh /root/
+RUN /root/get_llvm.sh /root/webrtc /root
 
 # Boost のビルド
 
 ARG BOOST_VERSION
 
+COPY script/setup_boost.sh /root/
 RUN \
-  /bin/bash -c " \
-    set -ex \
-    && source /root/docker.sh \
-    && setup_boost $BOOST_VERSION /root/boost-source \
-    && cd /root/boost-source/source \
-    && echo 'using clang : : /root/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;' > project-config.jam \
-    && ./b2 \
-      cxxflags=' \
-        -D_LIBCPP_ABI_UNSTABLE \
-        -nostdinc++ \
-        -isystem/root/webrtc/src/buildtools/third_party/libc++/trunk/include \
-      ' \
-      linkflags=' \
-      ' \
-      toolset=clang \
-      visibility=global \
-      target-os=linux \
-      address-model=64 \
-      link=static \
-      variant=release \
-      install \
-      -j`nproc` \
-      --ignore-site-config \
-      --prefix=/root/boost-$BOOST_VERSION \
-      --with-filesystem \
-  "
+  set -ex \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && cd /root/boost-source/source \
+  && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
+  && ./b2 \
+    cxxflags=' \
+      -D_LIBCPP_ABI_UNSTABLE \
+      -nostdinc++ \
+      -isystem/root/llvm/libcxx/include \
+    ' \
+    linkflags=' \
+    ' \
+    toolset=clang \
+    visibility=global \
+    target-os=linux \
+    address-model=64 \
+    link=static \
+    variant=release \
+    install \
+    -j`nproc` \
+    --ignore-site-config \
+    --prefix=/root/boost \
+    --with-filesystem
+
+# nlohmann/json の取得
+
+ARG JSON_VERSION
+RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git /root/json
+
+# CLI11 の取得
+
+ARG CLI11_VERSION
+RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
