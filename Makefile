@@ -110,11 +110,12 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
   USE_SDL2 ?= 0
-  BOOST_ROOT ?= /root/boost-$(BOOST_VERSION)
+  BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
-  WEBRTC_SRC_ROOT ?= /root/webrtc/src
-  WEBRTC_LIB_ROOT ?= /root/webrtc-build/ubuntu-16.04_armv7_ros
+  WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
+  WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  USE_LIBCXX ?= 0
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   TARGET_OS ?= linux
