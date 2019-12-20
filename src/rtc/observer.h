@@ -2,16 +2,13 @@
 #define PEERCONNECTIONOBSERVER_H_
 
 #include "api/peer_connection_interface.h"
-
 #include "messagesender.h"
 #include "video_track_receiver.h"
 
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
  public:
-  PeerConnectionObserver(RTCMessageSender* sender,
-                         VideoTrackReceiver *receiver)
-                         : _sender(sender),
-                           _receiver(receiver) {};
+  PeerConnectionObserver(RTCMessageSender* sender, VideoTrackReceiver* receiver)
+      : _sender(sender), _receiver(receiver){};
   ~PeerConnectionObserver();
 
  protected:
@@ -34,7 +31,7 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
   void ClearAllRegisteredTracks();
 
   RTCMessageSender* _sender;
-  VideoTrackReceiver *_receiver;
+  VideoTrackReceiver* _receiver;
   std::vector<webrtc::VideoTrackInterface*> _video_tracks;
 };
 

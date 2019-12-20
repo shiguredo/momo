@@ -1,6 +1,6 @@
-#include "rtc_base/logging.h"
-
 #include "connection.h"
+
+#include "rtc_base/logging.h"
 
 RTCConnection::~RTCConnection() {
   _connection->Close();

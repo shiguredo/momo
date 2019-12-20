@@ -84,38 +84,45 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
     return nullptr;
   }
-  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps, device);
+  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps,
+                                                device);
 }
 
-AVCaptureDevice* MacCapturer::FindVideoDevice(const std::string& specifiedVideoDevice) {
+AVCaptureDevice* MacCapturer::FindVideoDevice(
+    const std::string& specifiedVideoDevice) {
   // Device の決定ロジックは ffmpeg の avfoundation と同じ仕様にする
   // https://www.ffmpeg.org/ffmpeg-devices.html#avfoundation
 
   size_t capture_device_index = SIZE_T_MAX;
-  NSArray<AVCaptureDevice *>* devices = [RTCCameraVideoCapturer captureDevices];
-  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice *device, NSUInteger i, BOOL *stop) {
+  NSArray<AVCaptureDevice*>* devices = [RTCCameraVideoCapturer captureDevices];
+  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
+                                        BOOL* stop) {
     // 便利なのでデバイスの一覧をログに出力しておく
-    RTC_LOG(LS_INFO) << "video device found: [" << i << "] device_name=" << [device.localizedName UTF8String];
+    RTC_LOG(LS_INFO) << "video device found: [" << i
+                     << "] device_name=" << [device.localizedName UTF8String];
   }];
 
   // video-device オプション未指定、空白、"default", "0" の場合はデフォルトデバイスを返す
-  if (specifiedVideoDevice.empty() || specifiedVideoDevice == "default" || specifiedVideoDevice == "0") {
+  if (specifiedVideoDevice.empty() || specifiedVideoDevice == "default" ||
+      specifiedVideoDevice == "0") {
     capture_device_index = 0;
   } else {
-    NSUInteger selected_index = [devices indexOfObjectPassingTest:^BOOL(AVCaptureDevice *device, NSUInteger i, BOOL *stop) {
-      // デバイス番号を優先して検索
-      if (specifiedVideoDevice == [@(i).stringValue UTF8String]) {
-        return YES;
-      }
+    NSUInteger selected_index =
+        [devices indexOfObjectPassingTest:^BOOL(AVCaptureDevice* device,
+                                                NSUInteger i, BOOL* stop) {
+          // デバイス番号を優先して検索
+          if (specifiedVideoDevice == [@(i).stringValue UTF8String]) {
+            return YES;
+          }
 
-      // デバイス名は前方一致検索
-      std::string device_name = [device.localizedName UTF8String];
-      if (device_name.find(specifiedVideoDevice) == 0) {
-        return YES;
-      }
+          // デバイス名は前方一致検索
+          std::string device_name = [device.localizedName UTF8String];
+          if (device_name.find(specifiedVideoDevice) == 0) {
+            return YES;
+          }
 
-      return NO;
-    }];
+          return NO;
+        }];
 
     if (selected_index != NSNotFound) {
       capture_device_index = selected_index;
@@ -123,8 +130,10 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(const std::string& specifiedVideoD
   }
 
   if (capture_device_index != SIZE_T_MAX) {
-    AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices] objectAtIndex:capture_device_index];
-    RTC_LOG(LS_INFO) << "selected video device: [" << capture_device_index << "] device_name=" << [device.localizedName UTF8String];
+    AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices]
+        objectAtIndex:capture_device_index];
+    RTC_LOG(LS_INFO) << "selected video device: [" << capture_device_index
+                     << "] device_name=" << [device.localizedName UTF8String];
     return device;
   }
 

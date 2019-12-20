@@ -13,16 +13,14 @@
 
 #include <memory>
 
+#include "audio_common_msgs/AudioData.h"
+#include "connection_settings.h"
 #include "modules/audio_device/audio_device_generic.h"
+#include "ros/ros.h"
 #include "rtc_base/critical_section.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/time_utils.h"
-
-#include "audio_common_msgs/AudioData.h"
-#include "ros/ros.h"
-
-#include "connection_settings.h"
 
 class ROSAudioDevice : public webrtc::AudioDeviceGeneric {
  public:

@@ -20,6 +20,7 @@
 #include <sys/select.h>
 #include <time.h>
 #include <unistd.h>
+
 #include <new>
 #include <string>
 
@@ -28,11 +29,10 @@
 #include "media/base/video_common.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
+#include "rtc/native_buffer.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
 #include "third_party/libyuv/include/libyuv.h"
-
-#include "rtc/native_buffer.h"
 
 rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
     ConnectionSettings cs) {

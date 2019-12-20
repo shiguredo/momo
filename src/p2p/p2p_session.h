@@ -1,11 +1,6 @@
 #ifndef P2P_SESSION_H_
 #define P2P_SESSION_H_
 
-#include <cstdlib>
-#include <functional>
-#include <memory>
-#include <string>
-
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -13,6 +8,10 @@
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
+#include <cstdlib>
+#include <functional>
+#include <memory>
+#include <string>
 
 #include "connection_settings.h"
 #include "p2p_websocket_session.h"
