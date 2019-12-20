@@ -24,9 +24,9 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 
 ARG WEBRTC_BUILD_VERSION
 
-# COPY script/get_webrtc.sh /root/
-# RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-16.04_armv7 /root
-COPY webrtc/ /root/webrtc/
+COPY script/get_webrtc.sh /root/
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-16.04_armv7 /root
+# COPY webrtc/ /root/webrtc/
 
 # コンパイラの取得
 
