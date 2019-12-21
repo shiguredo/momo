@@ -13,7 +13,7 @@ OUTPUT_DIR=$3
 set -ex
 
 pushd $OUTPUT_DIR
-  curl -LO https://github.com/melpon/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.${PACKAGE_NAME}.tar.gz
+  curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.${PACKAGE_NAME}.tar.gz
   tar xf webrtc.${PACKAGE_NAME}.tar.gz
   rm webrtc.${PACKAGE_NAME}.tar.gz
 popd
