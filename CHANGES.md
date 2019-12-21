@@ -9,6 +9,11 @@
 - FIX
     - バグ修正
 
+## develop
+
+- [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
+    - @kdxu
+
 ## 19.12.0
 
 - [UPDATE] libwebrtc M79 コミットポジションを 5 にする
