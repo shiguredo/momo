@@ -278,6 +278,8 @@ void AyameWebsocketClient::createPeerConnection() {
 }
 
 void AyameWebsocketClient::close() {
+  // websocket 接続を閉じる
+  // 閉じられると onClose() にコールバックする
   if (ws_->isSSL()) {
     ws_->nativeSecureSocket().async_close(
         boost::beast::websocket::close_code::normal,
@@ -298,6 +300,8 @@ void AyameWebsocketClient::close() {
 void AyameWebsocketClient::onClose(boost::system::error_code ec) {
   if (ec)
     return MOMO_BOOST_ERROR(ec, "close");
+  // WebSocket 接続がちゃんと閉じられたら `reconnectAfter` を発火して websocket に再接続する
+  // 現在は WebSocket がどんな理由で閉じられても、再接続するようになっている
   retry_count_ = 0;
   reconnectAfter();
 }
@@ -421,6 +425,8 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       break;
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:
+      // ice connection state が failed になったら websocket ごと閉じて
+      // 再接続処理を行う
       close();
       break;
     default:
