@@ -278,6 +278,8 @@ void AyameWebsocketClient::createPeerConnection() {
 }
 
 void AyameWebsocketClient::close() {
+  // websocket 接続を閉じる
+  // 閉じられると onClose() にコールバックする
   if (ws_->isSSL()) {
     ws_->nativeSecureSocket().async_close(
         boost::beast::websocket::close_code::normal,
@@ -295,9 +297,19 @@ void AyameWebsocketClient::close() {
   }
 }
 
+// WebSocket が閉じられたときのコールバック
 void AyameWebsocketClient::onClose(boost::system::error_code ec) {
   if (ec)
     return MOMO_BOOST_ERROR(ec, "close");
+  // retry_count_ は reconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
+  // WebSocket につないでいない時間をなるべく短くしたいので、
+  // WebSocket を閉じたときは一度インクリメントされている可能性のある retry_count_ を0 にして
+  // onWatchdogExpired(); が発火して再接続が行われるまでの時間を最小にしておく。
+  retry_count_ = 0;
+  // WebSocket 接続がちゃんと閉じられたら reconnectAfter(); を発火する。
+  // reconnectAfter(); によって onWatchdogExpired(); が呼ばれ、ここで WebSocket の再接続が行われる。
+  // 現在は WebSocket がどんな理由で閉じられても、再接続するようになっている
+  reconnectAfter();
 }
 
 void AyameWebsocketClient::onRead(boost::system::error_code ec,
@@ -310,6 +322,14 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   // 書き込みのために読み込み処理がキャンセルされた時にこのエラーになるので、これはエラーとして扱わない
   if (ec == boost::asio::error::operation_aborted)
     return;
+
+  // WebSocket が closed なエラーが返ってきた場合すぐに close(); を呼んで、onRead 関数から抜ける
+  if (ec == boost::beast::websocket::error::closed) {
+    // close(); で WebSocket が閉じられたら、onClose(); -> reconnectAfter(); -> onWatchdogExpired(); の順に関数が呼ばれることで、
+    // WebSocket の再接続が行われる
+    close();
+    return;
+  }
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Read");
@@ -355,10 +375,6 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     candidate = ice["candidate"];
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
-    if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
-                          kIceConnectionConnected) {
-      return;
-    }
     watchdog_.reset();
     doSendPong();
   }
@@ -415,9 +431,12 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       retry_count_ = 0;
       watchdog_.enable(60);
       break;
+    // ice connection state が failed になったら close(); を呼んで、WebSocket 接続を閉じる
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:
-      reconnectAfter();
+      // close(); で WebSocket が閉じられたら、onClose(); -> reconnectAfter(); -> onWatchdogExpired(); の順に関数が呼ばれることで
+      // WebSocket の再接続が行われる
+      close();
       break;
     default:
       break;

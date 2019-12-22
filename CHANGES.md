@@ -9,12 +9,22 @@
 - FIX
     - バグ修正
 
+## develop
+
+## 19.12.1
+
+- [UPDATE] libwebrtc を時前しないようにする
+    - @melpon
+- [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
+    - @kdxu
+
 ## 19.12.0
 
 - [UPDATE] libwebrtc M79 コミットポジションを 5 にする
     - libwebrtc のハッシュは b484ec0082948ae086c2ba4142b4d2bf8bc4dd4b
     - @voluntas
 - [UPDATE] json を 3.7.3 に上げる
+    - @voluntas
 - [ADD] sora モード利用時の --role に sendrecv | sendonly | recvonly を指定できるようにする
     - @melpon
 - [FIX] QVGA の指定を 320x240 にする

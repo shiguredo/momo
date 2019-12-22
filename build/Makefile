@@ -61,12 +61,12 @@ define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
 .PHONY: $(1).package
 $(1).package: $(1).prepare
 	# momo を package モードでビルドし直す
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
 
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
@@ -82,7 +82,7 @@ $(1).package: $(1).prepare
 
 .PHONY: $(1).edit
 $(1).edit: $(1).prepare
-	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'export PACKAGE_NAME=$(1); cd /root/momo && exec /bin/bash'
+	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_BUILD_VERSION) /bin/bash -c 'export PACKAGE_NAME=$(1); cd /root/momo && exec /bin/bash'
 
 .PHONY: $(1).prepare
 $(1).prepare:
@@ -91,14 +91,23 @@ $(1).prepare:
 	cp -r ../patch $(1)/patch
 	cp -r ../script $(1)/script
 
-	DOCKER_BUILDKIT=1 docker build -t momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) $(DOCKER_BUILD_FLAGS) --build-arg WEBRTC_VERSION=$$(WEBRTC_VERSION) --build-arg WEBRTC_COMMIT=$$(WEBRTC_COMMIT) --build-arg BOOST_VERSION=$$(BOOST_VERSION) --build-arg SDL2_VERSION=$$(SDL2_VERSION) --build-arg PACKAGE_NAME=$(1) $(1)
+	DOCKER_BUILDKIT=1 docker build \
+		-t momo/$(1):m$$(WEBRTC_BUILD_VERSION) \
+		$(DOCKER_BUILD_FLAGS) \
+		--build-arg WEBRTC_BUILD_VERSION=$$(WEBRTC_BUILD_VERSION) \
+		--build-arg BOOST_VERSION=$$(BOOST_VERSION) \
+		--build-arg SDL2_VERSION=$$(SDL2_VERSION) \
+		--build-arg JSON_VERSION=$$(JSON_VERSION) \
+		--build-arg CLI11_VERSION=$$(CLI11_VERSION) \
+		--build-arg PACKAGE_NAME=$(1) \
+		$(1)
 
 	rm -r $(1)/patch
 	rm -r $(1)/script
 
 .PHONY: $(1).clean
 $(1).clean:
-	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_VERSION)-$$(WEBRTC_COMMIT_SHORT) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
+	-docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_BUILD_VERSION) /bin/bash -c 'cd /root/momo && make PACKAGE_NAME=$(1) clean'
 	IMAGES=`docker image ls -q momo/$(1)` && if [ -n "$$$${IMAGES}" ]; then docker image rm $$$${IMAGES}; fi
 	docker builder prune -f --filter=label=jp.shiguredo.momo=$(1)
 

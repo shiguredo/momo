@@ -81,8 +81,8 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 #ifdef __APPLE__
-  rtc::scoped_refptr<MacCapturer> capturer =
-      MacCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
+  rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
+      cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
 #else
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
@@ -145,11 +145,11 @@ int main(int argc, char* argv[]) {
 
 #if USE_SDL2
     if (sdl_renderer) {
-      sdl_renderer->SetDispatchFunction(
-        [&ioc](std::function<void ()> f) {
-          if (ioc.stopped()) return;
-          boost::asio::dispatch(ioc.get_executor(), f);
-        });
+      sdl_renderer->SetDispatchFunction([&ioc](std::function<void()> f) {
+        if (ioc.stopped())
+          return;
+        boost::asio::dispatch(ioc.get_executor(), f);
+      });
 
       ioc.run();
 

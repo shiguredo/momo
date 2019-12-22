@@ -1,11 +1,12 @@
 #include "websocket.h"
-#include "util.h"
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
 #include <utility>
+
+#include "util.h"
 
 Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc)), strand_(ws_->get_executor()) {

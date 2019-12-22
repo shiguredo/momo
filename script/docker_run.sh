@@ -5,7 +5,7 @@ set -e
 # ヘルプ表示
 function show_help() {
   echo ""
-  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION> <CLI11_VERSION> <JSON_VERSION>"
+  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION>"
   echo ""
 }
 
@@ -22,8 +22,6 @@ PACKAGE_NAME="$4"
 DOCKER_IMAGE="$5"
 BUILD_MODE="$6"
 MOMO_VERSION="$7"
-CLI11_VERSION="$8"
-JSON_VERSION="$9"
 
 if [ -z "$WORK_DIR" ]; then
   echo "エラー: <作業ディレクトリ> が空です"
@@ -69,18 +67,6 @@ fi
 
 if [ -z "$MOMO_VERSION" ]; then
   echo "エラー: <MOMO_VERSION> が空です"
-  show_help
-  exit 1
-fi
-
-if [ -z "$CLI11_VERSION" ]; then
-  echo "エラー: <CLI11_VERSION> が空です"
-  show_help
-  exit 1
-fi
-
-if [ -z "$JSON_VERSION" ]; then
-  echo "エラー: <JSON_VERSION> が空です"
   show_help
   exit 1
 fi
@@ -134,17 +120,6 @@ else
   if [ -e $MOMO_DIR/_build/$PACKAGE_NAME ]; then
     mkdir -p momo/_build
     cp -r $MOMO_DIR/_build/$PACKAGE_NAME momo/_build/$PACKAGE_NAME
-  fi
-  # git clone で取ってくる依存ライブラリのコピー
-  if [ -e $MOMO_DIR/libs/CLI11-$CLI11_VERSION ]; then
-    # 全部コピーすると時間が掛かるので include ディレクトリだけコピーする
-    mkdir -p momo/libs/CLI11-$CLI11_VERSION
-    cp -r $MOMO_DIR/libs/CLI11-$CLI11_VERSION/include momo/libs/CLI11-$CLI11_VERSION/include
-  fi
-  if [ -e $MOMO_DIR/libs/json-$JSON_VERSION ]; then
-    # 全部コピーすると時間が掛かるので include ディレクトリだけコピーする
-    mkdir -p momo/libs/json-$JSON_VERSION
-    cp -r $MOMO_DIR/libs/json-$JSON_VERSION/include momo/libs/json-$JSON_VERSION/include
   fi
 
   # 更新日時を元ファイルに合わせる

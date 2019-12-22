@@ -14,13 +14,12 @@
 #include <unistd.h>
 
 #include "modules/video_coding/include/video_error_codes.h"
+#include "nvbuf_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
-
-#include "nvbuf_utils.h"
 
 #define INIT_ERROR(cond, desc)                 \
   if (cond) {                                  \
@@ -30,16 +29,13 @@
   }
 #define CHUNK_SIZE 4000000
 
-
 JetsonVideoDecoder::JetsonVideoDecoder(uint32_t input_format)
-        : input_format_(input_format),
-          decoder_(nullptr),
-          decode_complete_callback_(nullptr),
-          buffer_pool_(false, 300 /* max_number_of_buffers*/),
-          got_error_(false),
-          dst_dma_fd_(-1) {
-
-}
+    : input_format_(input_format),
+      decoder_(nullptr),
+      decode_complete_callback_(nullptr),
+      buffer_pool_(false, 300 /* max_number_of_buffers*/),
+      got_error_(false),
+      dst_dma_fd_(-1) {}
 
 JetsonVideoDecoder::~JetsonVideoDecoder() {
   Release();
@@ -108,8 +104,7 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " timestamp:" << input_image.Timestamp()
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.Timestamp()
                    << " bytesused:" << buffer->planes[0].bytesused;
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -134,7 +129,6 @@ const char* JetsonVideoDecoder::ImplementationName() const {
   return "Jetson Video";
 }
 
-
 int32_t JetsonVideoDecoder::JetsonConfigure() {
   int ret = 0;
 
@@ -142,7 +136,8 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
   INIT_ERROR(!decoder_, "Failed to createVideoDecoder");
 
   ret = decoder_->subscribeEvent(V4L2_EVENT_RESOLUTION_CHANGE, 0, 0);
-  INIT_ERROR(ret < 0, "Failed to decoder subscribeEvent V4L2_EVENT_RESOLUTION_CHANGE");
+  INIT_ERROR(ret < 0,
+             "Failed to decoder subscribeEvent V4L2_EVENT_RESOLUTION_CHANGE");
 
   ret = decoder_->setOutputPlaneFormat(input_format_, CHUNK_SIZE);
   INIT_ERROR(ret < 0, "Failed to decoder setOutputPlaneFormat");
@@ -179,8 +174,7 @@ bool JetsonVideoDecoder::JetsonRelease() {
     delete decoder_;
     decoder_ = nullptr;
   }
-  if(dst_dma_fd_ != -1)
-  {
+  if (dst_dma_fd_ != -1) {
     NvBufferDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
@@ -200,11 +194,11 @@ void JetsonVideoDecoder::CaptureLoop() {
     ret = decoder_->dqEvent(event, 50000);
     if (ret < 0) {
       if (errno == EAGAIN) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__
-                          << "　Timed out waiting for first V4L2_EVENT_RESOLUTION_CHANGE";
+        RTC_LOG(LS_ERROR)
+            << __FUNCTION__
+            << "　Timed out waiting for first V4L2_EVENT_RESOLUTION_CHANGE";
       } else {
-        RTC_LOG(LS_ERROR) << __FUNCTION__
-                          << "　Failed to dqEvent at decoder";
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "　Failed to dqEvent at decoder";
       }
       got_error_ = true;
       break;
@@ -215,16 +209,15 @@ void JetsonVideoDecoder::CaptureLoop() {
     SetCapture();
   }
 
-  while (!(got_error_ || decoder_->isInError() || !capture_loop_->IsRunning()))
-  {
+  while (
+      !(got_error_ || decoder_->isInError() || !capture_loop_->IsRunning())) {
     ret = decoder_->dqEvent(event, false);
-    if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE)
-    {
+    if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
       SetCapture();
       continue;
     }
 
-    NvBuffer *buffer;
+    NvBuffer* buffer;
     while (1) {
       struct v4l2_buffer v4l2_buf;
       struct v4l2_plane planes[MAX_PLANES];
@@ -238,13 +231,13 @@ void JetsonVideoDecoder::CaptureLoop() {
         if (errno == EAGAIN) {
           usleep(1000);
         } else {
-          RTC_LOG(LS_ERROR) << __FUNCTION__
-                            << " Failed to dqBuffer at decoder capture_plane";
+          RTC_LOG(LS_ERROR)
+              << __FUNCTION__ << " Failed to dqBuffer at decoder capture_plane";
           got_error_ = true;
         }
         break;
       }
-      
+
       uint64_t pts = v4l2_buf.timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                      v4l2_buf.timestamp.tv_usec;
 
@@ -265,7 +258,8 @@ void JetsonVideoDecoder::CaptureLoop() {
       transform_params.transform_filter = NvBufferTransform_Filter_Smart;
       transform_params.src_rect = src_rect;
       transform_params.dst_rect = dest_rect;
-      ret = NvBufferTransform(buffer->planes[0].fd, dst_dma_fd_, &transform_params);
+      ret = NvBufferTransform(buffer->planes[0].fd, dst_dma_fd_,
+                              &transform_params);
       if (ret == -1) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << " Transform failed";
         break;
@@ -276,7 +270,8 @@ void JetsonVideoDecoder::CaptureLoop() {
                                     buffer->planes[0].fmt.height);
       if (!i420_buffer.get()) {
         // Pool has too many pending frames.
-        RTC_HISTOGRAM_BOOLEAN("WebRTC.Video.LibvpxVp8Decoder.TooManyPendingFrames", 1);
+        RTC_HISTOGRAM_BOOLEAN(
+            "WebRTC.Video.LibvpxVp8Decoder.TooManyPendingFrames", 1);
         got_error_ = true;
         break;
       }
@@ -284,8 +279,8 @@ void JetsonVideoDecoder::CaptureLoop() {
       NvBufferParams parm;
       ret = NvBufferGetParams(dst_dma_fd_, &parm);
 
-      void *src_data;
-      uint8_t *dst_data;
+      void* src_data;
+      uint8_t* dst_data;
       int dst_stride;
       for (uint32_t i = 0; i < MAX_PLANES; i++) {
         if (i == 0) {
@@ -303,21 +298,23 @@ void JetsonVideoDecoder::CaptureLoop() {
         ret = NvBufferMemMap(dst_dma_fd_, i, NvBufferMem_Read, &src_data);
         NvBufferMemSyncForCpu(dst_dma_fd_, i, &src_data);
         for (uint32_t j = 0; j < parm.height[i]; j++) {
-          memcpy(dst_data + j * dst_stride,
-                (char *)src_data + j * parm.pitch[i],
-                parm.width[i]);
+          memcpy(dst_data + j * dst_stride, (char*)src_data + j * parm.pitch[i],
+                 parm.width[i]);
         }
         NvBufferMemUnMap(dst_dma_fd_, i, &src_data);
       }
 
-      webrtc::VideoFrame decoded_image = webrtc::VideoFrame::Builder()
-                                    .set_video_frame_buffer(i420_buffer)
-                                    .set_timestamp_rtp(pts)
-                                    .build();
-      decode_complete_callback_->Decoded(decoded_image, absl::nullopt, absl::nullopt);
+      webrtc::VideoFrame decoded_image =
+          webrtc::VideoFrame::Builder()
+              .set_video_frame_buffer(i420_buffer)
+              .set_timestamp_rtp(pts)
+              .build();
+      decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
+                                         absl::nullopt);
 
       if (decoder_->capture_plane.qBuffer(v4l2_buf, NULL) < 0) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to qBuffer at capture_plane";
+        RTC_LOG(LS_ERROR) << __FUNCTION__
+                          << "Failed to qBuffer at capture_plane";
         got_error_ = true;
         break;
       }
@@ -336,13 +333,11 @@ int JetsonVideoDecoder::SetCapture() {
   ret = decoder_->capture_plane.getCrop(crop);
   INIT_ERROR(ret < 0, "Failed to getCrop at capture_plane");
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " "
-                    << format.fmt.pix_mp.pixelformat << " "
-                    << format.fmt.pix_mp.width << "x"
-                    << format.fmt.pix_mp.height;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " " << format.fmt.pix_mp.pixelformat
+                   << " " << format.fmt.pix_mp.width << "x"
+                   << format.fmt.pix_mp.height;
 
-  if(dst_dma_fd_ != -1)
-  {
+  if (dst_dma_fd_ != -1) {
     NvBufferDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
@@ -355,7 +350,7 @@ int JetsonVideoDecoder::SetCapture() {
   input_params.colorFormat = NvBufferColorFormat_YUV420;
   input_params.nvbuf_tag = NvBufferTag_VIDEO_DEC;
 
-  ret = NvBufferCreateEx (&dst_dma_fd_, &input_params);
+  ret = NvBufferCreateEx(&dst_dma_fd_, &input_params);
   INIT_ERROR(ret == -1, "create dmabuf failed");
 
   decoder_->capture_plane.deinitPlane();
@@ -369,7 +364,8 @@ int JetsonVideoDecoder::SetCapture() {
   ret = decoder_->getMinimumCapturePlaneBuffers(min_capture_buffer_size);
   INIT_ERROR(ret < 0, "Failed to getMinimumCapturePlaneBuffers");
 
-  ret = decoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, min_capture_buffer_size + 5, false, false);
+  ret = decoder_->capture_plane.setupPlane(
+      V4L2_MEMORY_MMAP, min_capture_buffer_size + 5, false, false);
   INIT_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
   ret = decoder_->capture_plane.setStreamStatus(true);
