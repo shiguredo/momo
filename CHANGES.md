@@ -11,6 +11,8 @@
 
 ## develop
 
+## 19.12.1
+
 - [UPDATE] libwebrtc を時前しないようにする
     - @melpon
 - [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
