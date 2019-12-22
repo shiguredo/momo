@@ -81,10 +81,10 @@ Momo はオープンソースソフトウェアですが、開発については
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-## ビルドにチャレンジする
+## ビルドする
 
-- Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
-- macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+- Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
+- macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
 ## パッケージを作成する
 
