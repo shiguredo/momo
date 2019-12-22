@@ -1,8 +1,8 @@
 #include "sora_websocket_client.h"
 
 #include <boost/beast/websocket/stream.hpp>
-
 #include <nlohmann/json.hpp>
+
 #include "url_parts.h"
 #include "util.h"
 
@@ -329,20 +329,17 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
     const std::string event_type = json_message["event_type"];
     if (event_type == "connection.created" ||
         event_type == "connection.destroyed") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ 
-                        << ": event_type=" << event_type
-                        << ": client_id=" << json_message["client_id"]
-                        << ": connection_id=" << json_message["connection_id"];
+      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
+                       << ": client_id=" << json_message["client_id"]
+                       << ": connection_id=" << json_message["connection_id"];
     } else if (event_type == "network.status") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ 
-                        << ": event_type=" << event_type
-                        << ": unstable_level=" << json_message["unstable_level"];
+      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
+                       << ": unstable_level=" << json_message["unstable_level"];
     } else if (event_type == "spotlight.changed") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ 
-                        << ": event_type=" << event_type
-                        << ": client_id=" << json_message["client_id"]
-                        << ": connection_id=" << json_message["connection_id"]
-                        << ": spotlight_id=" << json_message["spotlight_id"];
+      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
+                       << ": client_id=" << json_message["client_id"]
+                       << ": connection_id=" << json_message["connection_id"]
+                       << ": spotlight_id=" << json_message["spotlight_id"];
     }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::

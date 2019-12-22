@@ -1,4 +1,6 @@
 
+#include "manager.h"
+
 #include <iostream>
 
 #include "absl/memory/memory.h"
@@ -13,11 +15,9 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
+#include "observer.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ssl_adapter.h"
-
-#include "manager.h"
-#include "observer.h"
 #include "scalable_track_source.h"
 #include "util.h"
 
@@ -45,8 +45,7 @@ RTCManager::RTCManager(
     ConnectionSettings conn_settings,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
-    : _conn_settings(conn_settings),
-      _receiver(receiver) {
+    : _conn_settings(conn_settings), _receiver(receiver) {
   rtc::InitializeSSL();
 
   _networkThread = rtc::Thread::CreateWithSocketServer();

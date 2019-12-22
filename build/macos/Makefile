@@ -1,8 +1,15 @@
 include ../../VERSION
 
-LIBWEBRTC = $(CURDIR)/webrtc-build/obj/libwebrtc.a
-BOOST = $(CURDIR)/boost-$(BOOST_VERSION)
-SDL2 = $(CURDIR)/sdl2-$(SDL2_VERSION)
+WEBRTC_PREFIX = $(CURDIR)/webrtc
+BOOST_PREFIX = $(CURDIR)/boost
+SDL2_PREFIX = $(CURDIR)/sdl2
+
+WEBRTC = $(WEBRTC_PREFIX)/lib/libwebrtc.a
+BOOST = $(BOOST_PREFIX)/include/boost/version.hpp
+SDL2 = $(SDL2_PREFIX)/lib/libSDL2.a
+LLVM = $(CURDIR)/llvm/clang/bin/clang++
+CLI11 = $(CURDIR)/CLI11/include/CLI/Version.hpp
+JSON = $(CURDIR)/json/include/nlohmann/json.hpp
 
 ifeq ($(JOBS),)
 	JOBS := $(shell system_profiler SPHardwareDataType | grep "Total Number of Cores" |  awk '{split($$0,ary,":");print ary[2]}' | xargs)
@@ -12,16 +19,16 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-all: $(LIBWEBRTC) $(BOOST) $(SDL2)
+all: check $(WEBRTC) $(BOOST) $(SDL2) $(LLVM) $(CLI11) $(JSON)
 
 .PHONY: clean
 clean:
 	rm -rf webrtc
-	rm -rf webrtc-build
+	rm -rf boost-source
 	rm -rf boost
-	rm -rf boost-*
+	rm -rf sdl2-source
 	rm -rf sdl2
-	rm -rf sdl2-*
+	rm -rf llvm
 
 .PHONY: check
 check:
@@ -33,34 +40,29 @@ check:
 	  exit 1; \
 	fi
 
-$(LIBWEBRTC): check
-	source ../../script/docker.sh && \
-	export PATH="$(CURDIR)/webrtc/depot_tools:$(PATH)" && \
-	export GYP_DEFINES="OS=mac target_arch=x64" && \
-	prepare_webrtc_macos "" $(WEBRTC_COMMIT) $(CURDIR)/webrtc && \
-	cd $(CURDIR)/webrtc/src && \
-	patch -p2 < $(CURDIR)/../../patch/4k.patch && \
-	patch -p2 < $(CURDIR)/../../patch/macos_h264_encoder.patch && \
-	gn gen $(CURDIR)/webrtc-build/macos --args='target_os="mac" is_debug=false rtc_include_tests=false rtc_build_examples=false rtc_use_h264=false is_component_build=false use_rtti=true libcxx_abi_unstable=false' && \
-	ninja -C $(CURDIR)/webrtc-build/macos && \
-	ninja -C $(CURDIR)/webrtc-build/macos \
-	  builtin_audio_decoder_factory \
-	  default_task_queue_factory \
-	  native_api \
-	  default_codec_factory_objc \
-	  peerconnection \
-	  videocapture_objc
+$(CLI11): ../../VERSION
+	rm -rf CLI11
+	git clone --branch v$(CLI11_VERSION) --depth 1 https://github.com/CLIUtils/CLI11.git
 
-$(BOOST):
-	source ../../script/docker.sh && \
-	setup_boost $(BOOST_VERSION) $(CURDIR)/boost && \
-	cd $(CURDIR)/boost/source && \
-	./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(CURDIR)/boost-$(BOOST_VERSION) --ignore-site-config --with-filesystem
+$(JSON): ../../VERSION
+	rm -rf json
+	git clone --branch v$(JSON_VERSION) --depth 1 https://github.com/nlohmann/json.git
 
-$(SDL2):
-	source ../../script/docker.sh && \
-	setup_sdl2 $(SDL2_VERSION) $(CURDIR)/sdl2 && \
-	cd $(CURDIR)/sdl2/source/build && \
-	../configure --disable-shared --prefix=$(CURDIR)/sdl2-$(SDL2_VERSION) && \
-	make && \
-	make install
+$(LLVM): $(WEBRTC)
+	../../script/get_llvm.sh $(WEBRTC_PREFIX) $(CURDIR)
+	touch $(LLVM)
+
+$(WEBRTC): ../../VERSION
+	../../script/get_webrtc.sh $(WEBRTC_BUILD_VERSION) macos $(CURDIR)
+	touch $(WEBRTC)
+
+$(BOOST): ../../VERSION
+	../../script/setup_boost.sh $(BOOST_VERSION) $(CURDIR)/boost-source
+	cd $(CURDIR)/boost-source/source && ./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(BOOST_PREFIX) --ignore-site-config --with-filesystem
+
+$(SDL2): $(LLVM)
+	../../script/setup_sdl2.sh $(SDL2_VERSION) $(CURDIR)/sdl2-source
+	rm -rf $(CURDIR)/sdl2-source/build
+	mkdir -p $(CURDIR)/sdl2-source/build
+	cd $(CURDIR)/sdl2-source/build && ../source/configure --disable-shared --prefix=$(SDL2_PREFIX)
+	cd $(CURDIR)/sdl2-source/build && make && make install

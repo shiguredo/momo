@@ -4,9 +4,8 @@
 #include <memory>
 
 #include "api/task_queue/task_queue_factory.h"
-#include "modules/audio_device/include/audio_device.h"
-
 #include "connection_settings.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "ros_audio_device.h"
 
 #define CHECKinitialized_() \
