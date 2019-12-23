@@ -176,7 +176,7 @@ void Util::parseArgs(int argc,
                "MJPEGのデコードとビデオのリサイズをハードウェアで行う"
                "（対応デバイスのみ）")
       ->check(is_valid_use_native);
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if __linux__
   app.add_option("--video-device", cs.video_device,
                  "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
       ->check(CLI::ExistingFile);

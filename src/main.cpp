@@ -19,7 +19,7 @@
 #ifdef __APPLE__
 #include "mac_helper/mac_capturer.h"
 #else
-#if USE_MMAL_ENCODER | USE_JETSON_ENCODER
+#if __linux__
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
   rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
       cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
 #else
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if __linux__
   rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
 #else
   rtc::scoped_refptr<DeviceVideoCapturer> capturer =
