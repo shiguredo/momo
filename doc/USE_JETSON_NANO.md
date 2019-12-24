@@ -39,25 +39,15 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
+## JetPack 4.3 以上を必ず利用してください
+
+`JetPack 4.3 - L4T R32.3.1 released - NVIDIA Developer Forums <https://devtalk.nvidia.com/default/topic/1068583/jetson-nano/jetpack-4-3-l4t-r32-3-1-released/>`_
+
 ## 4K@30 を出すためにやること
 
 ### 実行時のコマンドについて
 
 `--fixed-resolution` を外してみてください。4Kの時には `--fixed-resolution` オプションを使うとレートが安定しない傾向があります。
-
-### --use-native オプション利用時のハングアップについて
-
-Jetson Nano のライブラリにバグがあるため、 `/usr/lib/aarch64-linux-gnu/tegra/libnvjpeg.so` を下記の記事で配布されているものに置き換えてください
-
-下記のコマンドの実行結果でパッチが異なります
-
-> cat /etc/nv_tegra_release | head -1
-
-`# R32 (release), REVISION: 1.0` の場合は [こちら](https://devtalk.nvidia.com/default/topic/1050162/jetson-nano/r32-1-0-mmapi-and-decodetofd-leak-memory-/)
-
-`# R32 (release), REVISION: 2.1` の場合は [こちら](https://devtalk.nvidia.com/default/topic/1060896/jetson-tx2/jetpack-4-2-1-nvjpeg-leaking/)
-
-を適用してください
 
 ### フレームレートが出ない場合
 
