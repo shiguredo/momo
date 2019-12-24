@@ -11,6 +11,11 @@
 
 ## develop
 
+- [UPDATE] 2020.1 にバージョンを上げる
+    - @voluntas
+- [UPDATE] Boost 1.72.0 にアップデートする
+    - @voluntas
+
 ## 19.12.1
 
 - [UPDATE] libwebrtc を時前ビルドしないようにする
