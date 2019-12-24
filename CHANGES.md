@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] 2020.1 にバージョンを上げる
+- [UPDATE] Momo 2020.1 にバージョンを上げる
     - @voluntas
 - [UPDATE] Boost 1.72.0 にアップデートする
     - @voluntas

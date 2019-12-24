@@ -51,9 +51,9 @@ Momo はオープンソースソフトウェアですが、開発については
 
 4 種類のバイナリを配布しています。
 
-- Raspberry Raspbian Buster ARMv7
-- Raspberry Raspbian Buster ARMv6
-- Jetson Nano Ubuntu 18.04 ARMv8
+- Raspbian Buster ARMv7
+- Raspbian Buster ARMv6
+- Ubuntu 18.04 ARMv8 (Jetson Nano)
 - macOS 10.15 x86_64
 
 ## 動作環境
@@ -90,6 +90,12 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
+## バージョン番号について
+
+```
+YYYY.<リリースした回数>
+```
+
 ## ライセンス
 
 Apache License 2.0
@@ -112,11 +118,14 @@ limitations under the License.
 
 ## サポートについて
 
-WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
+WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。
+それ以外については Discord へお願いします。
 
 ### バグ報告
 
 https://github.com/shiguredo/momo/issues
+
+バグ報告すべきか悩んだら Discord で気軽に相談してください。
 
 #### 理想的なバグ報告例
 
@@ -134,7 +143,8 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 ## H.264 のライセンス費用について
 
-H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
+ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
 
 ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、配布時にライセンス費用を支払う必要はありません。
 
