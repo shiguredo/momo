@@ -44,7 +44,9 @@ include VERSION
 #
 # WEBRTC_INCLUDE_DIR: WebRTC のインクルードディレクトリ
 #
-# WEBRTC_LIB_ROOT: WebRTC のビルドディレクトリ
+# WEBRTC_LIBRARY_DIR: WebRTC のライブラリディレクトリ
+#
+# CLANG_ROOT: ビルドに使う clang コンパイラのインストール先ディレクトリ
 #
 # USE_LIBCXX: libstdc++ の代わりに libc++ を使うかどうか
 #   有効な値は 0, 1
@@ -79,6 +81,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -97,6 +100,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -115,6 +119,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
   SYSROOT ?= /root/rootfs
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
@@ -132,6 +137,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -151,6 +157,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
   SYSROOT ?= /root/rootfs
@@ -168,6 +175,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   TARGET_OS ?= linux
@@ -183,6 +191,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
 else ifeq ($(PACKAGE_NAME),macos)
@@ -199,12 +208,9 @@ else ifeq ($(PACKAGE_NAME),macos)
   CLI11_ROOT ?= $(CURDIR)/build/macos/CLI11
   WEBRTC_INCLUDE_DIR ?= $(CURDIR)/build/macos/webrtc/include
   WEBRTC_LIBRARY_DIR ?= $(CURDIR)/build/macos/webrtc/lib
+  CLANG_ROOT ?= $(CURDIR)/build/macos/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= $(CURDIR)/build/macos/llvm/libcxx/include
-
-  # depot_tools へのパスを通しておく
-  # (Docker から実行するタイプのビルドでは事前に通してあるが、こっちは通してない可能性があるので)
-  # export PATH := $(CURDIR)/build/macos/webrtc/depot_tools:$(PATH)
 else
   # 各変数がちゃんと設定されているか確認する
 
@@ -272,6 +278,11 @@ else
     HAS_ERROR = 1
   endif
 
+  ifndef CLANG_ROOT
+    $(info - CLANG_ROOT が指定されていません)
+    HAS_ERROR = 1
+  endif
+
   ifndef USE_LIBCXX
     $(info - USE_LIBCXX が指定されていません)
     HAS_ERROR = 1
@@ -336,9 +347,9 @@ ifeq ($(TARGET_OS),linux)
   CFLAGS += -fpic
   LDFLAGS += -lX11 -lXau -lXdmcp -lxcb -lplds4 -lXext -lexpat -ldl -lnss3 -lnssutil3 -lplc4 -lnspr4 -lrt
 
-  CC = /root/llvm/clang/bin/clang
-  CXX = /root/llvm/clang/bin/clang++
-  AR = /root/llvm/clang/bin/llvm-ar
+  CC = $(CLANG_ROOT)/bin/clang
+  CXX = $(CLANG_ROOT)/bin/clang++
+  AR = $(CLANG_ROOT)/bin/llvm-ar
 
   ifeq ($(TARGET_ARCH),arm)
     ifeq ($(TARGET_ARCH_ARM),armv8)
@@ -459,8 +470,8 @@ ifeq ($(TARGET_OS),linux)
 endif
 
 ifeq ($(TARGET_OS),macos)
-  CC = $(CURDIR)/build/macos/llvm/clang/bin/clang
-  CXX = $(CURDIR)/build/macos/llvm/clang/bin/clang++
+  CC = $(CLANG_ROOT)/bin/clang
+  CXX = $(CLANG_ROOT)/bin/clang++
   # brew でインストールした ar コマンドを使うとエラーになるので、明示的にフルパスを指定する
   AR = /usr/bin/ar
 
