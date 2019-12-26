@@ -86,9 +86,7 @@ $(1).edit: $(1).prepare
 
 .PHONY: $(1).prepare
 $(1).prepare:
-	rm -rf $(1)/patch
 	rm -rf $(1)/script
-	cp -r ../patch $(1)/patch
 	cp -r ../script $(1)/script
 
 	DOCKER_BUILDKIT=1 docker build \
@@ -102,7 +100,6 @@ $(1).prepare:
 		--build-arg PACKAGE_NAME=$(1) \
 		$(1)
 
-	rm -r $(1)/patch
 	rm -r $(1)/script
 
 .PHONY: $(1).clean
