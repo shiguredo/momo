@@ -15,6 +15,9 @@
     - @voluntas
 - [UPDATE] Boost 1.72.0 にアップデートする
     - @voluntas
+- [UPDATE] --video-device を Linux 全般で有効にする
+    - V4L2 capturer を使うようにした
+    - @shino
 
 ## 19.12.1
 
@@ -41,9 +44,6 @@
    - @kdxu
 - [FIX] OpenH264 を明示的にビルドしないようにする
     - @melpon
-- [UPDATE] --video-device を Linux 全般で有効にする
-    - V4L2 capturer を使うようにした
-    - @shino
 
 ## 19.11.1
 
