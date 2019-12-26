@@ -351,6 +351,8 @@ ifeq ($(TARGET_OS),linux)
   CXX = $(CLANG_ROOT)/bin/clang++
   AR = $(CLANG_ROOT)/bin/llvm-ar
 
+  SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
+
   ifeq ($(TARGET_ARCH),arm)
     ifeq ($(TARGET_ARCH_ARM),armv8)
       ARCH_NAME = aarch64-linux-gnu
@@ -388,7 +390,6 @@ ifeq ($(TARGET_OS),linux)
           -lnvrm \
           -lnvrm_graphics \
           -lnvos
-        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_jetson -maxdepth 1 -name '*.cpp')
         JETSON_ADDITIONAL_SOURCES += \
           $(SYSROOT)/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvBuffer.cpp \
@@ -462,7 +463,6 @@ ifeq ($(TARGET_OS),linux)
           -lmmal_util \
           -lmmal_vc_client \
           -lm
-        SOURCES += $(shell find src/v4l2_video_capturer -maxdepth 1 -name '*.cpp')
         SOURCES += $(shell find src/hwenc_mmal -maxdepth 1 -name '*.cpp')
       endif
     endif

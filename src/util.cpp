@@ -176,14 +176,14 @@ void Util::parseArgs(int argc,
                "MJPEGのデコードとビデオのリサイズをハードウェアで行う"
                "（対応デバイスのみ）")
       ->check(is_valid_use_native);
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  app.add_option("--video-device", cs.video_device,
-                 "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
-      ->check(CLI::ExistingFile);
-#elif __APPLE__
+#if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
                  "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス"
                  "番号が0）のビデオデバイスを自動検出");
+#elif defined(__linux__)
+  app.add_option("--video-device", cs.video_device,
+                 "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
+      ->check(CLI::ExistingFile);
 #endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
