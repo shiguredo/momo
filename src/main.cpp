@@ -16,9 +16,9 @@
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
 #else
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
-#elif __linux__
+#elif defined(__linux__)
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"

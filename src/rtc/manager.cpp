@@ -55,7 +55,7 @@ RTCManager::RTCManager(
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
-#if __linux__
+#if defined(__linux__)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxAlsaAudio;
 #else
