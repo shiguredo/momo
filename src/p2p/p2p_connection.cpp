@@ -1,7 +1,8 @@
+#include "p2p_connection.h"
+
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-#include "p2p_connection.h"
 #include "util.h"
 
 using json = nlohmann::json;

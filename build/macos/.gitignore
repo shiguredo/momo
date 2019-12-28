@@ -4,6 +4,9 @@
 /boost*
 /sdl2
 /sdl2*
+/CLI11
+/json
+/llvm
 /src
 /.cipd
 /.gclient

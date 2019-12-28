@@ -1,31 +1,28 @@
 #ifndef SDL_RENDERER_H_
 #define SDL_RENDERER_H_
 
+#include <SDL2/SDL.h>
+
+#include <boost/asio.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <boost/asio.hpp>
-
-#include <SDL2/SDL.h>
 
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
-#include "rtc_base/critical_section.h"
-
 #include "rtc/video_track_receiver.h"
+#include "rtc_base/critical_section.h"
 
 class SDLRenderer : public VideoTrackReceiver {
  public:
   SDLRenderer(int width, int height, bool fullscreen);
   ~SDLRenderer();
 
-  void SetDispatchFunction(
-      std::function<void (std::function<void ()>)> dispatch);
+  void SetDispatchFunction(std::function<void(std::function<void()>)> dispatch);
 
-  static int RenderThreadExec(void *data);
+  static int RenderThreadExec(void* data);
   int RenderThread();
 
   void SetOutlines();
@@ -78,14 +75,15 @@ class SDLRenderer : public VideoTrackReceiver {
   void PollEvent();
 
   rtc::CriticalSection sinks_lock_;
-  typedef std::vector<std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink> > >
+  typedef std::vector<
+      std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink> > >
       VideoTrackSinkVector;
   VideoTrackSinkVector sinks_;
   std::atomic<bool> running_;
-  SDL_Thread *thread_;
+  SDL_Thread* thread_;
   SDL_Window* window_;
-  SDL_Renderer *renderer_;
-  std::function<void (std::function<void ()>)> dispatch_;
+  SDL_Renderer* renderer_;
+  std::function<void(std::function<void()>)> dispatch_;
   int width_;
   int height_;
   int rows_;

@@ -1,4 +1,5 @@
 #include "watchdog.h"
+
 #include <iostream>
 
 WatchDog::WatchDog(boost::asio::io_context& ioc, std::function<void()> callback)

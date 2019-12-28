@@ -6,6 +6,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
+
 #include "rtc_base/helpers.h"
 #if USE_ROS
 #include "ros/ros.h"
@@ -112,7 +113,7 @@ void Util::parseArgs(int argc,
     local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
     local_nh.getParam("ROOM_ID", cs.ayame_room_id);
     local_nh.param<std::string>("client_id", cs.ayame_client_id,
-        cs.ayame_client_id);
+                                cs.ayame_client_id);
     local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key,
                                 cs.ayame_signaling_key);
   } else {
@@ -181,7 +182,8 @@ void Util::parseArgs(int argc,
       ->check(CLI::ExistingFile);
 #elif __APPLE__
   app.add_option("--video-device", cs.video_device,
-                 "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス番号が0）のビデオデバイスを自動検出");
+                 "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス"
+                 "番号が0）のビデオデバイスを自動検出");
 #endif
   app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
               "解像度");
@@ -194,11 +196,14 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(0, 65535));
   app.add_flag("--use-sdl", cs.use_sdl, "SDLを使い映像を表示する");
   app.add_flag("--show-me", cs.show_me, "自分のカメラも表示する");
-  app.add_option("--window-width", cs.window_width, "映像を表示するウィンドウの横幅")
+  app.add_option("--window-width", cs.window_width,
+                 "映像を表示するウィンドウの横幅")
       ->check(CLI::Range(180, 16384));
-  app.add_option("--window-height", cs.window_height, "映像を表示するウィンドウの縦幅")
+  app.add_option("--window-height", cs.window_height,
+                 "映像を表示するウィンドウの縦幅")
       ->check(CLI::Range(180, 16384));
-  app.add_flag("--fullscreen", cs.fullscreen, "映像を表示するウィンドウをフルスクリーンにする");
+  app.add_flag("--fullscreen", cs.fullscreen,
+               "映像を表示するウィンドウをフルスクリーンにする");
   app.add_flag("--daemon", is_daemon, "デーモン化する");
   app.add_flag("--version", version, "バージョン情報の表示");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
@@ -262,8 +267,7 @@ void Util::parseArgs(int argc,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
       "ロール（デフォルトは upstream）");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight,
-                   "スポットライトの配信数")
+      ->add_option("--spotlight", cs.sora_spotlight, "スポットライトの配信数")
       ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(

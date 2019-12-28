@@ -1,13 +1,11 @@
 #ifndef ROS_VIDEO_CAPTURE_H_
 #define ROS_VIDEO_CAPTURE_H_
 
+#include "connection_settings.h"
 #include "ros/ros.h"
-
+#include "rtc/scalable_track_source.h"
 #include "sensor_msgs/CompressedImage.h"
 #include "sensor_msgs/Image.h"
-
-#include "connection_settings.h"
-#include "rtc/scalable_track_source.h"
 
 class ROSVideoCapture : public ScalableVideoTrackSource {
  public:

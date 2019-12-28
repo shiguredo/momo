@@ -9,6 +9,16 @@
 - FIX
     - バグ修正
 
+## develop
+
+## 19.12.1
+
+- [UPDATE] libwebrtc を時前ビルドしないようにする
+    - https://github.com/shiguredo-webrtc-build/webrtc-build を利用する
+    - @melpon
+- [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
+    - @kdxu
+
 ## 19.12.0
 
 - [UPDATE] libwebrtc M79 コミットポジションを 5 にする

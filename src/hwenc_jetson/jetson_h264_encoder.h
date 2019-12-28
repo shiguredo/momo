@@ -12,15 +12,15 @@
 #ifndef Jetson_H264_ENCODER_H_
 #define Jetson_H264_ENCODER_H_
 
-#include "NvJpegDecoder.h"
-#include "NvVideoConverter.h"
-#include "NvVideoEncoder.h"
-
 #include <linux/videodev2.h>
+
 #include <chrono>
 #include <memory>
 #include <queue>
 
+#include "NvJpegDecoder.h"
+#include "NvVideoConverter.h"
+#include "NvVideoEncoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
