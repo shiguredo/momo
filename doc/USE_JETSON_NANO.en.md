@@ -1,8 +1,18 @@
-# Jetson Nano で Momo を使ってみる
+# WebRTC Native Client Momo
 
-## Momo について
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
 
-Momo は CUI で動かせる WebRTC クライアントです。
+## About Support
+
+We check PRs or Issues only when written in JAPANESE.
+In other languages, we won't be able to deal with them. Thank you for your understanding.
+
+## WebRTC Native Client Momo について
+
+WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
+
 Jetson Nano 上で動作させることで H.264 で圧縮された 4K の映像を 1 秒以内でブラウザに配信可能にします。
 
 ## Jetson Nano 向けのバイナリは以下にて提供しています
@@ -23,22 +33,18 @@ $ ./momo --no-audio --port 8080 test
 
 momo 起動後 http://[Jetson Nano の IP アドレス]:8080/html/test.html にアクセスして接続してみてください。
 
-## 4K@30 を出すためにやること
+## ayame モードを利用して繋ぐ
 
-### 実行時のコマンドについて
+Ayame Lite は無料で利用可能なシグナリングサーバです。
 
-`--fixed-resolution` を外してみてください。4Kの時には `--fixed-resolution` オプションを使うとレートが安定しない傾向があります。
+ルーム ID は open-momo を利用していますが、実際に利用する場合は推測されにくい ID を利用してください。
 
-### --use-native オプション利用時のハングアップについて
+```shell
+$ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
+```
 
-Jetson Nano のライブラリにバグがあるため、 `/usr/lib/aarch64-linux-gnu/tegra/libnvjpeg.so` を下記の記事で配布されているものに置き換えてください
+Ayame Web SDK のオンラインサンプルを利用して確認します。 URL の引数にルーム ID を指定してアクセスします。
 
-下記のコマンドの実行結果でパッチが異なります
-
-> cat /etc/nv_tegra_release | head -1
-
-`# R32 (release), REVISION: 1.0` の場合は [こちら](https://devtalk.nvidia.com/default/topic/1050162/jetson-nano/r32-1-0-mmapi-and-decodetofd-leak-memory-/)
-
-`# R32 (release), REVISION: 2.1` の場合は [こちら](https://devtalk.nvidia.com/default/topic/1060896/jetson-tx2/jetpack-4-2-1-nvjpeg-leaking/)
-
-を適用してください
+```
+https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
+```

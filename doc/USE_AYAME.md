@@ -28,7 +28,6 @@ Ayame SDK のオンラインサンプルを利用します。 URL の引数に�
 https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
 ```
 
-
 ### サインアップする場合
 
 Ayame Lite にサインアップした場合はルーム ID に GitHub ID の Prefix を先頭に指定する必要があります
