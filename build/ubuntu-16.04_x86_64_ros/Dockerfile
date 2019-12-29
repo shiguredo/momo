@@ -7,8 +7,6 @@ LABEL jp.shiguredo.momo=$PACKAGE_NAME
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
-COPY script/docker.sh /root/
-
 # パッケージのインストール
 
 COPY script/apt_install_x86_64.sh /root/
