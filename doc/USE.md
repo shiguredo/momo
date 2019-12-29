@@ -2,17 +2,17 @@
 
 Momo を初めて利用する場合 テストモードでの利用をおすすめします。
 
-## Raspberry Pi で Momo を使ってみる
+## Raspberry Pi で Momo をセットアップする
 
-[USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
+[SETUP_RASPBERRY_PI.md](SETUP_RASPBERRY_PI.md) をお読みください。
 
-## NVIDIA Jetson Nano で Momo を使ってみる
+## NVIDIA Jetson Nano で Momo をセットアップする
 
-[USE_JETSON_NANO.md](USE_JETSON_NANO.md) をお読みください。
+[SETUP_JETSON_NANO.md](SETUP_JETSON_NANO.md) をお読みください。
 
-## macOS で Momo を使ってみる
+## macOS で Momo をセットアップする
 
-[USE_MAC.md](USE_MAC.md) をお読みください。
+[SETUP_MAC.md](SETUP_MAC.md) をお読みください。
 
 ## テストモードを利用して Momo を動かしてみる
 
