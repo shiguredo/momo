@@ -91,6 +91,9 @@ void Util::parseArgs(int argc,
                        cs.disable_highpass_filter);
   local_nh.param<bool>("disable_typing_detection", cs.disable_typing_detection,
                        cs.disable_typing_detection);
+  local_nh.param<bool>("disable_residual_echo_detector",
+                       cs.disable_residual_echo_detector,
+                       cs.disable_residual_echo_detector);
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") &&
       local_nh.hasParam("CHANNEL_ID")) {
@@ -222,6 +225,9 @@ void Util::parseArgs(int argc,
                "ハイパスフィルター無効");
   app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
                "タイピングディテクション無効");
+  app.add_flag("--disable-residual-echo-detector",
+               cs.disable_residual_echo_detector,
+               "残響エコーディテクション無効");
 
   auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
