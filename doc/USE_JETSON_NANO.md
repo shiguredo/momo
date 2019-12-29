@@ -3,6 +3,7 @@
 ## Jetson Nano を購入する
 
 - [Jetson Nano 開発者キット](https://www.switch-science.com/catalog/5433/)
+    - [NVIDIA Jetson Nano Developer Kit](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
     - Jetson Nano 本体はこちらがおすすめ
     - スイッチサイエンス
 - [【OLIOSPECオリジナル】NVIDIA Jetson Nano Developer kit用ケース\(長尾製作所製\)](https://www.oliospec.com/shopdetail/000000008491/)
