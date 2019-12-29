@@ -46,6 +46,8 @@ include VERSION
 #
 # WEBRTC_LIBRARY_DIR: WebRTC のライブラリディレクトリ
 #
+# WEBRTC_VERSION_FILE: WebRTC のバージョンファイル
+#
 # CLANG_ROOT: ビルドに使う clang コンパイラのインストール先ディレクトリ
 #
 # USE_LIBCXX: libstdc++ の代わりに libc++ を使うかどうか
@@ -61,6 +63,8 @@ include VERSION
 # BUILD_ROOT: ビルド用ディレクトリ。デフォルトでは ../momo-build になる。
 #
 # MOMO_VERSION: バージョン情報。設定しなければ internal-build になる
+#
+# MOMO_COMMIT_SHORT: Momo のコミットハッシュ。設定しなければ unknown になる
 #
 # MOMO_CFLAGS: C コンパイラに追加で渡すフラグ。最適化フラグやデバッグフラグを入れることを想定している。
 #
@@ -81,6 +85,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
@@ -100,6 +105,7 @@ else ifeq ($(PACKAGE_NAME),raspbian-buster_armv7)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
@@ -119,6 +125,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_armv7_ros)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
   SYSROOT ?= /root/rootfs
@@ -137,6 +144,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
@@ -157,6 +165,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_armv8_jetson_nano)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
@@ -175,6 +184,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-16.04_x86_64_ros)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 0
 else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
@@ -191,6 +201,7 @@ else ifeq ($(PACKAGE_NAME),ubuntu-18.04_x86_64)
   CLI11_ROOT ?= /root/CLI11
   WEBRTC_INCLUDE_DIR ?= /root/webrtc/include
   WEBRTC_LIBRARY_DIR ?= /root/webrtc/lib
+  WEBRTC_VERSION_FILE ?= /root/webrtc/VERSIONS
   CLANG_ROOT ?= /root/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= /root/llvm/libcxx/include
@@ -208,6 +219,7 @@ else ifeq ($(PACKAGE_NAME),macos)
   CLI11_ROOT ?= $(CURDIR)/build/macos/CLI11
   WEBRTC_INCLUDE_DIR ?= $(CURDIR)/build/macos/webrtc/include
   WEBRTC_LIBRARY_DIR ?= $(CURDIR)/build/macos/webrtc/lib
+  WEBRTC_VERSION_FILE ?= $(CURDIR)/build/macos/webrtc/VERSIONS
   CLANG_ROOT ?= $(CURDIR)/build/macos/llvm/clang
   USE_LIBCXX ?= 1
   LIBCXX_INCLUDE_DIR ?= $(CURDIR)/build/macos/llvm/libcxx/include
@@ -322,6 +334,25 @@ CFLAGS += -I$(WEBRTC_INCLUDE_DIR) -I$(WEBRTC_INCLUDE_DIR)/third_party/libyuv/inc
 LDFLAGS += -L$(WEBRTC_LIBRARY_DIR) -lpthread
 ifdef MOMO_VERSION
   CFLAGS += -DMOMO_VERSION='"$(MOMO_VERSION)"'
+endif
+ifdef MOMO_COMMIT_SHORT
+  CFLAGS += -DMOMO_COMMIT_SHORT='"$(MOMO_COMMIT_SHORT)"'
+endif
+
+# WebRTC のバージョンファイルがある場合、必要な情報を CFLAGS に追加していく
+ifdef WEBRTC_VERSION_FILE
+  WEBRTC_READABLE_VERSION = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_READABLE_VERSION)
+  WEBRTC_COMMIT_SHORT = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_COMMIT | cut -b 1-8)
+  WEBRTC_BUILD_VERSION = $(shell . $(WEBRTC_VERSION_FILE) && echo $$WEBRTC_BUILD_VERSION)
+endif
+ifdef WEBRTC_READABLE_VERSION
+  CFLAGS += -DWEBRTC_READABLE_VERSION='"$(WEBRTC_READABLE_VERSION)"'
+endif
+ifdef WEBRTC_COMMIT_SHORT
+  CFLAGS += -DWEBRTC_COMMIT_SHORT='"$(WEBRTC_COMMIT_SHORT)"'
+endif
+ifdef WEBRTC_BUILD_VERSION
+  CFLAGS += -DWEBRTC_BUILD_VERSION='"$(WEBRTC_BUILD_VERSION)"'
 endif
 
 ifeq ($(USE_LIBCXX),1)

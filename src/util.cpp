@@ -7,15 +7,10 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
 
+#include "momo_version.h"
 #include "rtc_base/helpers.h"
 #if USE_ROS
 #include "ros/ros.h"
-#endif
-
-// バージョン情報
-// 通常は外から渡すが、渡されていなかった場合の対応
-#ifndef MOMO_VERSION
-#define MOMO_VERSION "internal-build"
 #endif
 
 // HWA を効かせる場合は 1 になる
@@ -306,8 +301,8 @@ void Util::parseArgs(int argc,
   }
 
   if (version) {
-    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION
-                 " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
+    std::cout << MOMO_NAME
+        " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
               << std::endl;
     exit(0);
   }

@@ -40,7 +40,7 @@ help:
 	@echo "具体的には docker build コマンドに --progress=plain を指定します。"
 	@echo ""
 
-WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
+MOMO_COMMIT_SHORT=$(shell git rev-parse HEAD | cut -b 1-8)
 
 ifeq ($(NOCACHE),1)
   DOCKER_BUILD_FLAGS += --no-cache
@@ -61,12 +61,12 @@ define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) build $(MOMO_VERSION) $(MOMO_COMMIT_SHORT)
 
 .PHONY: $(1).package
 $(1).package: $(1).prepare
 	# momo を package モードでビルドし直す
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) package $(MOMO_VERSION) $(MOMO_COMMIT_SHORT)
 
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
@@ -115,7 +115,7 @@ $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(pa
 
 .PHONY: macos
 macos: macos.prepare
-	make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
+	make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos MOMO_VERSION=$(MOMO_VERSION) MOMO_COMMIT_SHORT=$(MOMO_COMMIT_SHORT) momo
 
 .PHONY: macos.package
 macos.package: macos.prepare
