@@ -12,6 +12,7 @@
     - SD カードはこちらがおすすめ
     - OLIOSPEC
 - [Noctua NF-A4x10 5V PWMサイレントファン40 mmプレミアムブラウン/ベージュ](https://amazon.co.jp/dp/B07DXS86G7)
+    - [NF A4x10 5V PWM](https://noctua.at/en/nf-a4x10-5v-pwm)
     - ファンはこちらがおすすめ
     - Amazon
 - [２４Ｗ級スイッチングＡＣアダプター５Ｖ４Ａ　ＧＦ２４－ＵＳ０５４０](http://akizukidenshi.com/catalog/g/gM-09594/)
@@ -20,6 +21,12 @@
 - [つまみ付ジャンパーピン（緑）（２．５４ｍｍピッチ）（２０個入）](http://akizukidenshi.com/catalog/g/gP-03894/)
     - ジャンパーピンを持っていない人はこちら
     - 秋月電子通商
+ - [TP-Link WiFi 無線LAN 子機 AC600 433Mbps + 200Mbps](https://amazon.co.jp/dp/B07MXHJ6KB)
+    - [Archer T2U Nano \| AC600 ナノ 無線LAN子機 \| TP\-Link Japan](https://www.tp-link.com/jp/home-networking/adapter/archer-t2u-nano/)
+    - ドライバーのビルドが必要になるが問題なく使える
+    - [Jetson Nano で TP\-LINK Archer T2U Nano を使う \- Qiita](https://qiita.com/daisuzu_/items/8d6913f3bda1b7434526)
+        - こちらにかかれている `os_dep/linux/usb_intf.c の 300行番台あたりに以下を追加する` は最新版では不要
+    - Amazon
 
 ## 4K@30 出るカメラの購入する
 
