@@ -1,5 +1,7 @@
 # Momo を使ってみる
 
+Momo を初めて利用する場合 テストモードでの利用をおすすめします。
+
 ## Raspberry Pi で Momo を使ってみる
 
 [USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
@@ -8,34 +10,40 @@
 
 [USE_JETSON_NANO.md](USE_JETSON_NANO.md) をお読みください。
 
-## Mac で Momo を使ってみる
+## macOS で Momo を使ってみる
 
 [USE_MAC.md](USE_MAC.md) をお読みください。
 
-## WebRTC Signaling Server Ayame を使って Momo を動かしてみる
+## テストモードを利用して Momo を動かしてみる
 
-時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
+[USE_TEST.md](USE_TEST.md) をお読みください。
+
+## Ayame モードを 利用して Momo を動かしてみる
+
+Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
+
+[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 無料で試すことが可能です。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-## WebRTC SFU Sora を使って Momo を動かしてみる
+## Sora モードを 利用して Momo を動かしてみる
 
-時雨堂が開発、販売している WebRTC SFU Sora を利用します。
+Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
-[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を購入せずに無料で試すことが可能です。
+[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を無料で試すことが可能です。
 
-Sora Labo での使い方も書いてありますので、まずは [USE_SORA.md](USE_SORA.md) をお読みください。
-
-## ROS ノードとして Momo を使ってみる
-
-- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
-- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
+[USE_SORA.md](USE_SORA.md) をお読みください。
 
 ## SDL を利用した受信機能を使ってみる
 
 Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力することが可能になります。
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
+
+## ROS ノードとして Momo を使ってみる
+
+- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
+- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
 ## コマンド
 
