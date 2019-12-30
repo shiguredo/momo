@@ -239,6 +239,7 @@ void SoraWebsocketClient::doSendConnect() {
 #if defined(__APPLE__) || defined(__linux__)
   std::string arch = "unknown arch";
   std::string os = "Unknown OS";
+  std::string info = "";
 
   utsname u;
   int r = uname(&u);
@@ -288,9 +289,43 @@ void SoraWebsocketClient::doSendConnect() {
     boost::algorithm::trim_if(os, [](char c) { return c == '"'; });
     break;
   }
+
+#if USE_JETSON_ENCODER
+  // Jetson Nano の場合、更に詳細な情報を取得する
+
+  // nvidia-l4t-core のバージョンを拾う
+  // $ dpkg-query --show nvidia-l4t-core
+  // で取得できるが、外部コマンドは出来るだけ使いたくないので、
+  // /var/lib/dpkg/status から該当行を探す
+
+  std::string content;
+  {
+    std::stringstream ss;
+    std::ifstream fin("/var/lib/dpkg/status");
+    ss << fin.rdbuf();
+    content = ss.str();
+  }
+  std::string l4t_core_version = "unknown";
+  auto pos = content.find("Package: nvidia-l4t-core");
+  if (pos != std::string::npos) {
+    const std::string VERSION = "Version: ";
+    auto pos2 = content.find(VERSION, pos);
+    if (pos2 != std::string::npos) {
+      pos2 += VERSION.size();
+      auto pos3 = content.find("\n", pos2);
+      l4t_core_version = pos3 == std::string::npos
+                             ? content.substr(pos2)
+                             : content.substr(pos2, pos3 - pos2);
+    }
+  }
+
+  info = " (nvidia-l4t-core " + l4t_core_version + ")";
+
 #endif
 
-  environment = "[" + arch + "] " + os;
+#endif
+
+  environment = "[" + arch + "] " + os + info;
 #endif
 
   json json_message = {
