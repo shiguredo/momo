@@ -1,4 +1,4 @@
-# Linux でカメラデバイスを指定する
+# Linux でビデオデバイスを指定する
 
 ## --video-device
 
