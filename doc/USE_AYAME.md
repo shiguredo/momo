@@ -14,13 +14,15 @@ https://ayame-lite.shiguredo.jp/beta
 
 ### Ayame Lite にサインアップしない場合
 
-Ayame Lite はサインアップせずにそのままシグナリングサーバだけでも利用可能です。
+Ayame Lite はサインアップせずにシグナリングサーバを利用可能です。
+
+ここでは `ルーム ID` は `open-momo` としておりますが、必ず推測されにくい値に変更してください。
 
 ```shell
 $ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
 ```
 
-Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID を指定してアクセスします。
+Ayame SDK のオンラインサンプルを利用します。 URL の引数に `ルーム ID` を指定してアクセスします。
 
 ```
 https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
@@ -29,9 +31,10 @@ https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
 ### Ayame Lite にサインアップする場合
 
 Ayame Lite にサインアップした場合は `ルーム ID` に `GitHub ユーザ名` を先頭に指定する必要があります。
+例えば GitHub ユーザ名が `shiguredo` の場合は `shiguredo@open-momo` となります。
 
 - `ルーム ID` は `GitHub ユーザ名` を先頭に指定する必要があります
-- シグナリングキーを `--signaling-key` にて指定する必要があります
+- `シグナリングキー` を `--signaling-key` にて指定する必要があります
 
 ```shell
 $ ./momo --no-audio ayame \

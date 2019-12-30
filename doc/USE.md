@@ -1,16 +1,16 @@
 # Momo を使ってみる
 
-## セットアップ
+## 準備
 
-### Raspberry Pi で Momo をセットアップする
+### Raspberry Pi で Momo を 準備する
 
 [SETUP_RASPBERRY_PI.md](SETUP_RASPBERRY_PI.md) をお読みください。
 
-### NVIDIA Jetson Nano で Momo をセットアップする
+### NVIDIA Jetson Nano で Momo を準備する
 
 [SETUP_JETSON_NANO.md](SETUP_JETSON_NANO.md) をお読みください。
 
-### macOS で Momo をセットアップする
+### macOS で Momo を準備する
 
 [SETUP_MAC.md](SETUP_MAC.md) をお読みください。
 
@@ -24,7 +24,7 @@
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 無料で試すことが可能です。
+[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
