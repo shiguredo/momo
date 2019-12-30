@@ -43,13 +43,30 @@
 
 色々 4K@30 が出せるカメラを試してきましたが、このカメラが一番安定しています。
 
+## JetPack 4.3 以上を必ず利用してください
+
+`JetPack 4.3 - L4T R32.3.1 released - NVIDIA Developer Forums <https://devtalk.nvidia.com/default/topic/1068583/jetson-nano/jetpack-4-3-l4t-r32-3-1-released/>`_
+
 ## Jetson Nano 向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-## JetPack 4.3 以上を必ず利用してください
+## ダウンロードしたパッケージ、解凍後の構成
 
-`JetPack 4.3 - L4T R32.3.1 released - NVIDIA Developer Forums <https://devtalk.nvidia.com/default/topic/1068583/jetson-nano/jetpack-4-3-l4t-r32-3-1-released/>`_
+```
+$ tree
+.
+├── html
+│   ├── test.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
+```
+
+## 動かしてみる
+
+動かし方について、まずは [USE_TEST.md](USE_TEST.md) をご確認ください。
 
 ## 4K@30 を出すためにやること
 

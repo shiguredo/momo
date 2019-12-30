@@ -1,10 +1,27 @@
 #include "sora_websocket_client.h"
 
+#include <fstream>
+#include <sstream>
+
+// boost
+#include <boost/algorithm/string/classification.hpp>  // is_any_of
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/beast/websocket/stream.hpp>
+
+// json
 #include <nlohmann/json.hpp>
 
+#include "momo_version.h"
 #include "url_parts.h"
 #include "util.h"
+
+#if defined(__APPLE__) || defined(__linux__)
+#include <sys/utsname.h>
+#endif
+#if defined(__APPLE__)
+#include "mac_helper/macos_version.h"
+#endif
 
 using json = nlohmann::json;
 
@@ -217,10 +234,72 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
 }
 
 void SoraWebsocketClient::doSendConnect() {
+  std::string environment = "Unknown Environment";
+
+#if defined(__APPLE__) || defined(__linux__)
+  std::string arch = "unknown arch";
+  std::string os = "Unknown OS";
+
+  utsname u;
+  int r = uname(&u);
+  if (r == 0) {
+    arch = u.machine;
+  }
+
+#if defined(__APPLE__)
+  os = MacosVersion::GetOSName() + " " + MacosVersion::GetOSVersion();
+#else
+  // /etc/os-release ファイルを読んで PRETTY_NAME を利用する
+
+  // /etc/os-release は以下のような内容になっているので、これを適当にパースする
+  /*
+    $ docker run -it --rm ubuntu cat /etc/os-release
+    NAME="Ubuntu"
+    VERSION="18.04.3 LTS (Bionic Beaver)"
+    ID=ubuntu
+    ID_LIKE=debian
+    PRETTY_NAME="Ubuntu 18.04.3 LTS"
+    VERSION_ID="18.04"
+    HOME_URL="https://www.ubuntu.com/"
+    SUPPORT_URL="https://help.ubuntu.com/"
+    BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+    PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+    VERSION_CODENAME=bionic
+    UBUNTU_CODENAME=bionic
+  */
+  // 行ごとに分けたデータを取得
+  std::vector<std::string> lines;
+  {
+    std::stringstream ss;
+    std::ifstream fin("/etc/os-release");
+    ss << fin.rdbuf();
+    std::string content = ss.str();
+    boost::algorithm::split(lines, ss.str(), boost::is_any_of("\n"));
+  }
+  const std::string PRETTY_NAME = "PRETTY_NAME=";
+  for (auto& line : lines) {
+    // 先頭が PRETTY_NAME= の行を探す
+    if (line.find(PRETTY_NAME) != 0) {
+      continue;
+    }
+    // PRETTY_NAME= 以降のデータを取り出す
+    os = line.substr(PRETTY_NAME.size());
+    // 左右の " を除ける（in-place バージョン）
+    boost::algorithm::trim_if(os, [](char c) { return c == '"'; });
+    break;
+  }
+#endif
+
+  environment = "[" + arch + "] " + os;
+#endif
+
   json json_message = {
       {"type", "connect"},
       {"role", conn_settings_.sora_role},
       {"channel_id", conn_settings_.sora_channel_id},
+      {"sora_client", MOMO_NAME},
+      {"libwebrtc", LIBWEBRTC_NAME},
+      {"environment", environment},
   };
 
   if (conn_settings_.sora_multistream) {

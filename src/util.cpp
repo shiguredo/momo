@@ -7,15 +7,10 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
 
+#include "momo_version.h"
 #include "rtc_base/helpers.h"
 #if USE_ROS
 #include "ros/ros.h"
-#endif
-
-// バージョン情報
-// 通常は外から渡すが、渡されていなかった場合の対応
-#ifndef MOMO_VERSION
-#define MOMO_VERSION "internal-build"
 #endif
 
 // HWA を効かせる場合は 1 になる
@@ -91,6 +86,9 @@ void Util::parseArgs(int argc,
                        cs.disable_highpass_filter);
   local_nh.param<bool>("disable_typing_detection", cs.disable_typing_detection,
                        cs.disable_typing_detection);
+  local_nh.param<bool>("disable_residual_echo_detector",
+                       cs.disable_residual_echo_detector,
+                       cs.disable_residual_echo_detector);
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") &&
       local_nh.hasParam("CHANNEL_ID")) {
@@ -222,6 +220,9 @@ void Util::parseArgs(int argc,
                "ハイパスフィルター無効");
   app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
                "タイピングディテクション無効");
+  app.add_flag("--disable-residual-echo-detector",
+               cs.disable_residual_echo_detector,
+               "残響エコーディテクション無効");
 
   auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
@@ -300,8 +301,8 @@ void Util::parseArgs(int argc,
   }
 
   if (version) {
-    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION
-                 " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
+    std::cout << MOMO_NAME
+        " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
               << std::endl;
     exit(0);
   }
