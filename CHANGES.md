@@ -24,6 +24,10 @@
     - @melpon
 - [UPDATE] 音声系オプションの --disable-residual-echo-detector を追加する
     - @melpon
+- [ADD] 自由に解像度の値を指定できるようにする
+    - `--resolution 640x480` のように指定できるようになりました
+    - この機能が有効になるのは、カメラに依存するため動作保証はありません
+    - @melpon
 - [ADD] Sora 利用時のシグナリング接続情報に enviroment / libwebrtc / sora_client を追加する
     - Jetson Nano の場合
         - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
