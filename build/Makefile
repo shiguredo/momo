@@ -7,12 +7,11 @@ help:
 	@echo "使い方:"
 	@echo "  make [オプション] <パッケージ名>"
 	@echo "  make [オプション] <パッケージ名>.package"
-	@echo "  make [オプション] <パッケージ名>.edit"
 	@echo "  make [オプション] <パッケージ名>.clean"
 	@echo ""
 	@echo "<パッケージ名>:"
 	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
-	@echo "  - macos (make macos.edit を除く)"
+	@echo "  - macos"
 	@echo ""
 	@echo "[オプション]:"
 	@echo "  - NOCACHE=1"
@@ -22,9 +21,6 @@ help:
 	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
 	@echo ""
 	@echo "make <パッケージ名>.package は、指定したパッケージ名の環境用の momo バイナリを含んだリリース用パッケージを生成します。"
-	@echo ""
-	@echo "make <パッケージ名>.edit は、WebRTC のソースを変更して、カスタマイズされた WebRTC を使って momo バイナリを生成するための機能です。"
-	@echo "詳細は doc/PATCH_WEBRTC.md を参照して下さい。"
 	@echo ""
 	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージやビルドキャッシュを削除します。"
 	@echo ""
@@ -79,10 +75,6 @@ $(1).package: $(1).prepare
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	@echo ""
 	@echo "パッケージが package/momo-$(MOMO_VERSION)_$(1).tar.gz に生成されました。"
-
-.PHONY: $(1).edit
-$(1).edit: $(1).prepare
-	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_BUILD_VERSION) /bin/bash -c 'export PACKAGE_NAME=$(1); cd /root/momo && exec /bin/bash'
 
 .PHONY: $(1).prepare
 $(1).prepare:
