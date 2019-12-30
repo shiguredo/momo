@@ -54,6 +54,10 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 動かし方については [USE_TEST.md](USE_TEST.md) をご確認ください。
 
+## ビデオデバイスの指定
+
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+
 ## Raspberry Pi 向けの追加のオプション
 
 ### --use-native

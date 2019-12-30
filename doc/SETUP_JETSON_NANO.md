@@ -27,6 +27,20 @@ $ tree
 
 動かし方について、まずは [USE_TEST.md](USE_TEST.md) をご確認ください。
 
+## ビデオデバイスの指定
+
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+
+## Jetson Nano 向けの追加のオプション
+
+### --use-native
+
+`--use-native` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
+
+```shell
+$ ./momo --use-native --no-audio --port 8080 test
+```
+
 ## 4K@30 を出すためにやること
 
 ### 実行時のコマンドについて
