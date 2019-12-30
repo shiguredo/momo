@@ -1,5 +1,9 @@
 # WebRTC SFU Sora を使って Momo を動かしてみる
 
+Sora は時雨堂が開発、販売している商用 WebRTC SFU 製品です。
+
+https://sora.shiguredo.jp/
+
 ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を使います。
 
 ## Sora Labo を使う
@@ -28,11 +32,7 @@ https://sora-labo.shiguredo.jp/recvonly?videoCodecType=VP8&audio=False
 
 ### マルチストリームを使ってみる
 
-以下の OS の環境で GUI で使うことで送受信が可能です。
-
-- macOS 15.10
-- Ubuntu 18.04 Jetson Nano
-- Raspbian
+GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
 
 ```shell
 ./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me \
