@@ -37,10 +37,7 @@ Ayame Lite にサインアップした場合はルーム ID に GitHub ユーザ
     - ここではシグナリングキーを `xyz` としています
 
 ```shell
-./momo --no-audio ayame \
-  wss://ayame-lite.shiguredo.jp/signaling \
-  shiguredo@open-momo \
-  --signaling-key xyz
+./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling shiguredo@open-momo --signaling-key xyz
 ```
 
 Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。
