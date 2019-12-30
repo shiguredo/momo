@@ -116,6 +116,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Momo についての電子書籍
+
+Momo のコントリビュータである @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+
+[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+
+
 ## サポートについて
 
 WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。
@@ -172,18 +179,6 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
-
-## Momo についての電子書籍
-
-Momo のコア開発者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
-
-[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
-
-## Windows 版について
-
-Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
-
-[Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)
 
 ## カスタマイズなど
 
