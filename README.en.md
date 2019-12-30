@@ -20,18 +20,19 @@ Jetson Nano 上で動作させることで H.264 で圧縮された 4K の映像
 https://github.com/shiguredo/momo/releases にて最新版の Jetson Nano 向けバイナリをダウンロードしてください。
 
 ```
-momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
 ```
 
 ## test モードを利用して繋ぐ
 
-Momo 自体がシグナリングサーバの機能を持っている、つ test モードを利用して動かしてみてください。
+Momo 自体がシグナリングサーバの機能を持っている、 test モードを利用して動かしてみてください。
 
 ```shell
 $ ./momo --no-audio --port 8080 test
 ```
 
-momo 起動後 http://[Jetson Nano の IP アドレス]:8080/html/test.html にアクセスして接続してみてください。
+momo の IP アドレスが 192.0.2.100 の場合は、
+http://192.0.2.100:8080/html/test.html に WebRTC が利用可能なブラウザでアクセスして接続してみてください。
 
 ## ayame モードを利用して繋ぐ
 
@@ -40,11 +41,11 @@ Ayame Lite は無料で利用可能なシグナリングサーバです。
 ルーム ID は open-momo を利用していますが、実際に利用する場合は推測されにくい ID を利用してください。
 
 ```shell
-$ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
+$ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo-en
 ```
 
 Ayame Web SDK のオンラインサンプルを利用して確認します。 URL の引数にルーム ID を指定してアクセスします。
 
 ```
-https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
+https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo-en
 ```
