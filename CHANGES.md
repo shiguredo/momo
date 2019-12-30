@@ -26,7 +26,7 @@
     - @melpon
 - [ADD] Sora 利用時のシグナリング開始情報に enviroment / libwebrtc / sora_client を追加する
     - Jetson Nano の場合
-        - `"environment": "[aarch64] Ubuntu 18.04.3 LTS"`
+        - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
         - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
         - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
     - macOS の場合
