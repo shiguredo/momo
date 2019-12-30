@@ -52,7 +52,7 @@ $ make ubuntu-18.04_armv8
 build ディレクトリ以下で make ubuntu-18.04_armv8 と打つことで Momo のバイナリが生成されます。
 
 ```shell
-$ make ubuntu-18.04_armv8
+$ make ubuntu-18.04_armv8_jetson_nano
 ```
 
 うまくいかない場合は `make ubuntu-18.04_armv8_jetson_nano.clean && make ubuntu-18.04_armv8_jetson_nano` を試してみてください。それでもだめな場合は issues にお願いします。
