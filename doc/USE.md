@@ -1,35 +1,40 @@
 # Momo を使ってみる
 
-## Raspberry Pi で Momo を使ってみる
+## 準備
 
-[USE_RASPBERRY_PI.md](USE_RASPBERRY_PI.md) をお読みください。
+### Raspberry Pi で Momo を 準備する
 
-## NVIDIA Jetson Nano で Momo を使ってみる
+[SETUP_RASPBERRY_PI.md](SETUP_RASPBERRY_PI.md) をお読みください。
 
-[USE_JETSON_NANO.md](USE_JETSON_NANO.md) をお読みください。
+### NVIDIA Jetson Nano で Momo を準備する
 
-## Mac で Momo を使ってみる
+[SETUP_JETSON_NANO.md](SETUP_JETSON_NANO.md) をお読みください。
 
-[USE_MAC.md](USE_MAC.md) をお読みください。
+### macOS で Momo を準備する
 
-## WebRTC Signaling Server Ayame を使って Momo を動かしてみる
+[SETUP_MAC.md](SETUP_MAC.md) をお読みください。
 
-時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
+## 動かす
+
+## テストモードを利用して Momo を動かしてみる
+
+[USE_TEST.md](USE_TEST.md) をお読みください。
+
+## Ayame モードを 利用して Momo を動かしてみる
+
+Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
+
+[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-## WebRTC SFU Sora を使って Momo を動かしてみる
+## Sora モードを 利用して Momo を動かしてみる
 
-時雨堂が開発、販売している WebRTC SFU Sora を利用します。
+Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
-[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を購入せずに無料で試すことが可能です。
+[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を無料で試すことが可能です。
 
-Sora Labo での使い方も書いてありますので、まずは [USE_SORA.md](USE_SORA.md) をお読みください。
-
-## ROS ノードとして Momo を使ってみる
-
-- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
-- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
+[USE_SORA.md](USE_SORA.md) をお読みください。
 
 ## SDL を利用した受信機能を使ってみる
 
@@ -37,13 +42,18 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
+## ROS ノードとして Momo を使ってみる
+
+- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
+- ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
+
 ## コマンド
 
 ### バージョン情報
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo version 19.11.0 USE_MMAL_ENCODER=0
+WebRTC Native Client Momo 2020.1 (4fc855c6) USE_MMAL_ENCODER=0
 ```
 
 ### ヘルプ
@@ -60,8 +70,7 @@ Options:
   --force-i420                強制的にI420にする（対応デバイスのみ）
   --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う（対応デバイスのみ）
   --video-device TEXT         デバイス番号、またはデバイス名。省略時はデフォルト（デバイス番号が0）のビデオデバイスを自動検出
-  --resolution TEXT:{4K,FHD,HD,QVGA,VGA}
-                              解像度
+  --resolution TEXT           解像度(QVGA, VGA, HD, FHD, 4K, 幅x高さ)
   --framerate INT:INT in [1 - 60]
                               フレームレート
   --fixed-resolution          固定解像度
@@ -85,6 +94,8 @@ Options:
   --disable-noise-suppression ノイズサプレッション無効
   --disable-highpass-filter   ハイパスフィルター無効
   --disable-typing-detection  タイピングディテクション無効
+  --disable-residual-echo-detector
+                              残響エコーディテクション無効
 
 Subcommands:
   test                        開発向け
@@ -146,7 +157,7 @@ Options:
   --audio-bitrate INT:INT in [6 - 510]
                               オーディオのビットレート
   --multistream               マルチストリームかどうか
-  --role TEXT:{downstream,upstream}
+  --role TEXT:{downstream,recvonly,sendonly,sendrecv,upstream}
                               ロール（デフォルトは upstream）
   --spotlight INT:INT in [1 - 10]
                               スポットライトの配信数

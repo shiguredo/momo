@@ -11,6 +11,38 @@
 
 ## develop
 
+- [UPDATE] Momo 2020.1 にバージョンを上げる
+    - バージョン番号を <リリース年>.<その年のリリース回数> に変更
+    - @voluntas
+- [UPDATE] Boost 1.72.0 にアップデートする
+    - @voluntas
+- [UPDATE] --video-device を Linux 全般で有効にする
+    - V4L2 capturer を使うようにした
+    - @shino
+- [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.3.1 に上げる
+    - [L4T \| NVIDIA Developer](https://developer.nvidia.com/embedded/linux-tegra)
+    - @melpon
+- [UPDATE] 音声系オプションの --disable-residual-echo-detector を追加する
+    - @melpon
+- [ADD] 自由に解像度の値を指定できるようにする
+    - `--resolution 640x480` のように指定できるようになりました
+    - この機能が有効になるのは、カメラに依存するため動作保証はありません
+    - @melpon
+- [ADD] Sora 利用時のシグナリング接続情報に enviroment / libwebrtc / sora_client を追加する
+    - Jetson Nano の場合
+        - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - macOS の場合
+        - `"environment": "[x86_64] macOS Version 10.15.2 (Build 19C57)"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - Ubuntu 18.04 x86_64 の場合
+        - `"environment": "[x86_64] Ubuntu 18.04.3 LTS"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - @melpon
+
 ## 19.12.1
 
 - [UPDATE] libwebrtc を時前ビルドしないようにする

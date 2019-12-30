@@ -5,12 +5,12 @@ set -e
 # ヘルプ表示
 function show_help() {
   echo ""
-  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION>"
+  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION> <MOMO_COMMIT_SHORT>"
   echo ""
 }
 
 # 引数のチェック
-if [ $# -ne 9 ]; then
+if [ $# -ne 8 ]; then
   show_help
   exit 1
 fi
@@ -22,6 +22,7 @@ PACKAGE_NAME="$4"
 DOCKER_IMAGE="$5"
 BUILD_MODE="$6"
 MOMO_VERSION="$7"
+MOMO_COMMIT_SHORT="$8"
 
 if [ -z "$WORK_DIR" ]; then
   echo "エラー: <作業ディレクトリ> が空です"
@@ -71,15 +72,21 @@ if [ -z "$MOMO_VERSION" ]; then
   exit 1
 fi
 
+if [ -z "$MOMO_COMMIT_SHORT" ]; then
+  echo "エラー: <MOMO_COMMIT_SHORT> が空です"
+  show_help
+  exit 1
+fi
+
 # マウントするかどうかで大きく分岐する
 if [ "$MOUNT_TYPE" = "mount" ]; then
   # マウントする場合は、単純にマウントしてビルドするだけ
   if [ "$BUILD_MODE" = "build" ]; then
     # build
-    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME MOMO_VERSION=$MOMO_VERSION                    momo"
+    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
   else
     # package
-    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION momo"
+    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
   fi
 else
   # マウントしない場合は、コンテナを起動して、コンテナに必要なファイルを転送して、コンテナ上でビルドして、生成されたファイルをコンテナから戻して、コンテナを終了する
@@ -144,10 +151,10 @@ else
   docker container exec momo-$PACKAGE_NAME /bin/bash -c 'cd /root && tar xf momo.tar.gz && rm momo.tar.gz'
   if [ "$BUILD_MODE" = "build" ]; then
     # build
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION momo"
+    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
   else
     # package
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION momo"
+    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
   fi
 
   # 中間ファイル類を取り出す

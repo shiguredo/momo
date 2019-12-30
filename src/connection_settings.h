@@ -57,31 +57,33 @@ struct ConnectionSettings {
   bool disable_noise_suppression = false;
   bool disable_highpass_filter = false;
   bool disable_typing_detection = false;
+  bool disable_residual_echo_detector = false;
 
-  int getWidth() {
+  struct Size {
+    int width;
+    int height;
+  };
+  Size getSize() {
     if (resolution == "QVGA") {
-      return 320;
+      return {320, 240};
+    } else if (resolution == "VGA") {
+      return {640, 480};
     } else if (resolution == "HD") {
-      return 1280;
+      return {1280, 720};
     } else if (resolution == "FHD") {
-      return 1920;
+      return {1920, 1080};
     } else if (resolution == "4K") {
-      return 3840;
+      return {3840, 2160};
     }
-    return 640;
-  }
 
-  int getHeight() {
-    if (resolution == "QVGA") {
-      return 240;
-    } else if (resolution == "HD") {
-      return 720;
-    } else if (resolution == "FHD") {
-      return 1080;
-    } else if (resolution == "4K") {
-      return 2160;
+    // 128x96 みたいな感じのフォーマット
+    auto pos = resolution.find('x');
+    if (pos == std::string::npos) {
+      return {16, 16};
     }
-    return 480;
+    auto width = std::atoi(resolution.substr(0, pos).c_str());
+    auto height = std::atoi(resolution.substr(pos + 1).c_str());
+    return {std::max(16, width), std::max(16, height)};
   }
 
   // FRAMERATE が優先のときは RESOLUTION をデグレさせていく

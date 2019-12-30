@@ -16,7 +16,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 # RootFS の構築
 
 COPY script/init_rootfs_armhf.sh /root/
-COPY patch/rpi-raspbian.conf /root/
+COPY rpi-raspbian.conf /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /root/init_rootfs_armhf.sh /root/rootfs /root/rpi-raspbian.conf
 

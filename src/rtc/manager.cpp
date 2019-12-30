@@ -55,7 +55,7 @@ RTCManager::RTCManager(
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
-#if __linux__
+#if defined(__linux__)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxAlsaAudio;
 #else
@@ -144,6 +144,8 @@ RTCManager::RTCManager(
       ao.highpass_filter = false;
     if (_conn_settings.disable_typing_detection)
       ao.typing_detection = false;
+    if (_conn_settings.disable_residual_echo_detector)
+      ao.residual_echo_detector = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
     _audio_track = _factory->CreateAudioTrack(Util::generateRandomChars(),
                                               _factory->CreateAudioSource(ao));

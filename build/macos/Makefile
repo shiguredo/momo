@@ -59,6 +59,7 @@ $(WEBRTC): ../../VERSION
 $(BOOST): ../../VERSION
 	../../script/setup_boost.sh $(BOOST_VERSION) $(CURDIR)/boost-source
 	cd $(CURDIR)/boost-source/source && ./b2 visibility=hidden link=static variant=release install -j$(JOBS) --prefix=$(BOOST_PREFIX) --ignore-site-config --with-filesystem
+	touch $(BOOST)
 
 $(SDL2): $(LLVM)
 	../../script/setup_sdl2.sh $(SDL2_VERSION) $(CURDIR)/sdl2-source
@@ -66,3 +67,4 @@ $(SDL2): $(LLVM)
 	mkdir -p $(CURDIR)/sdl2-source/build
 	cd $(CURDIR)/sdl2-source/build && ../source/configure --disable-shared --prefix=$(SDL2_PREFIX)
 	cd $(CURDIR)/sdl2-source/build && make && make install
+	touch $(SDL2)

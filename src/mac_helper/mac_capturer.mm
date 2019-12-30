@@ -66,6 +66,9 @@ MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
                          AVCaptureDevice* device) {
+  RTC_LOG(LS_INFO) << "MacCapturer width=" << width << ", height=" << height
+                   << ", target_fps=" << target_fps;
+
   adapter_ = [[RTCVideoSourceAdapter alloc] init];
   adapter_.capturer = this;
 

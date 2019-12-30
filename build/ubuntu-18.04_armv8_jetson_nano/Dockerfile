@@ -16,7 +16,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 # RootFS の構築
 
 COPY script/init_rootfs_arm64.sh /root/
-COPY patch/arm64.conf /root/
+COPY arm64.conf /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /root/init_rootfs_arm64.sh /root/rootfs /root/arm64.conf
 

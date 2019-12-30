@@ -91,9 +91,10 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
     return nullptr;
   }
   if (v4l2_capturer->StartCapture(cs) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = "
-                        << cs.getWidth() << ", h = " << cs.getHeight()
-                        << ", fps = " << cs.framerate << ")";
+    auto size = cs.getSize();
+    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = " << size.width
+                        << ", h = " << size.height << ", fps = " << cs.framerate
+                        << ")";
     return nullptr;
   }
   return v4l2_capturer;
@@ -172,8 +173,9 @@ V4L2VideoCapture::~V4L2VideoCapture() {
 }
 
 int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
+  auto size = cs.getSize();
   if (_captureStarted) {
-    if (cs.getWidth() == _currentWidth && cs.getHeight() == _currentHeight) {
+    if (size.width == _currentWidth && size.height == _currentHeight) {
       return 0;
     } else {
       StopCapture();
@@ -193,7 +195,7 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   // I420 otherwise.
   const int nFormats = 5;
   unsigned int fmts[nFormats];
-  if (!cs.force_i420 && (cs.getWidth() > 640 || cs.getHeight() > 480)) {
+  if (!cs.force_i420 && (size.width > 640 || size.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YUYV;
@@ -239,8 +241,8 @@ int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
   memset(&video_fmt, 0, sizeof(struct v4l2_format));
   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   video_fmt.fmt.pix.sizeimage = 0;
-  video_fmt.fmt.pix.width = cs.getWidth();
-  video_fmt.fmt.pix.height = cs.getHeight();
+  video_fmt.fmt.pix.width = size.width;
+  video_fmt.fmt.pix.height = size.height;
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
