@@ -78,14 +78,15 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
+  auto size = cs.getSize();
 #if defined(__APPLE__)
   rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
-      cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
+      size.width, size.height, cs.framerate, cs.video_device);
 #elif defined(__linux__)
   rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
 #else
   rtc::scoped_refptr<DeviceVideoCapturer> capturer =
-      DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
+      DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
 #endif
   if (!capturer && !cs.no_video) {
     std::cerr << "failed to create capturer" << std::endl;

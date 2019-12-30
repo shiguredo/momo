@@ -1,5 +1,8 @@
 #include "util.h"
 
+#include <regex>
+
+// external libraries
 #include <CLI/CLI.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -165,6 +168,24 @@ void Util::parseArgs(int argc,
       },
       "");
 
+  auto is_valid_resolution = CLI::Validator(
+      [](std::string input) -> std::string {
+        if (input == "QVGA" || input == "VGA" || input == "HD" ||
+            input == "FHD" || input == "4K") {
+          return std::string();
+        }
+
+        // 数値x数値、というフォーマットになっているか確認する
+        std::regex re("^[1-9][0-9]*x[1-9][0-9]*$");
+        if (std::regex_match(input, re)) {
+          return std::string();
+        }
+
+        return "解像度は QVGA, VGA, HD, FHD, 4K, 幅x高さ "
+               "どれかである必要があります。";
+      },
+      "");
+
   app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
   app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
   app.add_flag("--force-i420", cs.force_i420,
@@ -183,8 +204,9 @@ void Util::parseArgs(int argc,
                  "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
       ->check(CLI::ExistingFile);
 #endif
-  app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
-              "解像度");
+  app.add_option("--resolution", cs.resolution,
+                 "解像度(QVGA, VGA, HD, FHD, 4K, 幅x高さ)")
+      ->check(is_valid_resolution);
   app.add_option("--framerate", cs.framerate, "フレームレート")
       ->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
