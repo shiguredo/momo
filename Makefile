@@ -329,7 +329,7 @@ else
   BUILD_ROOT ?= _build/local
 endif
 
-CFLAGS += -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
+CFLAGS += -Wno-implicit-int-float-conversion -Wno-macro-redefined -fno-lto -std=c++14 -pthread -DWEBRTC_POSIX -DOPENSSL_IS_BORINGSSL -Isrc/
 CFLAGS += -I$(WEBRTC_INCLUDE_DIR) -I$(WEBRTC_INCLUDE_DIR)/third_party/libyuv/include -I$(WEBRTC_INCLUDE_DIR)/third_party/abseil-cpp
 LDFLAGS += -L$(WEBRTC_LIBRARY_DIR) -lpthread
 ifdef MOMO_VERSION
