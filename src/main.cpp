@@ -66,8 +66,6 @@ int main(int argc, char* argv[]) {
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  rtc::scoped_refptr<ROSVideoCapture> capturer(
-      new rtc::RefCountedObject<ROSVideoCapture>(cs));
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
@@ -78,21 +76,36 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  auto size = cs.getSize();
-#if defined(__APPLE__)
-  rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
-      size.width, size.height, cs.framerate, cs.video_device);
-#elif defined(__linux__)
-  rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
-#else
-  rtc::scoped_refptr<DeviceVideoCapturer> capturer =
-      DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
 #endif
+
+  auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
+    if (cs.no_video) {
+      return nullptr;
+    }
+
+#if USE_ROS
+    rtc::scoped_refptr<ROSVideoCapture> capturer(
+        new rtc::RefCountedObject<ROSVideoCapture>(cs));
+#else  // USE_ROS
+    auto size = cs.getSize();
+#if defined(__APPLE__)
+    rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
+        size.width, size.height, cs.framerate, cs.video_device);
+#elif defined(__linux__)
+    rtc::scoped_refptr<V4L2VideoCapture> capturer =
+        V4L2VideoCapture::Create(cs);
+#else
+    rtc::scoped_refptr<DeviceVideoCapturer> capturer =
+        DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
+#endif
+#endif  // USE_ROS
+    return capturer;
+  })();
+
   if (!capturer && !cs.no_video) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
   }
-#endif
 
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
