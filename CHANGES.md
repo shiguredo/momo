@@ -42,6 +42,8 @@
         - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
         - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
     - @melpon
+- [CHANGE] <package>.edit の機能とドキュメントを削除
+    - @melpon
 - [FIX] --no-video を指定しているにもかかわらずカメラを一瞬だけ掴むのを修正する
     - @melpon @mganeko
 
