@@ -323,8 +323,8 @@ void Util::parseArgs(int argc,
   }
 
   if (version) {
-    std::cout << MOMO_NAME
-        " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
+    std::cout << MomoVersion::GetClientName()
+              << " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
               << std::endl;
     exit(0);
   }
