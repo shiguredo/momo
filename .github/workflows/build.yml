@@ -35,8 +35,8 @@ jobs:
         name:
           - raspbian-buster_armv6
           - raspbian-buster_armv7
-          - ubuntu-16.04_armv7_rom
-          - ubuntu-16.04_x86_64_rom
+          - ubuntu-16.04_armv7_ros
+          - ubuntu-16.04_x86_64_ros
           - ubuntu-18.04_armv8
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_x86_64
@@ -53,7 +53,7 @@ jobs:
           cat VERSION | grep MOMO_VERSION > tmp
           source tmp
           rm tmp
-          echo "##[set-output name=name;]momo-${MOMO_VERSION}_${{ matrix.name }}-${MACOS_VERSION}.tar.gz"
+          echo "##[set-output name=name;]momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
