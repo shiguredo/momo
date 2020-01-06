@@ -6,36 +6,57 @@ on:
     - 'doc/**'
 
 jobs:
-  build_raspbian-buster_armv6:
-    name: Build momo for raspbian-buster_armv6
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
-        working-directory: build
-        timeout-minutes: 120
-  build_raspbian-buster_armv7:
-    name: Build momo for raspbian-buster_armv7
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
-        working-directory: build
-        timeout-minutes: 120
-  build_ubuntu-18_04_armv8_jetson_nano:
-    name: Build momo for build_ubuntu-18.04_armv8_jetson_nano
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8_jetson_nano
-        working-directory: build
-        timeout-minutes: 120
   build_macos:
     name: Build momo for macOS 10.15
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - run: make macos
+      - run: make macos.package
         working-directory: build
         timeout-minutes: 120
-
+      - name: Output package name
+        shell: bash
+        run: |
+          cat VERSION | grep MOMO_VERSION > tmp
+          source tmp
+          rm tmp
+          MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
+          echo "##[set-output name=name;]momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: build/package/${{ steps.package_name.outputs.name }}
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - raspbian-buster_armv6
+          - raspbian-buster_armv7
+          - ubuntu-16.04_armv7_rom
+          - ubuntu-16.04_x86_64_rom
+          - ubuntu-18.04_armv8
+          - ubuntu-18.04_armv8_jetson_nano
+          - ubuntu-18.04_x86_64
+    name: Build momo for ${{ matrix.name }}
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ${{ matrix.name }}.package
+        working-directory: build
+        timeout-minutes: 120
+      - name: Output package name
+        shell: bash
+        run: |
+          cat VERSION | grep MOMO_VERSION > tmp
+          source tmp
+          rm tmp
+          echo "##[set-output name=name;]momo-${MOMO_VERSION}_${{ matrix.name }}-${MACOS_VERSION}.tar.gz"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: build/package/${{ steps.package_name.outputs.name }}
