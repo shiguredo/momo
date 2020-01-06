@@ -121,7 +121,7 @@ bool AyameWebsocketClient::connect() {
 }
 
 void AyameWebsocketClient::reconnectAfter() {
-  int interval = 5 * (2 * retry_count_ + 1);
+  int interval = 5 * (2 * retry_count_);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.enable(interval);
