@@ -377,6 +377,10 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   } else if (type == "ping") {
     watchdog_.reset();
     doSendPong();
+  } else if (type == "bye") {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": bye";
+    connection_ = nullptr;
+    close();
   }
 }
 
