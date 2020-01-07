@@ -132,7 +132,7 @@ void Util::parseArgs(int argc,
                      bool& use_sora,
                      int& log_level,
                      ConnectionSettings& cs) {
-  CLI::App app("Momo - WebRTC ネイティブクライアント");
+  CLI::App app("Momo - WebRTC Native Client");
 
   bool version = false;
 
@@ -141,7 +141,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "このデバイスは --force-i420 に対応していません。";
+        return "This hardware does NOT suppport --force-i420 option.";
 #endif
       },
       "");
@@ -150,7 +150,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "このデバイスは --use-native に対応していません。";
+        return "This hardware does NOT suppport --use-native option.";
 #endif
       },
       "");
@@ -161,7 +161,7 @@ void Util::parseArgs(int argc,
         return std::string();
 #else
         if (input == "H264") {
-          return "このデバイスは --video-codec=H264 に対応していません。";
+          return "This hardware does NOT support --video-codec=H264 option.";
         }
         return std::string();
 #endif
@@ -181,70 +181,70 @@ void Util::parseArgs(int argc,
           return std::string();
         }
 
-        return "解像度は QVGA, VGA, HD, FHD, 4K, 幅x高さ "
-               "どれかである必要があります。";
+        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT]."
       },
       "");
 
-  app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
-  app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
+  app.add_flag("--no-video", cs.no_video, "do not use video");
+  app.add_flag("--no-audio", cs.no_audio, "do not use audio");
   app.add_flag("--force-i420", cs.force_i420,
-               "強制的にI420にする（対応デバイスのみ）")
+               "use I420 format (only on supported hardwares)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
-               "MJPEGのデコードとビデオのリサイズをハードウェアで行う"
-               "（対応デバイスのみ）")
+               "perform MJPEG deoode and video resize by hardware acceleration "
+               "(only on supported hardwares)")
       ->check(is_valid_use_native);
 #if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
-                 "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス"
-                 "番号が0）のビデオデバイスを自動検出");
+                 "use specified video device, by an id or a name"
+                 "(device with id 0 will be used without this option)");
 #elif defined(__linux__)
   app.add_option("--video-device", cs.video_device,
-                 "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
+                 "use specifide video device by name "
+                 "(some device will be used without this option)")
       ->check(CLI::ExistingFile);
 #endif
   app.add_option("--resolution", cs.resolution,
-                 "解像度(QVGA, VGA, HD, FHD, 4K, 幅x高さ)")
+                 "specify video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
-  app.add_option("--framerate", cs.framerate, "フレームレート")
+  app.add_option("--framerate", cs.framerate, "specify video framerate")
       ->check(CLI::Range(1, 60));
-  app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
+  app.add_flag("--fixed-resolution", cs.fixed_resolution, "maintain video resolution in degradation");
   app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
-              "優先設定 (Experimental)");
-  app.add_option("--port", cs.port, "ポート番号(デフォルト:8080)")
+              "specify preference in video degradation (experimental)");
+  app.add_option("--port", cs.port, "specify port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
-  app.add_flag("--use-sdl", cs.use_sdl, "SDLを使い映像を表示する");
-  app.add_flag("--show-me", cs.show_me, "自分のカメラも表示する");
+  app.add_flag("--use-sdl", cs.use_sdl, "show video using SDL");
+  app.add_flag("--show-me", cs.show_me, "show self video");
   app.add_option("--window-width", cs.window_width,
-                 "映像を表示するウィンドウの横幅")
+                 "specify window width for videos")
       ->check(CLI::Range(180, 16384));
   app.add_option("--window-height", cs.window_height,
-                 "映像を表示するウィンドウの縦幅")
+                 "specify window height for videos")
       ->check(CLI::Range(180, 16384));
   app.add_flag("--fullscreen", cs.fullscreen,
-               "映像を表示するウィンドウをフルスクリーンにする");
-  app.add_flag("--daemon", is_daemon, "デーモン化する");
-  app.add_flag("--version", version, "バージョン情報の表示");
+               "use fullscreen window for videos");
+  app.add_flag("--daemon", is_daemon, "run as a daemon process");
+  app.add_flag("--version", version, "show version information");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
-  app.add_option("--log-level", log_level, "ログレベル")
+  app.add_option("--log-level", log_level, "specify log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   // オーディオフラグ
   app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
-               "エコーキャンセルを無効");
+               "disable echo cancellation for audio");
   app.add_flag("--disable-auto-gain-control", cs.disable_auto_gain_control,
-               "オートゲインコントロール無効");
+               "disable auto gain control for audio");
   app.add_flag("--disable-noise-suppression", cs.disable_noise_suppression,
-               "ノイズサプレッション無効");
+               "disable noise supression for audio");
   app.add_flag("--disable-highpass-filter", cs.disable_highpass_filter,
-               "ハイパスフィルター無効");
+               "disable highpass filter for audio");
   app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
-               "タイピングディテクション無効");
+               "disable typing detection for audio");
   app.add_flag("--disable-residual-echo-detector",
                cs.disable_residual_echo_detector,
-               "残響エコーディテクション無効");
+               "disable residual echo detector for audio");
 
   auto test_app = app.add_subcommand("test", "開発向け");
   auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
