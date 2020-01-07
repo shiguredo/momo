@@ -200,7 +200,7 @@ void Util::parseArgs(int argc,
                  "(device with id 0 will be used without this option)");
 #elif defined(__linux__)
   app.add_option("--video-device", cs.video_device,
-                 "use specifide video device by name "
+                 "use specified video device by name "
                  "(some device will be used without this option)")
       ->check(CLI::ExistingFile);
 #endif
@@ -237,7 +237,7 @@ void Util::parseArgs(int argc,
   app.add_flag("--disable-auto-gain-control", cs.disable_auto_gain_control,
                "disable auto gain control for audio");
   app.add_flag("--disable-noise-suppression", cs.disable_noise_suppression,
-               "disable noise supression for audio");
+               "disable noise suppression for audio");
   app.add_flag("--disable-highpass-filter", cs.disable_highpass_filter,
                "disable highpass filter for audio");
   app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
@@ -246,12 +246,12 @@ void Util::parseArgs(int argc,
                cs.disable_residual_echo_detector,
                "disable residual echo detector for audio");
 
-  auto test_app = app.add_subcommand("test", "Mode for momo developer with simple http server");
+  auto test_app = app.add_subcommand("test", "Mode for momo developer with simple HTTP server");
   auto ayame_app = app.add_subcommand("ayame", "Mode for working with WebRTC Signaling Server Ayame");
   auto sora_app = app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
   test_app
-      ->add_option("--document-root", cs.test_document_root, "specify http document root directory")
+      ->add_option("--document-root", cs.test_document_root, "specify HTTP document root directory")
       ->check(CLI::ExistingDirectory);
 
   ayame_app
