@@ -102,6 +102,7 @@ jobs:
     name: Upload Assets to Release
     needs:
       - create-release
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
