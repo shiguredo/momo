@@ -127,8 +127,8 @@ jobs:
         run: |
           source ${{ matrix.name }}.env/${{ matrix.name }}.env
           source create-release.env/create-release.env
-          echo "::set-output package_name=name::$PACKAGE_NAME"
-          echo "::set-output upload_url=name::$UPLOAD_URL"
+          echo "::set-output name=package_name::$PACKAGE_NAME"
+          echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
       - uses: actions/download-artifact@v1
         with:
