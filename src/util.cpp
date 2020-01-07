@@ -133,6 +133,8 @@ void Util::parseArgs(int argc,
                      int& log_level,
                      ConnectionSettings& cs) {
   CLI::App app("Momo - WebRTC Native Client");
+  app.set_help_flag("-h,--help", "print this help message and exit");
+  app.set_help_all_flag("--help-all", "print help message for all modes and exit");
 
   bool version = false;
 
