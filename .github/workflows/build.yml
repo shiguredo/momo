@@ -125,8 +125,8 @@ jobs:
       - name: Env to output
         shell: bash
         run: |
-          source ${{ matrix.name }}.env
-          source create-release.env
+          source ${{ matrix.name }}.env/${{ matrix.name }}.env
+          source create-release.env/create-release.env
           echo "::set-output package_name=name::$PACKAGE_NAME"
           echo "::set-output upload_url=name::$UPLOAD_URL"
         id: env
