@@ -181,7 +181,7 @@ void Util::parseArgs(int argc,
           return std::string();
         }
 
-        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT]."
+        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT].";
       },
       "");
 
@@ -275,7 +275,7 @@ void Util::parseArgs(int argc,
                 "specify video codec")
       ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
-                    "specify audio codec")
+                    "specify audio codec");
   sora_app
       ->add_option("--video-bitrate", cs.video_bitrate, "specify video bitrate")
       ->check(CLI::Range(1, 30000));
@@ -290,7 +290,7 @@ void Util::parseArgs(int argc,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
       "specify role (default: upstream)");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight, "specify transmitted stream count in spotlight")
+      ->add_option("--spotlight", cs.sora_spotlight, "specify stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(
