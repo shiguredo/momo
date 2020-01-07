@@ -92,7 +92,7 @@ jobs:
           prerelease: false
       - name: Output upload url
         shell: bash
-        run: echo "UPLOAD_URL=steps.create_release.outputs.upload_url" > create-release.env
+        run: echo "UPLOAD_URL='${{ steps.create_release.outputs.upload_url }}'" > create-release.env
       - name: Upload create-release Environment
         uses: actions/upload-artifact@v1
         with:
