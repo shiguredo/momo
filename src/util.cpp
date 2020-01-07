@@ -141,7 +141,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This hardware does NOT support --force-i420 option.";
+        return "This machine does NOT support --force-i420 option.";
 #endif
       },
       "");
@@ -150,7 +150,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This hardware does NOT support --use-native option.";
+        return "This machine does NOT support --use-native option.";
 #endif
       },
       "");
@@ -161,7 +161,7 @@ void Util::parseArgs(int argc,
         return std::string();
 #else
         if (input == "H264") {
-          return "This hardware does NOT support --video-codec=H264 option.";
+          return "This machine does NOT support --video-codec=H264 option.";
         }
         return std::string();
 #endif
@@ -189,11 +189,11 @@ void Util::parseArgs(int argc,
   app.add_flag("--no-video", cs.no_video, "do not use video");
   app.add_flag("--no-audio", cs.no_audio, "do not use audio");
   app.add_flag("--force-i420", cs.force_i420,
-               "use I420 format (only on supported hardware)")
+               "use I420 format (only on supported machines)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
                "perform MJPEG deoode and video resize by hardware acceleration "
-               "(only on supported hardware)")
+               "(only on supported machines)")
       ->check(is_valid_use_native);
 #if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
