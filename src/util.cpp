@@ -288,9 +288,9 @@ void Util::parseArgs(int argc,
   sora_app->add_set(
       "--role", cs.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
-      "ロール（デフォルトは upstream）");
+      "specify role (default: upstream)");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight, "スポットライトの配信数")
+      ->add_option("--spotlight", cs.sora_spotlight, "specify transmitted stream count in spotlight")
       ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(
@@ -304,7 +304,7 @@ void Util::parseArgs(int argc,
       },
       "JSON Value");
   std::string sora_metadata;
-  sora_app->add_option("--metadata", sora_metadata, "メタデータ")
+  sora_app->add_option("--metadata", sora_metadata, "specify metadata for signaling connect")
       ->check(is_json);
 
   try {
