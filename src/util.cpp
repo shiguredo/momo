@@ -246,45 +246,45 @@ void Util::parseArgs(int argc,
                cs.disable_residual_echo_detector,
                "disable residual echo detector for audio");
 
-  auto test_app = app.add_subcommand("test", "開発向け");
-  auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
-  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto test_app = app.add_subcommand("test", "Mode for momo developer with simple http server");
+  auto ayame_app = app.add_subcommand("ayame", "Mode for working with WebRTC Signaling Server Ayame");
+  auto sora_app = app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
   test_app
-      ->add_option("--document-root", cs.test_document_root, "配信ディレクトリ")
+      ->add_option("--document-root", cs.test_document_root, "specify http document root directory")
       ->check(CLI::ExistingDirectory);
 
   ayame_app
       ->add_option("SIGNALING-URL", cs.ayame_signaling_host,
-                   "シグナリングホスト")
+                   "specify signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
-  ayame_app->add_option("--client-id", cs.ayame_client_id, "クライアントID");
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "specify room ID")->required();
+  ayame_app->add_option("--client-id", cs.ayame_client_id, "specify client ID");
   ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
-                        "シグナリングキー");
+                        "specify signaling key");
 
   sora_app
       ->add_option("SIGNALING-URL", cs.sora_signaling_host,
-                   "シグナリングホスト")
+                   "specify signaling URL")
       ->required();
-  sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")
+  sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "specify channel ID")
       ->required();
-  sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+  sora_app->add_flag("--auto", cs.sora_auto_connect, "connect to Sora automatically");
   sora_app
       ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
-                "ビデオコーデック")
+                "specify video codec")
       ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
-                    "オーディオコーデック");
+                    "specify audio codec")
   sora_app
-      ->add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")
+      ->add_option("--video-bitrate", cs.video_bitrate, "specify video bitrate")
       ->check(CLI::Range(1, 30000));
   sora_app
       ->add_option("--audio-bitrate", cs.audio_bitrate,
-                   "オーディオのビットレート")
+                   "specify audio bitrate")
       ->check(CLI::Range(6, 510));
   sora_app->add_flag("--multistream", cs.sora_multistream,
-                     "マルチストリームかどうか");
+                     "use multistream");
   sora_app->add_set(
       "--role", cs.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
