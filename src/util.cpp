@@ -141,7 +141,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This hardware does NOT suppport --force-i420 option.";
+        return "This hardware does NOT support --force-i420 option.";
 #endif
       },
       "");
@@ -150,7 +150,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This hardware does NOT suppport --use-native option.";
+        return "This hardware does NOT support --use-native option.";
 #endif
       },
       "");
