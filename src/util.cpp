@@ -181,7 +181,8 @@ void Util::parseArgs(int argc,
           return std::string();
         }
 
-        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT].";
+        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or "
+               "[WIDTH]x[HEIGHT].";
       },
       "");
 
@@ -205,11 +206,13 @@ void Util::parseArgs(int argc,
       ->check(CLI::ExistingFile);
 #endif
   app.add_option("--resolution", cs.resolution,
-                 "specify video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])")
+                 "specify video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
+                 "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
   app.add_option("--framerate", cs.framerate, "specify video framerate")
       ->check(CLI::Range(1, 60));
-  app.add_flag("--fixed-resolution", cs.fixed_resolution, "maintain video resolution in degradation");
+  app.add_flag("--fixed-resolution", cs.fixed_resolution,
+               "maintain video resolution in degradation");
   app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
               "specify preference in video degradation (experimental)");
   app.add_option("--port", cs.port, "specify port number (default: 8080)")
@@ -228,7 +231,8 @@ void Util::parseArgs(int argc,
   app.add_flag("--version", version, "show version information");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
-  app.add_option("--log-level", log_level, "specify log severity level threshold")
+  app.add_option("--log-level", log_level,
+                 "specify log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   // オーディオフラグ
@@ -246,19 +250,24 @@ void Util::parseArgs(int argc,
                cs.disable_residual_echo_detector,
                "disable residual echo detector for audio");
 
-  auto test_app = app.add_subcommand("test", "Mode for momo developer with simple HTTP server");
-  auto ayame_app = app.add_subcommand("ayame", "Mode for working with WebRTC Signaling Server Ayame");
-  auto sora_app = app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
+  auto test_app = app.add_subcommand(
+      "test", "Mode for momo developer with simple HTTP server");
+  auto ayame_app = app.add_subcommand(
+      "ayame", "Mode for working with WebRTC Signaling Server Ayame");
+  auto sora_app =
+      app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
   test_app
-      ->add_option("--document-root", cs.test_document_root, "specify HTTP document root directory")
+      ->add_option("--document-root", cs.test_document_root,
+                   "specify HTTP document root directory")
       ->check(CLI::ExistingDirectory);
 
   ayame_app
       ->add_option("SIGNALING-URL", cs.ayame_signaling_host,
                    "specify signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "specify room ID")->required();
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "specify room ID")
+      ->required();
   ayame_app->add_option("--client-id", cs.ayame_client_id, "specify client ID");
   ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
                         "specify signaling key");
@@ -269,7 +278,8 @@ void Util::parseArgs(int argc,
       ->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "specify channel ID")
       ->required();
-  sora_app->add_flag("--auto", cs.sora_auto_connect, "connect to Sora automatically");
+  sora_app->add_flag("--auto", cs.sora_auto_connect,
+                     "connect to Sora automatically");
   sora_app
       ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
                 "specify video codec")
@@ -280,17 +290,16 @@ void Util::parseArgs(int argc,
       ->add_option("--video-bitrate", cs.video_bitrate, "specify video bitrate")
       ->check(CLI::Range(1, 30000));
   sora_app
-      ->add_option("--audio-bitrate", cs.audio_bitrate,
-                   "specify audio bitrate")
+      ->add_option("--audio-bitrate", cs.audio_bitrate, "specify audio bitrate")
       ->check(CLI::Range(6, 510));
-  sora_app->add_flag("--multistream", cs.sora_multistream,
-                     "use multistream");
+  sora_app->add_flag("--multistream", cs.sora_multistream, "use multistream");
   sora_app->add_set(
       "--role", cs.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
       "specify role (default: upstream)");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight, "specify stream count delivered in spotlight")
+      ->add_option("--spotlight", cs.sora_spotlight,
+                   "specify stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(
@@ -304,7 +313,9 @@ void Util::parseArgs(int argc,
       },
       "JSON Value");
   std::string sora_metadata;
-  sora_app->add_option("--metadata", sora_metadata, "specify metadata for signaling connect")
+  sora_app
+      ->add_option("--metadata", sora_metadata,
+                   "specify metadata for signaling connect")
       ->check(is_json);
 
   try {
