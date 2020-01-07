@@ -189,11 +189,11 @@ void Util::parseArgs(int argc,
   app.add_flag("--no-video", cs.no_video, "do not use video");
   app.add_flag("--no-audio", cs.no_audio, "do not use audio");
   app.add_flag("--force-i420", cs.force_i420,
-               "use I420 format (only on supported hardwares)")
+               "use I420 format (only on supported hardware)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
                "perform MJPEG deoode and video resize by hardware acceleration "
-               "(only on supported hardwares)")
+               "(only on supported hardware)")
       ->check(is_valid_use_native);
 #if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
