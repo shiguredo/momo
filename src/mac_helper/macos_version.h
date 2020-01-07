@@ -9,4 +9,4 @@ class MacosVersion {
   static std::string GetOSVersion();
 };
 
-#endif // MACOS_VERSION_H_INCLUDED
+#endif  // MACOS_VERSION_H_INCLUDED
