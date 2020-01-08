@@ -142,7 +142,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This machine does NOT support --force-i420 option.";
+        return "Not available because your device does not have this feature.";
 #endif
       },
       "");
@@ -151,7 +151,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "This machine does NOT support --use-native option.";
+        return "Not available because your device does not have this feature.";
 #endif
       },
       "");
@@ -162,7 +162,7 @@ void Util::parseArgs(int argc,
         return std::string();
 #else
         if (input == "H264") {
-          return "This machine does NOT support --video-codec=H264 option.";
+          return "Not available because your device does not have this feature.";
         }
         return std::string();
 #endif
