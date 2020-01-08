@@ -182,7 +182,7 @@ void Util::parseArgs(int argc,
           return std::string();
         }
 
-        return "A resolution value must be one of QVGA, VGA, HD, FHD, 4K, or "
+        return "Must be one of QVGA, VGA, HD, FHD, 4K, or "
                "[WIDTH]x[HEIGHT].";
       },
       "");
@@ -190,7 +190,7 @@ void Util::parseArgs(int argc,
   app.add_flag("--no-video", cs.no_video, "Do not send video");
   app.add_flag("--no-audio", cs.no_audio, "Do not send audio");
   app.add_flag("--force-i420", cs.force_i420,
-               "Use I420 format (only on supported devices)")
+               "Prefer I420 format for video capture (only on supported devices)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
                "Perform MJPEG deoode and video resize by hardware acceleration "
@@ -198,12 +198,12 @@ void Util::parseArgs(int argc,
       ->check(is_valid_use_native);
 #if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
-                 "Use specified video device, by an id or a name"
-                 "(device with id 0 will be used without this option)");
+                 "Use the video device specified by an index or a name "
+                 "(use the first one if not specified)");
 #elif defined(__linux__)
   app.add_option("--video-device", cs.video_device,
-                 "Use specified video device by name "
-                 "(some device will be used without this option)")
+                 "Use the video input device specified by a name "
+                 "(some device will be used if not specified)")
       ->check(CLI::ExistingFile);
 #endif
   app.add_option("--resolution", cs.resolution,
