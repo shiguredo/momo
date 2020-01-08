@@ -147,4 +147,3 @@ std::string MomoVersion::GetEnvironmentName() {
 
   return environment;
 }
-
