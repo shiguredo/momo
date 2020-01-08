@@ -133,7 +133,8 @@ void Util::parseArgs(int argc,
                      int& log_level,
                      ConnectionSettings& cs) {
   CLI::App app("Momo - WebRTC Native Client");
-  app.set_help_all_flag("--help-all", "Print help message for all modes and exit");
+  app.set_help_all_flag("--help-all",
+                        "Print help message for all modes and exit");
 
   bool version = false;
 
@@ -162,7 +163,8 @@ void Util::parseArgs(int argc,
         return std::string();
 #else
         if (input == "H264") {
-          return "Not available because your device does not have this feature.";
+          return "Not available because your device does not have this "
+                 "feature.";
         }
         return std::string();
 #endif
@@ -189,8 +191,9 @@ void Util::parseArgs(int argc,
 
   app.add_flag("--no-video", cs.no_video, "Do not send video");
   app.add_flag("--no-audio", cs.no_audio, "Do not send audio");
-  app.add_flag("--force-i420", cs.force_i420,
-               "Prefer I420 format for video capture (only on supported devices)")
+  app.add_flag(
+         "--force-i420", cs.force_i420,
+         "Prefer I420 format for video capture (only on supported devices)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
                "Perform MJPEG deoode and video resize by hardware acceleration "
@@ -220,8 +223,7 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(0, 65535));
   app.add_flag("--use-sdl", cs.use_sdl, "Show video using SDL");
   app.add_flag("--show-me", cs.show_me, "Show self video");
-  app.add_option("--window-width", cs.window_width,
-                 "Window width for videos")
+  app.add_option("--window-width", cs.window_width, "Window width for videos")
       ->check(CLI::Range(180, 16384));
   app.add_option("--window-height", cs.window_height,
                  "Window height for videos")
@@ -232,8 +234,7 @@ void Util::parseArgs(int argc,
   app.add_flag("--version", version, "Show version information");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
-  app.add_option("--log-level", log_level,
-                 "Log severity level threshold")
+  app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   // オーディオフラグ
@@ -264,18 +265,14 @@ void Util::parseArgs(int argc,
       ->check(CLI::ExistingDirectory);
 
   ayame_app
-      ->add_option("SIGNALING-URL", cs.ayame_signaling_host,
-                   "Signaling URL")
+      ->add_option("SIGNALING-URL", cs.ayame_signaling_host, "Signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "Room ID")
-      ->required();
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "Room ID")->required();
   ayame_app->add_option("--client-id", cs.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
                         "Signaling key");
 
-  sora_app
-      ->add_option("SIGNALING-URL", cs.sora_signaling_host,
-                   "Signaling URL")
+  sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "Signaling URL")
       ->required();
   sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "Channel ID")
       ->required();
@@ -287,11 +284,9 @@ void Util::parseArgs(int argc,
       ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
                     "Audio codec for send");
-  sora_app
-      ->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
+  sora_app->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
       ->check(CLI::Range(1, 30000));
-  sora_app
-      ->add_option("--audio-bitrate", cs.audio_bitrate, "Audio bitrate")
+  sora_app->add_option("--audio-bitrate", cs.audio_bitrate, "Audio bitrate")
       ->check(CLI::Range(6, 510));
   sora_app->add_flag("--multistream", cs.sora_multistream, "Use multistream");
   sora_app->add_set(
