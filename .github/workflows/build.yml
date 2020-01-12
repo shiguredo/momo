@@ -6,36 +6,139 @@ on:
     - 'doc/**'
 
 jobs:
-  build_raspbian-buster_armv6:
-    name: Build momo for raspbian-buster_armv6
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv6
-        working-directory: build
-        timeout-minutes: 120
-  build_raspbian-buster_armv7:
-    name: Build momo for raspbian-buster_armv7
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make raspbian-buster_armv7
-        working-directory: build
-        timeout-minutes: 120
-  build_ubuntu-18_04_armv8_jetson_nano:
-    name: Build momo for build_ubuntu-18.04_armv8_jetson_nano
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ubuntu-18.04_armv8_jetson_nano
-        working-directory: build
-        timeout-minutes: 120
-  build_macos:
+  build-macos:
     name: Build momo for macOS 10.15
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - run: make macos
+      - run: make macos.package
         working-directory: build
         timeout-minutes: 120
-
+      - name: Output package name
+        shell: bash
+        run: |
+          cat VERSION | grep MOMO_VERSION > tmp
+          source tmp
+          rm tmp
+          MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" > macos.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: build/package/${{ steps.package_name.outputs.name }}
+      - name: Upload Environment
+        uses: actions/upload-artifact@v1
+        with:
+          name: macos.env
+          path: macos.env
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - raspbian-buster_armv6
+          - raspbian-buster_armv7
+          - ubuntu-16.04_armv7_ros
+          - ubuntu-16.04_x86_64_ros
+          - ubuntu-18.04_armv8
+          - ubuntu-18.04_armv8_jetson_nano
+          - ubuntu-18.04_x86_64
+    name: Build momo for ${{ matrix.name }}
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ${{ matrix.name }}.package
+        working-directory: build
+        timeout-minutes: 120
+      - name: Output package name
+        shell: bash
+        run: |
+          cat VERSION | grep MOMO_VERSION > tmp
+          source tmp
+          rm tmp
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" > ${{ matrix.name }}.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: build/package/${{ steps.package_name.outputs.name }}
+      - name: Upload Environment
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.name }}.env
+          path: ${{ matrix.name }}.env
+  create-release:
+    name: Create Release
+    if: contains(github.ref, 'tags/202')
+    needs:
+      - build-macos
+      - build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Output upload url
+        shell: bash
+        run: echo "UPLOAD_URL='${{ steps.create_release.outputs.upload_url }}'" > create-release.env
+      - name: Upload create-release Environment
+        uses: actions/upload-artifact@v1
+        with:
+          name: create-release.env
+          path: create-release.env
+  upload-assets:
+    name: Upload Assets to Release
+    needs:
+      - create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        name:
+          - macos
+          - raspbian-buster_armv6
+          - raspbian-buster_armv7
+          - ubuntu-16.04_armv7_ros
+          - ubuntu-16.04_x86_64_ros
+          - ubuntu-18.04_armv8
+          - ubuntu-18.04_armv8_jetson_nano
+          - ubuntu-18.04_x86_64
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: ${{ matrix.name }}.env
+      - uses: actions/download-artifact@v1
+        with:
+          name: create-release.env
+      - name: Env to output
+        shell: bash
+        run: |
+          source ${{ matrix.name }}.env/${{ matrix.name }}.env
+          source create-release.env/create-release.env
+          echo "::set-output name=package_name::$PACKAGE_NAME"
+          echo "::set-output name=upload_url::$UPLOAD_URL"
+        id: env
+      - uses: actions/download-artifact@v1
+        with:
+          name: ${{ steps.env.outputs.package_name }}
+      - name: Upload ${{ matrix.name }} Release Asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.env.outputs.upload_url }}
+          asset_path: ${{ steps.env.outputs.package_name }}/${{ steps.env.outputs.package_name }}
+          asset_name: ${{ steps.env.outputs.package_name }}
+          asset_content_type: application/gzip

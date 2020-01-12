@@ -3,6 +3,7 @@
 #include <boost/beast/websocket/stream.hpp>
 #include <nlohmann/json.hpp>
 
+#include "../momo_version.h"
 #include "url_parts.h"
 #include "util.h"
 
@@ -224,6 +225,9 @@ void AyameWebsocketClient::doRegister() {
       {"type", "register"},
       {"clientId", Util::generateRandomChars()},
       {"roomId", conn_settings_.ayame_room_id},
+      {"ayameClient", MomoVersion::GetClientName()},
+      {"libwebrtc", MomoVersion::GetLibwebrtcName()},
+      {"environment", MomoVersion::GetEnvironmentName()},
   };
   if (conn_settings_.ayame_client_id != "") {
     json_message["clientId"] = conn_settings_.ayame_client_id;
