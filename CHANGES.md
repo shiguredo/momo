@@ -28,7 +28,7 @@
     - `--resolution 640x480` のように指定できるようになりました
     - この機能が有効になるのは、カメラに依存するため動作保証はありません
     - @melpon
-- [ADD] Sora 利用時のシグナリング接続情報に enviroment / libwebrtc / sora_client を追加する
+- [ADD] Sora モード利用時のシグナリング接続情報に enviroment / libwebrtc / sora_client を追加する
     - Jetson Nano の場合
         - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
         - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
@@ -41,6 +41,20 @@
         - `"environment": "[x86_64] Ubuntu 18.04.3 LTS"`
         - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
         - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - @melpon
+- [ADD] Ayame モード利用時のシグナリング接続情報に enviroment / libwebrtc / ayameClient を追加する
+    - Jetson Nano の場合
+        - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"ayameClient": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - macOS の場合
+        - `"environment": "[x86_64] macOS Version 10.15.2 (Build 19C57)"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"ayameClient": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - Ubuntu 18.04 x86_64 の場合
+        - `"environment": "[x86_64] Ubuntu 18.04.3 LTS"`
+        - `"libwebrtc": "Shiguredo-Build M79@{#5} (79.5.4 b484ec00)"`
+        - `"ayameClient": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
     - @melpon
 - [CHANGE] <package>.edit の機能とドキュメントを削除
     - @melpon
