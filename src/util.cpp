@@ -171,6 +171,17 @@ void Util::parseArgs(int argc,
       },
       "");
 
+  auto is_sdl_available = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_SDL
+        return std::string();
+#else
+        return "Not available because your device does not have this "
+               "feature.";
+#endif
+      },
+      "");
+
   auto is_valid_resolution = CLI::Validator(
       [](std::string input) -> std::string {
         if (input == "QVGA" || input == "VGA" || input == "HD" ||
@@ -221,15 +232,22 @@ void Util::parseArgs(int argc,
               "Preference in video degradation (experimental)");
   app.add_option("--port", cs.port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
-  app.add_flag("--use-sdl", cs.use_sdl, "Show video using SDL");
-  app.add_flag("--show-me", cs.show_me, "Show self video");
-  app.add_option("--window-width", cs.window_width, "Window width for videos")
+  app.add_flag("--use-sdl", cs.use_sdl,
+               "Show video using SDL (if SDL is available)")
+      ->check(is_sdl_available);
+  app.add_flag("--show-me", cs.show_me, "Show self video (if SDL is available)")
+      ->check(is_sdl_available);
+  app.add_option("--window-width", cs.window_width,
+                 "Window width for videos (if SDL is available)")
+      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_option("--window-height", cs.window_height,
-                 "Window height for videos")
+                 "Window height for videos (if SDL is available)")
+      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_flag("--fullscreen", cs.fullscreen,
-               "Use fullscreen window for videos");
+               "Use fullscreen window for videos (if SDL is available)")
+      ->check(is_sdl_available);
   app.add_flag("--daemon", is_daemon, "Run as a daemon process");
   app.add_flag("--version", version, "Show version information");
   auto log_level_map = std::vector<std::pair<std::string, int> >(

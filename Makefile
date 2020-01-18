@@ -79,7 +79,7 @@ ifeq ($(PACKAGE_NAME),raspbian-buster_armv6)
   USE_MMAL_ENCODER ?= 1
   USE_JETSON_ENCODER ?= 0
   USE_H264 ?= 1
-  USE_SDL2 ?= 1
+  USE_SDL2 ?= 0
   BOOST_ROOT ?= /root/boost
   JSON_ROOT ?= /root/json
   CLI11_ROOT ?= /root/CLI11
