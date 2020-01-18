@@ -44,8 +44,11 @@
 RTCManager::RTCManager(
     ConnectionSettings conn_settings,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-    VideoTrackReceiver* receiver)
-    : _conn_settings(conn_settings), _receiver(receiver) {
+    VideoTrackReceiver* receiver,
+    RTCDataManager* data_manager)
+    : _conn_settings(conn_settings),
+      _receiver(receiver),
+      _data_manager(data_manager) {
   rtc::InitializeSSL();
 
   _networkThread = rtc::Thread::CreateWithSocketServer();
@@ -191,7 +194,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
-      new PeerConnectionObserver(sender, _receiver));
+      new PeerConnectionObserver(sender, _receiver, _data_manager));
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
       _factory->CreatePeerConnection(rtc_config, nullptr, nullptr,
                                      observer.get());

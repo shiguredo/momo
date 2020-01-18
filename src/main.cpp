@@ -25,6 +25,10 @@
 #endif
 #endif
 
+#ifndef _MSC_VER
+#include "serial_data_channel/serial_data_manager.h"
+#endif
+
 #if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"
 #endif
@@ -107,6 +111,13 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  std::unique_ptr<RTCDataManager> data_manager = nullptr;
+#ifndef _MSC_VER
+  if (!cs.serial_device.empty()) {
+    data_manager.reset(new SerialDataManager(cs.serial_device, cs.serial_rate));
+  }
+#endif
+
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (cs.use_sdl) {
@@ -114,11 +125,11 @@ int main(int argc, char* argv[]) {
         new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
+      cs, std::move(capturer), sdl_renderer.get(), data_manager.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), nullptr));
+      new RTCManager(cs, std::move(capturer), nullptr, data_manager.get()));
 #endif
 
   {

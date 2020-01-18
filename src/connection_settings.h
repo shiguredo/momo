@@ -35,6 +35,8 @@ struct ConnectionSettings {
   int window_width = 640;
   int window_height = 480;
   bool fullscreen = false;
+  std::string serial_device = "";
+  unsigned int serial_rate = 9600;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;
