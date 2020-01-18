@@ -36,9 +36,11 @@ Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を�
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
 
-## データチャネル経由でのシリアル読み書きを使ってみる
+## データチャネルを利用したシリアル読み書きを使ってみる
 
-[USE_SERIAL.md](USE_SERIAL.md)
+Test と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
+
+[USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
 ## SDL を利用した受信機能を使ってみる
 
