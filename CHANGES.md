@@ -63,8 +63,12 @@
     - @shino msnoigrs
 - [CHANGE] <package>.edit の機能とドキュメントを削除
     - @melpon
+- [CHANGE] armv6 で SDL を使えなくする
+    - @melpon
 - [FIX] --no-video を指定しているにもかかわらずカメラを一瞬だけ掴むのを修正する
     - @melpon @mganeko
+- [FIX] SDL が有効でない時に SDL 関連のオプションを指定するとエラーにする
+    - @melpon
 
 ## 19.12.1
 
