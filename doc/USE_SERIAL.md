@@ -8,7 +8,7 @@
 
 socat はインストールされている前提です。
 
-内部的につながっている仮想シリアルポートを作成します。
+仮想シリアルポートを２つ作成します。
 
 ```
 $ socat -d -d pty,raw,echo=0 pty,raw,echo=0
@@ -17,9 +17,9 @@ $ socat -d -d pty,raw,echo=0 pty,raw,echo=0
 2020/01/18 18:47:21 socat[71342] N starting data transfer loop with FDs [5,5] and [7,7]
 ```
 
-これで /dev/ttys003 と /dev/ttys004 が内部的につながっていることになります。
+内部的に繋がった /dev/ttys003 と /dev/ttys004 の２つの仮想シリアルポートができました。
 
-ttys003 に Momo を繋ぎます。
+次に /dev/ttys003 に Momo を繋ぎます。
 
 ```
 $ ./momo --serial /dev/ttys003,9600 test
@@ -34,6 +34,14 @@ $ cat < /dev/ttys004
 http://127.0.0.1:8080/html/test.html にアクセスします。
 
 send のところでなにか文字列を送って無事 ttys004 経由で表示される事を確認してください。
+
+次に /dev/ttys004 に書き込んだら
+
+```
+$ echo "Hello, world!" > /dev/ttys004
+```
+
+http://127.0.0.1:8080/html/test.html の JavaScript Console に表示される事を確認してください。
 
 ## 参考動画
 
