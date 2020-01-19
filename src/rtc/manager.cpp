@@ -46,7 +46,8 @@ RTCManager::RTCManager(
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
     : _conn_settings(conn_settings),
-      _receiver(receiver) {
+      _receiver(receiver),
+      _data_manager(nullptr) {
   rtc::InitializeSSL();
 
   _networkThread = rtc::Thread::CreateWithSocketServer();
