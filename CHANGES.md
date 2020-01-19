@@ -28,7 +28,6 @@
 - [UPDATE] 音声系オプションの --disable-residual-echo-detector を追加する
     - @melpon
 - [ADD] データチャネルを利用したシリアルポートへの読み書き機能を追加する
-
     - --serial を指定することでデータチャネル経由でのシリアル読み書きが可能になる
     - test と ayame モードでのみ利用可能
     - @tnoho
