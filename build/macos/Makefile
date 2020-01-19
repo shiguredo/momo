@@ -19,7 +19,7 @@ ifeq ($(JOBS),)
 endif
 
 .PHONY: all
-all: check $(WEBRTC) $(BOOST) $(SDL2) $(LLVM) $(CLI11) $(JSON)
+all: $(WEBRTC) $(BOOST) $(SDL2) $(LLVM) $(CLI11) $(JSON)
 
 .PHONY: clean
 clean:
@@ -29,16 +29,6 @@ clean:
 	rm -rf sdl2-source
 	rm -rf sdl2
 	rm -rf llvm
-
-.PHONY: check
-check:
-	@if [ "`python --version 2>&1 | cut -d' ' -f2 | cut -b1-3`" != "2.7" ]; then \
-	  echo ""; \
-	  echo "Python 3 では WebRTC をビルドできません。Python 2.7 を利用して下さい。"; \
-	  echo "macOS でのビルド方法については doc/BUILD.md を確認して下さい。"; \
-	  echo ""; \
-	  exit 1; \
-	fi
 
 $(CLI11): ../../VERSION
 	rm -rf CLI11
