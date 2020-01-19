@@ -12,14 +12,14 @@ class SerialDataChannel;
 
 class SerialDataManager : public RTCDataManager {
  public:
-  static SerialDataManager* Create(boost::asio::io_context& ioc,
+  static std::unique_ptr<SerialDataManager> Create(boost::asio::io_context& ioc,
                                    std::string device,
                                    unsigned int rate) {
     std::unique_ptr<SerialDataManager> data_manager(new SerialDataManager(ioc));
     if (!data_manager->Connect(device, rate)) {
       return nullptr;
     }
-    return data_manager.release();
+    return data_manager;
   }
   ~SerialDataManager();
 

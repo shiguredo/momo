@@ -130,12 +130,8 @@ int main(int argc, char* argv[]) {
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
     if (!cs.serial_device.empty()) {
-      data_manager.reset(
-          SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate));
+      data_manager = SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
       if (!data_manager) {
-        RTC_LOG(LS_ERROR) << "failed to connect serial device : "
-                          << cs.serial_device
-                          << "  bundrate : " << cs.serial_rate;
         return 1;
       }
       rtc_manager->SetDataManager(data_manager.get());

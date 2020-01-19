@@ -274,8 +274,8 @@ void Util::parseArgs(int argc,
       [](std::string input) -> std::string {
         try {
           auto separater_pos = input.find(',');
-          std::string bandrate_str = input.substr(separater_pos + 1);
-          unsigned int _ = std::stoi(bandrate_str);
+          std::string baudrate_str = input.substr(separater_pos + 1);
+          unsigned int _ = std::stoi(baudrate_str);
           return std::string();
         } catch (std::invalid_argument& e) {
           return "Value " + input +
@@ -362,9 +362,9 @@ void Util::parseArgs(int argc,
 
   if (!serial_setting.empty()) {
     auto separater_pos = serial_setting.find(',');
-    std::string bandrate_str = serial_setting.substr(separater_pos + 1);
+    std::string baudrate_str = serial_setting.substr(separater_pos + 1);
     cs.serial_device = serial_setting.substr(0, separater_pos);
-    cs.serial_rate = std::stoi(bandrate_str);
+    cs.serial_rate = std::stoi(baudrate_str);
   }
 
   // メタデータのパース

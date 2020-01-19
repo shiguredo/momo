@@ -3,6 +3,7 @@
 
 #include "serial_data_manager.h"
 
+#include <iostream>
 #include <boost/bind.hpp>
 
 #include "rtc_base/log_sinks.h"
@@ -49,26 +50,45 @@ bool SerialDataManager::Connect(std::string device, unsigned int rate) {
   boost::system::error_code error;
   serial_port_.open(device, error);
   if (error) {
+    std::cerr << "failed to connect serial port device : "
+                      << device << std::endl;
     return false;
   }
 
   serial_port_.set_option(boost::asio::serial_port_base::baud_rate(rate),
                           error);
   if (error) {
+    std::cerr << "failed to set serial port baudrate : " << rate << std::endl;
     return false;
   }
   serial_port_.set_option(boost::asio::serial_port_base::character_size(8),
                           error);
+  if (error) {
+    std::cerr << "failed to set serial port character size : 8" << std::endl;
+    return false;
+  }
   serial_port_.set_option(
       boost::asio::serial_port_base::flow_control(
           boost::asio::serial_port_base::flow_control::none),
       error);
+  if (error) {
+    std::cerr << "failed to set serial port flow control : none" << std::endl;
+    return false;
+  }
   serial_port_.set_option(boost::asio::serial_port_base::parity(
                               boost::asio::serial_port_base::parity::none),
                           error);
+  if (error) {
+    std::cerr << "failed to set serial port parity : none" << std::endl;
+    return false;
+  }
   serial_port_.set_option(boost::asio::serial_port_base::stop_bits(
                               boost::asio::serial_port_base::stop_bits::one),
                           error);
+  if (error) {
+    std::cerr << "failed to set serial port stop bit : one" << std::endl;
+    return false;
+  }
 
   read_buffer_.reset(new uint8_t[read_buffer_size_]);
   post_(std::bind(&SerialDataManager::doRead, this));
