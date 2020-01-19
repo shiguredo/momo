@@ -12,12 +12,13 @@ class SerialDataChannel : public webrtc::DataChannelObserver {
   SerialDataChannel(
       SerialDataManager* serial_data_manager,
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel);
+  ~SerialDataChannel();
+
+  void Send(uint8_t* data, size_t length);
 
   void OnStateChange() override;
   void OnMessage(const webrtc::DataBuffer& buffer) override;
   void OnBufferedAmountChange(uint64_t previous_amount) override {}
-
-  void send(uint8_t* data, size_t length);
 
  private:
   SerialDataManager* serial_data_manager_;

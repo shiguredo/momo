@@ -9,6 +9,11 @@ SerialDataChannel::SerialDataChannel(
   data_channel_->RegisterObserver(this);
 }
 
+
+SerialDataChannel::~SerialDataChannel() {
+  data_channel_->UnregisterObserver();
+}
+
 void SerialDataChannel::OnStateChange() {
   webrtc::DataChannelInterface::DataState state = data_channel_->state();
   if (state == webrtc::DataChannelInterface::kClosed) {
@@ -18,12 +23,12 @@ void SerialDataChannel::OnStateChange() {
 
 void SerialDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
   const uint8_t* data = buffer.data.data<uint8_t>();
-  size_t lenght = buffer.data.size();
+  size_t length = buffer.data.size();
 
-  serial_data_manager_->send(data, lenght);
+  serial_data_manager_->Send(data, length);
 }
 
-void SerialDataChannel::send(uint8_t* data, size_t length) {
+void SerialDataChannel::Send(uint8_t* data, size_t length) {
   if (data_channel_->state() != webrtc::DataChannelInterface::kOpen) {
     return;
   }

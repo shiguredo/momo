@@ -111,13 +111,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  std::unique_ptr<RTCDataManager> data_manager = nullptr;
-#ifndef _MSC_VER
-  if (!cs.serial_device.empty()) {
-    data_manager.reset(new SerialDataManager(cs.serial_device, cs.serial_rate));
-  }
-#endif
-
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (cs.use_sdl) {
@@ -126,14 +119,27 @@ int main(int argc, char* argv[]) {
   }
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
-      cs, std::move(capturer), sdl_renderer.get(), data_manager.get()));
+      cs, std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), nullptr, data_manager.get()));
+      new RTCManager(cs, std::move(capturer), nullptr));
 #endif
 
   {
     boost::asio::io_context ioc{1};
+
+    std::unique_ptr<RTCDataManager> data_manager = nullptr;
+    if (!cs.serial_device.empty()) {
+      data_manager.reset(
+          SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate));
+      if (!data_manager) {
+        RTC_LOG(LS_ERROR) << "failed to connect serial device : "
+                          << cs.serial_device
+                          << "  bundrate : " << cs.serial_rate;
+        return 1;
+      }
+      rtc_manager->SetDataManager(data_manager.get());
+    }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
     signals.async_wait(

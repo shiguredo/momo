@@ -44,11 +44,9 @@
 RTCManager::RTCManager(
     ConnectionSettings conn_settings,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-    VideoTrackReceiver* receiver,
-    RTCDataManager* data_manager)
+    VideoTrackReceiver* receiver)
     : _conn_settings(conn_settings),
-      _receiver(receiver),
-      _data_manager(data_manager) {
+      _receiver(receiver) {
   rtc::InitializeSSL();
 
   _networkThread = rtc::Thread::CreateWithSocketServer();
@@ -186,6 +184,10 @@ RTCManager::~RTCManager() {
   _signalingThread->Stop();
 
   rtc::CleanupSSL();
+}
+
+void RTCManager::SetDataManager(RTCDataManager* data_manager) {
+  _data_manager = data_manager;
 }
 
 std::shared_ptr<RTCConnection> RTCManager::createConnection(

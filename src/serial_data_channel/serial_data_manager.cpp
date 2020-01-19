@@ -10,20 +10,53 @@
 #define SERIAL_TX_BUFFER_SIZE 16
 #define SERIAL_RX_BUFFER_SIZE 256
 
-SerialDataManager::SerialDataManager(std::string device, unsigned int rate)
-    : serial_port_(io_service_),
-      read_buffer_size_(SERIAL_RX_BUFFER_SIZE),
-      writting_(false) {
+SerialDataManager::SerialDataManager(boost::asio::io_context& ioc)
+    : serial_port_(ioc), read_buffer_size_(SERIAL_RX_BUFFER_SIZE) {
+  post_ = [&ioc](std::function<void()> f) {
+    if (ioc.stopped())
+      return;
+    ioc.post(f);
+  };
+}
+
+SerialDataManager::~SerialDataManager() {
+  {
+    rtc::CritScope lock(&channels_lock_);
+    for (SerialDataChannel* serial_data_channel : serial_data_channels_) {
+      delete serial_data_channel;
+    }
+  }
+
+  doCloseSerial();
+}
+
+void SerialDataManager::OnDataChannel(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
+  rtc::CritScope lock(&channels_lock_);
+  serial_data_channels_.push_back(new SerialDataChannel(this, data_channel));
+}
+
+void SerialDataManager::OnClosed(SerialDataChannel* serial_data_channel) {
+  rtc::CritScope lock(&channels_lock_);
+  serial_data_channels_.erase(
+      std::remove(serial_data_channels_.begin(), serial_data_channels_.end(),
+                  serial_data_channel),
+      serial_data_channels_.end());
+  delete serial_data_channel;
+}
+
+bool SerialDataManager::Connect(std::string device, unsigned int rate) {
   boost::system::error_code error;
   serial_port_.open(device, error);
   if (error) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << " open serial failed  device : " << device;
-    return;
+    return false;
   }
 
   serial_port_.set_option(boost::asio::serial_port_base::baud_rate(rate),
                           error);
+  if (error) {
+    return false;
+  }
   serial_port_.set_option(boost::asio::serial_port_base::character_size(8),
                           error);
   serial_port_.set_option(
@@ -38,43 +71,13 @@ SerialDataManager::SerialDataManager(std::string device, unsigned int rate)
                           error);
 
   read_buffer_.reset(new uint8_t[read_buffer_size_]);
-  io_service_.post(boost::bind(&SerialDataManager::doRead, this));
-  read_thread_ =
-      std::thread(boost::bind(&boost::asio::io_service::run, &io_service_));
+  post_(std::bind(&SerialDataManager::doRead, this));
+  return true;
 }
 
-SerialDataManager::~SerialDataManager() {
-  for (SerialDataChannel* serial_data_channel : _serial_data_channels) {
-    delete serial_data_channel;
-  }
-
-  io_service_.post(boost::bind(&SerialDataManager::doCloseSerial, this));
-  read_thread_.join();
-  io_service_.reset();
-}
-
-void SerialDataManager::OnDataChannel(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
-  _serial_data_channels.push_back(new SerialDataChannel(this, data_channel));
-}
-
-void SerialDataManager::OnClosed(SerialDataChannel* serial_data_channel) {
-  _serial_data_channels.erase(
-      std::remove(_serial_data_channels.begin(), _serial_data_channels.end(),
-                  serial_data_channel),
-      _serial_data_channels.end());
-  delete serial_data_channel;
-}
-
-void SerialDataManager::send(const uint8_t* data, size_t length) {
-  if (!serial_port_.is_open()) {
-    return;
-  }
-  {
-    rtc::CritScope lock(&write_buffer_lock_);
-    write_buffer_.insert(write_buffer_.end(), data, data + length);
-  }
-  io_service_.post(boost::bind(&SerialDataManager::startWrite, this));
+void SerialDataManager::Send(const uint8_t* data, size_t length) {
+  std::vector<uint8_t> v(data, data + length);
+  post_(std::bind(&SerialDataManager::startWrite, this, std::move(v)));
 }
 
 void SerialDataManager::doCloseSerial() {
@@ -107,26 +110,36 @@ void SerialDataManager::onRead(const boost::system::error_code& error,
   }
   read_line_buffer_.insert(read_line_buffer_.end(), read_buffer_.get(),
                            read_buffer_.get() + bytes_transferred);
+  {
+    rtc::CritScope lock(&channels_lock_);
+    sendLineFromSerial();
+  }
+  doRead();
+}
+
+void SerialDataManager::sendLineFromSerial() {
   auto delimiter_iterator =
       std::find(read_line_buffer_.begin(), read_line_buffer_.end(), '\n');
   if (delimiter_iterator != read_line_buffer_.end()) {
     size_t delimiter_index =
         std::distance(read_line_buffer_.begin(), delimiter_iterator);
-    for (SerialDataChannel* serial_data_channel : _serial_data_channels) {
-      serial_data_channel->send(read_line_buffer_.data(), delimiter_index);
+    for (SerialDataChannel* serial_data_channel : serial_data_channels_) {
+      serial_data_channel->Send(read_line_buffer_.data(), delimiter_index);
     }
     read_line_buffer_.erase(read_line_buffer_.begin(), delimiter_iterator + 1);
+    sendLineFromSerial();
   }
-  doRead();
 }
 
-void SerialDataManager::startWrite() {
-  rtc::CritScope lock(&write_buffer_lock_);
-  if (writting_ || write_buffer_.size() == 0) {
+void SerialDataManager::startWrite(std::vector<uint8_t> v) {
+  if (!serial_port_.is_open()) {
     return;
   }
-  writting_ = true;
-  doWrite();
+  bool empty = write_buffer_.empty();
+  write_buffer_.insert(write_buffer_.end(), v.begin(), v.end());
+  if (empty && !write_buffer_.empty()) {
+    doWrite();
+  }
 }
 
 void SerialDataManager::doWrite() {
@@ -148,11 +161,9 @@ void SerialDataManager::onWrite(const boost::system::error_code& error) {
     doCloseSerial();
     return;
   }
-  rtc::CritScope lock(&write_buffer_lock_);
   write_buffer_.erase(write_buffer_.begin(),
                       write_buffer_.begin() + write_length_);
-  if (write_buffer_.size() == 0) {
-    writting_ = false;
+  if (write_buffer_.empty()) {
     return;
   }
   doWrite();
