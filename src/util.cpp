@@ -173,7 +173,7 @@ void Util::parseArgs(int argc,
 
   auto is_sdl_available = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_SDL
+#if USE_SDL2
         return std::string();
 #else
         return "Not available because your device does not have this "
