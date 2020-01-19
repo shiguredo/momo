@@ -25,6 +25,10 @@
 #endif
 #endif
 
+#ifndef _MSC_VER
+#include "serial_data_channel/serial_data_manager.h"
+#endif
+
 #if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"
 #endif
@@ -114,8 +118,8 @@ int main(int argc, char* argv[]) {
         new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
+      cs, std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), nullptr));
@@ -123,6 +127,15 @@ int main(int argc, char* argv[]) {
 
   {
     boost::asio::io_context ioc{1};
+
+    std::unique_ptr<RTCDataManager> data_manager = nullptr;
+    if (!cs.serial_device.empty()) {
+      data_manager = SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
+      if (!data_manager) {
+        return 1;
+      }
+      rtc_manager->SetDataManager(data_manager.get());
+    }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
     signals.async_wait(

@@ -270,6 +270,28 @@ void Util::parseArgs(int argc,
                cs.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
 
+  auto is_serial_setting_format = CLI::Validator(
+      [](std::string input) -> std::string {
+        try {
+          auto separater_pos = input.find(',');
+          std::string baudrate_str = input.substr(separater_pos + 1);
+          unsigned int _ = std::stoi(baudrate_str);
+          return std::string();
+        } catch (std::invalid_argument& e) {
+          return "Value " + input +
+                 " is not serial setting format [DEVICE],[BAUDRATE]";
+        } catch (std::out_of_range& e) {
+          return "Value " + input +
+                 " is not serial setting format [DEVICE],[BAUDRATE]";
+        }
+      },
+      "serial setting format");
+  std::string serial_setting;
+  app.add_option(
+         "--serial", serial_setting,
+         "Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]")
+      ->check(is_serial_setting_format);
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
@@ -336,6 +358,13 @@ void Util::parseArgs(int argc,
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
     exit(app.exit(e));
+  }
+
+  if (!serial_setting.empty()) {
+    auto separater_pos = serial_setting.find(',');
+    std::string baudrate_str = serial_setting.substr(separater_pos + 1);
+    cs.serial_device = serial_setting.substr(0, separater_pos);
+    cs.serial_rate = std::stoi(baudrate_str);
   }
 
   // メタデータのパース
