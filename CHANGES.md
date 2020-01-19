@@ -53,7 +53,7 @@
     - Sora 時の sora_client が ayameClient に変わります
     - @melpon
 - [CHANGE] momo --help の英語化
-    - @shino msnoigrs
+    - @shino @msnoigrs
 - [CHANGE] <package>.edit の機能とドキュメントを削除
     - @melpon
 - [CHANGE] armv6 で SDL を使えなくする
@@ -62,6 +62,14 @@
     - @melpon @mganeko
 - [FIX] SDL が有効でない時に SDL 関連のオプションを指定するとエラーにする
     - @melpon
+- [FIX] macOS のビルドで Python 2.7 必須を外す
+    - @melpon
+- [FIX] Ayame モードで WebSocket が閉じられた際に再接続処理に進まない箇所を修正
+    - @Hexa
+- [FIX] Ayame モードで シグナリングで bye を受信した際処理として、各 close 処理を追加する
+    - @Hexa
+- [FIX] Ayame モードで 再接続処理の 1 回目を、5 秒後からすぐに実行されるように変更する
+    - @Hexa
 
 ## 19.12.1
 
