@@ -7,12 +7,11 @@ help:
 	@echo "使い方:"
 	@echo "  make [オプション] <パッケージ名>"
 	@echo "  make [オプション] <パッケージ名>.package"
-	@echo "  make [オプション] <パッケージ名>.edit"
 	@echo "  make [オプション] <パッケージ名>.clean"
 	@echo ""
 	@echo "<パッケージ名>:"
 	@for pkg in $(PACKAGE_NAMES); do echo "  - $$pkg"; done
-	@echo "  - macos (make macos.edit を除く)"
+	@echo "  - macos"
 	@echo ""
 	@echo "[オプション]:"
 	@echo "  - NOCACHE=1"
@@ -22,9 +21,6 @@ help:
 	@echo "make <パッケージ名> は、指定したパッケージ名の環境用の momo バイナリを生成します。"
 	@echo ""
 	@echo "make <パッケージ名>.package は、指定したパッケージ名の環境用の momo バイナリを含んだリリース用パッケージを生成します。"
-	@echo ""
-	@echo "make <パッケージ名>.edit は、WebRTC のソースを変更して、カスタマイズされた WebRTC を使って momo バイナリを生成するための機能です。"
-	@echo "詳細は doc/PATCH_WEBRTC.md を参照して下さい。"
 	@echo ""
 	@echo "make <パッケージ名>.clean は、<パッケージ名> の Docker イメージやビルドキャッシュを削除します。"
 	@echo ""
@@ -40,7 +36,7 @@ help:
 	@echo "具体的には docker build コマンドに --progress=plain を指定します。"
 	@echo ""
 
-WEBRTC_COMMIT_SHORT=$(shell echo $(WEBRTC_COMMIT) | cut -b 1-8)
+MOMO_COMMIT_SHORT=$(shell git rev-parse HEAD | cut -b 1-8)
 
 ifeq ($(NOCACHE),1)
   DOCKER_BUILD_FLAGS += --no-cache
@@ -61,12 +57,12 @@ define generateDockerRules
 
 .PHONY: $(1)
 $(1): $(1).prepare
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) build ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) build $(MOMO_VERSION) $(MOMO_COMMIT_SHORT)
 
 .PHONY: $(1).package
 $(1).package: $(1).prepare
 	# momo を package モードでビルドし直す
-	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) package ${MOMO_VERSION} $(CLI11_VERSION) $(JSON_VERSION)
+	../script/docker_run.sh `pwd` `pwd`/.. $(DOCKER_MOUNT) $(1) momo/$(1):m$$(WEBRTC_BUILD_VERSION) package $(MOMO_VERSION) $(MOMO_COMMIT_SHORT)
 
 	rm -rf package/momo-$(MOMO_VERSION)_$(1)
 	rm -f package/momo-$(MOMO_VERSION)_$(1).tar.gz
@@ -80,15 +76,9 @@ $(1).package: $(1).prepare
 	@echo ""
 	@echo "パッケージが package/momo-$(MOMO_VERSION)_$(1).tar.gz に生成されました。"
 
-.PHONY: $(1).edit
-$(1).edit: $(1).prepare
-	docker run -it --rm -v `pwd`/..:/root/momo momo/$(1):m$$(WEBRTC_BUILD_VERSION) /bin/bash -c 'export PACKAGE_NAME=$(1); cd /root/momo && exec /bin/bash'
-
 .PHONY: $(1).prepare
 $(1).prepare:
-	rm -rf $(1)/patch
 	rm -rf $(1)/script
-	cp -r ../patch $(1)/patch
 	cp -r ../script $(1)/script
 
 	DOCKER_BUILDKIT=1 docker build \
@@ -102,7 +92,6 @@ $(1).prepare:
 		--build-arg PACKAGE_NAME=$(1) \
 		$(1)
 
-	rm -r $(1)/patch
 	rm -r $(1)/script
 
 .PHONY: $(1).clean
@@ -118,7 +107,7 @@ $(foreach package_name, $(PACKAGE_NAMES), $(eval $(call generateDockerRules,$(pa
 
 .PHONY: macos
 macos: macos.prepare
-	make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos MOMO_VERSION=${MOMO_VERSION} momo
+	make -C .. MOMO_CFLAGS="-O2 -fobjc-arc" PACKAGE_NAME=macos MOMO_VERSION=$(MOMO_VERSION) MOMO_COMMIT_SHORT=$(MOMO_COMMIT_SHORT) momo
 
 .PHONY: macos.package
 macos.package: macos.prepare

@@ -1,8 +1,15 @@
 #include "sora_websocket_client.h"
 
+#include <fstream>
+#include <sstream>
+
+// boost
 #include <boost/beast/websocket/stream.hpp>
+
+// json
 #include <nlohmann/json.hpp>
 
+#include "momo_version.h"
 #include "url_parts.h"
 #include "util.h"
 
@@ -221,6 +228,9 @@ void SoraWebsocketClient::doSendConnect() {
       {"type", "connect"},
       {"role", conn_settings_.sora_role},
       {"channel_id", conn_settings_.sora_channel_id},
+      {"sora_client", MomoVersion::GetClientName()},
+      {"libwebrtc", MomoVersion::GetLibwebrtcName()},
+      {"environment", MomoVersion::GetEnvironmentName()},
   };
 
   if (conn_settings_.sora_multistream) {

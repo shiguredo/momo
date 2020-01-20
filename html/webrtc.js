@@ -1,6 +1,8 @@
 const remoteVideo = document.getElementById('remote_video');
+const dataTextInput = document.getElementById('data_text');
 remoteVideo.controls = true;
 let peerConnection = null;
+let dataChannel = null;
 let candidates = [];
 let hasReceivedSdp = false;
 // iceServer を定義
@@ -117,6 +119,7 @@ function playVideo(element, stream) {
 
 function prepareNewConnection() {
   const peer = new RTCPeerConnection(peerConnectionConfig);
+  dataChannel = peer.createDataChannel("serial");
   if ('ontrack' in peer) {
     if (isSafari()) {
       let tracks = [];
@@ -167,6 +170,10 @@ function prepareNewConnection() {
   peer.addTransceiver('video', {direction: 'recvonly'});
   peer.addTransceiver('audio', {direction: 'recvonly'});
 
+  dataChannel.onmessage = function (event) {
+    console.log("Got Data Channel Message:", new TextDecoder().decode(event.data));
+  };
+  
   return peer;
 }
 
@@ -361,4 +368,16 @@ function removeCodec(orgsdp, codec) {
 
 function play() {
   remoteVideo.play();
+}
+
+function sendDataChannel() {
+  let textData = dataTextInput.value;
+  if (textData.length == 0) {
+    return;
+  }
+  if (dataChannel == null || dataChannel.readyState != "open") {
+    return;
+  }
+  dataChannel.send(new TextEncoder().encode(textData));
+  dataTextInput.value = "";
 }

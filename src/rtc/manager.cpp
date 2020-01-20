@@ -45,7 +45,9 @@ RTCManager::RTCManager(
     ConnectionSettings conn_settings,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
-    : _conn_settings(conn_settings), _receiver(receiver) {
+    : _conn_settings(conn_settings),
+      _receiver(receiver),
+      _data_manager(nullptr) {
   rtc::InitializeSSL();
 
   _networkThread = rtc::Thread::CreateWithSocketServer();
@@ -55,7 +57,7 @@ RTCManager::RTCManager(
   _signalingThread = rtc::Thread::Create();
   _signalingThread->Start();
 
-#if __linux__
+#if defined(__linux__)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxAlsaAudio;
 #else
@@ -144,6 +146,8 @@ RTCManager::RTCManager(
       ao.highpass_filter = false;
     if (_conn_settings.disable_typing_detection)
       ao.typing_detection = false;
+    if (_conn_settings.disable_residual_echo_detector)
+      ao.residual_echo_detector = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
     _audio_track = _factory->CreateAudioTrack(Util::generateRandomChars(),
                                               _factory->CreateAudioSource(ao));
@@ -183,13 +187,17 @@ RTCManager::~RTCManager() {
   rtc::CleanupSSL();
 }
 
+void RTCManager::SetDataManager(RTCDataManager* data_manager) {
+  _data_manager = data_manager;
+}
+
 std::shared_ptr<RTCConnection> RTCManager::createConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
-      new PeerConnectionObserver(sender, _receiver));
+      new PeerConnectionObserver(sender, _receiver, _data_manager));
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
       _factory->CreatePeerConnection(rtc_config, nullptr, nullptr,
                                      observer.get());

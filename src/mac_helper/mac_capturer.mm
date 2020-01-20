@@ -17,7 +17,7 @@
 #import "sdk/objc/native/api/video_capturer.h"
 #import "sdk/objc/native/src/objc_frame_buffer.h"
 
-@interface RTCVideoSourceAdapter : NSObject <RTCVideoCapturerDelegate>
+@interface RTCVideoSourceAdapter : NSObject<RTCVideoCapturerDelegate>
 @property(nonatomic) MacCapturer* capturer;
 @end
 
@@ -66,6 +66,9 @@ MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
                          AVCaptureDevice* device) {
+  RTC_LOG(LS_INFO) << "MacCapturer width=" << width << ", height=" << height
+                   << ", target_fps=" << target_fps;
+
   adapter_ = [[RTCVideoSourceAdapter alloc] init];
   adapter_.capturer = this;
 

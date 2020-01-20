@@ -16,15 +16,17 @@
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
 #else
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
-#else
-#if USE_MMAL_ENCODER | USE_JETSON_ENCODER
+#elif defined(__linux__)
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
 #endif
 #endif
+
+#ifndef _MSC_VER
+#include "serial_data_channel/serial_data_manager.h"
 #endif
 
 #if USE_SDL2
@@ -68,8 +70,6 @@ int main(int argc, char* argv[]) {
 #if USE_ROS
   std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-  rtc::scoped_refptr<ROSVideoCapture> capturer(
-      new rtc::RefCountedObject<ROSVideoCapture>(cs));
 #else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
@@ -80,22 +80,36 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-#ifdef __APPLE__
-  rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
-      cs.getWidth(), cs.getHeight(), cs.framerate, cs.video_device);
-#else
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2VideoCapture::Create(cs);
-#else
-  rtc::scoped_refptr<DeviceVideoCapturer> capturer =
-      DeviceVideoCapturer::Create(cs.getWidth(), cs.getHeight(), cs.framerate);
 #endif
+
+  auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
+    if (cs.no_video) {
+      return nullptr;
+    }
+
+#if USE_ROS
+    rtc::scoped_refptr<ROSVideoCapture> capturer(
+        new rtc::RefCountedObject<ROSVideoCapture>(cs));
+#else  // USE_ROS
+    auto size = cs.getSize();
+#if defined(__APPLE__)
+    rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
+        size.width, size.height, cs.framerate, cs.video_device);
+#elif defined(__linux__)
+    rtc::scoped_refptr<V4L2VideoCapture> capturer =
+        V4L2VideoCapture::Create(cs);
+#else
+    rtc::scoped_refptr<DeviceVideoCapturer> capturer =
+        DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
 #endif
+#endif  // USE_ROS
+    return capturer;
+  })();
+
   if (!capturer && !cs.no_video) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
   }
-#endif
 
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
@@ -104,8 +118,8 @@ int main(int argc, char* argv[]) {
         new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
+      cs, std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), nullptr));
@@ -113,6 +127,15 @@ int main(int argc, char* argv[]) {
 
   {
     boost::asio::io_context ioc{1};
+
+    std::unique_ptr<RTCDataManager> data_manager = nullptr;
+    if (!cs.serial_device.empty()) {
+      data_manager = SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
+      if (!data_manager) {
+        return 1;
+      }
+      rtc_manager->SetDataManager(data_manager.get());
+    }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
     signals.async_wait(

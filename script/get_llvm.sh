@@ -25,7 +25,7 @@ pushd $OUTPUT_DIR/llvm
   git clone https://chromium.googlesource.com/chromium/src/tools
   pushd tools
     git reset --hard $WEBRTC_SRC_TOOLS_COMMIT
-    python clang/scripts/update.py --clang-dir=$OUTPUT_DIR/llvm/clang
+    python clang/scripts/update.py --output-dir=$OUTPUT_DIR/llvm/clang
   popd
 popd
 

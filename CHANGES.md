@@ -11,9 +11,75 @@
 
 ## develop
 
+## 2020.1
+
+
+- [UPDATE] libwebrtc を M80.3987@{#2} に上げる
+    - libwebrtc のハッシュは fba51dc69b97f6f170d9c325a38e05ddd69c8b28
+    - @melpon
+- [UPDATE] Momo 2020.1 にバージョンを上げる
+    - バージョン番号を <リリース年>.<その年のリリース回数> に変更
+    - @voluntas
+- [UPDATE] Boost 1.72.0 にアップデートする
+    - @voluntas
+- [UPDATE] --video-device を Linux 全般で有効にする
+    - V4L2 capturer を使うようにした
+    - @shino
+- [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.3.1 に上げる
+    - [L4T \| NVIDIA Developer](https://developer.nvidia.com/embedded/linux-tegra)
+    - @melpon
+- [UPDATE] 音声系オプションの --disable-residual-echo-detector を追加する
+    - @melpon
+- [ADD] データチャネルを利用したシリアルポートへの読み書き機能を追加する
+    - --serial を指定することでデータチャネル経由でのシリアル読み書きが可能になる
+    - test と ayame モードでのみ利用可能
+    - @tnoho
+- [ADD] 自由に解像度の値を指定できるようにする
+    - `--resolution 640x480` のように指定できるようになりました
+    - この機能が有効になるのは、カメラに依存するため動作保証はありません
+    - @melpon
+- [ADD] Sora モード利用時のシグナリング接続情報に enviroment / libwebrtc / sora_client を追加する
+    - Jetson Nano の場合
+        - `"environment": "[aarch64] Ubuntu 18.04.3 LTS (nvidia-l4t-core 32.2.1-20190812212815)"`
+        - `"libwebrtc": "Shiguredo-Build M80.3987@{#2} (80.3987.2.1 15b26e4)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - macOS の場合
+        - `"environment": "[x86_64] macOS Version 10.15.2 (Build 19C57)"`
+        - `"libwebrtc": "Shiguredo-Build M80.3987@{#2} (80.3987.2.1 15b26e4)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - Ubuntu 18.04 x86_64 の場合
+        - `"environment": "[x86_64] Ubuntu 18.04.3 LTS"`
+        - `"libwebrtc": "Shiguredo-Build M80.3987@{#2} (80.3987.2.1 15b26e4)"`
+        - `"sora_client": "WebRTC Native Client Momo 2020.1 (f6b69e77)"`
+    - @melpon
+- [ADD] Ayame モード利用時のシグナリング接続情報に enviroment / libwebrtc / ayameClient を追加する
+    - Sora 時の sora_client が ayameClient に変わります
+    - @melpon
+- [ADD] Raspbian ミラーを追加する
+    - @melpon
+- [CHANGE] momo --help の英語化
+    - @shino @msnoigrs
+- [CHANGE] <package>.edit の機能とドキュメントを削除
+    - @melpon
+- [CHANGE] armv6 で SDL を使えなくする
+    - @melpon
+- [FIX] --no-video を指定しているにもかかわらずカメラを一瞬だけ掴むのを修正する
+    - @melpon @mganeko
+- [FIX] SDL が有効でない時に SDL 関連のオプションを指定するとエラーにする
+    - @melpon
+- [FIX] macOS のビルドで Python 2.7 必須を外す
+    - @melpon
+- [FIX] Ayame モードで WebSocket が閉じられた際に再接続処理に進まない箇所を修正
+    - @Hexa
+- [FIX] Ayame モードで シグナリングで bye を受信した際処理として、各 close 処理を追加する
+    - @Hexa
+- [FIX] Ayame モードで 再接続処理の 1 回目を、5 秒後からすぐに実行されるように変更する
+    - @Hexa
+
 ## 19.12.1
 
-- [UPDATE] libwebrtc を時前しないようにする
+- [UPDATE] libwebrtc を時前ビルドしないようにする
+    - https://github.com/shiguredo-webrtc-build/webrtc-build を利用する
     - @melpon
 - [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
     - @kdxu

@@ -1,5 +1,8 @@
 #include "util.h"
 
+#include <regex>
+
+// external libraries
 #include <CLI/CLI.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -7,15 +10,10 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
 
+#include "momo_version.h"
 #include "rtc_base/helpers.h"
 #if USE_ROS
 #include "ros/ros.h"
-#endif
-
-// バージョン情報
-// 通常は外から渡すが、渡されていなかった場合の対応
-#ifndef MOMO_VERSION
-#define MOMO_VERSION "internal-build"
 #endif
 
 // HWA を効かせる場合は 1 になる
@@ -91,6 +89,9 @@ void Util::parseArgs(int argc,
                        cs.disable_highpass_filter);
   local_nh.param<bool>("disable_typing_detection", cs.disable_typing_detection,
                        cs.disable_typing_detection);
+  local_nh.param<bool>("disable_residual_echo_detector",
+                       cs.disable_residual_echo_detector,
+                       cs.disable_residual_echo_detector);
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") &&
       local_nh.hasParam("CHANNEL_ID")) {
@@ -131,7 +132,9 @@ void Util::parseArgs(int argc,
                      bool& use_sora,
                      int& log_level,
                      ConnectionSettings& cs) {
-  CLI::App app("Momo - WebRTC ネイティブクライアント");
+  CLI::App app("Momo - WebRTC Native Client");
+  app.set_help_all_flag("--help-all",
+                        "Print help message for all modes and exit");
 
   bool version = false;
 
@@ -140,7 +143,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "このデバイスは --force-i420 に対応していません。";
+        return "Not available because your device does not have this feature.";
 #endif
       },
       "");
@@ -149,7 +152,7 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
         return std::string();
 #else
-        return "このデバイスは --use-native に対応していません。";
+        return "Not available because your device does not have this feature.";
 #endif
       },
       "");
@@ -160,114 +163,179 @@ void Util::parseArgs(int argc,
         return std::string();
 #else
         if (input == "H264") {
-          return "このデバイスは --video-codec=H264 に対応していません。";
+          return "Not available because your device does not have this "
+                 "feature.";
         }
         return std::string();
 #endif
       },
       "");
 
-  app.add_flag("--no-video", cs.no_video, "ビデオを表示しない");
-  app.add_flag("--no-audio", cs.no_audio, "オーディオを出さない");
-  app.add_flag("--force-i420", cs.force_i420,
-               "強制的にI420にする（対応デバイスのみ）")
+  auto is_sdl_available = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_SDL2
+        return std::string();
+#else
+        return "Not available because your device does not have this "
+               "feature.";
+#endif
+      },
+      "");
+
+  auto is_valid_resolution = CLI::Validator(
+      [](std::string input) -> std::string {
+        if (input == "QVGA" || input == "VGA" || input == "HD" ||
+            input == "FHD" || input == "4K") {
+          return std::string();
+        }
+
+        // 数値x数値、というフォーマットになっているか確認する
+        std::regex re("^[1-9][0-9]*x[1-9][0-9]*$");
+        if (std::regex_match(input, re)) {
+          return std::string();
+        }
+
+        return "Must be one of QVGA, VGA, HD, FHD, 4K, or "
+               "[WIDTH]x[HEIGHT].";
+      },
+      "");
+
+  app.add_flag("--no-video", cs.no_video, "Do not send video");
+  app.add_flag("--no-audio", cs.no_audio, "Do not send audio");
+  app.add_flag(
+         "--force-i420", cs.force_i420,
+         "Prefer I420 format for video capture (only on supported devices)")
       ->check(is_valid_force_i420);
   app.add_flag("--use-native", cs.use_native,
-               "MJPEGのデコードとビデオのリサイズをハードウェアで行う"
-               "（対応デバイスのみ）")
+               "Perform MJPEG deoode and video resize by hardware acceleration "
+               "(only on supported devices)")
       ->check(is_valid_use_native);
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if defined(__APPLE__)
   app.add_option("--video-device", cs.video_device,
-                 "デバイスファイル名。省略時はどれかのビデオデバイスを自動検出")
+                 "Use the video device specified by an index or a name "
+                 "(use the first one if not specified)");
+#elif defined(__linux__)
+  app.add_option("--video-device", cs.video_device,
+                 "Use the video input device specified by a name "
+                 "(some device will be used if not specified)")
       ->check(CLI::ExistingFile);
-#elif __APPLE__
-  app.add_option("--video-device", cs.video_device,
-                 "デバイス番号、またはデバイス名。省略時はデフォルト（デバイス"
-                 "番号が0）のビデオデバイスを自動検出");
 #endif
-  app.add_set("--resolution", cs.resolution, {"QVGA", "VGA", "HD", "FHD", "4K"},
-              "解像度");
-  app.add_option("--framerate", cs.framerate, "フレームレート")
+  app.add_option("--resolution", cs.resolution,
+                 "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
+                 "[WIDTH]x[HEIGHT])")
+      ->check(is_valid_resolution);
+  app.add_option("--framerate", cs.framerate, "Video framerate")
       ->check(CLI::Range(1, 60));
-  app.add_flag("--fixed-resolution", cs.fixed_resolution, "固定解像度");
+  app.add_flag("--fixed-resolution", cs.fixed_resolution,
+               "Maintain video resolution in degradation");
   app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
-              "優先設定 (Experimental)");
-  app.add_option("--port", cs.port, "ポート番号(デフォルト:8080)")
+              "Preference in video degradation (experimental)");
+  app.add_option("--port", cs.port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
-  app.add_flag("--use-sdl", cs.use_sdl, "SDLを使い映像を表示する");
-  app.add_flag("--show-me", cs.show_me, "自分のカメラも表示する");
+  app.add_flag("--use-sdl", cs.use_sdl,
+               "Show video using SDL (if SDL is available)")
+      ->check(is_sdl_available);
+  app.add_flag("--show-me", cs.show_me, "Show self video (if SDL is available)")
+      ->check(is_sdl_available);
   app.add_option("--window-width", cs.window_width,
-                 "映像を表示するウィンドウの横幅")
+                 "Window width for videos (if SDL is available)")
+      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_option("--window-height", cs.window_height,
-                 "映像を表示するウィンドウの縦幅")
+                 "Window height for videos (if SDL is available)")
+      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_flag("--fullscreen", cs.fullscreen,
-               "映像を表示するウィンドウをフルスクリーンにする");
-  app.add_flag("--daemon", is_daemon, "デーモン化する");
-  app.add_flag("--version", version, "バージョン情報の表示");
+               "Use fullscreen window for videos (if SDL is available)")
+      ->check(is_sdl_available);
+  app.add_flag("--daemon", is_daemon, "Run as a daemon process");
+  app.add_flag("--version", version, "Show version information");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
-  app.add_option("--log-level", log_level, "ログレベル")
+  app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
   // オーディオフラグ
   app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
-               "エコーキャンセルを無効");
+               "Disable echo cancellation for audio");
   app.add_flag("--disable-auto-gain-control", cs.disable_auto_gain_control,
-               "オートゲインコントロール無効");
+               "Disable auto gain control for audio");
   app.add_flag("--disable-noise-suppression", cs.disable_noise_suppression,
-               "ノイズサプレッション無効");
+               "Disable noise suppression for audio");
   app.add_flag("--disable-highpass-filter", cs.disable_highpass_filter,
-               "ハイパスフィルター無効");
+               "Disable highpass filter for audio");
   app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
-               "タイピングディテクション無効");
+               "Disable typing detection for audio");
+  app.add_flag("--disable-residual-echo-detector",
+               cs.disable_residual_echo_detector,
+               "Disable residual echo detector for audio");
 
-  auto test_app = app.add_subcommand("test", "開発向け");
-  auto ayame_app = app.add_subcommand("ayame", "WebRTC Signaling Server Ayame");
-  auto sora_app = app.add_subcommand("sora", "WebRTC SFU Sora");
+  auto is_serial_setting_format = CLI::Validator(
+      [](std::string input) -> std::string {
+        try {
+          auto separater_pos = input.find(',');
+          std::string baudrate_str = input.substr(separater_pos + 1);
+          unsigned int _ = std::stoi(baudrate_str);
+          return std::string();
+        } catch (std::invalid_argument& e) {
+          return "Value " + input +
+                 " is not serial setting format [DEVICE],[BAUDRATE]";
+        } catch (std::out_of_range& e) {
+          return "Value " + input +
+                 " is not serial setting format [DEVICE],[BAUDRATE]";
+        }
+      },
+      "serial setting format");
+  std::string serial_setting;
+  app.add_option(
+         "--serial", serial_setting,
+         "Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]")
+      ->check(is_serial_setting_format);
+
+  auto test_app = app.add_subcommand(
+      "test", "Mode for momo development with simple HTTP server");
+  auto ayame_app = app.add_subcommand(
+      "ayame", "Mode for working with WebRTC Signaling Server Ayame");
+  auto sora_app =
+      app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
   test_app
-      ->add_option("--document-root", cs.test_document_root, "配信ディレクトリ")
+      ->add_option("--document-root", cs.test_document_root,
+                   "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
 
   ayame_app
-      ->add_option("SIGNALING-URL", cs.ayame_signaling_host,
-                   "シグナリングホスト")
+      ->add_option("SIGNALING-URL", cs.ayame_signaling_host, "Signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "ルームID")->required();
-  ayame_app->add_option("--client-id", cs.ayame_client_id, "クライアントID");
+  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "Room ID")->required();
+  ayame_app->add_option("--client-id", cs.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
-                        "シグナリングキー");
+                        "Signaling key");
 
-  sora_app
-      ->add_option("SIGNALING-URL", cs.sora_signaling_host,
-                   "シグナリングホスト")
+  sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "Signaling URL")
       ->required();
-  sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "チャンネルID")
+  sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "Channel ID")
       ->required();
-  sora_app->add_flag("--auto", cs.sora_auto_connect, "自動接続する");
+  sora_app->add_flag("--auto", cs.sora_auto_connect,
+                     "Connect to Sora automatically");
   sora_app
       ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
-                "ビデオコーデック")
+                "Video codec for send")
       ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
-                    "オーディオコーデック");
-  sora_app
-      ->add_option("--video-bitrate", cs.video_bitrate, "ビデオのビットレート")
+                    "Audio codec for send");
+  sora_app->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
       ->check(CLI::Range(1, 30000));
-  sora_app
-      ->add_option("--audio-bitrate", cs.audio_bitrate,
-                   "オーディオのビットレート")
+  sora_app->add_option("--audio-bitrate", cs.audio_bitrate, "Audio bitrate")
       ->check(CLI::Range(6, 510));
-  sora_app->add_flag("--multistream", cs.sora_multistream,
-                     "マルチストリームかどうか");
+  sora_app->add_flag("--multistream", cs.sora_multistream, "Use multistream");
   sora_app->add_set(
       "--role", cs.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
-      "ロール（デフォルトは upstream）");
+      "Role (default: upstream)");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight, "スポットライトの配信数")
+      ->add_option("--spotlight", cs.sora_spotlight,
+                   "Stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
 
   auto is_json = CLI::Validator(
@@ -281,13 +349,22 @@ void Util::parseArgs(int argc,
       },
       "JSON Value");
   std::string sora_metadata;
-  sora_app->add_option("--metadata", sora_metadata, "メタデータ")
+  sora_app
+      ->add_option("--metadata", sora_metadata,
+                   "Signaling metadata used in connect message")
       ->check(is_json);
 
   try {
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
     exit(app.exit(e));
+  }
+
+  if (!serial_setting.empty()) {
+    auto separater_pos = serial_setting.find(',');
+    std::string baudrate_str = serial_setting.substr(separater_pos + 1);
+    cs.serial_device = serial_setting.substr(0, separater_pos);
+    cs.serial_rate = std::stoi(baudrate_str);
   }
 
   // メタデータのパース
@@ -300,8 +377,8 @@ void Util::parseArgs(int argc,
   }
 
   if (version) {
-    std::cout << "WebRTC Native Client Momo version " MOMO_VERSION
-                 " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
+    std::cout << MomoVersion::GetClientName()
+              << " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
               << std::endl;
     exit(0);
   }

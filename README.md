@@ -19,6 +19,10 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 - macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) の H.264 ハードウェアエンコーダー機能を利用することが可能です
 - Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで H.264 を 4K@30 での配信が可能です。
 
+### データチャネル経由でのシリアルの読み書き
+
+Momo はデータチャネルを利用しシリアルに直接読み書きが可能です。信頼性より低遅延を優先したい場合の利用を想定しています。
+
 ### SDL を利用した音声や映像の受信
 
 Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
@@ -51,9 +55,9 @@ Momo はオープンソースソフトウェアですが、開発については
 
 4 種類のバイナリを配布しています。
 
-- Raspberry Raspbian Buster ARMv7
-- Raspberry Raspbian Buster ARMv6
-- Jetson Nano Ubuntu 18.04 ARMv8
+- Raspbian Buster ARMv7
+- Raspbian Buster ARMv6
+- Ubuntu 18.04 ARMv8 (Jetson Nano)
 - macOS 10.15 x86_64
 
 ## 動作環境
@@ -81,21 +85,27 @@ Momo はオープンソースソフトウェアですが、開発については
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
-## ビルドにチャレンジする
+## ビルドする
 
-- Linux 版 Momo のビルドに挑戦したい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
-- macOS 版 Momo のビルドに挑戦したい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+- Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
+- macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
 ## パッケージを作成する
 
 パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
+
+## バージョン番号について
+
+```
+YYYY.<その年にリリースした回数>
+```
 
 ## ライセンス
 
 Apache License 2.0
 
 ```
-Copyright 2018-2019, Shiguredo Inc, tnoho and melpon and kdxu
+Copyright 2018-2020, Shiguredo Inc, tnoho and melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -110,13 +120,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Momo についての電子書籍
+
+Momo のコントリビュータである @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+
+[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+
+
 ## サポートについて
 
-WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。それ以外については Discord へお願いします。
+WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。
+それ以外については Discord へお願いします。
 
 ### バグ報告
 
 https://github.com/shiguredo/momo/issues
+
+バグ報告すべきか悩んだら Discord で気軽に相談してください。
 
 #### 理想的なバグ報告例
 
@@ -134,7 +154,8 @@ WebRTC Native Client に対する有料でのサポート契約については W
 
 ## H.264 のライセンス費用について
 
-H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
+ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
 
 ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、配布時にライセンス費用を支払う必要はありません。
 
@@ -162,18 +183,6 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
-
-## Momo についての電子書籍
-
-Momo のコア開発者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
-
-[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
-
-## Windows 版について
-
-Windows 版 Momo をビルドするツールを販売しております。興味のある方は以下をご確認ください。
-
-[Windows 版 WebRTC Native Client Momo](https://gist.github.com/voluntas/7af1596557121796123ac7dee9e3f5a4)
 
 ## カスタマイズなど
 
