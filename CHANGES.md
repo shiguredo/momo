@@ -52,6 +52,8 @@
 - [ADD] Ayame モード利用時のシグナリング接続情報に enviroment / libwebrtc / ayameClient を追加する
     - Sora 時の sora_client が ayameClient に変わります
     - @melpon
+- [ADD] Raspbian ミラーを追加する
+    - @melpon
 - [CHANGE] momo --help の英語化
     - @shino @msnoigrs
 - [CHANGE] <package>.edit の機能とドキュメントを削除
