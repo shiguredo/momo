@@ -4,7 +4,7 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- Raspberry Pi 2 や 3 を利用する場合は、 `momo-<VERSION>_raspbian-buster_armv7.tar.gz` を利用してください
+- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspbian-buster_armv7.tar.gz` を利用してください
 - Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspbian-buster_armv6.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
@@ -50,9 +50,9 @@ bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 を追加して再起動してください。
 
-## 動かしてみる
+## 使ってみる
 
-動かし方については [USE_TEST.md](USE_TEST.md) をご確認ください。
+[USE_TEST.md](USE_TEST.md) をご確認ください。
 
 ## ビデオデバイスの指定
 
