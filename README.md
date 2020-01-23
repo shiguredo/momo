@@ -63,10 +63,12 @@ Momo はオープンソースソフトウェアですが、開発については
 ## 動作環境
 
 - Raspbian Buster ARMv7
-    - Raspberry Pi 4 B で動作
-    - Raspberry Pi 3 B/B+ で動作
+    - Raspberry Pi 4
+    - Raspberry Pi 3
+    - Raspberry Pi 2
 - Raspbian Buster ARMv6
-    - Raspberry Pi Zero W/WH で動作
+    - Raspberry Pi Zero
+    - Raspberry Pi 1
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson Nano
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
@@ -144,7 +146,15 @@ https://github.com/shiguredo/momo/issues
 
 ### Discord
 
-ベストエフォートで運用しています。
+- アドバイス
+    - します
+- フィードバック
+    - 歓迎します
+- サポート
+    - しません
+
+最新の状況などはこちらで共有しています。質疑応答もこちらでのみ受け付けています。
+GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 https://discord.gg/gmEuZye
 
