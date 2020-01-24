@@ -31,6 +31,10 @@ Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://ww
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
+## 動画
+
+[WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
+
 ## OpenMomo プロジェクトについて
 
 OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
