@@ -162,6 +162,9 @@ https://discord.gg/gmEuZye
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
+- Momo のテクニカルサポート
+- OSS 公開前提での Momo への機能追加。
+
 ## H.264 のライセンス費用について
 
 H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
@@ -193,11 +196,3 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
-
-## カスタマイズなど
-
-OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
-
-非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
-
-まずは momo at shiguredo.jp までお問い合わせください。
