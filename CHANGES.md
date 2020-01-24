@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] CLI11 を v1.9.0 にアップデートする
+    - @voluntas
+
 ## 2020.1
 
 
