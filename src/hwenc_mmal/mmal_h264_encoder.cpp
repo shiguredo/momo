@@ -215,22 +215,18 @@ int32_t MMALH264Encoder::MMALConfigure() {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (use_native_) {
-    if (mmal_port_parameter_set_boolean(component_in->output[0],
-                                        MMAL_PARAMETER_ZERO_COPY,
-                                        MMAL_TRUE) != MMAL_SUCCESS) {
-      RTC_LOG(LS_ERROR) << "Failed to set component_in output zero copy";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+  if (mmal_port_parameter_set_boolean(component_in->input[0],
+                                      MMAL_PARAMETER_ZERO_COPY,
+                                      MMAL_TRUE) != MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set input zero copy";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
 
-    if (input_video_type_ == webrtc::VideoType::kMJPEG) {
-      if (mmal_port_parameter_set_boolean(resizer_->output[0],
-                                          MMAL_PARAMETER_ZERO_COPY,
-                                          MMAL_TRUE) != MMAL_SUCCESS) {
-        RTC_LOG(LS_ERROR) << "Failed to set resizer output zero copy";
-        return WEBRTC_VIDEO_CODEC_ERROR;
-      }
-    }
+  if (mmal_port_parameter_set_boolean(encoder_->output[0],
+                                      MMAL_PARAMETER_ZERO_COPY,
+                                      MMAL_TRUE) != MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set output zero copy";
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   MMAL_PARAMETER_VIDEO_PROFILE_T video_profile;
