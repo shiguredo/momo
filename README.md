@@ -57,12 +57,9 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-4 種類のバイナリを配布しています。
+以下からダウンロードが可能です。
 
-- Raspbian Buster ARMv7
-- Raspbian Buster ARMv6
-- Ubuntu 18.04 ARMv8 (Jetson Nano)
-- macOS 10.15 x86_64
+https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
@@ -140,9 +137,9 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 
 ### バグ報告
 
-https://github.com/shiguredo/momo/issues
+バグ報告すべきか悩んだらまずは、 Discord で気軽に相談してください。
 
-バグ報告すべきか悩んだら Discord で気軽に相談してください。
+https://github.com/shiguredo/momo/issues
 
 #### 理想的なバグ報告例
 
@@ -150,14 +147,11 @@ https://github.com/shiguredo/momo/issues
 
 ### Discord
 
-- アドバイス
-    - します
-- フィードバック
-    - 歓迎します
-- サポート
-    - しません
+- アドバイスします
+- フィードバック歓迎します
+- サポートしません
 
-最新の状況などはこちらで共有しています。質疑応答もこちらでのみ受け付けています。
+最新の状況などはこちらで共有しています。質問もこちらでのみ受け付けています。
 GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 https://discord.gg/gmEuZye
@@ -167,7 +161,7 @@ https://discord.gg/gmEuZye
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
 - Momo のテクニカルサポート
-- OSS 公開前提での Momo への機能追加。
+- OSS 公開前提での Momo への機能追加
 
 ## H.264 のライセンス費用について
 
