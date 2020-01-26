@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] Raspberry Pi の H.264 を利用時のリサイズ処理をハードウェアに変更する
+    - VPU でソフトウェア処理される `vc.ril.resize` からハードウェア処理される `vc.ril.isp` への変更
+    - YUV の形式が異なる場合の変換処理もハードウェアに変更
+    - @tnoho
 - [UPDATE] CLI11 を v1.9.0 にアップデートする
     - @voluntas
 

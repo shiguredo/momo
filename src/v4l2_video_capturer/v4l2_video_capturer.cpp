@@ -352,8 +352,17 @@ int32_t V4L2VideoCapture::StopCapture() {
 }
 
 bool V4L2VideoCapture::useNativeBuffer() {
+#if USE_MMAL_ENCODER
+  return _useNative && (_captureVideoType == webrtc::VideoType::kMJPEG ||
+                        _captureVideoType == webrtc::VideoType::kYUY2 ||
+                        _captureVideoType == webrtc::VideoType::kUYVY ||
+                        _captureVideoType == webrtc::VideoType::kI420);
+#elif USE_JETSON_ENCODER
   return _useNative && (_captureVideoType == webrtc::VideoType::kMJPEG ||
                         _captureVideoType == webrtc::VideoType::kI420);
+#else
+  return false;
+#endif
 }
 
 // critical section protected by the caller

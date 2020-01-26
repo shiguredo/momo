@@ -31,6 +31,7 @@ extern "C" {
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "rtc_base/critical_section.h"
 
@@ -111,7 +112,7 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   int32_t stride_width_;
   int32_t stride_height_;
   bool use_native_;
-  bool use_decoder_;
+  webrtc::VideoType input_video_type_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
