@@ -25,9 +25,7 @@
 #endif
 #endif
 
-#ifndef _MSC_VER
 #include "serial_data_channel/serial_data_manager.h"
-#endif
 
 #if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"

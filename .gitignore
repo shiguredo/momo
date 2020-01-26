@@ -44,5 +44,8 @@ webrtc_logs_0
 /build/package
 /build/momo/
 /build/momo.tar.gz
+/build/windows/_source
+/build/windows/_build
+/build/windows/_install
 
 /src/hwenc_jetson/Nv*

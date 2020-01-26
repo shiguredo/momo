@@ -136,9 +136,9 @@ int SDLRenderer::RenderThread() {
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
         SDL_FreeSurface(surface);
 
-        SDL_Rect image_rect = (SDL_Rect){0, 0, width, height};
-        SDL_Rect draw_rect = (SDL_Rect){sink->GetOffsetX(), sink->GetOffsetY(),
-                                        sink->GetWidth(), sink->GetHeight()};
+        SDL_Rect image_rect = {0, 0, width, height};
+        SDL_Rect draw_rect = {sink->GetOffsetX(), sink->GetOffsetY(),
+                              sink->GetWidth(), sink->GetHeight()};
 
         // flip (自画像とか？)
         //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
