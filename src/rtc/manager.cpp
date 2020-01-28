@@ -32,7 +32,7 @@
 #include "ros/ros_audio_device_module.h"
 #endif
 
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
 #include "api/video_codecs/video_encoder_factory.h"
 #include "hw_video_encoder_factory.h"
 #endif
@@ -96,7 +96,7 @@ RTCManager::RTCManager(
   media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
 #else
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
   media_dependencies.video_encoder_factory =
       std::unique_ptr<webrtc::VideoEncoderFactory>(
           absl::make_unique<HWVideoEncoderFactory>());

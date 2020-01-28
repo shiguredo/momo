@@ -5,8 +5,14 @@ cmake_policy(SET CMP0091 NEW)
 project(momo C CXX)
 
 if (MSVC)
+  enable_language(CUDA)
+
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
-  add_compile_options("/utf-8;/bigobj")
+  #add_compile_options("/utf-8;/bigobj")
+  #add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+  #add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+  #add_compile_options("$<$<C_COMPILER_ID:MSVC>:/bigobj>")
+  #add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/bigobj>")
 
   # CRTライブラリを静的リンクさせる
   # CMake 3.15 以上なら CMAKE_MSVC_RUNTIME_LIBRARY が使える
@@ -42,7 +48,8 @@ if (MSVC)
     NOMINMAX
     WIN32_LEAN_AND_MEAN
     UNICODE
-    _UNICODE)
+    _UNICODE
+    USE_NVCODEC_ENCODER=1)
 elseif (APPLE)
 
   set(_LINK_LIBRARIES
@@ -75,8 +82,13 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(JSON REQUIRED)
 find_package(CLI11 REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(NvCodec REQUIRED)
 
 add_executable(momo)
+
+set_target_properties(momo
+  PROPERTIES
+    COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler;/utf-8 /bigobj>$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>")
 
 if (WIN32)
 elseif (APPLE)
@@ -87,12 +99,9 @@ elseif (APPLE)
   )
 
   # Objective-C++ の設定
-  set_source_files_properties(src/mac_helper/mac_capturer.mm PROPERTIES
-    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
-  set_source_files_properties(src/mac_helper/macos_version.mm PROPERTIES
-    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
-  set_source_files_properties(src/mac_helper/objc_codec_factory_helper.mm PROPERTIES
-    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
+  set_source_files_properties(${_ADDITIONAL_SOURCES}
+    PROPERTIES
+      COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
 
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 endif ()
@@ -109,6 +118,7 @@ target_sources(momo
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
+    src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
     src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
@@ -126,8 +136,20 @@ target_sources(momo
     src/sora/sora_session.cpp
     src/sora/sora_websocket_client.cpp
     src/ws/websocket.cpp
-    ${_ADDITIONAL_SOURCES}
-)
+    ${_ADDITIONAL_SOURCES})
+
+# NVIDIA Video Codec SDK
+target_sources(momo
+  PRIVATE
+    ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoder.cpp
+    ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoderCuda.cpp)
+target_include_directories(momo
+  PRIVATE
+    ${NVCODEC_ROOT_DIR}/Samples/NvCodec)
+set_source_files_properties(${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoderCuda.cpp
+  PROPERTIES
+    LANGUAGE CUDA
+    CUDA_SEPARABLE_COMPILATION ON)
 
 target_include_directories(momo PRIVATE src)
 
@@ -140,6 +162,8 @@ target_link_libraries(momo
   CLI11::CLI11
   SDL2::SDL2-static
   SDL2::SDL2main
+  NvCodec::nvencodeapi
+  cuda.lib
   ${_LINK_LIBRARIES})
 
 string(SUBSTRING ${MOMO_COMMIT} 0 8 MOMO_COMMIT_SHORT)

@@ -16,6 +16,9 @@
 #if USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_h264_encoder.h"
 #endif
+#if USE_NVCODEC_ENCODER
+#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#endif
 
 #include "h264_format.h"
 
@@ -69,6 +72,10 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
 #if USE_JETSON_ENCODER
     return std::unique_ptr<webrtc::VideoEncoder>(
         absl::make_unique<JetsonH264Encoder>(cricket::VideoCodec(format)));
+#endif
+#if USE_NVCODEC_ENCODER
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
 #endif
   }
 
