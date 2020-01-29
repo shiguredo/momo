@@ -137,9 +137,7 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 
 ### バグ報告
 
-バグ報告すべきか悩んだらまずは、 Discord で気軽に相談してください。
-
-https://github.com/shiguredo/momo/issues
+GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 #### 理想的なバグ報告例
 
