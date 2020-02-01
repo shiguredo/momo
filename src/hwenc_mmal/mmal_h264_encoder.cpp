@@ -52,6 +52,8 @@ MMALH264Encoder::MMALH264Encoder(const cricket::VideoCodec& codec)
       conn2_(nullptr),
       pool_out_(nullptr),
       bitrate_adjuster_(.5, .95),
+      target_framerate_fps_(30),
+      configured_framerate_fps_(30),
       configured_width_(0),
       configured_height_(0),
       use_native_(false),
@@ -186,9 +188,6 @@ int32_t MMALH264Encoder::MMALConfigure() {
     component_in = encoder_;
   }
 
-  format_in->es->video.frame_rate.num = 30;
-  format_in->es->video.frame_rate.den = 1;
-
   if (mmal_port_format_commit(component_in->input[0]) != MMAL_SUCCESS) {
     RTC_LOG(LS_ERROR) << "Failed to commit input port format";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -211,15 +210,29 @@ int32_t MMALH264Encoder::MMALConfigure() {
 
   if (mmal_port_parameter_set_boolean(component_in->input[0],
                                       MMAL_PARAMETER_ZERO_COPY,
+                                      MMAL_FALSE) != MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set component_in input zero copy";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  if (mmal_port_parameter_set_boolean(component_in->output[0],
+                                      MMAL_PARAMETER_ZERO_COPY,
                                       MMAL_TRUE) != MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to set input zero copy";
+    RTC_LOG(LS_ERROR) << "Failed to set component_in output zero copy";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  if (mmal_port_parameter_set_boolean(encoder_->input[0],
+                                      MMAL_PARAMETER_ZERO_COPY,
+                                      MMAL_TRUE) != MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set encoder input zero copy";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   if (mmal_port_parameter_set_boolean(encoder_->output[0],
                                       MMAL_PARAMETER_ZERO_COPY,
                                       MMAL_TRUE) != MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to set output zero copy";
+    RTC_LOG(LS_ERROR) << "Failed to set encoder output zero copy";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -247,6 +260,13 @@ int32_t MMALH264Encoder::MMALConfigure() {
                                       MMAL_PARAMETER_VIDEO_ENCODE_INLINE_HEADER,
                                       MMAL_TRUE) != MMAL_SUCCESS) {
     RTC_LOG(LS_ERROR) << "Failed to set enable inline header";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  if (mmal_port_parameter_set_boolean(encoder_->input[0],
+                                      MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT,
+                                      MMAL_TRUE) != MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set enable immutable input";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -291,8 +311,6 @@ int32_t MMALH264Encoder::MMALConfigure() {
     format_resize->es->video.crop.y = 0;
     format_resize->es->video.crop.width = width_;
     format_resize->es->video.crop.height = height_;
-    format_resize->es->video.frame_rate.num = 30;
-    format_resize->es->video.frame_rate.den = 1;
     if (mmal_port_format_commit(resizer_->output[0]) != MMAL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to commit output port format";
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -505,9 +523,11 @@ void MMALH264Encoder::SetRates(const RateControlParameters& parameters) {
     return;
 
   RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " bitrate:" << parameters.bitrate.get_sum_bps();
+                   << " bitrate:" << parameters.bitrate.get_sum_bps()
+                   << " fps:" << parameters.framerate_fps;
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
+  target_framerate_fps_ = parameters.framerate_fps;
   return;
 }
 
@@ -515,7 +535,7 @@ void MMALH264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
   if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps) {
     return;
   }
-  RTC_LOG(LS_INFO) << "SetBitrateBps " << bitrate_bps << "bit/sec";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " " << bitrate_bps << " bit/sec";
   if (mmal_port_parameter_set_uint32(encoder_->output[0],
                                      MMAL_PARAMETER_VIDEO_BIT_RATE,
                                      bitrate_bps) != MMAL_SUCCESS) {
@@ -523,6 +543,24 @@ void MMALH264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
     return;
   }
   configured_bitrate_bps_ = bitrate_bps;
+}
+
+void MMALH264Encoder::SetFramerateFps(double framerate_fps) {
+  if (configured_framerate_fps_ == framerate_fps) {
+    return;
+  }
+  RTC_LOG(LS_ERROR) << __FUNCTION__ << " " << framerate_fps << " fps";
+  MMAL_PARAMETER_FRAME_RATE_T frame_rate;
+  frame_rate.hdr.id = MMAL_PARAMETER_VIDEO_FRAME_RATE;
+  frame_rate.hdr.size = sizeof(frame_rate);
+  frame_rate.frame_rate.num = framerate_fps;
+  frame_rate.frame_rate.den = 1;
+  if (mmal_port_parameter_set(encoder_->output[0], &frame_rate.hdr) !=
+      MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to set H264 framerate";
+    return;
+  }
+  configured_framerate_fps_ = framerate_fps;
 }
 
 webrtc::VideoEncoder::EncoderInfo MMALH264Encoder::GetEncoderInfo() const {
@@ -591,6 +629,7 @@ int32_t MMALH264Encoder::Encode(
   }
 
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
+  SetFramerateFps(target_framerate_fps_);
   {
     rtc::CritScope lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
@@ -622,7 +661,7 @@ int32_t MMALH264Encoder::Encode(
       NativeBuffer* native_buffer =
           dynamic_cast<NativeBuffer*>(frame_buffer.get());
       buffer->length = buffer->alloc_size = native_buffer->length();
-      memcpy(buffer->data, native_buffer->Data(), buffer->length);
+      buffer->data = (uint8_t *)native_buffer->Data();
       if (mmal_port_send_buffer(component_in->input[0], buffer) !=
           MMAL_SUCCESS) {
         RTC_LOG(LS_ERROR) << "Failed to send input native buffer";

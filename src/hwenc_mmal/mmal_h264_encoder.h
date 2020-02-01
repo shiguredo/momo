@@ -89,6 +89,7 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
                                          MMAL_BUFFER_HEADER_T* buffer);
   void MMALOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
   void SetBitrateBps(uint32_t bitrate_bps);
+  void SetFramerateFps(double framerate_fps);
   int32_t SendFrame(unsigned char* buffer, size_t size);
 
   std::mutex mtx_;
@@ -103,6 +104,8 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
+  double target_framerate_fps_;
+  int32_t configured_framerate_fps_;
   int32_t raw_width_;
   int32_t raw_height_;
   int32_t width_;

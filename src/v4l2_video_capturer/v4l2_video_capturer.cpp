@@ -489,8 +489,7 @@ bool V4L2VideoCapture::CaptureProcess() {
       if (useNativeBuffer()) {
         rtc::scoped_refptr<NativeBuffer> native_buffer(NativeBuffer::Create(
             _captureVideoType, _currentWidth, _currentHeight));
-        memcpy(native_buffer->MutableData(),
-               (unsigned char*)_pool[buf.index].start, buf.bytesused);
+        native_buffer->SetData((unsigned char*)_pool[buf.index].start);
         native_buffer->SetLength(buf.bytesused);
         dst_buffer = native_buffer;
       } else {
