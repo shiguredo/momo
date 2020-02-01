@@ -47,5 +47,8 @@ webrtc_logs_0
 /build/windows/_source
 /build/windows/_build
 /build/windows/_install
+/build/macos/_source
+/build/macos/_build
+/build/macos/_install
 
 /src/hwenc_jetson/Nv*

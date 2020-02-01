@@ -5,6 +5,7 @@ cmake_policy(SET CMP0054 NEW)
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
 
+set(MOMO_PACKAGE_NAME "" CACHE STRING "ビルド設定を自動化するパッケージ名")
 set(TARGET_OS "" CACHE STRING "ビルド対象の動作する OS。\n有効な値は windows, macos, linux")
 set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な OS の情報。")
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
@@ -14,8 +15,8 @@ set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを�
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
 set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
-set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ")
-set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ")
+set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
+set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
 set(WEBRTC_INCLUDE_DIR "" CACHE PATH "WebRTC のインクルードディレクトリ")
@@ -47,14 +48,59 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${SDL2_ROOT_DIR}/cmake)
   list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR} ${SDL2_ROOT_DIR})
 elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos/_install)
+
+  set(TARGET_OS "macos")
+  set(TARGET_ARCH "x86_64")
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
+  set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
+  set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
+  set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
+  set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
+  set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_armv7_ros")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_x86_64_ros")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
+else()
 endif()
 
-project(momo C CXX OBJCXX)
+if (NOT "${CLANG_ROOT}" STREQUAL "")
+  set(CMAKE_C_COMPILER ${CLANG_ROOT}/bin/clang)
+  set(CMAKE_CXX_COMPILER ${CLANG_ROOT}/bin/clang++)
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+if (NOT "${BOOST_ROOT_DIR}" STREQUAL "")
+  list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR})
+endif()
+
+if (USE_SDL2 AND (NOT "${SDL2_ROOT_DIR}" STREQUAL ""))
+  list(APPEND CMAKE_MODULE_PATH ${SDL2_ROOT_DIR}/cmake)
+  list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
+endif()
+
+project(momo C CXX)
 
 list(APPEND MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+if ("${TARGET_OS}" STREQUAL "windows")
+  set(Boost_USE_STATIC_RUNTIME ON)
+else()
+  set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
@@ -64,8 +110,8 @@ find_package(SDL2 REQUIRED)
 
 add_executable(momo)
 
-string(SUBSTRING ${MOMO_COMMIT} 0 8 MOMO_COMMIT_SHORT)
-string(SUBSTRING ${WEBRTC_COMMIT} 0 8 WEBRTC_COMMIT_SHORT)
+string(SUBSTRING "${MOMO_COMMIT}" 0 8 MOMO_COMMIT_SHORT)
+string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -90,7 +136,6 @@ target_sources(momo
     src/rtc/native_buffer.cpp
     src/rtc/observer.cpp
     src/rtc/scalable_track_source.cpp
-    src/sdl_renderer/sdl_renderer.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
     src/signal_listener.cpp
@@ -104,13 +149,6 @@ target_include_directories(momo PRIVATE src)
 
 set_target_properties(momo PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
 
-target_compile_definitions(momo
-  PRIVATE
-    USE_SDL2=1
-    _THREAD_SAVE
-    USE_H264=1
-)
-
 target_link_libraries(momo
   PRIVATE
     WebRTC::WebRTC
@@ -118,15 +156,49 @@ target_link_libraries(momo
     JSON::JSON
     CLI11::CLI11
 )
+
+target_compile_definitions(momo
+  PRIVATE
+    OPENSSL_IS_BORINGSSL
+    USE_H264=$<BOOL:${USE_H264}>
+    USE_SDL2=$<BOOL:${USE_SDL2}>
+)
+
 if (USE_SDL2)
+  target_sources(momo
+    PRIVATE
+      src/sdl_renderer/sdl_renderer.cpp
+  )
+  target_compile_definitions(momo
+    PRIVATE
+      _THREAD_SAFE
+  )
+
   target_link_libraries(momo
     PRIVATE
       SDL2::SDL2-static
       SDL2::SDL2main
   )
+
+  if ("${TARGET_OS}" STREQUAL "macos")
+    target_link_libraries(momo
+      PRIVATE
+        iconv
+        "-framework Carbon"
+        "-framework IOKit"
+        "-framework ForceFeedback"
+    )
+  endif()
 endif()
 
-if (TARGET_OS STREQUAL "windows")
+if (USE_LIBCXX)
+  set_target_properties(momo
+    PROPERTIES
+      COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>"
+  )
+endif()
+
+if ("${TARGET_OS}" STREQUAL "windows")
   set_target_properties(momo
     PROPERTIES
       # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
@@ -179,7 +251,12 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/objc_codec_factory_helper.mm
   )
 
-  set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  set_target_properties(momo
+    PROPERTIES
+      CXX_VISIBILITY_PRESET hidden
+      COMPILE_OPTIONS "-fconstant-string-class=NSConstantString"
+      LINK_OPTIONS "-ObjC"
+  )
 
   target_link_libraries(momo
     PRIVATE
