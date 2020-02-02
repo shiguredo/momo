@@ -118,9 +118,33 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_armv7_ros")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_x86_64_ros")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-16.04")
+  set(TARGET_ARCH "x86_64")
+  set(USE_ROS ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(WEBRTC_LIBRARY_NAME "webrtc_nolibcxx")
+  set(CLANG_ROOT /root/llvm/clang)
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
 else()
 endif()
+
+if (USE_ROS)
+  if (TARGET_OS_LINUX STREQUAL "ubuntu-16.04")
+    set(ROS_VERSION "kinetic")
+  elseif (TARGET_OS_LINUX STREQUAL "ubuntu-18.04")
+    set(ROS_VERSION "melodic")
+  else()
+    message(FATAL_ERROR "ROS_VERSION が決定できません")
+  endif()
+endif()
+
 
 if (NOT "${CLANG_ROOT}" STREQUAL "")
   set(CMAKE_C_COMPILER ${CLANG_ROOT}/bin/clang)
@@ -271,6 +295,30 @@ if (USE_SDL2)
   endif()
 endif()
 
+if (USE_ROS)
+  target_sources(momo
+    PRIVATE
+      src/ros/ros_audio_device.cpp
+      src/ros/ros_audio_device_module.cpp
+      src/ros/ros_video_capture.cpp
+  )
+  target_compile_definitions(momo PRIVATE HAVE_JPEG=1)
+  target_include_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/include)
+  target_link_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/lib)
+  target_link_libraries(momo
+    PRIVATE
+      message_filters
+      roscpp
+      rosconsole
+      roscpp_serialization
+      rostime
+      xmlrpcpp
+      cpp_common
+      rosconsole_log4cxx
+      rosconsole_backend_interface
+  )
+endif()
+
 if (USE_LIBCXX)
   set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>")
 endif()
@@ -356,6 +404,7 @@ elseif (TARGET_OS STREQUAL "macos")
       WEBRTC_POSIX
       WEBRTC_MAC
   )
+
 elseif (TARGET_OS STREQUAL "linux")
   find_package(Threads REQUIRED)
 
@@ -367,6 +416,11 @@ elseif (TARGET_OS STREQUAL "linux")
     PRIVATE
       WEBRTC_POSIX
   )
+  if (NOT USE_ROS)
+    # USE_ROS=OFF かつ Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
+    target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE)
+  endif()
+
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo
     PRIVATE
