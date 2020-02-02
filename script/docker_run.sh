@@ -92,7 +92,7 @@ if [ "$MOUNT_TYPE" = "mount" ]; then
           -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
           -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
           ../..
-        if [ -n "$VERBOSE" ]; then
+        if [ -n \"$VERBOSE\" ]; then
           export VERBOSE=$VERBOSE
         fi
         cmake --build . -j\$(nproc)
@@ -172,7 +172,7 @@ else
             -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
             -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
             ../..
-          if [ -n "$VERBOSE" ]; then
+          if [ -n \"$VERBOSE\" ]; then
             export VERBOSE=$VERBOSE
           fi
           cmake --build . -j\$(nproc)
