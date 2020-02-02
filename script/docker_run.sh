@@ -5,12 +5,12 @@ set -e
 # ヘルプ表示
 function show_help() {
   echo ""
-  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <ビルドモード [build | package]> <MOMO_VERSION> <MOMO_COMMIT_SHORT>"
+  echo "$0 <作業ディレクトリ> <Momoリポジトリのルートディレクトリ> <マウントタイプ [mount | nomount]> <パッケージ名> <Dockerイメージ名> <MOMO_COMMIT>"
   echo ""
 }
 
 # 引数のチェック
-if [ $# -ne 8 ]; then
+if [ $# -ne 6 ]; then
   show_help
   exit 1
 fi
@@ -20,9 +20,7 @@ MOMO_DIR="$2"
 MOUNT_TYPE="$3"
 PACKAGE_NAME="$4"
 DOCKER_IMAGE="$5"
-BUILD_MODE="$6"
-MOMO_VERSION="$7"
-MOMO_COMMIT_SHORT="$8"
+MOMO_COMMIT="$6"
 
 if [ -z "$WORK_DIR" ]; then
   echo "エラー: <作業ディレクトリ> が空です"
@@ -60,34 +58,42 @@ if [ -z "$(docker images -q $DOCKER_IMAGE)" ]; then
   exit 1
 fi
 
-if [ "$BUILD_MODE" != "build" -a "$BUILD_MODE" != "package"  ]; then
-  echo "エラー: <ビルドモード> は build または package である必要があります"
+if [ -z "$MOMO_COMMIT" ]; then
+  echo "エラー: <MOMO_COMMIT> が空です"
   show_help
   exit 1
 fi
 
-if [ -z "$MOMO_VERSION" ]; then
-  echo "エラー: <MOMO_VERSION> が空です"
-  show_help
+if [ ! -e "$MOMO_DIR/VERSION" ]; then
+  echo "エラー: $MOMO_DIR/VERSION が存在しません"
   exit 1
 fi
 
-if [ -z "$MOMO_COMMIT_SHORT" ]; then
-  echo "エラー: <MOMO_COMMIT_SHORT> が空です"
-  show_help
-  exit 1
-fi
+source $MOMO_DIR/VERSION
 
 # マウントするかどうかで大きく分岐する
 if [ "$MOUNT_TYPE" = "mount" ]; then
   # マウントする場合は、単純にマウントしてビルドするだけ
-  if [ "$BUILD_MODE" = "build" ]; then
-    # build
-    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
-  else
-    # package
-    docker run -it --rm -v "$WORK_DIR/..:/root/momo" "$DOCKER_IMAGE" /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
-  fi
+  docker run \
+    -it \
+    --rm \
+    -v "$WORK_DIR/..:/root/momo" \
+    "$DOCKER_IMAGE" \
+    /bin/bash -c "
+      set -ex
+      mkdir -p /root/momo/_build/$PACKAGE_NAME
+      cd /root/momo/_build/$PACKAGE_NAME
+      cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DMOMO_PACKAGE_NAME=$PACKAGE_NAME \
+        -DMOMO_VERSION=$MOMO_VERSION \
+        -DMOMO_COMMIT=$MOMO_COMMIT \
+        -DWEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
+        -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
+        -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
+        ../..
+      VERBOSE=$VERBOSE cmake --build . -j\$(nproc)
+    "
 else
   # マウントしない場合は、コンテナを起動して、コンテナに必要なファイルを転送して、コンテナ上でビルドして、生成されたファイルをコンテナから戻して、コンテナを終了する
 
@@ -149,13 +155,26 @@ else
   rm momo.tar.gz
 
   docker container exec momo-$PACKAGE_NAME /bin/bash -c 'cd /root && tar xf momo.tar.gz && rm momo.tar.gz'
-  if [ "$BUILD_MODE" = "build" ]; then
-    # build
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo &&                                          make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME                    MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
-  else
-    # package
-    docker container exec momo-$PACKAGE_NAME /bin/bash -c "cd /root/momo && make PACKAGE_NAME=$PACKAGE_NAME clean && make MOMO_CFLAGS='-O2' PACKAGE_NAME=$PACKAGE_NAME BUILD_MODE=package MOMO_VERSION=$MOMO_VERSION MOMO_COMMIT_SHORT=$MOMO_COMMIT_SHORT momo"
-  fi
+  docker run \
+    -it \
+    --rm \
+    -v "$WORK_DIR/..:/root/momo" \
+    "$DOCKER_IMAGE" \
+    /bin/bash -c "
+      set -ex
+      mkdir -p /root/momo/_build/$PACKAGE_NAME
+      cd /root/momo/_build/$PACKAGE_NAME
+      cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DMOMO_PACKAGE_NAME=$PACKAGE_NAME \
+        -DMOMO_VERSION=$MOMO_VERSION \
+        -DMOMO_COMMIT=$MOMO_COMMIT \
+        -DWEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
+        -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
+        -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
+        ../..
+      VERBOSE=$VERBOSE cmake --build . -j\$(nproc)
+    "
 
   # 中間ファイル類を取り出す
   rm -rf $MOMO_DIR/_build/$PACKAGE_NAME

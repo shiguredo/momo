@@ -47,7 +47,9 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
 
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${SDL2_ROOT_DIR}/cmake)
   list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR} ${SDL2_ROOT_DIR})
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
+
   set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos/_install)
 
   set(TARGET_OS "macos")
@@ -66,6 +68,27 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
 
 elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv6")
+  set(USE_MMAL_ENCODER ON)
+  set(USE_H264 ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(SDL2_ROOT_DIR /root/SDL2)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+  set(Boost_ARCHITECTURE 32)
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_armv7_ros")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8")
@@ -91,6 +114,29 @@ if (USE_SDL2 AND (NOT "${SDL2_ROOT_DIR}" STREQUAL ""))
   list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
 endif()
 
+# SYSROOT とかの設定
+# これらの設定は project の前に行う必要がある
+if (TARGET_OS STREQUAL "linux")
+  if (TARGET_ARCH STREQUAL "arm")
+    if (TARGET_ARCH_ARM STREQUAL "armv8")
+      set(ARCH_NAME aarch64-linux-gnu)
+    else()
+      set(ARCH_NAME arm-linux-gnueabihf)
+    endif()
+
+    set(CMAKE_SYSTEM_NAME Generic)
+    if (TARGET_ARCH_ARM STREQUAL "armv8")
+      set(CMAKE_SYSTEM_PROCESSOR aarch64)
+    else()
+      set(CMAKE_SYSTEM_PROCESSOR arm)
+    endif()
+    set(CMAKE_SYSROOT ${SYSROOT})
+    set(CMAKE_C_COMPILER_TARGET ${ARCH_NAME})
+    set(CMAKE_CXX_COMPILER_TARGET ${ARCH_NAME})
+  endif()
+endif()
+
+
 project(momo C CXX)
 
 list(APPEND MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -106,7 +152,9 @@ find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(JSON REQUIRED)
 find_package(CLI11 REQUIRED)
-find_package(SDL2 REQUIRED)
+if (USE_SDL2)
+  find_package(SDL2 REQUIRED)
+endif()
 
 add_executable(momo)
 
@@ -160,6 +208,9 @@ target_link_libraries(momo
 target_compile_definitions(momo
   PRIVATE
     OPENSSL_IS_BORINGSSL
+    USE_ROS=$<BOOL:${USE_ROS}>
+    USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
+    USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
     USE_SDL2=$<BOOL:${USE_SDL2}>
 )
@@ -192,17 +243,14 @@ if (USE_SDL2)
 endif()
 
 if (USE_LIBCXX)
-  set_target_properties(momo
-    PROPERTIES
-      COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>"
-  )
+  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>")
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
+  # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
+  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "/utf-8;/bigobj")
   set_target_properties(momo
     PROPERTIES
-      # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
-      COMPILE_OPTIONS "/utf-8;/bigobj"
       # CRTライブラリを静的リンクさせる
       # CMake 3.15 以上なら MSVC_RUNTIME_LIBRARY が使える
       MSVC_RUNTIME_LIBRARY "MultiThreaded"
@@ -251,12 +299,9 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/objc_codec_factory_helper.mm
   )
 
-  set_target_properties(momo
-    PROPERTIES
-      CXX_VISIBILITY_PRESET hidden
-      COMPILE_OPTIONS "-fconstant-string-class=NSConstantString"
-      LINK_OPTIONS "-ObjC"
-  )
+  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-fconstant-string-class=NSConstantString")
+  set_property(TARGET momo APPEND PROPERTY LINK_OPTIONS "-ObjC")
+  set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
   target_link_libraries(momo
     PRIVATE
@@ -282,4 +327,141 @@ elseif (TARGET_OS STREQUAL "macos")
       WEBRTC_POSIX
       WEBRTC_MAC
   )
-endif ()
+elseif (TARGET_OS STREQUAL "linux")
+  find_package(Threads REQUIRED)
+
+  target_sources(momo
+    PRIVATE
+      src/v4l2_video_capturer/v4l2_video_capturer.cpp
+  )
+  target_compile_definitions(momo
+    PRIVATE
+      WEBRTC_POSIX
+  )
+  set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  target_link_libraries(momo
+    PRIVATE
+      X11
+      Xau
+      Xdmcp
+      xcb
+      plds4
+      Xext
+      expat
+      dl
+      nss3
+      nssutil3
+      plc4
+      nspr4
+      rt
+      Threads::Threads
+  )
+
+  if (TARGET_ARCH STREQUAL "arm")
+    if (USE_LIBCXX)
+      target_include_directories(momo PRIVATE ${SYSROOT}/usr/include/${ARCH_NAME})
+      target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/$(ARCH_NAME))
+    endif()
+
+    if (TARGET_ARCH_ARM STREQUAL "armv8")
+      # Jetson の設定
+      if (USE_JETSON_ENCODER)
+
+        target_sources(momo
+          PRIVATE
+            src/hwenc_jetson/jetson_h264_encoder.cpp
+            src/hwenc_jetson/jetson_video_decoder.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvBuffer.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvElement.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvElementProfiler.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvJpegDecoder.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvJpegEncoder.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvLogging.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2Element.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoConverter.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
+            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
+        )
+
+        target_include_directories(momo PRIVATE ${SYSROOT}/include/libjpeg-8b)
+        target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
+        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu")
+        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu")
+        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra")
+        target_link_libraries(momo
+          PRIVATE
+            v4l2
+            nvbuf_utils
+            nvbuf_fdmap
+            nvddk_vic
+            nvddk_2d_v2
+            nvjpeg
+            nvrm
+            nvrm_graphics
+            nvos
+        )
+      endif(USE_JETSON_ENCODER)
+    else()
+      # armv6, armv7 用
+      if (TARGET_ARCH_ARM STREQUAL "armv6")
+        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-mcpu=arm1176jzf-s;-mfpu=vfp")
+      else()
+        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-march=armv7-a;-mtune=generic-armv7-a;-mfpu=neon;-mthumb")
+      endif()
+
+      if (USE_MMAL_ENCODER)
+        target_sources(momo
+          PRIVATE
+            src/hwenc_mmal/mmal_h264_encoder.cpp
+        )
+
+        if (TARGET_OS_LINUX STREQUAL "raspbian-buster")
+          set(_VC_PATH ${SYSROOT}/opt/vc)
+        else()
+          set(_VC_PATH ${SYSROOT}/usr)
+        endif()
+
+        target_include_directories(momo PRIVATE ${_VC_PATH}/include)
+        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-ftree-vectorize;-pipe")
+        target_compile_definitions(momo
+          PRIVATE
+            STANDALONE
+            __STDC_CONSTANT_MACROS
+            __STDC_LIMIT_MACROS
+            TARGET_POSIX
+            _LINUX
+            PIC
+            _REENTRANT
+            _LARGEFILE64_SOURCE
+            _FILE_OFFSET_BITS=64
+            _FORTIFY_SOURCE
+            HAVE_LIBOPENMAX=2
+            OMX
+            OMX_SKIP64BIT
+            USE_EXTERNAL_OMX
+            HAVE_LIBBCM_HOST
+            USE_EXTERNAL_LIBBCM_HOST
+            USE_VCHIQ_ARM
+        )
+        target_link_directories(momo PRIVATE ${_VC_PATH}/lib)
+        target_link_libraries(momo
+          PRIVATE
+            brcmGLESv2
+            brcmEGL
+            bcm_host
+            containers
+            vcos
+            vcsm
+            vchiq_arm
+            mmal
+            mmal_core
+            mmal_components
+            mmal_util
+            mmal_vc_client
+            m
+        )
+      endif(USE_MMAL_ENCODER)
+    endif(TARGET_ARCH_ARM STREQUAL "armv8")
+  endif(TARGET_ARCH STREQUAL "arm")
+endif()

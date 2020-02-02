@@ -17,7 +17,7 @@ _PACKAGES=" \
 "
 
 function show_help() {
-  echo "$PROGRAM [--clean] [--package] <package>"
+  echo "$PROGRAM [--clean] [--package] [--no-cache] [-no-tty] [--no-mount] <package>"
   echo "<package>:"
   for package in $_PACKAGES; do
     echo "  - $package"
@@ -27,11 +27,16 @@ function show_help() {
 PACKAGE=""
 FLAG_CLEAN=0
 FLAG_PACKAGE=0
+DOCKER_BUILD_FLAGS=""
+DOCKER_MOUNT_TYPE=mount
 
 while [ $# -ne 0 ]; do
   case "$1" in
     "--clean" ) FLAG_CLEAN=1 ;;
     "--package" ) FLAG_PACKAGE=1 ;;
+    "--no-cache" ) DOCKER_BUILD_FLAGS="$DOCKER_BUILD_FLAGS --no-cache" ;;
+    "--no-tty" ) DOCKER_BUILD_FLAGS="$DOCKER_BUILD_FLAGS --progress=plain" ;;
+    "--no-mount" ) DOCKER_MOUNT_TYPE=nomount ;;
     --* )
       show_help
       exit 1
@@ -67,7 +72,8 @@ echo "<package>: " $PACKAGE
 set -ex
 
 pushd ..
-  MOMO_COMMIT="$(git rev-parse HEAD)"
+  MOMO_COMMIT="`git rev-parse HEAD`"
+  MOMO_COMMIT_SHORT="`cat $MOMO_COMMIT | cut -b 1-8`"
 popd
 
 source ../VERSION
@@ -132,6 +138,34 @@ case "$PACKAGE" in
 
     ;;
   * )
-    echo "TODO"
+    if [ $FLAG_CLEAN -eq 1 ]; then
+      rm -rf ../_build/$PACKAGE
+      IMAGES="`docker image ls -q momo/$PACKAGE`"
+      if [ -n "$IMAGES" ]; then
+        docker image rm $IMAGES
+      fi
+      docker builder prune -f --filter=label=jp.shiguredo.momo=$PACKAGE
+      exit 0
+    fi
+
+    rm -rf $PACKAGE/script
+    cp -r ../script $PACKAGE/script
+
+    DOCKER_BUILDKIT=1 docker build \
+      -t momo/$PACKAGE:m$WEBRTC_BUILD_VERSION \
+      $DOCKER_BUILD_FLAGS \
+      --build-arg WEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
+      --build-arg BOOST_VERSION=$BOOST_VERSION \
+      --build-arg SDL2_VERSION=$SDL2_VERSION \
+      --build-arg JSON_VERSION=$JSON_VERSION \
+      --build-arg CLI11_VERSION=$CLI11_VERSION \
+      --build-arg CMAKE_VERSION=$CMAKE_VERSION \
+      --build-arg PACKAGE_NAME=$PACKAGE \
+      $PACKAGE
+
+    rm -r $PACKAGE/script
+
+    ../script/docker_run.sh `pwd` `pwd`/.. $DOCKER_MOUNT_TYPE $PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION $MOMO_COMMIT
+
     ;;
 esac
