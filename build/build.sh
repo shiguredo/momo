@@ -70,6 +70,8 @@ pushd ..
   MOMO_COMMIT="$(git rev-parse HEAD)"
 popd
 
+source ../VERSION
+
 case "$PACKAGE" in
   "windows" )
     echo "Windows では build.bat を利用してください。"
@@ -107,7 +109,25 @@ case "$PACKAGE" in
     popd
 
     if [ $FLAG_PACKAGE -eq 1 ]; then
-      echo "TODO"
+      MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
+
+      pushd ..
+        # パッケージのバイナリを作る
+        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+        rm -f _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz
+        mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+        cp    _build/macos/momo _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
+        cp    LICENSE           _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
+        cp    NOTICE            _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
+        cp -r html              _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/html
+        pushd _package
+          tar czf momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+        popd
+
+        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+        echo ""
+        echo "パッケージが _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz に生成されました。"
+      popd
     fi
 
     ;;

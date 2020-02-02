@@ -38,12 +38,8 @@ core
 webrtc_logs_0
 .DS_Store
 
-/libs/CLI11-*
-/libs/json-*
 /_build
-/build/package
-/build/momo/
-/build/momo.tar.gz
+/_package
 /build/windows/_source
 /build/windows/_build
 /build/windows/_install
