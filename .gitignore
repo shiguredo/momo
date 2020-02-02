@@ -37,6 +37,7 @@ core
 *.tar.gz
 webrtc_logs_0
 .DS_Store
+*.swp
 
 /_build
 /_package

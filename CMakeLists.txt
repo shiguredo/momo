@@ -90,6 +90,30 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
   set(Boost_ARCHITECTURE 32)
 
 elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv7")
+  set(USE_MMAL_ENCODER ON)
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(SDL2_ROOT_DIR "")
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+  set(Boost_ARCHITECTURE 32)
+
+  list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_armv7_ros")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8")
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
@@ -225,11 +249,16 @@ if (USE_SDL2)
       _THREAD_SAFE
   )
 
-  target_link_libraries(momo
-    PRIVATE
-      SDL2::SDL2-static
-      SDL2::SDL2main
-  )
+  if (TARGET SDL2::SDL2-static)
+    target_link_libraries(momo
+      PRIVATE
+        SDL2::SDL2-static
+        SDL2::SDL2main
+    )
+  else()
+    target_link_libraries(momo PRIVATE SDL2)
+    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+  endif()
 
   if ("${TARGET_OS}" STREQUAL "macos")
     target_link_libraries(momo
@@ -360,7 +389,7 @@ elseif (TARGET_OS STREQUAL "linux")
   if (TARGET_ARCH STREQUAL "arm")
     if (USE_LIBCXX)
       target_include_directories(momo PRIVATE ${SYSROOT}/usr/include/${ARCH_NAME})
-      target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/$(ARCH_NAME))
+      target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/${ARCH_NAME})
     endif()
 
     if (TARGET_ARCH_ARM STREQUAL "armv8")
@@ -461,6 +490,7 @@ elseif (TARGET_OS STREQUAL "linux")
             mmal_vc_client
             m
         )
+
       endif(USE_MMAL_ENCODER)
     endif(TARGET_ARCH_ARM STREQUAL "armv8")
   endif(TARGET_ARCH STREQUAL "arm")
