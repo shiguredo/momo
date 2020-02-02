@@ -168,17 +168,22 @@ case "$PACKAGE" in
     ../script/docker_run.sh `pwd` `pwd`/.. $DOCKER_MOUNT_TYPE $PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION $MOMO_COMMIT
 
     if [ $FLAG_PACKAGE -eq 1 ]; then
-      rm -rf _package/momo-${MOMO_VERSION}_${PACKAGE}
-      rm -f _package/momo-${MOMO_VERSION}_${PACKAGE}.tar.gz
-      mkdir -p _package/momo-${MOMO_VERSION}_${PACKAGE}
-      cp    ../_build/${PACKAGE}/momo _package/momo-${MOMO_VERSION}_${PACKAGE}/
-      cp    ../LICENSE                _package/momo-${MOMO_VERSION}_${PACKAGE}/
-      cp    ../NOTICE                 _package/momo-${MOMO_VERSION}_${PACKAGE}/
-      cp -r ../html                   _package/momo-${MOMO_VERSION}_${PACKAGE}/html
-      cd _package && tar czf momo-${MOMO_VERSION}_${PACKAGE}.tar.gz momo-${MOMO_VERSION}_${PACKAGE}
-      rm -rf _package/momo-${MOMO_VERSION}_${PACKAGE}
-      echo ""
-      echo "パッケージが _package/momo-${MOMO_VERSION}_${PACKAGE}.tar.gz に生成されました。"
+      pushd ..
+        rm -rf _package/momo-${MOMO_VERSION}_${PACKAGE}
+        rm -f _package/momo-${MOMO_VERSION}_${PACKAGE}.tar.gz
+        mkdir -p _package/momo-${MOMO_VERSION}_${PACKAGE}
+        cp    _build/${PACKAGE}/momo _package/momo-${MOMO_VERSION}_${PACKAGE}/
+        cp    LICENSE                _package/momo-${MOMO_VERSION}_${PACKAGE}/
+        cp    NOTICE                 _package/momo-${MOMO_VERSION}_${PACKAGE}/
+        cp -r html                   _package/momo-${MOMO_VERSION}_${PACKAGE}/html
+        pushd _package
+          tar czf momo-${MOMO_VERSION}_${PACKAGE}.tar.gz momo-${MOMO_VERSION}_${PACKAGE}
+        popd
+
+        rm -rf _package/momo-${MOMO_VERSION}_${PACKAGE}
+        echo ""
+        echo "パッケージが _package/momo-${MOMO_VERSION}_${PACKAGE}.tar.gz に生成されました。"
+      popd
     fi
     ;;
 esac
