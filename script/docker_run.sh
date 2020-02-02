@@ -158,11 +158,7 @@ else
     rm momo.tar.gz
 
     docker container exec momo-$PACKAGE_NAME /bin/bash -c 'cd /root && tar xf momo.tar.gz && rm momo.tar.gz'
-    docker run \
-      -it \
-      --rm \
-      -v "$WORK_DIR/..:/root/momo" \
-      "$DOCKER_IMAGE" \
+    docker container exec momo-$PACKAGE_NAME \
       /bin/bash -c "
         set -ex
         mkdir -p /root/momo/_build/$PACKAGE_NAME
