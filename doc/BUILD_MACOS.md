@@ -40,18 +40,24 @@ $ xcode-select --print-path
 $ sudo xcode-select -s /Applications/Xcode.app
 ```
 
+### CMake
+
+ビルドには CMake 3.16 以上が必要になります。
+
+Homebrew が入っている場合は `brew install cmake` するか、あるいは公式サイトからダウンロードして PATH を通しておいてください。
+
 ### ビルド方法
 
-build ディレクトリ以下で make macos と打つことで Momo の macOS 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh macos と打つことで Momo の macOS 向けバイナリが生成されます。
 
 ```shell
-$ make macos
+$ ./build.sh macos
 ```
 
 ## 中間ファイルのクリーンアップ
 
-ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して make macos.clean を実行することでクリーンアップできます。
+ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して ./build.sh --clean macos を実行することでクリーンアップできます。
 
 ```shell
-$ make macos.clean
+$ ./build.sh --clean macos
 ```
