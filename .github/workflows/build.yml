@@ -21,9 +21,10 @@ jobs:
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows.zip" >> windows.env
+          $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip" >> windows.env
           echo "CONTENT_TYPE=application/zip" >> windows.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_windows.zip"
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
@@ -36,7 +37,7 @@ jobs:
           name: windows.env
           path: windows.env
   build-macos:
-    name: Build momo for macOS 10.15
+    name: Build momo for macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1

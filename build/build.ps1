@@ -56,20 +56,21 @@ Pop-Location
 if ($package) {
   # パッケージのバイナリを作る
   Push-Location ..
-    if (Test-Path "_package\momo-${MOMO_VERSION}_windows.zip") {
-      Remove-Item "_package\momo-${MOMO_VERSION}_windows.zip" -Force
+    $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
+    if (Test-Path "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip") {
+      Remove-Item "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip" -Force
     }
-    if (Test-Path "_package\momo-${MOMO_VERSION}_windows") {
-      Remove-Item "_package\momo-${MOMO_VERSION}_windows" -Force -Recurse
+    if (Test-Path "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}") {
+      Remove-Item "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}" -Force -Recurse
     }
-    mkdir -Force "_package\momo-${MOMO_VERSION}_windows"
-    Copy-Item _build\windows\Release\momo.exe _package\momo-${MOMO_VERSION}_windows\
-    Copy-Item LICENSE                         _package\momo-${MOMO_VERSION}_windows\
-    Copy-Item NOTICE                          _package\momo-${MOMO_VERSION}_windows\
-    Copy-Item html                            _package\momo-${MOMO_VERSION}_windows\html\
+    mkdir -Force "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}"
+    Copy-Item _build\windows\Release\momo.exe _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
+    Copy-Item LICENSE                         _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
+    Copy-Item NOTICE                          _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
+    Copy-Item html                            _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\html\
     Push-Location _package
-      Compress-Archive -Path "momo-${MOMO_VERSION}_windows" -DestinationPath "momo-${MOMO_VERSION}_windows.zip"
+      Compress-Archive -Path "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}" -DestinationPath "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip"
     Pop-Location
-    Remove-Item "_package\momo-${MOMO_VERSION}_windows" -Force -Recurse
+    Remove-Item "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}" -Force -Recurse
   Pop-Location
 }
