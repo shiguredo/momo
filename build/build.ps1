@@ -67,7 +67,7 @@ if ($package) {
     Copy-Item _build\windows\Release\momo.exe _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
     Copy-Item LICENSE                         _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
     Copy-Item NOTICE                          _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\
-    Copy-Item html                            _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\html\
+    Copy-Item html                            _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}\html\ -Recurse
     Push-Location _package
       Compress-Archive -Path "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}" -DestinationPath "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip"
     Pop-Location
