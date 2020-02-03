@@ -6,6 +6,36 @@ on:
     - 'doc/**'
 
 jobs:
+  build-windows:
+    name: Build momo for Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: build.bat -package
+        working-directory: build
+        timeout-minutes: 120
+      - name: Output package name
+        shell: bash
+        run: |
+          Get-Content "VERSION" | Foreach-Object {
+            if (!$_) { continue }
+            $var = $_.Split('=')
+            New-Variable -Name $var[0] -Value $var[1] -Force
+          }
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows.zip" >> windows.env
+          echo "CONTENT_TYPE=application/zip" >> windows.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows.zip"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: _package/${{ steps.package_name.outputs.name }}
+      - name: Upload Environment
+        uses: actions/upload-artifact@v1
+        with:
+          name: windows.env
+          path: windows.env
   build-macos:
     name: Build momo for macOS 10.15
     runs-on: macos-latest
@@ -19,7 +49,8 @@ jobs:
         run: |
           source VERSION
           MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" > macos.env
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" >> macos.env
+          echo "CONTENT_TYPE=application/gzip" >> macos.env
           echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz"
         id: package_name
       - name: Upload Artifact
@@ -55,7 +86,8 @@ jobs:
         shell: bash
         run: |
           source VERSION
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" > ${{ matrix.name }}.env
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> ${{ matrix.name }}.env
+          echo "CONTENT_TYPE=application/gzip" >> ${{ matrix.name }}.env
           echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
         id: package_name
       - name: Upload Artifact
@@ -72,6 +104,7 @@ jobs:
     name: Create Release
     if: contains(github.ref, 'tags/202')
     needs:
+      - build-windows
       - build-macos
       - build-linux
     runs-on: ubuntu-latest
@@ -103,6 +136,7 @@ jobs:
       fail-fast: true
       matrix:
         name:
+          - windows
           - macos
           - raspbian-buster_armv6
           - raspbian-buster_armv7
@@ -124,6 +158,7 @@ jobs:
           source ${{ matrix.name }}.env/${{ matrix.name }}.env
           source create-release.env/create-release.env
           echo "::set-output name=package_name::$PACKAGE_NAME"
+          echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
       - uses: actions/download-artifact@v1
@@ -137,4 +172,4 @@ jobs:
           upload_url: ${{ steps.env.outputs.upload_url }}
           asset_path: ${{ steps.env.outputs.package_name }}/${{ steps.env.outputs.package_name }}
           asset_name: ${{ steps.env.outputs.package_name }}
-          asset_content_type: application/gzip
+          asset_content_type: ${{ steps.env.outputs.content_type }}
