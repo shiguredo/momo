@@ -1,5 +1,5 @@
-find_path(WebRTC_INCLUDE_DIR NAMES api/peer_connection_interface.h PATHS "${WEBRTC_ROOT_DIR}/include")
-find_library(WebRTC_LIBRARY NAMES webrtc PATHS "${WEBRTC_ROOT_DIR}/release" "${WEBRTC_ROOT_DIR}/lib")
+find_path(WebRTC_INCLUDE_DIR NAMES api/peer_connection_interface.h PATHS "${WEBRTC_INCLUDE_DIR}")
+find_library(WebRTC_LIBRARY NAMES ${WEBRTC_LIBRARY_NAME} PATHS "${WEBRTC_LIBRARY_DIR}")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(WebRTC DEFAULT_MSG WebRTC_LIBRARY WebRTC_INCLUDE_DIR)

@@ -1,4 +1,5 @@
 #include "momo_version.h"
+#include "momo_version.gen.h"
 
 #include <fstream>
 #include <sstream>
@@ -8,6 +9,10 @@
 // boost
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <sys/utsname.h>
@@ -50,10 +55,72 @@ std::string MomoVersion::GetLibwebrtcName() {
   return LIBWEBRTC_NAME;
 }
 
+#ifdef WIN32
+
+static int RtlGetVersion(LPOSVERSIONINFOW lpOSVersionInfo) {
+  HMODULE module = GetModuleHandle(L"ntdll.dll");
+
+  if (module != nullptr) {
+    typedef int(WINAPI * RtlGetVersionFunc)(LPOSVERSIONINFOW lpOSVersionInfo);
+
+    auto rtl_get_version =
+        (RtlGetVersionFunc)GetProcAddress(module, "RtlGetVersion");
+    if (rtl_get_version != nullptr) {
+      return rtl_get_version(lpOSVersionInfo);
+    }
+  }
+
+  return -1;
+}
+
+#endif
+
 std::string MomoVersion::GetEnvironmentName() {
   std::string environment = "Unknown Environment";
 
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(WIN32)
+  SYSTEM_INFO sysInfo;
+  GetSystemInfo(&sysInfo);
+  std::string arch;
+  switch (sysInfo.wProcessorArchitecture) {
+    // x64 (AMD or Intel)
+    case PROCESSOR_ARCHITECTURE_AMD64:
+      arch = "x64";
+      break;
+    // ARM
+    case PROCESSOR_ARCHITECTURE_ARM:
+      arch = "arm";
+      break;
+    // ARM64
+    case PROCESSOR_ARCHITECTURE_ARM64:
+      arch = "arm64";
+      break;
+    // Intel Itanium-based
+    case PROCESSOR_ARCHITECTURE_IA64:
+      arch = "IA64";
+      break;
+    // x86
+    case PROCESSOR_ARCHITECTURE_INTEL:
+      arch = "x86";
+      break;
+    case PROCESSOR_ARCHITECTURE_UNKNOWN:
+    default:
+      arch = "unknown";
+      break;
+  }
+
+  OSVERSIONINFOW versionInfo = {sizeof(OSVERSIONINFOW)};
+  auto status = RtlGetVersion(&versionInfo);
+  std::string os = "Windows <noinfo>";
+  if (status == 0) {
+    os = "Windows " + std::to_string(versionInfo.dwMajorVersion) + "." +
+         std::to_string(versionInfo.dwMinorVersion) + " Build " +
+         std::to_string(versionInfo.dwBuildNumber);
+  }
+
+  environment = "[" + arch + "] " + os;
+
+#elif defined(__APPLE__) || defined(__linux__)
   std::string arch = "unknown arch";
   std::string os = "Unknown OS";
   std::string info = "";
