@@ -85,9 +85,16 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   static void MMALInputCallbackFunction(MMAL_PORT_T* port,
                                         MMAL_BUFFER_HEADER_T* buffer);
   void MMALInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-  static void MMALOutputCallbackFunction(MMAL_PORT_T* port,
+  void ResizerFillBuffer();
+  static void ResizerOutputCallbackFunction(MMAL_PORT_T* port,
+                                            MMAL_BUFFER_HEADER_T* buffer);
+  void ResizerOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  static void EncoderInputCallbackFunction(MMAL_PORT_T* port,
                                          MMAL_BUFFER_HEADER_T* buffer);
-  void MMALOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  void EncoderInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  static void EncoderOutputCallbackFunction(MMAL_PORT_T* port,
+                                         MMAL_BUFFER_HEADER_T* buffer);
+  void EncoderOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
   void SetBitrateBps(uint32_t bitrate_bps);
   void SetFramerateFps(double framerate_fps);
   int32_t SendFrame(unsigned char* buffer, size_t size);
@@ -97,10 +104,11 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   MMAL_COMPONENT_T* decoder_;
   MMAL_COMPONENT_T* resizer_;
   MMAL_COMPONENT_T* encoder_;
-  MMAL_CONNECTION_T* conn1_;
-  MMAL_CONNECTION_T* conn2_;
+  MMAL_CONNECTION_T* connection_;
   MMAL_POOL_T* pool_in_;
-  MMAL_POOL_T* pool_out_;
+  MMAL_POOL_T* resizer_pool_out_;
+  MMAL_POOL_T* encoder_pool_in_;
+  MMAL_POOL_T* encoder_pool_out_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
