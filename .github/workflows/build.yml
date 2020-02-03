@@ -22,9 +22,10 @@ jobs:
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
           $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip" >> windows.env
+          $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip" >> windows.env
           echo "CONTENT_TYPE=application/zip" >> windows.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.zip"
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
