@@ -15,7 +15,6 @@ jobs:
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
-        shell: bash
         run: |
           Get-Content "VERSION" | Foreach-Object {
             if (!$_) { continue }
