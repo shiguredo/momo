@@ -11,6 +11,7 @@ set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な O
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv6, armv7, armv8")
 set(USE_ROS OFF CACHE BOOL "ROS を使っているかどうか")
+set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
@@ -19,6 +20,7 @@ set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクト�
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
+set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
 set(WEBRTC_INCLUDE_DIR "" CACHE PATH "WebRTC のインクルードディレクトリ")
 set(WEBRTC_LIBRARY_DIR "" CACHE PATH "WebRTC のライブラリディレクトリ")
 set(WEBRTC_LIBRARY_NAME "webrtc" CACHE STRING "WebRTC のライブラリ名")
@@ -37,11 +39,14 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
 
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
+  set(USE_NVCODEC_ENCODER ON)
+  set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
+  set(NVCODEC_ROOT_DIR ${_INSTALL_DIR}/NvCodec)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
   set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release)
 
@@ -280,6 +285,9 @@ find_package(CLI11 REQUIRED)
 if (USE_SDL2)
   find_package(SDL2 REQUIRED)
 endif()
+if (USE_NVCODEC_ENCODER)
+  find_package(NvCodec REQUIRED)
+endif()
 
 add_executable(momo)
 
@@ -335,6 +343,7 @@ target_compile_definitions(momo
   PRIVATE
     OPENSSL_IS_BORINGSSL
     USE_ROS=$<BOOL:${USE_ROS}>
+    USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
@@ -402,17 +411,6 @@ if (USE_LIBCXX)
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
-  find_package(NvCodec REQUIRED)
-
-  # NVIDIA Video Codec SDK
-  target_sources(momo
-    PRIVATE
-      ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoder.cpp
-      ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
-  target_include_directories(momo
-    PRIVATE
-      ${NVCODEC_ROOT_DIR}/Samples/NvCodec)
-
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "/utf-8;/bigobj")
   set_target_properties(momo
@@ -457,6 +455,24 @@ if ("${TARGET_OS}" STREQUAL "windows")
       UNICODE
       _UNICODE
   )
+
+  # NVIDIA Video Codec SDK
+  if (USE_NVCODEC_ENCODER)
+    target_sources(momo
+      PRIVATE
+        ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoder.cpp
+        ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
+    target_include_directories(momo
+      PRIVATE
+        ${NVCODEC_ROOT_DIR}/Samples/NvCodec)
+    target_link_libraries(momo
+      PRIVATE
+        NvCodec::nvencodeapi
+        DXGI.lib
+        D3D11.lib
+    )
+  endif()
+
 elseif (TARGET_OS STREQUAL "macos")
   target_sources(momo
     PRIVATE

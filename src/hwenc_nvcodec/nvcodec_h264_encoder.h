@@ -1,9 +1,18 @@
 #ifndef NVCODEC_H264_ENCODER_H_
 #define NVCODEC_H264_ENCODER_H_
 
+#ifdef _WIN32
+#include <d3d11.h>
+#include <wrl.h>
+#endif
+
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <queue>
+
+// NvCodec
+#include <NvEncoder/NvEncoderD3D11.h>
 
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
@@ -29,6 +38,34 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
       const std::vector<webrtc::VideoFrameType>* frame_types) override;
   void SetRates(const RateControlParameters& parameters) override;
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
+
+ private:
+  std::mutex mutex_;
+  webrtc::EncodedImageCallback* callback_ = nullptr;
+  webrtc::BitrateAdjuster bitrate_adjuster_ =
+      webrtc::BitrateAdjuster(0.5, 0.95);
+  uint32_t target_bitrate_bps_ = 0;
+  uint32_t max_bitrate_bps_ = 0;
+
+  int32_t InitNvEnc();
+  int32_t ReleaseNvEnc();
+  webrtc::H264BitstreamParser h264_bitstream_parser_;
+
+#ifdef _WIN32
+  Microsoft::WRL::ComPtr<ID3D11Device> id3d11_device_;
+  Microsoft::WRL::ComPtr<ID3D11DeviceContext> id3d11_context_;
+  Microsoft::WRL::ComPtr<ID3D11Texture2D> id3d11_texture_;
+  std::unique_ptr<NvEncoderD3D11> nv_encoder_;
+#endif
+  bool reconfigure_needed_ = false;
+  bool use_argb_ = false;
+  uint32_t width_ = 0;
+  uint32_t height_ = 0;
+  uint32_t framerate_ = 0;
+  webrtc::VideoCodecMode mode_ = webrtc::VideoCodecMode::kRealtimeVideo;
+  NV_ENC_INITIALIZE_PARAMS initialize_params_;
+  std::vector<std::vector<uint8_t>> v_packet_;
+  webrtc::EncodedImage encoded_image_;
 };
 
 #endif  // NVCODEC_H264_ENCODER_H_
