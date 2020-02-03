@@ -1,4 +1,22 @@
+Param([switch]$clean, [switch]$package)
+
 $ErrorActionPreference = 'Stop'
+
+if ($clean) {
+  if (Test-Path "windows\_source") {
+    Remove-Item "windows\_source" -Force -Recurse
+  }
+  if (Test-Path "windows\_build") {
+    Remove-Item "windows\_build" -Force -Recurse
+  }
+  if (Test-Path "windows\_install") {
+    Remove-Item "windows\_install" -Force -Recurse
+  }
+  if (Test-Path "..\_build\windows") {
+    Remove-Item "..\_build\windows" -Force -Recurse
+  }
+  exit 0
+}
 
 Push-Location windows
   .\install_deps.ps1
@@ -34,3 +52,24 @@ Push-Location ..\_build\windows
     -DWEBRTC_COMMIT="$WEBRTC_COMMIT"
   cmake --build . --config Release
 Pop-Location
+
+if ($package) {
+  # パッケージのバイナリを作る
+  Push-Location ..
+    if (Test-Path "_package\momo-${MOMO_VERSION}_windows.zip") {
+      Remove-Item "_package\momo-${MOMO_VERSION}_windows.zip" -Force
+    }
+    if (Test-Path "_package\momo-${MOMO_VERSION}_windows") {
+      Remove-Item "_package\momo-${MOMO_VERSION}_windows" -Force -Recurse
+    }
+    mkdir -Force "_package\momo-${MOMO_VERSION}_windows"
+    Copy-Item _build\windows\Release\momo.exe _package\momo-${MOMO_VERSION}_windows\
+    Copy-Item LICENSE                         _package\momo-${MOMO_VERSION}_windows\
+    Copy-Item NOTICE                          _package\momo-${MOMO_VERSION}_windows\
+    Copy-Item html                            _package\momo-${MOMO_VERSION}_windows\html\
+    Push-Location _package
+      Compress-Archive -Path "momo-${MOMO_VERSION}_windows" -DestinationPath "momo-${MOMO_VERSION}_windows.zip"
+    Pop-Location
+    Remove-Item "_package\momo-${MOMO_VERSION}_windows" -Force -Recurse
+  Pop-Location
+}
