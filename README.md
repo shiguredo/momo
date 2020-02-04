@@ -78,8 +78,6 @@ https://github.com/shiguredo/momo/releases
 
 ### 以下はビルドが通ること以外は確認していません
 
-- Ubuntu 18.04 ARMv8
-    - 今後削除予定
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
