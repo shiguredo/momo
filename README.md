@@ -74,6 +74,7 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 ARMv8 Jetson Nano
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
 - macOS 10.15 x86_64
+- Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
 
@@ -82,6 +83,7 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
+    - 今後削除予定
     - Raspberry Pi 3 B+
 
 ## 使ってみる
@@ -92,6 +94,7 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 - Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
 - macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+- Windows 版 Momo のビルドしたい人は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
 
 ## パッケージを作成する
 
