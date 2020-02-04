@@ -1,18 +1,7 @@
-# 各種ライブラリのバージョン情報
-# 項目を変更してビルドすれば各環境へ反映される（ように作る）
 MOMO_VERSION=2020.1
-WEBRTC_BUILD_VERSION=80.3987.2.1
+WEBRTC_BUILD_VERSION=80.3987.2.2
 BOOST_VERSION=1.72.0
 JSON_VERSION=3.7.3
 CLI11_VERSION=1.9.0
 SDL2_VERSION=2.0.10
-
-# パッケージ名の一覧
-PACKAGE_NAMES= \
-  raspbian-buster_armv6 \
-  raspbian-buster_armv7 \
-  ubuntu-16.04_armv7_ros \
-  ubuntu-18.04_armv8 \
-  ubuntu-18.04_armv8_jetson_nano \
-  ubuntu-16.04_x86_64_ros \
-  ubuntu-18.04_x86_64
+CMAKE_VERSION=3.16.3

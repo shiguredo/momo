@@ -108,7 +108,8 @@ YYYY.<その年にリリースした回数>
 Apache License 2.0
 
 ```
-Copyright 2018-2020, Shiguredo Inc, tnoho and melpon and kdxu
+Copyright 2015-2020, tnoho
+Copyright 2018-2020, Shiguredo Inc, melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -125,7 +126,7 @@ limitations under the License.
 
 ## Momo についての電子書籍
 
-Momo のコントリビュータである @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
 
 [WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
 
