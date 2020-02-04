@@ -11,10 +11,14 @@
 
 ## develop
 
+- [ADD] Momo を Windows に対応
+    - @melpon
 - [ADD] Windows の Sora/Ayame モード利用時のシグナリング接続情報に environment / libwebrtc / sora_client を追加
     - `"environment": "[x64] Windows 10.0 Build 18362"`
     - `"libwebrtc": "Shiguredo-Build M80.3987@{#2} (80.3987.2.1 fba51dc6)"`
     - `"sora_client": "WebRTC Native Client Momo 2020.1 (0ff24ff3)"`
+    - @melpon
+- [ADD] Momo のビルド環境を CMake 化
     - @melpon
 
 ## 2020.1
