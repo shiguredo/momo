@@ -4,6 +4,11 @@ on:
   push:
     paths-ignore:
     - 'doc/**'
+    - 'html/**'
+    - '**.md'
+    - 'THANKS'
+    - 'LICENSE'
+    - 'NOTICE'
 
 jobs:
   build-windows:

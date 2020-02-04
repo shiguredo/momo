@@ -31,6 +31,10 @@ Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://ww
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
+## 動画
+
+[WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
+
 ## OpenMomo プロジェクトについて
 
 OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
@@ -53,12 +57,9 @@ Momo はオープンソースソフトウェアですが、開発については
 
 ## バイナリ提供について
 
-4 種類のバイナリを配布しています。
+以下からダウンロードが可能です。
 
-- Raspbian Buster ARMv7
-- Raspbian Buster ARMv6
-- Ubuntu 18.04 ARMv8 (Jetson Nano)
-- macOS 10.15 x86_64
+https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
@@ -137,9 +138,7 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 
 ### バグ報告
 
-https://github.com/shiguredo/momo/issues
-
-バグ報告すべきか悩んだら Discord で気軽に相談してください。
+GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 #### 理想的なバグ報告例
 
@@ -147,14 +146,11 @@ https://github.com/shiguredo/momo/issues
 
 ### Discord
 
-- アドバイス
-    - します
-- フィードバック
-    - 歓迎します
-- サポート
-    - しません
+- アドバイスします
+- フィードバック歓迎します
+- サポートしません
 
-最新の状況などはこちらで共有しています。質疑応答もこちらでのみ受け付けています。
+最新の状況などはこちらで共有しています。質問もこちらでのみ受け付けています。
 GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 https://discord.gg/gmEuZye
@@ -162,6 +158,9 @@ https://discord.gg/gmEuZye
 ### 有料サポートについて
 
 WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+
+- Momo のテクニカルサポート
+- OSS 公開前提での Momo への機能追加
 
 ## H.264 のライセンス費用について
 
@@ -194,11 +193,3 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
-
-## カスタマイズなど
-
-OSS にて公開可能でさらに弊社が Momo に組み込んでも良いと思える機能開発であれば、お仕事としてお受けすることが可能です。
-
-非公開のカスタマイズは時雨堂がお仕事としてお受けする事はできません。ただし Momo の開発を仕事として受けることが可能な開発者を紹介することが可能です。
-
-まずは momo at shiguredo.jp までお問い合わせください。
