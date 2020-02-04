@@ -46,7 +46,6 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
-  set(NVCODEC_ROOT_DIR ${_INSTALL_DIR}/NvCodec)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
   set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release)
 
@@ -285,9 +284,6 @@ find_package(CLI11 REQUIRED)
 if (USE_SDL2)
   find_package(SDL2 REQUIRED)
 endif()
-if (USE_NVCODEC_ENCODER)
-  find_package(NvCodec REQUIRED)
-endif()
 
 add_executable(momo)
 
@@ -460,14 +456,14 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoder.cpp
-        ${NVCODEC_ROOT_DIR}/Samples/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
+        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
     target_include_directories(momo
       PRIVATE
-        ${NVCODEC_ROOT_DIR}/Samples/NvCodec)
+        NvCodec/include
+        NvCodec/NvCodec)
     target_link_libraries(momo
       PRIVATE
-        NvCodec::nvencodeapi
         DXGI.lib
         D3D11.lib
     )
