@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] ubuntu-18.04_armv8 のビルドを削除
+    - @melpon
 - [ADD] Momo を Windows に対応
     - @melpon
 - [ADD] Windows の Sora/Ayame モード利用時のシグナリング接続情報に environment / libwebrtc / sora_client を追加
