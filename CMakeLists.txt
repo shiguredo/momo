@@ -304,7 +304,6 @@ target_sources(momo
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
-    src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
     src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
@@ -456,6 +455,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
+        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
     target_include_directories(momo
