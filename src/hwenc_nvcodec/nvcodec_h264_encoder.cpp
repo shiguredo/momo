@@ -189,7 +189,7 @@ int32_t NvCodecH264Encoder::Encode(
         frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
         frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
         (uint8_t*)map.pData, map.RowPitch,
-        ((uint8_t*)map.pData + 1080 * map.RowPitch), map.RowPitch,
+        ((uint8_t*)map.pData + height_ * map.RowPitch), map.RowPitch,
         frame_buffer->width(), frame_buffer->height());
   }
   id3d11_context_->Unmap(id3d11_texture_.Get(), D3D11CalcSubresource(0, 0, 1));
@@ -329,8 +329,8 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
   }
   D3D11_TEXTURE2D_DESC desc;
   ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
-  desc.Width = 1920;
-  desc.Height = 1080;
+  desc.Width = width_;
+  desc.Height = height_;
   desc.MipLevels = 1;
   desc.ArraySize = 1;
   desc.Format = dxgi_format;
@@ -360,8 +360,8 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
     //initialize_params_.enablePTD = 1;
     initialize_params_.frameRateDen = 1;
     initialize_params_.frameRateNum = framerate_;
-    initialize_params_.maxEncodeWidth = 1920;
-    initialize_params_.maxEncodeHeight = 1080;
+    initialize_params_.maxEncodeWidth = width_;
+    initialize_params_.maxEncodeHeight = height_;
 
     //encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
     encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
