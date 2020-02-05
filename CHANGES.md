@@ -11,8 +11,10 @@
 
 ## develop
 
-- [CHANGE] ubuntu-18.04_armv8 のビルドを削除
-    - @melpon
+## 2020.2
+
+- [UPDATE] CLI11 を v1.9.0 にアップデートする
+    - @voluntas
 - [ADD] Windows 10 対応を追加
     - @melpon
 - [ADD] Windows の Sora/Ayame モード利用時のシグナリング接続情報に environment / libwebrtc / sora_client を追加
@@ -22,11 +24,10 @@
     - @melpon
 - [ADD] ビルド環境を CMake 化
     - @melpon
-- [UPDATE] CLI11 を v1.9.0 にアップデートする
-    - @voluntas
+- [CHANGE] ubuntu-18.04_armv8 のビルドを削除
+    - @melpon
 
 ## 2020.1
-
 
 - [UPDATE] libwebrtc を M80.3987@{#2} に上げる
     - libwebrtc のハッシュは fba51dc69b97f6f170d9c325a38e05ddd69c8b28
