@@ -11,8 +11,23 @@
 
 ## develop
 
-## 2020.1
+## 2020.2
 
+- [UPDATE] CLI11 を v1.9.0 にアップデートする
+    - @voluntas
+- [ADD] Windows 10 対応を追加
+    - @melpon
+- [ADD] Windows の Sora/Ayame モード利用時のシグナリング接続情報に environment / libwebrtc / sora_client を追加
+    - `"environment": "[x64] Windows 10.0 Build 18362"`
+    - `"libwebrtc": "Shiguredo-Build M80.3987@{#2} (80.3987.2.1 fba51dc6)"`
+    - `"sora_client": "WebRTC Native Client Momo 2020.1 (0ff24ff3)"`
+    - @melpon
+- [ADD] ビルド環境を CMake 化
+    - @melpon
+- [CHANGE] ubuntu-18.04_armv8 のビルドを削除
+    - @melpon
+
+## 2020.1
 
 - [UPDATE] libwebrtc を M80.3987@{#2} に上げる
     - libwebrtc のハッシュは fba51dc69b97f6f170d9c325a38e05ddd69c8b28

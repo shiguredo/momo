@@ -4,31 +4,66 @@ on:
   push:
     paths-ignore:
     - 'doc/**'
+    - 'html/**'
+    - '**.md'
+    - 'THANKS'
+    - 'LICENSE'
+    - 'NOTICE'
 
 jobs:
+  build-windows:
+    name: Build momo for Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: .\build.bat -package
+        working-directory: build
+        timeout-minutes: 120
+      - name: Output package name
+        run: |
+          Get-Content "VERSION" | Foreach-Object {
+            if (!$_) { continue }
+            $var = $_.Split('=')
+            New-Variable -Name $var[0] -Value $var[1] -Force
+          }
+          $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
+          $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip" >> windows.env
+          echo "CONTENT_TYPE=application/zip" >> windows.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip"
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: _package/${{ steps.package_name.outputs.name }}
+      - name: Upload Environment
+        uses: actions/upload-artifact@v1
+        with:
+          name: windows.env
+          path: windows.env
   build-macos:
-    name: Build momo for macOS 10.15
+    name: Build momo for macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - run: make macos.package
+      - run: ./build.sh --package macos
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
         shell: bash
         run: |
-          cat VERSION | grep MOMO_VERSION > tmp
-          source tmp
-          rm tmp
+          source VERSION
           MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" > macos.env
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" >> macos.env
+          echo "CONTENT_TYPE=application/gzip" >> macos.env
           echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
           name: ${{ steps.package_name.outputs.name }}
-          path: build/package/${{ steps.package_name.outputs.name }}
+          path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
         uses: actions/upload-artifact@v1
         with:
@@ -43,30 +78,28 @@ jobs:
           - raspbian-buster_armv7
           - ubuntu-16.04_armv7_ros
           - ubuntu-16.04_x86_64_ros
-          - ubuntu-18.04_armv8
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: DOCKER_BUILDKIT=1 NOTTY=1 NOMOUNT=1 make ${{ matrix.name }}.package
+      - run: ./build.sh --no-tty --no-mount --package ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
         shell: bash
         run: |
-          cat VERSION | grep MOMO_VERSION > tmp
-          source tmp
-          rm tmp
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" > ${{ matrix.name }}.env
+          source VERSION
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> ${{ matrix.name }}.env
+          echo "CONTENT_TYPE=application/gzip" >> ${{ matrix.name }}.env
           echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
         with:
           name: ${{ steps.package_name.outputs.name }}
-          path: build/package/${{ steps.package_name.outputs.name }}
+          path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
         uses: actions/upload-artifact@v1
         with:
@@ -76,6 +109,7 @@ jobs:
     name: Create Release
     if: contains(github.ref, 'tags/202')
     needs:
+      - build-windows
       - build-macos
       - build-linux
     runs-on: ubuntu-latest
@@ -107,12 +141,12 @@ jobs:
       fail-fast: true
       matrix:
         name:
+          - windows
           - macos
           - raspbian-buster_armv6
           - raspbian-buster_armv7
           - ubuntu-16.04_armv7_ros
           - ubuntu-16.04_x86_64_ros
-          - ubuntu-18.04_armv8
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_x86_64
     steps:
@@ -128,6 +162,7 @@ jobs:
           source ${{ matrix.name }}.env/${{ matrix.name }}.env
           source create-release.env/create-release.env
           echo "::set-output name=package_name::$PACKAGE_NAME"
+          echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
       - uses: actions/download-artifact@v1
@@ -141,4 +176,4 @@ jobs:
           upload_url: ${{ steps.env.outputs.upload_url }}
           asset_path: ${{ steps.env.outputs.package_name }}/${{ steps.env.outputs.package_name }}
           asset_name: ${{ steps.env.outputs.package_name }}
-          asset_content_type: application/gzip
+          asset_content_type: ${{ steps.env.outputs.content_type }}

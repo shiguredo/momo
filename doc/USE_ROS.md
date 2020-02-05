@@ -15,7 +15,7 @@ ROS 環境を用意しておきます。
 [BUILD.md](./BUILD.md)を確認して Ubuntu 16.04 (x86_64) 向け ROS 対応バイナリをビルドしてください。
 
 ```shell
-$ make ubuntu-16.04_x86_64_ros
+$ ./build.sh ubuntu-16.04_x86_64_ros
 ```
 
 #### ライブラリのインストール
