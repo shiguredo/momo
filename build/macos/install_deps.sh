@@ -90,15 +90,13 @@ if [ ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
   mkdir -p $BUILD_DIR/SDL2
   ../../script/setup_sdl2.sh $SDL2_VERSION $SOURCE_DIR/SDL2
   pushd $BUILD_DIR/SDL2
-    CC=$INSTALL_DIR/llvm/clang/bin/clang \
-    CXX=$INSTALL_DIR/llvm/clang/bin/clang++ \
-    cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/SDL2 \
-      $SOURCE_DIR/SDL2/source
-
-    cmake --build . -j$JOBS
-    cmake --build . --target install
+    # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
+    # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+    SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
+    CC="$INSTALL_DIR/llvm/clang/bin/clang --sysroot=$SYSROOT" \
+      CXX="$INSTALL_DIR/llvm/clang/bin/clang++ --sysroot=$SYSROOT -nostdinc++" \
+      $SOURCE_DIR/SDL2/source/configure --disable-shared --prefix=$INSTALL_DIR/SDL2
+    make -j$JOBS
+    make install
   popd
 fi
