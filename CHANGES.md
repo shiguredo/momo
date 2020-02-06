@@ -11,6 +11,13 @@
 
 ## develop
 
+## 2020.2.1
+
+**hotfix**
+
+- [FIX] macOS で --use-sdl オプションを利用すると落ちていたのを修正する
+    - https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+
 ## 2020.2
 
 - [UPDATE] CLI11 を v1.9.0 にアップデートする

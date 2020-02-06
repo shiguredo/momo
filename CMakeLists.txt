@@ -340,6 +340,7 @@ if (USE_SDL2)
         SDL2::SDL2main
     )
   else()
+    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
     target_link_libraries(momo PRIVATE SDL2)
     target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
   endif()
