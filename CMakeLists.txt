@@ -381,12 +381,16 @@ if (USE_ROS)
 endif()
 
 if (USE_LIBCXX)
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>")
+  target_compile_options(momo
+    PRIVATE
+      -nostdinc++
+      $<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>
+  )
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "/utf-8;/bigobj")
+  target_compile_options(momo PRIVATE /utf-8 /bigobj)
   set_target_properties(momo
     PROPERTIES
       # CRTライブラリを静的リンクさせる
@@ -437,8 +441,8 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/objc_codec_factory_helper.mm
   )
 
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-fconstant-string-class=NSConstantString")
-  set_property(TARGET momo APPEND PROPERTY LINK_OPTIONS "-ObjC")
+  target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString)
+  target_link_options(momo APPEND PROPERTY LINK_OPTIONS "-ObjC")
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
   target_link_libraries(momo
@@ -530,9 +534,12 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_include_directories(momo PRIVATE ${SYSROOT}/include/libjpeg-8b)
         target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu")
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu")
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra")
+        target_link_options(momo
+          PRIVATE
+            "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra"
+        )
         target_link_libraries(momo
           PRIVATE
             v4l2
@@ -549,9 +556,9 @@ elseif (TARGET_OS STREQUAL "linux")
     else()
       # armv6, armv7 用
       if (TARGET_ARCH_ARM STREQUAL "armv6")
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-mcpu=arm1176jzf-s;-mfpu=vfp")
+        target_compile_options(momo PRIVATE -mfloat-abi=hard -mcpu=arm1176jzf-s -mfpu=vfp)
       else()
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-march=armv7-a;-mtune=generic-armv7-a;-mfpu=neon;-mthumb")
+        target_compile_options(momo PRIVATE -mfloat-abi=hard -march=armv7-a -mtune=generic-armv7-a -mfpu=neon -mthumb)
       endif()
 
       if (USE_MMAL_ENCODER)
@@ -567,7 +574,7 @@ elseif (TARGET_OS STREQUAL "linux")
         endif()
 
         target_include_directories(momo PRIVATE ${_VC_PATH}/include)
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-ftree-vectorize;-pipe")
+        target_compile_options(momo PRIVATE -ftree-vectorize -pipe)
         target_compile_definitions(momo
           PRIVATE
             STANDALONE
