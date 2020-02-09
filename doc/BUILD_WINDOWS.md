@@ -14,6 +14,8 @@ $ git clone git@github.com:shiguredo/momo.git
   - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
 - [CMake](https://cmake.org/download/)
   - バージョン 3.16 以上をインストールして下さい。
+- [7zip](https://www.7-zip.org/)
+  - 最新バージョンをインストールしてパスを通しておいて下さい。
 
 ### ビルド方法
 
