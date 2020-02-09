@@ -442,7 +442,7 @@ elseif (TARGET_OS STREQUAL "macos")
   )
 
   target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString)
-  target_link_options(momo APPEND PROPERTY LINK_OPTIONS "-ObjC")
+  target_link_options(momo PRIVATE -ObjC)
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
   target_link_libraries(momo
