@@ -156,7 +156,7 @@ int32_t MMALH264Encoder::MMALConfigure() {
     if (port_in->buffer_size < port_in->buffer_size_min)
       port_in->buffer_size = port_in->buffer_size_min;
     if (input_video_type_ == webrtc::VideoType::kMJPEG)
-      port_in->buffer_size = port_in->buffer_size_recommended * 8;
+      port_in->buffer_size = 512 << 10;
     port_in->buffer_num = 1;
     port_in->userdata = (MMAL_PORT_USERDATA_T*)this;
 
@@ -243,6 +243,20 @@ int32_t MMALH264Encoder::MMALConfigure() {
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
+      if (mmal_port_parameter_set_boolean(decoder_->output[0],
+                                          MMAL_PARAMETER_ZERO_COPY,
+                                          MMAL_TRUE) != MMAL_SUCCESS) {
+        RTC_LOG(LS_ERROR) << "Failed to set decoder output zero copy";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+
+      if (mmal_port_parameter_set_boolean(resizer_->input[0],
+                                          MMAL_PARAMETER_ZERO_COPY,
+                                          MMAL_TRUE) != MMAL_SUCCESS) {
+        RTC_LOG(LS_ERROR) << "Failed to set resizer input zero copy";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+
       if (mmal_connection_enable(connection_) != MMAL_SUCCESS) {
         RTC_LOG(LS_ERROR) << "Failed to enable connection decoder to resizer";
         return WEBRTC_VIDEO_CODEC_ERROR;
@@ -286,9 +300,7 @@ int32_t MMALH264Encoder::MMALConfigure() {
   encoder_port_out->format->es->video.frame_rate.den = 1;
   encoder_port_out->format->bitrate = bitrate_adjuster_.GetAdjustedBitrateBps();
 
-  encoder_port_out->buffer_size = encoder_port_out->buffer_size_recommended * 4;
-  if (encoder_port_out->buffer_size < encoder_port_out->buffer_size_min)
-    encoder_port_out->buffer_size = encoder_port_out->buffer_size_min;
+  encoder_port_out->buffer_size = 256 << 10;
   encoder_port_out->buffer_num = 4;
   encoder_port_out->userdata = (MMAL_PORT_USERDATA_T*)this;
 
@@ -451,8 +463,7 @@ void MMALH264Encoder::ResizerOutputCallbackFunction(
 
 void MMALH264Encoder::ResizerOutputCallback(MMAL_PORT_T* port,
                                             MMAL_BUFFER_HEADER_T* buffer) {
-  MMAL_BUFFER_HEADER_T* encoder_in =
-      mmal_queue_get(encoder_pool_in_->queue);
+  MMAL_BUFFER_HEADER_T* encoder_in = mmal_queue_get(encoder_pool_in_->queue);
   if (encoder_in) {
     mmal_buffer_header_replicate(encoder_in, buffer);
     mmal_port_send_buffer(encoder_->input[0], encoder_in);
@@ -462,25 +473,27 @@ void MMALH264Encoder::ResizerOutputCallback(MMAL_PORT_T* port,
   ResizerFillBuffer();
 }
 
-void MMALH264Encoder::EncoderInputCallbackFunction(MMAL_PORT_T* port,
-                                                MMAL_BUFFER_HEADER_T* buffer) {
+void MMALH264Encoder::EncoderInputCallbackFunction(
+    MMAL_PORT_T* port,
+    MMAL_BUFFER_HEADER_T* buffer) {
   ((MMALH264Encoder*)port->userdata)->EncoderInputCallback(port, buffer);
 }
 
 void MMALH264Encoder::EncoderInputCallback(MMAL_PORT_T* port,
-                                        MMAL_BUFFER_HEADER_T* buffer) {
+                                           MMAL_BUFFER_HEADER_T* buffer) {
   mmal_buffer_header_release(buffer);
 
   ResizerFillBuffer();
 }
 
-void MMALH264Encoder::EncoderOutputCallbackFunction(MMAL_PORT_T* port,
-                                                 MMAL_BUFFER_HEADER_T* buffer) {
+void MMALH264Encoder::EncoderOutputCallbackFunction(
+    MMAL_PORT_T* port,
+    MMAL_BUFFER_HEADER_T* buffer) {
   ((MMALH264Encoder*)port->userdata)->EncoderOutputCallback(port, buffer);
 }
 
 void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
-                                         MMAL_BUFFER_HEADER_T* buffer) {
+                                            MMAL_BUFFER_HEADER_T* buffer) {
   if (buffer->length == 0) {
     mmal_buffer_header_release(buffer);
     return;

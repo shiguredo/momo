@@ -9,7 +9,6 @@ SerialDataChannel::SerialDataChannel(
   data_channel_->RegisterObserver(this);
 }
 
-
 SerialDataChannel::~SerialDataChannel() {
   data_channel_->UnregisterObserver();
 }

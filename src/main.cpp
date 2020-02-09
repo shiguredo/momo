@@ -19,7 +19,11 @@
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
+#if USE_MMAL_ENCODER
+#include "hwenc_mmal/v4l2_mmal_capturer.h"
+#else
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
+#endif
 #else
 #include "rtc/device_video_capturer.h"
 #endif
@@ -96,8 +100,12 @@ int main(int argc, char* argv[]) {
     rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
         size.width, size.height, cs.framerate, cs.video_device);
 #elif defined(__linux__)
+#if USE_MMAL_ENCODER
+    rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2MMALCapture::Create(cs);
+#else
     rtc::scoped_refptr<V4L2VideoCapture> capturer =
         V4L2VideoCapture::Create(cs);
+#endif
 #else
     rtc::scoped_refptr<DeviceVideoCapturer> capturer =
         DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
@@ -118,8 +126,8 @@ int main(int argc, char* argv[]) {
         new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
-      cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(
+      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), nullptr));
@@ -130,7 +138,8 @@ int main(int argc, char* argv[]) {
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
     if (!cs.serial_device.empty()) {
-      data_manager = SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
+      data_manager =
+          SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
       if (!data_manager) {
         return 1;
       }
