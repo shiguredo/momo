@@ -479,14 +479,20 @@ bool V4L2VideoCapture::CaptureProcess() {
         }
       }
 
-      OnCaptured(buf);
+      if(!OnCaptured(buf)) {
+        // enqueue the buffer again
+        if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
+          RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
+        }
+      }
     }
   }
   usleep(0);
   return true;
 }
 
-void V4L2VideoCapture::OnCaptured(struct v4l2_buffer& buf) {
+bool V4L2VideoCapture::OnCaptured(struct v4l2_buffer& buf) {
+  RTC_LOG(LS_ERROR) << __FUNCTION__;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   if (useNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
@@ -527,4 +533,5 @@ void V4L2VideoCapture::OnCaptured(struct v4l2_buffer& buf) {
   if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
     RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
   }
+  return true;
 }

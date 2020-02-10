@@ -20,7 +20,7 @@
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
-#include "hwenc_mmal/v4l2_mmal_capturer.h"
+#include "hwenc_mmal/mmal_v4l2_capture.h"
 #else
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #endif
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         size.width, size.height, cs.framerate, cs.video_device);
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
-    rtc::scoped_refptr<V4L2VideoCapture> capturer = V4L2MMALCapture::Create(cs);
+    rtc::scoped_refptr<V4L2VideoCapture> capturer = MMALV4L2Capture::Create(cs);
 #else
     rtc::scoped_refptr<V4L2VideoCapture> capturer =
         V4L2VideoCapture::Create(cs);

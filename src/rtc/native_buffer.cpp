@@ -24,7 +24,7 @@ webrtc::VideoFrameBuffer::Type NativeBuffer::type() const {
 }
 
 void NativeBuffer::InitializeData() {
-  //memset(data_.get(), 0, ArgbDataSize(raw_height_, raw_width_));
+  memset(data_.get(), 0, ArgbDataSize(raw_height_, raw_width_));
 }
 
 int NativeBuffer::width() const {
@@ -39,7 +39,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
   rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(raw_width_, raw_height_);
   const int conversionResult = libyuv::ConvertToI420(
-      data_, length_, i420_buffer.get()->MutableDataY(),
+      data_.get(), length_, i420_buffer.get()->MutableDataY(),
       i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
       i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
       i420_buffer.get()->StrideV(), 0, 0, raw_width_, raw_height_, raw_width_,
@@ -75,12 +75,8 @@ webrtc::VideoType NativeBuffer::VideoType() const {
   return video_type_;
 }
 
-void NativeBuffer::SetData(uint8_t* data) {
-  data_ = data;
-}
-
 const uint8_t* NativeBuffer::Data() const {
-  return data_;
+  return data_.get();
 }
 
 uint8_t* NativeBuffer::MutableData() {
@@ -94,6 +90,8 @@ NativeBuffer::NativeBuffer(webrtc::VideoType video_type, int width, int height)
       scaled_height_(height),
       length_(ArgbDataSize(height, width)),
       video_type_(video_type),
-      data_(nullptr) {}
+      data_(static_cast<uint8_t*>(
+          webrtc::AlignedMalloc(ArgbDataSize(height, width),
+                                kBufferAlignment))) {}
 
 NativeBuffer::~NativeBuffer() {}

@@ -25,7 +25,6 @@ class NativeBuffer : public webrtc::VideoFrameBuffer {
   void SetLength(size_t size);
   size_t length();
   webrtc::VideoType VideoType() const;
-  void SetData(uint8_t* data);
   const uint8_t* Data() const;
   uint8_t* MutableData();
 
@@ -40,6 +39,6 @@ class NativeBuffer : public webrtc::VideoFrameBuffer {
   int scaled_height_;
   size_t length_;
   const webrtc::VideoType video_type_;
-  uint8_t* data_;
+  const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
 };
 #endif  // NATIVE_BUFFER_H_

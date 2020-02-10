@@ -36,7 +36,7 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
   virtual int32_t StartCapture(ConnectionSettings cs);
   virtual int32_t StopCapture();
   virtual bool useNativeBuffer() override;
-  virtual void OnCaptured(struct v4l2_buffer& buf);
+  virtual bool OnCaptured(struct v4l2_buffer& buf);
 
  protected:
   int32_t _deviceFd;
