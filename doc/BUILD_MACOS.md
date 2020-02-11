@@ -1,6 +1,6 @@
 # macOS 版 Momo をビルドする
 
-まずは momo のリポジトリをダウンロードします。
+まずは Momo のリポジトリをダウンロードします。
 
 ```shell
 $ git clone git@github.com:shiguredo/momo.git
@@ -10,22 +10,22 @@ $ git clone git@github.com:shiguredo/momo.git
 
 ### 事前確認
 
-libwebrtc をビルドするためには、XCode をインストールし、最低１回は起動してライセンスに同意しておく必要があります。
+Momo をビルドするためには、Xcode をインストールし、最低１回は起動してライセンスに同意しておく必要があります。
 現時点では、開発ツールのスタンドアローンインストール（`/Library/Developer/CommandLineTools` にインストールされるもの）はサポートされていません。
 詳細は、次のリンク先をご覧ください。
 
 https://bugs.chromium.org/p/chromium/issues/detail?id=729990#c1
 
 開発マシンがどちらを使っているかは xcode-select --print-path で確かめることができます。
-XCode のものが利用されている場合は、次のような出力になります。
+Xcode のものが利用されている場合は、次のような出力になります。
 
 ```shell
 $ xcode-select --print-path
 /Applications/Xcode.app/Contents/Developer
 ```
 
-ここでは AppStore から XCode をインストールしたケースを想定しています。
-もし XCode の beta 版をインストールしている場合は、`/Applications/Xcode.app` の部分を適宜読み替えてください。
+ここでは AppStore から Xcode をインストールしたケースを想定しています。
+もし Xcode の beta 版をインストールしている場合は、`/Applications/Xcode.app` の部分を適宜読み替えてください。
 
 スタンドアローンインストールされたものが利用されている場合は、次のような出力になります。
 
@@ -40,28 +40,24 @@ $ xcode-select --print-path
 $ sudo xcode-select -s /Applications/Xcode.app
 ```
 
-また、libwebrtc のビルド中にいくつかの Python スクリプトが呼び出されますが、そこでは Python 2 系が入っていることが期待されています。
-macOS に同梱されている Python 以外の python を入れている場合は、バージョンを確認して、必要に応じてバージョンを切り替えておいてください。
-例えば `pyenv` を利用している場合は、ビルド前に system を利用するように指定し、Python 2 が利用されること確認してください。
+### CMake
 
-```shell
-$ pyenv local system
-$ python --version
-Python 2.7.16
-```
+ビルドには CMake 3.16 以上が必要になります。
+
+Homebrew が入っている場合は `brew install cmake` するか、あるいは公式サイトからダウンロードして PATH を通しておいてください。
 
 ### ビルド方法
 
-build ディレクトリ以下で make macos と打つことで Momo の macOS 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh macos と打つことで Momo の macOS 向けバイナリが生成されます。
 
 ```shell
-$ make macos
+$ ./build.sh macos
 ```
 
 ## 中間ファイルのクリーンアップ
 
-ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して make macos.clean を実行することでクリーンアップできます。
+ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して ./build.sh --clean macos を実行することでクリーンアップできます。
 
 ```shell
-$ make macos.clean
+$ ./build.sh --clean macos
 ```

@@ -14,6 +14,10 @@
 
 [SETUP_MAC.md](SETUP_MAC.md) をお読みください。
 
+### Windows で Momo を準備する
+
+[SETUP_WINDOWS.md](SETUP_WINDOWS.md) をお読みください。
+
 ## 動かす
 
 ## テストモードを利用して Momo を動かしてみる
@@ -35,6 +39,12 @@ Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を�
 [Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を無料で試すことが可能です。
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
+
+## データチャネルを利用したシリアル読み書きを使ってみる
+
+Test と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
+
+[USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
 ## SDL を利用した受信機能を使ってみる
 
@@ -60,47 +70,50 @@ WebRTC Native Client Momo 2020.1 (4fc855c6) USE_MMAL_ENCODER=0
 
 ```
 $ ./momo --help
-Momo - WebRTC ネイティブクライアント
+Momo - WebRTC Native Client
 Usage: ./momo [OPTIONS] [SUBCOMMAND]
 
 Options:
   -h,--help                   Print this help message and exit
-  --no-video                  ビデオを表示しない
-  --no-audio                  オーディオを出さない
-  --force-i420                強制的にI420にする（対応デバイスのみ）
-  --use-native                MJPEGのデコードとビデオのリサイズをハードウェアで行う（対応デバイスのみ）
-  --video-device TEXT         デバイス番号、またはデバイス名。省略時はデフォルト（デバイス番号が0）のビデオデバイスを自動検出
-  --resolution TEXT           解像度(QVGA, VGA, HD, FHD, 4K, 幅x高さ)
+  --help-all                  Print help message for all modes and exit
+  --no-video                  Do not send video
+  --no-audio                  Do not send audio
+  --force-i420                Prefer I420 format for video capture (only on supported devices)
+  --use-native                Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
+  --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
+  --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
   --framerate INT:INT in [1 - 60]
-                              フレームレート
-  --fixed-resolution          固定解像度
+                              Video framerate
+  --fixed-resolution          Maintain video resolution in degradation
   --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
-                              優先設定 (Experimental)
+                              Preference in video degradation (experimental)
   --port INT:INT in [0 - 65535]
-                              ポート番号(デフォルト:8080)
-  --use-sdl                   SDLを使い映像を表示する
-  --show-me                   自分のカメラも表示する
+                              Port number (default: 8080)
+  --use-sdl                   Show video using SDL
+  --show-me                   Show self video
   --window-width INT:INT in [180 - 16384]
-                              映像を表示するウィンドウの横幅
+                              Window width for videos
   --window-height INT:INT in [180 - 16384]
-                              映像を表示するウィンドウの縦幅
-  --fullscreen                映像を表示するウィンドウをフルスクリーンにする
-  --daemon                    デーモン化する
-  --version                   バージョン情報の表示
+                              Window height for videos
+  --fullscreen                Use fullscreen window for videos
+  --daemon                    Run as a daemon process
+  --version                   Show version information
   --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
-                              ログレベル
-  --disable-echo-cancellation エコーキャンセルを無効
-  --disable-auto-gain-control オートゲインコントロール無効
-  --disable-noise-suppression ノイズサプレッション無効
-  --disable-highpass-filter   ハイパスフィルター無効
-  --disable-typing-detection  タイピングディテクション無効
+                              Log severity level threshold
+  --disable-echo-cancellation Disable echo cancellation for audio
+  --disable-auto-gain-control Disable auto gain control for audio
+  --disable-noise-suppression Disable noise suppression for audio
+  --disable-highpass-filter   Disable highpass filter for audio
+  --disable-typing-detection  Disable typing detection for audio
   --disable-residual-echo-detector
-                              残響エコーディテクション無効
+                              Disable residual echo detector for audio
+  --serial TEXT:serial setting format
+                              Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]
 
 Subcommands:
-  test                        開発向け
-  ayame                       WebRTC Signaling Server Ayame
-  sora                        WebRTC SFU Sora
+  test                        Mode for momo development with simple HTTP server
+  ayame                       Mode for working with WebRTC Signaling Server Ayame
+  sora                        Mode for working with WebRTC SFU Sora
 ```
 
 ### test モードヘルプ
@@ -108,12 +121,13 @@ Subcommands:
 
 ```
 $ ./momo test --help
-開発向け
+Mode for momo development with simple HTTP server
 Usage: ./momo test [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
-  --document-root TEXT:DIR    配信ディレクトリ
+  --help-all                  Print help message for all modes and exit
+  --document-root TEXT:DIR    HTTP document root directory
 ```
 
 ### ayame モードヘルプ
@@ -121,47 +135,49 @@ Options:
 
 ```
 $ ./momo ayame --help
-WebRTC Signaling Server Ayame
+Mode for working with WebRTC Signaling Server Ayame
 Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID
 
 Positionals:
-  SIGNALING-URL TEXT REQUIRED シグナリングホスト
-  ROOM-ID TEXT REQUIRED       ルームID
+  SIGNALING-URL TEXT REQUIRED Signaling URL
+  ROOM-ID TEXT REQUIRED       Room ID
 
 Options:
   -h,--help                   Print this help message and exit
-  --client-id TEXT            クライアントID
-  --signaling-key TEXT        シグナリングキー
+  --help-all                  Print help message for all modes and exit
+  --client-id TEXT            Client ID
+  --signaling-key TEXT        Signaling key
 ```
 
 ### sora モードヘルプ
 
 ```
 $ ./momo sora --help
-WebRTC SFU Sora
+Mode for working with WebRTC SFU Sora
 Usage: ./momo sora [OPTIONS] SIGNALING-URL CHANNEL-ID
 
 Positionals:
-  SIGNALING-URL TEXT REQUIRED シグナリングホスト
-  CHANNEL-ID TEXT REQUIRED    チャンネルID
+  SIGNALING-URL TEXT REQUIRED Signaling URL
+  CHANNEL-ID TEXT REQUIRED    Channel ID
 
 Options:
   -h,--help                   Print this help message and exit
-  --auto                      自動接続する
+  --help-all                  Print help message for all modes and exit
+  --auto                      Connect to Sora automatically
   --video-codec TEXT:{H264,VP8,VP9}
-                              ビデオコーデック
+                              Video codec for send
   --audio-codec TEXT:{OPUS,PCMU}
-                              オーディオコーデック
+                              Audio codec for send
   --video-bitrate INT:INT in [1 - 30000]
-                              ビデオのビットレート
+                              Video bitrate
   --audio-bitrate INT:INT in [6 - 510]
-                              オーディオのビットレート
-  --multistream               マルチストリームかどうか
+                              Audio bitrate
+  --multistream               Use multistream
   --role TEXT:{downstream,recvonly,sendonly,sendrecv,upstream}
-                              ロール（デフォルトは upstream）
+                              Role (default: upstream)
   --spotlight INT:INT in [1 - 10]
-                              スポットライトの配信数
-  --metadata TEXT:JSON Value  メタデータ
+                              Stream count delivered in spotlight
+  --metadata TEXT:JSON Value  Signaling metadata used in connect message
 ```
 
 ## うまく動作しない時

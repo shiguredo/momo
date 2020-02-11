@@ -63,3 +63,9 @@ RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json
 
 ARG CLI11_VERSION
 RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
+
+# CMake のインストール
+ARG CMAKE_VERSION
+COPY script/get_cmake.sh /root/
+RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
+ENV PATH "/root/cmake/bin:$PATH"

@@ -9,11 +9,17 @@ PeerConnectionObserver::~PeerConnectionObserver() {
   ClearAllRegisteredTracks();
 }
 
+void PeerConnectionObserver::OnDataChannel(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
+  if (_data_manager != nullptr) {
+    _data_manager->OnDataChannel(data_channel);
+  }
+}
+
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " :" << new_state;
-  if (_receiver != nullptr &&
-      new_state == webrtc::PeerConnectionInterface::IceConnectionState::
+  if (new_state == webrtc::PeerConnectionInterface::IceConnectionState::
                        kIceConnectionDisconnected) {
     ClearAllRegisteredTracks();
   }
@@ -69,8 +75,10 @@ void PeerConnectionObserver::OnRemoveTrack(
 }
 
 void PeerConnectionObserver::ClearAllRegisteredTracks() {
-  for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
-    _receiver->RemoveTrack(video_track);
+  if (_receiver != nullptr) {
+    for (webrtc::VideoTrackInterface* video_track : _video_tracks) {
+      _receiver->RemoveTrack(video_track);
+    }
   }
   _video_tracks.clear();
 }

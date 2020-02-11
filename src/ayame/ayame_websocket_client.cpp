@@ -3,6 +3,7 @@
 #include <boost/beast/websocket/stream.hpp>
 #include <nlohmann/json.hpp>
 
+#include "../momo_version.h"
 #include "url_parts.h"
 #include "util.h"
 
@@ -121,7 +122,7 @@ bool AyameWebsocketClient::connect() {
 }
 
 void AyameWebsocketClient::reconnectAfter() {
-  int interval = 5 * (2 * retry_count_ + 1);
+  int interval = 5 * (2 * retry_count_);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.enable(interval);
@@ -224,6 +225,9 @@ void AyameWebsocketClient::doRegister() {
       {"type", "register"},
       {"clientId", Util::generateRandomChars()},
       {"roomId", conn_settings_.ayame_room_id},
+      {"ayameClient", MomoVersion::GetClientName()},
+      {"libwebrtc", MomoVersion::GetLibwebrtcName()},
+      {"environment", MomoVersion::GetEnvironmentName()},
   };
   if (conn_settings_.ayame_client_id != "") {
     json_message["clientId"] = conn_settings_.ayame_client_id;
@@ -300,7 +304,7 @@ void AyameWebsocketClient::close() {
 // WebSocket が閉じられたときのコールバック
 void AyameWebsocketClient::onClose(boost::system::error_code ec) {
   if (ec)
-    return MOMO_BOOST_ERROR(ec, "close");
+    MOMO_BOOST_ERROR(ec, "close");
   // retry_count_ は reconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
   // WebSocket につないでいない時間をなるべく短くしたいので、
   // WebSocket を閉じたときは一度インクリメントされている可能性のある retry_count_ を0 にして
@@ -377,6 +381,10 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   } else if (type == "ping") {
     watchdog_.reset();
     doSendPong();
+  } else if (type == "bye") {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": bye";
+    connection_ = nullptr;
+    close();
   }
 }
 
