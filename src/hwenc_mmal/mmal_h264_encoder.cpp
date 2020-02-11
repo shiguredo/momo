@@ -182,12 +182,6 @@ int32_t MMALH264Encoder::MMALConfigure() {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (mmal_port_parameter_set_boolean(encoder_port_in, MMAL_PARAMETER_ZERO_COPY,
-                                      MMAL_TRUE) != MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to set encoder input zero copy";
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  }
-
   if (mmal_port_parameter_set_boolean(encoder_port_out,
                                       MMAL_PARAMETER_ZERO_COPY,
                                       MMAL_TRUE) != MMAL_SUCCESS) {

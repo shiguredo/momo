@@ -68,6 +68,8 @@ class MMALV4L2Capture : public V4L2VideoCapture {
   int32_t configured_height_;
   rtc::CriticalSection frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
+  unsigned int decoded_buffer_num_;
+  size_t decoded_buffer_size_;
 };
 
 #endif  // V4L2_MMAL_CAPTURE_H_

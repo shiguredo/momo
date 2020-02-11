@@ -69,11 +69,18 @@ MMALV4L2Capture::MMALV4L2Capture()
       configured_width_(0),
       configured_height_(0) {
   bcm_host_init();
+  decoded_buffer_num_ = 4;
+  decoded_buffer_size_ =
+      webrtc::CalcBufferSize(webrtc::VideoType::kI420, VCOS_ALIGN_UP(1920, 32),
+                             VCOS_ALIGN_UP(1080, 16));
+  // 出力のプールはまとめないと、リサイズ時にエンコーダに送ったフレームが破棄される場合がある
+  resizer_pool_out_ = mmal_pool_create(decoded_buffer_num_, decoded_buffer_size_);
 }
 
 MMALV4L2Capture::~MMALV4L2Capture() {
   std::lock_guard<std::mutex> lock(mtx_);
   MMALRelease();
+  mmal_pool_destroy(resizer_pool_out_);
 }
 
 int32_t MMALV4L2Capture::StartCapture(ConnectionSettings cs) {
@@ -125,7 +132,7 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
   }
 
   MMAL_BUFFER_HEADER_T* buffer;
-  if ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
+  while ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
     buffer->pts = buffer->dts = timestamp_us;
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
@@ -299,14 +306,19 @@ int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
   resizer_port_out->format->es->video.crop.width = width;
   resizer_port_out->format->es->video.crop.height = height;
 
-  resizer_port_out->buffer_size = resizer_port_out->buffer_size_recommended;
-  if (resizer_port_out->buffer_size < resizer_port_out->buffer_size_min)
-    resizer_port_out->buffer_size = resizer_port_out->buffer_size_min;
-  resizer_port_out->buffer_num = 4;
+  resizer_port_out->buffer_size = decoded_buffer_size_;
+  resizer_port_out->buffer_num = decoded_buffer_num_;
   resizer_port_out->userdata = (MMAL_PORT_USERDATA_T*)this;
 
   if (mmal_port_format_commit(resizer_port_out) != MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to commit resizer output port format";
+    RTC_LOG(LS_ERROR) << "Failed to commit output port format";
+    return -1;
+  }
+
+  // mmal_pool_create で作った場合 mmal_component_enable 前に mmal_port_enable
+  if (mmal_port_enable(resizer_port_out, ResizerOutputCallbackFunction) !=
+      MMAL_SUCCESS) {
+    RTC_LOG(LS_ERROR) << "Failed to enable resizer output port";
     return -1;
   }
 
@@ -329,15 +341,7 @@ int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
   pool_in_ =
       mmal_port_pool_create(port_in, port_in->buffer_num, port_in->buffer_size);
 
-  if (mmal_port_enable(resizer_port_out, ResizerOutputCallbackFunction) !=
-      MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to enable resizer output port";
-    return -1;
-  }
-
-  resizer_pool_out_ =
-      mmal_port_pool_create(resizer_port_out, resizer_port_out->buffer_num,
-                            resizer_port_out->buffer_size);
+  ResizerFillBuffer();
 
   if (_captureVideoType == webrtc::VideoType::kMJPEG) {
     if (mmal_component_enable(decoder_) != MMAL_SUCCESS) {
@@ -382,7 +386,6 @@ void MMALV4L2Capture::MMALRelease() {
       mmal_port_pool_destroy(resizer_->input[0], pool_in_);
     }
     mmal_port_disable(resizer_->output[0]);
-    mmal_port_pool_destroy(resizer_->output[0], resizer_pool_out_);
   }
   if (connection_) {
     mmal_connection_destroy(connection_);
