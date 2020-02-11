@@ -71,7 +71,10 @@ MMALV4L2Capture::MMALV4L2Capture()
   bcm_host_init();
 }
 
-MMALV4L2Capture::~MMALV4L2Capture() {}
+MMALV4L2Capture::~MMALV4L2Capture() {
+  std::lock_guard<std::mutex> lock(mtx_);
+  MMALRelease();
+}
 
 int32_t MMALV4L2Capture::StartCapture(ConnectionSettings cs) {
   return V4L2VideoCapture::StartCapture(cs);
@@ -99,6 +102,7 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
                   &crop_y)) {
     return false;
   }
+  std::lock_guard<std::mutex> lock(mtx_);
 
   if (configured_width_ != adapted_width ||
       configured_height_ != adapted_height) {
@@ -113,6 +117,12 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
   }
 
   ResizerFillBuffer();
+
+  {
+    rtc::CritScope lock(&frame_params_lock_);
+    frame_params_.push(absl::make_unique<FrameParams>(
+        configured_width_, configured_height_, timestamp_us));
+  }
 
   MMAL_BUFFER_HEADER_T* buffer;
   while ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
@@ -160,13 +170,36 @@ void MMALV4L2Capture::ResizerOutputCallbackFunction(
 
 void MMALV4L2Capture::ResizerOutputCallback(MMAL_PORT_T* port,
                                             MMAL_BUFFER_HEADER_T* buffer) {
+
+  std::unique_ptr<FrameParams> params;
+  {
+    rtc::CritScope lock(&frame_params_lock_);
+    do {
+      if (frame_params_.empty()) {
+        RTC_LOG(LS_WARNING)
+            << __FUNCTION__
+            << "Frame parameter is not found. SkipFrame pts:" << buffer->pts;
+        mmal_buffer_header_release(buffer);
+        return;
+      }
+      params = std::move(frame_params_.front());
+      frame_params_.pop();
+    } while (params->timestamp < buffer->pts);
+    if (params->timestamp != buffer->pts) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__
+                          << "Frame parameter is not found. SkipFrame pts:"
+                          << buffer->pts;
+      mmal_buffer_header_release(buffer);
+      return;
+    }
+  }
+
   rtc::scoped_refptr<MMALBuffer> mmal_buffer(MMALBuffer::Create(
-      buffer, configured_width_, configured_height_));
+      buffer, params->width, params->height));
   OnFrame(webrtc::VideoFrame::Builder()
               .set_video_frame_buffer(mmal_buffer)
               .set_timestamp_rtp(0)
-              .set_timestamp_ms(rtc::TimeMillis())
-              .set_timestamp_us(rtc::TimeMicros())
+              .set_timestamp_us(buffer->pts)
               .set_rotation(webrtc::kVideoRotation_0)
               .build());
 }
@@ -362,4 +395,6 @@ void MMALV4L2Capture::MMALRelease() {
     mmal_component_destroy(decoder_);
     decoder_ = nullptr;
   }
+  while (!frame_params_.empty())
+    frame_params_.pop();
 }
