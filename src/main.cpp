@@ -21,9 +21,8 @@
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
 #include "hwenc_mmal/mmal_v4l2_capture.h"
-#else
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
 #endif
+#include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
 #endif
@@ -94,24 +93,26 @@ int main(int argc, char* argv[]) {
 #if USE_ROS
     rtc::scoped_refptr<ROSVideoCapture> capturer(
         new rtc::RefCountedObject<ROSVideoCapture>(cs));
+    return capturer;
 #else  // USE_ROS
     auto size = cs.getSize();
 #if defined(__APPLE__)
-    rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
+    return MacCapturer::Create(
         size.width, size.height, cs.framerate, cs.video_device);
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
-    rtc::scoped_refptr<V4L2VideoCapture> capturer = MMALV4L2Capture::Create(cs);
+    if (cs.use_native) {
+      return MMALV4L2Capture::Create(cs);
+    } else {
+      return V4L2VideoCapture::Create(cs);
+    }
 #else
-    rtc::scoped_refptr<V4L2VideoCapture> capturer =
-        V4L2VideoCapture::Create(cs);
+    return V4L2VideoCapture::Create(cs);
 #endif
 #else
-    rtc::scoped_refptr<DeviceVideoCapturer> capturer =
-        DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
+    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
 #endif
 #endif  // USE_ROS
-    return capturer;
   })();
 
   if (!capturer && !cs.no_video) {
