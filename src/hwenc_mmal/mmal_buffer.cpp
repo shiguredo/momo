@@ -39,11 +39,12 @@ const uint8_t* MMALBuffer::DataY() const {
 }
 
 const uint8_t* MMALBuffer::DataU() const {
-  return DataY() + StrideY() * VCOS_ALIGN_UP(height_, 16);
+  return DataY() + VCOS_ALIGN_UP(width_, 32) * VCOS_ALIGN_UP(height_, 16);
 }
 
 const uint8_t* MMALBuffer::DataV() const {
-  return DataY() + StrideY() * VCOS_ALIGN_UP(height_, 16) + StrideU() * ((VCOS_ALIGN_UP(height_, 16) + 1) / 2);
+  return DataY() + VCOS_ALIGN_UP(width_, 32) * VCOS_ALIGN_UP(height_, 16) +
+         StrideU() * ((VCOS_ALIGN_UP(height_, 16) + 1) / 2);
 }
 
 const size_t MMALBuffer::length() const {

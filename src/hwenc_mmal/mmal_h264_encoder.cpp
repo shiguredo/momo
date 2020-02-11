@@ -215,6 +215,8 @@ int32_t MMALH264Encoder::MMALConfigure() {
       mmal_port_pool_create(encoder_port_out, encoder_port_out->buffer_num,
                             encoder_port_out->buffer_size);
 
+  EncoderFillBuffer();
+
   configured_width_ = width_;
   configured_height_ = height_;
   stride_width_ = VCOS_ALIGN_UP(width_, 32);
@@ -244,31 +246,26 @@ void MMALH264Encoder::MMALRelease() {
 void MMALH264Encoder::EncoderInputCallbackFunction(
     MMAL_PORT_T* port,
     MMAL_BUFFER_HEADER_T* buffer) {
-  ((MMALH264Encoder*)port->userdata)->EncoderInputCallback(port, buffer);
-}
-
-void MMALH264Encoder::EncoderInputCallback(MMAL_PORT_T* port,
-                                           MMAL_BUFFER_HEADER_T* buffer) {
   mmal_buffer_header_release(buffer);
 }
 
 void MMALH264Encoder::EncoderOutputCallbackFunction(
     MMAL_PORT_T* port,
     MMAL_BUFFER_HEADER_T* buffer) {
-  ((MMALH264Encoder*)port->userdata)->EncoderOutputCallback(port, buffer);
+  MMALH264Encoder* _this = (MMALH264Encoder*)port->userdata;
+  _this->EncoderOutputCallback(port, buffer);
+  mmal_buffer_header_release(buffer);
+  _this->EncoderFillBuffer();
 }
 
 void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
                                             MMAL_BUFFER_HEADER_T* buffer) {
-  if (buffer->length == 0) {
-    mmal_buffer_header_release(buffer);
+  if (buffer->length == 0)
     return;
-  }
 
   if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) {
     memcpy(encoded_image_buffer_.get(), buffer->data, buffer->length);
     encoded_buffer_length_ = buffer->length;
-    mmal_buffer_header_release(buffer);
     RTC_LOG(LS_INFO) << "MMAL_BUFFER_HEADER_FLAG_CONFIG";
     return;
   }
@@ -284,8 +281,7 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
             << __FUNCTION__
-            << "Frame parameter is not found. SkipFrame pts:" << buffer->pts;
-        mmal_buffer_header_release(buffer);
+            << "Frame parameter is empty. SkipFrame pts:" << buffer->pts;
         return;
       }
       params = std::move(frame_params_.front());
@@ -295,7 +291,6 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
       RTC_LOG(LS_WARNING) << __FUNCTION__
                           << "Frame parameter is not found. SkipFrame pts:"
                           << buffer->pts;
-      mmal_buffer_header_release(buffer);
       return;
     }
   }
@@ -317,8 +312,13 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
     SendFrame(encoded_image_buffer_.get(), encoded_buffer_length_);
     encoded_buffer_length_ = 0;
   }
+}
 
-  mmal_buffer_header_release(buffer);
+void MMALH264Encoder::EncoderFillBuffer() {
+  MMAL_BUFFER_HEADER_T* buffer;
+  while ((buffer = mmal_queue_get(encoder_pool_out_->queue)) != nullptr) {
+    mmal_port_send_buffer(encoder_->output[0], buffer);
+  }
 }
 
 int32_t MMALH264Encoder::RegisterEncodeCompleteCallback(
@@ -361,7 +361,7 @@ void MMALH264Encoder::SetFramerateFps(double framerate_fps) {
   if (configured_framerate_fps_ == framerate_fps) {
     return;
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " " << framerate_fps << " fps";
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " " << framerate_fps << " fps";
   MMAL_PARAMETER_FRAME_RATE_T frame_rate;
   frame_rate.hdr.id = MMAL_PARAMETER_VIDEO_FRAME_RATE;
   frame_rate.hdr.size = sizeof(frame_rate);
@@ -442,14 +442,7 @@ int32_t MMALH264Encoder::Encode(
   }
 
   MMAL_BUFFER_HEADER_T* buffer;
-  while ((buffer = mmal_queue_get(encoder_pool_out_->queue)) != nullptr) {
-    if (mmal_port_send_buffer(encoder_->output[0], buffer) != MMAL_SUCCESS) {
-      RTC_LOG(LS_ERROR) << "Failed to send output buffer";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-  }
-
-  while ((buffer = mmal_queue_get(encoder_pool_in_->queue)) != nullptr) {
+  if ((buffer = mmal_queue_get(encoder_pool_in_->queue)) != nullptr) {
     buffer->pts = buffer->dts = input_frame.timestamp();
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;

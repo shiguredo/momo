@@ -31,12 +31,8 @@ class MMALV4L2Capture : public V4L2VideoCapture {
 
  private:
   struct FrameParams {
-    FrameParams(int32_t w,
-                int32_t h,
-                int64_t ts)
-        : width(w),
-          height(h),
-          timestamp(ts) {}
+    FrameParams(int32_t w, int32_t h, int64_t ts)
+        : width(w), height(h), timestamp(ts) {}
 
     int32_t width;
     int32_t height;

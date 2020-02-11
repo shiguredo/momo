@@ -84,10 +84,10 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   void MMALRelease();
   static void EncoderInputCallbackFunction(MMAL_PORT_T* port,
                                            MMAL_BUFFER_HEADER_T* buffer);
-  void EncoderInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
   static void EncoderOutputCallbackFunction(MMAL_PORT_T* port,
                                             MMAL_BUFFER_HEADER_T* buffer);
   void EncoderOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  void EncoderFillBuffer();
   void SetBitrateBps(uint32_t bitrate_bps);
   void SetFramerateFps(double framerate_fps);
   int32_t SendFrame(unsigned char* buffer, size_t size);

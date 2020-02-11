@@ -97,8 +97,8 @@ int main(int argc, char* argv[]) {
 #else  // USE_ROS
     auto size = cs.getSize();
 #if defined(__APPLE__)
-    return MacCapturer::Create(
-        size.width, size.height, cs.framerate, cs.video_device);
+    return MacCapturer::Create(size.width, size.height, cs.framerate,
+                               cs.video_device);
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
     if (cs.use_native) {

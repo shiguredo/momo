@@ -87,7 +87,7 @@ $ ./momo --resolution=HD --force-i420 --use-native test
 USB カメラ利用時には `--use-native` を使わない方がフレームレートは出ます。しかし `--use-native` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
 
 ```
-gpu_mem=128
+gpu_mem=256
 force_turbo=1
 avoid_warnings=2
 ```

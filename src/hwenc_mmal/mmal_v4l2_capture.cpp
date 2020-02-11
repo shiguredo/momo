@@ -106,9 +106,9 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
 
   if (configured_width_ != adapted_width ||
       configured_height_ != adapted_height) {
-    RTC_LOG(LS_INFO) << "Resizer reinitialized from "
-                     << configured_width_ << "x" << configured_height_ << " to "
-                     << adapted_width << "x" << adapted_height;
+    RTC_LOG(LS_INFO) << "Resizer reinitialized from " << configured_width_
+                     << "x" << configured_height_ << " to " << adapted_width
+                     << "x" << adapted_height;
     MMALRelease();
     if (MMALConfigure(adapted_width, adapted_height) == -1) {
       RTC_LOG(LS_ERROR) << "Failed to MMALConfigure";
@@ -125,7 +125,7 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
   }
 
   MMAL_BUFFER_HEADER_T* buffer;
-  while ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
+  if ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
     buffer->pts = buffer->dts = timestamp_us;
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
@@ -170,7 +170,6 @@ void MMALV4L2Capture::ResizerOutputCallbackFunction(
 
 void MMALV4L2Capture::ResizerOutputCallback(MMAL_PORT_T* port,
                                             MMAL_BUFFER_HEADER_T* buffer) {
-
   std::unique_ptr<FrameParams> params;
   {
     rtc::CritScope lock(&frame_params_lock_);
@@ -194,8 +193,8 @@ void MMALV4L2Capture::ResizerOutputCallback(MMAL_PORT_T* port,
     }
   }
 
-  rtc::scoped_refptr<MMALBuffer> mmal_buffer(MMALBuffer::Create(
-      buffer, params->width, params->height));
+  rtc::scoped_refptr<MMALBuffer> mmal_buffer(
+      MMALBuffer::Create(buffer, params->width, params->height));
   OnFrame(webrtc::VideoFrame::Builder()
               .set_video_frame_buffer(mmal_buffer)
               .set_timestamp_rtp(0)
@@ -260,6 +259,8 @@ int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
     port_in->buffer_size = port_in->buffer_size_min;
   if (_captureVideoType == webrtc::VideoType::kMJPEG)
     port_in->buffer_size = 512 << 10;
+  // port_in->buffer_num を 2 にあげた方が VPX では 22fps レートは出るが H264 が詰まる
+  // port_in->buffer_num が 1 の時は 15fps 程度
   port_in->buffer_num = 1;
   port_in->userdata = (MMAL_PORT_USERDATA_T*)this;
 
@@ -305,7 +306,7 @@ int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
   resizer_port_out->userdata = (MMAL_PORT_USERDATA_T*)this;
 
   if (mmal_port_format_commit(resizer_port_out) != MMAL_SUCCESS) {
-    RTC_LOG(LS_ERROR) << "Failed to commit output port format";
+    RTC_LOG(LS_ERROR) << "Failed to commit resizer output port format";
     return -1;
   }
 

@@ -479,10 +479,11 @@ bool V4L2VideoCapture::CaptureProcess() {
         }
       }
 
-      if(!OnCaptured(buf)) {
+      if (!OnCaptured(buf)) {
         // enqueue the buffer again
         if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-          RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
+          RTC_LOG(LS_INFO) << __FUNCTION__
+                           << " Failed to enqueue capture buffer";
         }
       }
     }
