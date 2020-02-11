@@ -24,7 +24,6 @@
 #include "third_party/libyuv/include/libyuv/video_common.h"
 
 #define H264HWENC_HEADER_DEBUG 0
-#define ROUND_UP_4(num) (((num) + 3) & ~3)
 
 namespace {
 struct nal_entry {
