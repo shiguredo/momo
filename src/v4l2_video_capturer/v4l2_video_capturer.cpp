@@ -492,7 +492,6 @@ bool V4L2VideoCapture::CaptureProcess() {
 }
 
 bool V4L2VideoCapture::OnCaptured(struct v4l2_buffer& buf) {
-  RTC_LOG(LS_ERROR) << __FUNCTION__;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   if (useNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
