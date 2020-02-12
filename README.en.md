@@ -38,7 +38,8 @@ http://192.0.2.100:8080/html/test
 ## Use "Ayame mode"
 
 "Ayame Lite" is a free signaling server.
-The room ID is "open-momo" in the sample, but it is recommended to use an ID that is difficult to guess.
+
+The room ID is "open-momo-en" in the sample, but it is recommended to use an ID that is difficult to guess.
 
 ```shell
 $ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo-en
