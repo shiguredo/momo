@@ -33,7 +33,7 @@ $ ./momo --no-audio --port 8080 test
 
 If momo's IP address is 192.0.2.100, access the following URL and try to connect from WebRTC-compatible browser.
 
-http://192.0.2.100:8080/html/test.
+http://192.0.2.100:8080/html/test
 
 ## Use "Ayame mode"
 
