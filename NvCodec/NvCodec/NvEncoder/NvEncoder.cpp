@@ -10,6 +10,9 @@
 */
 
 #include "NvEncoder/NvEncoder.h"
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#endif
 
 #ifndef _WIN32
 #include <cstring>

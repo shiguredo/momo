@@ -11,16 +11,19 @@
 #include <mutex>
 #include <queue>
 
-// NvCodec
-#include <NvEncoder/NvEncoderD3D11.h>
-
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "rtc_base/critical_section.h"
 
-class ProcessThread;
+// NvCodec
+#ifdef _WIN32
+#include <NvEncoder/NvEncoderD3D11.h>
+#endif
+#ifdef __linux__
+#include "nvcodec_h264_encoder_cuda.h"
+#endif
 
 class NvCodecH264Encoder : public webrtc::VideoEncoder {
  public:
@@ -36,7 +39,8 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   int32_t Encode(
       const webrtc::VideoFrame& frame,
       const std::vector<webrtc::VideoFrameType>* frame_types) override;
-  void SetRates(const RateControlParameters& parameters) override;
+  void SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& parameters) override;
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
  private:
@@ -56,6 +60,10 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   Microsoft::WRL::ComPtr<ID3D11DeviceContext> id3d11_context_;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> id3d11_texture_;
   std::unique_ptr<NvEncoderD3D11> nv_encoder_;
+#endif
+#ifdef __linux__
+  std::unique_ptr<NvCodecH264EncoderCuda> cuda_;
+  std::unique_ptr<NvEncoder> nv_encoder_;
 #endif
   bool reconfigure_needed_ = false;
   bool use_argb_ = false;

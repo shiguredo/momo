@@ -196,13 +196,17 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(TARGET_OS_LINUX "ubuntu-18.04")
   set(TARGET_ARCH "x86_64")
   set(USE_SDL2 ON)
+  set(USE_NVCODEC_ENCODER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(JSON_ROOT_DIR /root/json)
   set(CLI11_ROOT_DIR /root/CLI11)
   set(SDL2_ROOT_DIR "")
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
+
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
+  set(CMAKE_C_COMPILER clang-8)
+  set(CMAKE_CXX_COMPILER clang++-8)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -402,7 +406,11 @@ if (USE_ROS)
 endif()
 
 if (USE_LIBCXX)
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>")
+  target_compile_options(momo
+    PRIVATE
+      "$<$<COMPILE_LANGUAGE:CXX>:-nostdinc++>"
+      "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:LIBCXX_INCLUDE_DIR>>:-isystem${LIBCXX_INCLUDE_DIR}>"
+  )
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
@@ -540,6 +548,32 @@ elseif (TARGET_OS STREQUAL "linux")
       rt
       Threads::Threads
   )
+
+  # NVIDIA Video Codec SDK
+  if (USE_NVCODEC_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
+    target_include_directories(momo
+      PRIVATE
+        NvCodec/include
+        NvCodec/NvCodec
+        /usr/local/cuda/include)
+
+    # これらのソースは CUDA としてコンパイルする
+    set_source_files_properties(
+        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+      PROPERTIES
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_30"
+    )
+
+    target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
+    target_link_libraries(momo PRIVATE cuda cudart_static dl rt)
+  endif()
 
   if (TARGET_ARCH STREQUAL "arm")
     if (USE_LIBCXX)

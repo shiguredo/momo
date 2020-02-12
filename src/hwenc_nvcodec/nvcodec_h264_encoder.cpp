@@ -14,9 +14,12 @@ struct nal_entry {
   size_t size;
 };
 
+#ifdef _WIN32
 using Microsoft::WRL::ComPtr;
+#endif
 
 NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec) {
+#ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
                                        (void**)idxgi_factory.GetAddressOf())));
@@ -35,6 +38,10 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec) {
   size_t result = 0;
   wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
   RTC_LOG(INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
+#endif
+#ifdef __linux__
+  cuda_.reset(new NvCodecH264EncoderCuda());
+#endif
 }
 NvCodecH264Encoder::~NvCodecH264Encoder() {}
 int32_t NvCodecH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
@@ -122,26 +129,26 @@ int32_t NvCodecH264Encoder::Encode(
 
   if (reconfigure_needed_) {
     /*NV_ENC_RECONFIGURE_PARAMS reconfigure_params = { NV_ENC_RECONFIGURE_PARAMS_VER };
-    reconfigure_params.resetEncoder = 1;
-    reconfigure_params.forceIDR = 1;
-    NV_ENC_CONFIG encode_config = { NV_ENC_CONFIG_VER };
-    memcpy(&encode_config, initialize_params_.encodeConfig, sizeof(encode_config));
-    encode_config.rcParams.averageBitRate = bitrate_bps_;
-    encode_config.rcParams.vbvBufferSize =
-      encode_config.rcParams.averageBitRate * 1 / framerate_;
-    reconfigure_params.reInitEncodeParams.encodeConfig = &encode_config;
-    nv_encoder_->GetInitializeParams(&reconfigure_params.reInitEncodeParams);
-    reconfigure_params.reInitEncodeParams.frameRateDen = 1;
-    reconfigure_params.reInitEncodeParams.frameRateNum = framerate_;
-    try {
-      //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Reconfigure";
-      nv_encoder_->Reconfigure(&reconfigure_params);
-    }
-    catch (const NVENCException &e) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    reconfigure_needed_ = false;*/
+      reconfigure_params.resetEncoder = 1;
+      reconfigure_params.forceIDR = 1;
+      NV_ENC_CONFIG encode_config = { NV_ENC_CONFIG_VER };
+      memcpy(&encode_config, initialize_params_.encodeConfig, sizeof(encode_config));
+      encode_config.rcParams.averageBitRate = bitrate_bps_;
+      encode_config.rcParams.vbvBufferSize =
+        encode_config.rcParams.averageBitRate * 1 / framerate_;
+      reconfigure_params.reInitEncodeParams.encodeConfig = &encode_config;
+      nv_encoder_->GetInitializeParams(&reconfigure_params.reInitEncodeParams);
+      reconfigure_params.reInitEncodeParams.frameRateDen = 1;
+      reconfigure_params.reInitEncodeParams.frameRateNum = framerate_;
+      try {
+        //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Reconfigure";
+        nv_encoder_->Reconfigure(&reconfigure_params);
+      }
+      catch (const NVENCException &e) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      reconfigure_needed_ = false;*/
     ReleaseNvEnc();
     InitNvEnc();
     send_key_frame = true;
@@ -170,6 +177,7 @@ int32_t NvCodecH264Encoder::Encode(
 
   v_packet_.clear();
 
+#ifdef _WIN32
   const NvEncInputFrame* input_frame = nv_encoder_->GetNextInputFrame();
   D3D11_MAPPED_SUBRESOURCE map;
   id3d11_context_->Map(id3d11_texture_.Get(), D3D11CalcSubresource(0, 0, 1),
@@ -196,6 +204,15 @@ int32_t NvCodecH264Encoder::Encode(
   ID3D11Texture2D* nv11_texture =
       reinterpret_cast<ID3D11Texture2D*>(input_frame->inputPtr);
   id3d11_context_->CopyResource(nv11_texture, id3d11_texture_.Get());
+#endif
+#ifdef __linux__
+  rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+      frame.video_frame_buffer()->ToI420();
+  const NvEncInputFrame* input_frame = nv_encoder_->GetNextInputFrame();
+  cuda_->Copy(input_frame, frame_buffer->DataY(), frame_buffer->width(),
+              frame_buffer->height());
+#endif
+
   try {
     nv_encoder_->EncodeFrame(v_packet_, &pic_params);
   } catch (const NVENCException& e) {
@@ -286,7 +303,8 @@ int32_t NvCodecH264Encoder::Encode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void NvCodecH264Encoder::SetRates(const RateControlParameters& parameters) {
+void NvCodecH264Encoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& parameters) {
   if (!nv_encoder_) {
     RTC_LOG(LS_WARNING) << "SetRates() while uninitialized.";
     return;
@@ -310,17 +328,18 @@ void NvCodecH264Encoder::SetRates(const RateControlParameters& parameters) {
 }
 
 webrtc::VideoEncoder::EncoderInfo NvCodecH264Encoder::GetEncoderInfo() const {
-  EncoderInfo info;
+  webrtc::VideoEncoder::EncoderInfo info;
   info.supports_native_handle = true;
   info.implementation_name = "NvCodec H264";
-  info.scaling_settings =
-      VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
+      kLowH264QpThreshold, kHighH264QpThreshold);
   info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
 
 int32_t NvCodecH264Encoder::InitNvEnc() {
+#ifdef _WIN32
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_NV12;
   NV_ENC_BUFFER_FORMAT nvenc_format = NV_ENC_BUFFER_FORMAT_NV12;
   if (use_argb_) {
@@ -348,6 +367,16 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
+#endif
+
+#ifdef __linux__
+  try {
+    nv_encoder_.reset(cuda_->CreateNvEncoder(width_, height_));
+  } catch (const NVENCException& e) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+#endif
 
   initialize_params_ = {NV_ENC_INITIALIZE_PARAMS_VER};
   NV_ENC_CONFIG encode_config = {NV_ENC_CONFIG_VER};
@@ -411,7 +440,9 @@ int32_t NvCodecH264Encoder::ReleaseNvEnc() {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
     }
     nv_encoder_ = nullptr;
+#ifdef _WIN32
     id3d11_texture_.Reset();
+#endif
   }
   return WEBRTC_VIDEO_CODEC_OK;
 }
