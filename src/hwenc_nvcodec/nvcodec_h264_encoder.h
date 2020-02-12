@@ -66,7 +66,7 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   std::unique_ptr<NvEncoder> nv_encoder_;
 #endif
   bool reconfigure_needed_ = false;
-  bool use_argb_ = false;
+  bool use_native_ = false;
   uint32_t width_ = 0;
   uint32_t height_ = 0;
   uint32_t framerate_ = 0;

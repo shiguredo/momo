@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-#ifdef __linux__
+#include <NvDecoder/NvDecoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
-#endif
 
 #ifdef __cuda_cuda_h__
 inline bool check(CUresult e, int iLine, const char* szFile) {
@@ -107,13 +106,19 @@ class NvCodecH264EncoderCudaImpl {
   NvCodecH264EncoderCudaImpl();
   ~NvCodecH264EncoderCudaImpl();
 
-  void Copy(const NvEncInputFrame* input_frame,
+  void Copy(NvEncoder* nv_encoder,
             const void* ptr,
             int width,
             int height);
-  NvEncoder* CreateNvEncoder(int width, int height);
+  void CopyNative(NvEncoder* nv_encoder,
+                  const void* ptr,
+                  int size,
+                  int width,
+                  int height);
+  NvEncoder* CreateNvEncoder(int width, int height, bool use_native);
 
  private:
+  NvDecoder* nv_decoder_ = nullptr;
   CUdevice cu_device_;
   CUcontext cu_context_;
 };
@@ -124,14 +129,23 @@ NvCodecH264EncoderCuda::~NvCodecH264EncoderCuda() {
   delete impl_;
 }
 
-void NvCodecH264EncoderCuda::Copy(const NvEncInputFrame* input_frame,
+void NvCodecH264EncoderCuda::Copy(NvEncoder* nv_encoder,
                                   const void* ptr,
                                   int width,
                                   int height) {
-  impl_->Copy(input_frame, ptr, width, height);
+  impl_->Copy(nv_encoder, ptr, width, height);
 }
-NvEncoder* NvCodecH264EncoderCuda::CreateNvEncoder(int width, int height) {
-  return impl_->CreateNvEncoder(width, height);
+void NvCodecH264EncoderCuda::CopyNative(NvEncoder* nv_encoder,
+                                        const void* ptr,
+                                        int size,
+                                        int width,
+                                        int height) {
+  impl_->CopyNative(nv_encoder, ptr, size, width, height);
+}
+NvEncoder* NvCodecH264EncoderCuda::CreateNvEncoder(int width,
+                                                   int height,
+                                                   bool use_native) {
+  return impl_->CreateNvEncoder(width, height, use_native);
 }
 
 void ShowEncoderCapability() {
@@ -249,23 +263,53 @@ NvCodecH264EncoderCudaImpl::NvCodecH264EncoderCudaImpl() {
   ck(cuDeviceGet(&cu_device_, 0));
   char device_name[80];
   ck(cuDeviceGetName(device_name, sizeof(device_name), cu_device_));
-  std::cout << "GPU in use: " << device_name;
+  std::cout << "GPU in use: " << device_name << std::endl;
   ck(cuCtxCreate(&cu_context_, 0, cu_device_));
 }
 NvCodecH264EncoderCudaImpl::~NvCodecH264EncoderCudaImpl() {
+  if (nv_decoder_ != nullptr) {
+    delete nv_decoder_;
+  }
   cuCtxDestroy(cu_context_);
 }
-void NvCodecH264EncoderCudaImpl::Copy(const NvEncInputFrame* input_frame,
+void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
                                       const void* ptr,
                                       int width,
                                       int height) {
+  const NvEncInputFrame* input_frame = nv_encoder->GetNextInputFrame();
   NvEncoderCuda::CopyToDeviceFrame(
       cu_context_, (void*)ptr, 0, (CUdeviceptr)input_frame->inputPtr,
       (int)input_frame->pitch, width, height, CU_MEMORYTYPE_HOST,
       input_frame->bufferFormat, input_frame->chromaOffsets,
       input_frame->numChromaPlanes);
 }
-NvEncoder* NvCodecH264EncoderCudaImpl::CreateNvEncoder(int width, int height) {
-  NV_ENC_BUFFER_FORMAT nvenc_format = NV_ENC_BUFFER_FORMAT_IYUV;
+void NvCodecH264EncoderCudaImpl::CopyNative(NvEncoder* nv_encoder,
+                                            const void* ptr,
+                                            int size,
+                                            int width,
+                                            int height) {
+  if (nv_decoder_ == nullptr) {
+    std::cout << "Use JPEG Decoder" << std::endl;
+    nv_decoder_ = new NvDecoder(cu_context_, true, cudaVideoCodec_JPEG, nullptr,
+                                false, true);
+  }
+  uint8_t** frames = nullptr;
+  int frame_count = 0;
+  nv_decoder_->Decode((const uint8_t*)ptr, size, &frames, &frame_count);
+
+  for (int i = 0; i < frame_count; i++) {
+    const NvEncInputFrame* input_frame = nv_encoder->GetNextInputFrame();
+    NvEncoderCuda::CopyToDeviceFrame(
+        cu_context_, (void*)frames[i], nv_decoder_->GetDeviceFramePitch(),
+        (CUdeviceptr)input_frame->inputPtr, (int)input_frame->pitch, width,
+        height, CU_MEMORYTYPE_DEVICE, input_frame->bufferFormat,
+        input_frame->chromaOffsets, input_frame->numChromaPlanes);
+  }
+}
+NvEncoder* NvCodecH264EncoderCudaImpl::CreateNvEncoder(int width,
+                                                       int height,
+                                                       bool use_native) {
+  NV_ENC_BUFFER_FORMAT nvenc_format =
+      use_native ? NV_ENC_BUFFER_FORMAT_NV12 : NV_ENC_BUFFER_FORMAT_IYUV;
   return new NvEncoderCuda(cu_context_, width, height, nvenc_format);
 }

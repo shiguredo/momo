@@ -7,9 +7,7 @@
 // このヘッダーファイルは、外から呼ばれるので #include <cuda.h> をしてはいけない
 // また、CUDA 側に WebRTC のヘッダを混ぜることができないので WebRTC のヘッダも include してはいけない
 
-#ifdef __linux__
 #include <NvEncoder/NvEncoder.h>
-#endif
 
 class NvCodecH264EncoderCudaImpl;
 
@@ -18,12 +16,17 @@ class NvCodecH264EncoderCuda {
   NvCodecH264EncoderCuda();
   ~NvCodecH264EncoderCuda();
 
-  void Copy(const NvEncInputFrame* input_frame,
+  void Copy(NvEncoder* nv_encoder,
             const void* ptr,
             int width,
             int height);
+  void CopyNative(NvEncoder* nv_encoder,
+                  const void* ptr,
+                  int size,
+                  int width,
+                  int height);
   // 念のため <memory> も include せずポインタを利用する
-  NvEncoder* CreateNvEncoder(int width, int height);
+  NvEncoder* CreateNvEncoder(int width, int height, bool use_native);
 
  private:
   NvCodecH264EncoderCudaImpl* impl_;

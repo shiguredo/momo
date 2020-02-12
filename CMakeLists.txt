@@ -555,6 +555,7 @@ elseif (TARGET_OS STREQUAL "linux")
       PRIVATE
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
     target_include_directories(momo
@@ -566,13 +567,14 @@ elseif (TARGET_OS STREQUAL "linux")
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
         COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_30"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
-    target_link_libraries(momo PRIVATE cuda cudart_static dl rt)
+    target_link_libraries(momo PRIVATE cuda cudart_static dl rt nvcuvid)
   endif()
 
   if (TARGET_ARCH STREQUAL "arm")

@@ -112,15 +112,15 @@ int32_t NvCodecH264Encoder::Encode(
 
   if (frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
-    if (!use_argb_) {
+    if (!use_native_) {
       ReleaseNvEnc();
-      use_argb_ = true;
+      use_native_ = true;
       InitNvEnc();
     }
   } else {
-    if (use_argb_) {
+    if (use_native_) {
       ReleaseNvEnc();
-      use_argb_ = false;
+      use_native_ = false;
       InitNvEnc();
     }
   }
@@ -182,7 +182,7 @@ int32_t NvCodecH264Encoder::Encode(
   D3D11_MAPPED_SUBRESOURCE map;
   id3d11_context_->Map(id3d11_texture_.Get(), D3D11CalcSubresource(0, 0, 1),
                        D3D11_MAP_WRITE, 0, &map);
-  if (use_argb_) {
+  if (use_native_) {
     const NativeBuffer* frame_buffer =
         dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     for (int y = 0; y < frame_buffer->height(); y++) {
@@ -206,11 +206,19 @@ int32_t NvCodecH264Encoder::Encode(
   id3d11_context_->CopyResource(nv11_texture, id3d11_texture_.Get());
 #endif
 #ifdef __linux__
-  rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
-      frame.video_frame_buffer()->ToI420();
-  const NvEncInputFrame* input_frame = nv_encoder_->GetNextInputFrame();
-  cuda_->Copy(input_frame, frame_buffer->DataY(), frame_buffer->width(),
-              frame_buffer->height());
+  if (frame.video_frame_buffer()->type() ==
+      webrtc::VideoFrameBuffer::Type::kNative) {
+    NativeBuffer* native_buffer =
+        dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
+    cuda_->CopyNative(nv_encoder_.get(), native_buffer->Data(),
+                      native_buffer->length(), native_buffer->width(),
+                      native_buffer->height());
+  } else {
+    rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+        frame.video_frame_buffer()->ToI420();
+    cuda_->Copy(nv_encoder_.get(), frame_buffer->DataY(), frame_buffer->width(),
+                frame_buffer->height());
+  }
 #endif
 
   try {
@@ -272,6 +280,7 @@ int32_t NvCodecH264Encoder::Encode(
       //printf(" nal_size: %d packet.size(): %d \n", packet.size() - nal_start_idx , packet.size());
     }
     //printf("\n");
+    //nals.push_back({4, packet.size() - 4});
 
     //RTC_LOG(LS_ERROR) << __FUNCTION__ << "  nals.size():" << nals.size();
 
@@ -342,7 +351,7 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
 #ifdef _WIN32
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_NV12;
   NV_ENC_BUFFER_FORMAT nvenc_format = NV_ENC_BUFFER_FORMAT_NV12;
-  if (use_argb_) {
+  if (use_native_) {
     dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
     nvenc_format = NV_ENC_BUFFER_FORMAT_ARGB;
   }
@@ -371,7 +380,7 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
 
 #ifdef __linux__
   try {
-    nv_encoder_.reset(cuda_->CreateNvEncoder(width_, height_));
+    nv_encoder_.reset(cuda_->CreateNvEncoder(width_, height_, use_native_));
   } catch (const NVENCException& e) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
     return WEBRTC_VIDEO_CODEC_ERROR;
