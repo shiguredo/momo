@@ -200,7 +200,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(BOOST_ROOT_DIR /root/boost)
   set(JSON_ROOT_DIR /root/json)
   set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR "")
+  set(SDL2_ROOT_DIR /root/SDL2)
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
