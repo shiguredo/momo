@@ -9,42 +9,43 @@
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## WebRTC Native Client Momo について
+## About WebRTC Native Client Momo
 
-WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
+Momo is a WebRTC Native Client that uses "libwebrtc" and runs on various browser-less devices.
+When Momo runs on Jetson Nano, it is possible to deliver 4K video compressed with H.264 to the browser within 1 second.
 
-Jetson Nano 上で動作させることで H.264 で圧縮された 4K の映像を 1 秒以内でブラウザに配信可能にします。
+## Binary for Jetson Nano
 
-## Jetson Nano 向けのバイナリは以下にて提供しています
-
-https://github.com/shiguredo/momo/releases にて最新版の Jetson Nano 向けバイナリをダウンロードしてください。
+Download the latest version of the binary for Jetson Nano from below.
+https://github.com/shiguredo/momo/releases
 
 ```
 momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
 ```
 
-## test モードを利用して繋ぐ
+## Use "test mode"
 
-Momo 自体がシグナリングサーバの機能を持っている、 test モードを利用して動かしてみてください。
+First, try "test mode", where Momo itself has a function as a signaling server.
 
 ```shell
 $ ./momo --no-audio --port 8080 test
 ```
 
-momo の IP アドレスが 192.0.2.100 の場合は、
-http://192.0.2.100:8080/html/test.html に WebRTC が利用可能なブラウザでアクセスして接続してみてください。
+If momo's IP address is 192.0.2.100, access the following URL and try to connect from WebRTC-compatible browser.
 
-## ayame モードを利用して繋ぐ
+http://192.0.2.100:8080/html/test.
 
-Ayame Lite は無料で利用可能なシグナリングサーバです。
+## Use "Ayame mode"
 
-ルーム ID は open-momo を利用していますが、実際に利用する場合は推測されにくい ID を利用してください。
+"Ayame Lite" is a free signaling server.
+The room ID is "open-momo" in the sample, but it is recommended to use an ID that is difficult to guess.
 
 ```shell
 $ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo-en
 ```
 
-Ayame Web SDK のオンラインサンプルを利用して確認します。 URL の引数にルーム ID を指定してアクセスします。
+Check with the online sample of Ayame Web SDK.
+Access by specifying the room ID in the URL argument.
 
 ```
 https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo-en
