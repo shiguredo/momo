@@ -74,14 +74,14 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 ARMv8 Jetson Nano
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
 - macOS 10.15 x86_64
+- Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
 
-- Ubuntu 18.04 ARMv8
-    - 今後削除予定
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 - Ubuntu 16.04 ARMv7 ROS Kinetic
+    - 今後削除予定
     - Raspberry Pi 3 B+
 
 ## 使ってみる
@@ -92,6 +92,7 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 - Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
 - macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+- Windows 版 Momo のビルドしたい人は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
 
 ## パッケージを作成する
 
@@ -108,7 +109,8 @@ YYYY.<その年にリリースした回数>
 Apache License 2.0
 
 ```
-Copyright 2018-2020, Shiguredo Inc, tnoho and melpon and kdxu
+Copyright 2015-2020, tnoho
+Copyright 2018-2020, Shiguredo Inc, melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -123,12 +125,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## 有償での優先実装
+
+- Windows 版 OSS 化
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+
 ## Momo についての電子書籍
 
-Momo のコントリビュータである @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
 
 [WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
-
 
 ## サポートについて
 
@@ -137,9 +143,7 @@ WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願い
 
 ### バグ報告
 
-バグ報告すべきか悩んだらまずは、 Discord で気軽に相談してください。
-
-https://github.com/shiguredo/momo/issues
+GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
 
 #### 理想的なバグ報告例
 
@@ -194,3 +198,4 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
 - [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 - [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
+

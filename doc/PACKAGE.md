@@ -2,22 +2,28 @@
 
 ## Raspbian Buster (armv6) 向けパッケージの作成例
 
-raspbian-buster_armv6 パッケージを作成する場合は raspbian-buster_armv6.package と打つことでパッケージが作成されます。
+raspbian-buster_armv6 パッケージを作成する場合は build ディレクトリで ./build.sh --package raspbian-buster_armv6 と打つことでパッケージが作成されます。
 
 ```shell
-$ make raspbian-buster_armv6.package
+$ ./build.sh --package raspbian-buster_armv6
 ```
 
-パッケージは build/package 以下に作成されます。
+Windows の場合は以下のコマンドになります。
+
+```powershell
+.\build.bat -package
+```
+
+パッケージは `_package` 以下に作成されます。
 
 ### 作成可能なパッケージ一覧
 
+- windows
+- macos
 - raspbian-buster_armv6
 - raspbian-buster_armv7
-- ubuntu-18.04_armv8
 - ubuntu-18.04_armv8_jetson_nano
 - ubuntu-18.04_x86_64
-- macos
 - ubuntu-16.04_armv7_ros
 - ubuntu-16.04_x86_64_ros
 

@@ -14,6 +14,10 @@
 
 [SETUP_MAC.md](SETUP_MAC.md) をお読みください。
 
+### Windows で Momo を準備する
+
+[SETUP_WINDOWS.md](SETUP_WINDOWS.md) をお読みください。
+
 ## 動かす
 
 ## テストモードを利用して Momo を動かしてみる

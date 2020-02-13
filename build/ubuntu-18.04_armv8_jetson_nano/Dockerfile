@@ -73,6 +73,21 @@ RUN \
     --prefix=/root/boost \
     --with-filesystem
 
+# nlohmann/json の取得
+
+ARG JSON_VERSION
+RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git /root/json
+
+# CLI11 の取得
+
+ARG CLI11_VERSION
+RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11
+
+# CMake のインストール
+ARG CMAKE_VERSION
+COPY script/get_cmake.sh /root/
+RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
+ENV PATH "/root/cmake/bin:$PATH"
 
 # SDL2 のビルド
 
@@ -84,24 +99,26 @@ RUN \
   && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
   && mkdir -p /root/sdl2-source/build \
   && cd /root/sdl2-source/build \
-  && CC='/root/llvm/clang/bin/clang --target=aarch64-linux-gnu --sysroot=/root/rootfs' \
-      CFLAGS=' \
-        -I/root/rootfs/usr/include/aarch64-linux-gnu \
-      ' \
-      LDFLAGS=' \
-        -L/root/rootfs/usr/lib/aarch64-linux-gnu \
-        -B/root/rootfs/usr/lib/aarch64-linux-gnu \
-      ' \
-      ../source/configure --disable-shared --prefix=/root/sdl2 --host=aarch64-linux-gnu --with-sysroot=/root/rootfs --disable-pulseaudio --disable-esd --disable-video-wayland \
-  && make \
+  && cmake ../source \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+    -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+    -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
+    -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+    -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
+    -DCMAKE_FIND_ROOT_PATH=/root/rootfs \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
+    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH \
+    -DCMAKE_SYSROOT=/root/rootfs \
+    -DPTHREADS=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DPULSEAUDIO=OFF \
+    -DESD=OFF \
+    -DVIDEO_WAYLAND=OFF \
+  && make -j`nproc` \
   && make install
 
-# nlohmann/json の取得
-
-ARG JSON_VERSION
-RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git /root/json
-
-# CLI11 の取得
-
-ARG CLI11_VERSION
-RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git /root/CLI11

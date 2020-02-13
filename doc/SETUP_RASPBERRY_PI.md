@@ -27,6 +27,8 @@ $ tree
 下記を実行してください。
 
 ```
+$ sudo apt-get update
+$ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3 libsdl2-dev
 ```
 
