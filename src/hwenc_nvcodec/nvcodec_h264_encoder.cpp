@@ -300,9 +300,10 @@ void NvCodecH264Encoder::SetRates(const RateControlParameters& parameters) {
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
   if (std::abs((int64_t)new_framerate - (int64_t)framerate_) >= 2 ||
-      std::abs((int64_t)new_bitrate - (int64_t)target_bitrate_bps_) >= 5000) {
+      new_bitrate > max_bitrate_bps_ || new_bitrate < target_bitrate_bps_ / 2) {
     framerate_ = new_framerate;
     target_bitrate_bps_ = new_bitrate;
+    max_bitrate_bps_ = new_bitrate + new_bitrate / 2;
     reconfigure_needed_ = true;
   }
   RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
