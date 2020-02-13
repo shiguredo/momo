@@ -301,8 +301,8 @@ void NvCodecH264Encoder::SetRates(const RateControlParameters& parameters) {
                 << " target_bitrate_bps_:" << target_bitrate_bps_
                 << " new_bitrate:" << new_bitrate
                 << " max_bitrate_bps_:" << max_bitrate_bps_;
-  framerate_ = parameters.framerate_fps;
-  target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
+  framerate_ = new_framerate;
+  target_bitrate_bps_ = new_bitrate;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   reconfigure_needed_ = true;
 }
