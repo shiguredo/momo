@@ -11,6 +11,10 @@
 
 ## develop
 
+- [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
+    - https://github.com/shiguredo/momo/issues/124
+    - @tnoho
+
 ## 2020.2.1
 
 **hotfix**
