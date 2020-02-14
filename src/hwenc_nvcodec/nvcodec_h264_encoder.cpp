@@ -18,7 +18,8 @@ struct nal_entry {
 using Microsoft::WRL::ComPtr;
 #endif
 
-NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec) {
+NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
+    : bitrate_adjuster_(0.5, 0.95) {
 #ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
@@ -77,11 +78,6 @@ int32_t NvCodecH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
           ? webrtc::VideoContentType::SCREENSHARE
           : webrtc::VideoContentType::UNSPECIFIED;
 
-  target_bitrate_bps_ = codec_settings->startBitrate * 1000;
-  bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
-
-  RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
-
   return InitNvEnc();
 }
 
@@ -128,30 +124,30 @@ int32_t NvCodecH264Encoder::Encode(
   bool send_key_frame = false;
 
   if (reconfigure_needed_) {
-    /*NV_ENC_RECONFIGURE_PARAMS reconfigure_params = { NV_ENC_RECONFIGURE_PARAMS_VER };
-      reconfigure_params.resetEncoder = 1;
-      reconfigure_params.forceIDR = 1;
-      NV_ENC_CONFIG encode_config = { NV_ENC_CONFIG_VER };
-      memcpy(&encode_config, initialize_params_.encodeConfig, sizeof(encode_config));
-      encode_config.rcParams.averageBitRate = bitrate_bps_;
-      encode_config.rcParams.vbvBufferSize =
+    NV_ENC_RECONFIGURE_PARAMS reconfigure_params = {
+        NV_ENC_RECONFIGURE_PARAMS_VER};
+    NV_ENC_CONFIG encode_config = {NV_ENC_CONFIG_VER};
+    reconfigure_params.reInitEncodeParams.encodeConfig = &encode_config;
+    nv_encoder_->GetInitializeParams(&reconfigure_params.reInitEncodeParams);
+
+    reconfigure_params.reInitEncodeParams.frameRateNum = framerate_;
+
+    encode_config.rcParams.averageBitRate =
+        bitrate_adjuster_.GetAdjustedBitrateBps();
+    encode_config.rcParams.maxBitRate = max_bitrate_bps_;
+    encode_config.rcParams.vbvBufferSize =
         encode_config.rcParams.averageBitRate * 1 / framerate_;
-      reconfigure_params.reInitEncodeParams.encodeConfig = &encode_config;
-      nv_encoder_->GetInitializeParams(&reconfigure_params.reInitEncodeParams);
-      reconfigure_params.reInitEncodeParams.frameRateDen = 1;
-      reconfigure_params.reInitEncodeParams.frameRateNum = framerate_;
-      try {
-        //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Reconfigure";
-        nv_encoder_->Reconfigure(&reconfigure_params);
-      }
-      catch (const NVENCException &e) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
-        return WEBRTC_VIDEO_CODEC_ERROR;
-      }
-      reconfigure_needed_ = false;*/
-    ReleaseNvEnc();
-    InitNvEnc();
-    send_key_frame = true;
+    encode_config.rcParams.vbvInitialDelay =
+        encode_config.rcParams.vbvBufferSize;
+    try {
+      //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Reconfigure";
+      nv_encoder_->Reconfigure(&reconfigure_params);
+    } catch (const NVENCException& e) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    reconfigure_needed_ = false;
   }
 
   if (frame_types != nullptr) {
@@ -307,6 +303,7 @@ int32_t NvCodecH264Encoder::Encode(
                         << " OnEncodedImage failed error:" << result.error;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
+    bitrate_adjuster_.Update(packet.size());
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -326,14 +323,15 @@ void NvCodecH264Encoder::SetRates(
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  if (std::abs((int64_t)new_framerate - (int64_t)framerate_) >= 2 ||
-      std::abs((int64_t)new_bitrate - (int64_t)target_bitrate_bps_) >= 5000) {
-    framerate_ = new_framerate;
-    target_bitrate_bps_ = new_bitrate;
-    reconfigure_needed_ = true;
-  }
   RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                << " target_bitrate_bps_:" << target_bitrate_bps_;
+                << " new_framerate: " << new_framerate
+                << " target_bitrate_bps_:" << target_bitrate_bps_
+                << " new_bitrate:" << new_bitrate
+                << " max_bitrate_bps_:" << max_bitrate_bps_;
+  framerate_ = new_framerate;
+  target_bitrate_bps_ = new_bitrate;
+  bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
+  reconfigure_needed_ = true;
 }
 
 webrtc::VideoEncoder::EncoderInfo NvCodecH264Encoder::GetEncoderInfo() const {
