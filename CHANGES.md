@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を M80.3987@{#6} に上げる
+    - @voluntas
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
     - https://github.com/shiguredo/momo/issues/124
     - @tnoho
