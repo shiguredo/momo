@@ -22,6 +22,8 @@
 
 #if USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_video_decoder.h"
+#elif USE_MMAL_ENCODER
+#include "hwenc_mmal/mmal_h264_decoder.h"
 #endif
 
 #include "h264_format.h"
@@ -90,6 +92,11 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
     return webrtc::VP8Decoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Decoder::Create();
+#if USE_MMAL_ENCODER
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
+    return std::unique_ptr<webrtc::VideoDecoder>(
+        absl::make_unique<MMALH264Decoder>());
+#endif
 #endif
 
   RTC_NOTREACHED();

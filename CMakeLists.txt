@@ -564,6 +564,7 @@ elseif (TARGET_OS STREQUAL "linux")
       if (USE_MMAL_ENCODER)
         target_sources(momo
           PRIVATE
+            src/hwenc_mmal/mmal_h264_decoder.cpp
             src/hwenc_mmal/mmal_h264_encoder.cpp
         )
 
