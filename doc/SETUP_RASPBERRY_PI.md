@@ -38,19 +38,11 @@ $ sudo apt-get install libnspr4 libnss3 libsdl2-dev
 
 raspi-config で Camera を Enable にしてください。
 
-さらに、以下のコマンドか
+加えて、以下のコマンドを実行してください
 
 ```
 $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
-
-/etc/modules の末尾に
-
-```
-bcm2835-v4l2 max_video_width=2592 max_video_height=1944
-```
-
-を追加して再起動してください。
 
 ## 使ってみる
 
@@ -87,17 +79,17 @@ $ ./momo --force-i420 --no-audio --port 8080 test
 Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
 ```shell
-$ ./momo --resolution=HD --framerate=20 --force-i420 --use-native test
+$ ./momo --resolution=HD --force-i420 --use-native test
 ```
 
-がリアルタイムでの最高解像度設定となります。パフォーマンスが限られた Zero でリアルタイムにするには framerate を制限することも重要になります。
+がリアルタイムでの最高解像度設定となります。
 
 ## Raspberry Pi で USB カメラ利用時に use-native を使ってもフレームレートが出ない
 
 USB カメラ利用時には `--use-native` を使わない方がフレームレートは出ます。しかし `--use-native` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
 
 ```
-gpu_mem=128
+gpu_mem=256
 force_turbo=1
 avoid_warnings=2
 ```

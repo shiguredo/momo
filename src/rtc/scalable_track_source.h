@@ -28,6 +28,8 @@ class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
   webrtc::MediaSourceInterface::SourceState state() const override;
   bool remote() const override;
   void OnCapturedFrame(const webrtc::VideoFrame& frame);
+
+ protected:
   virtual bool useNativeBuffer() { return false; }
 
  private:

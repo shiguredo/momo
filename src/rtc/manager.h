@@ -4,9 +4,12 @@
 #include "connection.h"
 #include "connection_settings.h"
 #include "data_manager.h"
+#include "messagesender.h"
 #include "pc/video_track_source.h"
 #include "scalable_track_source.h"
 #include "video_track_receiver.h"
+
+class RTCConnection;
 
 class RTCManager {
  public:

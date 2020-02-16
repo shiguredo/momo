@@ -3,8 +3,8 @@
 
 #include "serial_data_manager.h"
 
-#include <iostream>
 #include <boost/bind.hpp>
+#include <iostream>
 
 #include "rtc_base/log_sinks.h"
 
@@ -50,8 +50,8 @@ bool SerialDataManager::Connect(std::string device, unsigned int rate) {
   boost::system::error_code error;
   serial_port_.open(device, error);
   if (error) {
-    std::cerr << "failed to connect serial port device : "
-                      << device << std::endl;
+    std::cerr << "failed to connect serial port device : " << device
+              << std::endl;
     return false;
   }
 
