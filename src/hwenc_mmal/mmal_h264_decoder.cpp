@@ -57,7 +57,7 @@ int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  //rtc::CritScope lock(&config_lock_);
+  rtc::CritScope lock(&config_lock_);
 
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
