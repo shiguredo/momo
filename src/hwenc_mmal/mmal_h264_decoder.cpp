@@ -13,6 +13,7 @@
 
 #include <unistd.h>
 
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -140,9 +141,9 @@ void MMALH264Decoder::MMALOutputCallback(MMAL_PORT_T* port,
       RTC_LOG(LS_ERROR) << "Failed to commit output port format";
       return;
     }
-    
+
     port_out->buffer_size = port_out->buffer_size_recommended;
-    port_out->buffer_num = 4;
+    port_out->buffer_num = 3;
     port_out->userdata = (MMAL_PORT_USERDATA_T*)this;
   } else {
     SendFrame(buffer);
@@ -180,8 +181,8 @@ int32_t MMALH264Decoder::MMALConfigure() {
   MMAL_PORT_T* port_in = decoder_->input[0];
   port_in->format->type = MMAL_ES_TYPE_VIDEO;
   port_in->format->encoding = MMAL_ENCODING_H264;
-  port_in->format->es->video.width = width_;
-  port_in->format->es->video.height = height_;
+  port_in->format->es->video.width = 0;
+  port_in->format->es->video.height = 0;
   port_in->format->es->video.frame_rate.num = 0;
   port_in->format->es->video.frame_rate.den = 1;
   port_in->format->es->video.par.num = 1;
@@ -201,23 +202,21 @@ int32_t MMALH264Decoder::MMALConfigure() {
     return -1;
   }
 
-  port_in->buffer_num = 4;
+  port_in->buffer_num = 3;
   port_in->buffer_size = 256 << 10;
-  port_out->buffer_num = 4;
-  port_out->buffer_size = 256 << 14;
+  port_out->buffer_num = 3;
+  port_out->buffer_size = 256;
 
   port_in->userdata = (MMAL_PORT_USERDATA_T*)this;
   port_out->userdata = (MMAL_PORT_USERDATA_T*)this;
 
-  if (mmal_port_parameter_set_boolean(port_in,
-                                      MMAL_PARAMETER_ZERO_COPY,
+  if (mmal_port_parameter_set_boolean(port_in, MMAL_PARAMETER_ZERO_COPY,
                                       MMAL_TRUE) != MMAL_SUCCESS) {
     RTC_LOG(LS_ERROR) << "Failed to set resizer input zero copy";
     return -1;
   }
 
-  if (mmal_port_parameter_set_boolean(port_out,
-                                      MMAL_PARAMETER_ZERO_COPY,
+  if (mmal_port_parameter_set_boolean(port_out, MMAL_PARAMETER_ZERO_COPY,
                                       MMAL_TRUE) != MMAL_SUCCESS) {
     RTC_LOG(LS_ERROR) << "Failed to set resizer output zero copy";
     return -1;
@@ -235,8 +234,9 @@ int32_t MMALH264Decoder::MMALConfigure() {
 
   pool_in_ =
       mmal_port_pool_create(port_in, port_in->buffer_num, port_in->buffer_size);
-  pool_out_ = mmal_port_pool_create(port_out, port_out->buffer_num,
-                                    port_out->buffer_size);
+  pool_out_ = mmal_port_pool_create(
+      port_out, port_out->buffer_num,
+      webrtc::CalcBufferSize(webrtc::VideoType::kI420, 1920, 1088));
 
   if (mmal_component_enable(decoder_) != MMAL_SUCCESS) {
     RTC_LOG(LS_ERROR) << "Failed to enable component";
