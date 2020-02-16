@@ -129,6 +129,9 @@ int32_t JetsonH264Encoder::JetsonConfigure() {
         V4L2_PIX_FMT_YUV420M, width_, height_, V4L2_NV_BUFFER_LAYOUT_PITCH);
     INIT_ERROR(ret < 0, "Failed to converter setCapturePlaneFormat");
 
+    ret = converter_->setCropRect(0, 0, raw_width_, raw_height_);
+    INIT_ERROR(ret < 0, "Failed to converter setCropRect");
+
     ret = converter_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false,
                                               false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
