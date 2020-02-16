@@ -564,7 +564,9 @@ elseif (TARGET_OS STREQUAL "linux")
       if (USE_MMAL_ENCODER)
         target_sources(momo
           PRIVATE
+            src/hwenc_mmal/mmal_buffer.cpp
             src/hwenc_mmal/mmal_h264_encoder.cpp
+            src/hwenc_mmal/mmal_v4l2_capture.cpp
         )
 
         if (TARGET_OS_LINUX STREQUAL "raspbian-buster")

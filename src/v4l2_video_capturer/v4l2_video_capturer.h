@@ -26,24 +26,39 @@
 class V4L2VideoCapture : public ScalableVideoTrackSource {
  public:
   static rtc::scoped_refptr<V4L2VideoCapture> Create(ConnectionSettings cs);
+  static void LogDeviceList(
+      webrtc::VideoCaptureModule::DeviceInfo* device_info);
+  V4L2VideoCapture();
+  ~V4L2VideoCapture();
+
+  int32_t Init(const char* deviceUniqueId,
+               const std::string& specifiedVideoDevice);
+  virtual int32_t StartCapture(ConnectionSettings cs);
+  virtual int32_t StopCapture();
+  virtual bool useNativeBuffer() override;
+  virtual bool OnCaptured(struct v4l2_buffer& buf);
+
+ protected:
+  int32_t _deviceFd;
+  int32_t _currentWidth;
+  int32_t _currentHeight;
+  int32_t _currentFrameRate;
+  webrtc::VideoType _captureVideoType;
+  struct Buffer {
+    void* start;
+    size_t length;
+  };
+  Buffer* _pool;
+
+ private:
   static rtc::scoped_refptr<V4L2VideoCapture> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       ConnectionSettings cs,
       size_t capture_device_index);
-  V4L2VideoCapture();
-  ~V4L2VideoCapture();
-  int32_t Init(const char* deviceUniqueId,
-               const std::string& specifiedVideoDevice);
-  int32_t StartCapture(ConnectionSettings cs);
-
-  bool useNativeBuffer() override;
-
- private:
   bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
 
   enum { kNoOfV4L2Bufffers = 4 };
 
-  int32_t StopCapture();
   bool AllocateVideoBuffers();
   bool DeAllocateVideoBuffers();
   static void CaptureThread(void*);
@@ -54,20 +69,10 @@ class V4L2VideoCapture : public ScalableVideoTrackSource {
   rtc::CriticalSection _captureCritSect;
   bool quit_ RTC_GUARDED_BY(_captureCritSect);
   std::string _videoDevice;
-  int32_t _deviceFd;
 
   int32_t _buffersAllocatedByDevice;
-  int32_t _currentWidth;
-  int32_t _currentHeight;
-  int32_t _currentFrameRate;
   bool _useNative;
   bool _captureStarted;
-  webrtc::VideoType _captureVideoType;
-  struct Buffer {
-    void* start;
-    size_t length;
-  };
-  Buffer* _pool;
 };
 
 #endif  // V4L2_VIDEO_CAPTURE_H_
