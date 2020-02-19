@@ -14,6 +14,9 @@
 - [UPDATE] Raspberry Pi の H.264 を利用時のリサイズ処理をハードウェアに変更する
     - VPU でソフトウェア処理される `vc.ril.resize` からハードウェア処理される `vc.ril.isp` への変更
     - YUV の形式が異なる場合の変換処理もハードウェアに変更
+    - @tnoho
+- [ADD] Raspberry Pi で SDL 利用時に H264 ハードウェアデコーダを利用するようにする
+    - @tnoho
 - [UPDATE] libwebrtc を M80.3987@{#6} に上げる
     - @voluntas
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
