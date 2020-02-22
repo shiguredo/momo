@@ -109,7 +109,7 @@ YYYY.<その年にリリースした回数>
 Apache License 2.0
 
 ```
-Copyright 2015-2020, tnoho
+Copyright 2015-2020, tnoho (Original Author)
 Copyright 2018-2020, Shiguredo Inc, melpon and kdxu
 
 Licensed under the Apache License, Version 2.0 (the "License");
