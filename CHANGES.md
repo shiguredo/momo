@@ -29,6 +29,7 @@
 
 - [FIX] macOS で --use-sdl オプションを利用すると落ちていたのを修正する
     - https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+    - @melpon
 
 ## 2020.2
 
