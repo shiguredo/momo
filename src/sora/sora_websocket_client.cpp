@@ -262,6 +262,13 @@ void SoraWebsocketClient::doSendPong() {
   json json_message = {{"type", "pong"}};
   ws_->sendText(json_message.dump());
 }
+void SoraWebsocketClient::doSendPong(
+    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+  std::string stats = report->ToJson();
+  json json_message = {{"type", "pong"}, {"stats", stats}};
+  std::string str = R"({"type":"pong","stats":)" + stats + "}";
+  ws_->sendText(std::move(str));
+}
 
 void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
@@ -357,7 +364,16 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
       return;
     }
     watchdog_.reset();
-    doSendPong();
+    bool stats = json_message.value("stats", false);
+    if (stats) {
+      connection_->getStats(
+          [this](
+              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            doSendPong(report);
+          });
+    } else {
+      doSendPong();
+    }
   }
 }
 

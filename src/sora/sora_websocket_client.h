@@ -78,6 +78,8 @@ class SoraWebsocketClient
   void onHandshake(boost::system::error_code ec);
   void doSendConnect();
   void doSendPong();
+  void doSendPong(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void createPeerFromConfig(nlohmann::json jconfig);
 
  public:

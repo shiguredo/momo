@@ -2,6 +2,32 @@
 
 #include "rtc_base/logging.h"
 
+// stats のコールバックを受け取るためのクラス
+class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
+ public:
+  typedef std::function<void(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report)>
+      ResultCallback;
+
+  static RTCStatsCallback* Create(ResultCallback result_callback) {
+    return new rtc::RefCountedObject<RTCStatsCallback>(
+        std::move(result_callback));
+  }
+
+  void OnStatsDelivered(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) override {
+    std::move(result_callback_)(report);
+  }
+
+ protected:
+  RTCStatsCallback(ResultCallback result_callback)
+      : result_callback_(std::move(result_callback)) {}
+  ~RTCStatsCallback() override = default;
+
+ private:
+  ResultCallback result_callback_;
+};
+
 RTCConnection::~RTCConnection() {
   _connection->Close();
 }
@@ -149,4 +175,10 @@ bool RTCConnection::isMediaEnabled(
     return track->enabled();
   }
   return false;
+}
+
+void RTCConnection::getStats(
+    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+        callback) {
+  _connection->GetStats(RTCStatsCallback::Create(std::move(callback)));
 }
