@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "`dirname $0`"
+
 # 引数の処理
 
 PROGRAM="$0"
