@@ -137,6 +137,13 @@ INSTALL_DIR="`pwd`/local/_install"
 
 source ../VERSION
 
+if [ -z "$JOBS" ]; then
+  JOBS=`nproc`
+  if [ -z "$JOBS" ]; then
+    JOBS=1
+  fi
+fi
+
 mkdir -p ../_build/local
 pushd ../_build/local
   cmake \
@@ -185,6 +192,201 @@ WebRTC をカスタマイズする場合、自前で WebRTC をビルドし、�
 参考用に、Ubuntu 18.04 の x86_64 環境で WebRTC をローカルでビルドして Momo をビルドするスクリプトを以下に載せています。
 ビルド環境やターゲットに合わせて変更してみて下さい。
 
+`build/local_webrtc/install_deps_local_webrtc.sh`:
+
 ```bash
-# TODO(melpon): 用意する
+#!/bin/bash
+
+cd "`dirname $0`"
+
+SOURCE_DIR="`pwd`/_source"
+BUILD_DIR="`pwd`/_build"
+INSTALL_DIR="`pwd`/_install"
+
+set -ex
+
+mkdir -p $SOURCE_DIR
+mkdir -p $BUILD_DIR
+mkdir -p $INSTALL_DIR
+
+source ../../VERSION
+
+if [ -z "$JOBS" ]; then
+  JOBS=`nproc`
+  if [ -z "$JOBS" ]; then
+    JOBS=1
+  fi
+fi
+
+# depot_tools 取得
+pushd $SOURCE_DIR
+  if [ -e depot_tools/.git ]; then
+    pushd depot_tools
+      git fetch
+      git checkout -f origin/HEAD
+    popd
+  else
+    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+  fi
+popd
+
+export PATH="$SOURCE_DIR/depot_tools:$PATH"
+
+
+# WebRTC のソースを取得
+mkdir -p $SOURCE_DIR/webrtc
+
+pushd $SOURCE_DIR/webrtc
+  gclient
+
+  if [ ! -e src ]; then
+    fetch webrtc
+
+    # 依存ライブラリの取得
+    bash ./src/build/install-build-deps.sh --no-arm --no-chromeos-fonts
+  fi
+popd
+
+# WebRTC のビルド
+pushd $SOURCE_DIR/webrtc/src
+  if [ ! -e $BUILD_DIR/webrtc ]; then
+    gn gen $BUILD_DIR/webrtc --args='
+      target_os="linux"
+      is_debug=false
+      rtc_include_tests=false
+      rtc_use_h264=false
+      is_component_build=false
+      use_rtti=true
+    '
+  fi
+  ninja -C $BUILD_DIR/webrtc
+popd
+
+# ar で .o ファイルを固める
+pushd $BUILD_DIR/webrtc/obj
+  mkdir -p $INSTALL_DIR/webrtc/lib
+  $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/llvm-ar -rc $INSTALL_DIR/webrtc/lib/libwebrtc.a `find . -name '*.o'`
+popd
+
+# CLI11
+if [ ! -e $INSTALL_DIR/CLI11/include/CLI/Version.hpp ]; then
+  pushd $INSTALL_DIR
+    rm -rf CLI11
+    git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI11.git
+  popd
+fi
+
+# nlohmann/json
+if [ ! -e $INSTALL_DIR/json/include/nlohmann/json.hpp ]; then
+  pushd $INSTALL_DIR
+    rm -rf json
+    git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git
+  popd
+fi
+
+# Boost
+if [ ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]; then
+  rm -rf $SOURCE_DIR/boost
+  rm -rf $BUILD_DIR/boost
+  rm -rf $INSTALL_DIR/boost
+  mkdir -p $SOURCE_DIR/boost
+  ../../script/setup_boost.sh $BOOST_VERSION $SOURCE_DIR/boost
+  pushd $SOURCE_DIR/boost/source
+    echo "using clang : : $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;" > project-config.jam
+    ./b2 \
+      cxxflags=" \
+        -D_LIBCPP_ABI_UNSTABLE \
+        -nostdinc++ \
+        -isystem$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/trunk/include \
+      " \
+      toolset=clang \
+      visibility=global \
+      target-os=linux \
+      address-model=64 \
+      link=static \
+      variant=release \
+      install \
+      -j$JOBS \
+      --build-dir=$BUILD_DIR/boost \
+      --prefix=$INSTALL_DIR/boost \
+      --ignore-site-config \
+      --with-filesystem
+  popd
+fi
+
+# SDL2
+if [ ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
+  rm -rf $SOURCE_DIR/SDL2
+  rm -rf $BUILD_DIR/SDL2
+  rm -rf $INSTALL_DIR/SDL2
+  mkdir -p $SOURCE_DIR/SDL2
+  mkdir -p $BUILD_DIR/SDL2
+  ../../script/setup_sdl2.sh $SDL2_VERSION $SOURCE_DIR/SDL2
+  pushd $BUILD_DIR/SDL2
+    CC=$SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang \
+    CXX=$SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/SDL2 \
+      $SOURCE_DIR/SDL2/source
+
+    cmake --build . -j$JOBS
+    cmake --build . --target install
+  popd
+fi
 ```
+
+`build/build_local_webrtc.sh`:
+
+```bash
+#!/bin/bash
+
+cd "`dirname $0`"
+
+INSTALL_DIR="`pwd`/local_webrtc/_install"
+SOURCE_DIR="`pwd`/local_webrtc/_source"
+
+./local_webrtc/install_deps_local_webrtc.sh
+
+source ../VERSION
+
+if [ -z "$JOBS" ]; then
+  JOBS=`nproc`
+  if [ -z "$JOBS" ]; then
+    JOBS=1
+  fi
+fi
+
+mkdir -p ../_build/local_webrtc
+pushd ../_build/local_webrtc
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DMOMO_VERSION="$MOMO_VERSION" \
+    -DMOMO_COMMIT="$MOMO_COMMIT" \
+    -DWEBRTC_BUILD_VERSION="$WEBRTC_BUILD_VERSION" \
+    -DWEBRTC_READABLE_VERSION="$WEBRTC_READABLE_VERSION" \
+    -DWEBRTC_COMMIT="$WEBRTC_COMMIT" \
+    -DTARGET_OS="linux" \
+    -DTARGET_OS_LINUX="ubuntu-18.04" \
+    -DTARGET_ARCH="x86_64" \
+    -DUSE_SDL2=ON \
+    -DBOOST_ROOT_DIR=$INSTALL_DIR/boost \
+    -DJSON_ROOT_DIR=$INSTALL_DIR/json \
+    -DCLI11_ROOT_DIR=$INSTALL_DIR/CLI11 \
+    -DSDL2_ROOT_DIR=$INSTALL_DIR/SDL2 \
+    -DWEBRTC_INCLUDE_DIR=$SOURCE_DIR/webrtc/src \
+    -DWEBRTC_LIBRARY_DIR=$INSTALL_DIR/webrtc/lib \
+    -DCLANG_ROOT=$SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts \
+    -DUSE_LIBCXX=ON \
+    -DLIBCXX_INCLUDE_DIR=$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/trunk/include \
+    ../..
+
+  cmake --build . -j$JOBS
+popd
+```
+
+これで `./build/build_local_webrtc.sh` を実行すれば、`./build/local_webrtc/_source/webrtc` 以下に WebRTC のソースが、`./build/local_webrtc/_install` 以下に各ライブラリがインストールされます。
+また、WebRTC のソースを書き換えると、WebRTC のビルドを実行した上で Momo のビルドが行われます。
+
+初回のソース取得時は `bash ./src/build/install-build-deps.sh` によって `sudo apt-get install` が走るので注意して下さい。
