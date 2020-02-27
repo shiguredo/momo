@@ -34,6 +34,7 @@ JetsonVideoDecoder::JetsonVideoDecoder(uint32_t input_format)
       decoder_(nullptr),
       decode_complete_callback_(nullptr),
       buffer_pool_(false, 300 /* max_number_of_buffers*/),
+      eos_(false),
       got_error_(false),
       dst_dma_fd_(-1) {}
 
@@ -78,7 +79,7 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
 
   if (decoder_->output_plane.getNumQueuedBuffers() ==
       decoder_->output_plane.getNumBuffers()) {
-    if (decoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
+    if (decoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, -1) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to dqBuffer at decoder output_plane";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
@@ -156,6 +157,7 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
   INIT_ERROR(ret < 0, "Failed to setStreamStatus at decoder output_plane");
 
   if (!capture_loop_) {
+    eos_ = false;
     capture_loop_.reset(
         new rtc::PlatformThread(JetsonVideoDecoder::CaptureLoopFunction, this,
                                 "CaptureLoop", rtc::kHighPriority));
@@ -166,11 +168,29 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
 }
 
 bool JetsonVideoDecoder::JetsonRelease() {
-  if (capture_loop_) {
-    capture_loop_->Stop();
-    capture_loop_.reset();
-  }
   if (decoder_) {
+    if (capture_loop_) {
+      eos_ = true;
+      SendEOS(decoder_);
+      while (decoder_->output_plane.getNumQueuedBuffers() > 0 &&
+             !got_error_ && !decoder_->isInError()) {
+        struct v4l2_buffer v4l2_buf;
+        struct v4l2_plane planes[MAX_PLANES];
+
+        memset(&v4l2_buf, 0, sizeof(v4l2_buf));
+        memset(planes, 0, sizeof(planes));
+
+        v4l2_buf.m.planes = planes;
+        if (decoder_->output_plane.dqBuffer(v4l2_buf, NULL, NULL, -1) < 0) {
+          RTC_LOG(LS_ERROR)
+              << __FUNCTION__ << " Failed to dqBuffer at decoder output_plane";
+          got_error_ = true;
+          break;
+        }
+      }
+      capture_loop_->Stop();
+      capture_loop_.reset();
+    }
     delete decoder_;
     decoder_ = nullptr;
   }
@@ -178,8 +198,31 @@ bool JetsonVideoDecoder::JetsonRelease() {
     NvBufferDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " 1";
   return true;
+}
+
+
+void JetsonVideoDecoder::SendEOS(NvV4l2Element* element) {
+  if (element->output_plane.getStreamStatus()) {
+    struct v4l2_buffer v4l2_buf;
+    struct v4l2_plane planes[MAX_PLANES];
+    NvBuffer* buffer;
+
+    memset(&v4l2_buf, 0, sizeof(v4l2_buf));
+    memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
+    v4l2_buf.m.planes = planes;
+
+    if (element->output_plane.getNumQueuedBuffers() ==
+        element->output_plane.getNumBuffers()) {
+      if (element->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
+        RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
+      }
+    }
+    planes[0].bytesused = 0;
+    if (element->output_plane.qBuffer(v4l2_buf, NULL) < 0) {
+      RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
+    }
+  }
 }
 
 void JetsonVideoDecoder::CaptureLoopFunction(void* obj) {
@@ -191,17 +234,18 @@ void JetsonVideoDecoder::CaptureLoop() {
   struct v4l2_event event;
   int ret;
   do {
-    ret = decoder_->dqEvent(event, 50000);
+    ret = decoder_->dqEvent(event, 10);
+    if (eos_) {
+      return;
+    }
     if (ret < 0) {
       if (errno == EAGAIN) {
-        RTC_LOG(LS_ERROR)
-            << __FUNCTION__
-            << "　Timed out waiting for first V4L2_EVENT_RESOLUTION_CHANGE";
+        continue;
       } else {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << "　Failed to dqEvent at decoder";
+        got_error_ = true;
+        break;
       }
-      got_error_ = true;
-      break;
     }
   } while (event.type != V4L2_EVENT_RESOLUTION_CHANGE && !got_error_);
 
@@ -210,7 +254,7 @@ void JetsonVideoDecoder::CaptureLoop() {
   }
 
   while (
-      !(got_error_ || decoder_->isInError() || !capture_loop_->IsRunning())) {
+      !(eos_ || got_error_ || decoder_->isInError() || !capture_loop_->IsRunning())) {
     ret = decoder_->dqEvent(event, false);
     if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
       SetCapture();

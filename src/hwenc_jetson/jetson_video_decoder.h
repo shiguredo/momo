@@ -44,6 +44,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
  private:
   int32_t JetsonConfigure();
   bool JetsonRelease();
+  void SendEOS(NvV4l2Element* element);
   static void CaptureLoopFunction(void* obj);
   void CaptureLoop();
   int32_t SetCapture();
@@ -53,6 +54,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   webrtc::DecodedImageCallback* decode_complete_callback_;
   webrtc::I420BufferPool buffer_pool_;
   std::unique_ptr<rtc::PlatformThread> capture_loop_;
+  std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;
 };
