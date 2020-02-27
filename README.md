@@ -140,7 +140,9 @@ limitations under the License.
     - MotionJPEG ハードウェアデコーダ対応
     - H.264 / VP9 ハードウェアエンコーダ対応
     - H.264 / VP9 ハードウェアデコーダ対応
-- Simulcast 対応
+- 統計機能
+    - Sora のシグナリング経由での出力
+    - Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
     - H.264 ハードウェアエンコーダ対応
         - Ubuntu 18.04
@@ -151,13 +153,13 @@ limitations under the License.
     - MotionJPEG ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
+- Simulcast 対応
 - Intel Media SDK 対応
     - VP8 / VP9 / H.264 ハードウェアエンコーダ対応
+- Ubuntu 18.04 Raspberry Pi 対応
+    - H.264 の HWA 対応を含む
 - 録画対応
     - MP4 形式での出力
-- 統計機能
-    - Sora のシグナリング経由での出力
-    - Ayame のシグナリング 経由での出力
 - ROS2 対応
 
 ## Momo についての電子書籍
