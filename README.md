@@ -13,6 +13,8 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
+https://momo.shiguredo.jp/
+
 ### ハードウェアエンコーダへの対応
 
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
@@ -129,6 +131,34 @@ limitations under the License.
 
 - Windows 版 OSS 化
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+
+## 有償での優先実装が可能な機能一覧
+
+**詳細は momo at shiguredo dot jp までお問い合わせください**
+
+- Jetson Xavier NX 対応
+    - MotionJPEG ハードウェアデコーダ対応
+    - H.264 / VP9 ハードウェアエンコーダ対応
+    - H.264 / VP9 ハードウェアデコーダ対応
+- Simulcast 対応
+- NVIDIA VIDEO CODEC SDK
+    - H.264 ハードウェアエンコーダ対応
+        - Ubuntu 18.04
+        - Windows 10
+    - VP8 / VP9 / H.264 ハードウェアデコーダ対応
+        - Ubuntu 18.04
+        - Windows 10
+    - MotionJPEG ハードウェアデコーダ対応
+        - Ubuntu 18.04
+        - Windows 10
+- Intel Media SDK 対応
+    - VP8 / VP9 / H.264 ハードウェアエンコーダ対応
+- 録画対応
+    - MP4 形式での出力
+- 統計機能
+    - Sora のシグナリング経由での出力
+    - Ayame のシグナリング 経由での出力
+- ROS2 対応
 
 ## Momo についての電子書籍
 
