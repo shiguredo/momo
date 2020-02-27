@@ -160,6 +160,7 @@ limitations under the License.
     - H.264 の HWA 対応を含む
 - 録画対応
     - MP4 形式での出力
+- ROS Melodic 対応
 - ROS2 対応
 
 ## Momo についての電子書籍
@@ -204,7 +205,8 @@ WebRTC Native Client に対する有料でのサポート契約については W
 H.264 ハードウェアエンコーダ **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
 ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
 
-ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、配布時にライセンス費用を支払う必要はありません。
+ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、
+配布時にライセンス費用を支払う必要はありません。
 
 詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
 
@@ -223,6 +225,7 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 
 ## 利用例など
 
+- [カメラ無しのラズパイとmomoでテスト映像をWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
 - [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
 - [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
