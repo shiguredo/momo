@@ -131,6 +131,8 @@ limitations under the License.
 
 - Windows 版 OSS 化
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+- WebRTC's Statistics 対応
+    - 企業名非公開
 
 ## 有償での優先実装が可能な機能一覧
 
