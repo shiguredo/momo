@@ -81,6 +81,7 @@ if [ "$MOUNT_TYPE" = "mount" ]; then
     "$DOCKER_IMAGE" \
     /bin/bash -c "
       set -ex
+      source /root/webrtc/VERSIONS
       mkdir -p /root/momo/_build/$PACKAGE_NAME
       pushd /root/momo/_build/$PACKAGE_NAME
         cmake \
@@ -89,8 +90,8 @@ if [ "$MOUNT_TYPE" = "mount" ]; then
           -DMOMO_VERSION=$MOMO_VERSION \
           -DMOMO_COMMIT=$MOMO_COMMIT \
           -DWEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
-          -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
-          -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
+          -DWEBRTC_READABLE_VERSION=\$WEBRTC_READABLE_VERSION \
+          -DWEBRTC_COMMIT=\$WEBRTC_COMMIT \
           ../..
         if [ -n \"$VERBOSE\" ]; then
           export VERBOSE=$VERBOSE
@@ -161,6 +162,7 @@ else
     docker container exec momo-$PACKAGE_NAME \
       /bin/bash -c "
         set -ex
+        source /root/webrtc/VERSIONS
         mkdir -p /root/momo/_build/$PACKAGE_NAME
         pushd /root/momo/_build/$PACKAGE_NAME
           cmake \
@@ -169,8 +171,8 @@ else
             -DMOMO_VERSION=$MOMO_VERSION \
             -DMOMO_COMMIT=$MOMO_COMMIT \
             -DWEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
-            -DWEBRTC_READABLE_VERSION=$WEBRTC_READABLE_VERSION \
-            -DWEBRTC_COMMIT=$WEBRTC_COMMIT \
+            -DWEBRTC_READABLE_VERSION=\$WEBRTC_READABLE_VERSION \
+            -DWEBRTC_COMMIT=\$WEBRTC_COMMIT \
             ../..
           if [ -n \"$VERBOSE\" ]; then
             export VERBOSE=$VERBOSE
