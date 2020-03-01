@@ -24,6 +24,10 @@ class RTCConnection {
   bool isAudioEnabled();
   bool isVideoEnabled();
 
+  void getStats(
+      std::function<void(
+          const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
+
  private:
   rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
   rtc::scoped_refptr<webrtc::AudioTrackInterface> getLocalAudioTrack();
