@@ -35,7 +35,6 @@ bool SoraWebsocketClient::parseURL(URLParts& parts) const {
 
 boost::asio::ssl::context SoraWebsocketClient::createSSLContext() const {
   boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
-  RTC_LOG(LS_INFO) << "default cert file: " << X509_get_default_cert_file();
   //ctx.set_default_verify_paths();
   ctx.set_options(boost::asio::ssl::context::default_workarounds |
                   boost::asio::ssl::context::no_sslv2 |

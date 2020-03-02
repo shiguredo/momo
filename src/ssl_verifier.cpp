@@ -91,6 +91,7 @@ bool SSLVerifier::VerifyX509(X509* x509) {
   LoadBuiltinSSLRootCertificates(store);
   // デフォルト証明書のパスの設定
   X509_STORE_set_default_paths(store);
+  RTC_LOG(LS_INFO) << "default cert file: " << X509_get_default_cert_file();
 
   ctx = X509_STORE_CTX_new();
   if (ctx == nullptr) {
