@@ -12,8 +12,10 @@ class SSLVerifier {
   static bool VerifyX509(X509* x509);
 
  private:
-  // ルート証明書の追加
+  // PEM 形式のルート証明書を追加する
   static bool AddCert(const std::string& pem, X509_STORE* store);
+  // WebRTC の組み込みルート証明書を追加する
+  static bool LoadBuiltinSSLRootCertificates(X509_STORE* store);
 };
 
 #endif  // SSL_VERIFIER_H_INCLUDED
