@@ -9,7 +9,6 @@
 // 自前で SSL の証明書検証を行うためのクラス
 class SSLVerifier {
  public:
-  static bool VerifyHost(const std::string& hostname, const std::string& port);
   static bool VerifyX509(X509* x509);
 
  private:

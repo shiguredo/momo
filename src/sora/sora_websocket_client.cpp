@@ -80,16 +80,11 @@ void SoraWebsocketClient::reset() {
     ws_->nativeSecureSocket().next_layer().set_verify_mode(
         boost::asio::ssl::verify_peer);
     ws_->nativeSecureSocket().next_layer().set_verify_callback(
-        [hostname = parts_.host,
-         port = parts_.port.empty() ? std::string("443") : parts_.port](
-            bool preverified, boost::asio::ssl::verify_context& ctx) {
+        [](bool preverified, boost::asio::ssl::verify_context& ctx) {
           if (preverified) {
             return true;
           }
-
           X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-
-          //return SSLVerifier::VerifyHost(hostname, port);
           return SSLVerifier::VerifyX509(cert);
         });
 
