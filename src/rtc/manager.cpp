@@ -17,6 +17,7 @@
 #include "modules/video_capture/video_capture_factory.h"
 #include "observer.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/openssl_certificate.h"
 #include "rtc_base/ssl_adapter.h"
 #include "scalable_track_source.h"
 #include "util.h"
@@ -40,6 +41,8 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "hw_video_decoder_factory.h"
 #endif
+
+#include "ssl_verifier.h"
 
 RTCManager::RTCManager(
     ConnectionSettings conn_settings,
@@ -191,6 +194,20 @@ void RTCManager::SetDataManager(RTCDataManager* data_manager) {
   _data_manager = data_manager;
 }
 
+class RTCSSLVerifier : public rtc::SSLCertificateVerifier {
+  std::string hostname_;
+  std::string port_;
+
+ public:
+  RTCSSLVerifier(const std::string& hostname, const std::string& port)
+      : hostname_(hostname), port_(port) {}
+  bool Verify(const rtc::SSLCertificate& certificate) override {
+    //return SSLVerifier::VerifyHost(hostname_, port_);
+    return SSLVerifier::VerifyX509(
+        static_cast<const rtc::OpenSSLCertificate&>(certificate).x509());
+  }
+};
+
 std::shared_ptr<RTCConnection> RTCManager::createConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
@@ -198,9 +215,49 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, _receiver, _data_manager));
+  webrtc::PeerConnectionDependencies dependencies(observer.get());
+
+  // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
+  // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
+  //
+  // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
+
+  // FIXME(melpon): 2個以上だと対応できないので何とかしたい
+  if (rtc_config.servers.size() == 1 &&
+      rtc_config.servers[0].uri.substr(0, 6) == "turns:") {
+    std::string uri = rtc_config.servers[0].uri;
+
+    // turns:sora-labo-turns.shiguredo.jp:443?transport=tcp
+    // みたいな文字列からホスト名とポートを取り出す
+    // ref: https://tools.ietf.org/html/rfc7065
+
+    // turns: と ? 以降を取り除く
+    uri = uri.substr(6);
+    auto n = uri.find("?");
+    if (n != std::string::npos) {
+      uri = uri.substr(0, n);
+    }
+
+    // : の手前がホスト名、: より後がポート番号（省略時は 5349）
+    std::string host;
+    std::string port;
+    n = uri.find(":");
+    if (n == std::string::npos) {
+      host = uri;
+      port = "5349";
+    } else {
+      host = uri.substr(0, n);
+      port = uri.substr(n + 1);
+    }
+
+    dependencies.tls_cert_verifier =
+        std::unique_ptr<rtc::SSLCertificateVerifier>(
+            new RTCSSLVerifier(host, port));
+    RTC_LOG(LS_INFO) << "set tls_cert_verifier for " << uri;
+  }
+
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
-      _factory->CreatePeerConnection(rtc_config, nullptr, nullptr,
-                                     observer.get());
+      _factory->CreatePeerConnection(rtc_config, std::move(dependencies));
   if (!connection) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
