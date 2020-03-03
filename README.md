@@ -173,12 +173,9 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 ## サポートについて
 
-WebRTC Native Client Momo に関するバグ報告は GitHub Issues へお願いします。
-それ以外については Discord へお願いします。
-
 ### バグ報告
 
-GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
+まずは Discord にてご連絡ください。
 
 #### 理想的なバグ報告例
 
