@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include "momo_version.h"
+#include "ssl_verifier.h"
 #include "url_parts.h"
 #include "util.h"
 
@@ -34,7 +35,7 @@ bool SoraWebsocketClient::parseURL(URLParts& parts) const {
 
 boost::asio::ssl::context SoraWebsocketClient::createSSLContext() const {
   boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
-  ctx.set_default_verify_paths();
+  //ctx.set_default_verify_paths();
   ctx.set_options(boost::asio::ssl::context::default_workarounds |
                   boost::asio::ssl::context::no_sslv2 |
                   boost::asio::ssl::context::no_sslv3 |
@@ -74,10 +75,18 @@ void SoraWebsocketClient::reset() {
 
   if (parseURL(parts_)) {
     auto ssl_ctx = createSSLContext();
-    boost::beast::websocket::stream<
-        boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>
-        wss(ioc_, ssl_ctx);
     ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
+    ws_->nativeSecureSocket().next_layer().set_verify_mode(
+        boost::asio::ssl::verify_peer);
+    ws_->nativeSecureSocket().next_layer().set_verify_callback(
+        [](bool preverified, boost::asio::ssl::verify_context& ctx) {
+          if (preverified) {
+            return true;
+          }
+          X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+          return SSLVerifier::VerifyX509(cert);
+        });
+
     // SNI の設定を行う
     if (!SSL_set_tlsext_host_name(
             ws_->nativeSecureSocket().next_layer().native_handle(),
