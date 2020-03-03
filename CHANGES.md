@@ -17,6 +17,12 @@
     - @tnoho
 - [UPDATE] libwebrtc を M80.3987@{#6} に上げる
     - @voluntas
+- [ADD] WSS と TURN-TLS 時の証明書チェックを libwebrtc ハードコードとデフォルトパス両方を利用するようにする
+    - @melpon
+- [ADD] WebRTC カスタム用のスクリプトを追加
+    - @melpon
+- [ADD] Sora モード利用時の `type: pong` で stats 取得して送るようにする
+    - @melpon
 - [ADD] Raspberry Pi で SDL 利用時に H264 ハードウェアデコーダを利用するようにする
     - @tnoho
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
@@ -24,6 +30,8 @@
     - @tnoho
 - [FIX] Jetson Nano で H264 デコーダを止める際にハングしてしまう問題を修正
     - @tnoho
+- [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
+    - @melpon
 
 ## 2020.2.1
 
