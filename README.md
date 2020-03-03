@@ -143,12 +143,12 @@ limitations under the License.
     - H.264 / VP9 ハードウェアエンコーダ対応
     - H.264 / VP9 ハードウェアデコーダ対応
 - 統計機能
-    - Sora のシグナリング経由での出力
+    - [x] Sora のシグナリング経由での出力
     - Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
     - H.264 ハードウェアエンコーダ対応
-        - Ubuntu 18.04
-        - Windows 10
+        - [x] Ubuntu 18.04
+        - [x] Windows 10
     - VP8 / VP9 / H.264 ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
