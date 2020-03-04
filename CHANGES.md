@@ -9,8 +9,6 @@
 - FIX
     - バグ修正
 
-## 2020.3
-
 ## develop
 
 - [UPDATE] Raspberry Pi の H.264 を利用時のリサイズ処理をハードウェアに変更する
