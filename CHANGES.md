@@ -29,9 +29,9 @@
     - @tnoho
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
     - https://github.com/shiguredo/momo/issues/124
-    - @tnoho
+    - @tetsu-koba  @tnoho
 - [FIX] Jetson Nano で H264 デコーダを止める際にハングしてしまう問題を修正
-    - @tnoho
+    - @soudegesu @tnoho
 - [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
     - @melpon
 
