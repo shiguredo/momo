@@ -85,6 +85,8 @@ struct NvEncInputFrame
 class NvEncoder
 {
 public:
+    static void TryLoadNvEncApi();
+
     /**
     *  @brief This function is used to initialize the encoder session.
     *  Application must call this function to initialize the encoder, before

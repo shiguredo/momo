@@ -30,6 +30,8 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   explicit NvCodecH264Encoder(const cricket::VideoCodec& codec);
   ~NvCodecH264Encoder() override;
 
+  static bool IsSupported();
+
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
                      size_t max_payload_size) override;

@@ -44,7 +44,19 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
   cuda_.reset(new NvCodecH264EncoderCuda());
 #endif
 }
+
 NvCodecH264Encoder::~NvCodecH264Encoder() {}
+
+bool NvCodecH264Encoder::IsSupported() {
+  try {
+    NvEncoder::TryLoadNvEncApi();
+    return true;
+  } catch (const NVENCException& e) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+    return false;
+  }
+}
+
 int32_t NvCodecH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                        int32_t number_of_cores,
                                        size_t max_payload_size) {

@@ -56,6 +56,57 @@ NvEncoder::NvEncoder(NV_ENC_DEVICE_TYPE eDeviceType, void *pDevice, uint32_t nWi
     m_hEncoder = hEncoder;
 }
 
+void NvEncoder::TryLoadNvEncApi() {
+#if defined(_WIN32)
+#if defined(_WIN64)
+  HMODULE hModule = LoadLibrary(TEXT("nvEncodeAPI64.dll"));
+#else
+  HMODULE hModule = LoadLibrary(TEXT("nvEncodeAPI.dll"));
+#endif
+#else
+  void* hModule = dlopen("libnvidia-encode.so.1", RTLD_LAZY);
+#endif
+
+  if (hModule == NULL) {
+    NVENC_THROW_ERROR(
+        "NVENC library file is not found. Please ensure NV driver is installed",
+        NV_ENC_ERR_NO_ENCODE_DEVICE);
+  }
+
+  typedef NVENCSTATUS(NVENCAPI *
+                      NvEncodeAPIGetMaxSupportedVersion_Type)(uint32_t*);
+#if defined(_WIN32)
+  NvEncodeAPIGetMaxSupportedVersion_Type NvEncodeAPIGetMaxSupportedVersion =
+      (NvEncodeAPIGetMaxSupportedVersion_Type)GetProcAddress(
+          hModule, "NvEncodeAPIGetMaxSupportedVersion");
+#else
+  NvEncodeAPIGetMaxSupportedVersion_Type NvEncodeAPIGetMaxSupportedVersion =
+      (NvEncodeAPIGetMaxSupportedVersion_Type)dlsym(
+          hModule, "NvEncodeAPIGetMaxSupportedVersion");
+#endif
+
+  uint32_t version = 0;
+  uint32_t currentVersion =
+      (NVENCAPI_MAJOR_VERSION << 4) | NVENCAPI_MINOR_VERSION;
+  NVENC_API_CALL(NvEncodeAPIGetMaxSupportedVersion(&version));
+  if (currentVersion > version) {
+#if defined(_WIN32)
+    FreeLibrary((HMODULE)hModule);
+#else
+    dlclose(hModule);
+#endif
+    NVENC_THROW_ERROR(
+        "Current Driver Version does not support this NvEncodeAPI version, "
+        "please upgrade driver",
+        NV_ENC_ERR_INVALID_VERSION);
+  }
+#if defined(_WIN32)
+  FreeLibrary((HMODULE)hModule);
+#else
+  dlclose(hModule);
+#endif
+}
+
 void NvEncoder::LoadNvEncApi()
 {
 #if defined(_WIN32)
