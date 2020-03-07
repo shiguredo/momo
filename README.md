@@ -16,8 +16,9 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 ### ハードウェアエンコーダへの対応
 
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
-- macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) の H.264 ハードウェアエンコーダー機能を利用することが可能です
-- Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで H.264 を 4K@30 での配信が可能です。
+- Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することが可能です
+- NVIDIA Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です。
+- NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することが可能です
 
 ### データチャネル経由でのシリアルの読み書き
 
@@ -159,9 +160,9 @@ GitHub Issues を利用する前に、まずは Discord へ質問をお願いし
 
 https://discord.gg/gmEuZye
 
-### 有料サポートについて
+### 有料でのテクニカルサポートについて
 
-WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+WebRTC Native Client に対する有料でのテクニカルサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
 ## H.264 のライセンス費用について
 

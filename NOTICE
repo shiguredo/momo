@@ -21,7 +21,7 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 ```
 
-# json
+# JSON for Modern C++
 
 https://github.com/nlohmann/json
 
@@ -49,7 +49,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-# Boost
+# Boost C++ Libraries
 
 https://www.boost.org/LICENSE_1_0.txt
 
@@ -1080,7 +1080,39 @@ freely, subject to the following restrictions:
 
 ```
 
-# nvencode, nvdecode
+# cuviddec.h / nvEncodeAPI.h / nvcuvid.h
+
+```
+This copyright notice applies to this header file only:
+
+Copyright (c) 2010-2019 NVIDIA Corporation
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the software, and to permit persons to whom the
+software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+```
+
+## NvDecoder / NvEncoder
+
+https://developer.nvidia.com/nvidia-video-codec-sdk-license-agreement
+
 ```
 NVIDIA VIDEO CODEC SDK LICENSE AGREEMENT (“Agreement”)
 
@@ -1114,7 +1146,7 @@ Derivative Works:  Subject to the License Grant Back below, Licensee shall own
 any Derivative Works it creates directly to the Source Code that integrates
 with Licensee’s software product ("Modification(s)") subject to NVIDIA’s
 ownership of the underlying Source Code and all intellectual property rights
-therein. 
+therein.
 
 Distribution: Licensee may distribute the Software (in object code form)
 integrated with Licensee software products only to Licensee’s authorized
@@ -1132,7 +1164,7 @@ to enable screen scraping, data scraping, or any other activity with the
 purpose of capturing copyright protected content in violation of a third party
 party’s intellectual property or other proprietary rights.  Licensee shall
 indemnify NVIDIA for any and all claims, liabilities, damages, expenses and
-costs arising from Licensee’s breach of the foregoing limitations. 
+costs arising from Licensee’s breach of the foregoing limitations.
 
 License Grant Back:Licensee hereby grants to NVIDIA and its affiliates a
 worldwide, non-exclusive, irrevocable, perpetual, sublicenseable (through
@@ -1150,7 +1182,7 @@ No Other License:No rights or licenses with respect to any proprietary
 information or patent, copyright, trade secret or other intellectual property
 right owned or controlled by NVIDIA are granted by NVIDIA to Licensee under
 this Agreement, expressly or by implication, except as expressly provided in
-this Agreement. 
+this Agreement.
 
 Confidentiality: If applicable, any exchange of Confidential Information (as
 defined in the NDA) shall be made pursuant to the terms and conditions of a
@@ -1265,7 +1297,7 @@ royalty-free, fully paid-up license grant to freely use, have used, sell,
 modify, reproduce, transmit, license, sublicense (through multiple tiers of
 sublicensees), distribute (through multiple tiers of distributors), and
 otherwise commercialize the Licensee Feedback in the Licensed Materials or
-other related technologies.  
+other related technologies.
 
 RESTRICTED RIGHTS NOTICE: Licensed Materials has been developed entirely at
 private expense and is commercial computer software provided with RESTRICTED
@@ -1295,29 +1327,4 @@ delegated, or otherwise transferred by Licensee without NVIDIA’s prior written
 consent, and any attempted assignment, subcontract, delegation, or transfer in
 violation of the foregoing will be null and void.   The terms of this Agreement
 shall be binding upon assignees.
-```
-
-```
-Copyright (c) 2010-2019 NVIDIA Corporation
-
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the software, and to permit persons to whom the
-software is furnished to do so, subject to the following
-conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
 ```
