@@ -18,8 +18,10 @@ https://momo.shiguredo.jp/
 ### ハードウェアエンコーダへの対応
 
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
-- macOS に積まれている [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) の H.264 ハードウェアエンコーダー機能を利用することが可能です
-- Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで H.264 を 4K@30 での配信が可能です。
+- Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用しています
+- NVIDIA Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
+- NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
+
 
 ### データチャネル経由でのシリアルの読み書き
 
@@ -75,7 +77,7 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson Nano
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-- macOS 10.15 x86_64
+- macOS 10.15 x86_64 以降
 - Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
@@ -131,16 +133,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## 有償での優先実装
+## 優先実装
+
+優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
 
 - Windows 版 OSS 化
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
-    - 企業名非公開
+    - 現時点では企業名非公開
+- Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+- Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
+    - 現時点では企業名非公開
 
-## 有償での優先実装が可能な機能一覧
+## 優先実装が可能な機能一覧
 
-**詳細は momo at shiguredo dot jp までお問い合わせください**
+**詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Jetson Xavier NX 対応
     - MotionJPEG ハードウェアデコーダ対応
@@ -150,7 +158,7 @@ limitations under the License.
     - [x] Sora のシグナリング経由での出力
     - Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
-    - H.264 ハードウェアエンコーダ対応
+    - [x] H.264 ハードウェアエンコーダ対応
         - [x] Ubuntu 18.04
         - [x] Windows 10
     - VP8 / VP9 / H.264 ハードウェアデコーダ対応
@@ -159,9 +167,9 @@ limitations under the License.
     - MotionJPEG ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
-- Simulcast 対応
 - Intel Media SDK 対応
     - VP8 / VP9 / H.264 ハードウェアエンコーダ対応
+- Simulcast 対応
 - Ubuntu 18.04 Raspberry Pi 対応
     - H.264 の HWA 対応を含む
 - 録画対応
