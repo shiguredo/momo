@@ -78,7 +78,7 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
       return std::unique_ptr<webrtc::VideoEncoder>(
           absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
     } else {
-      RTC_LOG(LS_WARN) << "NVIDIA VIDEO CODEC SDK is not supported";
+      RTC_LOG(LS_WARNING) << "NVIDIA VIDEO CODEC SDK is not supported";
       return nullptr;
     }
 #endif
