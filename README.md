@@ -22,7 +22,6 @@ https://momo.shiguredo.jp/
 - NVIDIA Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
 
-
 ### データチャネル経由でのシリアルの読み書き
 
 Momo はデータチャネルを利用しシリアルに直接読み書きが可能です。信頼性より低遅延を優先したい場合の利用を想定しています。
@@ -204,9 +203,9 @@ GitHub Issues を利用する前に、まずは Discord へ質問をお願いし
 
 https://discord.gg/gmEuZye
 
-### 有料サポートについて
+### 有料でのテクニカルサポートについて
 
-WebRTC Native Client に対する有料でのサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+WebRTC Native Client に対する有料でのテクニカルサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
 
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加

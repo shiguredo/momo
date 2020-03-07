@@ -19,7 +19,6 @@ apt-get -y install \
   libnspr4-dev \
   libnss3-dev \
   libpulse-dev \
-  libsdl2-dev \
   libudev-dev \
   lsb-release \
   python \

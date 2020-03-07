@@ -140,7 +140,7 @@ void Util::parseArgs(int argc,
 
   auto is_valid_force_i420 = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
@@ -149,7 +149,7 @@ void Util::parseArgs(int argc,
       "");
   auto is_valid_use_native = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
