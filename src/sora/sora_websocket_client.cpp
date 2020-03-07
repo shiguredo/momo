@@ -79,8 +79,13 @@ void SoraWebsocketClient::reset() {
     ws_->nativeSecureSocket().next_layer().set_verify_mode(
         boost::asio::ssl::verify_peer);
     ws_->nativeSecureSocket().next_layer().set_verify_callback(
-        [](bool preverified, boost::asio::ssl::verify_context& ctx) {
+        [insecure = conn_settings_.insecure](
+            bool preverified, boost::asio::ssl::verify_context& ctx) {
           if (preverified) {
+            return true;
+          }
+          // insecure の場合は証明書をチェックしない
+          if (insecure) {
             return true;
           }
           X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());

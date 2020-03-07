@@ -195,9 +195,15 @@ void RTCManager::SetDataManager(RTCDataManager* data_manager) {
 }
 
 class RTCSSLVerifier : public rtc::SSLCertificateVerifier {
+  bool insecure_;
+
  public:
-  RTCSSLVerifier() {}
+  RTCSSLVerifier(bool insecure) : insecure_(insecure) {}
   bool Verify(const rtc::SSLCertificate& certificate) override {
+    // insecure の場合は証明書をチェックしない
+    if (insecure_) {
+      return true;
+    }
     return SSLVerifier::VerifyX509(
         static_cast<const rtc::OpenSSLCertificate&>(certificate).x509());
   }
@@ -216,8 +222,8 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
   // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
   //
   // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
-  dependencies.tls_cert_verifier =
-      std::unique_ptr<rtc::SSLCertificateVerifier>(new RTCSSLVerifier());
+  dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
+      new RTCSSLVerifier(_conn_settings.insecure));
 
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
       _factory->CreatePeerConnection(rtc_config, std::move(dependencies));

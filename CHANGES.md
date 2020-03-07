@@ -17,6 +17,8 @@
     - @tnoho
 - [UPDATE] libwebrtc を M80.3987@{#6} に上げる
     - @voluntas
+- [ADD] TLS チェックを行わない --insecure オプションを追加
+    - @melpon
 - [ADD] WSS と TURN-TLS 時の証明書チェックを libwebrtc ハードコードとデフォルトパス両方を利用するようにする
     - @melpon
 - [ADD] WebRTC カスタム用のスクリプトを追加

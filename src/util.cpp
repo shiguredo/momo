@@ -73,6 +73,7 @@ void Util::parseArgs(int argc,
   local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
   local_nh.param<int>("port", cs.port, cs.port);
+  local_nh.param<bool>("insecure", cs.insecure, cs.insecure);
   local_nh.param<int>("log_level", log_level, log_level);
 
   // オーディオフラグ
@@ -250,6 +251,8 @@ void Util::parseArgs(int argc,
       ->check(is_sdl_available);
   app.add_flag("--daemon", is_daemon, "Run as a daemon process");
   app.add_flag("--version", version, "Show version information");
+  app.add_flag("--insecure", cs.insecure,
+               "Allow insecure server connections when using SSL");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "Log severity level threshold")
