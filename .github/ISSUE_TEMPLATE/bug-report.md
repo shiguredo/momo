@@ -9,7 +9,7 @@ assignees: ''
 
 **Discord ID を教えて下さい**
 
-Discord にて相談した時の Discord ID を教えて下さい。
+Discord の ID を教えて下さい。
 
 **バグを説明してください**
 
