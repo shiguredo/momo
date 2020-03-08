@@ -184,24 +184,19 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 ## サポートについて
 
-### バグ報告
-
-まずは Discord にてご連絡ください。
-
-#### 理想的なバグ報告例
-
-- [ローカルネット上のAyameを使用して接続した場合にSEGVが発生する · Issue \#100 · shiguredo/momo](https://github.com/shiguredo/momo/issues/100)
-
 ### Discord
 
 - アドバイスします
 - フィードバック歓迎します
 - サポートしません
 
-最新の状況などはこちらで共有しています。質問もこちらでのみ受け付けています。
-GitHub Issues を利用する前に、まずは Discord へ質問をお願いします。
+最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
 https://discord.gg/gmEuZye
+
+### バグ報告
+
+Discord へお願いします。
 
 ### 有料でのテクニカルサポートについて
 
