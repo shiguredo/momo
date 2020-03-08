@@ -15,6 +15,10 @@
     - VPU でソフトウェア処理される `vc.ril.resize` からハードウェア処理される `vc.ril.isp` への変更
     - YUV の形式が異なる場合の変換処理もハードウェアに変更
     - @tnoho
+- [UPDATE] libwebrtc を M81.4044@{#9} に上げる
+    - @voluntas
+- [UPDATE] libwebrtc を M81.4044@{#7} に上げる
+    - @voluntas
 - [UPDATE] libwebrtc を M80.3987@{#6} に上げる
     - @voluntas
 - [ADD] TLS チェックを行わない --insecure オプションを追加
