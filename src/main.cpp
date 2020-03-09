@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
       return nullptr;
     }
 
+#if USE_SCREEN_CAPTURER
     if (cs.screen_capture) {
       RTC_LOG(LS_INFO) << "Screen capturer source list: "
                        << ScreenVideoCapturer::GetSourceListString();
@@ -94,6 +95,7 @@ int main(int argc, char* argv[]) {
               sources[0].id, size.width, size.height, cs.framerate));
       return capturer;
     }
+#endif
 
 #if USE_ROS
     rtc::scoped_refptr<ROSVideoCapture> capturer(
