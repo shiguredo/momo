@@ -143,7 +143,7 @@ limitations under the License.
 - Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
-    - 現時点では企業名非公開
+    - [株式会社オプティム](https://www.optim.co.jp/) 様
 
 ## 優先実装が可能な機能一覧
 
