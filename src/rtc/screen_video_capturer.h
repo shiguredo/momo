@@ -41,7 +41,7 @@ class ScreenVideoCapturer : public ScalableVideoTrackSource,
   std::unique_ptr<webrtc::DesktopFrame> output_frame_;
   std::unique_ptr<rtc::PlatformThread> capture_thread_;
   std::unique_ptr<webrtc::DesktopCapturer> capturer_;
-  std::atomic<bool> quit_ = false;
+  std::atomic<bool> quit_;
 };
 
 #endif  // SCREEN_VIDEO_CAPTURER_H_

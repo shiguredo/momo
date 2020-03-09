@@ -55,7 +55,8 @@ ScreenVideoCapturer::ScreenVideoCapturer(
     : max_width_(max_width),
       max_height_(max_height),
       requested_frame_duration_((int)(1000.0f / target_fps)),
-      max_cpu_consumption_percentage_(50) {
+      max_cpu_consumption_percentage_(50),
+      quit_(false) {
   auto options = CreateDesktopCaptureOptions();
   std::unique_ptr<webrtc::DesktopCapturer> screen_capturer(
       //webrtc::DesktopCapturer::CreateWindowCapturer(options));
