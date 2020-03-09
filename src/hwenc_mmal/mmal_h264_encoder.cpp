@@ -280,8 +280,8 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
       }
       params = std::move(frame_params_.front());
       frame_params_.pop();
-    } while (params->timestamp < buffer->pts);
-    if (params->timestamp != buffer->pts) {
+    } while (params->timestamp_us < buffer->pts);
+    if (params->timestamp_us != buffer->pts) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
                           << "Frame parameter is not found. SkipFrame pts:"
                           << buffer->pts;
@@ -293,7 +293,7 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
   encoded_image_._encodedHeight = params->height;
   encoded_image_.capture_time_ms_ = params->render_time_ms;
   encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(buffer->pts);
+  encoded_image_.SetTimestamp(params->timestamp_rtp);
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
@@ -431,13 +431,13 @@ int32_t MMALH264Encoder::Encode(
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
-        input_frame.timestamp(), input_frame.rotation(),
-        input_frame.color_space()));
+        input_frame.timestamp_us(), input_frame.timestamp(),
+        input_frame.rotation(), input_frame.color_space()));
   }
 
   MMAL_BUFFER_HEADER_T* buffer;
   if ((buffer = mmal_queue_get(encoder_pool_in_->queue)) != nullptr) {
-    buffer->pts = buffer->dts = input_frame.timestamp();
+    buffer->pts = buffer->dts = input_frame.timestamp_us();
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
     if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {

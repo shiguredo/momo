@@ -450,8 +450,8 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
       }
       params = std::move(frame_params_.front());
       frame_params_.pop();
-    } while (params->timestamp < pts);
-    if (params->timestamp != pts) {
+    } while (params->timestamp_us < pts);
+    if (params->timestamp_us != pts) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
                           << "Frame parameter is not found. SkipFrame pts:"
                           << pts;
@@ -463,7 +463,7 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   encoded_image_._encodedHeight = params->height;
   encoded_image_.capture_time_ms_ = params->render_time_ms;
   encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(pts * 90 / rtc::kNumMicrosecsPerMillisec); // timestamp resolution is 90 kHz
+  encoded_image_.SetTimestamp(params->timestamp_rtp);
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
@@ -598,8 +598,8 @@ int32_t JetsonH264Encoder::Encode(
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
-        input_frame.timestamp_us(), input_frame.rotation(),
-        input_frame.color_space()));
+        input_frame.timestamp_us(), input_frame.timestamp(),
+        input_frame.rotation(), input_frame.color_space()));
   }
 
   struct v4l2_buffer v4l2_buf;
