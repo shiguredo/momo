@@ -34,6 +34,7 @@ struct ConnectionSettings {
   std::string serial_device = "";
   unsigned int serial_rate = 9600;
   bool insecure = false;
+  bool screen_capture = false;
 
   std::string sora_signaling_host = "wss://example.com/signaling";
   std::string sora_channel_id;

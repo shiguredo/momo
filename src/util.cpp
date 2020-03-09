@@ -193,6 +193,15 @@ void Util::parseArgs(int argc,
                "[WIDTH]x[HEIGHT].";
       },
       "");
+  auto is_valid_screen_capture = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_SCREEN_CAPTURER
+        return std::string();
+#else
+        return "Not available because your device does not have this feature.";
+#endif
+      },
+      "");
 
   app.add_flag("--no-google-stun", cs.no_google_stun,
                "Do not use google stun");
@@ -251,6 +260,8 @@ void Util::parseArgs(int argc,
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
+
+  app.add_flag("--screen-capture", cs.screen_capture, "Capture screen");
 
   // オーディオフラグ
   app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
