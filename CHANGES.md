@@ -11,12 +11,48 @@
 
 ## develop
 
+- [UPDATE] Raspberry Pi の H.264 を利用時のリサイズ処理をハードウェアに変更する
+    - VPU でソフトウェア処理される `vc.ril.resize` からハードウェア処理される `vc.ril.isp` への変更
+    - YUV の形式が異なる場合の変換処理もハードウェアに変更
+    - @tnoho
+- [UPDATE] libwebrtc を M81.4044@{#9} に上げる
+    - @voluntas
+- [UPDATE] libwebrtc を M81.4044@{#7} に上げる
+    - @voluntas
+- [UPDATE] libwebrtc を M80.3987@{#6} に上げる
+    - @voluntas
+- [ADD] Windows 10 で NVIDIA VIDEO CODEC SDK を利用した H.264 ハードウェアエンコーダへ対応
+    - @melpon
+- [ADD] Ubuntu 18.04 で NVIDIA VIDEO CODEC SDK を利用した H.264 ハードウェアエンコーダへ対応
+    - @melpon
+- [ADD] TLS チェックを行わない --insecure オプションを追加
+    - @melpon
+- [ADD] WSS と TURN-TLS 時の証明書チェックを libwebrtc ハードコードとデフォルトパス両方を利用するようにする
+    - @melpon
+- [ADD] WebRTC カスタム用のスクリプトを追加
+    - @melpon
+- [ADD] Sora モード利用時の `type: pong` で stats 取得して送るようにする
+    - @melpon
+- [ADD] Raspberry Pi で SDL 利用時に H264 ハードウェアデコーダを利用するようにする
+    - @tnoho
+- [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
+    - https://github.com/shiguredo/momo/issues/124
+    - @tetsu-koba  @tnoho
+- [FIX] Jetson Nano で H264 デコーダを止める際にハングしてしまう問題を修正
+    - @soudegesu @tnoho
+- [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
+    - @melpon
+- [FIX] Jetson Nano で RTP タイムスタンプが 90kHz になっていなかったのを修正
+    - https://github.com/shiguredo/momo/pull/137
+    - @tetsu-koba @tnoho
+
 ## 2020.2.1
 
 **hotfix**
 
 - [FIX] macOS で --use-sdl オプションを利用すると落ちていたのを修正する
     - https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+    - @melpon
 
 ## 2020.2
 

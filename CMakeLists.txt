@@ -11,6 +11,7 @@ set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な O
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv6, armv7, armv8")
 set(USE_ROS OFF CACHE BOOL "ROS を使っているかどうか")
+set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
@@ -19,6 +20,7 @@ set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクト�
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
+set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
 set(WEBRTC_INCLUDE_DIR "" CACHE PATH "WebRTC のインクルードディレクトリ")
 set(WEBRTC_LIBRARY_DIR "" CACHE PATH "WebRTC のライブラリディレクトリ")
 set(WEBRTC_LIBRARY_NAME "webrtc" CACHE STRING "WebRTC のライブラリ名")
@@ -37,6 +39,8 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
 
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
+  set(USE_NVCODEC_ENCODER ON)
+  set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
@@ -175,13 +179,17 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(TARGET_OS_LINUX "ubuntu-18.04")
   set(TARGET_ARCH "x86_64")
   set(USE_SDL2 ON)
+  set(USE_NVCODEC_ENCODER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(JSON_ROOT_DIR /root/json)
   set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR "")
+  set(SDL2_ROOT_DIR /root/SDL2)
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
+
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
+  set(CMAKE_C_COMPILER clang-8)
+  set(CMAKE_CXX_COMPILER clang++-8)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -277,6 +285,7 @@ target_sources(momo
     src/momo_version.cpp
     src/util.cpp
     src/watchdog.cpp
+    src/ssl_verifier.cpp
     src/ayame/ayame_server.cpp
     src/ayame/ayame_websocket_client.cpp
     src/p2p/p2p_connection.cpp
@@ -317,6 +326,7 @@ target_compile_definitions(momo
   PRIVATE
     OPENSSL_IS_BORINGSSL
     USE_ROS=$<BOOL:${USE_ROS}>
+    USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
@@ -381,12 +391,16 @@ if (USE_ROS)
 endif()
 
 if (USE_LIBCXX)
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-nostdinc++;$<$<BOOL:LIBCXX_INCLUDE_DIR>:-isystem${LIBCXX_INCLUDE_DIR}>")
+  target_compile_options(momo
+    PRIVATE
+      "$<$<COMPILE_LANGUAGE:CXX>:-nostdinc++>"
+      "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:LIBCXX_INCLUDE_DIR>>:-isystem${LIBCXX_INCLUDE_DIR}>"
+  )
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "/utf-8;/bigobj")
+  target_compile_options(momo PRIVATE /utf-8 /bigobj)
   set_target_properties(momo
     PROPERTIES
       # CRTライブラリを静的リンクさせる
@@ -429,6 +443,25 @@ if ("${TARGET_OS}" STREQUAL "windows")
       UNICODE
       _UNICODE
   )
+
+  # NVIDIA Video Codec SDK
+  if (USE_NVCODEC_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
+    target_include_directories(momo
+      PRIVATE
+        NvCodec/include
+        NvCodec/NvCodec)
+    target_link_libraries(momo
+      PRIVATE
+        DXGI.lib
+        D3D11.lib
+    )
+  endif()
+
 elseif (TARGET_OS STREQUAL "macos")
   target_sources(momo
     PRIVATE
@@ -437,8 +470,8 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/objc_codec_factory_helper.mm
   )
 
-  set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-fconstant-string-class=NSConstantString")
-  set_property(TARGET momo APPEND PROPERTY LINK_OPTIONS "-ObjC")
+  target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString)
+  target_link_options(momo PRIVATE -ObjC)
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
   target_link_libraries(momo
@@ -501,6 +534,34 @@ elseif (TARGET_OS STREQUAL "linux")
       Threads::Threads
   )
 
+  # NVIDIA Video Codec SDK
+  if (USE_NVCODEC_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
+    target_include_directories(momo
+      PRIVATE
+        NvCodec/include
+        NvCodec/NvCodec
+        /usr/local/cuda/include)
+
+    # これらのソースは CUDA としてコンパイルする
+    set_source_files_properties(
+        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+      PROPERTIES
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_30"
+    )
+
+    target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
+    target_link_libraries(momo PRIVATE cuda cudart_static dl rt nvcuvid)
+  endif()
+
   if (TARGET_ARCH STREQUAL "arm")
     if (USE_LIBCXX)
       target_include_directories(momo PRIVATE ${SYSROOT}/usr/include/${ARCH_NAME})
@@ -530,9 +591,12 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_include_directories(momo PRIVATE ${SYSROOT}/include/libjpeg-8b)
         target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu")
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu")
-        set_property(TARGET momo APPEND PROPERTY LINK_FLAGS "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra")
+        target_link_options(momo
+          PRIVATE
+            "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra"
+        )
         target_link_libraries(momo
           PRIVATE
             v4l2
@@ -549,15 +613,18 @@ elseif (TARGET_OS STREQUAL "linux")
     else()
       # armv6, armv7 用
       if (TARGET_ARCH_ARM STREQUAL "armv6")
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-mcpu=arm1176jzf-s;-mfpu=vfp")
+        target_compile_options(momo PRIVATE -mfloat-abi=hard -mcpu=arm1176jzf-s -mfpu=vfp)
       else()
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-mfloat-abi=hard;-march=armv7-a;-mtune=generic-armv7-a;-mfpu=neon;-mthumb")
+        target_compile_options(momo PRIVATE -mfloat-abi=hard -march=armv7-a -mtune=generic-armv7-a -mfpu=neon -mthumb)
       endif()
 
       if (USE_MMAL_ENCODER)
         target_sources(momo
           PRIVATE
+            src/hwenc_mmal/mmal_h264_decoder.cpp
+            src/hwenc_mmal/mmal_buffer.cpp
             src/hwenc_mmal/mmal_h264_encoder.cpp
+            src/hwenc_mmal/mmal_v4l2_capture.cpp
         )
 
         if (TARGET_OS_LINUX STREQUAL "raspbian-buster")
@@ -567,7 +634,7 @@ elseif (TARGET_OS STREQUAL "linux")
         endif()
 
         target_include_directories(momo PRIVATE ${_VC_PATH}/include)
-        set_property(TARGET momo APPEND PROPERTY COMPILE_OPTIONS "-ftree-vectorize;-pipe")
+        target_compile_options(momo PRIVATE -ftree-vectorize -pipe)
         target_compile_definitions(momo
           PRIVATE
             STANDALONE

@@ -72,3 +72,36 @@ COPY script/get_cmake.sh /root/
 RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
 ENV PATH "/root/cmake/bin:$PATH"
 
+# SDL2 のビルド
+
+ARG SDL2_VERSION
+
+COPY script/setup_sdl2.sh /root/
+RUN \
+  set -ex \
+  && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
+  && mkdir -p /root/sdl2-source/build \
+  && cd /root/sdl2-source/build \
+  && cmake ../source \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
+    -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+    -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+    -DPTHREADS=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DPULSEAUDIO=OFF \
+    -DESD=OFF \
+    -DVIDEO_WAYLAND=OFF \
+  && make -j`nproc` \
+  && make install
+
+# CUDA 周りのインストール
+RUN set -ex \
+  && apt-get update \
+  && apt-get install -y software-properties-common \
+  && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin \
+  && mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+  && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub \
+  && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-10.0 clang-8

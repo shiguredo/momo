@@ -73,6 +73,7 @@ void Util::parseArgs(int argc,
   local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
   local_nh.param<int>("port", cs.port, cs.port);
+  local_nh.param<bool>("insecure", cs.insecure, cs.insecure);
   local_nh.param<int>("log_level", log_level, log_level);
 
   // オーディオフラグ
@@ -140,7 +141,7 @@ void Util::parseArgs(int argc,
 
   auto is_valid_force_i420 = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
@@ -149,7 +150,7 @@ void Util::parseArgs(int argc,
       "");
   auto is_valid_use_native = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
@@ -250,6 +251,8 @@ void Util::parseArgs(int argc,
       ->check(is_sdl_available);
   app.add_flag("--daemon", is_daemon, "Run as a daemon process");
   app.add_flag("--version", version, "Show version information");
+  app.add_flag("--insecure", cs.insecure,
+               "Allow insecure server connections when using SSL");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "Log severity level threshold")

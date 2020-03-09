@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "`dirname $0`"
+
 # 引数の処理
 
 PROGRAM="$0"
@@ -84,6 +86,7 @@ case "$PACKAGE" in
     ;;
   "macos" )
     if [ $FLAG_CLEAN -eq 1 ]; then
+      rm -rf ../_build/macos
       rm -rf macos/_source
       rm -rf macos/_build
       rm -rf macos/_install
@@ -91,6 +94,8 @@ case "$PACKAGE" in
     fi
 
     ./macos/install_deps.sh
+
+    source ./macos/_install/webrtc/VERSIONS
 
     if [ -z "$JOBS" ]; then
       JOBS=`sysctl -n hw.logicalcpu_max`

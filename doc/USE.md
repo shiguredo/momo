@@ -57,6 +57,32 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 - Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
 - ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
+## 認証局の証明書を追加する
+
+`SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。
+
+```
+$ export SSL_CERT_FILE=/path/to/cert.pem
+$ ./momo sora ...
+```
+
+## サーバ証明書を無視する
+
+`--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることが可能です。
+
+```
+$ ./momo --insecure sora ...
+```
+
+## NVIDIA ビデオカードに搭載されている NVENC を利用する
+
+Windows と Linux で利用可能です。
+NVIDIA ビデオカードドライバーは最新版にしてください。
+
+NVENC が利用可能なビデオカードは以下で確認してください。
+
+[Video Encode and Decode GPU Support Matrix \| NVIDIA Developer](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix#Encoder)
+
 ## コマンド
 
 ### バージョン情報

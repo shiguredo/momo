@@ -31,6 +31,7 @@ extern "C" {
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "rtc_base/critical_section.h"
 
@@ -59,14 +60,16 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
                 int32_t h,
                 int64_t rtms,
                 int64_t ntpms,
-                int64_t ts,
+                int64_t tsus,
+                int64_t rtpts,
                 webrtc::VideoRotation r,
                 absl::optional<webrtc::ColorSpace> c)
         : width(w),
           height(h),
           render_time_ms(rtms),
           ntp_time_ms(ntpms),
-          timestamp(ts),
+          timestamp_us(tsus),
+          timestamp_rtp(rtpts),
           rotation(r),
           color_space(c) {}
 
@@ -74,44 +77,40 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
     int32_t height;
     int64_t render_time_ms;
     int64_t ntp_time_ms;
-    int64_t timestamp;
+    int64_t timestamp_us;
+    int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
     absl::optional<webrtc::ColorSpace> color_space;
   };
 
   int32_t MMALConfigure();
   void MMALRelease();
-  static void MMALInputCallbackFunction(MMAL_PORT_T* port,
-                                        MMAL_BUFFER_HEADER_T* buffer);
-  void MMALInputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-  static void MMALOutputCallbackFunction(MMAL_PORT_T* port,
-                                         MMAL_BUFFER_HEADER_T* buffer);
-  void MMALOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  static void EncoderInputCallbackFunction(MMAL_PORT_T* port,
+                                           MMAL_BUFFER_HEADER_T* buffer);
+  static void EncoderOutputCallbackFunction(MMAL_PORT_T* port,
+                                            MMAL_BUFFER_HEADER_T* buffer);
+  void EncoderOutputCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+  void EncoderFillBuffer();
   void SetBitrateBps(uint32_t bitrate_bps);
+  void SetFramerateFps(double framerate_fps);
   int32_t SendFrame(unsigned char* buffer, size_t size);
 
   std::mutex mtx_;
   webrtc::EncodedImageCallback* callback_;
-  MMAL_COMPONENT_T* decoder_;
-  MMAL_COMPONENT_T* resizer_;
   MMAL_COMPONENT_T* encoder_;
-  MMAL_CONNECTION_T* conn1_;
-  MMAL_CONNECTION_T* conn2_;
-  MMAL_POOL_T* pool_in_;
-  MMAL_POOL_T* pool_out_;
+  MMAL_POOL_T* encoder_pool_in_;
+  MMAL_POOL_T* encoder_pool_out_;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_;
   uint32_t configured_bitrate_bps_;
-  int32_t raw_width_;
-  int32_t raw_height_;
+  double target_framerate_fps_;
+  int32_t configured_framerate_fps_;
   int32_t width_;
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
   int32_t stride_width_;
   int32_t stride_height_;
-  bool use_native_;
-  bool use_decoder_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 

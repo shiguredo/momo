@@ -129,6 +129,9 @@ int32_t JetsonH264Encoder::JetsonConfigure() {
         V4L2_PIX_FMT_YUV420M, width_, height_, V4L2_NV_BUFFER_LAYOUT_PITCH);
     INIT_ERROR(ret < 0, "Failed to converter setCapturePlaneFormat");
 
+    ret = converter_->setCropRect(0, 0, raw_width_, raw_height_);
+    INIT_ERROR(ret < 0, "Failed to converter setCropRect");
+
     ret = converter_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false,
                                               false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
@@ -430,9 +433,9 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     return false;
   }
 
-  uint64_t pts = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+  uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                  v4l2_buf->timestamp.tv_usec;
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " pts:" << pts
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << timestamp
                    << " bytesused:" << buffer->planes[0].bytesused;
 
   std::unique_ptr<FrameParams> params;
@@ -442,16 +445,16 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
             << __FUNCTION__
-            << "Frame parameter is not found. SkipFrame pts:" << pts;
+            << "Frame parameter is not found. SkipFrame timestamp:" << timestamp;
         return true;
       }
       params = std::move(frame_params_.front());
       frame_params_.pop();
-    } while (params->timestamp < pts);
-    if (params->timestamp != pts) {
+    } while (params->timestamp_us < timestamp);
+    if (params->timestamp_us != timestamp) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
-                          << "Frame parameter is not found. SkipFrame pts:"
-                          << pts;
+                          << "Frame parameter is not found. SkipFrame timestamp:"
+                          << timestamp;
       return true;
     }
   }
@@ -460,7 +463,7 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   encoded_image_._encodedHeight = params->height;
   encoded_image_.capture_time_ms_ = params->render_time_ms;
   encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(pts / rtc::kNumMicrosecsPerMillisec);
+  encoded_image_.SetTimestamp(params->timestamp_rtp);
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
@@ -595,8 +598,8 @@ int32_t JetsonH264Encoder::Encode(
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
-        input_frame.timestamp_us(), input_frame.rotation(),
-        input_frame.color_space()));
+        input_frame.timestamp_us(), input_frame.timestamp(),
+        input_frame.rotation(), input_frame.color_space()));
   }
 
   struct v4l2_buffer v4l2_buf;

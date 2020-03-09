@@ -2,9 +2,8 @@
 
 NVIDIA Jetson Nano を購入する場合のオススメリンクです。
 
-- [Jetson Nano 開発者キット](https://www.switch-science.com/catalog/5433/)
+- [Jetson Nano 開発者キット B01](https://www.switch-science.com/catalog/6239/)
     - スイッチサイエンス
-    - [NVIDIA Jetson Nano Developer Kit](https://developer.nvidia.com/embedded/jetson-nano-developer-kit)
     - Jetson Nano 本体はこちらがおすすめです
 - [【OLIOSPECオリジナル】NVIDIA Jetson Nano Developer kit用ケース\(長尾製作所製\)](https://www.oliospec.com/shopdetail/000000008491/)
     - OLIOSPEC
@@ -25,7 +24,7 @@ NVIDIA Jetson Nano を購入する場合のオススメリンクです。
  - [TP-Link WiFi 無線LAN 子機 AC600 433Mbps + 200Mbps](https://amazon.co.jp/dp/B07MXHJ6KB)
     - Amazon
     - [Archer T2U Nano \| AC600 ナノ 無線LAN子機 \| TP\-Link Japan](https://www.tp-link.com/jp/home-networking/adapter/archer-t2u-nano/)
-    - ドライバーのビルドが必要になるが問題なく使えます
+    - ドライバーのビルドが必要になりますが問題なく使えます
     - [Jetson Nano で TP\-LINK Archer T2U Nano を使う \- Qiita](https://qiita.com/daisuzu_/items/8d6913f3bda1b7434526)
         - こちらにかかれている `os_dep/linux/usb_intf.c の 300行番台あたりに以下を追加する` は最新版では不要です
 

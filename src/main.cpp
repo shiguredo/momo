@@ -19,6 +19,9 @@
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
+#if USE_MMAL_ENCODER
+#include "hwenc_mmal/mmal_v4l2_capture.h"
+#endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
@@ -88,20 +91,26 @@ int main(int argc, char* argv[]) {
 #if USE_ROS
     rtc::scoped_refptr<ROSVideoCapture> capturer(
         new rtc::RefCountedObject<ROSVideoCapture>(cs));
+    return capturer;
 #else  // USE_ROS
     auto size = cs.getSize();
 #if defined(__APPLE__)
-    rtc::scoped_refptr<MacCapturer> capturer = MacCapturer::Create(
-        size.width, size.height, cs.framerate, cs.video_device);
+    return MacCapturer::Create(size.width, size.height, cs.framerate,
+                               cs.video_device);
 #elif defined(__linux__)
-    rtc::scoped_refptr<V4L2VideoCapture> capturer =
-        V4L2VideoCapture::Create(cs);
+#if USE_MMAL_ENCODER
+    if (cs.use_native) {
+      return MMALV4L2Capture::Create(cs);
+    } else {
+      return V4L2VideoCapture::Create(cs);
+    }
 #else
-    rtc::scoped_refptr<DeviceVideoCapturer> capturer =
-        DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
+    return V4L2VideoCapture::Create(cs);
+#endif
+#else
+    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
 #endif
 #endif  // USE_ROS
-    return capturer;
   })();
 
   if (!capturer && !cs.no_video) {
@@ -116,8 +125,8 @@ int main(int argc, char* argv[]) {
         new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
-      cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(
+      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), nullptr));
@@ -128,7 +137,8 @@ int main(int argc, char* argv[]) {
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
     if (!cs.serial_device.empty()) {
-      data_manager = SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
+      data_manager =
+          SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
       if (!data_manager) {
         return 1;
       }
