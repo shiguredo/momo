@@ -463,7 +463,7 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   encoded_image_._encodedHeight = params->height;
   encoded_image_.capture_time_ms_ = params->render_time_ms;
   encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(pts / rtc::kNumMicrosecsPerMillisec);
+  encoded_image_.SetTimestamp(pts * 90 / rtc::kNumMicrosecsPerMillisec); // timestamp resolution is 90 kHz
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
