@@ -212,8 +212,7 @@ void JetsonVideoDecoder::SendEOS(NvV4l2Element* element) {
     memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
     v4l2_buf.m.planes = planes;
 
-    if (element->output_plane.getNumQueuedBuffers() ==
-        element->output_plane.getNumBuffers()) {
+    while (element->output_plane.getNumQueuedBuffers() != 0) {
       if (element->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
         RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
       }
