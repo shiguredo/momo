@@ -42,6 +42,9 @@
     - @soudegesu @tnoho
 - [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
     - @melpon
+- [FIX] Jetson Nano で RTP タイムスタンプが 90kHz になっていなかったのを修正
+    - https://github.com/shiguredo/momo/pull/137
+    - @tetsu-koba @tnoho
 
 ## 2020.2.1
 
