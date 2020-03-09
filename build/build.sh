@@ -86,6 +86,7 @@ case "$PACKAGE" in
     ;;
   "macos" )
     if [ $FLAG_CLEAN -eq 1 ]; then
+      rm -rf ../_build/macos
       rm -rf macos/_source
       rm -rf macos/_build
       rm -rf macos/_install
