@@ -433,9 +433,9 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     return false;
   }
 
-  uint64_t pts = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+  uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                  v4l2_buf->timestamp.tv_usec;
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " pts:" << pts
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << timestamp
                    << " bytesused:" << buffer->planes[0].bytesused;
 
   std::unique_ptr<FrameParams> params;
@@ -445,16 +445,16 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
             << __FUNCTION__
-            << "Frame parameter is not found. SkipFrame pts:" << pts;
+            << "Frame parameter is not found. SkipFrame timestamp:" << timestamp;
         return true;
       }
       params = std::move(frame_params_.front());
       frame_params_.pop();
-    } while (params->timestamp_us < pts);
-    if (params->timestamp_us != pts) {
+    } while (params->timestamp_us < timestamp);
+    if (params->timestamp_us != timestamp) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
-                          << "Frame parameter is not found. SkipFrame pts:"
-                          << pts;
+                          << "Frame parameter is not found. SkipFrame timestamp:"
+                          << timestamp;
       return true;
     }
   }
