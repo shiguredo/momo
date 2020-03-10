@@ -83,6 +83,11 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 [Video Encode and Decode GPU Support Matrix \| NVIDIA Developer](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix#Encoder)
 
+### 動作確認が取れたビデオカード
+
+- GeForce GTX 1650
+    - @melpon
+
 ## コマンド
 
 ### バージョン情報
