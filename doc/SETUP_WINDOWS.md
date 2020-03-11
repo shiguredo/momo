@@ -7,3 +7,16 @@ https://github.com/shiguredo/momo/releases にて最新版のバイナリをダ�
 ## 動かしてみる
 
 動かし方については [USE_TEST.md](USE_TEST.md) を御覧ください。
+
+### PowerShellやコマンドプロンプトで実行する際の注意
+
+PowerShellやコマンドプロンプトで実行する場合文字列エスケープの仕様のため    
+metadataオプションのキーや値を囲む「"」を「\"」にする必要があります。  
+
+例：  
+```
+./momo --no-audio --port 0 sora \
+    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
+        --auto --video-codec VP8 --video-bitrate 500 \
+        --role sendonly --metadata '{\"signaling_key\": \"xyz\"}'
+```
