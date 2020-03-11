@@ -91,10 +91,10 @@ ScreenVideoCapturer::CreateDesktopCaptureOptions() {
   webrtc::DesktopCaptureOptions options =
       webrtc::DesktopCaptureOptions::CreateDefault();
 
-#ifdef _WIN32
+#if defined(_WIN32)
   options.set_allow_directx_capturer(true);
   options.set_allow_use_magnification_api(false);
-#elif __APPLE__
+#elif defined(__APPLE__)
   options.set_allow_iosurface(true);
 #endif
 

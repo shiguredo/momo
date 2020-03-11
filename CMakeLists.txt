@@ -63,6 +63,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(TARGET_ARCH "x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
+  set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
@@ -423,6 +424,12 @@ if (USE_SCREEN_CAPTURER)
         Xdamage
         Xfixes
         Xcomposite
+    )
+  endif()
+  if (TARGET_OS STREQUAL "macos")
+    target_link_libraries(momo
+      PRIVATE
+        "-framework IOSurface"
     )
   endif()
 endif()
