@@ -12,6 +12,7 @@
 #include <iostream>
 #include <memory>
 
+
 // WebRTC
 #include <api/video/i420_buffer.h>
 #include <modules/desktop_capture/cropped_desktop_frame.h>
@@ -24,7 +25,6 @@
 #include <third_party/libyuv/include/libyuv.h>
 
 #include "native_buffer.h"
-
 
 const std::string ScreenVideoCapturer::GetSourceListString() {
   std::ostringstream oss;
@@ -214,7 +214,7 @@ void ScreenVideoCapturer::OnCaptureResult(
       libyuv::ARGBScale(frame->data(), frame->stride(), frame->size().width(),
                         frame->size().height(), output_rect_data,
                         output_frame_->stride(), output_rect.width(),
-                        output_rect.height(), libyuv::kFilterBilinear);
+                        output_rect.height(), libyuv::kFilterBox);
       output_data = output_frame_->data();
       output_stride = output_frame_->stride();
     } else {
