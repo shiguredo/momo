@@ -87,8 +87,10 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 - GeForce GTX 1650
     - @melpon
-- GeForce GTX 1060
+- GeForce GTX 1060 6GB
     - @massie_g
+- GeForce GTX 10５０ Ti 4GB
+    - @cli_nil
 
 ## コマンド
 
