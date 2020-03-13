@@ -85,11 +85,13 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 ### 動作確認が取れたビデオカード
 
+- GeForce GTX 1080 Ti
+    - @melpon
 - GeForce GTX 1650
     - @melpon
 - GeForce GTX 1060 6GB
     - @massie_g
-- GeForce GTX 10５０ Ti 4GB
+- GeForce GTX 1050 Ti 4GB
     - @cli_nil
 
 ## コマンド
