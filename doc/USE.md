@@ -93,6 +93,8 @@ NVENC が利用可能なビデオカードは以下で確認してください�
     - @massie_g
 - GeForce GTX 1050 Ti 4GB
     - @cli_nil
+- GeForce GTX 1070 with Max-Q Design 8GB
+    - @torikizi
 
 ## コマンド
 
