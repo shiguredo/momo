@@ -95,6 +95,8 @@ NVENC が利用可能なビデオカードは以下で確認してください�
     - @cli_nil
 - GeForce GTX 1070 with Max-Q Design 8GB
     - @torikizi
+- Quadro P1000 4GB
+    - 株式会社オプティム
 
 ## コマンド
 
