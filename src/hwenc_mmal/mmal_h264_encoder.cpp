@@ -498,7 +498,7 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
         encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
       }
     }
-    if (data == 0x01 && zero_count == 3) {
+    if (data == 0x01 && zero_count >= 2) {
       if (nal_start_idx != 0) {
         nals.push_back({nal_start_idx, i - nal_start_idx + 1 - 4});
       }
