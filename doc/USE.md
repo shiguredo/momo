@@ -101,6 +101,8 @@ NVENC が利用可能なビデオカードは以下で確認してください�
     - 株式会社オプティム
 - GeForce RTX 2070
     - @msnoigrs
+- GeForce RTX 2080
+    - @shirokunet
 
 ## コマンド
 
