@@ -6,6 +6,11 @@
 
 #include "rtc/native_buffer.h"
 
+#ifdef __linux__
+#include "dyn/cuda.h"
+#include "dyn/nvcuvid.h"
+#endif
+
 const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
 
@@ -50,6 +55,16 @@ NvCodecH264Encoder::~NvCodecH264Encoder() {}
 bool NvCodecH264Encoder::IsSupported() {
   try {
     NvEncoder::TryLoadNvEncApi();
+
+    // Linux の場合、cuda と nvcuvid のロードも必要なのでチェックする
+#ifdef __linux__
+    if (!dyn::DynModule::Instance().IsLoadable(dyn::CUDA_SO)) {
+      return false;
+    }
+    if (!dyn::DynModule::Instance().IsLoadable(dyn::NVCUVID_SO)) {
+      return false;
+    }
+#endif
     return true;
   } catch (const NVENCException& e) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
