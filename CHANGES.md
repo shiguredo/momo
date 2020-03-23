@@ -15,13 +15,12 @@
     - @voluntas
 - [UPDATE] cmake を 3.17.0 に上げる
     - @voluntas
-- [UPDATE] video_adapter_メンバ変数は使用していないので削除する 
-    - @msnoigrs
-- [UPDATE] Ubuntu 18.04 で libcuda.so / libnvcuvid.so がイントールされていなくても起動するようにする
-    - @melpon
 - [ADD] Windowsでも --video-device を指定できるようにする
     - @msnoigrs
-
+- [FIX] video_adapter_メンバ変数は使用していないので削除する 
+    - @msnoigrs
+- [FIX] Ubuntu 18.04 で libcuda.so / libnvcuvid.so がイントールされていなくても起動するようにする
+    - @melpon
 
 ## 2020.3.1
 
