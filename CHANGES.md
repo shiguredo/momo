@@ -17,7 +17,7 @@
     - @voluntas
 - [UPDATE] video_adapter_メンバ変数は使用していないので削除する 
     - @msnoigrs
-- [ADD] Windowsでも--video-deviceを指定できるようにする
+- [ADD] Windowsでも --video-device を指定できるようにする
     - @msnoigrs
 
 
