@@ -15,8 +15,11 @@
     - @voluntas
 - [UPDATE] cmake を 3.17.0 に上げる
     - @voluntas
+- [UPDATE] video_adapter_メンバ変数は使用していないので削除する 
+    - @msnoigrs
 - [ADD] Windowsでも--video-deviceを指定できるようにする
     - @msnoigrs
+
 
 ## 2020.3.1
 
