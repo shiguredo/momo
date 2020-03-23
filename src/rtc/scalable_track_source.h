@@ -34,8 +34,6 @@ class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
 
  private:
   rtc::TimestampAligner timestamp_aligner_;
-
-  cricket::VideoAdapter video_adapter_;
 };
 
 #endif  // VIDEO_CAPTURER_H_
