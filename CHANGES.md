@@ -11,6 +11,9 @@
 
 ## develop
 
+- [ADD] Windowsでも--video-deviceを指定できるようにする
+    - @msnoigrs
+
 ## 2020.3.1
 
 - [FIX] ubuntu-18.04_x86_64 で H.264 を有効にする
