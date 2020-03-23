@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を M81.4044@{#10} に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.17.0 に上げる
+    - @voluntas
 - [ADD] Windowsでも--video-deviceを指定できるようにする
     - @msnoigrs
 
