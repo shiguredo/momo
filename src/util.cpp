@@ -36,7 +36,6 @@ using json = nlohmann::json;
 
 void Util::parseArgs(int argc,
                      char* argv[],
-                     bool& is_daemon,
                      bool& use_test,
                      bool& use_ayame,
                      bool& use_sora,
@@ -128,7 +127,6 @@ void Util::parseArgs(int argc,
 
 void Util::parseArgs(int argc,
                      char* argv[],
-                     bool& is_daemon,
                      bool& use_test,
                      bool& use_ayame,
                      bool& use_sora,
@@ -248,7 +246,6 @@ void Util::parseArgs(int argc,
   app.add_flag("--fullscreen", cs.fullscreen,
                "Use fullscreen window for videos (if SDL is available)")
       ->check(is_sdl_available);
-  app.add_flag("--daemon", is_daemon, "Run as a daemon process");
   app.add_flag("--version", version, "Show version information");
   app.add_flag("--insecure", cs.insecure,
                "Allow insecure server connections when using SSL");

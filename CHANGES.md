@@ -25,6 +25,8 @@
     - @melpon
 - [CHANGE] `sora` モードで `--port` を指定していない場合、`--auto` を指定しなくても自動的に接続する
     - @melpon
+- [CHANGE] `--daemon` 引数を削除
+    - @melpon
 
 ## 2020.3.1
 

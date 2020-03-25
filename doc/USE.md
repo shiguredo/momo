@@ -98,7 +98,6 @@ Options:
   --window-height INT:INT in [180 - 16384]
                               Window height for videos (if SDL is available)
   --fullscreen                Use fullscreen window for videos (if SDL is available)
-  --daemon                    Run as a daemon process
   --version                   Show version information
   --insecure                  Allow insecure server connections when using SSL
   --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}

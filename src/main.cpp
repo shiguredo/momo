@@ -1,6 +1,3 @@
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
 #include <atomic>
 #include <condition_variable>
 #include <csignal>
@@ -46,23 +43,12 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 int main(int argc, char* argv[]) {
   ConnectionSettings cs;
 
-  bool is_daemon = false;
   bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_test, use_ayame, use_sora,
-                  log_level, cs);
-
-#ifndef _MSC_VER
-  if (is_daemon) {
-    if (daemon(1, 0) == -1) {
-      std::cerr << "failed to launch momo daemon" << std::endl;
-      return -1;
-    }
-  }
-#endif
+  Util::parseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
 
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
   rtc::LogMessage::LogTimestamps();
