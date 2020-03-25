@@ -101,6 +101,10 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
+## Q&A
+
+[QA.md](doc/QA.md) をお読みください。
+
 ## バージョン番号について
 
 ```
