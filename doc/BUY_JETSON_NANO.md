@@ -41,3 +41,7 @@ NVIDIA Jetson Nano を購入する場合のオススメリンクです。
 - https://ja.aliexpress.com/item/33012473257.html
 
 色々 4K で 30fps が出せるカメラを試してきましたが、このカメラが一番安定しています。
+
+以下が購入の参考になると思います。
+
+[4K webcam について \- Qiita](https://qiita.com/tetsu_koba/items/8b4921f257a46a15d2a7)

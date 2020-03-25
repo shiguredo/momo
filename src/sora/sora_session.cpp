@@ -86,13 +86,13 @@ void SoraSession::onRead(boost::system::error_code ec,
         return;
       }
       try {
-        bool audioMute = recv_json["audio"];
+        bool audioMute = recv_json["audio"].get<bool>();
         rtc_conn->setAudioEnabled(!audioMute);
       } catch (json::type_error& e) {
       }
 
       try {
-        bool videoMute = recv_json["video"];
+        bool videoMute = recv_json["video"].get<bool>();
         rtc_conn->setVideoEnabled(!videoMute);
       } catch (json::type_error& e) {
       }

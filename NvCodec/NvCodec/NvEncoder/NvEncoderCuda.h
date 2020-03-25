@@ -17,20 +17,19 @@
 #include <cuda.h>
 #include "NvEncoder.h"
 
-#define CUDA_DRVAPI_CALL( call )                                                                                                 \
-    do                                                                                                                           \
-    {                                                                                                                            \
-        CUresult err__ = call;                                                                                                   \
-        if (err__ != CUDA_SUCCESS)                                                                                               \
-        {                                                                                                                        \
-            const char *szErrName = NULL;                                                                                        \
-            cuGetErrorName(err__, &szErrName);                                                                                   \
-            std::ostringstream errorLog;                                                                                         \
-            errorLog << "CUDA driver API error " << szErrName ;                                                                  \
-            throw NVENCException::makeNVENCException(errorLog.str(), NV_ENC_ERR_GENERIC, __FUNCTION__, __FILE__, __LINE__);      \
-        }                                                                                                                        \
-    }                                                                                                                            \
-    while (0)
+#define CUDA_DRVAPI_CALL(call)                                        \
+  do {                                                                \
+    CUresult err__ = call;                                            \
+    if (err__ != CUDA_SUCCESS) {                                      \
+      const char* szErrName = NULL;                                   \
+      dyn::cuGetErrorName(err__, &szErrName);                         \
+      std::ostringstream errorLog;                                    \
+      errorLog << "CUDA driver API error " << szErrName;              \
+      throw NVENCException::makeNVENCException(                       \
+          errorLog.str(), NV_ENC_ERR_GENERIC, __FUNCTION__, __FILE__, \
+          __LINE__);                                                  \
+    }                                                                 \
+  } while (0)
 
 /**
 *  @brief Encoder for CUDA device memory.

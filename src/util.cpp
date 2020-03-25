@@ -212,7 +212,7 @@ void Util::parseArgs(int argc,
                "Perform MJPEG deoode and video resize by hardware acceleration "
                "(only on supported devices)")
       ->check(is_valid_use_native);
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", cs.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");

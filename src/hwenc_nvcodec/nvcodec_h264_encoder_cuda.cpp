@@ -5,11 +5,13 @@
 #include <NvDecoder/NvDecoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
 
+#include "dyn/cuda.h"
+
 #ifdef __cuda_cuda_h__
 inline bool check(CUresult e, int iLine, const char* szFile) {
   if (e != CUDA_SUCCESS) {
     const char* szErrName = NULL;
-    cuGetErrorName(e, &szErrName);
+    dyn::cuGetErrorName(e, &szErrName);
     std::cerr << "CUDA driver API error " << szErrName << " at line " << iLine
               << " in file " << szFile << std::endl;
     return false;
@@ -149,9 +151,9 @@ NvEncoder* NvCodecH264EncoderCuda::CreateNvEncoder(int width,
 }
 
 void ShowEncoderCapability() {
-  ck(cuInit(0));
+  ck(dyn::cuInit(0));
   int nGpu = 0;
-  ck(cuDeviceGetCount(&nGpu));
+  ck(dyn::cuDeviceGetCount(&nGpu));
   if (nGpu == 0) {
     std::cerr << "CUDA Device not found" << std::endl;
     exit(1);
@@ -159,11 +161,11 @@ void ShowEncoderCapability() {
   std::cout << "Encoder Capability" << std::endl;
   for (int iGpu = 0; iGpu < nGpu; iGpu++) {
     CUdevice cuDevice = 0;
-    ck(cuDeviceGet(&cuDevice, iGpu));
+    ck(dyn::cuDeviceGet(&cuDevice, iGpu));
     char szDeviceName[80];
-    ck(cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
+    ck(dyn::cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
     CUcontext cuContext = NULL;
-    ck(cuCtxCreate(&cuContext, 0, cuDevice));
+    ck(dyn::cuCtxCreate(&cuContext, 0, cuDevice));
     NvEncoderCuda enc(cuContext, 1280, 720, NV_ENC_BUFFER_FORMAT_NV12);
 
     std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl
@@ -252,25 +254,25 @@ void ShowEncoderCapability() {
     std::cout << std::endl;
 
     enc.DestroyEncoder();
-    ck(cuCtxDestroy(cuContext));
+    ck(dyn::cuCtxDestroy(cuContext));
   }
 }
 
 NvCodecH264EncoderCudaImpl::NvCodecH264EncoderCudaImpl() {
   ShowEncoderCapability();
 
-  ck(cuInit(0));
-  ck(cuDeviceGet(&cu_device_, 0));
+  ck(dyn::cuInit(0));
+  ck(dyn::cuDeviceGet(&cu_device_, 0));
   char device_name[80];
-  ck(cuDeviceGetName(device_name, sizeof(device_name), cu_device_));
+  ck(dyn::cuDeviceGetName(device_name, sizeof(device_name), cu_device_));
   std::cout << "GPU in use: " << device_name << std::endl;
-  ck(cuCtxCreate(&cu_context_, 0, cu_device_));
+  ck(dyn::cuCtxCreate(&cu_context_, 0, cu_device_));
 }
 NvCodecH264EncoderCudaImpl::~NvCodecH264EncoderCudaImpl() {
   if (nv_decoder_ != nullptr) {
     delete nv_decoder_;
   }
-  cuCtxDestroy(cu_context_);
+  dyn::cuCtxDestroy(cu_context_);
 }
 void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
                                       const void* ptr,

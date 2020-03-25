@@ -20,11 +20,11 @@
 
 ## 動かす
 
-## テストモードを利用して Momo を動かしてみる
+### テストモードを利用して Momo を動かしてみる
 
 [USE_TEST.md](USE_TEST.md) をお読みください。
 
-## Ayame モードを 利用して Momo を動かしてみる
+### Ayame モードを 利用して Momo を動かしてみる
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
@@ -32,7 +32,7 @@ Ayame モードでは時雨堂が開発しているオープンソースのシ�
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-## Sora モードを 利用して Momo を動かしてみる
+### Sora モードを 利用して Momo を動かしてみる
 
 Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
@@ -40,63 +40,26 @@ Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を�
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
 
-## データチャネルを利用したシリアル読み書きを使ってみる
+### データチャネルを利用したシリアル読み書きを使ってみる
 
 Test と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
 
 [USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
-## SDL を利用した受信機能を使ってみる
+### SDL を利用した受信機能を使ってみる
 
 Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力することが可能になります。
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
-## ROS ノードとして Momo を使ってみる
+### ROS ノードとして Momo を使ってみる
 
 - Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
 - ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
-## 認証局の証明書を追加する
+## Q&A
 
-`SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。
-
-```
-$ export SSL_CERT_FILE=/path/to/cert.pem
-$ ./momo sora ...
-```
-
-## サーバ証明書を無視する
-
-`--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることが可能です。
-
-```
-$ ./momo --insecure sora ...
-```
-
-## NVIDIA ビデオカードに搭載されている NVENC を利用する
-
-Windows と Linux で利用可能です。
-NVIDIA ビデオカードドライバーは最新版にしてください。
-
-NVENC が利用可能なビデオカードは以下で確認してください。
-
-[Video Encode and Decode GPU Support Matrix \| NVIDIA Developer](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix#Encoder)
-
-### 動作確認が取れたビデオカード
-
-- GeForce GTX 1080 Ti
-    - @melpon
-- GeForce GTX 1650
-    - @melpon
-- GeForce GTX 1060 6GB
-    - @massie_g
-- GeForce GTX 1050 Ti 4GB
-    - @cli_nil
-- GeForce GTX 1070 with Max-Q Design 8GB
-    - @torikizi
-- Quadro P1000 4GB
-    - 株式会社オプティム
+Q&A に関しては [QA.md](QA.md) をお読みください。
 
 ## コマンド
 

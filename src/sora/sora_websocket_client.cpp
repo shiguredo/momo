@@ -351,13 +351,14 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
   if (type == "offer") {
     answer_sent_ = false;
     createPeerFromConfig(json_message["config"]);
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
   } else if (type == "update") {
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
   } else if (type == "notify") {
-    const std::string event_type = json_message["event_type"];
+    const std::string event_type =
+        json_message["event_type"].get<std::string>();
     if (event_type == "connection.created" ||
         event_type == "connection.destroyed") {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type

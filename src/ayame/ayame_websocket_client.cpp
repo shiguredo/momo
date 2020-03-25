@@ -268,10 +268,10 @@ void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
       for (auto jserver : jservers) {
         webrtc::PeerConnectionInterface::IceServer ice_server;
         if (jserver.contains("username")) {
-          ice_server.username = jserver["username"];
+          ice_server.username = jserver["username"].get<std::string>();
         }
         if (jserver.contains("credential")) {
-          ice_server.password = jserver["credential"];
+          ice_server.password = jserver["credential"].get<std::string>();
         }
         auto jurls = jserver["urls"];
         for (const std::string url : jurls) {
@@ -391,9 +391,9 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     int sdp_mlineindex = 0;
     std::string sdp_mid, candidate;
     json ice = json_message["ice"];
-    sdp_mid = ice["sdpMid"];
-    sdp_mlineindex = ice["sdpMLineIndex"];
-    candidate = ice["candidate"];
+    sdp_mid = ice["sdpMid"].get<std::string>();
+    sdp_mlineindex = ice["sdpMLineIndex"].get<int>();
+    candidate = ice["candidate"].get<std::string>();
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
     watchdog_.reset();

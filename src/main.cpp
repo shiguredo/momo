@@ -108,7 +108,8 @@ int main(int argc, char* argv[]) {
     return V4L2VideoCapture::Create(cs);
 #endif
 #else
-    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
+    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate,
+                                       cs.video_device);
 #endif
 #endif  // USE_ROS
   })();

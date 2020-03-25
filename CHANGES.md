@@ -11,6 +11,16 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を M81.4044@{#10} に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.17.0 に上げる
+    - @voluntas
+- [ADD] Windowsでも --video-device を指定できるようにする
+    - @msnoigrs
+- [FIX] video_adapter_メンバ変数は使用していないので削除する 
+    - @msnoigrs
+- [FIX] Ubuntu 18.04 で libcuda.so / libnvcuvid.so がイントールされていなくても起動するようにする
+    - @melpon
 - [CHANGE] ルートでの `--port` 引数を削除し、`sora` モードと `test` モードで `--port` を指定する
     - @melpon
 - [CHANGE] `sora` モードで `--port` を指定していない場合、`--auto` を指定しなくても自動的に接続する
