@@ -11,6 +11,11 @@
 
 ## develop
 
+- [CHANGE] ルートでの `--port` 引数を削除し、`sora` モードと `test` モードで `--port` を指定する
+    - @melpon
+- [CHANGE] `sora` モードで `--port` を指定していない場合、`--auto` を指定しなくても自動的に接続する
+    - @melpon
+
 ## 2020.3.1
 
 - [FIX] ubuntu-18.04_x86_64 で H.264 を有効にする
