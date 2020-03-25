@@ -2,7 +2,7 @@
 
 ## 商用利用は可能ですか？
 
-Momo は Apache License 2.0 で公開しております。ライセンスを守ってお使いください。
+Momo は [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
 ## 認証局の証明書を追加できますか？
 
@@ -52,3 +52,21 @@ NVENC が利用可能なビデオカードは以下で確認してください�
     - @msnoigrs
 - GeForce RTX 2080
     - @shirokunet
+
+## 4K カメラのオススメはありますか？
+
+以下の記事を参考にしてみてください。
+
+[4K webcam について \- Qiita](https://qiita.com/tetsu_koba/items/8b4921f257a46a15d2a7)
+
+## Momo はカメラからの映像以外を入力できますか？
+
+以下の記事を参考にしてみてください。
+
+[カメラ無しのラズパイとmomoでテスト映像をWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
+
+## Momo はマイクからの音声以外を入力できますか？
+
+以下の記事を参考にしてみてください。
+
+[ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
