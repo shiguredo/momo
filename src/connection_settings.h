@@ -29,7 +29,6 @@ struct ConnectionSettings {
   int framerate = 30;
   bool fixed_resolution = false;
   std::string priority = "BALANCE";
-  int port = 8080;
   bool use_sdl = false;
   bool show_me = false;
   int window_width = 640;
@@ -47,8 +46,10 @@ struct ConnectionSettings {
   std::string sora_role = "upstream";
   bool sora_multistream = false;
   int sora_spotlight = -1;
+  int sora_port = -1;
 
   std::string test_document_root;
+  int test_port = 8080;
 
   std::string ayame_signaling_host;
   std::string ayame_room_id;
@@ -112,7 +113,6 @@ struct ConnectionSettings {
     os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false")
        << "\n";
     os << "priority: " << cs.priority << "\n";
-    os << "port: " << cs.port << "\n";
     os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
     os << "ayame_room_id: " << cs.ayame_room_id << "\n";
     os << "ayame_client_id: " << cs.ayame_client_id << "\n";
@@ -121,7 +121,9 @@ struct ConnectionSettings {
     os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false")
        << "\n";
     os << "sora_metadata: " << cs.sora_metadata << "\n";
+    os << "sora_port: " << cs.sora_port << "\n";
     os << "test_document_root: " << cs.test_document_root << "\n";
+    os << "test_port: " << cs.test_port << "\n";
     return os;
   }
 };
