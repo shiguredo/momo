@@ -305,7 +305,7 @@ void Util::parseArgs(int argc,
       ->add_option("--document-root", cs.test_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
-  app.add_option("--port", cs.test_port, "Port number (default: 8080)")
+  test_app->add_option("--port", cs.test_port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
 
   ayame_app

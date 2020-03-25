@@ -91,8 +91,7 @@ $ ./momo  _use_test:=true \
           image:=/usb_cam/image_raw \
           audio:=/audio \
           _audio_topic_ch:=1 \
-          _audio_topic_rate:=16000 \
-          _port:=8080
+          _audio_topic_rate:=16000
 ```
 
 http://[momo の IP アドレス]:8080/html/test.html にアクセスしてください。
@@ -105,8 +104,11 @@ audio にはマイクから送られてくる音声データの topic を指定�
     - topic
   - _compressed
     - JPEG 圧縮済みイメージ topic か  [true,false]
-  - _port
-    - ポート番号  [0 - 65535]
+  - _test_port
+    - test モードで利用するポート番号  [0 - 65535]
+  - _sora_port
+    - sora モードで利用するポート番号  [-1 - 65535]
+    - -1 の場合は Listen しない
   - _log_level
     - ログレベル  [0 - 5]
   - audio
@@ -123,9 +125,7 @@ audio にはマイクから送られてくる音声データの topic を指定�
 
 ```shell
 $ ./momo  _use_sora:=true \
-          _auto:=true  \
           _compressed:=false \
-          _port:=0 \
           _SIGNALING_URL:="wss://example.com/signaling" \
           _CHANNEL_ID:="sora" \
           _video_codec:=H264 \
