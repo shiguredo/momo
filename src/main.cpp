@@ -151,16 +151,21 @@ int main(int argc, char* argv[]) {
         [&](const boost::system::error_code&, int) { ioc.stop(); });
 
     if (use_sora) {
-      const boost::asio::ip::tcp::endpoint endpoint{
-          boost::asio::ip::make_address("127.0.0.1"),
-          static_cast<unsigned short>(cs.port)};
-      std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
+      if (cs.sora_port >= 0) {
+        const boost::asio::ip::tcp::endpoint endpoint{
+            boost::asio::ip::make_address("127.0.0.1"),
+            static_cast<unsigned short>(cs.sora_port)};
+        std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)
+            ->run();
+      } else {
+        std::make_shared<SoraServer>(ioc, rtc_manager.get(), cs)->run();
+      }
     }
 
     if (use_test) {
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
-          static_cast<unsigned short>(cs.port)};
+          static_cast<unsigned short>(cs.test_port)};
       std::make_shared<P2PServer>(
           ioc, endpoint, std::make_shared<std::string>(cs.test_document_root),
           rtc_manager.get(), cs)
@@ -168,11 +173,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (use_ayame) {
-      const boost::asio::ip::tcp::endpoint endpoint{
-          boost::asio::ip::make_address("127.0.0.1"),
-          static_cast<unsigned short>(cs.port)};
-      std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)
-          ->run();
+      std::make_shared<AyameServer>(ioc, rtc_manager.get(), cs)->run();
     }
 
 #if USE_SDL2

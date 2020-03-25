@@ -72,7 +72,8 @@ void Util::parseArgs(int argc,
                       cs.audio_topic_rate);
   local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
-  local_nh.param<int>("port", cs.port, cs.port);
+  local_nh.param<int>("sora_port", cs.sora_port, cs.sora_port);
+  local_nh.param<int>("test_port", cs.test_port, cs.test_port);
   local_nh.param<bool>("insecure", cs.insecure, cs.insecure);
   local_nh.param<int>("log_level", log_level, log_level);
 
@@ -231,8 +232,6 @@ void Util::parseArgs(int argc,
                "Maintain video resolution in degradation");
   app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
               "Preference in video degradation (experimental)");
-  app.add_option("--port", cs.port, "Port number (default: 8080)")
-      ->check(CLI::Range(0, 65535));
   app.add_flag("--use-sdl", cs.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
@@ -306,6 +305,8 @@ void Util::parseArgs(int argc,
       ->add_option("--document-root", cs.test_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
+  test_app->add_option("--port", cs.test_port, "Port number (default: 8080)")
+      ->check(CLI::Range(0, 65535));
 
   ayame_app
       ->add_option("SIGNALING-URL", cs.ayame_signaling_host, "Signaling URL")
@@ -340,6 +341,8 @@ void Util::parseArgs(int argc,
       ->add_option("--spotlight", cs.sora_spotlight,
                    "Stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
+  sora_app->add_option("--port", cs.sora_port, "Port number (default: -1)")
+      ->check(CLI::Range(-1, 65535));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {

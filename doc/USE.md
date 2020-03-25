@@ -91,17 +91,16 @@ Options:
   --fixed-resolution          Maintain video resolution in degradation
   --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
                               Preference in video degradation (experimental)
-  --port INT:INT in [0 - 65535]
-                              Port number (default: 8080)
-  --use-sdl                   Show video using SDL
-  --show-me                   Show self video
+  --use-sdl                   Show video using SDL (if SDL is available)
+  --show-me                   Show self video (if SDL is available)
   --window-width INT:INT in [180 - 16384]
-                              Window width for videos
+                              Window width for videos (if SDL is available)
   --window-height INT:INT in [180 - 16384]
-                              Window height for videos
-  --fullscreen                Use fullscreen window for videos
+                              Window height for videos (if SDL is available)
+  --fullscreen                Use fullscreen window for videos (if SDL is available)
   --daemon                    Run as a daemon process
   --version                   Show version information
+  --insecure                  Allow insecure server connections when using SSL
   --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
                               Log severity level threshold
   --disable-echo-cancellation Disable echo cancellation for audio
@@ -132,6 +131,8 @@ Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
   --document-root TEXT:DIR    HTTP document root directory
+  --port INT:INT in [0 - 65535]
+                              Port number (default: 8080)
 ```
 
 ### ayame モードヘルプ
@@ -181,6 +182,8 @@ Options:
                               Role (default: upstream)
   --spotlight INT:INT in [1 - 10]
                               Stream count delivered in spotlight
+  --port INT:INT in [-1 - 65535]
+                              Port number (default: -1)
   --metadata TEXT:JSON Value  Signaling metadata used in connect message
 ```
 

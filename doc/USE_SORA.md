@@ -20,9 +20,9 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.jp/ にサイ�
     - ここではシグナリングキーを `xyz` とします。
 
 ```shell
-./momo --no-audio --port 0 sora \
+./momo --no-audio sora \
     wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
-        --auto --video-codec VP8 --video-bitrate 500 \
+        --video-codec VP8 --video-bitrate 500 \
         --role sendonly --metadata '{"signaling_key": "xyz"}'
 ```
 
@@ -35,9 +35,9 @@ https://sora-labo.shiguredo.jp/recvonly?videoCodecType=VP8&audio=False
 GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
 
 ```shell
-./momo --resolution VGA --no-audio --port 0 --use-sdl --show-me \
+./momo --resolution VGA --no-audio --use-sdl --show-me \
     sora wss://sora-labo.shiguredo.jp/signaling shiguredo@open-momo \
-        --auto --video-codec VP8 --video-bitrate 1000 \
+        --video-codec VP8 --video-bitrate 1000 \
         --multistream --role sendrecv --metadata '{"signaling_key": "xyz"}'
 ```
 
