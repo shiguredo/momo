@@ -170,7 +170,7 @@ Options:
   --auto                      Connect to Sora automatically
   --video-codec TEXT:{H264,VP8,VP9}
                               Video codec for send
-  --audio-codec TEXT:{OPUS,PCMU}
+  --audio-codec TEXT:{OPUS}
                               Audio codec for send
   --video-bitrate INT:INT in [1 - 30000]
                               Video bitrate

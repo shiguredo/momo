@@ -327,7 +327,7 @@ void Util::parseArgs(int argc,
       ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
                 "Video codec for send")
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
+  sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS"},
                     "Audio codec for send");
   sora_app->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
       ->check(CLI::Range(1, 30000));
