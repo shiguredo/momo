@@ -67,7 +67,7 @@ RTCManager::RTCManager(
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kPlatformDefaultAudio;
 #endif
-  if (_conn_settings.no_audio) {
+  if (_conn_settings.no_audio_device) {
     audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
   }
 
@@ -137,7 +137,7 @@ RTCManager::RTCManager(
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   _factory->SetOptions(factory_options);
 
-  if (!_conn_settings.no_audio) {
+  if (!_conn_settings.no_audio_device) {
     cricket::AudioOptions ao;
     if (_conn_settings.disable_echo_cancellation)
       ao.echo_cancellation = false;
@@ -159,7 +159,7 @@ RTCManager::RTCManager(
     }
   }
 
-  if (video_track_source && !_conn_settings.no_video) {
+  if (video_track_source && !_conn_settings.no_video_device) {
     rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
         webrtc::VideoTrackSourceProxy::Create(
             _signalingThread.get(), _workerThread.get(), video_track_source);

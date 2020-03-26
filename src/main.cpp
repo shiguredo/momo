@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 #endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
-    if (cs.no_video) {
+    if (cs.no_video_device) {
       return nullptr;
     }
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 #endif  // USE_ROS
   })();
 
-  if (!capturer && !cs.no_video) {
+  if (!capturer && !cs.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
   }

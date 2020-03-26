@@ -16,8 +16,8 @@ struct ConnectionSettings {
   int audio_topic_ch = 1;
 #endif
 
-  bool no_video = false;
-  bool no_audio = false;
+  bool no_video_device = false;
+  bool no_audio_device = false;
   bool force_i420 = false;
   bool use_native = false;
   std::string video_device = "";
@@ -102,8 +102,10 @@ struct ConnectionSettings {
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const ConnectionSettings& cs) {
-    os << "no_video: " << (cs.no_video ? "true" : "false") << "\n";
-    os << "no_audio: " << (cs.no_audio ? "true" : "false") << "\n";
+    os << "no_video_device: " << (cs.no_video_device ? "true" : "false")
+       << "\n";
+    os << "no_audio_device: " << (cs.no_audio_device ? "true" : "false")
+       << "\n";
     os << "video_codec: " << cs.video_codec << "\n";
     os << "audio_codec: " << cs.audio_codec << "\n";
     os << "video_bitrate: " << cs.video_bitrate << "\n";

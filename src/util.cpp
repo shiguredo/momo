@@ -54,8 +54,10 @@ void Util::parseArgs(int argc,
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
-  local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
-  local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+  local_nh.param<bool>("no_video_device", cs.no_video_device,
+                       cs.no_video_device);
+  local_nh.param<bool>("no_audio_device", cs.no_audio_device,
+                       cs.no_audio_device);
   local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
   local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
@@ -200,8 +202,10 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--no-video", cs.no_video, "Do not send video");
-  app.add_flag("--no-audio", cs.no_audio, "Do not send audio");
+  app.add_flag("--no-video-device", cs.no_video_device,
+               "Do not use video device");
+  app.add_flag("--no-audio-device", cs.no_audio_device,
+               "Do not use audio device");
   app.add_flag(
          "--force-i420", cs.force_i420,
          "Prefer I420 format for video capture (only on supported devices)")

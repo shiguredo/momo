@@ -27,6 +27,8 @@
     - @melpon
 - [CHANGE] `--daemon` 引数を削除
     - @melpon
+- [CHANGE] `--no-video` と `--no-audio` 引数を `--no-video-device` と `--no-audio-device` に変更
+    - @melpon
 
 ## 2020.3.1
 
