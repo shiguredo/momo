@@ -80,8 +80,8 @@ Usage: ./momo [OPTIONS] [SUBCOMMAND]
 Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
-  --no-video                  Do not send video
-  --no-audio                  Do not send audio
+  --no-video-device           Do not use video device
+  --no-audio-device           Do not use audio device
   --force-i420                Prefer I420 format for video capture (only on supported devices)
   --use-native                Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
   --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)

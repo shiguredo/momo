@@ -15,7 +15,7 @@ metadataオプションのキーや値を囲む「"」を「\"」にする必要
 
 例：
 ```
-./momo --no-audio sora \
+./momo --no-audio-device sora \
     wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
         --video-codec VP8 --video-bitrate 500 \
         --role sendonly --metadata '{\"signaling_key\": \"xyz\"}'
