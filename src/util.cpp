@@ -63,10 +63,14 @@ void Util::parseArgs(int argc,
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   local_nh.param<std::string>("video_device", cs.video_device, cs.video_device);
 #endif
-  local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
-  local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
-  local_nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
-  local_nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
+  local_nh.param<std::string>("sora_video_codec", cs.sora_video_codec,
+                              cs.sora_video_codec);
+  local_nh.param<std::string>("sora_audio_codec", cs.sora_audio_codec,
+                              cs.sora_audio_codec);
+  local_nh.param<int>("sora_video_bitrate", cs.sora_video_bitrate,
+                      cs.sora_video_bitrate);
+  local_nh.param<int>("sora_audio_bitrate", cs.sora_audio_bitrate,
+                      cs.sora_audio_bitrate);
   local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
   local_nh.param<int>("framerate", cs.framerate, cs.framerate);
   local_nh.param<int>("audio_topic_rate", cs.audio_topic_rate,
@@ -323,16 +327,29 @@ void Util::parseArgs(int argc,
       ->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect,
                      "Connect to Sora automatically");
+
+  auto bool_map = std::vector<std::pair<std::string, bool> >(
+      {{"false", false}, {"true", true}});
   sora_app
-      ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
-                "Video codec for send")
+      ->add_option("--video", cs.sora_video,
+                   "Send video to sora (default: true)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--audio", cs.sora_audio,
+                   "Send audio to sora (default: true)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_set("--video-codec", cs.sora_video_codec,
+                {"", "VP8", "VP9", "H264"}, "Video codec for send")
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS"},
+  sora_app->add_set("--audio-codec", cs.sora_audio_codec, {"", "OPUS"},
                     "Audio codec for send");
-  sora_app->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
-      ->check(CLI::Range(1, 30000));
-  sora_app->add_option("--audio-bitrate", cs.audio_bitrate, "Audio bitrate")
-      ->check(CLI::Range(6, 510));
+  sora_app
+      ->add_option("--video-bitrate", cs.sora_video_bitrate, "Video bitrate")
+      ->check(CLI::Range(0, 30000));
+  sora_app
+      ->add_option("--audio-bitrate", cs.sora_audio_bitrate, "Audio bitrate")
+      ->check(CLI::Range(0, 510));
   sora_app->add_flag("--multistream", cs.sora_multistream, "Use multistream");
   sora_app->add_set(
       "--role", cs.sora_role,
