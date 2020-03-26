@@ -31,6 +31,10 @@
     - @melpon
 - [CHANGE] PCMU オーディオコーデックを削除
     - @melpon
+- [ADD] sora モードの引数に `--audio` と `--video` を追加
+    - @melpon
+- [CHANGE] sora モードの `--video-codec` や `--audio-codec` を指定しなかった場合、Sora 側のデフォルト値を使うようにする（今までは VP8, OPUS だった）
+    - @melpon
 
 ## 2020.3.1
 
