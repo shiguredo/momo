@@ -52,7 +52,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - Signaling サーバの URL はダミーです
 
 ```
-./momo --resolution VGA --no-audio-device --use-sdl --show-me sora --video-codec VP8 --video-bitrate 1000 wss://example.com/signaling momo-sdl-sora --multistream
+./momo --resolution VGA --no-audio-device --use-sdl --show-me sora --video-codec VP8 --video-bitrate 1000 --audio false wss://example.com/signaling momo-sdl-sora --multistream
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/abdb1802bd66440ef32e75da6842f0cf.png)](https://gyazo.com/abdb1802bd66440ef32e75da6842f0cf)
