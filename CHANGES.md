@@ -15,9 +15,7 @@
 
 リリース日: 2020.04.01
 
-- [UPDATE] libwebrtc を M81.4044@{#10} に上げる
-    - @voluntas
-- [UPDATE] libwebrtc を M82.4085@{#2} に上げる
+- [UPDATE] libwebrtc を M81.4044@{#11} に上げる
     - @voluntas
 - [UPDATE] sdl2 を 2.0.12 に上げる
     - @voluntas
