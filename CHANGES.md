@@ -15,17 +15,15 @@
 
 リリース日: 2020.04.01
 
-- [UPDATE] libwebrtc を M81.4044@{#11} に上げる
+- [UPDATE] `libwebrtc` を `M81.4044@{#11}` に上げる
     - @voluntas
-- [UPDATE] sdl2 を 2.0.12 に上げる
+- [UPDATE] `sdl2` を `2.0.12` に上げる
     - @voluntas
-- [UPDATE] cmake を 3.17.0 に上げる
+- [UPDATE] `cmake` を `3.17.0` に上げる
     - @voluntas
-- [ADD] Windowsでも --video-device を指定できるようにする
+- [ADD] Windows でも `--video-device` を指定できるようにする
     - @msnoigrs
-- [FIX] video_adapter_メンバ変数は使用していないので削除する
-    - @msnoigrs
-- [FIX] Ubuntu 18.04 で libcuda.so / libnvcuvid.so がイントールされていなくても起動するようにする
+- [ADD] sora モードの引数に `--audio` と `--video` を追加
     - @melpon
 - [CHANGE] ルートでの `--port` 引数を削除し、`sora` モードと `test` モードで `--port` を指定する
     - @melpon
@@ -37,9 +35,12 @@
     - @melpon
 - [CHANGE] PCMU オーディオコーデックを削除
     - @melpon
-- [ADD] sora モードの引数に `--audio` と `--video` を追加
+- [CHANGE] sora モードの `--video-codec` や `--audio-codec` を指定しなかった場合、Sora 側のデフォルト値を使うようにする
+    - 今までは VP8, OPUS だった
     - @melpon
-- [CHANGE] sora モードの `--video-codec` や `--audio-codec` を指定しなかった場合、Sora 側のデフォルト値を使うようにする（今までは VP8, OPUS だった）
+- [FIX] video_adapter_メンバ変数は使用していないので削除する
+    - @msnoigrs
+- [FIX] Ubuntu 18.04 で `libcuda.so` / `libnvcuvid.so` がイントールされていなくても起動するようにする
     - @melpon
 
 ## 2020.3.1
