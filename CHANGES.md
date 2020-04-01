@@ -13,11 +13,15 @@
 
 - [UPDATE] libwebrtc を M81.4044@{#10} に上げる
     - @voluntas
+- [UPDATE] libwebrtc を M82.4085@{#2} に上げる
+    - @voluntas
+- [UPDATE] sdl2 を 2.0.12 に上げる
+    - @voluntas
 - [UPDATE] cmake を 3.17.0 に上げる
     - @voluntas
 - [ADD] Windowsでも --video-device を指定できるようにする
     - @msnoigrs
-- [FIX] video_adapter_メンバ変数は使用していないので削除する 
+- [FIX] video_adapter_メンバ変数は使用していないので削除する
     - @msnoigrs
 - [FIX] Ubuntu 18.04 で libcuda.so / libnvcuvid.so がイントールされていなくても起動するようにする
     - @melpon
