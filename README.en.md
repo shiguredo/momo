@@ -28,7 +28,7 @@ momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
 First, try "test mode", where Momo itself has a function as a signaling server.
 
 ```shell
-$ ./momo --no-audio --port 8080 test
+$ ./momo --no-audio-device --port 8080 test
 ```
 
 If momo's IP address is 192.0.2.100, access the following URL and try to connect from WebRTC-compatible browser.
@@ -42,7 +42,7 @@ http://192.0.2.100:8080/html/test
 The room ID is "open-momo-en" in the sample, but it is recommended to use an ID that is difficult to guess.
 
 ```shell
-$ ./momo --no-audio ayame wss://ayame-lite.shiguredo.jp/signaling open-momo-en
+$ ./momo --no-audio-device ayame wss://ayame-lite.shiguredo.jp/signaling open-momo-en
 ```
 
 Check with the online sample of Ayame Web SDK.

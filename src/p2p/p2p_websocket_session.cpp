@@ -82,7 +82,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
 
   std::string type;
   try {
-    type = recv_message["type"];
+    type = recv_message["type"].get<std::string>();
   } catch (json::type_error& e) {
     return;
   }
@@ -90,7 +90,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
   if (type == "offer") {
     std::string sdp;
     try {
-      sdp = recv_message["sdp"];
+      sdp = recv_message["sdp"].get<std::string>();
     } catch (json::type_error& e) {
       return;
     }
@@ -108,7 +108,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     }
     std::string sdp;
     try {
-      sdp = recv_message["sdp"];
+      sdp = recv_message["sdp"].get<std::string>();
     } catch (json::type_error& e) {
       return;
     }
@@ -123,9 +123,9 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     std::string sdp_mid, candidate;
     try {
       json ice = recv_message["ice"];
-      sdp_mid = ice["sdpMid"];
-      sdp_mlineindex = ice["sdpMLineIndex"];
-      candidate = ice["candidate"];
+      sdp_mid = ice["sdpMid"].get<std::string>();
+      sdp_mlineindex = ice["sdpMLineIndex"].get<int>();
+      candidate = ice["candidate"].get<std::string>();
     } catch (json::type_error& e) {
       return;
     }

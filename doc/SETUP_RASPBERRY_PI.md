@@ -56,10 +56,12 @@ $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 ### --use-native
 
+**USB カメラの場合は無理に利用する必要はありません**
+
 `--use-native` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 
 ```shell
-$ ./momo --use-native --no-audio --port 8080 test
+$ ./momo --use-native --no-audio-device test
 ```
 
 ### --force-i420
@@ -69,7 +71,7 @@ USBカメラでは逆にフレームレートが落ちるため使わないで�
 
 
 ```shell
-$ ./momo --force-i420 --no-audio --port 8080 test
+$ ./momo --force-i420 --no-audio-device test
 ```
 
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない

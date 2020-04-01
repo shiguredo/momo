@@ -36,7 +36,6 @@ using json = nlohmann::json;
 
 void Util::parseArgs(int argc,
                      char* argv[],
-                     bool& is_daemon,
                      bool& use_test,
                      bool& use_ayame,
                      bool& use_sora,
@@ -55,24 +54,31 @@ void Util::parseArgs(int argc,
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
-  local_nh.param<bool>("no_video", cs.no_video, cs.no_video);
-  local_nh.param<bool>("no_audio", cs.no_audio, cs.no_audio);
+  local_nh.param<bool>("no_video_device", cs.no_video_device,
+                       cs.no_video_device);
+  local_nh.param<bool>("no_audio_device", cs.no_audio_device,
+                       cs.no_audio_device);
   local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
   local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
   local_nh.param<std::string>("video_device", cs.video_device, cs.video_device);
 #endif
-  local_nh.param<std::string>("video_codec", cs.video_codec, cs.video_codec);
-  local_nh.param<std::string>("audio_codec", cs.audio_codec, cs.audio_codec);
-  local_nh.param<int>("video_bitrate", cs.video_bitrate, cs.video_bitrate);
-  local_nh.param<int>("audio_bitrate", cs.audio_bitrate, cs.audio_bitrate);
+  local_nh.param<std::string>("sora_video_codec", cs.sora_video_codec,
+                              cs.sora_video_codec);
+  local_nh.param<std::string>("sora_audio_codec", cs.sora_audio_codec,
+                              cs.sora_audio_codec);
+  local_nh.param<int>("sora_video_bitrate", cs.sora_video_bitrate,
+                      cs.sora_video_bitrate);
+  local_nh.param<int>("sora_audio_bitrate", cs.sora_audio_bitrate,
+                      cs.sora_audio_bitrate);
   local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
   local_nh.param<int>("framerate", cs.framerate, cs.framerate);
   local_nh.param<int>("audio_topic_rate", cs.audio_topic_rate,
                       cs.audio_topic_rate);
   local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
   local_nh.param<std::string>("priority", cs.priority, cs.priority);
-  local_nh.param<int>("port", cs.port, cs.port);
+  local_nh.param<int>("sora_port", cs.sora_port, cs.sora_port);
+  local_nh.param<int>("test_port", cs.test_port, cs.test_port);
   local_nh.param<bool>("insecure", cs.insecure, cs.insecure);
   local_nh.param<int>("log_level", log_level, log_level);
 
@@ -127,7 +133,6 @@ void Util::parseArgs(int argc,
 
 void Util::parseArgs(int argc,
                      char* argv[],
-                     bool& is_daemon,
                      bool& use_test,
                      bool& use_ayame,
                      bool& use_sora,
@@ -201,8 +206,10 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--no-video", cs.no_video, "Do not send video");
-  app.add_flag("--no-audio", cs.no_audio, "Do not send audio");
+  app.add_flag("--no-video-device", cs.no_video_device,
+               "Do not use video device");
+  app.add_flag("--no-audio-device", cs.no_audio_device,
+               "Do not use audio device");
   app.add_flag(
          "--force-i420", cs.force_i420,
          "Prefer I420 format for video capture (only on supported devices)")
@@ -211,7 +218,7 @@ void Util::parseArgs(int argc,
                "Perform MJPEG deoode and video resize by hardware acceleration "
                "(only on supported devices)")
       ->check(is_valid_use_native);
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", cs.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");
@@ -231,8 +238,6 @@ void Util::parseArgs(int argc,
                "Maintain video resolution in degradation");
   app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
               "Preference in video degradation (experimental)");
-  app.add_option("--port", cs.port, "Port number (default: 8080)")
-      ->check(CLI::Range(0, 65535));
   app.add_flag("--use-sdl", cs.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
@@ -249,7 +254,6 @@ void Util::parseArgs(int argc,
   app.add_flag("--fullscreen", cs.fullscreen,
                "Use fullscreen window for videos (if SDL is available)")
       ->check(is_sdl_available);
-  app.add_flag("--daemon", is_daemon, "Run as a daemon process");
   app.add_flag("--version", version, "Show version information");
   app.add_flag("--insecure", cs.insecure,
                "Allow insecure server connections when using SSL");
@@ -306,6 +310,8 @@ void Util::parseArgs(int argc,
       ->add_option("--document-root", cs.test_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
+  test_app->add_option("--port", cs.test_port, "Port number (default: 8080)")
+      ->check(CLI::Range(0, 65535));
 
   ayame_app
       ->add_option("SIGNALING-URL", cs.ayame_signaling_host, "Signaling URL")
@@ -321,16 +327,29 @@ void Util::parseArgs(int argc,
       ->required();
   sora_app->add_flag("--auto", cs.sora_auto_connect,
                      "Connect to Sora automatically");
+
+  auto bool_map = std::vector<std::pair<std::string, bool> >(
+      {{"false", false}, {"true", true}});
   sora_app
-      ->add_set("--video-codec", cs.video_codec, {"VP8", "VP9", "H264"},
-                "Video codec for send")
+      ->add_option("--video", cs.sora_video,
+                   "Send video to sora (default: true)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--audio", cs.sora_audio,
+                   "Send audio to sora (default: true)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_set("--video-codec", cs.sora_video_codec,
+                {"", "VP8", "VP9", "H264"}, "Video codec for send")
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec", cs.audio_codec, {"OPUS", "PCMU"},
+  sora_app->add_set("--audio-codec", cs.sora_audio_codec, {"", "OPUS"},
                     "Audio codec for send");
-  sora_app->add_option("--video-bitrate", cs.video_bitrate, "Video bitrate")
-      ->check(CLI::Range(1, 30000));
-  sora_app->add_option("--audio-bitrate", cs.audio_bitrate, "Audio bitrate")
-      ->check(CLI::Range(6, 510));
+  sora_app
+      ->add_option("--video-bitrate", cs.sora_video_bitrate, "Video bitrate")
+      ->check(CLI::Range(0, 30000));
+  sora_app
+      ->add_option("--audio-bitrate", cs.sora_audio_bitrate, "Audio bitrate")
+      ->check(CLI::Range(0, 510));
   sora_app->add_flag("--multistream", cs.sora_multistream, "Use multistream");
   sora_app->add_set(
       "--role", cs.sora_role,
@@ -340,6 +359,8 @@ void Util::parseArgs(int argc,
       ->add_option("--spotlight", cs.sora_spotlight,
                    "Stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
+  sora_app->add_option("--port", cs.sora_port, "Port number (default: -1)")
+      ->check(CLI::Range(-1, 65535));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {

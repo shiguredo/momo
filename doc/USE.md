@@ -20,11 +20,11 @@
 
 ## 動かす
 
-## テストモードを利用して Momo を動かしてみる
+### テストモードを利用して Momo を動かしてみる
 
 [USE_TEST.md](USE_TEST.md) をお読みください。
 
-## Ayame モードを 利用して Momo を動かしてみる
+### Ayame モードを 利用して Momo を動かしてみる
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
@@ -32,7 +32,7 @@ Ayame モードでは時雨堂が開発しているオープンソースのシ�
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-## Sora モードを 利用して Momo を動かしてみる
+### Sora モードを 利用して Momo を動かしてみる
 
 Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
@@ -40,48 +40,26 @@ Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を�
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
 
-## データチャネルを利用したシリアル読み書きを使ってみる
+### データチャネルを利用したシリアル読み書きを使ってみる
 
 Test と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
 
 [USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
-## SDL を利用した受信機能を使ってみる
+### SDL を利用した受信機能を使ってみる
 
 Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力することが可能になります。
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
-## ROS ノードとして Momo を使ってみる
+### ROS ノードとして Momo を使ってみる
 
 - Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
 - ARM 対応版の Momo を ROS ノードとして使ってみたい人は [USE_ARM_ROS.md](USE_ARM_ROS.md) をお読みください。
 
-## 認証局の証明書を追加する
+## Q&A
 
-`SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。
-
-```
-$ export SSL_CERT_FILE=/path/to/cert.pem
-$ ./momo sora ...
-```
-
-## サーバ証明書を無視する
-
-`--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることが可能です。
-
-```
-$ ./momo --insecure sora ...
-```
-
-## NVIDIA ビデオカードに搭載されている NVENC を利用する
-
-Windows と Linux で利用可能です。
-NVIDIA ビデオカードドライバーは最新版にしてください。
-
-NVENC が利用可能なビデオカードは以下で確認してください。
-
-[Video Encode and Decode GPU Support Matrix \| NVIDIA Developer](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix#Encoder)
+Q&A に関しては [QA.md](QA.md) をお読みください。
 
 ## コマンド
 
@@ -102,8 +80,8 @@ Usage: ./momo [OPTIONS] [SUBCOMMAND]
 Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
-  --no-video                  Do not send video
-  --no-audio                  Do not send audio
+  --no-video-device           Do not use video device
+  --no-audio-device           Do not use audio device
   --force-i420                Prefer I420 format for video capture (only on supported devices)
   --use-native                Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
   --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
@@ -113,17 +91,15 @@ Options:
   --fixed-resolution          Maintain video resolution in degradation
   --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
                               Preference in video degradation (experimental)
-  --port INT:INT in [0 - 65535]
-                              Port number (default: 8080)
-  --use-sdl                   Show video using SDL
-  --show-me                   Show self video
+  --use-sdl                   Show video using SDL (if SDL is available)
+  --show-me                   Show self video (if SDL is available)
   --window-width INT:INT in [180 - 16384]
-                              Window width for videos
+                              Window width for videos (if SDL is available)
   --window-height INT:INT in [180 - 16384]
-                              Window height for videos
-  --fullscreen                Use fullscreen window for videos
-  --daemon                    Run as a daemon process
+                              Window height for videos (if SDL is available)
+  --fullscreen                Use fullscreen window for videos (if SDL is available)
   --version                   Show version information
+  --insecure                  Allow insecure server connections when using SSL
   --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
                               Log severity level threshold
   --disable-echo-cancellation Disable echo cancellation for audio
@@ -154,6 +130,8 @@ Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
   --document-root TEXT:DIR    HTTP document root directory
+  --port INT:INT in [0 - 65535]
+                              Port number (default: 8080)
 ```
 
 ### ayame モードヘルプ
@@ -192,7 +170,7 @@ Options:
   --auto                      Connect to Sora automatically
   --video-codec TEXT:{H264,VP8,VP9}
                               Video codec for send
-  --audio-codec TEXT:{OPUS,PCMU}
+  --audio-codec TEXT:{OPUS}
                               Audio codec for send
   --video-bitrate INT:INT in [1 - 30000]
                               Video bitrate
@@ -203,6 +181,8 @@ Options:
                               Role (default: upstream)
   --spotlight INT:INT in [1 - 10]
                               Stream count delivered in spotlight
+  --port INT:INT in [-1 - 65535]
+                              Port number (default: -1)
   --metadata TEXT:JSON Value  Signaling metadata used in connect message
 ```
 

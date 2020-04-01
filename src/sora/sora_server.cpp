@@ -7,7 +7,9 @@ SoraServer::SoraServer(boost::asio::io_context& ioc,
                        boost::asio::ip::tcp::endpoint endpoint,
                        RTCManager* rtc_manager,
                        ConnectionSettings conn_settings)
-    : acceptor_(ioc),
+    : listen_(true),
+      timer_(ioc),
+      acceptor_(ioc),
       socket_(ioc),
       rtc_manager_(rtc_manager),
       conn_settings_(conn_settings),
@@ -44,6 +46,20 @@ SoraServer::SoraServer(boost::asio::io_context& ioc,
     return;
   }
 }
+SoraServer::SoraServer(boost::asio::io_context& ioc,
+                       RTCManager* rtc_manager,
+                       ConnectionSettings conn_settings)
+    : listen_(false),
+      timer_(ioc),
+      acceptor_(ioc),
+      socket_(ioc),
+      rtc_manager_(rtc_manager),
+      conn_settings_(conn_settings),
+      ws_client_(std::make_shared<SoraWebsocketClient>(ioc,
+                                                       rtc_manager,
+                                                       conn_settings)) {
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " listen=false";
+}
 
 SoraServer::~SoraServer() {
   // これをやっておかないと循環参照でリークする
@@ -51,13 +67,20 @@ SoraServer::~SoraServer() {
 }
 
 void SoraServer::run() {
-  if (!acceptor_.is_open())
-    return;
-
-  if (conn_settings_.sora_auto_connect) {
+  if (listen_) {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " listen=true";
+    if (!acceptor_.is_open())
+      return;
+    if (conn_settings_.sora_auto_connect) {
+      ws_client_->connect();
+    }
+    doAccept();
+  } else {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " listen=false";
+    // Listen してない場合は --auto を無視して常に接続する
     ws_client_->connect();
+    doWait();
   }
-  doAccept();
 }
 
 void SoraServer::doAccept() {
@@ -78,4 +101,19 @@ void SoraServer::onAccept(boost::system::error_code ec) {
 
   // Accept another connection
   doAccept();
+}
+
+void SoraServer::doWait() {
+  // あまり大きい時間にするのも怖いので５分に１回ぐらいは戻ってくるようにする
+  timer_.expires_from_now(boost::posix_time::minutes(5));
+  timer_.async_wait(std::bind(&SoraServer::onWait, shared_from_this(),
+                              std::placeholders::_1));
+}
+
+void SoraServer::onWait(boost::system::error_code ec) {
+  if (ec) {
+    return;
+  }
+
+  doWait();
 }

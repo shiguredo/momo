@@ -10,7 +10,7 @@
 */
 
 #include "NvEncoder/NvEncoderCuda.h"
-
+#include "dyn/cuda.h"
 
 NvEncoderCuda::NvEncoderCuda(CUcontext cuContext, uint32_t nWidth, uint32_t nHeight, NV_ENC_BUFFER_FORMAT eBufferFormat,
     uint32_t nExtraOutputDelay, bool bMotionEstimationOnly, bool bOutputInVideoMemory):
@@ -45,21 +45,24 @@ void NvEncoderCuda::AllocateInputBuffers(int32_t numInputBuffers)
 
     for (int count = 0; count < numCount; count++)
     {
-        CUDA_DRVAPI_CALL(cuCtxPushCurrent(m_cuContext));
-        std::vector<void*> inputFrames;
-        for (int i = 0; i < numInputBuffers; i++)
-        {
-            CUdeviceptr pDeviceFrame;
-            uint32_t chromaHeight = GetNumChromaPlanes(GetPixelFormat()) * GetChromaHeight(GetPixelFormat(), GetMaxEncodeHeight());
-            if (GetPixelFormat() == NV_ENC_BUFFER_FORMAT_YV12 || GetPixelFormat() == NV_ENC_BUFFER_FORMAT_IYUV)
-                chromaHeight = GetChromaHeight(GetPixelFormat(), GetMaxEncodeHeight());
-            CUDA_DRVAPI_CALL(cuMemAllocPitch((CUdeviceptr *)&pDeviceFrame,
-                &m_cudaPitch,
-                GetWidthInBytes(GetPixelFormat(), GetMaxEncodeWidth()),
-                GetMaxEncodeHeight() + chromaHeight, 16));
-            inputFrames.push_back((void*)pDeviceFrame);
+      CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(m_cuContext));
+      std::vector<void*> inputFrames;
+      for (int i = 0; i < numInputBuffers; i++) {
+        CUdeviceptr pDeviceFrame;
+        uint32_t chromaHeight =
+            GetNumChromaPlanes(GetPixelFormat()) *
+            GetChromaHeight(GetPixelFormat(), GetMaxEncodeHeight());
+        if (GetPixelFormat() == NV_ENC_BUFFER_FORMAT_YV12 ||
+            GetPixelFormat() == NV_ENC_BUFFER_FORMAT_IYUV)
+          chromaHeight =
+              GetChromaHeight(GetPixelFormat(), GetMaxEncodeHeight());
+        CUDA_DRVAPI_CALL(dyn::cuMemAllocPitch(
+            (CUdeviceptr*)&pDeviceFrame, &m_cudaPitch,
+            GetWidthInBytes(GetPixelFormat(), GetMaxEncodeWidth()),
+            GetMaxEncodeHeight() + chromaHeight, 16));
+        inputFrames.push_back((void*)pDeviceFrame);
         }
-        CUDA_DRVAPI_CALL(cuCtxPopCurrent(NULL));
+        CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
 
         RegisterInputResources(inputFrames,
             NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR,
@@ -95,13 +98,14 @@ void NvEncoderCuda::ReleaseCudaResources()
 
     UnregisterInputResources();
 
-    cuCtxPushCurrent(m_cuContext);
+    dyn::cuCtxPushCurrent(m_cuContext);
 
     for (uint32_t i = 0; i < m_vInputFrames.size(); ++i)
     {
         if (m_vInputFrames[i].inputPtr)
         {
-            cuMemFree(reinterpret_cast<CUdeviceptr>(m_vInputFrames[i].inputPtr));
+          dyn::cuMemFree(
+              reinterpret_cast<CUdeviceptr>(m_vInputFrames[i].inputPtr));
         }
     }
     m_vInputFrames.clear();
@@ -110,12 +114,13 @@ void NvEncoderCuda::ReleaseCudaResources()
     {
         if (m_vReferenceFrames[i].inputPtr)
         {
-            cuMemFree(reinterpret_cast<CUdeviceptr>(m_vReferenceFrames[i].inputPtr));
+          dyn::cuMemFree(
+              reinterpret_cast<CUdeviceptr>(m_vReferenceFrames[i].inputPtr));
         }
     }
     m_vReferenceFrames.clear();
 
-    cuCtxPopCurrent(NULL);
+    dyn::cuCtxPopCurrent(nullptr);
     m_cuContext = nullptr;
 }
 
@@ -138,7 +143,7 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
         NVENC_THROW_ERROR("Invalid source memory type for copy", NV_ENC_ERR_INVALID_PARAM);
     }
 
-    CUDA_DRVAPI_CALL(cuCtxPushCurrent(device));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(device));
 
     uint32_t srcPitch = nSrcPitch ? nSrcPitch : NvEncoder::GetWidthInBytes(pixelFormat, width);
     CUDA_MEMCPY2D m = { 0 };
@@ -159,11 +164,10 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
     m.Height = height;
     if (bUnAlignedDeviceCopy && srcMemoryType == CU_MEMORYTYPE_DEVICE)
     {
-        CUDA_DRVAPI_CALL(cuMemcpy2DUnaligned(&m));
-    }
-    else
-    {
-        CUDA_DRVAPI_CALL(stream == NULL? cuMemcpy2D(&m) : cuMemcpy2DAsync(&m, stream));
+      CUDA_DRVAPI_CALL(dyn::cuMemcpy2DUnaligned(&m));
+    } else {
+      CUDA_DRVAPI_CALL(stream == NULL ? dyn::cuMemcpy2D(&m)
+                                      : dyn::cuMemcpy2DAsync(&m, stream));
     }
 
     std::vector<uint32_t> srcChromaOffsets;
@@ -193,15 +197,15 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
             m.Height = chromaHeight;
             if (bUnAlignedDeviceCopy && srcMemoryType == CU_MEMORYTYPE_DEVICE)
             {
-                CUDA_DRVAPI_CALL(cuMemcpy2DUnaligned(&m));
-            }
-            else
-            {
-                CUDA_DRVAPI_CALL(stream == NULL? cuMemcpy2D(&m) : cuMemcpy2DAsync(&m, stream));
+              CUDA_DRVAPI_CALL(dyn::cuMemcpy2DUnaligned(&m));
+            } else {
+              CUDA_DRVAPI_CALL(stream == NULL
+                                   ? dyn::cuMemcpy2D(&m)
+                                   : dyn::cuMemcpy2DAsync(&m, stream));
             }
         }
     }
-    CUDA_DRVAPI_CALL(cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
 }
 
 void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
@@ -223,7 +227,7 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
         NVENC_THROW_ERROR("Invalid source memory type for copy", NV_ENC_ERR_INVALID_PARAM);
     }
 
-    CUDA_DRVAPI_CALL(cuCtxPushCurrent(device));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(device));
 
     uint32_t srcPitch = nSrcPitch ? nSrcPitch : NvEncoder::GetWidthInBytes(pixelFormat, width);
     CUDA_MEMCPY2D m = { 0 };
@@ -244,11 +248,9 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
     m.Height = height;
     if (bUnAlignedDeviceCopy && srcMemoryType == CU_MEMORYTYPE_DEVICE)
     {
-        CUDA_DRVAPI_CALL(cuMemcpy2DUnaligned(&m));
-    }
-    else
-    {
-        CUDA_DRVAPI_CALL(cuMemcpy2D(&m));
+      CUDA_DRVAPI_CALL(dyn::cuMemcpy2DUnaligned(&m));
+    } else {
+      CUDA_DRVAPI_CALL(dyn::cuMemcpy2D(&m));
     }
 
     std::vector<uint32_t> srcChromaOffsets;
@@ -277,13 +279,11 @@ void NvEncoderCuda::CopyToDeviceFrame(CUcontext device,
             m.Height = chromaHeight;
             if (bUnAlignedDeviceCopy && srcMemoryType == CU_MEMORYTYPE_DEVICE)
             {
-                CUDA_DRVAPI_CALL(cuMemcpy2DUnaligned(&m));
-            }
-            else
-            {
-                CUDA_DRVAPI_CALL(cuMemcpy2D(&m));
+              CUDA_DRVAPI_CALL(dyn::cuMemcpy2DUnaligned(&m));
+            } else {
+              CUDA_DRVAPI_CALL(dyn::cuMemcpy2D(&m));
             }
         }
     }
-    CUDA_DRVAPI_CALL(cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
 }

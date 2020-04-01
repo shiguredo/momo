@@ -4,13 +4,13 @@
 Momo 自体がシグナリングサーバの機能を持つ test モードを利用して動かしてみてください。
 
 ```shell
-$ ./momo --no-audio --port 8080 test
+$ ./momo --no-audio-device test
 ```
 
 Windows の場合:
 
 ```
-$ .\momo.exe --no-audio --port 8080 test
+$ .\momo.exe --no-audio-device test
 ```
 
 momo の IP アドレスが 192.0.2.100 の場合は、

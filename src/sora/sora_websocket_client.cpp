@@ -238,36 +238,58 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
 }
 
 void SoraWebsocketClient::doSendConnect() {
+  const auto& cs = conn_settings_;
   json json_message = {
       {"type", "connect"},
-      {"role", conn_settings_.sora_role},
-      {"channel_id", conn_settings_.sora_channel_id},
+      {"role", cs.sora_role},
+      {"channel_id", cs.sora_channel_id},
       {"sora_client", MomoVersion::GetClientName()},
       {"libwebrtc", MomoVersion::GetLibwebrtcName()},
       {"environment", MomoVersion::GetEnvironmentName()},
   };
 
-  if (conn_settings_.sora_multistream) {
+  if (cs.sora_multistream) {
     json_message["multistream"] = true;
   }
 
-  if (conn_settings_.sora_spotlight > 0) {
+  if (cs.sora_spotlight > 0) {
     json_message["multistream"] = true;
-    json_message["spotlight"] = conn_settings_.sora_spotlight;
+    json_message["spotlight"] = cs.sora_spotlight;
   }
 
-  if (!conn_settings_.sora_metadata.is_null()) {
-    json_message["metadata"] = conn_settings_.sora_metadata;
+  if (!cs.sora_metadata.is_null()) {
+    json_message["metadata"] = cs.sora_metadata;
   }
 
-  json_message["video"]["codec_type"] = conn_settings_.video_codec;
-  if (conn_settings_.video_bitrate != 0) {
-    json_message["video"]["bit_rate"] = conn_settings_.video_bitrate;
+  if (!cs.sora_video) {
+    // video: false の場合はそのまま設定
+    json_message["video"] = false;
+  } else if (cs.sora_video && cs.sora_video_codec.empty() &&
+             cs.sora_video_bitrate == 0) {
+    // video: true の場合、その他のオプションの設定が行われてなければ true を設定
+    json_message["video"] = true;
+  } else {
+    // それ以外はちゃんとオプションを設定する
+    if (!cs.sora_video_codec.empty()) {
+      json_message["video"]["codec_type"] = cs.sora_video_codec;
+    }
+    if (cs.sora_video_bitrate != 0) {
+      json_message["video"]["bit_rate"] = cs.sora_video_bitrate;
+    }
   }
 
-  json_message["audio"]["codec_type"] = conn_settings_.audio_codec;
-  if (conn_settings_.audio_bitrate != 0) {
-    json_message["audio"]["bit_rate"] = conn_settings_.audio_bitrate;
+  if (!cs.sora_audio) {
+    json_message["audio"] = false;
+  } else if (cs.sora_audio && cs.sora_audio_codec.empty() &&
+             cs.sora_audio_bitrate == 0) {
+    json_message["audio"] = true;
+  } else {
+    if (!cs.sora_audio_codec.empty()) {
+      json_message["audio"]["codec_type"] = cs.sora_audio_codec;
+    }
+    if (cs.sora_audio_bitrate != 0) {
+      json_message["audio"]["bit_rate"] = cs.sora_audio_bitrate;
+    }
   }
 
   ws_->sendText(json_message.dump());
@@ -351,13 +373,14 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
   if (type == "offer") {
     answer_sent_ = false;
     createPeerFromConfig(json_message["config"]);
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
   } else if (type == "update") {
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
   } else if (type == "notify") {
-    const std::string event_type = json_message["event_type"];
+    const std::string event_type =
+        json_message["event_type"].get<std::string>();
     if (event_type == "connection.created" ||
         event_type == "connection.destroyed") {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type

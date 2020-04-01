@@ -6,6 +6,11 @@
 
 #include "rtc/native_buffer.h"
 
+#ifdef __linux__
+#include "dyn/cuda.h"
+#include "dyn/nvcuvid.h"
+#endif
+
 const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
 
@@ -50,6 +55,16 @@ NvCodecH264Encoder::~NvCodecH264Encoder() {}
 bool NvCodecH264Encoder::IsSupported() {
   try {
     NvEncoder::TryLoadNvEncApi();
+
+    // Linux の場合、cuda と nvcuvid のロードも必要なのでチェックする
+#ifdef __linux__
+    if (!dyn::DynModule::Instance().IsLoadable(dyn::CUDA_SO)) {
+      return false;
+    }
+    if (!dyn::DynModule::Instance().IsLoadable(dyn::NVCUVID_SO)) {
+      return false;
+    }
+#endif
     return true;
   } catch (const NVENCException& e) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
@@ -269,10 +284,11 @@ int32_t NvCodecH264Encoder::Encode(
           encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
         }
       }
-      if (data == 0x01 && zero_count == 3) {
+      if (data == 0x01 && zero_count >= 2) {
         if (nal_start_idx != 0) {
-          nals.push_back({nal_start_idx, i - nal_start_idx + 1 - 4});
-          //printf(" nal_size: %d ", i - nal_start_idx + 1 - 4);
+          nals.push_back({nal_start_idx,
+                          i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
+          //printf(" nal_size: %d ", i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4));
         }
         nal_start_idx = i + 1;
         //printf(" nal_start_idx: %d\n", nal_start_idx);

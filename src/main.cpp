@@ -1,6 +1,3 @@
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
 #include <atomic>
 #include <condition_variable>
 #include <csignal>
@@ -46,23 +43,12 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 int main(int argc, char* argv[]) {
   ConnectionSettings cs;
 
-  bool is_daemon = false;
   bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, is_daemon, use_test, use_ayame, use_sora,
-                  log_level, cs);
-
-#ifndef _MSC_VER
-  if (is_daemon) {
-    if (daemon(1, 0) == -1) {
-      std::cerr << "failed to launch momo daemon" << std::endl;
-      return -1;
-    }
-  }
-#endif
+  Util::parseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
 
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
   rtc::LogMessage::LogTimestamps();
@@ -84,7 +70,7 @@ int main(int argc, char* argv[]) {
 #endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
-    if (cs.no_video) {
+    if (cs.no_video_device) {
       return nullptr;
     }
 
@@ -108,12 +94,13 @@ int main(int argc, char* argv[]) {
     return V4L2VideoCapture::Create(cs);
 #endif
 #else
-    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate);
+    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate,
+                                       cs.video_device);
 #endif
 #endif  // USE_ROS
   })();
 
-  if (!capturer && !cs.no_video) {
+  if (!capturer && !cs.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
   }
@@ -150,16 +137,21 @@ int main(int argc, char* argv[]) {
         [&](const boost::system::error_code&, int) { ioc.stop(); });
 
     if (use_sora) {
-      const boost::asio::ip::tcp::endpoint endpoint{
-          boost::asio::ip::make_address("127.0.0.1"),
-          static_cast<unsigned short>(cs.port)};
-      std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)->run();
+      if (cs.sora_port >= 0) {
+        const boost::asio::ip::tcp::endpoint endpoint{
+            boost::asio::ip::make_address("127.0.0.1"),
+            static_cast<unsigned short>(cs.sora_port)};
+        std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)
+            ->run();
+      } else {
+        std::make_shared<SoraServer>(ioc, rtc_manager.get(), cs)->run();
+      }
     }
 
     if (use_test) {
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
-          static_cast<unsigned short>(cs.port)};
+          static_cast<unsigned short>(cs.test_port)};
       std::make_shared<P2PServer>(
           ioc, endpoint, std::make_shared<std::string>(cs.test_document_root),
           rtc_manager.get(), cs)
@@ -167,11 +159,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (use_ayame) {
-      const boost::asio::ip::tcp::endpoint endpoint{
-          boost::asio::ip::make_address("127.0.0.1"),
-          static_cast<unsigned short>(cs.port)};
-      std::make_shared<AyameServer>(ioc, endpoint, rtc_manager.get(), cs)
-          ->run();
+      std::make_shared<AyameServer>(ioc, rtc_manager.get(), cs)->run();
     }
 
 #if USE_SDL2

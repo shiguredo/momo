@@ -560,7 +560,7 @@ elseif (TARGET_OS STREQUAL "linux")
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
-    target_link_libraries(momo PRIVATE cuda cudart_static dl rt nvcuvid)
+    target_link_libraries(momo PRIVATE cudart_static dl rt)
   endif()
 
   if (TARGET_ARCH STREQUAL "arm")
