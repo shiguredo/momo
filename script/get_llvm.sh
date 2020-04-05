@@ -32,7 +32,7 @@ popd
 # 特定バージョンの libcxx を利用する
 pushd $OUTPUT_DIR/llvm
   if [ ! -e libcxx/.git ]; then
-    git clone https://chromium.googlesource.com/chromium/llvm-project/libcxx
+    git clone https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx
   fi
   pushd libcxx
     git fetch
