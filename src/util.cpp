@@ -340,7 +340,7 @@ void Util::parseArgs(int argc,
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
       ->add_set("--video-codec", cs.sora_video_codec,
-                {"", "VP8", "VP9", "H264"}, "Video codec for send")
+                {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
       ->check(is_valid_h264);
   sora_app->add_set("--audio-codec", cs.sora_audio_codec, {"", "OPUS"},
                     "Audio codec for send");

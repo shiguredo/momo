@@ -10,6 +10,10 @@
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "rtc_base/logging.h"
 
+#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
+#endif
+
 #if USE_MMAL_ENCODER
 #include "hwenc_mmal/mmal_h264_encoder.h"
 #endif
@@ -41,6 +45,10 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
 
   for (const webrtc::SdpVideoFormat& format : h264_codecs)
     supported_codecs.push_back(format);
+
+#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
+#endif
 
   return supported_codecs;
 }
@@ -83,6 +91,11 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
     }
 #endif
   }
+
+#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
+  if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
+    return webrtc::CreateLibaomAv1Encoder();
+#endif
 
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;
