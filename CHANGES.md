@@ -11,6 +11,13 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M83.4103@{#2}` に上げる
+    - @voluntas
+- [UPDATE] `cmake` を `3.17.0` に上げる
+    - @voluntas
+- [ADD] AV1 に対応する
+    - @tnoho
+
 ## 2020.4
 
 リリース日: 2020.04.01
