@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M81.4044@{#13}` に上げる
+    - @voluntas
+
 ## 2020.4
 
 リリース日: 2020.04.01
