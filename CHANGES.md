@@ -15,10 +15,14 @@
     - @voluntas
 - [UPDATE] `libwebrtc` を `M81.4044@{#13}` に上げる
     - @voluntas
-- [UPDATE] `cmake` を `3.17.0` に上げる
+- [UPDATE] `cmake` を `3.17.1` に上げる
     - @voluntas
 - [ADD] AV1 に対応する
+    - Sora モードでのみ利用可能
     - @tnoho
+- [FIX] Jetson Nano では ALSA ではなく PulseAudio を利用する
+    - Jetson Nano でつながらない問題が発生するのを修正
+    - @melpon
 
 ## 2020.4
 
