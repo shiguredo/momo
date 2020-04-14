@@ -16,6 +16,7 @@ set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを�
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
 set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
+set(USE_LINUX_PULSE_AUDIO OFF CACH BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
@@ -147,6 +148,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
   set(USE_JETSON_ENCODER ON)
   set(USE_H264 ON)
   set(USE_SDL2 ON)
+  set(USE_LINUX_PULSE_AUDIO ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(JSON_ROOT_DIR /root/json)
   set(CLI11_ROOT_DIR /root/CLI11)
@@ -332,6 +334,7 @@ target_compile_definitions(momo
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
     USE_SDL2=$<BOOL:${USE_SDL2}>
+    USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
 )
 
 if (USE_SDL2)

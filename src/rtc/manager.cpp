@@ -61,8 +61,15 @@ RTCManager::RTCManager(
   _signalingThread->Start();
 
 #if defined(__linux__)
+
+#if USE_LINUX_PULSE_AUDIO
+  webrtc::AudioDeviceModule::AudioLayer audio_layer =
+      webrtc::AudioDeviceModule::kLinuxPulseAudio;
+#else
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxAlsaAudio;
+#endif
+
 #else
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kPlatformDefaultAudio;

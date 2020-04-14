@@ -157,6 +157,7 @@ limitations under the License.
     - MotionJPEG ハードウェアデコーダ対応
     - H.264 / VP9 ハードウェアエンコーダ対応
     - H.264 / VP9 ハードウェアデコーダ対応
+- [x] AV1 対応
 - 統計機能
     - [x] Sora のシグナリング経由での出力
     - Ayame のシグナリング 経由での出力
