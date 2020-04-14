@@ -17,7 +17,7 @@
     - @voluntas
 - [UPDATE] `cmake` を `3.17.1` に上げる
     - @voluntas
-- [ADD] AV1 に対応する
+- [ADD] 実験的に AV1 に対応する
     - Sora モードでのみ利用可能
     - @tnoho
 - [FIX] Jetson Nano では ALSA ではなく PulseAudio を利用する
