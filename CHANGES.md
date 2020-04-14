@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2020.5
+
+リリース日: 2020.04.14
+
 - [UPDATE] `libwebrtc` を `M83.4103@{#2}` に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `M81.4044@{#13}` に上げる
@@ -19,10 +23,10 @@
     - @voluntas
 - [ADD] 実験的に AV1 に対応する
     - Sora モードでのみ利用可能
-    - @tnoho
+    - @voluntas @tnoho
 - [FIX] Jetson Nano では ALSA ではなく PulseAudio を利用する
     - Jetson Nano でつながらない問題が発生するのを修正
-    - @melpon
+    - @azamiya @torikizi @tnoho @melpon
 
 ## 2020.4
 
