@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2020.5.1
+
+- [FIX] CMakeLists.txt のタイポを修正する
+    - @azamiya @torikizi @tnoho @melpon
+
 ## 2020.5
 
 リリース日: 2020.04.14
