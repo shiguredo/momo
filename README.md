@@ -34,6 +34,10 @@ Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://ww
 
 [ROS](http://www.ros.org/) ノードとしても利用可能です。
 
+### AV1 への対応
+
+Momo 同士で SDL 機能を利用して libwebrtc が対応している AV1 が利用可能です。
+
 ## 動画
 
 [WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
@@ -157,7 +161,10 @@ limitations under the License.
     - MotionJPEG ハードウェアデコーダ対応
     - H.264 / VP9 ハードウェアエンコーダ対応
     - H.264 / VP9 ハードウェアデコーダ対応
-- [x] AV1 対応
+- AV1 対応
+    - [x] macOS
+    - [x] Ubuntu
+    - [ ] Windows
 - 統計機能
     - [x] Sora のシグナリング経由での出力
     - Ayame のシグナリング 経由での出力

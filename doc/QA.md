@@ -2,7 +2,7 @@
 
 ## 商用利用は可能ですか？
 
-Momo は [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
+Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
 ## 認証局の証明書を追加できますか？
 
