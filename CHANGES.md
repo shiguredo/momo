@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M83.4103@{#9}` に上げる
+    - @voluntas
+
 ## 2020.5.1
 
 - [FIX] CMakeLists.txt のタイポを修正する
