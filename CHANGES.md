@@ -11,6 +11,13 @@
 
 ## develop
 
+## 2020.5.2
+
+- [FIX] AV1 が利用できなかったのを修正する
+    - @torikizi @voluntas
+- [UPDATE] `libwebrtc` を `M84.4104@{#0}` に上げる
+    - @voluntas
+
 ## 2020.5.1
 
 - [FIX] CMakeLists.txt のタイポを修正する
