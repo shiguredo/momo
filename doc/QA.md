@@ -4,6 +4,12 @@
 
 Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
+## AV1 は利用できますか？
+
+Sora モードでのみ利用可能です。
+
+`Sora と Momo で WebRTC の AV1 を試す <https://gist.github.com/voluntas/db82783b6a3f012977e6de641a16181e>`_
+
 ## 認証局の証明書を追加できますか？
 
 `SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。
