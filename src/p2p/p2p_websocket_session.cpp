@@ -131,8 +131,14 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     }
     std::shared_ptr<RTCConnection> rtc_conn = p2p_conn->getRTCConnection();
     rtc_conn->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-  } else if (type == "close") {
+  } else if (type == "close" || type == "bye") {
     connection_ = nullptr;
+  } else if (type == "register") {
+    json accept_message = {
+        {"type", "accept"},
+        {"isExistUser", true},
+    };
+    ws_->sendText(accept_message.dump());
   } else {
     return;
   }
