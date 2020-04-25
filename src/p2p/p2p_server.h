@@ -12,6 +12,7 @@
 #include "util.h"
 
 class P2PServer : public std::enable_shared_from_this<P2PServer> {
+  boost::asio::io_context& ioc_;
   boost::asio::ip::tcp::acceptor acceptor_;
   boost::asio::ip::tcp::socket socket_;
   std::shared_ptr<std::string const> doc_root_;
