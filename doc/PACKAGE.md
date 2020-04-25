@@ -24,7 +24,6 @@ Windows の場合は以下のコマンドになります。
 - raspbian-buster_armv7
 - ubuntu-18.04_armv8_jetson_nano
 - ubuntu-18.04_x86_64
-- ubuntu-16.04_armv7_ros
 - ubuntu-16.04_x86_64_ros
 
 ## パッケージ解凍後の構成

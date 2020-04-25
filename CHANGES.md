@@ -11,6 +11,9 @@
 
 ## develop
 
+- [CHANGE] ubuntu-16.04_armv7_ros ビルドを削除
+    - @melpon
+
 ## 2020.5.2
 
 - [FIX] AV1 が利用できなかったのを修正する
