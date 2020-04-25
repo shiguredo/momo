@@ -16,6 +16,7 @@ struct ConnectionSettings {
   int audio_topic_ch = 1;
 #endif
 
+  bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;
   bool force_i420 = false;
@@ -106,6 +107,8 @@ struct ConnectionSettings {
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const ConnectionSettings& cs) {
+    os << "no_google_stun: " << (cs.no_google_stun ? "true" : "false")
+       << "\n";
     os << "no_video_device: " << (cs.no_video_device ? "true" : "false")
        << "\n";
     os << "no_audio_device: " << (cs.no_audio_device ? "true" : "false")

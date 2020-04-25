@@ -98,7 +98,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     auto send = std::bind([](P2PWebsocketSession* session,
                              std::string str) { session->ws_->sendText(str); },
                           this, std::placeholders::_1);
-    connection_ = std::make_shared<P2PConnection>(rtc_manager_, send);
+    connection_ = std::make_shared<P2PConnection>(rtc_manager_, conn_settings_, send);
     std::shared_ptr<RTCConnection> rtc_conn = connection_->getRTCConnection();
     rtc_conn->setOffer(sdp);
   } else if (type == "answer") {
