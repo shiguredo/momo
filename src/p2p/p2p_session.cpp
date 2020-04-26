@@ -15,11 +15,13 @@
 
 #include "util.h"
 
-P2PSession::P2PSession(boost::asio::ip::tcp::socket socket,
+P2PSession::P2PSession(boost::asio::io_context& ioc,
+                       boost::asio::ip::tcp::socket socket,
                        std::shared_ptr<std::string const> const& doc_root,
                        RTCManager* rtc_manager,
                        ConnectionSettings conn_settings)
-    : socket_(std::move(socket)),
+    : ioc_(ioc),
+      socket_(std::move(socket)),
       strand_(socket_.get_executor()),
       doc_root_(doc_root),
       rtc_manager_(rtc_manager),
@@ -57,7 +59,7 @@ void P2PSession::onRead(boost::system::error_code ec,
   // WebSocket の upgrade リクエスト
   if (req_.target() == "/ws") {
     if (boost::beast::websocket::is_upgrade(req_)) {
-      P2PWebsocketSession::make_shared(std::move(socket_), rtc_manager_,
+      P2PWebsocketSession::make_shared(ioc_, std::move(socket_), rtc_manager_,
                                        conn_settings_)
           ->run(std::move(req_));
       return;

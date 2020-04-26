@@ -20,6 +20,7 @@
 
 // 1つの HTTP リクエストを処理するためのクラス
 class P2PSession : public std::enable_shared_from_this<P2PSession> {
+  boost::asio::io_context& ioc_;
   boost::asio::ip::tcp::socket socket_;
   boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> strand_;
   boost::beast::flat_buffer buffer_;
@@ -31,7 +32,8 @@ class P2PSession : public std::enable_shared_from_this<P2PSession> {
   ConnectionSettings conn_settings_;
 
  public:
-  P2PSession(boost::asio::ip::tcp::socket socket,
+  P2PSession(boost::asio::io_context& ioc,
+             boost::asio::ip::tcp::socket socket,
              std::shared_ptr<std::string const> const& doc_root,
              RTCManager* rtc_manager,
              ConnectionSettings conn_settings);

@@ -8,7 +8,8 @@ P2PServer::P2PServer(boost::asio::io_context& ioc,
                      std::shared_ptr<std::string const> const& doc_root,
                      RTCManager* rtc_manager,
                      ConnectionSettings conn_settings)
-    : acceptor_(ioc),
+    : ioc_(ioc),
+      acceptor_(ioc),
       socket_(ioc),
       doc_root_(doc_root),
       rtc_manager_(rtc_manager),
@@ -60,7 +61,7 @@ void P2PServer::onAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
   } else {
-    std::make_shared<P2PSession>(std::move(socket_), doc_root_, rtc_manager_,
+    std::make_shared<P2PSession>(ioc_, std::move(socket_), doc_root_, rtc_manager_,
                                  conn_settings_)
         ->run();
   }

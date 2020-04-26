@@ -140,6 +140,9 @@ bool AyameWebsocketClient::connect() {
 
 void AyameWebsocketClient::reconnectAfter() {
   int interval = 5 * (2 * retry_count_);
+  if (interval > 30) {
+    interval = 30;
+  }
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.enable(interval);
@@ -283,7 +286,7 @@ void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
       }
     }
   }
-  if (ice_servers_.empty()) {
+  if (ice_servers_.empty() && !conn_settings_.no_google_stun) {
     // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
