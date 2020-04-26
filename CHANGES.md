@@ -11,6 +11,8 @@
 
 ## develop
 
+- [ADD] test モードの Momo と Ayame モードの Momo の相互接続を可能とする
+    - @tnoho
 - [CHANGE] ubuntu-16.04_armv7_ros ビルドを削除
     - @melpon
 
