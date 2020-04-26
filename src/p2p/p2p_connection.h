@@ -11,7 +11,9 @@
 
 class P2PConnection : public RTCMessageSender {
  public:
-  P2PConnection(RTCManager* rtc_manager, std::function<void(std::string)> send);
+  P2PConnection(RTCManager* rtc_manager,
+                ConnectionSettings conn_settings,
+                std::function<void(std::string)> send);
   ~P2PConnection() {}
 
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState() {
