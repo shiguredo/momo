@@ -87,9 +87,6 @@ https://github.com/shiguredo/momo/releases
 
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
-- Ubuntu 16.04 ARMv7 ROS Kinetic
-    - 今後削除予定
-    - Raspberry Pi 3 B+
 
 ## 使ってみる
 

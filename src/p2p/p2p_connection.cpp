@@ -9,13 +9,16 @@ using json = nlohmann::json;
 using IceConnectionState = webrtc::PeerConnectionInterface::IceConnectionState;
 
 P2PConnection::P2PConnection(RTCManager* rtc_manager,
+                             ConnectionSettings conn_settings,
                              std::function<void(std::string)> send)
     : _send(send) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers servers;
-  webrtc::PeerConnectionInterface::IceServer ice_server;
-  ice_server.uri = "stun:stun.l.google.com:19302";
-  servers.push_back(ice_server);
+  if (!conn_settings.no_google_stun) {
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.uri = "stun:stun.l.google.com:19302";
+    servers.push_back(ice_server);
+  }
   rtc_config.servers = servers;
   _connection = rtc_manager->createConnection(rtc_config, this);
 }

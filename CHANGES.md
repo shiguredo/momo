@@ -11,6 +11,15 @@
 
 ## develop
 
+## 2020.6
+
+- [UPDATE] `libwebrtc` を `M84.4127@{#0}` に上げる
+    - @voluntas
+- [ADD] test モードの Momo と Ayame モードの Momo の相互接続を可能とする
+    - @tnoho
+- [CHANGE] ubuntu-16.04_armv7_ros ビルドを削除
+    - @melpon
+
 ## 2020.5.2
 
 - [FIX] AV1 が利用できなかったのを修正する

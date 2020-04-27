@@ -119,26 +119,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
 
   list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_armv7_ros")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-16.04")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv7")
-  set(USE_ROS ON)
-  set(USE_MMAL_ENCODER ON)
-  set(USE_H264 ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(JSON_ROOT_DIR /root/json)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(WEBRTC_LIBRARY_NAME "webrtc_nolibcxx")
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(Boost_ARCHITECTURE 32)
-
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
 
   set(TARGET_OS "linux")
