@@ -16,20 +16,6 @@
 #include "ros/ros.h"
 #endif
 
-// HWA を効かせる場合は 1 になる
-#if USE_MMAL_ENCODER
-#define MOMO_USE_MMAL_ENCODER 1
-#else
-#define MOMO_USE_MMAL_ENCODER 0
-#endif
-
-// H264 を有効にする場合は 1 になる
-#if USE_H264
-#define MOMO_USE_H264 1
-#else
-#define MOMO_USE_H264 0
-#endif
-
 using json = nlohmann::json;
 
 #if USE_ROS
@@ -167,7 +153,7 @@ void Util::parseArgs(int argc,
 
   auto is_valid_h264 = CLI::Validator(
       [](std::string input) -> std::string {
-#if MOMO_USE_H264
+#if USE_H264
         return std::string();
 #else
         if (input == "H264") {
@@ -405,9 +391,19 @@ void Util::parseArgs(int argc,
   }
 
   if (version) {
-    std::cout << MomoVersion::GetClientName()
-              << " USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(MOMO_USE_MMAL_ENCODER)
+    std::cout << MomoVersion::GetClientName() << std::endl;
+    std::cout << std::endl;
+    std::cout << "WebRTC: " << MomoVersion::GetLibwebrtcName() << std::endl;
+    std::cout << "Environment: " << MomoVersion::GetEnvironmentName()
               << std::endl;
+    std::cout << std::endl;
+    std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
+              << std::endl;
+    std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
+              << std::endl;
+    std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
+              << std::endl;
+    std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }
 
