@@ -21,9 +21,11 @@ set -ex
 # tools の update.py を叩いて特定バージョンの clang バイナリを拾う
 mkdir -p $OUTPUT_DIR/llvm
 pushd $OUTPUT_DIR/llvm
-  rm -rf tools
-  git clone https://chromium.googlesource.com/chromium/src/tools
+  if [ ! -e tools/.git ]; then
+    git clone https://chromium.googlesource.com/chromium/src/tools
+  fi
   pushd tools
+    git fetch
     git reset --hard $WEBRTC_SRC_TOOLS_COMMIT
     python clang/scripts/update.py --output-dir=$OUTPUT_DIR/llvm/clang
   popd
