@@ -156,8 +156,13 @@ limitations under the License.
 
 - Jetson Xavier NX 対応
     - MotionJPEG ハードウェアデコーダ対応
-    - H.264 / VP9 ハードウェアエンコーダ対応
-    - H.264 / VP9 ハードウェアデコーダ対応
+    - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
+    - H.265 / H.264 / VP9 ハードウェアデコーダ対応
+- Jetson Nano
+    - H.265 ハードウェアエンコーダ対応
+    - H.265 ハードウェアデコーダ対応
+- Raspberry Pi 4
+    - H.265 ハードウェアデコーダ対応
 - AV1 対応
     - [x] macOS
     - [x] Ubuntu
@@ -176,7 +181,7 @@ limitations under the License.
         - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
-    - VP8 / VP9 / H.264 ハードウェアエンコーダ対応
+    - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - Simulcast 対応
 - Ubuntu 18.04 Raspberry Pi 対応
     - H.264 の HWA 対応を含む
