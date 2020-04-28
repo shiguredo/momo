@@ -167,6 +167,10 @@ Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
   --auto                      Connect to Sora automatically
+  --video BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Send video to sora (default: true)
+  --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Send audio to sora (default: true)
   --video-codec TEXT:{H264,VP8,VP9}
                               Video codec for send
   --audio-codec TEXT:{OPUS}
