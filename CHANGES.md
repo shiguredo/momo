@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.4.2 に上げる
+    - @melpon
+
 ## 2020.6
 
 - [UPDATE] `libwebrtc` を `M84.4127@{#0}` に上げる
