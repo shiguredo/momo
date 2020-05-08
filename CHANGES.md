@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Boost 1.73.0 にアップデートする
+    - @voluntas
 - [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.4.2 に上げる
     - @melpon
 
