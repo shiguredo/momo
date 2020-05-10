@@ -23,7 +23,6 @@
 #include "NvVideoEncoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/h264/h264_bitstream_parser.h"
-#include "common_video/include/bitrate_adjuster.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "rtc_base/critical_section.h"
@@ -109,7 +108,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   NvJPEGDecoder* decoder_;
   NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
-  webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t framerate_;
   int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
