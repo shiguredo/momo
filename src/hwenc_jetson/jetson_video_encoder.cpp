@@ -47,6 +47,7 @@ JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
       decoder_(nullptr),
       converter_(nullptr),
       encoder_(nullptr),
+      bitrate_adjuster_(.5, .95),
       configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
@@ -73,10 +74,12 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   width_ = codec_settings->width;
   height_ = codec_settings->height;
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
-  if (codec_settings->codecType == webrtc::kVideoCodecH264)
+  if (codec_settings->codecType == webrtc::kVideoCodecH264) {
     key_frame_interval_ = codec_settings->H264().keyFrameInterval;
-  else if (codec_settings->codecType == webrtc::kVideoCodecVP9)
+    bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
+  } else if (codec_settings->codecType == webrtc::kVideoCodecVP9) {
     key_frame_interval_ = codec_settings->VP9().keyFrameInterval;
+  }
   framerate_ = codec_settings->maxFramerate;
 
   RTC_LOG(LS_INFO) << "InitEncode " << framerate_ << "fps "
@@ -88,6 +91,12 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
+  encoded_image_.timing_.flags =
+      webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
+  encoded_image_.content_type_ =
+      (codec_settings->mode == webrtc::VideoCodecMode::kScreensharing)
+          ? webrtc::VideoContentType::SCREENSHARE
+          : webrtc::VideoContentType::UNSPECIFIED;
 
   decoder_ = NvJPEGDecoder::createJPEGDecoder("jpegdec");
   INIT_ERROR(!decoder_, "Failed to createJPEGDecoder");
@@ -162,15 +171,17 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   ret = encoder_->setOutputPlaneFormat(V4L2_PIX_FMT_YUV420M, width_, height_);
   INIT_ERROR(ret < 0, "Failed to encoder setOutputPlaneFormat");
 
-  ret = encoder_->setBitrate(target_bitrate_bps_);
-  INIT_ERROR(ret < 0, "Failed to setBitrate");
 
   if (codec_.codecType == webrtc::kVideoCodecH264) {
+    SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
+
     ret = encoder_->setProfile(V4L2_MPEG_VIDEO_H264_PROFILE_HIGH);
     INIT_ERROR(ret < 0, "Failed to setProfile");
 
     ret = encoder_->setLevel(V4L2_MPEG_VIDEO_H264_LEVEL_5_1);
     INIT_ERROR(ret < 0, "Failed to setLevel");
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    SetBitrateBps(target_bitrate_bps_);
   }
 
   ret = encoder_->setRateControlMode(V4L2_MPEG_VIDEO_BITRATE_MODE_CBR);
@@ -186,7 +197,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
   //V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
-  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_SLOW);
+  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
   INIT_ERROR(ret < 0, "Failed to setHWPresetType");
 
   ret = encoder_->setNumBFrames(0);
@@ -505,8 +516,13 @@ void JetsonVideoEncoder::SetRates(const RateControlParameters& parameters) {
                    << " bitrate:" << parameters.bitrate.ToString();
   framerate_ = parameters.framerate_fps;
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
-  SetFramerate(framerate_);
-  SetBitrateBps(target_bitrate_bps_);
+
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    SetFramerate(framerate_);
+    SetBitrateBps(target_bitrate_bps_);
+  }
   return;
 }
 
@@ -531,15 +547,19 @@ void JetsonVideoEncoder::SetBitrateBps(uint32_t bitrate_bps) {
   if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps) {
     return;
   }
+  configured_bitrate_bps_ = bitrate_bps;
   RTC_LOG(LS_INFO) << __FUNCTION__ << " " << bitrate_bps << "bit/sec";
   if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    /* VP9 のときハードウェアエンコーダの実際のレートが指定したレートの大体半分になってしまう
+       BitrateAdjuster はアンダーシュートを補正してくれないため
+       これを修正するために 2倍 の値をエンコーダに設定する
+       オーバーシュートすることはほぼないため無視する */
     bitrate_bps *= 2;
   }
   if (encoder_->setBitrate(bitrate_bps) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to setBitrate";
     return;
   }
-  configured_bitrate_bps_ = bitrate_bps;
 }
 
 webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
@@ -552,8 +572,8 @@ webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
     info.scaling_settings =
         VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
-    static const int kLowVp9QpThreshold = 140;
-    static const int kHighVp9QpThreshold = 170;
+    static const int kLowVp9QpThreshold = 150;
+    static const int kHighVp9QpThreshold = 190;
     info.scaling_settings =
         VideoEncoder::ScalingSettings(kLowVp9QpThreshold, kHighVp9QpThreshold);
   }
@@ -616,6 +636,10 @@ int32_t JetsonVideoEncoder::Encode(
     }
   }
 
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    SetFramerate(framerate_);
+    SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
+  }
   {
     rtc::CritScope lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
@@ -792,7 +816,7 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     frag_header.fragmentationOffset[0] = 0;
     frag_header.fragmentationLength[0] = size;
     webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
-    RTC_LOG(LS_VERBOSE) << "VP9 qp :" << encoded_image_.qp_;
+    RTC_LOG(LS_INFO) << "VP9 qp :" << encoded_image_.qp_;
 
     if (key_frame) {
       gof_idx_ = 0;
@@ -824,6 +848,9 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << " OnEncodedImage failed error:" << result.error;
     return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    bitrate_adjuster_.Update(size);
   }
   return WEBRTC_VIDEO_CODEC_OK;
 }
