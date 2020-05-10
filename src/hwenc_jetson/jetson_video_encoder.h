@@ -109,7 +109,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   NvJPEGDecoder* decoder_;
   NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
-  webrtc::BitrateAdjuster bitrate_adjuster_;
+  std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
   uint32_t framerate_;
   int32_t configured_framerate_;
   uint32_t target_bitrate_bps_;
