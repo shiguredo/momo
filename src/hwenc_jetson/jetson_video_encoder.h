@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef Jetson_H264_ENCODER_H_
-#define Jetson_H264_ENCODER_H_
+#ifndef jetson_video_encoder_H_
+#define jetson_video_encoder_H_
 
 #include <linux/videodev2.h>
 
@@ -25,14 +25,15 @@
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
+#include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "rtc_base/critical_section.h"
 
 class ProcessThread;
 
-class JetsonH264Encoder : public webrtc::VideoEncoder {
+class JetsonVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit JetsonH264Encoder(const cricket::VideoCodec& codec);
-  ~JetsonH264Encoder() override;
+  explicit JetsonVideoEncoder(const cricket::VideoCodec& codec);
+  ~JetsonVideoEncoder() override;
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -103,6 +104,7 @@ class JetsonH264Encoder : public webrtc::VideoEncoder {
   void SetBitrateBps(uint32_t bitrate_bps);
   int32_t SendFrame(unsigned char* buffer, size_t size);
 
+  webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
   NvJPEGDecoder* decoder_;
   NvVideoConverter* converter_;
@@ -124,6 +126,9 @@ class JetsonH264Encoder : public webrtc::VideoEncoder {
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
+  webrtc::GofInfoVP9 gof_;
+  size_t gof_idx_;
+
   rtc::CriticalSection frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   std::mutex enc0_buffer_mtx_;
@@ -133,4 +138,4 @@ class JetsonH264Encoder : public webrtc::VideoEncoder {
   webrtc::EncodedImage encoded_image_;
 };
 
-#endif  // Jetson_H264_ENCODER_H_
+#endif  // jetson_video_encoder_H_

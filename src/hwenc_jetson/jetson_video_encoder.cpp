@@ -9,13 +9,14 @@
  *
  */
 
-#include "jetson_h264_encoder.h"
+#include "jetson_video_encoder.h"
 
 #include <limits>
 #include <string>
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "nvbuf_utils.h"
+#include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "rtc/native_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -39,12 +40,9 @@ struct nal_entry {
   size_t size;
 };
 
-const int kLowH264QpThreshold = 34;
-const int kHighH264QpThreshold = 40;
-
 }  // namespace
 
-JetsonH264Encoder::JetsonH264Encoder(const cricket::VideoCodec& codec)
+JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
     : callback_(nullptr),
       decoder_(nullptr),
       converter_(nullptr),
@@ -55,26 +53,31 @@ JetsonH264Encoder::JetsonH264Encoder(const cricket::VideoCodec& codec)
       configured_height_(0),
       use_mjpeg_(false) {}
 
-JetsonH264Encoder::~JetsonH264Encoder() {
+JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
 }
 
-int32_t JetsonH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
+int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                       int32_t number_of_cores,
                                       size_t max_payload_size) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   RTC_DCHECK(codec_settings);
-  RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
 
   int32_t release_ret = Release();
   if (release_ret != WEBRTC_VIDEO_CODEC_OK) {
     return release_ret;
   }
+  if (&codec_ != codec_settings) {
+    codec_ = *codec_settings;
+  }
 
   width_ = codec_settings->width;
   height_ = codec_settings->height;
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
-  key_frame_interval_ = codec_settings->H264().keyFrameInterval;
+  if (codec_settings->codecType == webrtc::kVideoCodecH264)
+    key_frame_interval_ = codec_settings->H264().keyFrameInterval;
+  else if (codec_settings->codecType == webrtc::kVideoCodecVP9)
+    key_frame_interval_ = codec_settings->VP9().keyFrameInterval;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   framerate_ = codec_settings->maxFramerate;
 
@@ -87,21 +90,17 @@ int32_t JetsonH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
-  encoded_image_.timing_.flags =
-      webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
-  encoded_image_.content_type_ =
-      (codec_settings->mode == webrtc::VideoCodecMode::kScreensharing)
-          ? webrtc::VideoContentType::SCREENSHARE
-          : webrtc::VideoContentType::UNSPECIFIED;
 
   decoder_ = NvJPEGDecoder::createJPEGDecoder("jpegdec");
   INIT_ERROR(!decoder_, "Failed to createJPEGDecoder");
 
+  gof_.SetGofInfoVP9(webrtc::TemporalStructureMode::kTemporalStructureMode1);
+  gof_idx_ = 0;
   RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t JetsonH264Encoder::Release() {
+int32_t JetsonVideoEncoder::Release() {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   JetsonRelease();
   if (decoder_) {
@@ -112,7 +111,7 @@ int32_t JetsonH264Encoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t JetsonH264Encoder::JetsonConfigure() {
+int32_t JetsonVideoEncoder::JetsonConfigure() {
   int ret = 0;
 
   if (use_mjpeg_) {
@@ -153,21 +152,32 @@ int32_t JetsonH264Encoder::JetsonConfigure() {
   encoder_ = NvVideoEncoder::createVideoEncoder("enc0");
   INIT_ERROR(!encoder_, "Failed to createVideoEncoder");
 
-  ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_H264, width_, height_,
-                                        4 * 1024 * 1024);
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_H264, width_, height_,
+                                          2 * 1024 * 1024);
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_VP9, width_, height_,
+                                          2 * 1024 * 1024);
+  }
   INIT_ERROR(ret < 0, "Failed to encoder setCapturePlaneFormat");
 
   ret = encoder_->setOutputPlaneFormat(V4L2_PIX_FMT_YUV420M, width_, height_);
   INIT_ERROR(ret < 0, "Failed to encoder setOutputPlaneFormat");
 
-  ret = encoder_->setBitrate(bitrate_adjuster_.GetAdjustedBitrateBps());
+  uint32_t bitrate_bps = bitrate_adjuster_.GetAdjustedBitrateBps();
+  if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    bitrate_bps *= 2;
+  }
+  ret = encoder_->setBitrate(bitrate_bps);
   INIT_ERROR(ret < 0, "Failed to setBitrate");
 
-  ret = encoder_->setProfile(V4L2_MPEG_VIDEO_H264_PROFILE_HIGH);
-  INIT_ERROR(ret < 0, "Failed to setProfile");
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    ret = encoder_->setProfile(V4L2_MPEG_VIDEO_H264_PROFILE_HIGH);
+    INIT_ERROR(ret < 0, "Failed to setProfile");
 
-  ret = encoder_->setLevel(V4L2_MPEG_VIDEO_H264_LEVEL_5_1);
-  INIT_ERROR(ret < 0, "Failed to setLevel");
+    ret = encoder_->setLevel(V4L2_MPEG_VIDEO_H264_LEVEL_5_1);
+    INIT_ERROR(ret < 0, "Failed to setLevel");
+  }
 
   ret = encoder_->setRateControlMode(V4L2_MPEG_VIDEO_BITRATE_MODE_CBR);
   INIT_ERROR(ret < 0, "Failed to setRateControlMode");
@@ -182,7 +192,7 @@ int32_t JetsonH264Encoder::JetsonConfigure() {
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
   //V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
-  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
+  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_SLOW);
   INIT_ERROR(ret < 0, "Failed to setHWPresetType");
 
   ret = encoder_->setNumBFrames(0);
@@ -262,7 +272,7 @@ int32_t JetsonH264Encoder::JetsonConfigure() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void JetsonH264Encoder::JetsonRelease() {
+void JetsonVideoEncoder::JetsonRelease() {
   if (!encoder_)
     return;
   if (converter_) {
@@ -285,7 +295,7 @@ void JetsonH264Encoder::JetsonRelease() {
   }
 }
 
-void JetsonH264Encoder::SendEOS(NvV4l2Element* element) {
+void JetsonVideoEncoder::SendEOS(NvV4l2Element* element) {
   if (element->output_plane.getStreamStatus()) {
     struct v4l2_buffer v4l2_buf;
     struct v4l2_plane planes[MAX_PLANES];
@@ -308,16 +318,16 @@ void JetsonH264Encoder::SendEOS(NvV4l2Element* element) {
   }
 }
 
-bool JetsonH264Encoder::ConvertFinishedCallbackFunction(
+bool JetsonVideoEncoder::ConvertFinishedCallbackFunction(
     struct v4l2_buffer* v4l2_buf,
     NvBuffer* buffer,
     NvBuffer* shared_buffer,
     void* data) {
-  return ((JetsonH264Encoder*)data)
+  return ((JetsonVideoEncoder*)data)
       ->ConvertFinishedCallback(v4l2_buf, buffer, shared_buffer);
 }
 
-bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
+bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
                                                 NvBuffer* buffer,
                                                 NvBuffer* shared_buffer) {
   NvBuffer* enc0_buffer;
@@ -366,16 +376,16 @@ bool JetsonH264Encoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
   return true;
 }
 
-bool JetsonH264Encoder::EncodeOutputCallbackFunction(
+bool JetsonVideoEncoder::EncodeOutputCallbackFunction(
     struct v4l2_buffer* v4l2_buf,
     NvBuffer* buffer,
     NvBuffer* shared_buffer,
     void* data) {
-  return ((JetsonH264Encoder*)data)
+  return ((JetsonVideoEncoder*)data)
       ->EncodeOutputCallback(v4l2_buf, buffer, shared_buffer);
 }
 
-bool JetsonH264Encoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
+bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
                                              NvBuffer* buffer,
                                              NvBuffer* shared_buffer) {
   struct v4l2_buffer conv_qbuf;
@@ -412,16 +422,16 @@ bool JetsonH264Encoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
   return true;
 }
 
-bool JetsonH264Encoder::EncodeFinishedCallbackFunction(
+bool JetsonVideoEncoder::EncodeFinishedCallbackFunction(
     struct v4l2_buffer* v4l2_buf,
     NvBuffer* buffer,
     NvBuffer* shared_buffer,
     void* data) {
-  return ((JetsonH264Encoder*)data)
+  return ((JetsonVideoEncoder*)data)
       ->EncodeFinishedCallback(v4l2_buf, buffer, shared_buffer);
 }
 
-bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
+bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
                                                NvBuffer* buffer,
                                                NvBuffer* shared_buffer) {
   if (!v4l2_buf) {
@@ -435,8 +445,16 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
 
   uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                  v4l2_buf->timestamp.tv_usec;
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << timestamp
-                   << " bytesused:" << buffer->planes[0].bytesused;
+
+  v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata;
+  if (encoder_->getMetadata(v4l2_buf->index, enc_metadata) == 0)
+  {
+    if (enc_metadata.KeyFrame) {
+      encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+    } else {
+      encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+    }
+  }
 
   std::unique_ptr<FrameParams> params;
   {
@@ -477,27 +495,27 @@ bool JetsonH264Encoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   return true;
 }
 
-int32_t JetsonH264Encoder::RegisterEncodeCompleteCallback(
+int32_t JetsonVideoEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void JetsonH264Encoder::SetRates(const RateControlParameters& parameters) {
+void JetsonVideoEncoder::SetRates(const RateControlParameters& parameters) {
   if (encoder_ == nullptr)
     return;
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate:" << parameters.framerate_fps
-                   << " bitrate:" << parameters.bitrate.get_sum_bps();
+  RTC_LOG(LS_ERROR) << __FUNCTION__ << " framerate:" << parameters.framerate_fps
+                   << " bitrate:" << parameters.bitrate.ToString();
   framerate_ = parameters.framerate_fps;
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   return;
 }
 
-void JetsonH264Encoder::SetFramerate(uint32_t framerate) {
+void JetsonVideoEncoder::SetFramerate(uint32_t framerate) {
   if (width_ <= 1920 && height_ <= 1080 && framerate > 60) {
     framerate = 60;
   } else if (framerate > 30) {
@@ -514,11 +532,14 @@ void JetsonH264Encoder::SetFramerate(uint32_t framerate) {
   configured_framerate_ = framerate;
 }
 
-void JetsonH264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
+void JetsonVideoEncoder::SetBitrateBps(uint32_t bitrate_bps) {
   if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps) {
     return;
   }
   RTC_LOG(LS_INFO) << __FUNCTION__ << " " << bitrate_bps << "bit/sec";
+  if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    bitrate_bps *= 2;
+  }
   if (encoder_->setBitrate(bitrate_bps) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to setBitrate";
     return;
@@ -526,18 +547,27 @@ void JetsonH264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
   configured_bitrate_bps_ = bitrate_bps;
 }
 
-webrtc::VideoEncoder::EncoderInfo JetsonH264Encoder::GetEncoderInfo() const {
+webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
   EncoderInfo info;
   info.supports_native_handle = true;
-  info.implementation_name = "Jetson H264";
-  info.scaling_settings =
-      VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  info.implementation_name = "Jetson Video Encoder";
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    static const int kLowH264QpThreshold = 34;
+    static const int kHighH264QpThreshold = 40;
+    info.scaling_settings =
+        VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    static const int kLowVp9QpThreshold = 180;
+    static const int kHighVp9QpThreshold = 240;
+    info.scaling_settings =
+        VideoEncoder::ScalingSettings(kLowVp9QpThreshold, kHighVp9QpThreshold);
+  }
   info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
 
-int32_t JetsonH264Encoder::Encode(
+int32_t JetsonVideoEncoder::Encode(
     const webrtc::VideoFrame& input_frame,
     const std::vector<webrtc::VideoFrameType>* frame_types) {
   if (!callback_) {
@@ -704,53 +734,96 @@ int32_t JetsonH264Encoder::Encode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t JetsonH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
-  encoded_image_.set_buffer(buffer, size);
-  encoded_image_.set_size(size);
-  encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-
-  uint8_t zero_count = 0;
-  size_t nal_start_idx = 0;
-  std::vector<nal_entry> nals;
-  for (size_t i = 0; i < size; i++) {
-    uint8_t data = buffer[i];
-    if ((i != 0) && (i == nal_start_idx)) {
-      if ((data & 0x1F) == 0x05) {
-        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
-      }
-    }
-    if (data == 0x01 && zero_count >= 2) {
-      if (nal_start_idx != 0) {
-        nals.push_back(
-            {nal_start_idx, i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
-      }
-      nal_start_idx = i + 1;
-    }
-    if (data == 0x00) {
-      zero_count++;
-    } else {
-      zero_count = 0;
-    }
-  }
-  if (nal_start_idx != 0) {
-    nals.push_back({nal_start_idx, size - nal_start_idx});
-  }
-
+int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
   webrtc::RTPFragmentationHeader frag_header;
-  frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
-  for (size_t i = 0; i < nals.size(); i++) {
-    frag_header.fragmentationOffset[i] = nals[i].offset;
-    frag_header.fragmentationLength[i] = nals[i].size;
-  }
-
   webrtc::CodecSpecificInfo codec_specific;
-  codec_specific.codecType = webrtc::kVideoCodecH264;
-  codec_specific.codecSpecific.H264.packetization_mode =
-      webrtc::H264PacketizationMode::NonInterleaved;
 
-  h264_bitstream_parser_.ParseBitstream(buffer, size);
-  h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " last slice qp:" << encoded_image_.qp_;
+  if (codec_.codecType == webrtc::kVideoCodecH264) {
+    encoded_image_.set_buffer(buffer, size);
+    encoded_image_.set_size(size);
+    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+
+    uint8_t zero_count = 0;
+    size_t nal_start_idx = 0;
+    std::vector<nal_entry> nals;
+    for (size_t i = 0; i < size; i++) {
+      uint8_t data = buffer[i];
+      if ((i != 0) && (i == nal_start_idx)) {
+        if ((data & 0x1F) == 0x05) {
+          encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+        }
+      }
+      if (data == 0x01 && zero_count >= 2) {
+        if (nal_start_idx != 0) {
+          nals.push_back(
+              {nal_start_idx, i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
+        }
+        nal_start_idx = i + 1;
+      }
+      if (data == 0x00) {
+        zero_count++;
+      } else {
+        zero_count = 0;
+      }
+    }
+    if (nal_start_idx != 0) {
+      nals.push_back({nal_start_idx, size - nal_start_idx});
+    }
+
+    frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
+    for (size_t i = 0; i < nals.size(); i++) {
+      frag_header.fragmentationOffset[i] = nals[i].offset;
+      frag_header.fragmentationLength[i] = nals[i].size;
+    }
+
+    codec_specific.codecType = webrtc::kVideoCodecH264;
+    codec_specific.codecSpecific.H264.packetization_mode =
+        webrtc::H264PacketizationMode::NonInterleaved;
+
+    h264_bitstream_parser_.ParseBitstream(buffer, size);
+    h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " last slice qp:" << encoded_image_.qp_;
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    if ((buffer[0] == 'D') && (buffer[1] == 'K') &&
+                    (buffer[2] == 'I') && (buffer[3] == 'F')) {
+      buffer += 32;
+      size -= 32;
+    }
+    buffer += 12;
+    size -= 12;
+    encoded_image_.set_buffer(buffer, size);
+    encoded_image_.set_size(size);
+    const bool key_frame = encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+
+    frag_header.VerifyAndAllocateFragmentationHeader(1);
+    frag_header.fragmentationOffset[0] = 0;
+    frag_header.fragmentationLength[0] = size;
+    webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
+    RTC_LOG(LS_ERROR) << "VP9 qp :" << encoded_image_.qp_;
+
+    if (key_frame) {
+      gof_idx_ = 0;
+    }
+    codec_specific.codecType = webrtc::kVideoCodecVP9;
+    codec_specific.codecSpecific.VP9.inter_pic_predicted = key_frame ? false : true;
+    codec_specific.codecSpecific.VP9.flexible_mode = false;
+    codec_specific.codecSpecific.VP9.ss_data_available = key_frame ? true : false;
+    codec_specific.codecSpecific.VP9.temporal_idx = webrtc::kNoTemporalIdx;
+    codec_specific.codecSpecific.VP9.temporal_up_switch = true;
+    codec_specific.codecSpecific.VP9.inter_layer_predicted = false;
+    codec_specific.codecSpecific.VP9.gof_idx =
+          static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
+    codec_specific.codecSpecific.VP9.num_spatial_layers = 1;
+    codec_specific.codecSpecific.VP9.first_frame_in_picture = true;
+    codec_specific.codecSpecific.VP9.end_of_picture = true;
+    codec_specific.codecSpecific.VP9.spatial_layer_resolution_present = false;
+    if (codec_specific.codecSpecific.VP9.ss_data_available) {
+      codec_specific.codecSpecific.VP9.spatial_layer_resolution_present = true;
+      codec_specific.codecSpecific.VP9.width[0] = encoded_image_._encodedWidth;
+      codec_specific.codecSpecific.VP9.height[0] = encoded_image_._encodedHeight;
+      codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
+    }
+  }
 
   webrtc::EncodedImageCallback::Result result =
       callback_->OnEncodedImage(encoded_image_, &codec_specific, &frag_header);

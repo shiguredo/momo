@@ -5,6 +5,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
+#include "media/base/vp9_profile.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -18,7 +19,7 @@
 #include "hwenc_mmal/mmal_h264_encoder.h"
 #endif
 #if USE_JETSON_ENCODER
-#include "hwenc_jetson/jetson_h264_encoder.h"
+#include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 #if USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
@@ -30,8 +31,9 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
     const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
-  for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
-    supported_codecs.push_back(format);
+  supported_codecs.push_back(webrtc::SdpVideoFormat(
+      cricket::kVp9CodecName,
+      {{webrtc::kVP9FmtpProfileId, webrtc::VP9ProfileToString(webrtc::VP9Profile::kProfile0)}}));
 
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
       CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
@@ -69,8 +71,14 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
     return webrtc::VP8Encoder::Create();
 
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
+  if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
+#if USE_JETSON_ENCODER
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+#else
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+#endif
+  }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
 #if USE_MMAL_ENCODER
@@ -79,7 +87,7 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
 #endif
 #if USE_JETSON_ENCODER
     return std::unique_ptr<webrtc::VideoEncoder>(
-        absl::make_unique<JetsonH264Encoder>(cricket::VideoCodec(format)));
+        absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
 #endif
 #if USE_NVCODEC_ENCODER
     if (NvCodecH264Encoder::IsSupported()) {
