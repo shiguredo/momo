@@ -75,7 +75,7 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   webrtc::VideoCodecMode mode_ = webrtc::VideoCodecMode::kRealtimeVideo;
   NV_ENC_INITIALIZE_PARAMS initialize_params_;
   std::vector<std::vector<uint8_t>> v_packet_;
-  webrtc::EncodedImage encoded_image_;
+  std::unique_ptr<webrtc::EncodedImage> encoded_image_;
 };
 
 #endif  // NVCODEC_H264_ENCODER_H_
