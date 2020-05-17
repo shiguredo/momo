@@ -175,6 +175,32 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 
     ret = encoder_->setLevel(V4L2_MPEG_VIDEO_H264_LEVEL_5_1);
     INIT_ERROR(ret < 0, "Failed to setLevel");
+
+    // 必須 なければ H264 でフレームレートが出ない
+    ret = encoder_->setNumBFrames(0);
+    INIT_ERROR(ret < 0, "Failed to setNumBFrames");
+
+    ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
+    INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
+
+    ret = encoder_->setInsertVuiEnabled(true);
+    INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
+
+    // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
+    ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
+    INIT_ERROR(ret < 0, "Failed to setHWPresetType");
+
+  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
+    // QP:160 が 30fps が出る下限。これ以上下げると 30fps を割る 
+    ret = encoder_->setQpRange(QP_RETAIN_VAL, 160,
+                               QP_RETAIN_VAL, 160,
+                               QP_RETAIN_VAL, 160);
+    INIT_ERROR(ret < 0, "Failed to setQpRange");
+
+    // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど SLOW でもフレームレートの落ち方が変わらない
+    ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_SLOW);
+    INIT_ERROR(ret < 0, "Failed to setHWPresetType");
+
   }
 
   ret = encoder_->setRateControlMode(V4L2_MPEG_VIDEO_BITRATE_MODE_CBR);
@@ -195,20 +221,6 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 
   ret = encoder_->setFrameRate(framerate_, 1);
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
-
-  // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
-  ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
-  INIT_ERROR(ret < 0, "Failed to setHWPresetType");
-
-  // 必須 なければ H264 でフレームレートが出ない
-  ret = encoder_->setNumBFrames(0);
-  INIT_ERROR(ret < 0, "Failed to setNumBFrames");
-
-  ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
-  INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
-
-  ret = encoder_->setInsertVuiEnabled(true);
-  INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
 
   if (use_mjpeg_) {
     ret =
@@ -337,7 +349,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
   struct v4l2_plane planes[MAX_PLANES];
 
   if (!v4l2_buf) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << " v4l2_buf is null";
     return false;
   }
   {
@@ -371,7 +383,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
   }
 
   if (v4l2_buf->m.planes[0].bytesused == 0) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << " buffer size is zero";
     return false;
   }
 
@@ -541,12 +553,6 @@ void JetsonVideoEncoder::SetBitrateBps(uint32_t bitrate_bps) {
   }
   configured_bitrate_bps_ = bitrate_bps;
   RTC_LOG(LS_INFO) << __FUNCTION__ << " " << bitrate_bps << "bit/sec";
-  if (codec_.codecType == webrtc::kVideoCodecVP9) {
-    /* VP9 のときハードウェアエンコーダの実際のレートが指定したレートの大体半分になってしまう
-       これを修正するために 2倍 の値をエンコーダに設定する
-       実際の値との差異については BitrateAdjuster の補正に任せる */
-    bitrate_bps *= 2;
-  }
   if (encoder_->setBitrate(bitrate_bps) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to setBitrate";
     return;
@@ -563,9 +569,9 @@ webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
     info.scaling_settings =
         VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
-    static const int kLowVp9QpThreshold = 150;
-    static const int kHighVp9QpThreshold = 190;
-    info.scaling_settings =
+    static const int kLowVp9QpThreshold = 160;
+    static const int kHighVp9QpThreshold = 161;
+    info.scaling_settings = 
         VideoEncoder::ScalingSettings(kLowVp9QpThreshold, kHighVp9QpThreshold);
   }
   info.is_hardware_accelerated = true;
