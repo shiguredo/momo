@@ -19,7 +19,7 @@ https://momo.shiguredo.jp/
 
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
 - Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用しています
-- NVIDIA Jetson Nano に搭載されている H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
+- NVIDIA Jetson に搭載されている H.264 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
 
 ### データチャネル経由でのシリアルの読み書き
@@ -78,7 +78,9 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi Zero
     - Raspberry Pi 1
 - Ubuntu 18.04 x86_64
-- Ubuntu 18.04 ARMv8 Jetson Nano
+- Ubuntu 18.04 ARMv8 Jetson
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/) 
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
 - macOS 10.15 x86_64 以降
 - Windows 10.1809 x86_64 以降
@@ -154,6 +156,10 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
+- Jetson AGX Xavier 対応
+    - MotionJPEG ハードウェアデコーダ対応
+    - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
+    - H.265 / H.264 / VP9 ハードウェアデコーダ対応
 - Jetson Xavier NX 対応
     - MotionJPEG ハードウェアデコーダ対応
     - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
@@ -200,9 +206,9 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 ### Discord
 
+- **サポートしません**
 - アドバイスします
 - フィードバック歓迎します
-- サポートしません
 
 最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
