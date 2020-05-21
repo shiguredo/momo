@@ -12,6 +12,7 @@
 #include "api/video_track_source_proxy.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/audio_device.h"
+#include "modules/audio_device/include/audio_device_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
@@ -94,6 +95,9 @@ RTCManager::RTCManager(
 #if USE_ROS
   media_dependencies.adm = ROSAudioDeviceModule::Create(
       _conn_settings, dependencies.task_queue_factory.get());
+#elif defined(_WIN32)
+  media_dependencies.adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+      dependencies.task_queue_factory.get());
 #else
   media_dependencies.adm = webrtc::AudioDeviceModule::Create(
       audio_layer, dependencies.task_queue_factory.get());
