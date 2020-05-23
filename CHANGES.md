@@ -19,6 +19,8 @@
     - @voluntas
 - [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.4.2 に上げる
     - @melpon
+- [FIX] Windows の ADM に専用の関数を使うようにする
+    - @torikizi @melpon
 
 ## 2020.6
 
