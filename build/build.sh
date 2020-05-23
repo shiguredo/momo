@@ -17,7 +17,7 @@ _PACKAGES=" \
 "
 
 function show_help() {
-  echo "$PROGRAM [--clean] [--package] [--no-cache] [-no-tty] [--no-mount] <package>"
+  echo "$PROGRAM [--clean] [--package] [--no-cache] [--no-tty] [--no-mount] <package>"
   echo "<package>:"
   for package in $_PACKAGES; do
     echo "  - $package"
