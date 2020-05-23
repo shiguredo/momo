@@ -177,6 +177,28 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-20.04")
+  set(TARGET_ARCH "x86_64")
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_NVCODEC_ENCODER ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(SDL2_ROOT_DIR /root/SDL2)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
+  set(CMAKE_C_COMPILER clang-8)
+  set(CMAKE_CXX_COMPILER clang++-8)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
 else()
 endif()
 

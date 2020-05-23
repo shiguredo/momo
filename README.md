@@ -80,6 +80,7 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson Nano
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+- Ubuntu 20.04 x86_64
 - macOS 10.15 x86_64 以降
 - Windows 10.1809 x86_64 以降
 
