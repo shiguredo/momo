@@ -41,7 +41,6 @@ RUN \
       -D_LIBCPP_ABI_UNSTABLE \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
-      -no-pie \
     ' \
     linkflags=' \
     ' \
