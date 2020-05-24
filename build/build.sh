@@ -14,6 +14,7 @@ _PACKAGES=" \
   ubuntu-16.04_x86_64_ros \
   ubuntu-18.04_armv8_jetson_nano \
   ubuntu-18.04_x86_64 \
+  ubuntu-20.04_x86_64 \
 "
 
 function show_help() {
