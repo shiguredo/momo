@@ -70,17 +70,23 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-- Raspbian Buster ARMv7
+- Raspberry Pi OS (64bit) ARMv8
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
-- Raspbian Buster ARMv6
+- Raspberry Pi OS (32bit) ARMv7
+    - Raspberry Pi 4
+    - Raspberry Pi 3
+    - Raspberry Pi 2
+- Raspberry Pi OS (32bit) ARMv6
     - Raspberry Pi Zero
     - Raspberry Pi 1
 - Ubuntu 18.04 x86_64
-- Ubuntu 18.04 ARMv8 Jetson Nano
-    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
 - Ubuntu 20.04 x86_64
+- Ubuntu 18.04 ARMv8 Jetson
+    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - macOS 10.15 x86_64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -156,12 +162,12 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Jetson Xavier NX 対応
-    - MotionJPEG ハードウェアデコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアデコーダ対応
+    - [ ] MotionJPEG ハードウェアデコーダ対応
+    - [ ] H.265 / H.264 / VP9 ハードウェアエンコーダ対応
+    - [ ] H.265 / H.264 / VP9 ハードウェアデコーダ対応
 - Jetson Nano
-    - H.265 ハードウェアエンコーダ対応
-    - H.265 ハードウェアデコーダ対応
+    - [ ] H.265 ハードウェアエンコーダ対応
+    - [ ] H.265 ハードウェアデコーダ対応
 - Raspberry Pi 4
     - H.265 ハードウェアデコーダ対応
 - AV1 対応
@@ -175,17 +181,15 @@ limitations under the License.
     - [x] H.264 ハードウェアエンコーダ対応
         - [x] Ubuntu 18.04
         - [x] Windows 10
-    - VP8 / VP9 / H.264 ハードウェアデコーダ対応
+    - [ ] VP8 / VP9 / H.264 ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
-    - MotionJPEG ハードウェアデコーダ対応
+    - [ ] MotionJPEG ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
     - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - Simulcast 対応
-- Ubuntu 18.04 Raspberry Pi 対応
-    - H.264 の HWA 対応を含む
 - 録画対応
     - MP4 形式での出力
 - ROS Melodic 対応
