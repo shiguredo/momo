@@ -19,8 +19,12 @@
     - @voluntas
 - [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.4.2 に上げる
     - @melpon
+- [ADD] Ubuntu 20.04 x86_64 に対応する
+    - @hakobera
 - [FIX] Windows の ADM に専用の関数を使うようにする
     - @torikizi @melpon
+- [FIX] build.sh の --no-tty オプションのヘルプメッセージの修正
+    - @hakobera
 
 ## 2020.6
 
