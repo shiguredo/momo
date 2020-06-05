@@ -195,7 +195,7 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--video-codecs", video_codecs,
+  app.add_flag("--video-codec-engines", video_codecs,
                "List available video encoders/decoders");
   app.add_flag("--no-google-stun", cs.no_google_stun,
                "Do not use google stun");
