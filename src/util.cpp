@@ -450,6 +450,11 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
   //
   // みたいな感じに出力する
   auto list_codecs = [](std::vector<VideoCodecInfo::Type> types) {
+    if (types.empty()) {
+      std::cout << "    *UNAVAILABLE*" << std::endl;
+      return;
+    }
+
     for (int i = 0; i < types.size(); i++) {
       auto type = types[i];
       auto p = VideoCodecInfo::TypeToString(type);
