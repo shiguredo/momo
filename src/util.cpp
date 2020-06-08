@@ -193,6 +193,7 @@ void Util::parseArgs(int argc,
                "[WIDTH]x[HEIGHT].";
       },
       "");
+
   auto is_valid_screen_capture = CLI::Validator(
       [](std::string input) -> std::string {
 #if USE_SCREEN_CAPTURER
@@ -261,7 +262,8 @@ void Util::parseArgs(int argc,
   app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
-  app.add_flag("--screen-capture", cs.screen_capture, "Capture screen");
+  app.add_flag("--screen-capture", cs.screen_capture, "Capture screen")
+      ->check(is_valid_screen_capture);
 
   // オーディオフラグ
   app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
