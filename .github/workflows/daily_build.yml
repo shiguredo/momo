@@ -11,7 +11,22 @@ jobs:
     name: Build momo for Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          Get-Content "VERSION" | Foreach-Object {
+            if (!$_) { continue }
+            $var = $_.Split('=')
+            New-Variable -Name $var[0] -Value $var[1] -Force
+          }
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: build\_cache\boost
+          key: boost-${{ steps.versions.outputs.boost_version }}.zip
       - run: .\build.bat -package
         working-directory: build
         timeout-minutes: 120
@@ -19,7 +34,18 @@ jobs:
     name: Build momo for macOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          source VERSION
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: build/_cache/boost
+          key: boost-${{ steps.versions.outputs.boost_version }}.tar.gz
       - run: ./build.sh macos
         working-directory: build
         timeout-minutes: 120
@@ -37,7 +63,18 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          source VERSION
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: build/_cache/boost
+          key: boost-${{ steps.versions.outputs.boost_version }}.tar.gz
       - run: ./build.sh --no-tty --no-mount ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
