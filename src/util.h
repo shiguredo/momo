@@ -7,6 +7,7 @@
 
 #include "api/peer_connection_interface.h"
 #include "connection_settings.h"
+#include "video_codec_info.h"
 
 class Util {
  public:
@@ -38,6 +39,9 @@ class Util {
   serverError(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::beast::string_view what);
+
+ private:
+  static void ShowVideoCodecs(VideoCodecInfo info);
 };
 
 // boost::system::error_code のエラーをいい感じに出力するマクロ
