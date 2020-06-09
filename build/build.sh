@@ -155,6 +155,12 @@ case "$PACKAGE" in
     rm -rf $PACKAGE/script
     cp -r ../script $PACKAGE/script
 
+    # 可能な限りキャッシュを利用する
+    mkdir -p $PACKAGE/_cache/boost/
+    if [ -e ../_cache/boost/ ]; then
+      cp -r ../_cache/boost/* $PACKAGE/_cache/boost/
+    fi
+
     DOCKER_BUILDKIT=1 docker build \
       -t momo/$PACKAGE:m$WEBRTC_BUILD_VERSION \
       $DOCKER_BUILD_FLAGS \
@@ -166,6 +172,18 @@ case "$PACKAGE" in
       --build-arg CMAKE_VERSION=$CMAKE_VERSION \
       --build-arg PACKAGE_NAME=$PACKAGE \
       $PACKAGE
+
+    rm -rf $PACKAGE/_cache/boost/
+
+    # キャッシュしたデータを取り出す
+    set +e
+    docker container create -it --name momo-$PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION
+    docker container start momo-$PACKAGE
+    mkdir -p ../_cache/boost/
+    docker container cp momo-$PACKAGE:/root/_cache/boost/. ../_cache/boost/
+    docker container stop momo-$PACKAGE
+    docker container rm momo-$PACKAGE
+    set -e
 
     rm -r $PACKAGE/script
 

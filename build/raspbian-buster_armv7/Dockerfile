@@ -36,10 +36,11 @@ RUN /root/get_llvm.sh /root/webrtc /root
 
 ARG BOOST_VERSION
 
+COPY _cache/boost/ /root/_cache/boost/
 COPY script/setup_boost.sh /root/
 RUN \
   set -ex \
-  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source /root/_cache/boost \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \

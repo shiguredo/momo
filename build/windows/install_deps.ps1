@@ -4,6 +4,7 @@ $SOURCE_DIR = Join-Path (Resolve-Path ".").Path "_source"
 $BUILD_DIR = Join-Path (Resolve-Path ".").Path "_build"
 $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 $INSTALL_DIR_SLASH = $INSTALL_DIR.Replace("\", "/")
+$CACHE_DIR = [IO.Path]::Combine((Resolve-Path ".").Path, "..", "..", "_cache")
 
 $VERSION_FILE = Join-Path (Resolve-Path ".").Path "..\..\VERSION"
 Get-Content $VERSION_FILE | Foreach-Object{
@@ -46,7 +47,7 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
 if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
   $_URL = "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
-  $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+  $_FILE = "$CACHE_DIR\boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   # ダウンロードと展開
   Push-Location $SOURCE_DIR
     if (!(Test-Path $_FILE)) {
