@@ -25,8 +25,8 @@ jobs:
         id: cache-boost
         uses: actions/cache@v2
         with:
-          path: build\_cache\boost
-          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip
+          path: _cache\boost
+          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v2
       - run: .\build.bat -package
         working-directory: build
         timeout-minutes: 120
@@ -44,8 +44,8 @@ jobs:
         id: cache-boost
         uses: actions/cache@v2
         with:
-          path: build/_cache/boost
-          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz
+          path: _cache/boost
+          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
       - run: ./build.sh macos
         working-directory: build
         timeout-minutes: 120
@@ -73,8 +73,8 @@ jobs:
         id: cache-boost
         uses: actions/cache@v2
         with:
-          path: build/_cache/boost
-          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz
+          path: _cache/boost
+          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
       - run: ./build.sh --no-tty --no-mount ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
