@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: build\_cache\boost
-          key: boost-${{ steps.versions.outputs.boost_version }}.zip
+          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip
       - run: .\build.bat -package
         working-directory: build
         timeout-minutes: 120
@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: build/_cache/boost
-          key: boost-${{ steps.versions.outputs.boost_version }}.tar.gz
+          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz
       - run: ./build.sh macos
         working-directory: build
         timeout-minutes: 120
@@ -74,7 +74,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: build/_cache/boost
-          key: boost-${{ steps.versions.outputs.boost_version }}.tar.gz
+          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz
       - run: ./build.sh --no-tty --no-mount ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
