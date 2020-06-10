@@ -21,6 +21,10 @@
     - @melpon
 - [ADD] Ubuntu 20.04 x86_64 に対応する
     - @hakobera
+- [ADD] ビデオエンコーダデコーダを表示する `--video-codec-engines` を追加
+    - @melpon
+- [ADD] GitHub Actions の Boost をキャッシュ化する
+    - @melpon
 - [FIX] Windows の ADM に専用の関数を使うようにする
     - @torikizi @melpon
 - [FIX] build.sh の --no-tty オプションのヘルプメッセージの修正
