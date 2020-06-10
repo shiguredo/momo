@@ -7,10 +7,12 @@ set -ex
 SOURCE_DIR="`pwd`/_source"
 BUILD_DIR="`pwd`/_build"
 INSTALL_DIR="`pwd`/_install"
+CACHE_DIR="`pwd`/../../_cache"
 
 mkdir -p $SOURCE_DIR
 mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
+mkdir -p $CACHE_DIR
 
 source ../../VERSION
 
@@ -81,8 +83,7 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
   rm -rf $SOURCE_DIR/boost
   rm -rf $BUILD_DIR/boost
   rm -rf $INSTALL_DIR/boost
-  mkdir -p $SOURCE_DIR/boost
-  ../../script/setup_boost.sh $BOOST_VERSION $SOURCE_DIR/boost
+  ../../script/setup_boost.sh $BOOST_VERSION $SOURCE_DIR/boost $CACHE_DIR/boost
   pushd $SOURCE_DIR/boost/source
     echo "using clang : : $INSTALL_DIR/llvm/clang/bin/clang++ : ;" > project-config.jam
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
