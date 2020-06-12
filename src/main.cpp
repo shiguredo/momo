@@ -13,6 +13,12 @@
 #include "ros/ros_video_capture.h"
 #include "signal_listener.h"
 #else
+
+#if USE_SCREEN_CAPTURER
+#include "rtc/screen_video_capturer.h"
+#include "rtc_base/string_utils.h"
+#endif
+
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
@@ -73,6 +79,23 @@ int main(int argc, char* argv[]) {
     if (cs.no_video_device) {
       return nullptr;
     }
+
+#if USE_SCREEN_CAPTURER
+    if (cs.screen_capture) {
+      RTC_LOG(LS_INFO) << "Screen capturer source list: "
+                       << ScreenVideoCapturer::GetSourceListString();
+      webrtc::DesktopCapturer::SourceList sources;
+      if (!ScreenVideoCapturer::GetSourceList(&sources)) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
+        return nullptr;
+      }
+      auto size = cs.getSize();
+      rtc::scoped_refptr<ScreenVideoCapturer> capturer(
+          new rtc::RefCountedObject<ScreenVideoCapturer>(
+              sources[0].id, size.width, size.height, cs.framerate));
+      return capturer;
+    }
+#endif
 
 #if USE_ROS
     rtc::scoped_refptr<ROSVideoCapture> capturer(
