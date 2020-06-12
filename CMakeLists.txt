@@ -122,7 +122,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
 
   list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson")
 
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-18.04")

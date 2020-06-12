@@ -37,15 +37,15 @@ $ ./build.sh raspbian-buster_armv7
 
 うまくいかない場合は `./build.sh --clean raspbian-buster_armv7 && ./build.sh raspbian-buster_armv7` を試してみてください。それでもだめな場合は Discord にお願いします。
 
-## Ubuntu 18.04 (armv8) Jetson Nano 向けバイナリを作成する
+## Ubuntu 18.04 (armv8) Jetson 向けバイナリを作成する
 
-build ディレクトリ以下で ./build.sh ubuntu-18.04_armv8_jetson_nano と打つことで Momo の Ubuntu 18.04 armv8 Jetson Nano 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh ubuntu-18.04_armv8_jetson と打つことで Momo の Ubuntu 18.04 armv8 Jetson 向けバイナリが生成されます。
 
 ```shell
-$ ./build.sh ubuntu-18.04_armv8_jetson_nano
+$ ./build.sh ubuntu-18.04_armv8_jetson
 ```
 
-うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson_nano && ./build.sh ubuntu-18.04_armv8_jetson_nano` を試してみてください。それでもだめな場合は Discord にお願いします。
+うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson && ./build.sh ubuntu-18.04_armv8_jetson` を試してみてください。それでもだめな場合は Discord にお願いします。
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 

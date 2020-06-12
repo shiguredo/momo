@@ -20,7 +20,7 @@ Download the latest version of the binary for Jetson Nano from below.
 https://github.com/shiguredo/momo/releases
 
 ```
-momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+momo-<VERSION>_ubuntu-18.04_armv8_jetson.tar.gz
 ```
 
 ## Use "test mode"
