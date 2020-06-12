@@ -25,6 +25,9 @@
     - @melpon
 - [ADD] GitHub Actions の Boost をキャッシュ化する
     - @melpon
+- [ADD] 全画面スクリーンキャプチャ機能を Windows / Linux 向けに追加する
+    - ``--screen-capture`` 指定することで利用可能
+    - @melpon
 - [FIX] Windows の ADM に専用の関数を使うようにする
     - @torikizi @melpon
 - [FIX] build.sh の --no-tty オプションのヘルプメッセージの修正
