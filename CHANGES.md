@@ -32,6 +32,8 @@
     - @torikizi @melpon
 - [FIX] build.sh の --no-tty オプションのヘルプメッセージの修正
     - @hakobera
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
+    - @melpon
 
 ## 2020.6
 
