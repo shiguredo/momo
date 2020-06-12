@@ -425,6 +425,7 @@ if (USE_SCREEN_CAPTURER)
         Xdamage
         Xfixes
         Xcomposite
+        Xrandr
     )
   endif()
   if (TARGET_OS STREQUAL "macos")
