@@ -30,20 +30,33 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
                                        (void**)idxgi_factory.GetAddressOf())));
   ComPtr<IDXGIAdapter> idxgi_adapter;
-  RTC_CHECK(
-      !FAILED(idxgi_factory->EnumAdapters(0, idxgi_adapter.GetAddressOf())));
-  RTC_CHECK(!FAILED(D3D11CreateDevice(
-      idxgi_adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0,
-      D3D11_SDK_VERSION, id3d11_device_.GetAddressOf(), NULL,
-      id3d11_context_.GetAddressOf())));
 
-  // 以下デバイス名を取得するだけの処理
-  DXGI_ADAPTER_DESC adapter_desc;
-  idxgi_adapter->GetDesc(&adapter_desc);
-  char szDesc[80];
-  size_t result = 0;
-  wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
-  RTC_LOG(INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
+  HRESULT hr = S_OK;
+  UINT adapter = 0;
+
+  do {
+    RTC_CHECK(!FAILED(hr = idxgi_factory->EnumAdapters(
+                          adapter, idxgi_adapter.GetAddressOf())));
+    if (FAILED(hr))
+      break;
+
+    DXGI_ADAPTER_DESC adapter_desc;
+    idxgi_adapter->GetDesc(&adapter_desc);
+    size_t result = 0;
+    char szDesc[80];
+    wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
+    if (strstr(szDesc, "NVIDIA") != nullptr) {
+      RTC_LOG(INFO) << __FUNCTION__ << " GPU in use: " << szDesc;
+      RTC_CHECK(!FAILED(D3D11CreateDevice(
+          idxgi_adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0,
+          D3D11_SDK_VERSION, id3d11_device_.GetAddressOf(), NULL,
+          id3d11_context_.GetAddressOf())));
+      break;
+    }
+    idxgi_adapter->Release();
+    adapter++;
+  } while (true);
+
 #endif
 #ifdef __linux__
   cuda_.reset(new NvCodecH264EncoderCuda());
