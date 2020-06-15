@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspbian-buster_armv6 /root /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspberry-pi-os_armv7 /root /root
 
 # コンパイラの取得
 

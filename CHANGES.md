@@ -11,8 +11,8 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M84.4147@{#6}` に上げる
-    - @voluntas
+- [UPDATE] `libwebrtc` を `M84.4147@{#7}` に上げる
+    - @voluntas, @melpon
 - [UPDATE] cmake を 3.17.3 に上げる
     - @voluntas
 - [UPDATE] Boost 1.73.0 にアップデートする
@@ -29,6 +29,8 @@
     - ``--screen-capture`` 指定することで利用可能
     - @melpon
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
+    - @melpon
+- [CHANGE] パッケージ名 `raspbian-buster_armv6` と `raspbian-buster_armv7` を `raspberry-pi-os_armv6` と `raspberry-pi-os_armv7` に変更
     - @melpon
 - [FIX] Windows の ADM に専用の関数を使うようにする
     - @torikizi @melpon

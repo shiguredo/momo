@@ -75,10 +75,10 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv6")
 
   set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv6")
   set(USE_MMAL_ENCODER ON)
@@ -97,10 +97,10 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
 
   set(Boost_ARCHITECTURE 32)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv7")
 
   set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv7")
   set(USE_MMAL_ENCODER ON)
@@ -664,7 +664,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_mmal/mmal_v4l2_capture.cpp
         )
 
-        if (TARGET_OS_LINUX STREQUAL "raspbian-buster")
+        if (TARGET_OS_LINUX STREQUAL "raspberry-pi-os")
           set(_VC_PATH ${SYSROOT}/opt/vc)
         else()
           set(_VC_PATH ${SYSROOT}/usr)

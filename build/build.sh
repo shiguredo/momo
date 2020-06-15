@@ -9,8 +9,8 @@ PROGRAM="$0"
 _PACKAGES=" \
   windows \
   macos \
-  raspbian-buster_armv6 \
-  raspbian-buster_armv7 \
+  raspberry-pi-os_armv6 \
+  raspberry-pi-os_armv7 \
   ubuntu-16.04_x86_64_ros \
   ubuntu-18.04_armv8_jetson \
   ubuntu-18.04_x86_64 \
