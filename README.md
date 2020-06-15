@@ -70,10 +70,6 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-- Raspberry Pi OS (64bit) ARMv8
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
 - Raspberry Pi OS (32bit) ARMv7
     - Raspberry Pi 4
     - Raspberry Pi 3
@@ -92,6 +88,10 @@ https://github.com/shiguredo/momo/releases
 
 ### 以下はビルドが通ること以外は確認していません
 
+- Raspberry Pi OS (64bit) ARMv8
+    - Raspberry Pi 4
+    - Raspberry Pi 3
+    - Raspberry Pi 2
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 
