@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.1.1-experimental
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ARG PACKAGE_NAME
 
@@ -9,23 +9,17 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloa
 
 # パッケージのインストール
 
-COPY script/apt_install_arm.sh /root/
+COPY script/apt_install_x86_64.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/apt_install_arm.sh
-
-# RootFS の構築
-
-COPY script/init_rootfs_armhf.sh /root/
-COPY rpi-raspbian.conf /root/
-RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/init_rootfs_armhf.sh /root/rootfs /root/rpi-raspbian.conf
+  /root/apt_install_x86_64.sh
 
 # WebRTC の取得
 
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspbian-buster_armv6 /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-20.04_x86_64 /root /root
+# COPY webrtc/ /root/webrtc/
 
 # コンパイラの取得
 
@@ -36,10 +30,11 @@ RUN /root/get_llvm.sh /root/webrtc /root
 
 ARG BOOST_VERSION
 
+COPY _cache/boost/ /root/_cache/boost/
 COPY script/setup_boost.sh /root/
 RUN \
   set -ex \
-  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source /root/_cache/boost \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
@@ -47,19 +42,13 @@ RUN \
       -D_LIBCPP_ABI_UNSTABLE \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
-      --target=arm-linux-gnueabihf \
-      --sysroot=/root/rootfs \
-      -I/root/rootfs/usr/include/arm-linux-gnueabihf \
     ' \
     linkflags=' \
-      -L/root/rootfs/usr/lib/arm-linux-gnueabihf \
-      -B/root/rootfs/usr/lib/arm-linux-gnueabihf \
     ' \
     toolset=clang \
     visibility=global \
     target-os=linux \
-    architecture=arm \
-    address-model=32 \
+    address-model=64 \
     link=static \
     variant=release \
     install \
@@ -83,3 +72,37 @@ ARG CMAKE_VERSION
 COPY script/get_cmake.sh /root/
 RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
 ENV PATH "/root/cmake/bin:$PATH"
+
+# SDL2 のビルド
+
+ARG SDL2_VERSION
+
+COPY script/setup_sdl2.sh /root/
+RUN \
+  set -ex \
+  && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
+  && mkdir -p /root/sdl2-source/build \
+  && cd /root/sdl2-source/build \
+  && cmake ../source \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
+    -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+    -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+    -DPTHREADS=ON \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DPULSEAUDIO=OFF \
+    -DESD=OFF \
+    -DVIDEO_WAYLAND=OFF \
+  && make -j`nproc` \
+  && make install
+
+# CUDA 周りのインストール
+RUN set -ex \
+  && apt-get update \
+  && apt-get install -y software-properties-common \
+  && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin \
+  && mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+  && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub \
+  && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-10.0 clang-8

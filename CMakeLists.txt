@@ -17,6 +17,7 @@ set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコー�
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
 set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
+set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
@@ -43,6 +44,7 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
   set(USE_NVCODEC_ENCODER ON)
   set(USE_H264 ON)
   set(USE_SDL2 ON)
+  set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
@@ -61,6 +63,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(TARGET_ARCH "x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
+  set(USE_SCREEN_CAPTURER OFF)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
@@ -72,10 +75,10 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv6")
 
   set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv6")
   set(USE_MMAL_ENCODER ON)
@@ -94,10 +97,10 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv6")
 
   set(Boost_ARCHITECTURE 32)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv7")
 
   set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspbian-buster")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv7")
   set(USE_MMAL_ENCODER ON)
@@ -119,7 +122,28 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspbian-buster_armv7")
 
   list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(USE_SDL2 ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(SDL2_ROOT_DIR "")
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+  list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/aarch64-linux-gnu/cmake/SDL2)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson")
 
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-18.04")
@@ -163,6 +187,30 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(USE_NVCODEC_ENCODER ON)
+  set(USE_SCREEN_CAPTURER ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(SDL2_ROOT_DIR /root/SDL2)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
+  set(CMAKE_C_COMPILER clang-8)
+  set(CMAKE_CXX_COMPILER clang++-8)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-20.04")
+  set(TARGET_ARCH "x86_64")
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_NVCODEC_ENCODER ON)
+  set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(JSON_ROOT_DIR /root/json)
   set(CLI11_ROOT_DIR /root/CLI11)
@@ -315,6 +363,7 @@ target_compile_definitions(momo
     USE_H264=$<BOOL:${USE_H264}>
     USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
+    USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
 )
 
 if (USE_SDL2)
@@ -382,6 +431,32 @@ if (USE_LIBCXX)
   )
 endif()
 
+if (USE_SCREEN_CAPTURER)
+  target_sources(momo
+    PRIVATE
+      src/rtc/screen_video_capturer.cpp
+  )
+  if (TARGET_OS STREQUAL "linux")
+    target_link_libraries(momo
+      PRIVATE
+        gio-2.0
+        gobject-2.0
+        glib-2.0
+        Xext
+        Xdamage
+        Xfixes
+        Xcomposite
+        Xrandr
+    )
+  endif()
+  if (TARGET_OS STREQUAL "macos")
+    target_link_libraries(momo
+      PRIVATE
+        "-framework IOSurface"
+    )
+  endif()
+endif()
+
 if ("${TARGET_OS}" STREQUAL "windows")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(momo PRIVATE /utf-8 /bigobj)
@@ -445,7 +520,6 @@ if ("${TARGET_OS}" STREQUAL "windows")
         D3D11.lib
     )
   endif()
-
 elseif (TARGET_OS STREQUAL "macos")
   target_sources(momo
     PRIVATE
@@ -611,7 +685,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_mmal/mmal_v4l2_capture.cpp
         )
 
-        if (TARGET_OS_LINUX STREQUAL "raspbian-buster")
+        if (TARGET_OS_LINUX STREQUAL "raspberry-pi-os")
           set(_VC_PATH ${SYSROOT}/opt/vc)
         else()
           set(_VC_PATH ${SYSROOT}/usr)

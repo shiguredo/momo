@@ -16,21 +16,16 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 # RootFS の構築
 
 COPY script/init_rootfs_arm64.sh /root/
-COPY arm64.conf /root/
+COPY rpi-raspbian.conf /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/init_rootfs_arm64.sh /root/rootfs /root/arm64.conf
-
-# 構築した RootFS を Jetson Nano のファイルで上書きする
-
-COPY jetson.sh /root/
-RUN /root/jetson.sh
+  /root/init_rootfs_arm64.sh /root/rootfs /root/rpi-raspbian.conf
 
 # WebRTC の取得
 
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8 /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspberry-pi-os_armv8 /root /root
 
 # コンパイラの取得
 
@@ -41,10 +36,11 @@ RUN /root/get_llvm.sh /root/webrtc /root
 
 ARG BOOST_VERSION
 
+COPY _cache/boost/ /root/_cache/boost/
 COPY script/setup_boost.sh /root/
 RUN \
   set -ex \
-  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source /root/_cache/boost \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
@@ -88,37 +84,3 @@ ARG CMAKE_VERSION
 COPY script/get_cmake.sh /root/
 RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
 ENV PATH "/root/cmake/bin:$PATH"
-
-# SDL2 のビルド
-
-ARG SDL2_VERSION
-
-COPY script/setup_sdl2.sh /root/
-RUN \
-  set -ex \
-  && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
-  && mkdir -p /root/sdl2-source/build \
-  && cd /root/sdl2-source/build \
-  && cmake ../source \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
-    -DCMAKE_SYSTEM_NAME=Linux \
-    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-    -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
-    -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
-    -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
-    -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
-    -DCMAKE_FIND_ROOT_PATH=/root/rootfs \
-    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
-    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
-    -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH \
-    -DCMAKE_SYSROOT=/root/rootfs \
-    -DPTHREADS=ON \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DPULSEAUDIO=OFF \
-    -DESD=OFF \
-    -DVIDEO_WAYLAND=OFF \
-  && make -j`nproc` \
-  && make install
-

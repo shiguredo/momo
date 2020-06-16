@@ -62,7 +62,7 @@ fi
 # WebRTC
 if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
   rm -rf $INSTALL_DIR/webrtc
-  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION ubuntu-18.04_x86_64 $INSTALL_DIR
+  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION ubuntu-18.04_x86_64 $INSTALL_DIR $SOURCE_DIR
 fi
 
 # LLVM

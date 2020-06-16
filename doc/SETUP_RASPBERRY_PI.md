@@ -1,11 +1,11 @@
-# Raspberry Pi (Raspbian) で Momo を使ってみる
+# Raspberry Pi (Raspberry-Pi-OS) で Momo を使ってみる
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspbian-buster_armv7.tar.gz` を利用してください
-- Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspbian-buster_armv6.tar.gz` を利用してください
+- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pic-os_armv7.tar.gz` を利用してください
+- Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspberry-pic-os_armv6.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
@@ -32,7 +32,7 @@ $ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3 libsdl2-dev
 ```
 
-### Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
+### Raspberry-Pi-OS で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
 
 これは USB カメラを利用する場合は不要なオプションです。
 

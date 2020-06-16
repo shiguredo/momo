@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.1.1-experimental
-FROM ros:kinetic-ros-core-xenial
+FROM ubuntu:18.04
 
 ARG PACKAGE_NAME
 
@@ -9,18 +9,23 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloa
 
 # パッケージのインストール
 
-COPY script/apt_install_x86_64.sh /root/
+COPY script/apt_install_arm.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/apt_install_x86_64.sh \
-  && apt-get install -y ros-kinetic-audio-common
+  /root/apt_install_arm.sh
+
+# RootFS の構築
+
+COPY script/init_rootfs_armhf.sh /root/
+COPY rpi-raspbian.conf /root/
+RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
+  /root/init_rootfs_armhf.sh /root/rootfs /root/rpi-raspbian.conf
 
 # WebRTC の取得
 
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-16.04_x86_64 /root /root
-# COPY webrtc/ /root/webrtc/
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspberry-pi-os_armv6 /root /root
 
 # コンパイラの取得
 
@@ -40,13 +45,22 @@ RUN \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
     cxxflags=' \
+      -D_LIBCPP_ABI_UNSTABLE \
+      -nostdinc++ \
+      -isystem/root/llvm/libcxx/include \
+      --target=arm-linux-gnueabihf \
+      --sysroot=/root/rootfs \
+      -I/root/rootfs/usr/include/arm-linux-gnueabihf \
     ' \
     linkflags=' \
+      -L/root/rootfs/usr/lib/arm-linux-gnueabihf \
+      -B/root/rootfs/usr/lib/arm-linux-gnueabihf \
     ' \
     toolset=clang \
     visibility=global \
     target-os=linux \
-    address-model=64 \
+    architecture=arm \
+    address-model=32 \
     link=static \
     variant=release \
     install \

@@ -9,15 +9,17 @@ PROGRAM="$0"
 _PACKAGES=" \
   windows \
   macos \
-  raspbian-buster_armv6 \
-  raspbian-buster_armv7 \
+  raspberry-pi-os_armv6 \
+  raspberry-pi-os_armv7 \
+  raspberry-pi-os_armv8 \
   ubuntu-16.04_x86_64_ros \
-  ubuntu-18.04_armv8_jetson_nano \
+  ubuntu-18.04_armv8_jetson \
   ubuntu-18.04_x86_64 \
+  ubuntu-20.04_x86_64 \
 "
 
 function show_help() {
-  echo "$PROGRAM [--clean] [--package] [--no-cache] [-no-tty] [--no-mount] <package>"
+  echo "$PROGRAM [--clean] [--package] [--no-cache] [--no-tty] [--no-mount] <package>"
   echo "<package>:"
   for package in $_PACKAGES; do
     echo "  - $package"
@@ -154,6 +156,12 @@ case "$PACKAGE" in
     rm -rf $PACKAGE/script
     cp -r ../script $PACKAGE/script
 
+    # 可能な限りキャッシュを利用する
+    mkdir -p $PACKAGE/_cache/boost/
+    if [ -e ../_cache/boost/ ]; then
+      cp -r ../_cache/boost/* $PACKAGE/_cache/boost/
+    fi
+
     DOCKER_BUILDKIT=1 docker build \
       -t momo/$PACKAGE:m$WEBRTC_BUILD_VERSION \
       $DOCKER_BUILD_FLAGS \
@@ -165,6 +173,18 @@ case "$PACKAGE" in
       --build-arg CMAKE_VERSION=$CMAKE_VERSION \
       --build-arg PACKAGE_NAME=$PACKAGE \
       $PACKAGE
+
+    rm -rf $PACKAGE/_cache/boost/
+
+    # キャッシュしたデータを取り出す
+    set +e
+    docker container create -it --name momo-$PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION
+    docker container start momo-$PACKAGE
+    mkdir -p ../_cache/boost/
+    docker container cp momo-$PACKAGE:/root/_cache/boost/. ../_cache/boost/
+    docker container stop momo-$PACKAGE
+    docker container rm momo-$PACKAGE
+    set -e
 
     rm -r $PACKAGE/script
 

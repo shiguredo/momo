@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspbian-buster_armv7 /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspberry-pi-os_armv7 /root /root
 
 # コンパイラの取得
 
@@ -36,10 +36,11 @@ RUN /root/get_llvm.sh /root/webrtc /root
 
 ARG BOOST_VERSION
 
+COPY _cache/boost/ /root/_cache/boost/
 COPY script/setup_boost.sh /root/
 RUN \
   set -ex \
-  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source /root/_cache/boost \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
