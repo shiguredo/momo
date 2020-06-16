@@ -1,4 +1,4 @@
-# Raspberry Pi (Raspbian) で Momo を使ってみる
+# Raspberry Pi (Raspberry-Pi-OS) で Momo を使ってみる
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
@@ -32,7 +32,7 @@ $ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3 libsdl2-dev
 ```
 
-### Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
+### Raspberry-Pi-OS で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
 
 これは USB カメラを利用する場合は不要なオプションです。
 

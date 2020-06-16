@@ -15,9 +15,9 @@ Docker for Windows では未検証です。Linux 版、または Docker for Mac 
 また、./build.sh 実行時に --no-mount オプションを指定することで、
 マウントを利用しないモードで docker container を動作させることができます。何らかの理由でマウントがうまく動作しない場合に使って下さい。
 
-## Raspbian (armv6) 向けバイナリを作成する
+## Raspberry Pi OS 32bit (armv6) 向けバイナリを作成する
 
-build ディレクトリ以下で ./build.sh raspberry-pi-os_armv6 と打つことで Momo の Raspbian Buster armv6 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh raspberry-pi-os_armv6 と打つことで Momo の Raspberry Pi OS armv6 向けバイナリが生成されます。
 
 ```shell
 $ ./build.sh raspberry-pi-os_armv6
@@ -25,17 +25,26 @@ $ ./build.sh raspberry-pi-os_armv6
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv6 && ./build.sh raspberry-pi-os_armv6` を試してみてください。それでもだめな場合は Discord にお願いします。
 
-## Raspbian (armv7) 向けバイナリを作成する
+## Raspberry Pi OS 32bit (armv7) 向けバイナリを作成する
 
-Raspberry Pi 3 B/B+ は実際は armv8 ですが 64 ビット機能が Raspbian では利用できないため、実質 armv7 相当のビルドになります。
-
-build ディレクトリ以下で ./build.sh raspberry-pi-os_armv7 と打つことで Momo の Raspbian Buster armv7 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh raspberry-pi-os_armv7 と打つことで Momo の Raspberry-Pi-OS armv7 向けバイナリが生成されます。
 
 ```shell
 $ ./build.sh raspberry-pi-os_armv7
 ```
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv7 && ./build.sh raspberry-pi-os_armv7` を試してみてください。それでもだめな場合は Discord にお願いします。
+
+## Raspberry Pi OS 64bit (armv8) 向けバイナリを作成する
+
+build ディレクトリ以下で ./build.sh raspberry-pi-os_armv8 と打つことで Momo の Raspberry Pi OS armv8 向けバイナリが生成されます。
+
+```shell
+$ ./build.sh raspberry-pi-os_armv8
+```
+
+うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv8 && ./build.sh raspberry-pi-os_armv8` を試してみてください。それでもだめな場合は Discord にお願いします。
+
 
 ## Ubuntu 18.04 (armv8) Jetson 向けバイナリを作成する
 

@@ -1,6 +1,6 @@
 # パッケージを作成する
 
-## Raspbian Buster (armv6) 向けパッケージの作成例
+## Raspberry Pi OS 32bit (armv6) 向けパッケージの作成例
 
 raspberry-pi-os_armv6 パッケージを作成する場合は build ディレクトリで ./build.sh --package raspberry-pi-os_armv6 と打つことでパッケージが作成されます。
 
@@ -22,6 +22,7 @@ Windows の場合は以下のコマンドになります。
 - macos
 - raspberry-pi-os_armv6
 - raspberry-pi-os_armv7
+- raspberry-pi-os_armv8
 - ubuntu-18.04_armv8_jetson
 - ubuntu-18.04_x86_64
 - ubuntu-20.04_x86_64
