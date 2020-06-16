@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2020.7
+
 - [UPDATE] `libwebrtc` を `M84.4147@{#7}` に上げる
     - @voluntas, @melpon
 - [UPDATE] cmake を 3.17.3 に上げる
