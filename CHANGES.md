@@ -28,6 +28,8 @@
 - [ADD] 全画面スクリーンキャプチャ機能を Windows / Linux 向けに追加する
     - ``--screen-capture`` 指定することで利用可能
     - @melpon
+- [ADD] `raspberry-pi-os_armv8` を追加
+    - @melpon
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
     - @melpon
 - [CHANGE] パッケージ名 `raspbian-buster_armv6` と `raspbian-buster_armv7` を `raspberry-pi-os_armv6` と `raspberry-pi-os_armv7` に変更

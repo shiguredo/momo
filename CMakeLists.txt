@@ -122,6 +122,27 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv7")
 
   list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
 
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(USE_SDL2 ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(SDL2_ROOT_DIR "")
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+  list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/aarch64-linux-gnu/cmake/SDL2)
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson")
 
   set(TARGET_OS "linux")
