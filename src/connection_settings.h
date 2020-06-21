@@ -6,6 +6,7 @@
 #include <string>
 
 #include "api/rtp_parameters.h"
+#include "video_codec_info.h"
 
 struct ConnectionSettings {
   std::string camera_name = "";
@@ -68,6 +69,15 @@ struct ConnectionSettings {
   bool disable_highpass_filter = false;
   bool disable_typing_detection = false;
   bool disable_residual_echo_detector = false;
+
+  VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type vp9_encoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type vp9_decoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type av1_encoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Auto;
 
   struct Size {
     int width;

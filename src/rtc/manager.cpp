@@ -23,26 +23,12 @@
 #include "scalable_track_source.h"
 #include "util.h"
 
-#ifdef __APPLE__
-#include "mac_helper/objc_codec_factory_helper.h"
-#else
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
-#endif
-
 #if USE_ROS
 #include "ros/ros_audio_device_module.h"
 #endif
 
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
-#include "api/video_codecs/video_encoder_factory.h"
-#include "hw_video_encoder_factory.h"
-#endif
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-#include "api/video_codecs/video_decoder_factory.h"
-#include "hw_video_decoder_factory.h"
-#endif
-
+#include "momo_video_decoder_factory.h"
+#include "momo_video_encoder_factory.h"
 #include "ssl_verifier.h"
 
 RTCManager::RTCManager(
@@ -106,27 +92,28 @@ RTCManager::RTCManager(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
-#ifdef __APPLE__
-  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
-  media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
-#else
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
-  media_dependencies.video_encoder_factory =
-      std::unique_ptr<webrtc::VideoEncoderFactory>(
-          absl::make_unique<HWVideoEncoderFactory>());
-#else
-  media_dependencies.video_encoder_factory =
-      webrtc::CreateBuiltinVideoEncoderFactory();
-#endif
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  media_dependencies.video_decoder_factory =
-      std::unique_ptr<webrtc::VideoDecoderFactory>(
-          absl::make_unique<HWVideoDecoderFactory>());
-#else
-  media_dependencies.video_decoder_factory =
-      webrtc::CreateBuiltinVideoDecoderFactory();
-#endif
-#endif
+
+  {
+    auto info = VideoCodecInfo::Get();
+    // 名前を短くする
+    auto& cs = conn_settings;
+    auto resolve = &VideoCodecInfo::Resolve;
+    media_dependencies.video_encoder_factory =
+        std::unique_ptr<webrtc::VideoEncoderFactory>(
+            absl::make_unique<MomoVideoEncoderFactory>(
+                resolve(cs.vp8_encoder, info.vp8_encoders),
+                resolve(cs.vp9_encoder, info.vp9_encoders),
+                resolve(cs.av1_encoder, info.av1_encoders),
+                resolve(cs.h264_encoder, info.h264_encoders)));
+    media_dependencies.video_decoder_factory =
+        std::unique_ptr<webrtc::VideoDecoderFactory>(
+            absl::make_unique<MomoVideoDecoderFactory>(
+                resolve(cs.vp8_decoder, info.vp8_decoders),
+                resolve(cs.vp9_decoder, info.vp9_decoders),
+                resolve(cs.av1_decoder, info.av1_decoders),
+                resolve(cs.h264_decoder, info.h264_decoders)));
+  }
+
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing =
       webrtc::AudioProcessingBuilder().Create();

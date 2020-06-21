@@ -205,8 +205,6 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--video-codec-engines", video_codecs,
-               "List available video encoders/decoders");
   app.add_flag("--no-google-stun", cs.no_google_stun,
                "Do not use google stun");
   app.add_flag("--no-video-device", cs.no_video_device,
@@ -282,6 +280,34 @@ void Util::parseArgs(int argc,
   app.add_flag("--disable-residual-echo-detector",
                cs.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
+
+  // ビデオエンコーダ
+  app.add_flag("--video-codec-engines", video_codecs,
+               "List available video encoders/decoders");
+  {
+    auto info = VideoCodecInfo::Get();
+    // 長いので短くする
+    auto f = [](auto x) {
+      return CLI::CheckedTransformer(VideoCodecInfo::GetValidMappingInfo(x),
+                                     CLI::ignore_case);
+    };
+    app.add_flag("--vp8-encoder", cs.vp8_encoder, "VP8 Encoder")
+        ->transform(f(info.vp8_encoders));
+    app.add_flag("--vp8-decoder", cs.vp8_decoder, "VP8 Decoder")
+        ->transform(f(info.vp8_decoders));
+    app.add_flag("--vp9-encoder", cs.vp9_encoder, "VP9 Encoder")
+        ->transform(f(info.vp9_encoders));
+    app.add_flag("--vp9-decoder", cs.vp9_decoder, "VP9 Decoder")
+        ->transform(f(info.vp9_decoders));
+    app.add_flag("--av1-encoder", cs.av1_encoder, "AV1 Encoder")
+        ->transform(f(info.av1_encoders));
+    app.add_flag("--av1-decoder", cs.av1_decoder, "AV1 Decoder")
+        ->transform(f(info.av1_decoders));
+    app.add_flag("--h264-encoder", cs.h264_encoder, "H.264 Encoder")
+        ->transform(f(info.h264_encoders));
+    app.add_flag("--h264-decoder", cs.h264_decoder, "H.264 Decoder")
+        ->transform(f(info.h264_decoders));
+  }
 
   auto is_serial_setting_format = CLI::Validator(
       [](std::string input) -> std::string {
@@ -471,7 +497,7 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
     for (int i = 0; i < types.size(); i++) {
       auto type = types[i];
       auto p = VideoCodecInfo::TypeToString(type);
-      std::cout << "    - " << p.first;
+      std::cout << "    - " << p.first << " [" << p.second << "]";
       if (i == 0) {
         std::cout << " (default)";
       }
