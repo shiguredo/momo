@@ -30,6 +30,8 @@
     - @melpon
 - [ADD] `raspberry-pi-os_armv8` を追加
     - @melpon
+- [ADD] ビデオコーデックのエンジン名を指定できる機能を実装
+    - @melpon
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
     - @melpon
 - [CHANGE] パッケージ名 `raspbian-buster_armv6` と `raspbian-buster_armv7` を `raspberry-pi-os_armv6` と `raspberry-pi-os_armv7` に変更
