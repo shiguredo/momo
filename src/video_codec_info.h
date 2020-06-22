@@ -1,6 +1,11 @@
 #ifndef VIDEO_CODEC_INFO_H_
 #define VIDEO_CODEC_INFO_H_
 
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+
 #if USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
