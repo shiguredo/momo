@@ -326,8 +326,8 @@ target_sources(momo
     src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
-    src/rtc/hw_video_decoder_factory.cpp
-    src/rtc/hw_video_encoder_factory.cpp
+    src/rtc/momo_video_decoder_factory.cpp
+    src/rtc/momo_video_encoder_factory.cpp
     src/rtc/manager.cpp
     src/rtc/native_buffer.cpp
     src/rtc/observer.cpp
