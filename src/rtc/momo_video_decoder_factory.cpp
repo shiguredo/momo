@@ -61,7 +61,6 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
 
   // VP8
-  // 今のところ Software のみ
   if (vp8_decoder_ == VideoCodecInfo::Type::Software ||
       vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
