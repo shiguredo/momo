@@ -70,14 +70,14 @@ struct ConnectionSettings {
   bool disable_typing_detection = false;
   bool disable_residual_echo_detector = false;
 
-  VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type vp9_encoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type vp9_decoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type av1_encoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Auto;
-  VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Auto;
+  VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp9_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp9_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type av1_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
 
   struct Size {
     int width;

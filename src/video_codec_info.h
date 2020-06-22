@@ -12,7 +12,7 @@
 
 struct VideoCodecInfo {
   enum class Type {
-    Auto,
+    Default,
     Jetson,
     MMAL,
     NVIDIA,
@@ -34,12 +34,12 @@ struct VideoCodecInfo {
   std::vector<Type> h264_encoders;
   std::vector<Type> h264_decoders;
 
-  // Auto を解決して、ちゃんとしたエンコーダ名か NotSupported になるようにする
+  // Default を解決して、ちゃんとしたエンコーダ名か NotSupported になるようにする
   static Type Resolve(Type specified, const std::vector<Type>& codecs) {
     if (codecs.empty()) {
       return Type::NotSupported;
     }
-    if (specified == Type::Auto) {
+    if (specified == Type::Default) {
       // 先頭のを利用する
       return codecs[0];
     }
@@ -53,7 +53,7 @@ struct VideoCodecInfo {
   static std::vector<std::pair<std::string, VideoCodecInfo::Type>>
   GetValidMappingInfo(std::vector<Type> types) {
     std::vector<std::pair<std::string, VideoCodecInfo::Type>> infos;
-    infos.push_back({"auto", VideoCodecInfo::Type::Auto});
+    infos.push_back({"default", VideoCodecInfo::Type::Default});
     for (auto type : types) {
       auto p = TypeToString(type);
       infos.push_back({p.second, type});
