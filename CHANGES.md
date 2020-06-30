@@ -11,10 +11,13 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M85.4183@{#0}` に上げる
+    - @voluntas
+
 ## 2020.7
 
 - [UPDATE] `libwebrtc` を `M84.4147@{#7}` に上げる
-    - @voluntas, @melpon
+    - @voluntas @melpon
 - [UPDATE] cmake を 3.17.3 に上げる
     - @voluntas
 - [UPDATE] Boost 1.73.0 にアップデートする
