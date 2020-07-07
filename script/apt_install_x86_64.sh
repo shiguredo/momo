@@ -20,6 +20,7 @@ apt-get -y install \
   libnss3-dev \
   libpulse-dev \
   libudev-dev \
+  libxrandr-dev \
   lsb-release \
   python \
   python-dev \

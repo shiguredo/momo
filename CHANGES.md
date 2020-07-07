@@ -11,12 +11,40 @@
 
 ## develop
 
-- [UPDATE] cmake を 3.17.2 に上げる
+- [UPDATE] `libwebrtc` を `M85.4183@{#0}` に上げる
+    - @voluntas
+
+## 2020.7
+
+- [UPDATE] `libwebrtc` を `M84.4147@{#7}` に上げる
+    - @voluntas @melpon
+- [UPDATE] cmake を 3.17.3 に上げる
     - @voluntas
 - [UPDATE] Boost 1.73.0 にアップデートする
     - @voluntas
 - [UPDATE] Jetson Nano 用のライブラリを NVIDIA L4T 32.4.2 に上げる
     - @melpon
+- [ADD] Ubuntu 20.04 x86_64 に対応する
+    - @hakobera
+- [ADD] ビデオエンコーダデコーダを表示する `--video-codec-engines` を追加
+    - @melpon
+- [ADD] GitHub Actions の Boost をキャッシュ化する
+    - @melpon
+- [ADD] 全画面スクリーンキャプチャ機能を Windows / Linux 向けに追加する
+    - ``--screen-capture`` 指定することで利用可能
+    - @melpon
+- [ADD] `raspberry-pi-os_armv8` を追加
+    - @melpon
+- [ADD] ビデオコーデックのエンジン名を指定できる機能を実装
+    - @melpon
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
+    - @melpon
+- [CHANGE] パッケージ名 `raspbian-buster_armv6` と `raspbian-buster_armv7` を `raspberry-pi-os_armv6` と `raspberry-pi-os_armv7` に変更
+    - @melpon
+- [FIX] Windows の ADM に専用の関数を使うようにする
+    - @torikizi @melpon
+- [FIX] build.sh の --no-tty オプションのヘルプメッセージの修正
+    - @hakobera
 
 ## 2020.6
 

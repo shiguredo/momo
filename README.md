@@ -70,23 +70,28 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-- Raspbian Buster ARMv7
+- Raspberry Pi OS (32bit) ARMv7
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
-- Raspbian Buster ARMv6
+- Raspberry Pi OS (32bit) ARMv6
     - Raspberry Pi Zero
     - Raspberry Pi 1
 - Ubuntu 18.04 x86_64
+- Ubuntu 20.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/) 
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - macOS 10.15 x86_64 以降
 - Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
 
+- Raspberry Pi OS (64bit) ARMv8
+    - Raspberry Pi 4
+    - Raspberry Pi 3
+    - Raspberry Pi 2
 - Ubuntu 16.04 x86_64 ROS Kinetic
     - http://wiki.ros.org/kinetic
 
@@ -151,6 +156,8 @@ limitations under the License.
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
     - [株式会社オプティム](https://www.optim.co.jp/) 様
+- Windows / Linux 版 スクリーンキャプチャ対応
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
 ## 優先実装が可能な機能一覧
 
@@ -161,12 +168,12 @@ limitations under the License.
     - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
     - H.265 / H.264 / VP9 ハードウェアデコーダ対応
 - Jetson Xavier NX 対応
-    - MotionJPEG ハードウェアデコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアデコーダ対応
+    - [ ] MotionJPEG ハードウェアデコーダ対応
+    - [ ] H.265 / H.264 / VP9 ハードウェアエンコーダ対応
+    - [ ] H.265 / H.264 / VP9 ハードウェアデコーダ対応
 - Jetson Nano
-    - H.265 ハードウェアエンコーダ対応
-    - H.265 ハードウェアデコーダ対応
+    - [ ] H.265 ハードウェアエンコーダ対応
+    - [ ] H.265 ハードウェアデコーダ対応
 - Raspberry Pi 4
     - H.265 ハードウェアデコーダ対応
 - AV1 対応
@@ -180,17 +187,15 @@ limitations under the License.
     - [x] H.264 ハードウェアエンコーダ対応
         - [x] Ubuntu 18.04
         - [x] Windows 10
-    - VP8 / VP9 / H.264 ハードウェアデコーダ対応
+    - [ ] VP8 / VP9 / H.264 ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
-    - MotionJPEG ハードウェアデコーダ対応
+    - [ ] MotionJPEG ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
     - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - Simulcast 対応
-- Ubuntu 18.04 Raspberry Pi 対応
-    - H.264 の HWA 対応を含む
 - 録画対応
     - MP4 形式での出力
 - ROS Melodic 対応

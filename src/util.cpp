@@ -131,6 +131,7 @@ void Util::parseArgs(int argc,
                         "Print help message for all modes and exit");
 
   bool version = false;
+  bool video_codecs = false;
 
   auto is_valid_force_i420 = CLI::Validator(
       [](std::string input) -> std::string {
@@ -194,6 +195,16 @@ void Util::parseArgs(int argc,
       },
       "");
 
+  auto is_valid_screen_capture = CLI::Validator(
+      [](std::string input) -> std::string {
+#if USE_SCREEN_CAPTURER
+        return std::string();
+#else
+        return "Not available because your device does not have this feature.";
+#endif
+      },
+      "");
+
   app.add_flag("--no-google-stun", cs.no_google_stun,
                "Do not use google stun");
   app.add_flag("--no-video-device", cs.no_video_device,
@@ -252,6 +263,9 @@ void Util::parseArgs(int argc,
   app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
+  app.add_flag("--screen-capture", cs.screen_capture, "Capture screen")
+      ->check(is_valid_screen_capture);
+
   // オーディオフラグ
   app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
                "Disable echo cancellation for audio");
@@ -266,6 +280,34 @@ void Util::parseArgs(int argc,
   app.add_flag("--disable-residual-echo-detector",
                cs.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
+
+  // ビデオエンコーダ
+  app.add_flag("--video-codec-engines", video_codecs,
+               "List available video encoders/decoders");
+  {
+    auto info = VideoCodecInfo::Get();
+    // 長いので短くする
+    auto f = [](auto x) {
+      return CLI::CheckedTransformer(VideoCodecInfo::GetValidMappingInfo(x),
+                                     CLI::ignore_case);
+    };
+    app.add_flag("--vp8-encoder", cs.vp8_encoder, "VP8 Encoder")
+        ->transform(f(info.vp8_encoders));
+    app.add_flag("--vp8-decoder", cs.vp8_decoder, "VP8 Decoder")
+        ->transform(f(info.vp8_decoders));
+    app.add_flag("--vp9-encoder", cs.vp9_encoder, "VP9 Encoder")
+        ->transform(f(info.vp9_encoders));
+    app.add_flag("--vp9-decoder", cs.vp9_decoder, "VP9 Decoder")
+        ->transform(f(info.vp9_decoders));
+    app.add_flag("--av1-encoder", cs.av1_encoder, "AV1 Encoder")
+        ->transform(f(info.av1_encoders));
+    app.add_flag("--av1-decoder", cs.av1_decoder, "AV1 Decoder")
+        ->transform(f(info.av1_decoders));
+    app.add_flag("--h264-encoder", cs.h264_encoder, "H.264 Encoder")
+        ->transform(f(info.h264_encoders));
+    app.add_flag("--h264-decoder", cs.h264_decoder, "H.264 Decoder")
+        ->transform(f(info.h264_decoders));
+  }
 
   auto is_serial_setting_format = CLI::Validator(
       [](std::string input) -> std::string {
@@ -407,6 +449,11 @@ void Util::parseArgs(int argc,
     exit(0);
   }
 
+  if (video_codecs) {
+    ShowVideoCodecs(VideoCodecInfo::Get());
+    exit(0);
+  }
+
   if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
     std::cout << app.help() << std::endl;
     exit(1);
@@ -426,6 +473,61 @@ void Util::parseArgs(int argc,
 }
 
 #endif
+
+void Util::ShowVideoCodecs(VideoCodecInfo info) {
+  // VP8:
+  //   Encoder:
+  //     - Software (default)
+  //   Decoder:
+  //     - Jetson (default)
+  //     - Software
+  //
+  // VP9:
+  //   Encoder:
+  //     - Software (default)
+  // ...
+  //
+  // みたいな感じに出力する
+  auto list_codecs = [](std::vector<VideoCodecInfo::Type> types) {
+    if (types.empty()) {
+      std::cout << "    *UNAVAILABLE*" << std::endl;
+      return;
+    }
+
+    for (int i = 0; i < types.size(); i++) {
+      auto type = types[i];
+      auto p = VideoCodecInfo::TypeToString(type);
+      std::cout << "    - " << p.first << " [" << p.second << "]";
+      if (i == 0) {
+        std::cout << " (default)";
+      }
+      std::cout << std::endl;
+    }
+  };
+  std::cout << "VP8:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.vp8_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.vp8_decoders);
+  std::cout << "" << std::endl;
+  std::cout << "VP9:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.vp9_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.vp9_decoders);
+  std::cout << "" << std::endl;
+  std::cout << "AV1:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.av1_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.av1_decoders);
+  std::cout << "" << std::endl;
+  std::cout << "H264:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.h264_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.h264_decoders);
+}
 
 std::string Util::generateRandomChars() {
   return generateRandomChars(32);

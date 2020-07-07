@@ -15,17 +15,17 @@ RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache
 
 # RootFS の構築
 
-COPY script/init_rootfs_armhf.sh /root/
+COPY script/init_rootfs_arm64.sh /root/
 COPY rpi-raspbian.conf /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/init_rootfs_armhf.sh /root/rootfs /root/rpi-raspbian.conf
+  /root/init_rootfs_arm64.sh /root/rootfs /root/rpi-raspbian.conf
 
 # WebRTC の取得
 
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspbian-buster_armv6 /root /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" raspberry-pi-os_armv8 /root /root
 
 # コンパイラの取得
 
@@ -36,10 +36,11 @@ RUN /root/get_llvm.sh /root/webrtc /root
 
 ARG BOOST_VERSION
 
+COPY _cache/boost/ /root/_cache/boost/
 COPY script/setup_boost.sh /root/
 RUN \
   set -ex \
-  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source \
+  && /root/setup_boost.sh "$BOOST_VERSION" /root/boost-source /root/_cache/boost \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
@@ -47,19 +48,19 @@ RUN \
       -D_LIBCPP_ABI_UNSTABLE \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
-      --target=arm-linux-gnueabihf \
+      --target=aarch64-linux-gnu \
       --sysroot=/root/rootfs \
-      -I/root/rootfs/usr/include/arm-linux-gnueabihf \
+      -I/root/rootfs/usr/include/aarch64-linux-gnu \
     ' \
     linkflags=' \
-      -L/root/rootfs/usr/lib/arm-linux-gnueabihf \
-      -B/root/rootfs/usr/lib/arm-linux-gnueabihf \
+      -L/root/rootfs/usr/lib/aarch64-linux-gnu \
+      -B/root/rootfs/usr/lib/aarch64-linux-gnu \
     ' \
     toolset=clang \
     visibility=global \
     target-os=linux \
     architecture=arm \
-    address-model=32 \
+    address-model=64 \
     link=static \
     variant=release \
     install \

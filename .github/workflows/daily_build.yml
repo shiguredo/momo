@@ -11,7 +11,22 @@ jobs:
     name: Build momo for Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          Get-Content "VERSION" | Foreach-Object {
+            if (!$_) { continue }
+            $var = $_.Split('=')
+            New-Variable -Name $var[0] -Value $var[1] -Force
+          }
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: _cache\boost
+          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v3
       - run: .\build.bat -package
         working-directory: build
         timeout-minutes: 120
@@ -19,7 +34,18 @@ jobs:
     name: Build momo for macOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          source VERSION
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: _cache/boost
+          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
       - run: ./build.sh macos
         working-directory: build
         timeout-minutes: 120
@@ -28,15 +54,28 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - raspbian-buster_armv6
-          - raspbian-buster_armv7
+          - raspberry-pi-os_armv6
+          - raspberry-pi-os_armv7
+          - raspberry-pi-os_armv8
           - ubuntu-16.04_x86_64_ros
-          - ubuntu-18.04_armv8_jetson_nano
+          - ubuntu-18.04_armv8_jetson
           - ubuntu-18.04_x86_64
+          - ubuntu-20.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Get Versions
+        run: |
+          source VERSION
+          echo "::set-output name=boost_version::${BOOST_VERSION}"
+        id: versions
+      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: _cache/boost
+          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
       - run: ./build.sh --no-tty --no-mount ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120

@@ -175,7 +175,7 @@ std::string MomoVersion::GetEnvironmentName() {
   }
 
 #if USE_JETSON_ENCODER
-  // Jetson Nano の場合、更に詳細な情報を取得する
+  // Jetson 系の場合、更に詳細な情報を取得する
 
   // nvidia-l4t-core のバージョンを拾う
   // $ dpkg-query --show nvidia-l4t-core
