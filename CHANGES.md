@@ -13,6 +13,10 @@
 
 - [UPDATE] `libwebrtc` を `M85.4183@{#0}` に上げる
     - @voluntas
+- [UPDATE] CLI11 を v1.9.1 にアップデートする
+    - @voluntas
+- [UPDATE] json を 3.8.0 に上げる
+    - @voluntas
 
 ## 2020.7
 
