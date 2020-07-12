@@ -79,14 +79,26 @@ RTCManager::RTCManager(
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #if USE_ROS
-  media_dependencies.adm = ROSAudioDeviceModule::Create(
-      _conn_settings, dependencies.task_queue_factory.get());
+  media_dependencies.adm =
+      _workerThread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+          RTC_FROM_HERE, [&] {
+            return ROSAudioDeviceModule::Create(
+                _conn_settings, dependencies.task_queue_factory.get());
+          });
 #elif defined(_WIN32)
-  media_dependencies.adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-      dependencies.task_queue_factory.get());
+  media_dependencies.adm =
+      _workerThread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+          RTC_FROM_HERE, [&] {
+            return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+                dependencies.task_queue_factory.get());
+          });
 #else
-  media_dependencies.adm = webrtc::AudioDeviceModule::Create(
-      audio_layer, dependencies.task_queue_factory.get());
+  media_dependencies.adm =
+      _workerThread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+          RTC_FROM_HERE, [&] {
+            return webrtc::AudioDeviceModule::Create(
+                audio_layer, dependencies.task_queue_factory.get());
+          });
 #endif
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
