@@ -230,6 +230,13 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     return nullptr;
   }
 
+  return std::make_shared<RTCConnection>(sender, std::move(observer),
+                                         connection);
+}
+
+void RTCManager::initTracks(RTCConnection* conn) {
+  auto connection = conn->getConnection();
+
   std::string stream_id = Util::generateRandomChars();
 
   if (_audio_track) {
@@ -253,7 +260,4 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add _video_track";
     }
   }
-
-  return std::make_shared<RTCConnection>(sender, std::move(observer),
-                                         connection);
 }

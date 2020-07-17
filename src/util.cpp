@@ -393,6 +393,7 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(1, 10));
   sora_app->add_option("--port", cs.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
+  sora_app->add_flag("--simulcast", cs.sora_simulcast, "Use simulcast");
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {

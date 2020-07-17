@@ -21,6 +21,7 @@ class RTCManager {
   std::shared_ptr<RTCConnection> createConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
+  void initTracks(RTCConnection* conn);
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;

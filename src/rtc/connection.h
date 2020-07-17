@@ -28,6 +28,11 @@ class RTCConnection {
       std::function<void(
           const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
 
+  void setEncodingParameters(
+      std::vector<webrtc::RtpEncodingParameters> encodings);
+
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> getConnection() const;
+
  private:
   rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
   rtc::scoped_refptr<webrtc::AudioTrackInterface> getLocalAudioTrack();
