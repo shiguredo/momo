@@ -164,29 +164,21 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Jetson AGX Xavier 対応
-    - MotionJPEG ハードウェアデコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアエンコーダ対応
-    - H.265 / H.264 / VP9 ハードウェアデコーダ対応
+    - [ ] H.265 ハードウェアエンコーダ対応
+    - [ ] H.265 ハードウェアデコーダ対応
 - Jetson Xavier NX 対応
-    - [ ] MotionJPEG ハードウェアデコーダ対応
-    - [ ] H.265 / H.264 / VP9 ハードウェアエンコーダ対応
-    - [ ] H.265 / H.264 / VP9 ハードウェアデコーダ対応
+    - [ ] H.265 ハードウェアエンコーダ対応
+    - [ ] H.265 ハードウェアデコーダ対応
 - Jetson Nano
     - [ ] H.265 ハードウェアエンコーダ対応
     - [ ] H.265 ハードウェアデコーダ対応
 - Raspberry Pi 4
-    - H.265 ハードウェアデコーダ対応
+    - [ ] H.265 ハードウェアデコーダ対応
 - AV1 対応
-    - [x] macOS
-    - [x] Ubuntu
     - [ ] Windows
 - 統計機能
-    - [x] Sora のシグナリング経由での出力
-    - Ayame のシグナリング 経由での出力
+    - [ ] Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
-    - [x] H.264 ハードウェアエンコーダ対応
-        - [x] Ubuntu 18.04
-        - [x] Windows 10
     - [ ] VP8 / VP9 / H.264 ハードウェアデコーダ対応
         - Ubuntu 18.04
         - Windows 10
@@ -194,7 +186,7 @@ limitations under the License.
         - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
-    - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
+    - [ ] VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - Simulcast 対応
 - 録画対応
     - MP4 形式での出力
