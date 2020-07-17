@@ -13,11 +13,13 @@
 
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
     - @hakobera
-- [UPDATE] `libwebrtc` を `M85.4183@{#0}` に上げる
-    - @voluntas
+- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+    - @hakobera @voluntas
 - [UPDATE] CLI11 を v1.9.1 にアップデートする
     - @voluntas
 - [UPDATE] json を 3.8.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.18.0 に上げる
     - @voluntas
 
 ## 2020.7
