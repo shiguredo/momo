@@ -56,6 +56,13 @@ JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
 }
 
+bool JetsonVideoEncoder::IsSupportedVP9() {
+  auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
+  auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_VP9, 1024, 768,
+                                            2 * 1024 * 1024);
+  return ret >= 0;
+}
+
 int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                       int32_t number_of_cores,
                                       size_t max_payload_size) {
