@@ -13,6 +13,8 @@
 
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
     - @hakobera
+- [ADD] Jetson Xavier シリーズで VP9 HWA を有効にする
+    - @tnoho @melpon
 - [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
     - @hakobera @voluntas
 - [UPDATE] CLI11 を v1.9.1 にアップデートする
