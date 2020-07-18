@@ -10,6 +10,10 @@
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
 
+#if USE_JETSON_ENCODER
+#include "hwenc_jetson/jetson_video_encoder.h"
+#endif
+
 struct VideoCodecInfo {
   enum class Type {
     Default,
@@ -150,6 +154,9 @@ struct VideoCodecInfo {
     info.h264_decoders.push_back(Type::Jetson);
     info.vp8_decoders.push_back(Type::Jetson);
     info.vp9_decoders.push_back(Type::Jetson);
+    if (JetsonVideoEncoder::IsSupportedVP9()) {
+      info.vp9_encoders.push_back(Type::Jetson);
+    }
 #endif
 
     info.vp8_encoders.push_back(Type::Software);

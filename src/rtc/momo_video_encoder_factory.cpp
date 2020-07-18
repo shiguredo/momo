@@ -6,6 +6,7 @@
 #include <api/video_codecs/sdp_video_format.h>
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
+#include <media/base/vp9_profile.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp8/include/vp8.h>
 #include <modules/video_coding/codecs/vp9/include/vp9.h>
@@ -23,7 +24,7 @@
 #include "hwenc_mmal/mmal_h264_encoder.h"
 #endif
 #if USE_JETSON_ENCODER
-#include "hwenc_jetson/jetson_h264_encoder.h"
+#include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 #if USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
@@ -55,11 +56,17 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   }
 
   // VP9
-  // 今のところ Software のみ
   if (vp9_encoder_ == VideoCodecInfo::Type::Software) {
     for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
       supported_codecs.push_back(format);
     }
+  } else if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
+#if USE_JETSON_ENCODER
+    supported_codecs.push_back(webrtc::SdpVideoFormat(
+        cricket::kVp9CodecName,
+        {{webrtc::kVP9FmtpProfileId,
+          webrtc::VP9ProfileToString(webrtc::VP9Profile::kProfile0)}}));
+#endif
   }
 
   // AV1
@@ -150,6 +157,12 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     if (vp9_encoder_ == VideoCodecInfo::Type::Software) {
       return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
     }
+#if USE_JETSON_ENCODER
+    if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
+      return std::unique_ptr<webrtc::VideoEncoder>(
+          absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+    }
+#endif
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
@@ -177,7 +190,7 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #if USE_JETSON_ENCODER
     if (h264_encoder_ == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<JetsonH264Encoder>(cricket::VideoCodec(format)));
+          absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
     }
 #endif
 
