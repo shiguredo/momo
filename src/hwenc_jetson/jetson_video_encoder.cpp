@@ -827,7 +827,8 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
 
     h264_bitstream_parser_.ParseBitstream(buffer, size);
     h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " last slice qp:" << encoded_image_.qp_;
+    RTC_LOG(LS_VERBOSE) << __FUNCTION__
+                        << " last slice qp:" << encoded_image_.qp_;
     sending_encoded_image_->qp_ = encoded_image_.qp_;
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
     if ((buffer[0] == 'D') && (buffer[1] == 'K') &&
