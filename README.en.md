@@ -20,7 +20,16 @@ Download the latest version of the binary for Jetson Nano from below.
 https://github.com/shiguredo/momo/releases
 
 ```
-momo-<VERSION>_ubuntu-18.04_armv8_jetson.tar.gz
+momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+```
+
+## Binary for Jetson Xavier NX / AGX
+
+Download the latest version of the binary for Jetson Xavier NX / AGX from below.
+https://github.com/shiguredo/momo/releases
+
+```
+momo-<VERSION>_ubuntu-18.04_armv8_jetson_xavier.tar.gz
 ```
 
 ## Use "test mode"
