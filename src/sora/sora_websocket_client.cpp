@@ -330,6 +330,14 @@ void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
 
   rtc_config.servers = ice_servers;
 
+  // macOS のサイマルキャスト時、なぜか無限に解像度が落ちていくので、
+  // それを回避するために cpu_adaptation を無効にする。
+#if defined(__APPLE__)
+  if (conn_settings_.sora_simulcast) {
+    rtc_config.set_cpu_adaptation(false);
+  }
+#endif
+
   connection_ = manager_->createConnection(rtc_config, this);
 }
 
