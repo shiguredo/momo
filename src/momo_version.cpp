@@ -1,10 +1,11 @@
 #include "momo_version.h"
-#include "momo_version.gen.h"
 
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "momo_version.gen.h"
 
 // boost
 #include <boost/algorithm/string/split.hpp>

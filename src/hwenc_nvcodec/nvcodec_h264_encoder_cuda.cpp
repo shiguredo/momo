@@ -1,9 +1,9 @@
 #include "nvcodec_h264_encoder_cuda.h"
 
-#include <iostream>
-
 #include <NvDecoder/NvDecoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
+
+#include <iostream>
 
 #include "dyn/cuda.h"
 
@@ -108,10 +108,7 @@ class NvCodecH264EncoderCudaImpl {
   NvCodecH264EncoderCudaImpl();
   ~NvCodecH264EncoderCudaImpl();
 
-  void Copy(NvEncoder* nv_encoder,
-            const void* ptr,
-            int width,
-            int height);
+  void Copy(NvEncoder* nv_encoder, const void* ptr, int width, int height);
   void CopyNative(NvEncoder* nv_encoder,
                   const void* ptr,
                   int size,

@@ -3,11 +3,10 @@
 #include <linux/videodev2.h>
 #include <sys/ioctl.h>
 
+#include "mmal_buffer.h"
 #include "modules/video_capture/video_capture_factory.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
-
-#include "mmal_buffer.h"
 
 rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
     ConnectionSettings cs) {
@@ -74,7 +73,8 @@ MMALV4L2Capture::MMALV4L2Capture()
       webrtc::CalcBufferSize(webrtc::VideoType::kI420, VCOS_ALIGN_UP(1920, 32),
                              VCOS_ALIGN_UP(1080, 16));
   // 出力のプールはまとめないと、リサイズ時にエンコーダに送ったフレームが破棄される場合がある
-  resizer_pool_out_ = mmal_pool_create(decoded_buffer_num_, decoded_buffer_size_);
+  resizer_pool_out_ =
+      mmal_pool_create(decoded_buffer_num_, decoded_buffer_size_);
 }
 
 MMALV4L2Capture::~MMALV4L2Capture() {

@@ -40,8 +40,7 @@ void Util::parseArgs(int argc,
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
-  local_nh.param<bool>("no_google_stun", cs.no_google_stun,
-                       cs.no_google_stun);
+  local_nh.param<bool>("no_google_stun", cs.no_google_stun, cs.no_google_stun);
   local_nh.param<bool>("no_video_device", cs.no_video_device,
                        cs.no_video_device);
   local_nh.param<bool>("no_audio_device", cs.no_audio_device,
@@ -205,8 +204,7 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--no-google-stun", cs.no_google_stun,
-               "Do not use google stun");
+  app.add_flag("--no-google-stun", cs.no_google_stun, "Do not use google stun");
   app.add_flag("--no-video-device", cs.no_video_device,
                "Do not use video device");
   app.add_flag("--no-audio-device", cs.no_audio_device,

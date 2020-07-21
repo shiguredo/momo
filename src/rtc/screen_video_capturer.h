@@ -12,7 +12,6 @@
 
 #include "scalable_track_source.h"
 
-
 class ScreenVideoCapturer : public ScalableVideoTrackSource,
                             public webrtc::DesktopCapturer::Callback {
  public:

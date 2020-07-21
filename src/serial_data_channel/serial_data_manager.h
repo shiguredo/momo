@@ -1,8 +1,7 @@
 #ifndef SERIAL_DATA_MANAGER_H_
 #define SERIAL_DATA_MANAGER_H_
-#include <vector>
-
 #include <boost/asio.hpp>
+#include <vector>
 
 #include "rtc/data_manager.h"
 #include "rtc_base/critical_section.h"

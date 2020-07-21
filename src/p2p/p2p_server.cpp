@@ -61,8 +61,8 @@ void P2PServer::onAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
   } else {
-    std::make_shared<P2PSession>(ioc_, std::move(socket_), doc_root_, rtc_manager_,
-                                 conn_settings_)
+    std::make_shared<P2PSession>(ioc_, std::move(socket_), doc_root_,
+                                 rtc_manager_, conn_settings_)
         ->run();
   }
 

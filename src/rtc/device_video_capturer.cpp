@@ -156,8 +156,7 @@ int DeviceVideoCapturer::LogDeviceInfo() {
       RTC_LOG(LS_WARNING) << "Failed to GetDeviceName(" << i << ")";
       continue;
     }
-    RTC_LOG(LS_INFO) << "GetDeviceName(" << i
-                     << "): device_name=" << name
+    RTC_LOG(LS_INFO) << "GetDeviceName(" << i << "): device_name=" << name
                      << ", unique_name=" << id;
   }
   return 0;
@@ -178,8 +177,7 @@ int DeviceVideoCapturer::GetDeviceIndex(const std::string& device) {
                   [](char ch) { return std::isdigit(ch); })) {
     try {
       ndev = std::stoi(device);
-    }
-    catch (const std::exception&) {
+    } catch (const std::exception&) {
       ndev = -1;
     }
   }
@@ -190,8 +188,8 @@ int DeviceVideoCapturer::GetDeviceIndex(const std::string& device) {
     const uint32_t kSize = 256;
     char name[kSize] = {0};
     char mid[kSize] = {0};
-    if (info->GetDeviceName(static_cast<uint32_t>(i),
-                            name, kSize, mid, kSize) != -1) {
+    if (info->GetDeviceName(static_cast<uint32_t>(i), name, kSize, mid,
+                            kSize) != -1) {
       // デバイスidでの検索
       if (i == ndev) {
         return i;

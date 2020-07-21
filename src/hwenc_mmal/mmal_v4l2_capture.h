@@ -20,7 +20,6 @@ extern "C" {
 #include <queue>
 
 #include "rtc_base/critical_section.h"
-
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 
 class MMALV4L2Capture : public V4L2VideoCapture {

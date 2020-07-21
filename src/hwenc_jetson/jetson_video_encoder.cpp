@@ -15,8 +15,8 @@
 #include <string>
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "nvbuf_utils.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
+#include "nvbuf_utils.h"
 #include "rtc/native_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -64,8 +64,8 @@ bool JetsonVideoEncoder::IsSupportedVP9() {
 }
 
 int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
-                                      int32_t number_of_cores,
-                                      size_t max_payload_size) {
+                                       int32_t number_of_cores,
+                                       size_t max_payload_size) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   RTC_DCHECK(codec_settings);
 
@@ -85,14 +85,21 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   } else if (codec_settings->codecType == webrtc::kVideoCodecVP9) {
     key_frame_interval_ = codec_settings->VP9().keyFrameInterval;
     RTC_LOG(LS_INFO) << "complexity: " << (int)codec_settings->VP9().complexity;
-    RTC_LOG(LS_INFO) << "numberOfTemporalLayers: " << codec_settings->VP9().numberOfTemporalLayers;
+    RTC_LOG(LS_INFO) << "numberOfTemporalLayers: "
+                     << codec_settings->VP9().numberOfTemporalLayers;
     RTC_LOG(LS_INFO) << "denoisingOn: " << codec_settings->VP9().denoisingOn;
-    RTC_LOG(LS_INFO) << "frameDroppingOn: " << codec_settings->VP9().frameDroppingOn;
-    RTC_LOG(LS_INFO) << "keyFrameInterval: " << codec_settings->VP9().keyFrameInterval;
-    RTC_LOG(LS_INFO) << "adaptiveQpMode: " << codec_settings->VP9().adaptiveQpMode;
-    RTC_LOG(LS_INFO) << "automaticResizeOn: " << codec_settings->VP9().automaticResizeOn;
-    RTC_LOG(LS_INFO) << "numberOfSpatialLayers: " << codec_settings->VP9().numberOfSpatialLayers;
-    RTC_LOG(LS_INFO) << "interLayerPred: " << codec_settings->VP9().interLayerPred;
+    RTC_LOG(LS_INFO) << "frameDroppingOn: "
+                     << codec_settings->VP9().frameDroppingOn;
+    RTC_LOG(LS_INFO) << "keyFrameInterval: "
+                     << codec_settings->VP9().keyFrameInterval;
+    RTC_LOG(LS_INFO) << "adaptiveQpMode: "
+                     << codec_settings->VP9().adaptiveQpMode;
+    RTC_LOG(LS_INFO) << "automaticResizeOn: "
+                     << codec_settings->VP9().automaticResizeOn;
+    RTC_LOG(LS_INFO) << "numberOfSpatialLayers: "
+                     << codec_settings->VP9().numberOfSpatialLayers;
+    RTC_LOG(LS_INFO) << "interLayerPred: "
+                     << codec_settings->VP9().interLayerPred;
   }
   framerate_ = codec_settings->maxFramerate;
 
@@ -208,8 +215,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
     // QP:150 が 30fps が出る下限。これ以上下げると 30fps を割る
-    ret = encoder_->setQpRange(QP_RETAIN_VAL, 150,
-                               QP_RETAIN_VAL, 150,
+    ret = encoder_->setQpRange(QP_RETAIN_VAL, 150, QP_RETAIN_VAL, 150,
                                QP_RETAIN_VAL, 150);
     INIT_ERROR(ret < 0, "Failed to setQpRange");
 
@@ -357,8 +363,8 @@ bool JetsonVideoEncoder::ConvertFinishedCallbackFunction(
 }
 
 bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
-                                                NvBuffer* buffer,
-                                                NvBuffer* shared_buffer) {
+                                                 NvBuffer* buffer,
+                                                 NvBuffer* shared_buffer) {
   NvBuffer* enc0_buffer;
   struct v4l2_buffer enc0_qbuf;
   struct v4l2_plane planes[MAX_PLANES];
@@ -415,8 +421,8 @@ bool JetsonVideoEncoder::EncodeOutputCallbackFunction(
 }
 
 bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
-                                             NvBuffer* buffer,
-                                             NvBuffer* shared_buffer) {
+                                              NvBuffer* buffer,
+                                              NvBuffer* shared_buffer) {
   struct v4l2_buffer conv_qbuf;
   struct v4l2_plane planes[MAX_PLANES];
 
@@ -461,8 +467,8 @@ bool JetsonVideoEncoder::EncodeFinishedCallbackFunction(
 }
 
 bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
-                                               NvBuffer* buffer,
-                                               NvBuffer* shared_buffer) {
+                                                NvBuffer* buffer,
+                                                NvBuffer* shared_buffer) {
   if (!v4l2_buf) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
     return false;
@@ -473,11 +479,10 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   }
 
   uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
-                 v4l2_buf->timestamp.tv_usec;
+                       v4l2_buf->timestamp.tv_usec;
 
   v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata;
-  if (encoder_->getMetadata(v4l2_buf->index, enc_metadata) == 0)
-  {
+  if (encoder_->getMetadata(v4l2_buf->index, enc_metadata) == 0) {
     if (enc_metadata.KeyFrame) {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
     } else {
@@ -492,16 +497,17 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
             << __FUNCTION__
-            << "Frame parameter is not found. SkipFrame timestamp:" << timestamp;
+            << "Frame parameter is not found. SkipFrame timestamp:"
+            << timestamp;
         return true;
       }
       params = std::move(frame_params_.front());
       frame_params_.pop();
     } while (params->timestamp_us < timestamp);
     if (params->timestamp_us != timestamp) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
-                          << "Frame parameter is not found. SkipFrame timestamp:"
-                          << timestamp;
+      RTC_LOG(LS_WARNING)
+          << __FUNCTION__
+          << "Frame parameter is not found. SkipFrame timestamp:" << timestamp;
       return true;
     }
   }
@@ -558,7 +564,8 @@ void JetsonVideoEncoder::SetFramerate(uint32_t framerate) {
 }
 
 void JetsonVideoEncoder::SetBitrateBps(uint32_t bitrate_bps) {
-  if (bitrate_bps < 300000 || (configured_bitrate_bps_ == bitrate_bps && configured_framerate_ == framerate_)) {
+  if (bitrate_bps < 300000 || (configured_bitrate_bps_ == bitrate_bps &&
+                               configured_framerate_ == framerate_)) {
     return;
   }
   configured_bitrate_bps_ = bitrate_bps;
@@ -567,7 +574,8 @@ void JetsonVideoEncoder::SetBitrateBps(uint32_t bitrate_bps) {
   // 60fps での bps を見てるっぽいので、ここで渡す bps を調整する
   if (codec_.codecType == webrtc::kVideoCodecVP9) {
     auto adjusted_bps = bitrate_bps * 60 / configured_framerate_;
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " bps=" << bitrate_bps << " adjusted_bps=" << adjusted_bps;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " bps=" << bitrate_bps
+                     << " adjusted_bps=" << adjusted_bps;
     bitrate_bps = adjusted_bps;
   } else {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " bps=" << bitrate_bps;
@@ -586,12 +594,12 @@ webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
   if (codec_.codecType == webrtc::kVideoCodecH264) {
     static const int kLowH264QpThreshold = 34;
     static const int kHighH264QpThreshold = 40;
-    info.scaling_settings =
-        VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+    info.scaling_settings = VideoEncoder::ScalingSettings(kLowH264QpThreshold,
+                                                          kHighH264QpThreshold);
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
     static const int kLowVp9QpThreshold = 150;
     static const int kHighVp9QpThreshold = 151;
-    info.scaling_settings = 
+    info.scaling_settings =
         VideoEncoder::ScalingSettings(kLowVp9QpThreshold, kHighVp9QpThreshold);
   }
   info.is_hardware_accelerated = true;
@@ -800,8 +808,8 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
       }
       if (data == 0x01 && zero_count >= 2) {
         if (nal_start_idx != 0) {
-          nals.push_back(
-              {nal_start_idx, i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
+          nals.push_back({nal_start_idx,
+                          i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
         }
         nal_start_idx = i + 1;
       }
@@ -831,8 +839,8 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
                         << " last slice qp:" << encoded_image_.qp_;
     sending_encoded_image_->qp_ = encoded_image_.qp_;
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
-    if ((buffer[0] == 'D') && (buffer[1] == 'K') &&
-                    (buffer[2] == 'I') && (buffer[3] == 'F')) {
+    if ((buffer[0] == 'D') && (buffer[1] == 'K') && (buffer[2] == 'I') &&
+        (buffer[3] == 'F')) {
       buffer += 32;
       size -= 32;
     }
@@ -853,27 +861,31 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     if (encoded_image_.ColorSpace() != nullptr) {
       sending_encoded_image_->SetColorSpace(*encoded_image_.ColorSpace());
     }
-    const bool key_frame = encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+    const bool key_frame =
+        encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
 
     frag_header.VerifyAndAllocateFragmentationHeader(1);
     frag_header.fragmentationOffset[0] = 0;
     frag_header.fragmentationLength[0] = size;
     webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
-    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size << " qp=" << encoded_image_.qp_;
+    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size
+                        << " qp=" << encoded_image_.qp_;
     sending_encoded_image_->qp_ = encoded_image_.qp_;
 
     if (key_frame) {
       gof_idx_ = 0;
     }
     codec_specific.codecType = webrtc::kVideoCodecVP9;
-    codec_specific.codecSpecific.VP9.inter_pic_predicted = key_frame ? false : true;
+    codec_specific.codecSpecific.VP9.inter_pic_predicted =
+        key_frame ? false : true;
     codec_specific.codecSpecific.VP9.flexible_mode = false;
-    codec_specific.codecSpecific.VP9.ss_data_available = key_frame ? true : false;
+    codec_specific.codecSpecific.VP9.ss_data_available =
+        key_frame ? true : false;
     codec_specific.codecSpecific.VP9.temporal_idx = webrtc::kNoTemporalIdx;
     codec_specific.codecSpecific.VP9.temporal_up_switch = true;
     codec_specific.codecSpecific.VP9.inter_layer_predicted = false;
     codec_specific.codecSpecific.VP9.gof_idx =
-          static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
+        static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
     codec_specific.codecSpecific.VP9.num_spatial_layers = 1;
     codec_specific.codecSpecific.VP9.first_frame_in_picture = true;
     codec_specific.codecSpecific.VP9.end_of_picture = true;
@@ -881,7 +893,8 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     if (codec_specific.codecSpecific.VP9.ss_data_available) {
       codec_specific.codecSpecific.VP9.spatial_layer_resolution_present = true;
       codec_specific.codecSpecific.VP9.width[0] = encoded_image_._encodedWidth;
-      codec_specific.codecSpecific.VP9.height[0] = encoded_image_._encodedHeight;
+      codec_specific.codecSpecific.VP9.height[0] =
+          encoded_image_._encodedHeight;
       codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
     }
   }
