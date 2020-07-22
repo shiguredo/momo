@@ -10,7 +10,7 @@
 #include <boost/system/error_code.hpp>
 
 #include "connection_settings.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 #include "util.h"
 
 class P2PServer : public std::enable_shared_from_this<P2PServer> {

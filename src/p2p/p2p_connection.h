@@ -5,9 +5,9 @@
 #include <memory>
 #include <string>
 
-#include "rtc/connection.h"
-#include "rtc/manager.h"
-#include "rtc/messagesender.h"
+#include "rtc/rtc_connection.h"
+#include "rtc/rtc_manager.h"
+#include "rtc/rtc_message_sender.h"
 
 class P2PConnection : public RTCMessageSender {
  public:

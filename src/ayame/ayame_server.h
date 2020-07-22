@@ -13,7 +13,7 @@
 
 #include "ayame_websocket_client.h"
 #include "connection_settings.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 
 // Ayame と接続する用のサーバ。
 //

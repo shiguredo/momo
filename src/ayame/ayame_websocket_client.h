@@ -16,8 +16,8 @@
 #include <nlohmann/json.hpp>
 
 #include "connection_settings.h"
-#include "rtc/manager.h"
-#include "rtc/messagesender.h"
+#include "rtc/rtc_manager.h"
+#include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
 #include "watchdog.h"
 #include "ws/websocket.h"

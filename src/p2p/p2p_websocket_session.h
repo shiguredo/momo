@@ -14,7 +14,7 @@
 
 #include "connection_settings.h"
 #include "p2p_connection.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 #include "util.h"
 #include "watchdog.h"
 #include "ws/websocket.h"

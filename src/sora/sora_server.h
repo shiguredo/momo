@@ -12,7 +12,7 @@
 #include <boost/asio/ip/tcp.hpp>
 
 #include "connection_settings.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 #include "sora_websocket_client.h"
 
 // Sora と接続する用のサーバ。

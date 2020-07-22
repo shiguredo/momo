@@ -41,7 +41,7 @@
 #include "ayame/ayame_server.h"
 #include "connection_settings.h"
 #include "p2p/p2p_server.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 #include "sora/sora_server.h"
 #include "util.h"
 

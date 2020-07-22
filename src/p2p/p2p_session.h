@@ -17,7 +17,7 @@
 
 #include "connection_settings.h"
 #include "p2p_websocket_session.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
 #include "util.h"
 
 // 1つの HTTP リクエストを処理するためのクラス

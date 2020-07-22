@@ -5,10 +5,10 @@
 #include <api/peer_connection_interface.h>
 #include <pc/video_track_source.h>
 
-#include "connection.h"
 #include "connection_settings.h"
-#include "data_manager.h"
-#include "messagesender.h"
+#include "rtc_connection.h"
+#include "rtc_data_manager.h"
+#include "rtc_message_sender.h"
 #include "scalable_track_source.h"
 #include "video_track_receiver.h"
 

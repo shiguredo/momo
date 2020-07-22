@@ -9,7 +9,7 @@
 // WebRTC
 #include <rtc_base/critical_section.h>
 
-#include "rtc/data_manager.h"
+#include "rtc/rtc_data_manager.h"
 #include "serial_data_channel.h"
 
 class SerialDataChannel;

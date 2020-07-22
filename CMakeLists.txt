@@ -323,14 +323,14 @@ target_sources(momo
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
-    src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
-    src/rtc/manager.cpp
     src/rtc/native_buffer.cpp
     src/rtc/observer.cpp
+    src/rtc/rtc_connection.cpp
+    src/rtc/rtc_manager.cpp
     src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
