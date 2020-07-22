@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef Jetson_VIDEO_ENCODER_H_
-#define Jetson_VIDEO_ENCODER_H_
+#ifndef JETSON_VIDEO_ENCODER_H_
+#define JETSON_VIDEO_ENCODER_H_
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
@@ -62,4 +62,4 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   int dst_dma_fd_;
 };
 
-#endif  // Jetson_VIDEO_ENCODER_H_
+#endif  // JETSON_VIDEO_ENCODER_H_

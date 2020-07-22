@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef jetson_video_encoder_H_
-#define jetson_video_encoder_H_
+#ifndef JETSON_VIDEO_ENCODER_H_
+#define JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
 #include <memory>
@@ -145,4 +145,4 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
 };
 
-#endif  // jetson_video_encoder_H_
+#endif  // JETSON_VIDEO_ENCODER_H_

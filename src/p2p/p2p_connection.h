@@ -37,4 +37,5 @@ class P2PConnection : public RTCMessageSender {
   std::function<void(std::string)> _send;
   webrtc::PeerConnectionInterface::IceConnectionState _rtc_state;
 };
+
 #endif

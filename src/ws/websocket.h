@@ -1,5 +1,5 @@
-#ifndef WS_WEBSOCKET_H_
-#define WS_WEBSOCKET_H_
+#ifndef WEBSOCKET_H_
+#define WEBSOCKET_H_
 
 #include <functional>
 #include <memory>
@@ -76,4 +76,4 @@ class Websocket {
   void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
 };
 
-#endif  // WS_WEBSOCKET_H_
+#endif  // WEBSOCKET_H_

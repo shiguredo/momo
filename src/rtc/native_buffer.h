@@ -42,4 +42,5 @@ class NativeBuffer : public webrtc::VideoFrameBuffer {
   const webrtc::VideoType video_type_;
   const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
 };
+
 #endif  // NATIVE_BUFFER_H_

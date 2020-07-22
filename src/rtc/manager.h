@@ -37,4 +37,5 @@ class RTCManager {
   VideoTrackReceiver* _receiver;
   RTCDataManager* _data_manager;
 };
+
 #endif

@@ -1,5 +1,5 @@
-#ifndef V4L2_MMAL_CAPTURE_H_
-#define V4L2_MMAL_CAPTURE_H_
+#ifndef MMAL_V4L2_CAPTURE_H_
+#define MMAL_V4L2_CAPTURE_H_
 
 extern "C" {
 #include <bcm_host.h>
@@ -72,4 +72,4 @@ class MMALV4L2Capture : public V4L2VideoCapture {
   size_t decoded_buffer_size_;
 };
 
-#endif  // V4L2_MMAL_CAPTURE_H_
+#endif  // MMAL_V4L2_CAPTURE_H_

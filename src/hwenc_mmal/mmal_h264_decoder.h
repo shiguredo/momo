@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef MMAL_VIDEO_ENCODER_H_
-#define MMAL_VIDEO_ENCODER_H_
+#ifndef MMAL_H264_DECODER_H_
+#define MMAL_H264_DECODER_H_
 
 extern "C" {
 #include <bcm_host.h>
@@ -71,4 +71,4 @@ class MMALH264Decoder : public webrtc::VideoDecoder {
   webrtc::I420BufferPool buffer_pool_;
 };
 
-#endif  // Jetson_VIDEO_ENCODER_H_
+#endif  // MMAL_H264_DECODER_H_

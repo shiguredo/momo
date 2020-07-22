@@ -1,5 +1,5 @@
-#ifndef NATIVE_BUFFER_H_
-#define NATIVE_BUFFER_H_
+#ifndef MMAL_BUFFER_H_
+#define MMAL_BUFFER_H_
 
 extern "C" {
 #include <interface/mmal/mmal.h>
@@ -35,4 +35,4 @@ class MMALBuffer : public webrtc::I420BufferInterface {
   const int width_;
   const int height_;
 };
-#endif  // NATIVE_BUFFER_H_
+#endif  // MMAL_BUFFER_H_

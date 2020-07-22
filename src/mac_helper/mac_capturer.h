@@ -52,4 +52,4 @@ class MacCapturer : public ScalableVideoTrackSource,
   RTCVideoSourceAdapter* adapter_;
 };
 
-#endif  // TEST_MAC_CAPTURER_H_
+#endif  // MAC_CAPTURER_H_

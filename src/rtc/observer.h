@@ -1,5 +1,5 @@
-#ifndef PEERCONNECTIONOBSERVER_H_
-#define PEERCONNECTIONOBSERVER_H_
+#ifndef PEER_CONNECTION_OBSERVER_H_
+#define PEER_CONNECTION_OBSERVER_H_
 
 // WebRTC
 #include <api/peer_connection_interface.h>
@@ -82,4 +82,5 @@ class SetSessionDescriptionObserver
   RTCMessageSender* _sender;
   webrtc::SdpType _type;
 };
+
 #endif

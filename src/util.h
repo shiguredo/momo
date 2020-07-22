@@ -1,5 +1,5 @@
-#ifndef RTC_UTIL_H_
-#define RTC_UTIL_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
 // Boost
 #include <boost/beast/core/string.hpp>

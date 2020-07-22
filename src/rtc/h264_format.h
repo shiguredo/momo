@@ -1,5 +1,5 @@
-#ifndef RTC_H264_FORMAT_H_
-#define RTC_H264_FORMAT_H_
+#ifndef H264_FORMAT_H_
+#define H264_FORMAT_H_
 
 #include <string>
 

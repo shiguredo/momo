@@ -1,5 +1,5 @@
-#ifndef AYAME_WEBSOCKET_CLIENT_
-#define AYAME_WEBSOCKET_CLIENT_
+#ifndef AYAME_WEBSOCKET_CLIENT_H_
+#define AYAME_WEBSOCKET_CLIENT_H_
 
 #include <algorithm>
 #include <cstdlib>
@@ -120,4 +120,4 @@ class AyameWebsocketClient
   void doSetDescription(webrtc::SdpType type);
 };
 
-#endif  // AYAME_WEBSOCKET_CLIENT_
+#endif  // AYAME_WEBSOCKET_CLIENT_H_

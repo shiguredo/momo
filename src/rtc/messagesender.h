@@ -1,5 +1,5 @@
-#ifndef RTC_MESSAGESENDER_H_
-#define RTC_MESSAGESENDER_H_
+#ifndef RTC_MESSAGE_SENDER_H_
+#define RTC_MESSAGE_SENDER_H_
 
 #include <string>
 

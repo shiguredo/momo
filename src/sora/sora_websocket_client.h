@@ -1,5 +1,5 @@
-#ifndef SORA_WEBSOCKET_CLIENT_
-#define SORA_WEBSOCKET_CLIENT_
+#ifndef SORA_WEBSOCKET_CLIENT_H_
+#define SORA_WEBSOCKET_CLIENT_H_
 
 #include <algorithm>
 #include <cstdlib>
@@ -116,4 +116,4 @@ class SoraWebsocketClient
       webrtc::PeerConnectionInterface::IceConnectionState new_state);
 };
 
-#endif  // SORA_WEBSOCKET_CLIENT_
+#endif  // SORA_WEBSOCKET_CLIENT_H_

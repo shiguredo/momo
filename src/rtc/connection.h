@@ -1,5 +1,5 @@
-#ifndef CONNECTION_H_
-#define CONNECTION_H_
+#ifndef RTC_CONNECTION_H_
+#define RTC_CONNECTION_H_
 
 // WebRTC
 #include <api/peer_connection_interface.h>
@@ -50,4 +50,5 @@ class RTCConnection {
   std::unique_ptr<PeerConnectionObserver> _observer;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> _connection;
 };
+
 #endif

@@ -37,4 +37,4 @@ class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
   rtc::TimestampAligner timestamp_aligner_;
 };
 
-#endif  // VIDEO_CAPTURER_H_
+#endif  // SCALABLE_VIDEO_TRACK_SOURCE_H_
