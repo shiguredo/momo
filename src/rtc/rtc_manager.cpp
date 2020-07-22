@@ -26,7 +26,7 @@
 
 #include "momo_video_decoder_factory.h"
 #include "momo_video_encoder_factory.h"
-#include "observer.h"
+#include "peer_connection_observer.h"
 #include "scalable_track_source.h"
 #include "ssl_verifier.h"
 #include "util.h"

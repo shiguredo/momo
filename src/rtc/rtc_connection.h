@@ -4,7 +4,7 @@
 // WebRTC
 #include <api/peer_connection_interface.h>
 
-#include "observer.h"
+#include "peer_connection_observer.h"
 
 class RTCConnection {
  public:
