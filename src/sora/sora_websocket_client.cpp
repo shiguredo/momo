@@ -493,10 +493,12 @@ void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
   if (type == webrtc::SdpType::kOffer) {
     // simulcast では offer の setRemoteDescription が終わった後に
     // トラックを追加する必要がある
-    manager_->initTracks(connection_.get());
+    if (!answer_sent_) {
+      manager_->initTracks(connection_.get());
 
-    if (conn_settings_.sora_simulcast) {
-      connection_->setEncodingParameters(std::move(encoding_parameters_));
+      if (conn_settings_.sora_simulcast) {
+        connection_->setEncodingParameters(std::move(encoding_parameters_));
+      }
     }
     connection_->createAnswer();
   }
