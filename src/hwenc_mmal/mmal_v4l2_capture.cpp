@@ -54,7 +54,7 @@ rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
     return nullptr;
   }
   if (v4l2_capturer->StartCapture(cs) < 0) {
-    auto size = cs.getSize();
+    auto size = cs.GetSize();
     RTC_LOG(LS_WARNING) << "Failed to start MMALV4L2Capture(w = " << size.width
                         << ", h = " << size.height << ", fps = " << cs.framerate
                         << ")";
@@ -94,7 +94,7 @@ int32_t MMALV4L2Capture::StopCapture() {
   return V4L2VideoCapture::StopCapture();
 }
 
-bool MMALV4L2Capture::useNativeBuffer() {
+bool MMALV4L2Capture::UseNativeBuffer() {
   return true;
 }
 

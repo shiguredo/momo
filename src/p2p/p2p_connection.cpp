@@ -28,8 +28,8 @@ P2PConnection::P2PConnection(RTCManager* rtc_manager,
 
 void P2PConnection::onIceConnectionStateChange(IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " rtc_state "
-                   << Util::iceConnectionStateToString(_rtc_state) << " -> "
-                   << Util::iceConnectionStateToString(new_state);
+                   << Util::IceConnectionStateToString(_rtc_state) << " -> "
+                   << Util::IceConnectionStateToString(new_state);
 
   _rtc_state = new_state;
 }

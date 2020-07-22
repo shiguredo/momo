@@ -356,7 +356,6 @@ target_sources(momo
     src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
-    src/signal_listener.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
     src/sora/sora_websocket_client.cpp

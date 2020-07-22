@@ -19,7 +19,7 @@ using json = nlohmann::json;
 bool SoraWebsocketClient::parseURL(URLParts& parts) const {
   std::string url = conn_settings_.sora_signaling_host;
 
-  if (!URLParts::parse(url, parts)) {
+  if (!URLParts::Parse(url, parts)) {
     throw std::exception();
   }
 
@@ -76,9 +76,9 @@ void SoraWebsocketClient::reset() {
   if (parseURL(parts_)) {
     auto ssl_ctx = createSSLContext();
     ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
-    ws_->nativeSecureSocket().next_layer().set_verify_mode(
+    ws_->NativeSecureSocket().next_layer().set_verify_mode(
         boost::asio::ssl::verify_peer);
-    ws_->nativeSecureSocket().next_layer().set_verify_callback(
+    ws_->NativeSecureSocket().next_layer().set_verify_callback(
         [insecure = conn_settings_.insecure](
             bool preverified, boost::asio::ssl::verify_context& ctx) {
           if (preverified) {
@@ -94,7 +94,7 @@ void SoraWebsocketClient::reset() {
 
     // SNI の設定を行う
     if (!SSL_set_tlsext_host_name(
-            ws_->nativeSecureSocket().next_layer().native_handle(),
+            ws_->NativeSecureSocket().next_layer().native_handle(),
             parts_.host.c_str())) {
       boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
                                    boost::asio::error::get_ssl_category()};
@@ -132,7 +132,7 @@ bool SoraWebsocketClient::connect() {
           std::bind(&SoraWebsocketClient::onResolve, shared_from_this(),
                     std::placeholders::_1, std::placeholders::_2)));
 
-  watchdog_.enable(30);
+  watchdog_.Enable(30);
 
   return true;
 }
@@ -141,7 +141,7 @@ void SoraWebsocketClient::reconnectAfter() {
   int interval = 5 * (2 * retry_count_ + 1);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
-  watchdog_.enable(interval);
+  watchdog_.Enable(interval);
   retry_count_++;
 }
 
@@ -164,7 +164,7 @@ void SoraWebsocketClient::onResolve(
   // DNS ルックアップで得られたエンドポイントに対して接続する
   if (ws_->isSSL()) {
     boost::asio::async_connect(
-        ws_->nativeSecureSocket().next_layer().next_layer(), results.begin(),
+        ws_->NativeSecureSocket().next_layer().next_layer(), results.begin(),
         results.end(),
         boost::asio::bind_executor(
             ws_->strand(),
@@ -172,7 +172,7 @@ void SoraWebsocketClient::onResolve(
                       std::placeholders::_1)));
   } else {
     boost::asio::async_connect(
-        ws_->nativeSocket().next_layer(), results.begin(), results.end(),
+        ws_->NativeSocket().next_layer(), results.begin(), results.end(),
         boost::asio::bind_executor(
             ws_->strand(),
             std::bind(&SoraWebsocketClient::onConnect, shared_from_this(),
@@ -187,7 +187,7 @@ void SoraWebsocketClient::onSSLConnect(boost::system::error_code ec) {
   }
 
   // SSL のハンドシェイク
-  ws_->nativeSecureSocket().next_layer().async_handshake(
+  ws_->NativeSecureSocket().next_layer().async_handshake(
       boost::asio::ssl::stream_base::client,
       boost::asio::bind_executor(
           ws_->strand(), std::bind(&SoraWebsocketClient::onSSLHandshake,
@@ -201,7 +201,7 @@ void SoraWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
   }
 
   // Websocket のハンドシェイク
-  ws_->nativeSecureSocket().async_handshake(
+  ws_->NativeSecureSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
           ws_->strand(), std::bind(&SoraWebsocketClient::onHandshake,
@@ -215,7 +215,7 @@ void SoraWebsocketClient::onConnect(boost::system::error_code ec) {
   }
 
   // Websocket のハンドシェイク
-  ws_->nativeSocket().async_handshake(
+  ws_->NativeSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
           ws_->strand(), std::bind(&SoraWebsocketClient::onHandshake,
@@ -230,7 +230,7 @@ void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
 
   connected_ = true;
 
-  ws_->startToRead(std::bind(&SoraWebsocketClient::onRead, this,
+  ws_->StartToRead(std::bind(&SoraWebsocketClient::onRead, this,
                              std::placeholders::_1, std::placeholders::_2,
                              std::placeholders::_3));
 
@@ -296,18 +296,18 @@ void SoraWebsocketClient::doSendConnect() {
     }
   }
 
-  ws_->sendText(json_message.dump());
+  ws_->SendText(json_message.dump());
 }
 void SoraWebsocketClient::doSendPong() {
   json json_message = {{"type", "pong"}};
-  ws_->sendText(json_message.dump());
+  ws_->SendText(json_message.dump());
 }
 void SoraWebsocketClient::doSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
   json json_message = {{"type", "pong"}, {"stats", stats}};
   std::string str = R"({"type":"pong","stats":)" + stats + "}";
-  ws_->sendText(std::move(str));
+  ws_->SendText(std::move(str));
 }
 
 void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
@@ -343,14 +343,14 @@ void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
 
 void SoraWebsocketClient::close() {
   if (ws_->isSSL()) {
-    ws_->nativeSecureSocket().async_close(
+    ws_->NativeSecureSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
             ws_->strand(),
             std::bind(&SoraWebsocketClient::onClose, shared_from_this(),
                       std::placeholders::_1)));
   } else {
-    ws_->nativeSocket().async_close(
+    ws_->NativeSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
             ws_->strand(),
@@ -432,7 +432,7 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
             std::string sdp;
             desc->ToString(&sdp);
             json json_message = {{"type", "answer"}, {"sdp", sdp}};
-            ws_->sendText(json_message.dump());
+            ws_->SendText(json_message.dump());
           });
     });
   } else if (type == "update") {
@@ -443,7 +443,7 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
             std::string sdp;
             desc->ToString(&sdp);
             json json_message = {{"type", "update"}, {"sdp", sdp}};
-            ws_->sendText(json_message.dump());
+            ws_->SendText(json_message.dump());
           });
     });
   } else if (type == "notify") {
@@ -468,7 +468,7 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
                           kIceConnectionConnected) {
       return;
     }
-    watchdog_.reset();
+    watchdog_.Reset();
     bool stats = json_message.value("stats", false);
     if (stats) {
       connection_->getStats(
@@ -495,19 +495,19 @@ void SoraWebsocketClient::onIceCandidate(const std::string sdp_mid,
                                          const int sdp_mlineindex,
                                          const std::string sdp) {
   json json_message = {{"type", "candidate"}, {"candidate", sdp}};
-  ws_->sendText(json_message.dump());
+  ws_->SendText(json_message.dump());
 }
 
 void SoraWebsocketClient::doIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
-                   << Util::iceConnectionStateToString(new_state);
+                   << Util::IceConnectionStateToString(new_state);
 
   switch (new_state) {
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionConnected:
       retry_count_ = 0;
-      watchdog_.enable(60);
+      watchdog_.Enable(60);
       break;
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:

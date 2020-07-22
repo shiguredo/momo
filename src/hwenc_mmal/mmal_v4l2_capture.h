@@ -45,7 +45,7 @@ class MMALV4L2Capture : public V4L2VideoCapture {
       size_t capture_device_index);
   int32_t StartCapture(ConnectionSettings cs) override;
   int32_t StopCapture() override;
-  bool useNativeBuffer() override;
+  bool UseNativeBuffer() override;
   bool OnCaptured(struct v4l2_buffer& buf) override;
   static void MMALInputCallbackFunction(MMAL_PORT_T* port,
                                         MMAL_BUFFER_HEADER_T* buffer);

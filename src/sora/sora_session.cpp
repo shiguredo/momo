@@ -52,7 +52,7 @@ void SoraSession::onRead(boost::system::error_code ec,
   if (req_.method() == boost::beast::http::verb::get) {
     if (req_.target() == "/connect/status") {
       std::string state =
-          Util::iceConnectionStateToString(ws_client_->getRTCConnectionState());
+          Util::IceConnectionStateToString(ws_client_->getRTCConnectionState());
       json json_message = {{"state", state}};
       sendResponse(createOKwithJson(req_, std::move(json_message)));
     } else if (req_.target() == "/mute/status") {
@@ -62,10 +62,10 @@ void SoraSession::onRead(boost::system::error_code ec,
                              {"video", !rtc_conn->isVideoEnabled()}};
         sendResponse(createOKwithJson(req_, std::move(json_message)));
       } else {
-        sendResponse(Util::serverError(req_, "Invalid RTC Connection"));
+        sendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
       }
     } else {
-      sendResponse(Util::badRequest(req_, "Invalid Request"));
+      sendResponse(Util::BadRequest(req_, "Invalid Request"));
     }
   } else if (req_.method() == boost::beast::http::verb::post) {
     if (req_.target() == "/connect") {
@@ -79,13 +79,13 @@ void SoraSession::onRead(boost::system::error_code ec,
       try {
         recv_json = json::parse(req_.body());
       } catch (json::parse_error& e) {
-        sendResponse(Util::badRequest(req_, "Invalid JSON"));
+        sendResponse(Util::BadRequest(req_, "Invalid JSON"));
         return;
       }
 
       std::shared_ptr<RTCConnection> rtc_conn = ws_client_->getRTCConnection();
       if (!rtc_conn) {
-        sendResponse(Util::serverError(req_, "Create RTC Connection Failed"));
+        sendResponse(Util::ServerError(req_, "Create RTC Connection Failed"));
         return;
       }
       try {
@@ -104,10 +104,10 @@ void SoraSession::onRead(boost::system::error_code ec,
                            {"video", !rtc_conn->isVideoEnabled()}};
       sendResponse(createOKwithJson(req_, std::move(json_message)));
     } else {
-      sendResponse(Util::badRequest(req_, "Invalid Request"));
+      sendResponse(Util::BadRequest(req_, "Invalid Request"));
     }
   } else {
-    sendResponse(Util::badRequest(req_, "Invalid Method"));
+    sendResponse(Util::BadRequest(req_, "Invalid Method"));
   }
 }
 

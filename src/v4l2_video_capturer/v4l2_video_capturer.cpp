@@ -99,7 +99,7 @@ rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
     return nullptr;
   }
   if (v4l2_capturer->StartCapture(cs) < 0) {
-    auto size = cs.getSize();
+    auto size = cs.GetSize();
     RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapture(w = " << size.width
                         << ", h = " << size.height << ", fps = " << cs.framerate
                         << ")";
@@ -181,7 +181,7 @@ V4L2VideoCapture::~V4L2VideoCapture() {
 }
 
 int32_t V4L2VideoCapture::StartCapture(ConnectionSettings cs) {
-  auto size = cs.getSize();
+  auto size = cs.GetSize();
   if (_captureStarted) {
     if (size.width == _currentWidth && size.height == _currentHeight) {
       return 0;
@@ -359,7 +359,7 @@ int32_t V4L2VideoCapture::StopCapture() {
   return 0;
 }
 
-bool V4L2VideoCapture::useNativeBuffer() {
+bool V4L2VideoCapture::UseNativeBuffer() {
   return _useNative && (_captureVideoType == webrtc::VideoType::kMJPEG ||
                         _captureVideoType == webrtc::VideoType::kI420);
 }
@@ -499,7 +499,7 @@ bool V4L2VideoCapture::CaptureProcess() {
 
 bool V4L2VideoCapture::OnCaptured(struct v4l2_buffer& buf) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  if (useNativeBuffer()) {
+  if (UseNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
         NativeBuffer::Create(_captureVideoType, _currentWidth, _currentHeight));
     memcpy(native_buffer->MutableData(), (unsigned char*)_pool[buf.index].start,

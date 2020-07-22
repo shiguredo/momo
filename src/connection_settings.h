@@ -13,8 +13,8 @@
 #include "video_codec_info.h"
 
 struct ConnectionSettings {
-  std::string camera_name = "";
 #if USE_ROS
+  std::string camera_name = "";
   bool image_compressed = false;
   std::string audio_topic_name = "";
   int audio_topic_rate = 16000;
@@ -88,7 +88,7 @@ struct ConnectionSettings {
     int width;
     int height;
   };
-  Size getSize() {
+  Size GetSize() {
     if (resolution == "QVGA") {
       return {320, 240};
     } else if (resolution == "VGA") {
@@ -112,7 +112,7 @@ struct ConnectionSettings {
   }
 
   // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
-  webrtc::DegradationPreference getPriority() {
+  webrtc::DegradationPreference GetPriority() {
     if (priority == "FRAMERATE") {
       return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
     } else if (priority == "RESOLUTION") {

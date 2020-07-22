@@ -17,9 +17,9 @@
 
 // ずっと Read しつつ、書き込みが来たら送信してくれる WebSocket
 // サーバ用、クライアント用どちらからでも使える。
-// 任意のスレッドから sendText を呼ぶことで書き込みができる。
+// 任意のスレッドから SendText を呼ぶことで書き込みができる。
 //
-// 接続の確立に関しては、nativeSocket() および nativeSecureSocket() 関数を使って自前で行うこと。
+// 接続の確立に関しては、NativeSocket() および NativeSecureSocket() 関数を使って自前で行うこと。
 class Websocket {
  public:
   typedef boost::beast::websocket::stream<boost::asio::ip::tcp::socket>
@@ -52,28 +52,28 @@ class Websocket {
 
   bool isSSL() const;
 
-  websocket_t& nativeSocket();
-  ssl_websocket_t& nativeSecureSocket();
+  websocket_t& NativeSocket();
+  ssl_websocket_t& NativeSecureSocket();
 
   boost::asio::strand<websocket_t::executor_type>& strand();
 
  public:
   // Websocket からの読み込みを開始する。
-  void startToRead(read_callback_t on_read);
+  void StartToRead(read_callback_t on_read);
 
  private:
-  void doRead(read_callback_t on_read);
-  void onRead(read_callback_t on_read,
+  void DoRead(read_callback_t on_read);
+  void OnRead(read_callback_t on_read,
               boost::system::error_code ec,
               std::size_t bytes_transferred);
 
  public:
-  void sendText(std::string text);
+  void SendText(std::string text);
 
  private:
-  void doSendText(std::string text);
-  void doWrite();
-  void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
+  void DoSendText(std::string text);
+  void DoWrite();
+  void OnWrite(boost::system::error_code ec, std::size_t bytes_transferred);
 };
 
 #endif  // WEBSOCKET_H_

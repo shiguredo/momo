@@ -17,7 +17,7 @@ struct URLParts {
 
   // 適当 URL パース
   // scheme://[user_pass@]host[:port][/path_query_fragment]
-  static bool parse(std::string url, URLParts& parts) {
+  static bool Parse(std::string url, URLParts& parts) {
     auto n = url.find("://");
     if (n == std::string::npos) {
       return false;

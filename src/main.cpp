@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
+  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
 
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
   rtc::LogMessage::LogTimestamps();
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
         return nullptr;
       }
-      auto size = cs.getSize();
+      auto size = cs.GetSize();
       rtc::scoped_refptr<ScreenVideoCapturer> capturer(
           new rtc::RefCountedObject<ScreenVideoCapturer>(
               sources[0].id, size.width, size.height, cs.framerate));
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
         new rtc::RefCountedObject<ROSVideoCapture>(cs));
     return capturer;
 #else  // USE_ROS
-    auto size = cs.getSize();
+    auto size = cs.GetSize();
 #if defined(__APPLE__)
     return MacCapturer::Create(size.width, size.height, cs.framerate,
                                cs.video_device);

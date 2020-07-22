@@ -163,7 +163,7 @@ RTCManager::RTCManager(
     if (_conn_settings.disable_residual_echo_detector)
       ao.residual_echo_detector = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
-    _audio_track = _factory->CreateAudioTrack(Util::generateRandomChars(),
+    _audio_track = _factory->CreateAudioTrack(Util::GenerateRandomChars(),
                                               _factory->CreateAudioSource(ao));
     if (!_audio_track) {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
@@ -175,7 +175,7 @@ RTCManager::RTCManager(
         webrtc::VideoTrackSourceProxy::Create(
             _signalingThread.get(), _workerThread.get(), video_track_source);
     _video_track =
-        _factory->CreateVideoTrack(Util::generateRandomChars(), video_source);
+        _factory->CreateVideoTrack(Util::GenerateRandomChars(), video_source);
     if (_video_track) {
       if (_conn_settings.fixed_resolution) {
         _video_track->set_content_hint(
@@ -250,7 +250,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
 void RTCManager::initTracks(RTCConnection* conn) {
   auto connection = conn->getConnection();
 
-  std::string stream_id = Util::generateRandomChars();
+  std::string stream_id = Util::GenerateRandomChars();
 
   if (_audio_track) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >
@@ -267,7 +267,7 @@ void RTCManager::initTracks(RTCConnection* conn) {
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender =
           video_add_result.value();
       webrtc::RtpParameters parameters = video_sender->GetParameters();
-      parameters.degradation_preference = _conn_settings.getPriority();
+      parameters.degradation_preference = _conn_settings.GetPriority();
       video_sender->SetParameters(parameters);
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add _video_track";

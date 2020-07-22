@@ -31,10 +31,10 @@ Websocket::~Websocket() {
 bool Websocket::isSSL() const {
   return wss_ != nullptr;
 }
-Websocket::websocket_t& Websocket::nativeSocket() {
+Websocket::websocket_t& Websocket::NativeSocket() {
   return *ws_;
 }
-Websocket::ssl_websocket_t& Websocket::nativeSecureSocket() {
+Websocket::ssl_websocket_t& Websocket::NativeSecureSocket() {
   return *wss_;
 }
 
@@ -43,29 +43,29 @@ Websocket::strand() {
   return strand_;
 }
 
-void Websocket::startToRead(read_callback_t on_read) {
-  boost::asio::post(strand_, std::bind(&Websocket::doRead, this, on_read));
+void Websocket::StartToRead(read_callback_t on_read) {
+  boost::asio::post(strand_, std::bind(&Websocket::DoRead, this, on_read));
 }
 
-void Websocket::doRead(read_callback_t on_read) {
+void Websocket::DoRead(read_callback_t on_read) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
   if (isSSL()) {
     wss_->async_read(
         read_buffer_,
         boost::asio::bind_executor(
-            strand_, std::bind(&Websocket::onRead, this, on_read,
+            strand_, std::bind(&Websocket::OnRead, this, on_read,
                                std::placeholders::_1, std::placeholders::_2)));
   } else {
     ws_->async_read(
         read_buffer_,
         boost::asio::bind_executor(
-            strand_, std::bind(&Websocket::onRead, this, on_read,
+            strand_, std::bind(&Websocket::OnRead, this, on_read,
                                std::placeholders::_1, std::placeholders::_2)));
   }
 }
 
-void Websocket::onRead(read_callback_t on_read,
+void Websocket::OnRead(read_callback_t on_read,
                        boost::system::error_code ec,
                        std::size_t bytes_transferred) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
@@ -81,18 +81,18 @@ void Websocket::onRead(read_callback_t on_read,
     return;
 
   if (ec)
-    return MOMO_BOOST_ERROR(ec, "onRead");
+    return MOMO_BOOST_ERROR(ec, "OnRead");
 
-  doRead(on_read);
+  DoRead(on_read);
 }
 
-void Websocket::sendText(std::string text) {
+void Websocket::SendText(std::string text) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
   boost::asio::post(strand_,
-                    std::bind(&Websocket::doSendText, this, std::move(text)));
+                    std::bind(&Websocket::DoSendText, this, std::move(text)));
 }
 
-void Websocket::doSendText(std::string text) {
+void Websocket::DoSendText(std::string text) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << text;
 
   bool empty = write_buffer_.empty();
@@ -112,10 +112,10 @@ void Websocket::doSendText(std::string text) {
   write_buffer_.push_back(std::move(buffer));
 
   if (empty) {
-    doWrite();
+    DoWrite();
   }
 }
-void Websocket::doWrite() {
+void Websocket::DoWrite() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
   auto& buffer = write_buffer_.front();
@@ -134,19 +134,19 @@ void Websocket::doWrite() {
     wss_->async_write(
         buffer.data(),
         boost::asio::bind_executor(
-            strand_, std::bind(&Websocket::onWrite, this, std::placeholders::_1,
+            strand_, std::bind(&Websocket::OnWrite, this, std::placeholders::_1,
                                std::placeholders::_2)));
   } else {
     ws_->text(true);
     ws_->async_write(
         buffer.data(),
         boost::asio::bind_executor(
-            strand_, std::bind(&Websocket::onWrite, this, std::placeholders::_1,
+            strand_, std::bind(&Websocket::OnWrite, this, std::placeholders::_1,
                                std::placeholders::_2)));
   }
 }
 
-void Websocket::onWrite(boost::system::error_code ec,
+void Websocket::OnWrite(boost::system::error_code ec,
                         std::size_t bytes_transferred) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
 
@@ -157,7 +157,7 @@ void Websocket::onWrite(boost::system::error_code ec,
     return;
 
   if (ec)
-    return MOMO_BOOST_ERROR(ec, "onWrite");
+    return MOMO_BOOST_ERROR(ec, "OnWrite");
 
   {
     std::string tmp =
@@ -170,6 +170,6 @@ void Websocket::onWrite(boost::system::error_code ec,
   write_buffer_.erase(write_buffer_.begin());
 
   if (!write_buffer_.empty()) {
-    doWrite();
+    DoWrite();
   }
 }

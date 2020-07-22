@@ -16,9 +16,9 @@ enable() を呼び出した後、一定時間が経過するとコールバッ�
 class WatchDog {
  public:
   WatchDog(boost::asio::io_context& ioc, std::function<void()> callback);
-  void enable(int timeout);
-  void disable();
-  void reset();
+  void Enable(int timeout);
+  void Disable();
+  void Reset();
 
  private:
   int timeout_;

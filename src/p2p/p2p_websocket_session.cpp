@@ -46,15 +46,15 @@ void P2PWebsocketSession::onWatchdogExpired() {
   json ping_message = {
       {"type", "ping"},
   };
-  ws_->sendText(std::move(ping_message.dump()));
-  watchdog_.reset();
+  ws_->SendText(std::move(ping_message.dump()));
+  watchdog_.Reset();
 }
 
 void P2PWebsocketSession::doAccept(
     boost::beast::http::request<boost::beast::http::string_body> req) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
   // Accept the websocket handshake
-  ws_->nativeSocket().async_accept(
+  ws_->NativeSocket().async_accept(
       req,
       boost::asio::bind_executor(
           ws_->strand(), std::bind(&P2PWebsocketSession::onAccept,
@@ -68,7 +68,7 @@ void P2PWebsocketSession::onAccept(boost::system::error_code ec) {
     return MOMO_BOOST_ERROR(ec, "Accept");
 
   // WebSocket での読み込みを開始
-  ws_->startToRead(std::bind(&P2PWebsocketSession::onRead, shared_from_this(),
+  ws_->StartToRead(std::bind(&P2PWebsocketSession::onRead, shared_from_this(),
                              std::placeholders::_1, std::placeholders::_2,
                              std::placeholders::_3));
 }
@@ -112,7 +112,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     }
 
     auto send = std::bind([](P2PWebsocketSession* session,
-                             std::string str) { session->ws_->sendText(str); },
+                             std::string str) { session->ws_->SendText(str); },
                           this, std::placeholders::_1);
     connection_ =
         std::make_shared<P2PConnection>(rtc_manager_, conn_settings_, send);
@@ -123,7 +123,7 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
         desc->ToString(&sdp);
         json json_desc = {{"type", "answer"}, {"sdp", sdp}};
         std::string str_desc = json_desc.dump();
-        ws_->sendText(std::move(str_desc));
+        ws_->SendText(std::move(str_desc));
       });
     });
   } else if (type == "answer") {
@@ -163,8 +163,8 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
         {"type", "accept"},
         {"isExistUser", true},
     };
-    ws_->sendText(std::move(accept_message.dump()));
-    watchdog_.enable(30);
+    ws_->SendText(std::move(accept_message.dump()));
+    watchdog_.Enable(30);
   } else {
     return;
   }

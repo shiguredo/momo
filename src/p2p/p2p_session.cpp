@@ -65,7 +65,7 @@ void P2PSession::onRead(boost::system::error_code ec,
           ->run(std::move(req_));
       return;
     } else {
-      sendResponse(Util::badRequest(std::move(req_), "Not upgrade request"));
+      sendResponse(Util::BadRequest(std::move(req_), "Not upgrade request"));
       return;
     }
   }
@@ -81,12 +81,12 @@ void P2PSession::handleRequest() {
   if (req.method() != boost::beast::http::verb::get &&
       req.method() != boost::beast::http::verb::head)
     return sendResponse(
-        Util::badRequest(std::move(req), "Unknown HTTP-method"));
+        Util::BadRequest(std::move(req), "Unknown HTTP-method"));
 
   // Request path must be absolute and not contain "..".
   if (req.target().empty() || req.target()[0] != '/' ||
       req.target().find("..") != boost::beast::string_view::npos)
-    return sendResponse(Util::badRequest(req, "Illegal request-target"));
+    return sendResponse(Util::BadRequest(req, "Illegal request-target"));
 
   // Build the path to the requested file
   boost::filesystem::path path =
@@ -106,11 +106,11 @@ void P2PSession::handleRequest() {
 
   // Handle the case where the file doesn't exist
   if (ec == boost::system::errc::no_such_file_or_directory)
-    return sendResponse(Util::notFound(req, req.target()));
+    return sendResponse(Util::NotFound(req, req.target()));
 
   // Handle an unknown error
   if (ec)
-    return sendResponse(Util::serverError(req, ec.message()));
+    return sendResponse(Util::ServerError(req, ec.message()));
 
   // Cache the size since we need it after the move
   auto const size = body.size();
@@ -121,7 +121,7 @@ void P2PSession::handleRequest() {
         boost::beast::http::status::ok, req.version()};
     res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(boost::beast::http::field::content_type,
-            Util::mimeType(path.string()));
+            Util::MimeType(path.string()));
     res.content_length(size);
     res.keep_alive(req.keep_alive());
     return sendResponse(std::move(res));
@@ -133,7 +133,7 @@ void P2PSession::handleRequest() {
       std::make_tuple(boost::beast::http::status::ok, req.version())};
   res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(boost::beast::http::field::content_type,
-          Util::mimeType(path.string()));
+          Util::MimeType(path.string()));
   res.content_length(size);
   res.keep_alive(req.keep_alive());
   return sendResponse(std::move(res));
