@@ -11,10 +11,14 @@
 
 ## develop
 
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と　`ubuntu-18.04_armv8_jetson_xavier` に変更
+    - @tnoho
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
     - @hakobera
 - [ADD] Jetson Xavier シリーズで VP9 HWA を有効にする
     - @tnoho @melpon
+- [UPDATE] Jetson の RootFS 構築方法をリポジトリからの取得に変更
+    - @tnoho
 - [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
     - @hakobera @voluntas
 - [UPDATE] CLI11 を v1.9.1 にアップデートする

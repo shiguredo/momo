@@ -45,16 +45,25 @@ $ ./build.sh raspberry-pi-os_armv8
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv8 && ./build.sh raspberry-pi-os_armv8` を試してみてください。それでもだめな場合は Discord にお願いします。
 
+## Ubuntu 18.04 (armv8) Jetson Nano 向けバイナリを作成する
 
-## Ubuntu 18.04 (armv8) Jetson 向けバイナリを作成する
-
-build ディレクトリ以下で ./build.sh ubuntu-18.04_armv8_jetson と打つことで Momo の Ubuntu 18.04 armv8 Jetson 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh ubuntu-18.04_armv8_jetson_nano と打つことで Momo の Ubuntu 18.04 armv8 Jetson Nano 向けバイナリが生成されます。
 
 ```shell
-$ ./build.sh ubuntu-18.04_armv8_jetson
+$ ./build.sh ubuntu-18.04_armv8_jetson_nano
 ```
 
-うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson && ./build.sh ubuntu-18.04_armv8_jetson` を試してみてください。それでもだめな場合は Discord にお願いします。
+うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson_nano && ./build.sh ubuntu-18.04_armv8_jetson_nano` を試してみてください。それでもだめな場合は Discord にお願いします。
+
+## Ubuntu 18.04 (armv8) Jetson Xavier NX / AGX 向けバイナリを作成する
+
+build ディレクトリ以下で ./build.sh ubuntu-18.04_armv8_jetson_xavier と打つことで Momo の Ubuntu 18.04 armv8 Jetson Xavier NX / AGX 向けバイナリが生成されます。
+
+```shell
+$ ./build.sh ubuntu-18.04_armv8_jetson_xavier
+```
+
+うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson_xavier && ./build.sh ubuntu-18.04_armv8_jetson_xavier` を試してみてください。それでもだめな場合は Discord にお願いします。
 
 ## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
 
