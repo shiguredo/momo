@@ -17,12 +17,14 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
   VideoCodecInfo::Type av1_encoder_;
   VideoCodecInfo::Type h264_encoder_;
   std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory_;
+  std::unique_ptr<MomoVideoEncoderFactory> internal_encoder_factory_;
 
  public:
   MomoVideoEncoderFactory(VideoCodecInfo::Type vp8_encoder,
                           VideoCodecInfo::Type vp9_encoder,
                           VideoCodecInfo::Type av1_encoder,
-                          VideoCodecInfo::Type h264_encoder);
+                          VideoCodecInfo::Type h264_encoder,
+                          bool simulcast);
   virtual ~MomoVideoEncoderFactory() {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
@@ -32,6 +34,12 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
 
   std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
       const webrtc::SdpVideoFormat& format) override;
+
+ private:
+  std::unique_ptr<webrtc::VideoEncoder> WithSimulcast(
+      const webrtc::SdpVideoFormat& format,
+      std::function<std::unique_ptr<webrtc::VideoEncoder>(
+          const webrtc::SdpVideoFormat&)> create);
 };
 
 #endif  // MOMO_VIDEO_ENCODER_FACTORY_H_

@@ -54,6 +54,7 @@ struct ConnectionSettings {
   bool sora_multistream = false;
   int sora_spotlight = -1;
   int sora_port = -1;
+  bool sora_simulcast = false;
 
   std::string test_document_root;
   int test_port = 8080;

@@ -116,7 +116,8 @@ RTCManager::RTCManager(
                 resolve(cs.vp8_encoder, info.vp8_encoders),
                 resolve(cs.vp9_encoder, info.vp9_encoders),
                 resolve(cs.av1_encoder, info.av1_encoders),
-                resolve(cs.h264_encoder, info.h264_encoders)));
+                resolve(cs.h264_encoder, info.h264_encoders),
+                conn_settings.sora_simulcast));
     media_dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
             absl::make_unique<MomoVideoDecoderFactory>(
@@ -242,6 +243,13 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     return nullptr;
   }
 
+  return std::make_shared<RTCConnection>(sender, std::move(observer),
+                                         connection);
+}
+
+void RTCManager::initTracks(RTCConnection* conn) {
+  auto connection = conn->getConnection();
+
   std::string stream_id = Util::generateRandomChars();
 
   if (_audio_track) {
@@ -265,7 +273,4 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add _video_track";
     }
   }
-
-  return std::make_shared<RTCConnection>(sender, std::move(observer),
-                                         connection);
 }

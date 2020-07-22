@@ -393,6 +393,7 @@ void Util::parseArgs(int argc,
       ->check(CLI::Range(1, 10));
   sora_app->add_option("--port", cs.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
+  sora_app->add_flag("--simulcast", cs.sora_simulcast, "Use simulcast");
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
@@ -414,6 +415,14 @@ void Util::parseArgs(int argc,
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
     exit(app.exit(e));
+  }
+
+  // サイマルキャストは VP8, H264 のみで動作する
+  if (cs.sora_simulcast && cs.sora_video_codec != "VP8" &&
+      cs.sora_video_codec != "H264") {
+    std::cerr << "Simulcast works only --video-codec=VP8 or --video-codec=H264."
+              << std::endl;
+    exit(1);
   }
 
   if (!serial_setting.empty()) {

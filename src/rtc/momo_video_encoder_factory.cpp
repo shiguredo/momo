@@ -7,6 +7,7 @@
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
 #include <media/base/vp9_profile.h>
+#include <media/engine/simulcast_encoder_adapter.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp8/include/vp8.h>
 #include <modules/video_coding/codecs/vp9/include/vp9.h>
@@ -36,7 +37,8 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     VideoCodecInfo::Type vp8_encoder,
     VideoCodecInfo::Type vp9_encoder,
     VideoCodecInfo::Type av1_encoder,
-    VideoCodecInfo::Type h264_encoder)
+    VideoCodecInfo::Type h264_encoder,
+    bool simulcast)
     : vp8_encoder_(vp8_encoder),
       vp9_encoder_(vp9_encoder),
       av1_encoder_(av1_encoder),
@@ -44,6 +46,10 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
 #if defined(__APPLE__)
   video_encoder_factory_ = CreateObjCEncoderFactory();
 #endif
+  if (simulcast) {
+    internal_encoder_factory_.reset(new MomoVideoEncoderFactory(
+        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false));
+  }
 }
 std::vector<webrtc::SdpVideoFormat>
 MomoVideoEncoderFactory::GetSupportedFormats() const {
@@ -159,8 +165,10 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     }
 #if USE_JETSON_ENCODER
     if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
-      return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+      });
     }
 #endif
   }
@@ -176,29 +184,38 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
 #if defined(__APPLE__)
     if (h264_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
-      return video_encoder_factory_->CreateVideoEncoder(format);
+      return WithSimulcast(
+          format, [this](const webrtc::SdpVideoFormat& format) {
+            return video_encoder_factory_->CreateVideoEncoder(format);
+          });
     }
 #endif
 
 #if USE_MMAL_ENCODER
     if (h264_encoder_ == VideoCodecInfo::Type::MMAL) {
-      return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
+      });
     }
 #endif
 
 #if USE_JETSON_ENCODER
     if (h264_encoder_ == VideoCodecInfo::Type::Jetson) {
-      return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+      });
     }
 #endif
 
 #if USE_NVCODEC_ENCODER
     if (h264_encoder_ == VideoCodecInfo::Type::NVIDIA &&
         NvCodecH264Encoder::IsSupported()) {
-      return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
+      });
     }
 #endif
   }
@@ -206,4 +223,17 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;
   return nullptr;
+}
+
+std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::WithSimulcast(
+    const webrtc::SdpVideoFormat& format,
+    std::function<std::unique_ptr<webrtc::VideoEncoder>(
+        const webrtc::SdpVideoFormat&)> create) {
+  if (internal_encoder_factory_) {
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        new webrtc::SimulcastEncoderAdapter(internal_encoder_factory_.get(),
+                                            format));
+  } else {
+    return create(format);
+  }
 }
