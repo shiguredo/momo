@@ -15,10 +15,24 @@ class RTCConnection {
         _observer(std::move(observer)),
         _connection(connection){};
   ~RTCConnection();
-  void createOffer();
-  void setOffer(const std::string sdp);
-  void createAnswer();
-  void setAnswer(const std::string sdp);
+
+  typedef std::function<void(webrtc::SessionDescriptionInterface*)>
+      OnCreateSuccessFunc;
+  typedef std::function<void(webrtc::RTCError)> OnCreateFailureFunc;
+
+  typedef std::function<void()> OnSetSuccessFunc;
+  typedef std::function<void(webrtc::RTCError)> OnSetFailureFunc;
+
+  void createOffer(OnCreateSuccessFunc on_success = nullptr,
+                   OnCreateFailureFunc on_failure = nullptr);
+  void setOffer(const std::string sdp,
+                OnSetSuccessFunc on_success = nullptr,
+                OnSetFailureFunc on_failure = nullptr);
+  void createAnswer(OnCreateSuccessFunc on_success = nullptr,
+                    OnCreateFailureFunc on_failure = nullptr);
+  void setAnswer(const std::string sdp,
+                 OnSetSuccessFunc on_success = nullptr,
+                 OnSetFailureFunc on_failure = nullptr);
   void addIceCandidate(const std::string sdp_mid,
                        const int sdp_mlineindex,
                        const std::string sdp);

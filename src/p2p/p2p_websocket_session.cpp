@@ -117,7 +117,15 @@ void P2PWebsocketSession::onRead(boost::system::error_code ec,
     connection_ =
         std::make_shared<P2PConnection>(rtc_manager_, conn_settings_, send);
     std::shared_ptr<RTCConnection> rtc_conn = connection_->getRTCConnection();
-    rtc_conn->setOffer(sdp);
+    rtc_conn->setOffer(sdp, [this, rtc_conn]() {
+      rtc_conn->createAnswer([this](webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        json json_desc = {{"type", "answer"}, {"sdp", sdp}};
+        std::string str_desc = json_desc.dump();
+        ws_->sendText(std::move(str_desc));
+      });
+    });
   } else if (type == "answer") {
     std::shared_ptr<P2PConnection> p2p_conn = connection_;
     if (!p2p_conn) {

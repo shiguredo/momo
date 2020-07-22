@@ -28,9 +28,6 @@ class P2PConnection : public RTCMessageSender {
   void onIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
-  void onCreateDescription(webrtc::SdpType type,
-                           const std::string sdp) override;
-  void onSetDescription(webrtc::SdpType type) override;
 
  private:
   std::shared_ptr<RTCConnection> _connection;

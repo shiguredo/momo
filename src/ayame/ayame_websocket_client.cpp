@@ -372,14 +372,21 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
       has_is_exist_user_flag_ = true;
       is_exist_user = json_message["isExistUser"];
     }
+    auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
+      std::string sdp;
+      desc->ToString(&sdp);
+      json json_message = {{"type", "offer"}, {"sdp", sdp}};
+      ws_->sendText(json_message.dump());
+    };
+
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
     if (is_exist_user) {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
       is_send_offer_ = true;
-      connection_->createOffer();
+      connection_->createOffer(on_create_offer);
     } else if (!has_is_exist_user_flag_) {
       // フラグがない場合とりあえず送信
-      connection_->createOffer();
+      connection_->createOffer(on_create_offer);
     }
   } else if (type == "offer") {
     // isExistUser フラグがなかった場合二回 peer connection を生成する
@@ -387,7 +394,20 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
       createPeerConnection();
     }
     const std::string sdp = json_message["sdp"];
-    connection_->setOffer(sdp);
+    connection_->setOffer(sdp, [this]() {
+      boost::asio::post(ws_->strand(), [this, self = shared_from_this()]() {
+        if (!is_send_offer_ || !has_is_exist_user_flag_) {
+          connection_->createAnswer(
+              [this](webrtc::SessionDescriptionInterface* desc) {
+                std::string sdp;
+                desc->ToString(&sdp);
+                json json_message = {{"type", "answer"}, {"sdp", sdp}};
+                ws_->sendText(json_message.dump());
+              });
+        }
+        is_send_offer_ = false;
+      });
+    });
   } else if (type == "answer") {
     const std::string sdp = json_message["sdp"];
     connection_->setAnswer(sdp);
@@ -432,23 +452,6 @@ void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid,
   ws_->sendText(json_message.dump());
 }
 
-void AyameWebsocketClient::onCreateDescription(webrtc::SdpType type,
-                                               const std::string sdp) {
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " SdpType: " << webrtc::SdpTypeToString(type);
-  json json_message = {{"type", webrtc::SdpTypeToString(type)}, {"sdp", sdp}};
-  ws_->sendText(json_message.dump());
-}
-
-void AyameWebsocketClient::onSetDescription(webrtc::SdpType type) {
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " SdpType: " << webrtc::SdpTypeToString(type);
-
-  boost::asio::post(ws_->strand(),
-                    std::bind(&AyameWebsocketClient::doSetDescription,
-                              shared_from_this(), type));
-}
-
 void AyameWebsocketClient::doIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
@@ -471,13 +474,4 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       break;
   }
   rtc_state_ = new_state;
-}
-
-void AyameWebsocketClient::doSetDescription(webrtc::SdpType type) {
-  if (type == webrtc::SdpType::kOffer) {
-    if (!is_send_offer_ || !has_is_exist_user_flag_) {
-      connection_->createAnswer();
-    }
-    is_send_offer_ = false;
-  }
 }

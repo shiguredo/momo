@@ -1,7 +1,9 @@
 #include "rtc_connection.h"
 
 // WebRTC
-#include <rtc_base/logging.h>
+#include <api/peer_connection_interface.h>
+#include <api/scoped_refptr.h>
+#include <rtc_base/ref_counted_object.h>
 
 // stats のコールバックを受け取るためのクラス
 class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
@@ -29,11 +31,89 @@ class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
   ResultCallback result_callback_;
 };
 
+class CreateSessionDescriptionThunk
+    : public webrtc::CreateSessionDescriptionObserver {
+ public:
+  typedef RTCConnection::OnCreateSuccessFunc OnSuccessFunc;
+  typedef RTCConnection::OnCreateFailureFunc OnFailureFunc;
+
+  static rtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
+      OnSuccessFunc on_success,
+      OnFailureFunc on_failure) {
+    return new rtc::RefCountedObject<CreateSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
+  }
+
+ protected:
+  CreateSessionDescriptionThunk(OnSuccessFunc on_success,
+                                OnFailureFunc on_failure)
+      : on_success_(std::move(on_success)),
+        on_failure_(std::move(on_failure)) {}
+  void OnSuccess(webrtc::SessionDescriptionInterface* desc) override {
+    auto f = std::move(on_success_);
+    if (f) {
+      f(desc);
+    }
+  }
+  void OnFailure(webrtc::RTCError error) override {
+    RTC_LOG(LS_ERROR) << "Failed to create session description : "
+                      << webrtc::ToString(error.type()) << ": "
+                      << error.message();
+    auto f = std::move(on_failure_);
+    if (f) {
+      f(error);
+    }
+  }
+
+ private:
+  OnSuccessFunc on_success_;
+  OnFailureFunc on_failure_;
+};
+
+class SetSessionDescriptionThunk
+    : public webrtc::SetSessionDescriptionObserver {
+ public:
+  typedef RTCConnection::OnSetSuccessFunc OnSuccessFunc;
+  typedef RTCConnection::OnSetFailureFunc OnFailureFunc;
+
+  static rtc::scoped_refptr<SetSessionDescriptionThunk> Create(
+      OnSuccessFunc on_success,
+      OnFailureFunc on_failure) {
+    return new rtc::RefCountedObject<SetSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
+  }
+
+ protected:
+  SetSessionDescriptionThunk(OnSuccessFunc on_success, OnFailureFunc on_failure)
+      : on_success_(std::move(on_success)),
+        on_failure_(std::move(on_failure)) {}
+  void OnSuccess() override {
+    auto f = std::move(on_success_);
+    if (f) {
+      f();
+    }
+  }
+  void OnFailure(webrtc::RTCError error) override {
+    RTC_LOG(LS_ERROR) << "Failed to set session description : "
+                      << webrtc::ToString(error.type()) << ": "
+                      << error.message();
+    auto f = std::move(on_failure_);
+    if (f) {
+      f(error);
+    }
+  }
+
+ private:
+  OnSuccessFunc on_success_;
+  OnFailureFunc on_failure_;
+};
+
 RTCConnection::~RTCConnection() {
   _connection->Close();
 }
 
-void RTCConnection::createOffer() {
+void RTCConnection::createOffer(OnCreateSuccessFunc on_success,
+                                OnCreateFailureFunc on_failure) {
   using RTCOfferAnswerOptions =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions;
   RTCOfferAnswerOptions options = RTCOfferAnswerOptions();
@@ -41,11 +121,27 @@ void RTCConnection::createOffer() {
       RTCOfferAnswerOptions::kOfferToReceiveMediaTrue;
   options.offer_to_receive_audio =
       RTCOfferAnswerOptions::kOfferToReceiveMediaTrue;
+
+  auto with_set_local_desc = [this, on_success = std::move(on_success)](
+                                 webrtc::SessionDescriptionInterface* desc) {
+    std::string sdp;
+    desc->ToString(&sdp);
+    RTC_LOG(LS_INFO) << "Created session description : " << sdp;
+    _connection->SetLocalDescription(
+        SetSessionDescriptionThunk::Create(nullptr, nullptr), desc);
+    if (on_success) {
+      on_success(desc);
+    }
+  };
   _connection->CreateOffer(
-      CreateSessionDescriptionObserver::Create(_sender, _connection), options);
+      CreateSessionDescriptionThunk::Create(std::move(with_set_local_desc),
+                                            std::move(on_failure)),
+      options);
 }
 
-void RTCConnection::setOffer(const std::string sdp) {
+void RTCConnection::setOffer(const std::string sdp,
+                             OnSetSuccessFunc on_success,
+                             OnSetFailureFunc on_failure) {
   webrtc::SdpParseError error;
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, sdp, &error);
@@ -57,18 +153,33 @@ void RTCConnection::setOffer(const std::string sdp) {
     return;
   }
   _connection->SetRemoteDescription(
-      SetSessionDescriptionObserver::Create(session_description->GetType(),
-                                            _sender),
+      SetSessionDescriptionThunk::Create(std::move(on_success),
+                                         std::move(on_failure)),
       session_description.release());
 }
 
-void RTCConnection::createAnswer() {
+void RTCConnection::createAnswer(OnCreateSuccessFunc on_success,
+                                 OnCreateFailureFunc on_failure) {
+  auto with_set_local_desc = [this, on_success = std::move(on_success)](
+                                 webrtc::SessionDescriptionInterface* desc) {
+    std::string sdp;
+    desc->ToString(&sdp);
+    RTC_LOG(LS_INFO) << "Created session description : " << sdp;
+    _connection->SetLocalDescription(
+        SetSessionDescriptionThunk::Create(nullptr, nullptr), desc);
+    if (on_success) {
+      on_success(desc);
+    }
+  };
   _connection->CreateAnswer(
-      CreateSessionDescriptionObserver::Create(_sender, _connection),
+      CreateSessionDescriptionThunk::Create(std::move(with_set_local_desc),
+                                            std::move(on_failure)),
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 
-void RTCConnection::setAnswer(const std::string sdp) {
+void RTCConnection::setAnswer(const std::string sdp,
+                              OnSetSuccessFunc on_success,
+                              OnSetFailureFunc on_failure) {
   webrtc::SdpParseError error;
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kAnswer, sdp, &error);
@@ -80,8 +191,8 @@ void RTCConnection::setAnswer(const std::string sdp) {
     return;
   }
   _connection->SetRemoteDescription(
-      SetSessionDescriptionObserver::Create(session_description->GetType(),
-                                            _sender),
+      SetSessionDescriptionThunk::Create(std::move(on_success),
+                                         std::move(on_failure)),
       session_description.release());
 }
 
@@ -97,11 +208,13 @@ void RTCConnection::addIceCandidate(const std::string sdp_mid,
                       << "\nline: " << error.line.c_str();
     return;
   }
-  if (!_connection->AddIceCandidate(candidate.get())) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << "Failed to apply the received candidate : " << sdp;
-    return;
-  }
+  _connection->AddIceCandidate(
+      std::move(candidate), [sdp](webrtc::RTCError error) {
+        RTC_LOG(LS_WARNING)
+            << __FUNCTION__ << " Failed to apply the received candidate. type="
+            << webrtc::ToString(error.type()) << " message=" << error.message()
+            << " sdp=" << sdp;
+      });
 }
 
 bool RTCConnection::setAudioEnabled(bool enabled) {

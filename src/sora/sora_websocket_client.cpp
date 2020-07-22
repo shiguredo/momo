@@ -386,44 +386,66 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
     answer_sent_ = false;
     createPeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"].get<std::string>();
-    connection_->setOffer(sdp);
 
-    if (conn_settings_.sora_simulcast) {
-      encoding_parameters_.clear();
+    connection_->setOffer(sdp, [this, json_message]() {
+      // simulcast では offer の setRemoteDescription が終わった後に
+      // トラックを追加する必要があるため、ここで初期化する
+      manager_->initTracks(connection_.get());
 
-      // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
-      auto encodings_json = json_message["encodings"];
-      for (auto p : encodings_json) {
-        webrtc::RtpEncodingParameters params;
-        // absl::optional<uint32_t> ssrc;
-        // double bitrate_priority = kDefaultBitratePriority;
-        // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
-        // Priority network_priority = Priority::kLow;
-        // absl::optional<int> max_bitrate_bps;
-        // absl::optional<int> min_bitrate_bps;
-        // absl::optional<double> max_framerate;
-        // absl::optional<int> num_temporal_layers;
-        // absl::optional<double> scale_resolution_down_by;
-        // bool active = true;
-        // std::string rid;
-        // bool adaptive_ptime = false;
-        params.rid = p["rid"].get<std::string>();
-        if (p.contains("maxBitrate")) {
-          params.max_bitrate_bps = p["maxBitrate"].get<int>();
+      if (conn_settings_.sora_simulcast) {
+        std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+
+        // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+        auto encodings_json = json_message["encodings"];
+        for (auto p : encodings_json) {
+          webrtc::RtpEncodingParameters params;
+          // absl::optional<uint32_t> ssrc;
+          // double bitrate_priority = kDefaultBitratePriority;
+          // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+          // Priority network_priority = Priority::kLow;
+          // absl::optional<int> max_bitrate_bps;
+          // absl::optional<int> min_bitrate_bps;
+          // absl::optional<double> max_framerate;
+          // absl::optional<int> num_temporal_layers;
+          // absl::optional<double> scale_resolution_down_by;
+          // bool active = true;
+          // std::string rid;
+          // bool adaptive_ptime = false;
+          params.rid = p["rid"].get<std::string>();
+          if (p.contains("maxBitrate")) {
+            params.max_bitrate_bps = p["maxBitrate"].get<int>();
+          }
+          if (p.contains("minBitrate")) {
+            params.min_bitrate_bps = p["minBitrate"].get<int>();
+          }
+          if (p.contains("scaleResolutionDownBy")) {
+            params.scale_resolution_down_by =
+                p["scaleResolutionDownBy"].get<double>();
+          }
+          encoding_parameters.push_back(params);
         }
-        if (p.contains("minBitrate")) {
-          params.min_bitrate_bps = p["minBitrate"].get<int>();
-        }
-        if (p.contains("scaleResolutionDownBy")) {
-          params.scale_resolution_down_by =
-              p["scaleResolutionDownBy"].get<double>();
-        }
-        encoding_parameters_.push_back(params);
+        connection_->setEncodingParameters(std::move(encoding_parameters));
       }
-    }
+
+      connection_->createAnswer(
+          [this](webrtc::SessionDescriptionInterface* desc) {
+            std::string sdp;
+            desc->ToString(&sdp);
+            json json_message = {{"type", "answer"}, {"sdp", sdp}};
+            ws_->sendText(json_message.dump());
+          });
+    });
   } else if (type == "update") {
     const std::string sdp = json_message["sdp"].get<std::string>();
-    connection_->setOffer(sdp);
+    connection_->setOffer(sdp, [this]() {
+      connection_->createAnswer(
+          [this](webrtc::SessionDescriptionInterface* desc) {
+            std::string sdp;
+            desc->ToString(&sdp);
+            json json_message = {{"type", "update"}, {"sdp", sdp}};
+            ws_->sendText(json_message.dump());
+          });
+    });
   } else if (type == "notify") {
     const std::string event_type =
         json_message["event_type"].get<std::string>();
@@ -474,34 +496,6 @@ void SoraWebsocketClient::onIceCandidate(const std::string sdp_mid,
                                          const std::string sdp) {
   json json_message = {{"type", "candidate"}, {"candidate", sdp}};
   ws_->sendText(json_message.dump());
-}
-void SoraWebsocketClient::onCreateDescription(webrtc::SdpType type,
-                                              const std::string sdp) {
-  // 最初の１回目は answer、以降は update にする
-  if (!answer_sent_) {
-    answer_sent_ = true;
-    json json_message = {{"type", "answer"}, {"sdp", sdp}};
-    ws_->sendText(json_message.dump());
-  } else {
-    json json_message = {{"type", "update"}, {"sdp", sdp}};
-    ws_->sendText(json_message.dump());
-  }
-}
-void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " SdpType: " << webrtc::SdpTypeToString(type);
-  if (type == webrtc::SdpType::kOffer) {
-    // simulcast では offer の setRemoteDescription が終わった後に
-    // トラックを追加する必要がある
-    if (!answer_sent_) {
-      manager_->initTracks(connection_.get());
-
-      if (conn_settings_.sora_simulcast) {
-        connection_->setEncodingParameters(std::move(encoding_parameters_));
-      }
-    }
-    connection_->createAnswer();
-  }
 }
 
 void SoraWebsocketClient::doIceConnectionStateChange(
