@@ -3,10 +3,13 @@
 
 #include "serial_data_manager.h"
 
-#include <boost/bind.hpp>
 #include <iostream>
 
-#include "rtc_base/log_sinks.h"
+// Boost
+#include <boost/bind.hpp>
+
+// WebRTC
+#include <rtc_base/log_sinks.h>
 
 #define SERIAL_TX_BUFFER_SIZE 16
 #define SERIAL_RX_BUFFER_SIZE 256

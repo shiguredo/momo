@@ -2,10 +2,14 @@
 #define CONNECTION_SETTINGS_H_
 
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <string>
 
-#include "api/rtp_parameters.h"
+// nlohmann/json
+#include <nlohmann/json.hpp>
+
+// WebRTC
+#include <api/rtp_parameters.h>
+
 #include "video_codec_info.h"
 
 struct ConnectionSettings {

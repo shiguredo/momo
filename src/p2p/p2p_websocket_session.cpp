@@ -1,8 +1,11 @@
 #include "p2p_websocket_session.h"
 
+// Boost
 #include <boost/asio/bind_executor.hpp>
 #include <boost/beast/websocket/error.hpp>
 #include <boost/beast/websocket/stream.hpp>
+
+// nlohmann/json
 #include <nlohmann/json.hpp>
 
 #include "util.h"

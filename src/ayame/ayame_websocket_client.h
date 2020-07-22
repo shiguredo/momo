@@ -2,14 +2,18 @@
 #define AYAME_WEBSOCKET_CLIENT_
 
 #include <algorithm>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl/context.hpp>
 #include <cstdlib>
 #include <functional>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <string>
+
+// Boost
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl/context.hpp>
+
+// nlohmann/json
+#include <nlohmann/json.hpp>
 
 #include "connection_settings.h"
 #include "rtc/manager.h"

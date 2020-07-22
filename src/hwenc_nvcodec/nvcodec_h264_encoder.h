@@ -11,11 +11,12 @@
 #include <mutex>
 #include <queue>
 
-#include "api/video_codecs/video_encoder.h"
-#include "common_video/h264/h264_bitstream_parser.h"
-#include "common_video/include/bitrate_adjuster.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "rtc_base/critical_section.h"
+// WebRTC
+#include <api/video_codecs/video_encoder.h>
+#include <common_video/h264/h264_bitstream_parser.h>
+#include <common_video/include/bitrate_adjuster.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <rtc_base/critical_section.h>
 
 // NvCodec
 #ifdef _WIN32

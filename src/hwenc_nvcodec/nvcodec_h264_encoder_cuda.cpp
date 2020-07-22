@@ -1,9 +1,10 @@
 #include "nvcodec_h264_encoder_cuda.h"
 
+#include <iostream>
+
+// NvCodec
 #include <NvDecoder/NvDecoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
-
-#include <iostream>
 
 #include "dyn/cuda.h"
 

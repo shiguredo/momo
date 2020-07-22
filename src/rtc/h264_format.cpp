@@ -1,8 +1,8 @@
 #include "h264_format.h"
 
-// webrtc
-#include "absl/types/optional.h"
-#include "api/video_codecs/sdp_video_format.h"
+// WebRTC
+#include <absl/types/optional.h>
+#include <api/video_codecs/sdp_video_format.h>
 
 // modules/video_coding/codecs/h264/h264.cc より
 webrtc::SdpVideoFormat CreateH264Format(webrtc::H264::Profile profile,

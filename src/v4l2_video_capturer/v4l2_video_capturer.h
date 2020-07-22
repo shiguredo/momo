@@ -16,12 +16,13 @@
 
 #include <memory>
 
-#include "connection_settings.h"
-#include "modules/video_capture/video_capture_defines.h"
-#include "modules/video_capture/video_capture_impl.h"
-#include "rtc/scalable_track_source.h"
-#include "rtc_base/critical_section.h"
-#include "rtc_base/platform_thread.h"
+// WebRTC
+#include <connection_settings.h>
+#include <modules/video_capture/video_capture_defines.h>
+#include <modules/video_capture/video_capture_impl.h>
+#include <rtc/scalable_track_source.h>
+#include <rtc_base/critical_section.h>
+#include <rtc_base/platform_thread.h>
 
 class V4L2VideoCapture : public ScalableVideoTrackSource {
  public:

@@ -1,7 +1,10 @@
 #include "sora_session.h"
 
+// Boost
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/version.hpp>
+
+// nlohman/json
 #include <nlohmann/json.hpp>
 
 #include "util.h"

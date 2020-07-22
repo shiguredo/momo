@@ -10,29 +10,34 @@
 
 #include "v4l2_video_capturer.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <linux/videodev2.h>
+// C
 #include <stdio.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/select.h>
 #include <time.h>
-#include <unistd.h>
 
+// C++
 #include <new>
 #include <string>
 
-#include "api/scoped_refptr.h"
-#include "api/video/i420_buffer.h"
-#include "media/base/video_common.h"
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_factory.h"
-#include "rtc/native_buffer.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
-#include "third_party/libyuv/include/libyuv.h"
+// Linux
+#include <errno.h>
+#include <fcntl.h>
+#include <linux/videodev2.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/select.h>
+#include <unistd.h>
+
+// WebRTC
+#include <api/scoped_refptr.h>
+#include <api/video/i420_buffer.h>
+#include <media/base/video_common.h>
+#include <modules/video_capture/video_capture.h>
+#include <modules/video_capture/video_capture_factory.h>
+#include <rtc/native_buffer.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/ref_counted_object.h>
+#include <third_party/libyuv/include/libyuv.h>
 
 rtc::scoped_refptr<V4L2VideoCapture> V4L2VideoCapture::Create(
     ConnectionSettings cs) {

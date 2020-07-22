@@ -1,6 +1,10 @@
 #ifndef WS_WEBSOCKET_H_
 #define WS_WEBSOCKET_H_
 
+#include <functional>
+#include <memory>
+
+// Boost
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -10,8 +14,6 @@
 #include <boost/beast/core/multi_buffer.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/beast/websocket/stream.hpp>
-#include <functional>
-#include <memory>
 
 // ずっと Read しつつ、書き込みが来たら送信してくれる WebSocket
 // サーバ用、クライアント用どちらからでも使える。

@@ -2,6 +2,12 @@
 #define SORA_SESSION_H_
 
 #include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <memory>
+#include <string>
+
+// Boost
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -10,11 +16,9 @@
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
-#include <cstdlib>
-#include <functional>
-#include <memory>
+
+// nlohmann/json
 #include <nlohmann/json.hpp>
-#include <string>
 
 #include "connection_settings.h"
 #include "rtc/manager.h"

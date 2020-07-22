@@ -1,6 +1,9 @@
 #ifndef CONNECTION_H_
 #define CONNECTION_H_
-#include "api/peer_connection_interface.h"
+
+// WebRTC
+#include <api/peer_connection_interface.h>
+
 #include "observer.h"
 
 class RTCConnection {

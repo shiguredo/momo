@@ -1,7 +1,9 @@
 #ifndef SERIAL_DATA_CHANNEL_H_
 #define SERIAL_DATA_CHANNEL_H_
 
-#include "api/data_channel_interface.h"
+// WebRTC
+#include <api/data_channel_interface.h>
+
 #include "serial_data_manager.h"
 
 class SerialDataManager;

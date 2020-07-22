@@ -12,10 +12,13 @@
 #ifndef Jetson_VIDEO_ENCODER_H_
 #define Jetson_VIDEO_ENCODER_H_
 
-#include "NvVideoDecoder.h"
-#include "api/video_codecs/video_decoder.h"
-#include "common_video/include/i420_buffer_pool.h"
-#include "rtc_base/platform_thread.h"
+// WebRTC
+#include <api/video_codecs/video_decoder.h>
+#include <common_video/include/i420_buffer_pool.h>
+#include <rtc_base/platform_thread.h>
+
+// Jetson Linux Multimedia API
+#include <NvVideoDecoder.h>
 
 class JetsonVideoDecoder : public webrtc::VideoDecoder {
  public:

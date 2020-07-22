@@ -14,9 +14,10 @@
 
 #include <memory>
 
-#include "media/base/adapted_video_track_source.h"
-#include "media/base/video_adapter.h"
-#include "rtc_base/timestamp_aligner.h"
+// WebRTC
+#include <media/base/adapted_video_track_source.h>
+#include <media/base/video_adapter.h>
+#include <rtc_base/timestamp_aligner.h>
 
 class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
  public:

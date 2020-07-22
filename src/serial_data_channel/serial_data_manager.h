@@ -1,10 +1,15 @@
 #ifndef SERIAL_DATA_MANAGER_H_
 #define SERIAL_DATA_MANAGER_H_
-#include <boost/asio.hpp>
+
 #include <vector>
 
+// Boost
+#include <boost/asio.hpp>
+
+// WebRTC
+#include <rtc_base/critical_section.h>
+
 #include "rtc/data_manager.h"
-#include "rtc_base/critical_section.h"
 #include "serial_data_channel.h"
 
 class SerialDataChannel;

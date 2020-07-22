@@ -13,14 +13,14 @@
 #define MMAL_H264_ENCODER_H_
 
 extern "C" {
-#include "bcm_host.h"
-#include "interface/mmal/mmal.h"
-#include "interface/mmal/mmal_format.h"
-#include "interface/mmal/util/mmal_connection.h"
-#include "interface/mmal/util/mmal_default_components.h"
-#include "interface/mmal/util/mmal_util.h"
-#include "interface/mmal/util/mmal_util_params.h"
-#include "interface/vcos/vcos.h"
+#include <bcm_host.h>
+#include <interface/mmal/mmal.h>
+#include <interface/mmal/mmal_format.h>
+#include <interface/mmal/util/mmal_connection.h>
+#include <interface/mmal/util/mmal_default_components.h>
+#include <interface/mmal/util/mmal_util.h>
+#include <interface/mmal/util/mmal_util_params.h>
+#include <interface/vcos/vcos.h>
 }
 
 #include <chrono>
@@ -28,12 +28,13 @@ extern "C" {
 #include <mutex>
 #include <queue>
 
-#include "api/video_codecs/video_encoder.h"
-#include "common_video/h264/h264_bitstream_parser.h"
-#include "common_video/include/bitrate_adjuster.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "rtc_base/critical_section.h"
+// WebRTC
+#include <api/video_codecs/video_encoder.h>
+#include <common_video/h264/h264_bitstream_parser.h>
+#include <common_video/include/bitrate_adjuster.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <rtc_base/critical_section.h>
 
 class ProcessThread;
 

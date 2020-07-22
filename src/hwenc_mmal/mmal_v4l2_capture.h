@@ -2,14 +2,14 @@
 #define V4L2_MMAL_CAPTURE_H_
 
 extern "C" {
-#include "bcm_host.h"
-#include "interface/mmal/mmal.h"
-#include "interface/mmal/mmal_format.h"
-#include "interface/mmal/util/mmal_connection.h"
-#include "interface/mmal/util/mmal_default_components.h"
-#include "interface/mmal/util/mmal_util.h"
-#include "interface/mmal/util/mmal_util_params.h"
-#include "interface/vcos/vcos.h"
+#include <bcm_host.h>
+#include <interface/mmal/mmal.h>
+#include <interface/mmal/mmal_format.h>
+#include <interface/mmal/util/mmal_connection.h>
+#include <interface/mmal/util/mmal_default_components.h>
+#include <interface/mmal/util/mmal_util.h>
+#include <interface/mmal/util/mmal_util_params.h>
+#include <interface/vcos/vcos.h>
 }
 
 #include <stddef.h>
@@ -19,8 +19,9 @@ extern "C" {
 #include <mutex>
 #include <queue>
 
-#include "rtc_base/critical_section.h"
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
+// WebRTC
+#include <rtc_base/critical_section.h>
+#include <v4l2_video_capturer/v4l2_video_capturer.h>
 
 class MMALV4L2Capture : public V4L2VideoCapture {
  public:

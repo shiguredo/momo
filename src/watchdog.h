@@ -1,8 +1,10 @@
 #ifndef WATCH_DOG_H_
 #define WATCH_DOG_H_
 
-#include <boost/asio.hpp>
 #include <functional>
+
+// Boost
+#include <boost/asio.hpp>
 
 /*
 タイムアウトを監視するためのクラス。

@@ -1,8 +1,9 @@
 #include "mmal_buffer.h"
 
-#include "api/video/i420_buffer.h"
-#include "rtc_base/checks.h"
-#include "third_party/libyuv/include/libyuv.h"
+// WebRTC
+#include <api/video/i420_buffer.h>
+#include <rtc_base/checks.h>
+#include <third_party/libyuv/include/libyuv.h>
 
 rtc::scoped_refptr<MMALBuffer> MMALBuffer::Create(MMAL_BUFFER_HEADER_T* buffer,
                                                   int width,

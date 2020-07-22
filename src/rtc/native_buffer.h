@@ -1,10 +1,11 @@
 #ifndef NATIVE_BUFFER_H_
 #define NATIVE_BUFFER_H_
 
-#include "api/video/video_frame.h"
-#include "common_video/include/video_frame_buffer.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "rtc_base/memory/aligned_malloc.h"
+// WebRTC
+#include <api/video/video_frame.h>
+#include <common_video/include/video_frame_buffer.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <rtc_base/memory/aligned_malloc.h>
 
 class NativeBuffer : public webrtc::VideoFrameBuffer {
  public:

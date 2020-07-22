@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "momo_version.gen.h"
-
 // boost
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -15,9 +13,12 @@
 #include <windows.h>
 #endif
 
+#include "momo_version.gen.h"
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <sys/utsname.h>
 #endif
+
 #if defined(__APPLE__)
 #include "mac_helper/macos_version.h"
 #endif

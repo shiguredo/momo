@@ -3,10 +3,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "api/video/i420_buffer.h"
-#include "rtc_base/log_sinks.h"
-#include "sensor_msgs/image_encodings.h"
-#include "third_party/libyuv/include/libyuv.h"
+// ROS
+#include <sensor_msgs/image_encodings.h>
+
+// WebRTC
+#include <api/video/i420_buffer.h>
+#include <rtc_base/log_sinks.h>
+#include <third_party/libyuv/include/libyuv.h>
 
 ROSVideoCapture::ROSVideoCapture(ConnectionSettings cs) {
   ros::NodeHandle nh;

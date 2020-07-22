@@ -6,7 +6,9 @@
 #include <thread>
 #include <vector>
 
-#include "rtc_base/log_sinks.h"
+// WebRTC
+#include <rtc_base/log_sinks.h>
+#include <rtc_base/string_utils.h>
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"
@@ -16,7 +18,6 @@
 
 #if USE_SCREEN_CAPTURER
 #include "rtc/screen_video_capturer.h"
-#include "rtc_base/string_utils.h"
 #endif
 
 #if defined(__APPLE__)

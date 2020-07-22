@@ -1,11 +1,13 @@
 #ifndef P2P_SERVER_H_
 #define P2P_SERVER_H_
 
+#include <memory>
+#include <string>
+
+// nlohmann/json
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/error_code.hpp>
-#include <memory>
-#include <string>
 
 #include "connection_settings.h"
 #include "rtc/manager.h"

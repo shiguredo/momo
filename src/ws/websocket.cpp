@@ -1,10 +1,12 @@
 #include "websocket.h"
 
+#include <utility>
+
+// Boost
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
-#include <utility>
 
 #include "util.h"
 
