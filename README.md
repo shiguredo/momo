@@ -22,6 +22,10 @@ https://momo.shiguredo.jp/
 - NVIDIA Jetson に搭載されている H.264 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
 
+### サイマルキャストへの対応
+
+Momo は Sora モード利用時にサイマルキャスト（複数画質の同時配信）に対応しています。
+
 ### データチャネル経由でのシリアルの読み書き
 
 Momo はデータチャネルを利用しシリアルに直接読み書きが可能です。信頼性より低遅延を優先したい場合の利用を想定しています。

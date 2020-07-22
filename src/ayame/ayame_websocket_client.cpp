@@ -299,6 +299,7 @@ void AyameWebsocketClient::createPeerConnection() {
 
   rtc_config.servers = ice_servers_;
   connection_ = manager_->createConnection(rtc_config, this);
+  manager_->initTracks(connection_.get());
 }
 
 void AyameWebsocketClient::close() {

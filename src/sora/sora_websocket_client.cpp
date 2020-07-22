@@ -252,6 +252,10 @@ void SoraWebsocketClient::doSendConnect() {
     json_message["multistream"] = true;
   }
 
+  if (cs.sora_simulcast) {
+    json_message["simulcast"] = true;
+  }
+
   if (cs.sora_spotlight > 0) {
     json_message["multistream"] = true;
     json_message["spotlight"] = cs.sora_spotlight;
@@ -326,6 +330,14 @@ void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
 
   rtc_config.servers = ice_servers;
 
+  // macOS のサイマルキャスト時、なぜか無限に解像度が落ちていくので、
+  // それを回避するために cpu_adaptation を無効にする。
+#if defined(__APPLE__)
+  if (conn_settings_.sora_simulcast) {
+    rtc_config.set_cpu_adaptation(false);
+  }
+#endif
+
   connection_ = manager_->createConnection(rtc_config, this);
 }
 
@@ -375,6 +387,40 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
     createPeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
+
+    if (conn_settings_.sora_simulcast) {
+      encoding_parameters_.clear();
+
+      // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+      auto encodings_json = json_message["encodings"];
+      for (auto p : encodings_json) {
+        webrtc::RtpEncodingParameters params;
+        // absl::optional<uint32_t> ssrc;
+        // double bitrate_priority = kDefaultBitratePriority;
+        // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+        // Priority network_priority = Priority::kLow;
+        // absl::optional<int> max_bitrate_bps;
+        // absl::optional<int> min_bitrate_bps;
+        // absl::optional<double> max_framerate;
+        // absl::optional<int> num_temporal_layers;
+        // absl::optional<double> scale_resolution_down_by;
+        // bool active = true;
+        // std::string rid;
+        // bool adaptive_ptime = false;
+        params.rid = p["rid"].get<std::string>();
+        if (p.contains("maxBitrate")) {
+          params.max_bitrate_bps = p["maxBitrate"].get<int>();
+        }
+        if (p.contains("minBitrate")) {
+          params.min_bitrate_bps = p["minBitrate"].get<int>();
+        }
+        if (p.contains("scaleResolutionDownBy")) {
+          params.scale_resolution_down_by =
+              p["scaleResolutionDownBy"].get<double>();
+        }
+        encoding_parameters_.push_back(params);
+      }
+    }
   } else if (type == "update") {
     const std::string sdp = json_message["sdp"].get<std::string>();
     connection_->setOffer(sdp);
@@ -445,6 +491,15 @@ void SoraWebsocketClient::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
   if (type == webrtc::SdpType::kOffer) {
+    // simulcast では offer の setRemoteDescription が終わった後に
+    // トラックを追加する必要がある
+    if (!answer_sent_) {
+      manager_->initTracks(connection_.get());
+
+      if (conn_settings_.sora_simulcast) {
+        connection_->setEncodingParameters(std::move(encoding_parameters_));
+      }
+    }
     connection_->createAnswer();
   }
 }
