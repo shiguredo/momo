@@ -6,9 +6,9 @@
 
 [SETUP_RASPBERRY_PI.md](SETUP_RASPBERRY_PI.md) をお読みください。
 
-### NVIDIA Jetson Nano で Momo を準備する
+### NVIDIA Jetson シリーズで Momo を準備する
 
-[SETUP_JETSON_NANO.md](SETUP_JETSON_NANO.md) をお読みください。
+[SETUP_JETSON.md](SETUP_JETSON.md) をお読みください。
 
 ### macOS で Momo を準備する
 
