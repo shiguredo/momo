@@ -358,7 +358,7 @@ target_sources(momo
     src/serial_data_channel/serial_data_manager.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
-    src/sora/sora_websocket_client.cpp
+    src/sora/sora_client.cpp
     src/ws/websocket.cpp
 )
 

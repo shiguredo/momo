@@ -22,45 +22,44 @@
 
 #include "connection_settings.h"
 #include "rtc/rtc_manager.h"
-#include "sora_websocket_client.h"
+#include "sora_client.h"
 
 // HTTP の１回のリクエストに対して答えるためのクラス
 class SoraSession : public std::enable_shared_from_this<SoraSession> {
   boost::asio::ip::tcp::socket socket_;
-  boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> strand_;
   boost::beast::flat_buffer buffer_;
   boost::beast::http::request<boost::beast::http::string_body> req_;
   std::shared_ptr<void> res_;
 
+  std::shared_ptr<SoraClient> client_;
   RTCManager* rtc_manager_;
-  std::shared_ptr<SoraWebsocketClient> ws_client_;
   ConnectionSettings conn_settings_;
 
  public:
   SoraSession(boost::asio::ip::tcp::socket socket,
+              std::shared_ptr<SoraClient> client,
               RTCManager* rtc_manager,
-              std::shared_ptr<SoraWebsocketClient> ws_client,
               ConnectionSettings conn_settings);
 
-  void run();
+  void Run();
 
  private:
-  void doRead();
+  void DoRead();
 
-  void onRead(boost::system::error_code ec, std::size_t bytes_transferred);
-  void onWrite(boost::system::error_code ec,
+  void OnRead(boost::system::error_code ec, std::size_t bytes_transferred);
+  void OnWrite(boost::system::error_code ec,
                std::size_t bytes_transferred,
                bool close);
-  void doClose();
+  void DoClose();
 
  private:
   static boost::beast::http::response<boost::beast::http::string_body>
-  createOKwithJson(
+  CreateOKWithJSON(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       nlohmann::json json_message);
 
   template <class Body, class Fields>
-  void sendResponse(boost::beast::http::response<Body, Fields> msg) {
+  void SendResponse(boost::beast::http::response<Body, Fields> msg) {
     auto sp = std::make_shared<boost::beast::http::response<Body, Fields>>(
         std::move(msg));
 
@@ -71,10 +70,9 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
     // Write the response
     boost::beast::http::async_write(
         socket_, *sp,
-        boost::asio::bind_executor(
-            strand_, std::bind(&SoraSession::onWrite, shared_from_this(),
-                               std::placeholders::_1, std::placeholders::_2,
-                               sp->need_eof())));
+        std::bind(&SoraSession::OnWrite, shared_from_this(),
+                  std::placeholders::_1, std::placeholders::_2,
+                  sp->need_eof()));
   }
 };
 

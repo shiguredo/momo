@@ -12,20 +12,19 @@
 using json = nlohmann::json;
 
 SoraSession::SoraSession(boost::asio::ip::tcp::socket socket,
+                         std::shared_ptr<SoraClient> client,
                          RTCManager* rtc_manager,
-                         std::shared_ptr<SoraWebsocketClient> ws_client,
                          ConnectionSettings conn_settings)
     : socket_(std::move(socket)),
-      strand_(socket_.get_executor()),
+      client_(client),
       rtc_manager_(rtc_manager),
-      ws_client_(ws_client),
       conn_settings_(conn_settings) {}
 
-void SoraSession::run() {
-  doRead();
+void SoraSession::Run() {
+  DoRead();
 }
 
-void SoraSession::doRead() {
+void SoraSession::DoRead() {
   // Make the request empty before reading,
   // otherwise the operation behavior is undefined.
   req_ = {};
@@ -33,18 +32,17 @@ void SoraSession::doRead() {
   // Read a request
   boost::beast::http::async_read(
       socket_, buffer_, req_,
-      boost::asio::bind_executor(
-          strand_, std::bind(&SoraSession::onRead, shared_from_this(),
-                             std::placeholders::_1, std::placeholders::_2)));
+      std::bind(&SoraSession::OnRead, shared_from_this(), std::placeholders::_1,
+                std::placeholders::_2));
 }
 
-void SoraSession::onRead(boost::system::error_code ec,
+void SoraSession::OnRead(boost::system::error_code ec,
                          std::size_t bytes_transferred) {
   boost::ignore_unused(bytes_transferred);
 
   // This means they closed the connection
   if (ec == boost::beast::http::error::end_of_stream)
-    return doClose();
+    return DoClose();
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "read");
@@ -52,40 +50,41 @@ void SoraSession::onRead(boost::system::error_code ec,
   if (req_.method() == boost::beast::http::verb::get) {
     if (req_.target() == "/connect/status") {
       std::string state =
-          Util::IceConnectionStateToString(ws_client_->getRTCConnectionState());
+          Util::IceConnectionStateToString(client_->GetRTCConnectionState());
       json json_message = {{"state", state}};
-      sendResponse(createOKwithJson(req_, std::move(json_message)));
+      SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute/status") {
-      std::shared_ptr<RTCConnection> rtc_conn = ws_client_->getRTCConnection();
+      std::shared_ptr<RTCConnection> rtc_conn = client_->GetRTCConnection();
       if (rtc_conn) {
         json json_message = {{"audio", !rtc_conn->isAudioEnabled()},
                              {"video", !rtc_conn->isVideoEnabled()}};
-        sendResponse(createOKwithJson(req_, std::move(json_message)));
+        SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
       } else {
-        sendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
+        SendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
       }
     } else {
-      sendResponse(Util::BadRequest(req_, "Invalid Request"));
+      SendResponse(Util::BadRequest(req_, "Invalid Request"));
     }
   } else if (req_.method() == boost::beast::http::verb::post) {
     if (req_.target() == "/connect") {
-      json json_message = {{"result", ws_client_->connect()}};
-      sendResponse(createOKwithJson(req_, std::move(json_message)));
+      json json_message = {{"result", client_->Connect()}};
+      SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/close") {
+      client_->Close();
       json json_message = {{"result", true}};
-      sendResponse(createOKwithJson(req_, std::move(json_message)));
+      SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute") {
       json recv_json;
       try {
         recv_json = json::parse(req_.body());
       } catch (json::parse_error& e) {
-        sendResponse(Util::BadRequest(req_, "Invalid JSON"));
+        SendResponse(Util::BadRequest(req_, "Invalid JSON"));
         return;
       }
 
-      std::shared_ptr<RTCConnection> rtc_conn = ws_client_->getRTCConnection();
+      std::shared_ptr<RTCConnection> rtc_conn = client_->GetRTCConnection();
       if (!rtc_conn) {
-        sendResponse(Util::ServerError(req_, "Create RTC Connection Failed"));
+        SendResponse(Util::ServerError(req_, "Create RTC Connection Failed"));
         return;
       }
       try {
@@ -102,16 +101,16 @@ void SoraSession::onRead(boost::system::error_code ec,
 
       json json_message = {{"audio", !rtc_conn->isAudioEnabled()},
                            {"video", !rtc_conn->isVideoEnabled()}};
-      sendResponse(createOKwithJson(req_, std::move(json_message)));
+      SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else {
-      sendResponse(Util::BadRequest(req_, "Invalid Request"));
+      SendResponse(Util::BadRequest(req_, "Invalid Request"));
     }
   } else {
-    sendResponse(Util::BadRequest(req_, "Invalid Method"));
+    SendResponse(Util::BadRequest(req_, "Invalid Method"));
   }
 }
 
-void SoraSession::onWrite(boost::system::error_code ec,
+void SoraSession::OnWrite(boost::system::error_code ec,
                           std::size_t bytes_transferred,
                           bool close) {
   boost::ignore_unused(bytes_transferred);
@@ -122,17 +121,17 @@ void SoraSession::onWrite(boost::system::error_code ec,
   if (close) {
     // This means we should close the connection, usually because
     // the response indicated the "Connection: close" semantic.
-    return doClose();
+    return DoClose();
   }
 
   // We're done with the response so delete it
   res_ = nullptr;
 
   // Read another request
-  doRead();
+  DoRead();
 }
 
-void SoraSession::doClose() {
+void SoraSession::DoClose() {
   // Send a TCP shutdown
   boost::system::error_code ec;
   socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
@@ -141,7 +140,7 @@ void SoraSession::doClose() {
 }
 
 boost::beast::http::response<boost::beast::http::string_body>
-SoraSession::createOKwithJson(
+SoraSession::CreateOKWithJSON(
     const boost::beast::http::request<boost::beast::http::string_body>& req,
     json json_message) {
   boost::beast::http::response<boost::beast::http::string_body> res{

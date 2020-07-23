@@ -1,4 +1,4 @@
-#include "sora_websocket_client.h"
+#include "sora_client.h"
 
 #include <fstream>
 #include <sstream>
@@ -16,7 +16,7 @@
 
 using json = nlohmann::json;
 
-bool SoraWebsocketClient::parseURL(URLParts& parts) const {
+bool SoraClient::ParseURL(URLParts& parts) const {
   std::string url = conn_settings_.sora_signaling_host;
 
   if (!URLParts::Parse(url, parts)) {
@@ -33,7 +33,7 @@ bool SoraWebsocketClient::parseURL(URLParts& parts) const {
   }
 }
 
-boost::asio::ssl::context SoraWebsocketClient::createSSLContext() const {
+boost::asio::ssl::context SoraClient::CreateSSLContext() const {
   boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
   //ctx.set_default_verify_paths();
   ctx.set_options(boost::asio::ssl::context::default_workarounds |
@@ -44,11 +44,11 @@ boost::asio::ssl::context SoraWebsocketClient::createSSLContext() const {
 }
 
 webrtc::PeerConnectionInterface::IceConnectionState
-SoraWebsocketClient::getRTCConnectionState() const {
+SoraClient::GetRTCConnectionState() const {
   return rtc_state_;
 }
 
-std::shared_ptr<RTCConnection> SoraWebsocketClient::getRTCConnection() const {
+std::shared_ptr<RTCConnection> SoraClient::GetRTCConnection() const {
   if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
                         kIceConnectionConnected) {
     return connection_;
@@ -57,24 +57,29 @@ std::shared_ptr<RTCConnection> SoraWebsocketClient::getRTCConnection() const {
   }
 }
 
-SoraWebsocketClient::SoraWebsocketClient(boost::asio::io_context& ioc,
-                                         RTCManager* manager,
-                                         ConnectionSettings conn_settings)
+SoraClient::SoraClient(boost::asio::io_context& ioc,
+                       RTCManager* manager,
+                       ConnectionSettings conn_settings)
     : ioc_(ioc),
       resolver_(ioc),
       manager_(manager),
       retry_count_(0),
       conn_settings_(conn_settings),
-      watchdog_(ioc, std::bind(&SoraWebsocketClient::onWatchdogExpired, this)) {
-  reset();
+      watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)) {
+  Reset();
 }
 
-void SoraWebsocketClient::reset() {
+SoraClient::~SoraClient() {
+  destructed_ = true;
+  // ここで onIceConnectionStateChange が呼ばれる
   connection_ = nullptr;
-  connected_ = false;
+}
 
-  if (parseURL(parts_)) {
-    auto ssl_ctx = createSSLContext();
+void SoraClient::Reset() {
+  connection_ = nullptr;
+
+  if (ParseURL(parts_)) {
+    auto ssl_ctx = CreateSSLContext();
     ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
     ws_->NativeSecureSocket().next_layer().set_verify_mode(
         boost::asio::ssl::verify_peer);
@@ -106,16 +111,8 @@ void SoraWebsocketClient::reset() {
   }
 }
 
-void SoraWebsocketClient::release() {
-  connection_ = nullptr;
-}
-
-bool SoraWebsocketClient::connect() {
+bool SoraClient::Connect() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (connected_) {
-    return false;
-  }
 
   std::string port;
   if (parts_.port.empty()) {
@@ -129,7 +126,7 @@ bool SoraWebsocketClient::connect() {
       parts_.host, port,
       boost::asio::bind_executor(
           ws_->strand(),
-          std::bind(&SoraWebsocketClient::onResolve, shared_from_this(),
+          std::bind(&SoraClient::OnResolve, shared_from_this(),
                     std::placeholders::_1, std::placeholders::_2)));
 
   watchdog_.Enable(30);
@@ -137,7 +134,7 @@ bool SoraWebsocketClient::connect() {
   return true;
 }
 
-void SoraWebsocketClient::reconnectAfter() {
+void SoraClient::ReconnectAfter() {
   int interval = 5 * (2 * retry_count_ + 1);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
@@ -145,19 +142,19 @@ void SoraWebsocketClient::reconnectAfter() {
   retry_count_++;
 }
 
-void SoraWebsocketClient::onWatchdogExpired() {
+void SoraClient::OnWatchdogExpired() {
   RTC_LOG(LS_WARNING) << __FUNCTION__;
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
-  reset();
-  connect();
+  Reset();
+  Connect();
 }
 
-void SoraWebsocketClient::onResolve(
+void SoraClient::OnResolve(
     boost::system::error_code ec,
     boost::asio::ip::tcp::resolver::results_type results) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "resolve");
   }
 
@@ -168,21 +165,20 @@ void SoraWebsocketClient::onResolve(
         results.end(),
         boost::asio::bind_executor(
             ws_->strand(),
-            std::bind(&SoraWebsocketClient::onSSLConnect, shared_from_this(),
+            std::bind(&SoraClient::OnSSLConnect, shared_from_this(),
                       std::placeholders::_1)));
   } else {
     boost::asio::async_connect(
         ws_->NativeSocket().next_layer(), results.begin(), results.end(),
         boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&SoraWebsocketClient::onConnect, shared_from_this(),
-                      std::placeholders::_1)));
+            ws_->strand(), std::bind(&SoraClient::OnConnect, shared_from_this(),
+                                     std::placeholders::_1)));
   }
 }
 
-void SoraWebsocketClient::onSSLConnect(boost::system::error_code ec) {
+void SoraClient::OnSSLConnect(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "SSLConnect");
   }
 
@@ -190,13 +186,13 @@ void SoraWebsocketClient::onSSLConnect(boost::system::error_code ec) {
   ws_->NativeSecureSocket().next_layer().async_handshake(
       boost::asio::ssl::stream_base::client,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&SoraWebsocketClient::onSSLHandshake,
+          ws_->strand(), std::bind(&SoraClient::OnSSLHandshake,
                                    shared_from_this(), std::placeholders::_1)));
 }
 
-void SoraWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
+void SoraClient::OnSSLHandshake(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "SSLHandshake");
   }
 
@@ -204,13 +200,13 @@ void SoraWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
   ws_->NativeSecureSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&SoraWebsocketClient::onHandshake,
-                                   shared_from_this(), std::placeholders::_1)));
+          ws_->strand(), std::bind(&SoraClient::OnHandshake, shared_from_this(),
+                                   std::placeholders::_1)));
 }
 
-void SoraWebsocketClient::onConnect(boost::system::error_code ec) {
+void SoraClient::OnConnect(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "connect");
   }
 
@@ -218,26 +214,23 @@ void SoraWebsocketClient::onConnect(boost::system::error_code ec) {
   ws_->NativeSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&SoraWebsocketClient::onHandshake,
-                                   shared_from_this(), std::placeholders::_1)));
+          ws_->strand(), std::bind(&SoraClient::OnHandshake, shared_from_this(),
+                                   std::placeholders::_1)));
 }
 
-void SoraWebsocketClient::onHandshake(boost::system::error_code ec) {
+void SoraClient::OnHandshake(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "Handshake");
   }
 
-  connected_ = true;
+  ws_->StartToRead(std::bind(&SoraClient::OnRead, this, std::placeholders::_1,
+                             std::placeholders::_2, std::placeholders::_3));
 
-  ws_->StartToRead(std::bind(&SoraWebsocketClient::onRead, this,
-                             std::placeholders::_1, std::placeholders::_2,
-                             std::placeholders::_3));
-
-  doSendConnect();
+  DoSendConnect();
 }
 
-void SoraWebsocketClient::doSendConnect() {
+void SoraClient::DoSendConnect() {
   const auto& cs = conn_settings_;
   json json_message = {
       {"type", "connect"},
@@ -298,11 +291,11 @@ void SoraWebsocketClient::doSendConnect() {
 
   ws_->SendText(json_message.dump());
 }
-void SoraWebsocketClient::doSendPong() {
+void SoraClient::DoSendPong() {
   json json_message = {{"type", "pong"}};
   ws_->SendText(json_message.dump());
 }
-void SoraWebsocketClient::doSendPong(
+void SoraClient::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
   json json_message = {{"type", "pong"}, {"stats", stats}};
@@ -310,7 +303,7 @@ void SoraWebsocketClient::doSendPong(
   ws_->SendText(std::move(str));
 }
 
-void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
+void SoraClient::CreatePeerFromConfig(json jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
@@ -341,32 +334,30 @@ void SoraWebsocketClient::createPeerFromConfig(json jconfig) {
   connection_ = manager_->createConnection(rtc_config, this);
 }
 
-void SoraWebsocketClient::close() {
+void SoraClient::Close() {
   if (ws_->isSSL()) {
     ws_->NativeSecureSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&SoraWebsocketClient::onClose, shared_from_this(),
-                      std::placeholders::_1)));
+            ws_->strand(), std::bind(&SoraClient::OnClose, shared_from_this(),
+                                     std::placeholders::_1)));
   } else {
     ws_->NativeSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&SoraWebsocketClient::onClose, shared_from_this(),
-                      std::placeholders::_1)));
+            ws_->strand(), std::bind(&SoraClient::OnClose, shared_from_this(),
+                                     std::placeholders::_1)));
   }
 }
 
-void SoraWebsocketClient::onClose(boost::system::error_code ec) {
+void SoraClient::OnClose(boost::system::error_code ec) {
   if (ec)
     return MOMO_BOOST_ERROR(ec, "close");
 }
 
-void SoraWebsocketClient::onRead(boost::system::error_code ec,
-                                 std::size_t bytes_transferred,
-                                 std::string text) {
+void SoraClient::OnRead(boost::system::error_code ec,
+                        std::size_t bytes_transferred,
+                        std::string text) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
 
   boost::ignore_unused(bytes_transferred);
@@ -383,8 +374,7 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "offer") {
-    answer_sent_ = false;
-    createPeerFromConfig(json_message["config"]);
+    CreatePeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"].get<std::string>();
 
     connection_->setOffer(sdp, [this, json_message]() {
@@ -474,31 +464,35 @@ void SoraWebsocketClient::onRead(boost::system::error_code ec,
       connection_->getStats(
           [this](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            doSendPong(report);
+            DoSendPong(report);
           });
     } else {
-      doSendPong();
+      DoSendPong();
     }
   }
 }
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void SoraWebsocketClient::onIceConnectionStateChange(
+void SoraClient::onIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
+  // デストラクタだと shared_from_this が機能しないので無視する
+  if (destructed_) {
+    return;
+  }
   boost::asio::post(ws_->strand(),
-                    std::bind(&SoraWebsocketClient::doIceConnectionStateChange,
+                    std::bind(&SoraClient::DoIceConnectionStateChange,
                               shared_from_this(), new_state));
 }
-void SoraWebsocketClient::onIceCandidate(const std::string sdp_mid,
-                                         const int sdp_mlineindex,
-                                         const std::string sdp) {
+void SoraClient::onIceCandidate(const std::string sdp_mid,
+                                const int sdp_mlineindex,
+                                const std::string sdp) {
   json json_message = {{"type", "candidate"}, {"candidate", sdp}};
   ws_->SendText(json_message.dump());
 }
 
-void SoraWebsocketClient::doIceConnectionStateChange(
+void SoraClient::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
                    << Util::IceConnectionStateToString(new_state);
@@ -511,7 +505,7 @@ void SoraWebsocketClient::doIceConnectionStateChange(
       break;
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:
-      reconnectAfter();
+      ReconnectAfter();
       break;
     default:
       break;

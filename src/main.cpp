@@ -145,6 +145,8 @@ int main(int argc, char* argv[]) {
 
   {
     boost::asio::io_context ioc{1};
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
+        work_guard(ioc.get_executor());
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
     if (!cs.serial_device.empty()) {
@@ -160,15 +162,23 @@ int main(int argc, char* argv[]) {
     signals.async_wait(
         [&](const boost::system::error_code&, int) { ioc.stop(); });
 
+    std::shared_ptr<SoraClient> sora_client;
+
     if (use_sora) {
+      sora_client = std::make_shared<SoraClient>(ioc, rtc_manager.get(), cs);
+      // SoraServer を起動しない場合と、SoraServer を起動して --auto が指定されている場合は即座に接続する。
+      // SoraServer を起動するけど --auto が指定されていない場合、SoraServer の API が呼ばれるまで接続しない。
+      if (cs.sora_port < 0 || cs.sora_port >= 0 && cs.sora_auto_connect) {
+        sora_client->Connect();
+      }
+
       if (cs.sora_port >= 0) {
         const boost::asio::ip::tcp::endpoint endpoint{
             boost::asio::ip::make_address("127.0.0.1"),
             static_cast<unsigned short>(cs.sora_port)};
-        std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)
-            ->run();
-      } else {
-        std::make_shared<SoraServer>(ioc, rtc_manager.get(), cs)->run();
+        std::make_shared<SoraServer>(ioc, endpoint, sora_client,
+                                     rtc_manager.get(), cs)
+            ->Run();
       }
     }
 
