@@ -11,10 +11,27 @@
 
 ## develop
 
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と　`ubuntu-18.04_armv8_jetson_xavier` に変更
+    - @tnoho
+- [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
+    - @hakobera
+- [ADD] Jetson Xavier シリーズで VP9 HWA を有効にする
+    - @tnoho @melpon
+- [UPDATE] Jetson の RootFS 構築方法をリポジトリからの取得に変更
+    - @tnoho
+- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+    - @hakobera @voluntas
+- [UPDATE] CLI11 を v1.9.1 にアップデートする
+    - @voluntas
+- [UPDATE] json を 3.8.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.18.0 に上げる
+    - @voluntas
+
 ## 2020.7
 
 - [UPDATE] `libwebrtc` を `M84.4147@{#7}` に上げる
-    - @voluntas, @melpon
+    - @voluntas @melpon
 - [UPDATE] cmake を 3.17.3 に上げる
     - @voluntas
 - [UPDATE] Boost 1.73.0 にアップデートする
@@ -31,6 +48,8 @@
     - ``--screen-capture`` 指定することで利用可能
     - @melpon
 - [ADD] `raspberry-pi-os_armv8` を追加
+    - @melpon
+- [ADD] ビデオコーデックのエンジン名を指定できる機能を実装
     - @melpon
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson_nano` を `ubuntu-18.04_armv8_jetson` に変更
     - @melpon

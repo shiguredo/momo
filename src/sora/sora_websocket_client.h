@@ -41,6 +41,8 @@ class SoraWebsocketClient
   bool connected_;
   bool answer_sent_ = false;
 
+  std::vector<webrtc::RtpEncodingParameters> encoding_parameters_;
+
  private:
   bool parseURL(URLParts& parts) const;
   boost::asio::ssl::context createSSLContext() const;

@@ -1,6 +1,8 @@
-# Jetson Nano を購入する
+# Jetson シリーズを購入する
 
-NVIDIA Jetson Nano を購入する場合のオススメリンクです。
+NVIDIA Jetson を購入する場合のオススメリンクです。
+
+## Jetson Nano
 
 - [Jetson Nano 開発者キット B01](https://www.switch-science.com/catalog/6239/)
     - スイッチサイエンス
@@ -27,6 +29,18 @@ NVIDIA Jetson Nano を購入する場合のオススメリンクです。
     - ドライバーのビルドが必要になりますが問題なく使えます
     - [Jetson Nano で TP\-LINK Archer T2U Nano を使う \- Qiita](https://qiita.com/daisuzu_/items/8d6913f3bda1b7434526)
         - こちらにかかれている `os_dep/linux/usb_intf.c の 300行番台あたりに以下を追加する` は最新版では不要です
+
+## Jetson Xavier NX
+
+- [Jetson Xavier NX 開発者キット](https://www.switch-science.com/catalog/6340/)
+    - スイッチサイエンス
+    - Jetson Xavier NX 本体はこちらがおすすめです
+
+## Jetson AGX Xavier
+
+- [NVIDIA Jetson AGX Xavier開発者キット](https://www.switch-science.com/catalog/4043/)
+    - スイッチサイエンス
+    - Jetson AGX Xavier 本体はこちらがおすすめです
 
 ## 4K@30 出るカメラの購入する
 

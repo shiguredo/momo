@@ -63,7 +63,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(TARGET_ARCH "x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
-  set(USE_SCREEN_CAPTURER OFF)
+  set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
@@ -143,7 +143,29 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
 
   list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/aarch64-linux-gnu/cmake/SDL2)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson")
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-18.04")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(USE_JETSON_ENCODER ON)
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_LINUX_PULSE_AUDIO ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(SDL2_ROOT_DIR /root/SDL2)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_xavier")
 
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-18.04")
@@ -326,8 +348,8 @@ target_sources(momo
     src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
-    src/rtc/hw_video_decoder_factory.cpp
-    src/rtc/hw_video_encoder_factory.cpp
+    src/rtc/momo_video_decoder_factory.cpp
+    src/rtc/momo_video_encoder_factory.cpp
     src/rtc/manager.cpp
     src/rtc/native_buffer.cpp
     src/rtc/observer.cpp
@@ -632,22 +654,23 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
-            src/hwenc_jetson/jetson_h264_encoder.cpp
+            src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvBuffer.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvElement.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvElementProfiler.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvJpegDecoder.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvJpegEncoder.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvLogging.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2Element.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoConverter.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
-            ${SYSROOT}/usr/src/nvidia/tegra_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElementProfiler.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegDecoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegEncoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvLogging.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2Element.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoConverter.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
         )
 
-        target_include_directories(momo PRIVATE ${SYSROOT}/include/libjpeg-8b)
+        target_include_directories(momo PRIVATE ${SYSROOT}/usr/src/jetson_multimedia_api/include)
+        target_include_directories(momo PRIVATE ${SYSROOT}/usr/src/jetson_multimedia_api/include/libjpeg-8b)
         target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
         target_link_options(momo
           PRIVATE
@@ -657,7 +680,8 @@ elseif (TARGET_OS STREQUAL "linux")
         )
         target_link_libraries(momo
           PRIVATE
-            v4l2
+            nvv4l2
+            nvv4lconvert
             nvbuf_utils
             nvbuf_fdmap
             nvddk_vic

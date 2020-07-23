@@ -6,6 +6,7 @@
 #include <string>
 
 #include "api/rtp_parameters.h"
+#include "video_codec_info.h"
 
 struct ConnectionSettings {
   std::string camera_name = "";
@@ -53,6 +54,7 @@ struct ConnectionSettings {
   bool sora_multistream = false;
   int sora_spotlight = -1;
   int sora_port = -1;
+  bool sora_simulcast = false;
 
   std::string test_document_root;
   int test_port = 8080;
@@ -68,6 +70,15 @@ struct ConnectionSettings {
   bool disable_highpass_filter = false;
   bool disable_typing_detection = false;
   bool disable_residual_echo_detector = false;
+
+  VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp9_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type vp9_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type av1_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
 
   struct Size {
     int width;

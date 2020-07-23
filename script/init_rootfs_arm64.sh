@@ -16,6 +16,9 @@ find $TARGET_DIR/usr/lib/aarch64-linux-gnu/pkgconfig -printf "%f\n" | while read
 if [ -L $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/5/libgcc_s.so ]; then
   unlink $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/5/libgcc_s.so
   ln -s ../../../../../lib64/aarch64-linux-gnu/libgcc_s.so.1 $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/5/libgcc_s.so
+elif [ -L $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/6/libgcc_s.so ]; then
+  unlink $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/6/libgcc_s.so
+  ln -s ../../../../../lib64/aarch64-linux-gnu/libgcc_s.so.1 $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/6/libgcc_s.so
 elif [ -L $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/7/libgcc_s.so ]; then
   unlink $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/7/libgcc_s.so
   ln -s ../../../../../lib64/aarch64-linux-gnu/libgcc_s.so.1 $TARGET_DIR/usr/lib/gcc/aarch64-linux-gnu/7/libgcc_s.so

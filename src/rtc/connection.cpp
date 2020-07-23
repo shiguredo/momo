@@ -182,3 +182,68 @@ void RTCConnection::getStats(
         callback) {
   _connection->GetStats(RTCStatsCallback::Create(std::move(callback)));
 }
+
+std::string RtpTransceiverDirectionToString(
+    webrtc::RtpTransceiverDirection dir) {
+  switch (dir) {
+    case webrtc::RtpTransceiverDirection::kSendRecv:
+      return "kSendRecv";
+    case webrtc::RtpTransceiverDirection::kSendOnly:
+      return "kSendOnly";
+    case webrtc::RtpTransceiverDirection::kRecvOnly:
+      return "kRecvOnly";
+    case webrtc::RtpTransceiverDirection::kInactive:
+      return "kInactive";
+    case webrtc::RtpTransceiverDirection::kStopped:
+      return "kStopped";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+void RTCConnection::setEncodingParameters(
+    std::vector<webrtc::RtpEncodingParameters> encodings) {
+  for (auto transceiver : _connection->GetTransceivers()) {
+    RTC_LOG(LS_INFO) << "transceiver mid="
+                     << transceiver->mid().value_or("nullopt") << " direction="
+                     << RtpTransceiverDirectionToString(
+                            transceiver->direction())
+                     << " current_direction="
+                     << (transceiver->current_direction()
+                             ? RtpTransceiverDirectionToString(
+                                   *transceiver->current_direction())
+                             : "nullopt")
+                     << " media_type="
+                     << cricket::MediaTypeToString(transceiver->media_type())
+                     << " sender_encoding_count="
+                     << transceiver->sender()->GetParameters().encodings.size();
+  }
+
+  // setRD のあとの direction は recv only になる。
+  // 現状 sender.track.streamIds を取れないので connection ID との比較もできない。
+  // video upstream 持っているときは、ひとつめの video type transceiver を
+  // 自分が send すべき transceiver と決め打ちする。
+  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  for (auto transceiver : _connection->GetTransceivers()) {
+    if (transceiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+      video_transceiver = transceiver;
+      break;
+    }
+  }
+
+  if (video_transceiver == nullptr) {
+    RTC_LOG(LS_ERROR) << "video transceiver not found";
+    return;
+  }
+
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+      video_transceiver->sender();
+  webrtc::RtpParameters parameters = sender->GetParameters();
+  parameters.encodings = std::move(encodings);
+  sender->SetParameters(parameters);
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionInterface>
+RTCConnection::getConnection() const {
+  return _connection;
+}

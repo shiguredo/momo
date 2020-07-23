@@ -4,7 +4,7 @@ Sora は時雨堂が開発、販売している商用 WebRTC SFU 製品です。
 
 https://sora.shiguredo.jp/
 
-ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を使います。
+ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
 
 ## Sora Labo を使う
 
@@ -27,9 +27,7 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.jp/ にサイ�
         --role sendonly --metadata '{"signaling_key": "xyz"}'
 ```
 
-ブラウザでの受信は Chrome や Firefox で以下の URL で確認できます。
-
-https://sora-labo.shiguredo.jp/recvonly?videoCodecType=VP8&audio=False
+ブラウザでの送受信は Sora Labo にあるサンプルのシングルストリーム受信を利用して確認してください。
 
 ### マルチストリームを使ってみる
 
@@ -43,7 +41,18 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
         --multistream --role sendrecv --metadata '{"signaling_key": "xyz"}'
 ```
 
-ブラウザでの送受信は Chrome や Firefox で以下の URL で確認できます。
+ブラウザでの送受信は Sora Labo にあるサンプルのマルチストリーム送受信を利用して確認してください。
 
-https://sora-labo.shiguredo.jp/multi_sendrecv?videoCodecType=VP8&audio=false
+### サイマルキャストで配信してみる
+
+```shell
+./momo --no-audio-device sora \
+    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
+        --simulcast \
+        --video-codec VP8 --video-bitrate 500 \
+        --audio false \
+        --role sendonly --metadata '{"signaling_key": "xyz"}'
+```
+
+ブラウザでの送受信は Sora Labo にあるサンプルのサイマルキャスト受信を利用して確認してください。
 

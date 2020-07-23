@@ -21,6 +21,7 @@ P2PConnection::P2PConnection(RTCManager* rtc_manager,
   }
   rtc_config.servers = servers;
   _connection = rtc_manager->createConnection(rtc_config, this);
+  rtc_manager->initTracks(_connection.get());
 }
 
 void P2PConnection::onIceConnectionStateChange(IceConnectionState new_state) {
