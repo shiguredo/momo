@@ -1,5 +1,5 @@
-#ifndef SORA_CLIENT_H_
-#define SORA_CLIENT_H_
+#ifndef AYAME_CLIENT_H_
+#define AYAME_CLIENT_H_
 
 #include <algorithm>
 #include <cstdlib>
@@ -22,28 +22,23 @@
 #include "watchdog.h"
 #include "ws/websocket.h"
 
-class SoraClient : public std::enable_shared_from_this<SoraClient>,
-                   public RTCMessageSender {
+class AyameClient : public std::enable_shared_from_this<AyameClient>,
+                    public RTCMessageSender {
  public:
-  SoraClient(boost::asio::io_context& ioc,
-             RTCManager* manager,
-             ConnectionSettings conn_settings);
-  ~SoraClient();
+  AyameClient(boost::asio::io_context& ioc,
+              RTCManager* manager,
+              ConnectionSettings conn_settings);
+  ~AyameClient();
   void Reset();
   bool Connect();
   void Close();
 
-  webrtc::PeerConnectionInterface::IceConnectionState GetRTCConnectionState()
-      const;
-  std::shared_ptr<RTCConnection> GetRTCConnection() const;
+  bool ParseURL(URLParts& parts) const;
+  boost::asio::ssl::context CreateSSLContext() const;
 
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
-
- private:
-  bool ParseURL(URLParts& parts) const;
-  boost::asio::ssl::context CreateSSLContext() const;
 
  private:
   void OnResolve(boost::system::error_code ec,
@@ -52,11 +47,10 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void OnSSLHandshake(boost::system::error_code ec);
   void OnConnect(boost::system::error_code ec);
   void OnHandshake(boost::system::error_code ec);
-  void DoSendConnect();
+  void DoRegister();
   void DoSendPong();
-  void DoSendPong(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void CreatePeerFromConfig(nlohmann::json jconfig);
+  void SetIceServersFromConfig(nlohmann::json json_message);
+  void CreatePeerConnection();
 
  private:
   void OnClose(boost::system::error_code ec);
@@ -94,6 +88,11 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
   WatchDog watchdog_;
+
+  bool is_send_offer_;
+  bool has_is_exist_user_flag_;
+
+  webrtc::PeerConnectionInterface::IceServers ice_servers_;
 };
 
-#endif  // SORA_CLIENT_H_
+#endif  // AYAME_CLIENT_H_

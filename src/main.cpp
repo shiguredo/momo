@@ -38,10 +38,11 @@
 #include "sdl_renderer/sdl_renderer.h"
 #endif
 
-#include "ayame/ayame_server.h"
+#include "ayame/ayame_client.h"
 #include "connection_settings.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
+#include "sora/sora_client.h"
 #include "sora/sora_server.h"
 #include "util.h"
 
@@ -163,9 +164,11 @@ int main(int argc, char* argv[]) {
         [&](const boost::system::error_code&, int) { ioc.stop(); });
 
     std::shared_ptr<SoraClient> sora_client;
+    std::shared_ptr<AyameClient> ayame_client;
 
     if (use_sora) {
       sora_client = std::make_shared<SoraClient>(ioc, rtc_manager.get(), cs);
+
       // SoraServer を起動しない場合と、SoraServer を起動して --auto が指定されている場合は即座に接続する。
       // SoraServer を起動するけど --auto が指定されていない場合、SoraServer の API が呼ばれるまで接続しない。
       if (cs.sora_port < 0 || cs.sora_port >= 0 && cs.sora_auto_connect) {
@@ -193,7 +196,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (use_ayame) {
-      std::make_shared<AyameServer>(ioc, rtc_manager.get(), cs)->run();
+      ayame_client = std::make_shared<AyameClient>(ioc, rtc_manager.get(), cs);
+      ayame_client->Connect();
     }
 
 #if USE_SDL2

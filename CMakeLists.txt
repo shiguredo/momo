@@ -339,8 +339,7 @@ target_sources(momo
     src/util.cpp
     src/watchdog.cpp
     src/ssl_verifier.cpp
-    src/ayame/ayame_server.cpp
-    src/ayame/ayame_websocket_client.cpp
+    src/ayame/ayame_client.cpp
     src/p2p/p2p_connection.cpp
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp

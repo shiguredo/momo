@@ -1,4 +1,4 @@
-#include "ayame_websocket_client.h"
+#include "ayame_client.h"
 
 // boost
 #include <boost/beast/websocket/stream.hpp>
@@ -13,7 +13,7 @@
 
 using json = nlohmann::json;
 
-bool AyameWebsocketClient::parseURL(URLParts& parts) const {
+bool AyameClient::ParseURL(URLParts& parts) const {
   std::string url = conn_settings_.ayame_signaling_host;
 
   if (!URLParts::Parse(url, parts)) {
@@ -30,7 +30,7 @@ bool AyameWebsocketClient::parseURL(URLParts& parts) const {
   }
 }
 
-boost::asio::ssl::context AyameWebsocketClient::createSSLContext() const {
+boost::asio::ssl::context AyameClient::CreateSSLContext() const {
   boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
   //ctx.set_default_verify_paths();
   ctx.set_options(boost::asio::ssl::context::default_workarounds |
@@ -40,42 +40,32 @@ boost::asio::ssl::context AyameWebsocketClient::createSSLContext() const {
   return ctx;
 }
 
-webrtc::PeerConnectionInterface::IceConnectionState
-AyameWebsocketClient::getRTCConnectionState() const {
-  return rtc_state_;
-}
-
-std::shared_ptr<RTCConnection> AyameWebsocketClient::getRTCConnection() const {
-  if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
-                        kIceConnectionConnected) {
-    return connection_;
-  } else {
-    return nullptr;
-  }
-}
-
-AyameWebsocketClient::AyameWebsocketClient(boost::asio::io_context& ioc,
-                                           RTCManager* manager,
-                                           ConnectionSettings conn_settings)
+AyameClient::AyameClient(boost::asio::io_context& ioc,
+                         RTCManager* manager,
+                         ConnectionSettings conn_settings)
     : ioc_(ioc),
       resolver_(ioc),
       manager_(manager),
       retry_count_(0),
       conn_settings_(conn_settings),
-      watchdog_(ioc,
-                std::bind(&AyameWebsocketClient::onWatchdogExpired, this)) {
-  reset();
+      watchdog_(ioc, std::bind(&AyameClient::OnWatchdogExpired, this)) {
+  Reset();
 }
 
-void AyameWebsocketClient::reset() {
+AyameClient::~AyameClient() {
+  destructed_ = true;
+  // ここで onIceConnectionStateChange が呼ばれる
   connection_ = nullptr;
-  connected_ = false;
+}
+
+void AyameClient::Reset() {
+  connection_ = nullptr;
   is_send_offer_ = false;
   has_is_exist_user_flag_ = false;
   ice_servers_.clear();
 
-  if (parseURL(parts_)) {
-    auto ssl_ctx = createSSLContext();
+  if (ParseURL(parts_)) {
+    auto ssl_ctx = CreateSSLContext();
     ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
     ws_->NativeSecureSocket().next_layer().set_verify_mode(
         boost::asio::ssl::verify_peer);
@@ -107,16 +97,8 @@ void AyameWebsocketClient::reset() {
   }
 }
 
-void AyameWebsocketClient::release() {
-  connection_ = nullptr;
-}
-
-bool AyameWebsocketClient::connect() {
+bool AyameClient::Connect() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (connected_) {
-    return false;
-  }
 
   std::string port;
   if (parts_.port.empty()) {
@@ -130,7 +112,7 @@ bool AyameWebsocketClient::connect() {
       parts_.host, port,
       boost::asio::bind_executor(
           ws_->strand(),
-          std::bind(&AyameWebsocketClient::onResolve, shared_from_this(),
+          std::bind(&AyameClient::OnResolve, shared_from_this(),
                     std::placeholders::_1, std::placeholders::_2)));
 
   watchdog_.Enable(30);
@@ -138,7 +120,7 @@ bool AyameWebsocketClient::connect() {
   return true;
 }
 
-void AyameWebsocketClient::reconnectAfter() {
+void AyameClient::ReconnectAfter() {
   int interval = 5 * (2 * retry_count_);
   if (interval > 30) {
     interval = 30;
@@ -149,19 +131,19 @@ void AyameWebsocketClient::reconnectAfter() {
   retry_count_++;
 }
 
-void AyameWebsocketClient::onWatchdogExpired() {
+void AyameClient::OnWatchdogExpired() {
   RTC_LOG(LS_WARNING) << __FUNCTION__;
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
-  reset();
-  connect();
+  Reset();
+  Connect();
 }
 
-void AyameWebsocketClient::onResolve(
+void AyameClient::OnResolve(
     boost::system::error_code ec,
     boost::asio::ip::tcp::resolver::results_type results) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "resolve");
   }
 
@@ -172,21 +154,21 @@ void AyameWebsocketClient::onResolve(
         results.end(),
         boost::asio::bind_executor(
             ws_->strand(),
-            std::bind(&AyameWebsocketClient::onSSLConnect, shared_from_this(),
+            std::bind(&AyameClient::OnSSLConnect, shared_from_this(),
                       std::placeholders::_1)));
   } else {
     boost::asio::async_connect(
         ws_->NativeSocket().next_layer(), results.begin(), results.end(),
         boost::asio::bind_executor(
             ws_->strand(),
-            std::bind(&AyameWebsocketClient::onConnect, shared_from_this(),
+            std::bind(&AyameClient::OnConnect, shared_from_this(),
                       std::placeholders::_1)));
   }
 }
 
-void AyameWebsocketClient::onSSLConnect(boost::system::error_code ec) {
+void AyameClient::OnSSLConnect(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "SSLConnect");
   }
 
@@ -194,13 +176,13 @@ void AyameWebsocketClient::onSSLConnect(boost::system::error_code ec) {
   ws_->NativeSecureSocket().next_layer().async_handshake(
       boost::asio::ssl::stream_base::client,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameWebsocketClient::onSSLHandshake,
+          ws_->strand(), std::bind(&AyameClient::OnSSLHandshake,
                                    shared_from_this(), std::placeholders::_1)));
 }
 
-void AyameWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
+void AyameClient::OnSSLHandshake(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "SSLHandshake");
   }
 
@@ -208,39 +190,36 @@ void AyameWebsocketClient::onSSLHandshake(boost::system::error_code ec) {
   ws_->NativeSecureSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameWebsocketClient::onHandshake,
+          ws_->strand(), std::bind(&AyameClient::OnHandshake,
                                    shared_from_this(), std::placeholders::_1)));
 }
 
-void AyameWebsocketClient::onConnect(boost::system::error_code ec) {
+void AyameClient::OnConnect(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
-    return MOMO_BOOST_ERROR(ec, "connect");
+    ReconnectAfter();
+    return MOMO_BOOST_ERROR(ec, "Connect");
   }
   // Websocket のハンドシェイク
   ws_->NativeSocket().async_handshake(
       parts_.host, parts_.path_query_fragment,
       boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameWebsocketClient::onHandshake,
+          ws_->strand(), std::bind(&AyameClient::OnHandshake,
                                    shared_from_this(), std::placeholders::_1)));
 }
 
-void AyameWebsocketClient::onHandshake(boost::system::error_code ec) {
+void AyameClient::OnHandshake(boost::system::error_code ec) {
   if (ec) {
-    reconnectAfter();
+    ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "Handshake");
   }
 
-  connected_ = true;
+  ws_->StartToRead(std::bind(&AyameClient::OnRead, this, std::placeholders::_1,
+                             std::placeholders::_2, std::placeholders::_3));
 
-  ws_->StartToRead(std::bind(&AyameWebsocketClient::onRead, this,
-                             std::placeholders::_1, std::placeholders::_2,
-                             std::placeholders::_3));
-
-  doRegister();
+  DoRegister();
 }
 
-void AyameWebsocketClient::doRegister() {
+void AyameClient::DoRegister() {
   json json_message = {
       {"type", "register"},
       {"clientId", Util::GenerateRandomChars()},
@@ -258,12 +237,12 @@ void AyameWebsocketClient::doRegister() {
   ws_->SendText(json_message.dump());
 }
 
-void AyameWebsocketClient::doSendPong() {
+void AyameClient::DoSendPong() {
   json json_message = {{"type", "pong"}};
   ws_->SendText(json_message.dump());
 }
 
-void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
+void AyameClient::SetIceServersFromConfig(json json_message) {
   // 返却されてきた iceServers を セットする
   if (json_message.contains("iceServers")) {
     auto jservers = json_message["iceServers"];
@@ -294,7 +273,7 @@ void AyameWebsocketClient::setIceServersFromConfig(json json_message) {
   }
 }
 
-void AyameWebsocketClient::createPeerConnection() {
+void AyameClient::CreatePeerConnection() {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
 
   rtc_config.servers = ice_servers_;
@@ -302,44 +281,42 @@ void AyameWebsocketClient::createPeerConnection() {
   manager_->initTracks(connection_.get());
 }
 
-void AyameWebsocketClient::close() {
+void AyameClient::Close() {
   // websocket 接続を閉じる
-  // 閉じられると onClose() にコールバックする
+  // 閉じられると OnClose() にコールバックする
   if (ws_->isSSL()) {
     ws_->NativeSecureSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&AyameWebsocketClient::onClose, shared_from_this(),
-                      std::placeholders::_1)));
+            ws_->strand(), std::bind(&AyameClient::OnClose, shared_from_this(),
+                                     std::placeholders::_1)));
   } else {
     ws_->NativeSocket().async_close(
         boost::beast::websocket::close_code::normal,
         boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&AyameWebsocketClient::onClose, shared_from_this(),
-                      std::placeholders::_1)));
+            ws_->strand(), std::bind(&AyameClient::OnClose, shared_from_this(),
+                                     std::placeholders::_1)));
   }
 }
 
 // WebSocket が閉じられたときのコールバック
-void AyameWebsocketClient::onClose(boost::system::error_code ec) {
+void AyameClient::OnClose(boost::system::error_code ec) {
   if (ec)
-    MOMO_BOOST_ERROR(ec, "close");
-  // retry_count_ は reconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
+    MOMO_BOOST_ERROR(ec, "Close");
+  // retry_count_ は ReconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
   // WebSocket につないでいない時間をなるべく短くしたいので、
   // WebSocket を閉じたときは一度インクリメントされている可能性のある retry_count_ を0 にして
-  // onWatchdogExpired(); が発火して再接続が行われるまでの時間を最小にしておく。
+  // OnWatchdogExpired(); が発火して再接続が行われるまでの時間を最小にしておく。
   retry_count_ = 0;
-  // WebSocket 接続がちゃんと閉じられたら reconnectAfter(); を発火する。
-  // reconnectAfter(); によって onWatchdogExpired(); が呼ばれ、ここで WebSocket の再接続が行われる。
+  // WebSocket 接続がちゃんと閉じられたら ReconnectAfter(); を発火する。
+  // ReconnectAfter(); によって OnWatchdogExpired(); が呼ばれ、ここで WebSocket の再接続が行われる。
   // 現在は WebSocket がどんな理由で閉じられても、再接続するようになっている
-  reconnectAfter();
+  ReconnectAfter();
 }
 
-void AyameWebsocketClient::onRead(boost::system::error_code ec,
-                                  std::size_t bytes_transferred,
-                                  std::string text) {
+void AyameClient::OnRead(boost::system::error_code ec,
+                         std::size_t bytes_transferred,
+                         std::string text) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
 
   boost::ignore_unused(bytes_transferred);
@@ -348,11 +325,11 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   if (ec == boost::asio::error::operation_aborted)
     return;
 
-  // WebSocket が closed なエラーが返ってきた場合すぐに close(); を呼んで、onRead 関数から抜ける
+  // WebSocket が closed なエラーが返ってきた場合すぐに Close(); を呼んで、OnRead 関数から抜ける
   if (ec == boost::beast::websocket::error::closed) {
-    // close(); で WebSocket が閉じられたら、onClose(); -> reconnectAfter(); -> onWatchdogExpired(); の順に関数が呼ばれることで、
+    // Close(); で WebSocket が閉じられたら、OnClose(); -> ReconnectAfter(); -> OnWatchdogExpired(); の順に関数が呼ばれることで、
     // WebSocket の再接続が行われる
-    close();
+    Close();
     return;
   }
 
@@ -364,14 +341,15 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "accept") {
-    setIceServersFromConfig(json_message);
-    createPeerConnection();
+    SetIceServersFromConfig(json_message);
+    CreatePeerConnection();
     // isExistUser フラグが存在するか確認する
     auto is_exist_user = false;
     if (json_message.contains("isExistUser")) {
       has_is_exist_user_flag_ = true;
       is_exist_user = json_message["isExistUser"];
     }
+
     auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
       std::string sdp;
       desc->ToString(&sdp);
@@ -391,7 +369,7 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
   } else if (type == "offer") {
     // isExistUser フラグがなかった場合二回 peer connection を生成する
     if (!has_is_exist_user_flag_) {
-      createPeerConnection();
+      CreatePeerConnection();
     }
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp, [this]() {
@@ -421,26 +399,30 @@ void AyameWebsocketClient::onRead(boost::system::error_code ec,
     connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
     watchdog_.Reset();
-    doSendPong();
+    DoSendPong();
   } else if (type == "bye") {
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": bye";
     connection_ = nullptr;
-    close();
+    Close();
   }
 }
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void AyameWebsocketClient::onIceConnectionStateChange(
+void AyameClient::onIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
+  // デストラクタだと shared_from_this が機能しないので無視する
+  if (destructed_) {
+    return;
+  }
   boost::asio::post(ws_->strand(),
-                    std::bind(&AyameWebsocketClient::doIceConnectionStateChange,
+                    std::bind(&AyameClient::DoIceConnectionStateChange,
                               shared_from_this(), new_state));
 }
-void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid,
-                                          const int sdp_mlineindex,
-                                          const std::string sdp) {
+void AyameClient::onIceCandidate(const std::string sdp_mid,
+                                 const int sdp_mlineindex,
+                                 const std::string sdp) {
   // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
   json json_message = {
       {"type", "candidate"},
@@ -452,7 +434,7 @@ void AyameWebsocketClient::onIceCandidate(const std::string sdp_mid,
   ws_->SendText(json_message.dump());
 }
 
-void AyameWebsocketClient::doIceConnectionStateChange(
+void AyameClient::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
                    << Util::IceConnectionStateToString(new_state);
@@ -463,12 +445,12 @@ void AyameWebsocketClient::doIceConnectionStateChange(
       retry_count_ = 0;
       watchdog_.Enable(60);
       break;
-    // ice connection state が failed になったら close(); を呼んで、WebSocket 接続を閉じる
+    // ice connection state が failed になったら Close(); を呼んで、WebSocket 接続を閉じる
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionFailed:
-      // close(); で WebSocket が閉じられたら、onClose(); -> reconnectAfter(); -> onWatchdogExpired(); の順に関数が呼ばれることで
+      // Close(); で WebSocket が閉じられたら、OnClose(); -> ReconnectAfter(); -> OnWatchdogExpired(); の順に関数が呼ばれることで
       // WebSocket の再接続が行われる
-      close();
+      Close();
       break;
     default:
       break;
