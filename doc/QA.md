@@ -4,6 +4,11 @@
 
 Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
+## サイマルキャストは利用できますか？
+
+Sora モードでのみ利用可能です。利用可能な映像コーデックは VP8 と H.264 です。
+利用する場合は `--simulcast` を指定してください。
+
 ## AV1 は利用できますか？
 
 Sora モードでのみ利用可能です。
