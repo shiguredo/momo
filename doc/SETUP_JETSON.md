@@ -1,14 +1,19 @@
-# Jetson Nano で Momo を使ってみる
+# Jetson シリーズで Momo を使ってみる
 
-もし Jetson Nano を購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
+もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
-## Jetson Nano では JetPack 4.3 以上の利用を前提としています
+## Jetson シリーズでは JetPack 4.4 以上の利用を前提としています
 
-`JetPack 4.3 - L4T R32.3.1 released - NVIDIA Developer Forums <https://devtalk.nvidia.com/default/topic/1068583/jetson-nano/jetpack-4-3-l4t-r32-3-1-released/>`_
+[JetPack 4\.4 \- L4T R32\.4\.3 production release \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-4-4-l4t-r32-4-3-production-release/140870)
 
-## Jetson Nano 向けのバイナリは以下にて提供しています
+## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+
+- momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+    - Jetson Nano
+- momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz
+    - Jetson Xavier NX または Jetson AGX Xavier
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
