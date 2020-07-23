@@ -1,6 +1,6 @@
 # Jetson Nano で Momo を使ってみる
 
-もし Jetson Nano を購入する場合は [BUY_JETSON_NANO.md](BUY_JETSON_NANO.md) を参考にしてください。
+もし Jetson Nano を購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
 ## Jetson Nano では JetPack 4.3 以上の利用を前提としています
 
