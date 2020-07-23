@@ -19,6 +19,9 @@
     - @hakobera
 - [ADD] Jetson Xavier シリーズで VP9 HWA を有効にする
     - @tnoho @melpon
+- [ADD] サイマルキャストへの対応を追加
+    - Sora モードで利用可能
+    - @melpon @shino
 - [UPDATE] Jetson の RootFS 構築方法をリポジトリからの取得に変更
     - @tnoho
 - [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
