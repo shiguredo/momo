@@ -29,11 +29,11 @@ P2PSession::P2PSession(boost::asio::io_context& ioc,
       conn_settings_(conn_settings) {}
 
 // Start the asynchronous operation
-void P2PSession::run() {
-  doRead();
+void P2PSession::Run() {
+  DoRead();
 }
 
-void P2PSession::doRead() {
+void P2PSession::DoRead() {
   // Make the request empty before reading,
   // otherwise the operation behavior is undefined.
   req_ = {};
@@ -42,17 +42,17 @@ void P2PSession::doRead() {
   boost::beast::http::async_read(
       socket_, buffer_, req_,
       boost::asio::bind_executor(
-          strand_, std::bind(&P2PSession::onRead, shared_from_this(),
+          strand_, std::bind(&P2PSession::OnRead, shared_from_this(),
                              std::placeholders::_1, std::placeholders::_2)));
 }
 
-void P2PSession::onRead(boost::system::error_code ec,
+void P2PSession::OnRead(boost::system::error_code ec,
                         std::size_t bytes_transferred) {
   boost::ignore_unused(bytes_transferred);
 
   // 接続が切られた
   if (ec == boost::beast::http::error::end_of_stream)
-    return doClose();
+    return DoClose();
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "read");
@@ -60,33 +60,33 @@ void P2PSession::onRead(boost::system::error_code ec,
   // WebSocket の upgrade リクエスト
   if (req_.target() == "/ws") {
     if (boost::beast::websocket::is_upgrade(req_)) {
-      P2PWebsocketSession::make_shared(ioc_, std::move(socket_), rtc_manager_,
-                                       conn_settings_)
-          ->run(std::move(req_));
+      P2PWebsocketSession::Create(ioc_, std::move(socket_), rtc_manager_,
+                                  conn_settings_)
+          ->Run(std::move(req_));
       return;
     } else {
-      sendResponse(Util::BadRequest(std::move(req_), "Not upgrade request"));
+      SendResponse(Util::BadRequest(std::move(req_), "Not upgrade request"));
       return;
     }
   }
 
-  handleRequest();
+  HandleRequest();
 }
 
-void P2PSession::handleRequest() {
+void P2PSession::HandleRequest() {
   boost::beast::http::request<boost::beast::http::string_body> req(
       std::move(req_));
 
   // Make sure we can handle the method
   if (req.method() != boost::beast::http::verb::get &&
       req.method() != boost::beast::http::verb::head)
-    return sendResponse(
+    return SendResponse(
         Util::BadRequest(std::move(req), "Unknown HTTP-method"));
 
   // Request path must be absolute and not contain "..".
   if (req.target().empty() || req.target()[0] != '/' ||
       req.target().find("..") != boost::beast::string_view::npos)
-    return sendResponse(Util::BadRequest(req, "Illegal request-target"));
+    return SendResponse(Util::BadRequest(req, "Illegal request-target"));
 
   // Build the path to the requested file
   boost::filesystem::path path =
@@ -106,11 +106,11 @@ void P2PSession::handleRequest() {
 
   // Handle the case where the file doesn't exist
   if (ec == boost::system::errc::no_such_file_or_directory)
-    return sendResponse(Util::NotFound(req, req.target()));
+    return SendResponse(Util::NotFound(req, req.target()));
 
   // Handle an unknown error
   if (ec)
-    return sendResponse(Util::ServerError(req, ec.message()));
+    return SendResponse(Util::ServerError(req, ec.message()));
 
   // Cache the size since we need it after the move
   auto const size = body.size();
@@ -124,7 +124,7 @@ void P2PSession::handleRequest() {
             Util::MimeType(path.string()));
     res.content_length(size);
     res.keep_alive(req.keep_alive());
-    return sendResponse(std::move(res));
+    return SendResponse(std::move(res));
   }
 
   // GET リクエスト
@@ -136,10 +136,10 @@ void P2PSession::handleRequest() {
           Util::MimeType(path.string()));
   res.content_length(size);
   res.keep_alive(req.keep_alive());
-  return sendResponse(std::move(res));
+  return SendResponse(std::move(res));
 }
 
-void P2PSession::onWrite(boost::system::error_code ec,
+void P2PSession::OnWrite(boost::system::error_code ec,
                          std::size_t bytes_transferred,
                          bool close) {
   boost::ignore_unused(bytes_transferred);
@@ -148,14 +148,14 @@ void P2PSession::onWrite(boost::system::error_code ec,
     return MOMO_BOOST_ERROR(ec, "write");
 
   if (close)
-    return doClose();
+    return DoClose();
 
   res_ = nullptr;
 
-  doRead();
+  DoRead();
 }
 
-void P2PSession::doClose() {
+void P2PSession::DoClose() {
   boost::system::error_code ec;
   socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
 }

@@ -45,26 +45,26 @@ P2PServer::P2PServer(boost::asio::io_context& ioc,
   }
 }
 
-void P2PServer::run() {
+void P2PServer::Run() {
   if (!acceptor_.is_open())
     return;
-  doAccept();
+  DoAccept();
 }
 
-void P2PServer::doAccept() {
+void P2PServer::DoAccept() {
   acceptor_.async_accept(socket_,
-                         std::bind(&P2PServer::onAccept, shared_from_this(),
+                         std::bind(&P2PServer::OnAccept, shared_from_this(),
                                    std::placeholders::_1));
 }
 
-void P2PServer::onAccept(boost::system::error_code ec) {
+void P2PServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
   } else {
     std::make_shared<P2PSession>(ioc_, std::move(socket_), doc_root_,
                                  rtc_manager_, conn_settings_)
-        ->run();
+        ->Run();
   }
 
-  doAccept();
+  DoAccept();
 }

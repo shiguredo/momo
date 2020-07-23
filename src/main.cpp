@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<P2PServer>(
           ioc, endpoint, std::make_shared<std::string>(cs.test_document_root),
           rtc_manager.get(), cs)
-          ->run();
+          ->Run();
     }
 
     if (use_ayame) {

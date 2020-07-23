@@ -13,44 +13,57 @@
 #include <boost/system/error_code.hpp>
 
 #include "connection_settings.h"
-#include "p2p_connection.h"
 #include "rtc/rtc_manager.h"
 #include "util.h"
 #include "watchdog.h"
 #include "ws/websocket.h"
 
 class P2PWebsocketSession
-    : public std::enable_shared_from_this<P2PWebsocketSession> {
-  std::unique_ptr<Websocket> ws_;
-  boost::beast::multi_buffer sending_buffer_;
-
-  WatchDog watchdog_;
-
-  RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
-  std::shared_ptr<P2PConnection> connection_;
-
+    : public std::enable_shared_from_this<P2PWebsocketSession>,
+      public RTCMessageSender {
  public:
   P2PWebsocketSession(boost::asio::io_context& ioc,
                       RTCManager* rtc_manager,
                       ConnectionSettings conn_settings);
   ~P2PWebsocketSession();
-  static std::shared_ptr<P2PWebsocketSession> make_shared(
+  static std::shared_ptr<P2PWebsocketSession> Create(
       boost::asio::io_context& ioc,
       boost::asio::ip::tcp::socket socket,
       RTCManager* rtc_manager,
       ConnectionSettings conn_settings);
-  void run(boost::beast::http::request<boost::beast::http::string_body> req);
+
+  void Run(boost::beast::http::request<boost::beast::http::string_body> req);
 
  private:
-  void onWatchdogExpired();
-  void doAccept(
+  void OnWatchdogExpired();
+  void DoAccept(
       boost::beast::http::request<boost::beast::http::string_body> req);
-  void onAccept(boost::system::error_code ec);
+  void OnAccept(boost::system::error_code ec);
 
-  void onRead(boost::system::error_code ec,
+  void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string recv_string);
+
+  std::shared_ptr<RTCConnection> CreateRTCConnection();
+
+ private:
+  //WebRTC
+  void onIceConnectionStateChange(
+      webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
+  void onIceCandidate(const std::string sdp_mid,
+                      const int sdp_mlineindex,
+                      const std::string sdp) override;
+
+ private:
+  std::unique_ptr<Websocket> ws_;
+
+  WatchDog watchdog_;
+
+  RTCManager* rtc_manager_;
+  ConnectionSettings conn_settings_;
+
+  std::shared_ptr<RTCConnection> connection_;
+  webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 };
 
 #endif  // P2P_WEBSOCKET_SESSION_H_
