@@ -67,7 +67,8 @@ void SoraSession::OnRead(boost::system::error_code ec,
     }
   } else if (req_.method() == boost::beast::http::verb::post) {
     if (req_.target() == "/connect") {
-      json json_message = {{"result", client_->Connect()}};
+      client_->Connect();
+      json json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/close") {
       client_->Close();

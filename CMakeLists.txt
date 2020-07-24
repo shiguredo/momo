@@ -357,7 +357,7 @@ target_sources(momo
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
     src/sora/sora_client.cpp
-    src/ws/websocket.cpp
+    src/websocket.cpp
 )
 
 target_include_directories(momo PRIVATE src)

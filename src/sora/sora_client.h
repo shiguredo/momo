@@ -20,7 +20,7 @@
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
 #include "watchdog.h"
-#include "ws/websocket.h"
+#include "websocket.h"
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
                    public RTCMessageSender {
@@ -29,8 +29,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
              RTCManager* manager,
              ConnectionSettings conn_settings);
   ~SoraClient();
+
   void Reset();
-  bool Connect();
+  void Connect();
   void Close();
 
   webrtc::PeerConnectionInterface::IceConnectionState GetRTCConnectionState()
@@ -40,18 +41,10 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
-
- private:
   bool ParseURL(URLParts& parts) const;
-  boost::asio::ssl::context CreateSSLContext() const;
 
  private:
-  void OnResolve(boost::system::error_code ec,
-                 boost::asio::ip::tcp::resolver::results_type results);
-  void OnSSLConnect(boost::system::error_code ec);
-  void OnSSLHandshake(boost::system::error_code ec);
-  void OnConnect(boost::system::error_code ec);
-  void OnHandshake(boost::system::error_code ec);
+  void DoRead();
   void DoSendConnect();
   void DoSendPong();
   void DoSendPong(
@@ -59,6 +52,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void CreatePeerFromConfig(nlohmann::json jconfig);
 
  private:
+  void OnConnect(boost::system::error_code ec);
   void OnClose(boost::system::error_code ec);
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
@@ -79,10 +73,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
  private:
   boost::asio::io_context& ioc_;
-
-  boost::asio::ip::tcp::resolver resolver_;
   std::unique_ptr<Websocket> ws_;
-  URLParts parts_;
 
   std::atomic_bool destructed_ = {false};
 

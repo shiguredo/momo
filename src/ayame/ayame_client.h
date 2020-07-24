@@ -20,7 +20,7 @@
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
 #include "watchdog.h"
-#include "ws/websocket.h"
+#include "websocket.h"
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
                     public RTCMessageSender {
@@ -29,30 +29,25 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
               RTCManager* manager,
               ConnectionSettings conn_settings);
   ~AyameClient();
-  void Reset();
-  bool Connect();
-  void Close();
 
-  bool ParseURL(URLParts& parts) const;
-  boost::asio::ssl::context CreateSSLContext() const;
+  void Reset();
+  void Connect();
+  void Close();
 
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
+  bool ParseURL(URLParts& parts) const;
 
  private:
-  void OnResolve(boost::system::error_code ec,
-                 boost::asio::ip::tcp::resolver::results_type results);
-  void OnSSLConnect(boost::system::error_code ec);
-  void OnSSLHandshake(boost::system::error_code ec);
-  void OnConnect(boost::system::error_code ec);
-  void OnHandshake(boost::system::error_code ec);
+  void DoRead();
   void DoRegister();
   void DoSendPong();
   void SetIceServersFromConfig(nlohmann::json json_message);
   void CreatePeerConnection();
 
  private:
+  void OnConnect(boost::system::error_code ec);
   void OnClose(boost::system::error_code ec);
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
@@ -73,10 +68,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
 
  private:
   boost::asio::io_context& ioc_;
-
-  boost::asio::ip::tcp::resolver resolver_;
   std::unique_ptr<Websocket> ws_;
-  URLParts parts_;
 
   std::atomic_bool destructed_ = {false};
 

@@ -46,19 +46,15 @@ void P2PWebsocketSession::OnWatchdogExpired() {
   json ping_message = {
       {"type", "ping"},
   };
-  ws_->SendText(std::move(ping_message.dump()));
+  ws_->WriteText(std::move(ping_message.dump()));
   watchdog_.Reset();
 }
 
 void P2PWebsocketSession::DoAccept(
     boost::beast::http::request<boost::beast::http::string_body> req) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-  // Accept the websocket handshake
-  ws_->NativeSocket().async_accept(
-      req,
-      boost::asio::bind_executor(
-          ws_->strand(), std::bind(&P2PWebsocketSession::OnAccept,
-                                   shared_from_this(), std::placeholders::_1)));
+  ws_->Accept(std::move(req),
+              std::bind(&P2PWebsocketSession::OnAccept, shared_from_this(),
+                        std::placeholders::_1));
 }
 
 void P2PWebsocketSession::OnAccept(boost::system::error_code ec) {
@@ -67,10 +63,13 @@ void P2PWebsocketSession::OnAccept(boost::system::error_code ec) {
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Accept");
 
-  // WebSocket での読み込みを開始
-  ws_->StartToRead(std::bind(&P2PWebsocketSession::OnRead, shared_from_this(),
-                             std::placeholders::_1, std::placeholders::_2,
-                             std::placeholders::_3));
+  DoRead();
+}
+
+void P2PWebsocketSession::DoRead() {
+  ws_->Read(std::bind(&P2PWebsocketSession::OnRead, shared_from_this(),
+                      std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 }
 
 void P2PWebsocketSession::OnRead(boost::system::error_code ec,
@@ -85,6 +84,12 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Read");
+
+  // これ以降はエラーが起きて処理を中断したとしても DoRead() する
+  struct Guard {
+    std::function<void()> f;
+    ~Guard() { f(); }
+  } guard = {[this]() { DoRead(); }};
 
   json recv_message;
 
@@ -119,7 +124,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
             desc->ToString(&sdp);
             json json_desc = {{"type", "answer"}, {"sdp", sdp}};
             std::string str_desc = json_desc.dump();
-            ws_->SendText(std::move(str_desc));
+            ws_->WriteText(std::move(str_desc));
           });
     });
   } else if (type == "answer") {
@@ -155,7 +160,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
         {"type", "accept"},
         {"isExistUser", true},
     };
-    ws_->SendText(std::move(accept_message.dump()));
+    ws_->WriteText(std::move(accept_message.dump()));
     watchdog_.Enable(30);
   } else {
     return;
@@ -196,5 +201,5 @@ void P2PWebsocketSession::onIceCandidate(const std::string sdp_mid,
                       {"sdpMLineIndex", sdp_mlineindex},
                       {"sdpMid", sdp_mid}};
   std::string str_cand = json_cand.dump();
-  ws_->SendText(str_cand);
+  ws_->WriteText(str_cand);
 }

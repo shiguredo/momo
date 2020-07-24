@@ -30,21 +30,10 @@ bool AyameClient::ParseURL(URLParts& parts) const {
   }
 }
 
-boost::asio::ssl::context AyameClient::CreateSSLContext() const {
-  boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
-  //ctx.set_default_verify_paths();
-  ctx.set_options(boost::asio::ssl::context::default_workarounds |
-                  boost::asio::ssl::context::no_sslv2 |
-                  boost::asio::ssl::context::no_sslv3 |
-                  boost::asio::ssl::context::single_dh_use);
-  return ctx;
-}
-
 AyameClient::AyameClient(boost::asio::io_context& ioc,
                          RTCManager* manager,
                          ConnectionSettings conn_settings)
     : ioc_(ioc),
-      resolver_(ioc),
       manager_(manager),
       retry_count_(0),
       conn_settings_(conn_settings),
@@ -64,60 +53,23 @@ void AyameClient::Reset() {
   has_is_exist_user_flag_ = false;
   ice_servers_.clear();
 
-  if (ParseURL(parts_)) {
-    auto ssl_ctx = CreateSSLContext();
-    ws_.reset(new Websocket(ioc_, std::move(ssl_ctx)));
-    ws_->NativeSecureSocket().next_layer().set_verify_mode(
-        boost::asio::ssl::verify_peer);
-    ws_->NativeSecureSocket().next_layer().set_verify_callback(
-        [insecure = conn_settings_.insecure](
-            bool preverified, boost::asio::ssl::verify_context& ctx) {
-          if (preverified) {
-            return true;
-          }
-          // insecure の場合は証明書をチェックしない
-          if (insecure) {
-            return true;
-          }
-          X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-          return SSLVerifier::VerifyX509(cert);
-        });
-
-    // SNI の設定を行う
-    if (!SSL_set_tlsext_host_name(
-            ws_->NativeSecureSocket().next_layer().native_handle(),
-            parts_.host.c_str())) {
-      boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
-                                   boost::asio::error::get_ssl_category()};
-      MOMO_BOOST_ERROR(ec, "SSL_set_tlsext_host_name");
-    }
+  URLParts parts;
+  if (ParseURL(parts)) {
+    ws_.reset(
+        new Websocket(Websocket::ssl_tag(), ioc_, conn_settings_.insecure));
   } else {
-    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> ws(ioc_);
     ws_.reset(new Websocket(ioc_));
   }
 }
 
-bool AyameClient::Connect() {
+void AyameClient::Connect() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  std::string port;
-  if (parts_.port.empty()) {
-    port = ws_->isSSL() ? "443" : "80";
-  } else {
-    port = parts_.port;
-  }
-
-  // DNS ルックアップ
-  resolver_.async_resolve(
-      parts_.host, port,
-      boost::asio::bind_executor(
-          ws_->strand(),
-          std::bind(&AyameClient::OnResolve, shared_from_this(),
-                    std::placeholders::_1, std::placeholders::_2)));
 
   watchdog_.Enable(30);
 
-  return true;
+  ws_->Connect(conn_settings_.ayame_signaling_host,
+               std::bind(&AyameClient::OnConnect, shared_from_this(),
+                         std::placeholders::_1));
 }
 
 void AyameClient::ReconnectAfter() {
@@ -139,84 +91,21 @@ void AyameClient::OnWatchdogExpired() {
   Connect();
 }
 
-void AyameClient::OnResolve(
-    boost::system::error_code ec,
-    boost::asio::ip::tcp::resolver::results_type results) {
-  if (ec) {
-    ReconnectAfter();
-    return MOMO_BOOST_ERROR(ec, "resolve");
-  }
-
-  // DNS ルックアップで得られたエンドポイントに対して接続する
-  if (ws_->isSSL()) {
-    boost::asio::async_connect(
-        ws_->NativeSecureSocket().next_layer().next_layer(), results.begin(),
-        results.end(),
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&AyameClient::OnSSLConnect, shared_from_this(),
-                      std::placeholders::_1)));
-  } else {
-    boost::asio::async_connect(
-        ws_->NativeSocket().next_layer(), results.begin(), results.end(),
-        boost::asio::bind_executor(
-            ws_->strand(),
-            std::bind(&AyameClient::OnConnect, shared_from_this(),
-                      std::placeholders::_1)));
-  }
-}
-
-void AyameClient::OnSSLConnect(boost::system::error_code ec) {
-  if (ec) {
-    ReconnectAfter();
-    return MOMO_BOOST_ERROR(ec, "SSLConnect");
-  }
-
-  // SSL のハンドシェイク
-  ws_->NativeSecureSocket().next_layer().async_handshake(
-      boost::asio::ssl::stream_base::client,
-      boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameClient::OnSSLHandshake,
-                                   shared_from_this(), std::placeholders::_1)));
-}
-
-void AyameClient::OnSSLHandshake(boost::system::error_code ec) {
-  if (ec) {
-    ReconnectAfter();
-    return MOMO_BOOST_ERROR(ec, "SSLHandshake");
-  }
-
-  // Websocket のハンドシェイク
-  ws_->NativeSecureSocket().async_handshake(
-      parts_.host, parts_.path_query_fragment,
-      boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameClient::OnHandshake,
-                                   shared_from_this(), std::placeholders::_1)));
-}
-
 void AyameClient::OnConnect(boost::system::error_code ec) {
-  if (ec) {
-    ReconnectAfter();
-    return MOMO_BOOST_ERROR(ec, "Connect");
-  }
-  // Websocket のハンドシェイク
-  ws_->NativeSocket().async_handshake(
-      parts_.host, parts_.path_query_fragment,
-      boost::asio::bind_executor(
-          ws_->strand(), std::bind(&AyameClient::OnHandshake,
-                                   shared_from_this(), std::placeholders::_1)));
-}
-
-void AyameClient::OnHandshake(boost::system::error_code ec) {
   if (ec) {
     ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "Handshake");
   }
 
-  ws_->StartToRead(std::bind(&AyameClient::OnRead, this, std::placeholders::_1,
-                             std::placeholders::_2, std::placeholders::_3));
+  DoRead();
 
   DoRegister();
+}
+
+void AyameClient::DoRead() {
+  ws_->Read(std::bind(&AyameClient::OnRead, shared_from_this(),
+                      std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 }
 
 void AyameClient::DoRegister() {
@@ -234,12 +123,12 @@ void AyameClient::DoRegister() {
   if (conn_settings_.ayame_signaling_key != "") {
     json_message["key"] = conn_settings_.ayame_signaling_key;
   }
-  ws_->SendText(json_message.dump());
+  ws_->WriteText(json_message.dump());
 }
 
 void AyameClient::DoSendPong() {
   json json_message = {{"type", "pong"}};
-  ws_->SendText(json_message.dump());
+  ws_->WriteText(json_message.dump());
 }
 
 void AyameClient::SetIceServersFromConfig(json json_message) {
@@ -282,21 +171,8 @@ void AyameClient::CreatePeerConnection() {
 }
 
 void AyameClient::Close() {
-  // websocket 接続を閉じる
-  // 閉じられると OnClose() にコールバックする
-  if (ws_->isSSL()) {
-    ws_->NativeSecureSocket().async_close(
-        boost::beast::websocket::close_code::normal,
-        boost::asio::bind_executor(
-            ws_->strand(), std::bind(&AyameClient::OnClose, shared_from_this(),
-                                     std::placeholders::_1)));
-  } else {
-    ws_->NativeSocket().async_close(
-        boost::beast::websocket::close_code::normal,
-        boost::asio::bind_executor(
-            ws_->strand(), std::bind(&AyameClient::OnClose, shared_from_this(),
-                                     std::placeholders::_1)));
-  }
+  ws_->Close(std::bind(&AyameClient::OnClose, shared_from_this(),
+                       std::placeholders::_1));
 }
 
 // WebSocket が閉じられたときのコールバック
@@ -354,7 +230,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
       std::string sdp;
       desc->ToString(&sdp);
       json json_message = {{"type", "offer"}, {"sdp", sdp}};
-      ws_->SendText(json_message.dump());
+      ws_->WriteText(json_message.dump());
     };
 
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
@@ -373,14 +249,14 @@ void AyameClient::OnRead(boost::system::error_code ec,
     }
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp, [this]() {
-      boost::asio::post(ws_->strand(), [this, self = shared_from_this()]() {
+      boost::asio::post(ioc_, [this, self = shared_from_this()]() {
         if (!is_send_offer_ || !has_is_exist_user_flag_) {
           connection_->createAnswer(
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
                 desc->ToString(&sdp);
                 json json_message = {{"type", "answer"}, {"sdp", sdp}};
-                ws_->SendText(json_message.dump());
+                ws_->WriteText(json_message.dump());
               });
         }
         is_send_offer_ = false;
@@ -405,6 +281,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     connection_ = nullptr;
     Close();
   }
+  DoRead();
 }
 
 // WebRTC からのコールバック
@@ -416,9 +293,8 @@ void AyameClient::onIceConnectionStateChange(
   if (destructed_) {
     return;
   }
-  boost::asio::post(ws_->strand(),
-                    std::bind(&AyameClient::DoIceConnectionStateChange,
-                              shared_from_this(), new_state));
+  boost::asio::post(ioc_, std::bind(&AyameClient::DoIceConnectionStateChange,
+                                    shared_from_this(), new_state));
 }
 void AyameClient::onIceCandidate(const std::string sdp_mid,
                                  const int sdp_mlineindex,
@@ -431,7 +307,7 @@ void AyameClient::onIceCandidate(const std::string sdp_mid,
   json_message["ice"] = {{"candidate", sdp},
                          {"sdpMLineIndex", sdp_mlineindex},
                          {"sdpMid", sdp_mid}};
-  ws_->SendText(json_message.dump());
+  ws_->WriteText(json_message.dump());
 }
 
 void AyameClient::DoIceConnectionStateChange(

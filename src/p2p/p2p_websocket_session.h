@@ -16,7 +16,7 @@
 #include "rtc/rtc_manager.h"
 #include "util.h"
 #include "watchdog.h"
-#include "ws/websocket.h"
+#include "websocket.h"
 
 class P2PWebsocketSession
     : public std::enable_shared_from_this<P2PWebsocketSession>,
@@ -40,6 +40,7 @@ class P2PWebsocketSession
       boost::beast::http::request<boost::beast::http::string_body> req);
   void OnAccept(boost::system::error_code ec);
 
+  void DoRead();
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string recv_string);
