@@ -423,7 +423,7 @@ if (USE_ROS)
     PRIVATE
       src/ros/ros_audio_device.cpp
       src/ros/ros_audio_device_module.cpp
-      src/ros/ros_video_capture.cpp
+      src/ros/ros_video_capturer.cpp
   )
   target_compile_definitions(momo PRIVATE HAVE_JPEG=1)
   target_include_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/include)
@@ -703,7 +703,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_mmal/mmal_h264_decoder.cpp
             src/hwenc_mmal/mmal_buffer.cpp
             src/hwenc_mmal/mmal_h264_encoder.cpp
-            src/hwenc_mmal/mmal_v4l2_capture.cpp
+            src/hwenc_mmal/mmal_v4l2_capturer.cpp
         )
 
         if (TARGET_OS_LINUX STREQUAL "raspberry-pi-os")

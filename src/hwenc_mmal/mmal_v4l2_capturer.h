@@ -1,5 +1,5 @@
-#ifndef MMAL_V4L2_CAPTURE_H_
-#define MMAL_V4L2_CAPTURE_H_
+#ifndef MMAL_V4L2_CAPTURER_H_
+#define MMAL_V4L2_CAPTURER_H_
 
 extern "C" {
 #include <bcm_host.h>
@@ -23,11 +23,11 @@ extern "C" {
 #include <rtc_base/critical_section.h>
 #include <v4l2_video_capturer/v4l2_video_capturer.h>
 
-class MMALV4L2Capture : public V4L2VideoCapture {
+class MMALV4L2Capturer : public V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(ConnectionSettings cs);
-  MMALV4L2Capture();
-  ~MMALV4L2Capture();
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(ConnectionSettings cs);
+  MMALV4L2Capturer();
+  ~MMALV4L2Capturer();
 
  private:
   struct FrameParams {
@@ -39,7 +39,7 @@ class MMALV4L2Capture : public V4L2VideoCapture {
     int64_t timestamp;
   };
 
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       ConnectionSettings cs,
       size_t capture_device_index);
@@ -72,4 +72,4 @@ class MMALV4L2Capture : public V4L2VideoCapture {
   size_t decoded_buffer_size_;
 };
 
-#endif  // MMAL_V4L2_CAPTURE_H_
+#endif  // MMAL_V4L2_CAPTURER_H_

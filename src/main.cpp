@@ -12,7 +12,7 @@
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"
-#include "ros/ros_video_capture.h"
+#include "ros/ros_video_capturer.h"
 #include "signal_listener.h"
 #else
 
@@ -24,7 +24,7 @@
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
-#include "hwenc_mmal/mmal_v4l2_capture.h"
+#include "hwenc_mmal/mmal_v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if USE_ROS
-    rtc::scoped_refptr<ROSVideoCapture> capturer(
-        new rtc::RefCountedObject<ROSVideoCapture>(cs));
+    rtc::scoped_refptr<ROSVideoCapturer> capturer(
+        new rtc::RefCountedObject<ROSVideoCapturer>(cs));
     return capturer;
 #else  // USE_ROS
     auto size = cs.GetSize();
@@ -111,12 +111,12 @@ int main(int argc, char* argv[]) {
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
     if (cs.use_native) {
-      return MMALV4L2Capture::Create(cs);
+      return MMALV4L2Capturer::Create(cs);
     } else {
-      return V4L2VideoCapture::Create(cs);
+      return V4L2VideoCapturer::Create(cs);
     }
 #else
-    return V4L2VideoCapture::Create(cs);
+    return V4L2VideoCapturer::Create(cs);
 #endif
 #else
     return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate,
