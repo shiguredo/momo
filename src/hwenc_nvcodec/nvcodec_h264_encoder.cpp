@@ -223,7 +223,7 @@ int32_t NvCodecH264Encoder::Encode(
     NativeBuffer* native_buffer =
         dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     cuda_->CopyNative(nv_encoder_.get(), native_buffer->Data(),
-                      native_buffer->length(), native_buffer->width(),
+                      native_buffer->Length(), native_buffer->width(),
                       native_buffer->height());
   } else {
     rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
