@@ -629,7 +629,7 @@ int32_t JetsonVideoEncoder::Encode(
     NativeBuffer* native_buffer =
         dynamic_cast<NativeBuffer*>(frame_buffer.get());
     int ret = decoder_->decodeToFd(fd, (unsigned char*)native_buffer->Data(),
-                                   native_buffer->length(), decode_pixfmt_,
+                                   native_buffer->Length(), decode_pixfmt_,
                                    raw_width_, raw_height_);
     if (ret < 0) {
       RTC_LOG(LS_ERROR) << "Failed to decodeToFd";
