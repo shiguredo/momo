@@ -309,4 +309,3 @@ void Websocket::OnClose(close_callback_t on_close,
                         boost::system::error_code ec) {
   on_close(ec);
 }
-
