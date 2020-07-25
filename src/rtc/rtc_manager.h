@@ -21,21 +21,21 @@ class RTCManager {
              VideoTrackReceiver* receiver);
   ~RTCManager();
   void SetDataManager(RTCDataManager* data_manager);
-  std::shared_ptr<RTCConnection> createConnection(
+  std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
-  void initTracks(RTCConnection* conn);
+  void InitTracks(RTCConnection* conn);
 
  private:
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory;
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> _audio_track;
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> _video_track;
-  std::unique_ptr<rtc::Thread> _networkThread;
-  std::unique_ptr<rtc::Thread> _workerThread;
-  std::unique_ptr<rtc::Thread> _signalingThread;
-  ConnectionSettings _conn_settings;
-  VideoTrackReceiver* _receiver;
-  RTCDataManager* _data_manager;
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  std::unique_ptr<rtc::Thread> network_thread_;
+  std::unique_ptr<rtc::Thread> worker_thread_;
+  std::unique_ptr<rtc::Thread> signaling_thread_;
+  ConnectionSettings conn_settings_;
+  VideoTrackReceiver* receiver_;
+  RTCDataManager* data_manager_;
 };
 
 #endif

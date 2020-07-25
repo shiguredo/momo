@@ -68,9 +68,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
  private:
   // WebRTC からのコールバック
   // これらは別スレッドからやってくるので取り扱い注意
-  void onIceConnectionStateChange(
+  void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-  void onIceCandidate(const std::string sdp_mid,
+  void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
 

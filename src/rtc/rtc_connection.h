@@ -11,9 +11,9 @@ class RTCConnection {
   RTCConnection(RTCMessageSender* sender,
                 std::unique_ptr<PeerConnectionObserver> observer,
                 rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
-      : _sender(sender),
-        _observer(std::move(observer)),
-        _connection(connection){};
+      : sender_(sender),
+        observer_(std::move(observer)),
+        connection_(connection) {}
   ~RTCConnection();
 
   typedef std::function<void(webrtc::SessionDescriptionInterface*)>
@@ -23,46 +23,46 @@ class RTCConnection {
   typedef std::function<void()> OnSetSuccessFunc;
   typedef std::function<void(webrtc::RTCError)> OnSetFailureFunc;
 
-  void createOffer(OnCreateSuccessFunc on_success = nullptr,
+  void CreateOffer(OnCreateSuccessFunc on_success = nullptr,
                    OnCreateFailureFunc on_failure = nullptr);
-  void setOffer(const std::string sdp,
+  void SetOffer(const std::string sdp,
                 OnSetSuccessFunc on_success = nullptr,
                 OnSetFailureFunc on_failure = nullptr);
-  void createAnswer(OnCreateSuccessFunc on_success = nullptr,
+  void CreateAnswer(OnCreateSuccessFunc on_success = nullptr,
                     OnCreateFailureFunc on_failure = nullptr);
-  void setAnswer(const std::string sdp,
+  void SetAnswer(const std::string sdp,
                  OnSetSuccessFunc on_success = nullptr,
                  OnSetFailureFunc on_failure = nullptr);
-  void addIceCandidate(const std::string sdp_mid,
+  void AddIceCandidate(const std::string sdp_mid,
                        const int sdp_mlineindex,
                        const std::string sdp);
-  bool setAudioEnabled(bool enabled);
-  bool setVideoEnabled(bool enabled);
-  bool isAudioEnabled();
-  bool isVideoEnabled();
+  bool SetAudioEnabled(bool enabled);
+  bool SetVideoEnabled(bool enabled);
+  bool IsAudioEnabled();
+  bool IsVideoEnabled();
 
-  void getStats(
+  void GetStats(
       std::function<void(
           const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
 
-  void setEncodingParameters(
+  void SetEncodingParameters(
       std::vector<webrtc::RtpEncodingParameters> encodings);
 
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> getConnection() const;
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
  private:
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> getLocalAudioTrack();
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> getLocalVideoTrack();
-  bool setMediaEnabled(
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
+  bool SetMediaEnabled(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
       bool enabled);
-  bool isMediaEnabled(
+  bool IsMediaEnabled(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
 
-  RTCMessageSender* _sender;
-  std::unique_ptr<PeerConnectionObserver> _observer;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> _connection;
+  RTCMessageSender* sender_;
+  std::unique_ptr<PeerConnectionObserver> observer_;
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;
 };
 
 #endif

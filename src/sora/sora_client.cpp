@@ -60,7 +60,7 @@ SoraClient::SoraClient(boost::asio::io_context& ioc,
 
 SoraClient::~SoraClient() {
   destructed_ = true;
-  // ここで onIceConnectionStateChange が呼ばれる
+  // ここで OnIceConnectionStateChange が呼ばれる
   connection_ = nullptr;
 }
 
@@ -216,7 +216,7 @@ void SoraClient::CreatePeerFromConfig(json jconfig) {
   }
 #endif
 
-  connection_ = manager_->createConnection(rtc_config, this);
+  connection_ = manager_->CreateConnection(rtc_config, this);
 }
 
 void SoraClient::Close() {
@@ -251,10 +251,10 @@ void SoraClient::OnRead(boost::system::error_code ec,
     CreatePeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"].get<std::string>();
 
-    connection_->setOffer(sdp, [this, json_message]() {
+    connection_->SetOffer(sdp, [this, json_message]() {
       // simulcast では offer の setRemoteDescription が終わった後に
       // トラックを追加する必要があるため、ここで初期化する
-      manager_->initTracks(connection_.get());
+      manager_->InitTracks(connection_.get());
 
       if (conn_settings_.sora_simulcast) {
         std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
@@ -288,10 +288,10 @@ void SoraClient::OnRead(boost::system::error_code ec,
           }
           encoding_parameters.push_back(params);
         }
-        connection_->setEncodingParameters(std::move(encoding_parameters));
+        connection_->SetEncodingParameters(std::move(encoding_parameters));
       }
 
-      connection_->createAnswer(
+      connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
@@ -301,8 +301,8 @@ void SoraClient::OnRead(boost::system::error_code ec,
     });
   } else if (type == "update") {
     const std::string sdp = json_message["sdp"].get<std::string>();
-    connection_->setOffer(sdp, [this]() {
-      connection_->createAnswer(
+    connection_->SetOffer(sdp, [this]() {
+      connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
@@ -336,7 +336,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
     watchdog_.Reset();
     bool stats = json_message.value("stats", false);
     if (stats) {
-      connection_->getStats(
+      connection_->GetStats(
           [this](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
             DoSendPong(report);
@@ -350,7 +350,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void SoraClient::onIceConnectionStateChange(
+void SoraClient::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
   // デストラクタだと shared_from_this が機能しないので無視する
@@ -360,7 +360,7 @@ void SoraClient::onIceConnectionStateChange(
   boost::asio::post(ioc_, std::bind(&SoraClient::DoIceConnectionStateChange,
                                     shared_from_this(), new_state));
 }
-void SoraClient::onIceCandidate(const std::string sdp_mid,
+void SoraClient::OnIceCandidate(const std::string sdp_mid,
                                 const int sdp_mlineindex,
                                 const std::string sdp) {
   json json_message = {{"type", "candidate"}, {"candidate", sdp}};

@@ -56,8 +56,8 @@ void SoraSession::OnRead(boost::system::error_code ec,
     } else if (req_.target() == "/mute/status") {
       std::shared_ptr<RTCConnection> rtc_conn = client_->GetRTCConnection();
       if (rtc_conn) {
-        json json_message = {{"audio", !rtc_conn->isAudioEnabled()},
-                             {"video", !rtc_conn->isVideoEnabled()}};
+        json json_message = {{"audio", !rtc_conn->IsAudioEnabled()},
+                             {"video", !rtc_conn->IsVideoEnabled()}};
         SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
       } else {
         SendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
@@ -90,18 +90,18 @@ void SoraSession::OnRead(boost::system::error_code ec,
       }
       try {
         bool audioMute = recv_json["audio"].get<bool>();
-        rtc_conn->setAudioEnabled(!audioMute);
+        rtc_conn->SetAudioEnabled(!audioMute);
       } catch (json::type_error& e) {
       }
 
       try {
         bool videoMute = recv_json["video"].get<bool>();
-        rtc_conn->setVideoEnabled(!videoMute);
+        rtc_conn->SetVideoEnabled(!videoMute);
       } catch (json::type_error& e) {
       }
 
-      json json_message = {{"audio", !rtc_conn->isAudioEnabled()},
-                           {"video", !rtc_conn->isVideoEnabled()}};
+      json json_message = {{"audio", !rtc_conn->IsAudioEnabled()},
+                           {"video", !rtc_conn->IsVideoEnabled()}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else {
       SendResponse(Util::BadRequest(req_, "Invalid Request"));

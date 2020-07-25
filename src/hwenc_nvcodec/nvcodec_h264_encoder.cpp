@@ -199,8 +199,8 @@ int32_t NvCodecH264Encoder::Encode(
         dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     for (int y = 0; y < frame_buffer->height(); y++) {
       memcpy((uint8_t*)map.pData + y * map.RowPitch,
-             frame_buffer->Data() + frame_buffer->raw_width() * y,
-             frame_buffer->raw_width());
+             frame_buffer->Data() + frame_buffer->RawWidth() * y,
+             frame_buffer->RawWidth());
     }
   } else {
     rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =

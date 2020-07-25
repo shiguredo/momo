@@ -351,6 +351,7 @@ target_sources(momo
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
+    src/rtc/rtc_ssl_verifier.cpp
     src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp

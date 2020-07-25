@@ -108,8 +108,8 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     }
 
     connection_ = CreateRTCConnection();
-    connection_->setOffer(sdp, [this]() {
-      connection_->createAnswer(
+    connection_->SetOffer(sdp, [this]() {
+      connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
@@ -128,7 +128,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     } catch (json::type_error& e) {
       return;
     }
-    connection_->setAnswer(sdp);
+    connection_->SetAnswer(sdp);
   } else if (type == "candidate") {
     if (!connection_) {
       return;
@@ -143,7 +143,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     } catch (json::type_error& e) {
       return;
     }
-    connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
+    connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "close" || type == "bye") {
     connection_ = nullptr;
   } else if (type == "register") {
@@ -167,13 +167,13 @@ std::shared_ptr<RTCConnection> P2PWebsocketSession::CreateRTCConnection() {
     servers.push_back(ice_server);
   }
   rtc_config.servers = servers;
-  auto connection = rtc_manager_->createConnection(rtc_config, this);
-  rtc_manager_->initTracks(connection.get());
+  auto connection = rtc_manager_->CreateConnection(rtc_config, this);
+  rtc_manager_->InitTracks(connection.get());
 
   return connection;
 }
 
-void P2PWebsocketSession::onIceConnectionStateChange(
+void P2PWebsocketSession::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " rtc_state "
                    << Util::IceConnectionStateToString(rtc_state_) << " -> "
@@ -182,7 +182,7 @@ void P2PWebsocketSession::onIceConnectionStateChange(
   rtc_state_ = new_state;
 }
 
-void P2PWebsocketSession::onIceCandidate(const std::string sdp_mid,
+void P2PWebsocketSession::OnIceCandidate(const std::string sdp_mid,
                                          const int sdp_mlineindex,
                                          const std::string sdp) {
   RTC_LOG(LS_INFO) << __FUNCTION__;

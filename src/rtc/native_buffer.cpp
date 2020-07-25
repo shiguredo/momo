@@ -51,11 +51,11 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
   return scaled_buffer;
 }
 
-int NativeBuffer::raw_width() const {
+int NativeBuffer::RawWidth() const {
   return raw_width_;
 }
 
-int NativeBuffer::raw_height() const {
+int NativeBuffer::RawHeight() const {
   return raw_height_;
 }
 
@@ -68,7 +68,7 @@ void NativeBuffer::SetLength(size_t length) {
   length_ = length;
 }
 
-size_t NativeBuffer::length() {
+size_t NativeBuffer::Length() const {
   return length_;
 }
 

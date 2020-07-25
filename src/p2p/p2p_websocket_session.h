@@ -54,9 +54,9 @@ class P2PWebsocketSession
 
  private:
   //WebRTC
-  void onIceConnectionStateChange(
+  void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-  void onIceCandidate(const std::string sdp_mid,
+  void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
 

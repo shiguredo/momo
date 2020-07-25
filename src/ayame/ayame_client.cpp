@@ -43,7 +43,7 @@ AyameClient::AyameClient(boost::asio::io_context& ioc,
 
 AyameClient::~AyameClient() {
   destructed_ = true;
-  // ここで onIceConnectionStateChange が呼ばれる
+  // ここで OnIceConnectionStateChange が呼ばれる
   connection_ = nullptr;
 }
 
@@ -166,8 +166,8 @@ void AyameClient::CreatePeerConnection() {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
 
   rtc_config.servers = ice_servers_;
-  connection_ = manager_->createConnection(rtc_config, this);
-  manager_->initTracks(connection_.get());
+  connection_ = manager_->CreateConnection(rtc_config, this);
+  manager_->InitTracks(connection_.get());
 }
 
 void AyameClient::Close() {
@@ -237,10 +237,10 @@ void AyameClient::OnRead(boost::system::error_code ec,
     if (is_exist_user) {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
       is_send_offer_ = true;
-      connection_->createOffer(on_create_offer);
+      connection_->CreateOffer(on_create_offer);
     } else if (!has_is_exist_user_flag_) {
       // フラグがない場合とりあえず送信
-      connection_->createOffer(on_create_offer);
+      connection_->CreateOffer(on_create_offer);
     }
   } else if (type == "offer") {
     // isExistUser フラグがなかった場合二回 peer connection を生成する
@@ -248,10 +248,10 @@ void AyameClient::OnRead(boost::system::error_code ec,
       CreatePeerConnection();
     }
     const std::string sdp = json_message["sdp"];
-    connection_->setOffer(sdp, [this]() {
+    connection_->SetOffer(sdp, [this]() {
       boost::asio::post(ioc_, [this, self = shared_from_this()]() {
         if (!is_send_offer_ || !has_is_exist_user_flag_) {
-          connection_->createAnswer(
+          connection_->CreateAnswer(
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
                 desc->ToString(&sdp);
@@ -264,7 +264,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     });
   } else if (type == "answer") {
     const std::string sdp = json_message["sdp"];
-    connection_->setAnswer(sdp);
+    connection_->SetAnswer(sdp);
   } else if (type == "candidate") {
     int sdp_mlineindex = 0;
     std::string sdp_mid, candidate;
@@ -272,7 +272,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     sdp_mid = ice["sdpMid"].get<std::string>();
     sdp_mlineindex = ice["sdpMLineIndex"].get<int>();
     candidate = ice["candidate"].get<std::string>();
-    connection_->addIceCandidate(sdp_mid, sdp_mlineindex, candidate);
+    connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
     watchdog_.Reset();
     DoSendPong();
@@ -286,7 +286,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void AyameClient::onIceConnectionStateChange(
+void AyameClient::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
   // デストラクタだと shared_from_this が機能しないので無視する
@@ -296,7 +296,7 @@ void AyameClient::onIceConnectionStateChange(
   boost::asio::post(ioc_, std::bind(&AyameClient::DoIceConnectionStateChange,
                                     shared_from_this(), new_state));
 }
-void AyameClient::onIceCandidate(const std::string sdp_mid,
+void AyameClient::OnIceCandidate(const std::string sdp_mid,
                                  const int sdp_mlineindex,
                                  const std::string sdp) {
   // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意

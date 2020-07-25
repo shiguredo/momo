@@ -8,9 +8,9 @@
 
 class RTCMessageSender {
  public:
-  virtual void onIceConnectionStateChange(
+  virtual void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) = 0;
-  virtual void onIceCandidate(const std::string sdp_mid,
+  virtual void OnIceCandidate(const std::string sdp_mid,
                               const int sdp_mlineindex,
                               const std::string sdp) = 0;
 };
