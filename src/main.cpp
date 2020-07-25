@@ -13,7 +13,6 @@
 #if USE_ROS
 #include "ros/ros_log_sink.h"
 #include "ros/ros_video_capturer.h"
-#include "signal_listener.h"
 #else
 
 #if USE_SCREEN_CAPTURER

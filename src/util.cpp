@@ -27,7 +27,7 @@ using json = nlohmann::json;
 
 #if USE_ROS
 
-void Util::parseArgs(int argc,
+void Util::ParseArgs(int argc,
                      char* argv[],
                      bool& use_test,
                      bool& use_ayame,
