@@ -60,8 +60,8 @@ void SoraServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
   } else {
-    std::make_shared<SoraSession>(std::move(socket_), client_, rtc_manager_,
-                                  conn_settings_)
+    SoraSession::Create(std::move(socket_), client_, rtc_manager_,
+                        conn_settings_)
         ->Run();
   }
 

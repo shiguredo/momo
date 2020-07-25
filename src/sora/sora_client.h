@@ -24,10 +24,17 @@
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
                    public RTCMessageSender {
- public:
   SoraClient(boost::asio::io_context& ioc,
              RTCManager* manager,
              ConnectionSettings conn_settings);
+
+ public:
+  static std::shared_ptr<SoraClient> Create(boost::asio::io_context& ioc,
+                                            RTCManager* manager,
+                                            ConnectionSettings conn_settings) {
+    return std::shared_ptr<SoraClient>(
+        new SoraClient(ioc, manager, conn_settings));
+  }
   ~SoraClient();
 
   void Reset();

@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<AyameClient> ayame_client;
 
     if (use_sora) {
-      sora_client = std::make_shared<SoraClient>(ioc, rtc_manager.get(), cs);
+      sora_client = SoraClient::Create(ioc, rtc_manager.get(), cs);
 
       // SoraServer を起動しない場合と、SoraServer を起動して --auto が指定されている場合は即座に接続する。
       // SoraServer を起動するけど --auto が指定されていない場合、SoraServer の API が呼ばれるまで接続しない。
@@ -179,8 +179,7 @@ int main(int argc, char* argv[]) {
         const boost::asio::ip::tcp::endpoint endpoint{
             boost::asio::ip::make_address("127.0.0.1"),
             static_cast<unsigned short>(cs.sora_port)};
-        std::make_shared<SoraServer>(ioc, endpoint, sora_client,
-                                     rtc_manager.get(), cs)
+        SoraServer::Create(ioc, endpoint, sora_client, rtc_manager.get(), cs)
             ->Run();
       }
     }
@@ -189,14 +188,13 @@ int main(int argc, char* argv[]) {
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
           static_cast<unsigned short>(cs.test_port)};
-      std::make_shared<P2PServer>(
-          ioc, endpoint, std::make_shared<std::string>(cs.test_document_root),
-          rtc_manager.get(), cs)
+      P2PServer::Create(ioc, endpoint, cs.test_document_root, rtc_manager.get(),
+                        cs)
           ->Run();
     }
 
     if (use_ayame) {
-      ayame_client = std::make_shared<AyameClient>(ioc, rtc_manager.get(), cs);
+      ayame_client = AyameClient::Create(ioc, rtc_manager.get(), cs);
       ayame_client->Connect();
     }
 

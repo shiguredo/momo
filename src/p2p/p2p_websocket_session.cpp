@@ -13,9 +13,11 @@
 using json = nlohmann::json;
 
 P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
+                                         boost::asio::ip::tcp::socket socket,
                                          RTCManager* rtc_manager,
                                          ConnectionSettings conn_settings)
-    : rtc_manager_(rtc_manager),
+    : ws_(new Websocket(std::move(socket))),
+      rtc_manager_(rtc_manager),
       conn_settings_(conn_settings),
       watchdog_(ioc, std::bind(&P2PWebsocketSession::OnWatchdogExpired, this)) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
@@ -23,17 +25,6 @@ P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
 
 P2PWebsocketSession::~P2PWebsocketSession() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
-}
-
-std::shared_ptr<P2PWebsocketSession> P2PWebsocketSession::Create(
-    boost::asio::io_context& ioc,
-    boost::asio::ip::tcp::socket socket,
-    RTCManager* rtc_manager,
-    ConnectionSettings conn_settings) {
-  auto p =
-      std::make_shared<P2PWebsocketSession>(ioc, rtc_manager, conn_settings);
-  p->ws_ = std::unique_ptr<Websocket>(new Websocket(std::move(socket)));
-  return p;
 }
 
 void P2PWebsocketSession::Run(

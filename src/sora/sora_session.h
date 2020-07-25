@@ -26,20 +26,20 @@
 
 // HTTP の１回のリクエストに対して答えるためのクラス
 class SoraSession : public std::enable_shared_from_this<SoraSession> {
-  boost::asio::ip::tcp::socket socket_;
-  boost::beast::flat_buffer buffer_;
-  boost::beast::http::request<boost::beast::http::string_body> req_;
-  std::shared_ptr<void> res_;
-
-  std::shared_ptr<SoraClient> client_;
-  RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
-
- public:
   SoraSession(boost::asio::ip::tcp::socket socket,
               std::shared_ptr<SoraClient> client,
               RTCManager* rtc_manager,
               ConnectionSettings conn_settings);
+
+ public:
+  static std::shared_ptr<SoraSession> Create(
+      boost::asio::ip::tcp::socket socket,
+      std::shared_ptr<SoraClient> client,
+      RTCManager* rtc_manager,
+      ConnectionSettings conn_settings) {
+    return std::shared_ptr<SoraSession>(
+        new SoraSession(std::move(socket), client, rtc_manager, conn_settings));
+  }
 
   void Run();
 
@@ -74,6 +74,16 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
                   std::placeholders::_1, std::placeholders::_2,
                   sp->need_eof()));
   }
+
+ private:
+  boost::asio::ip::tcp::socket socket_;
+  boost::beast::flat_buffer buffer_;
+  boost::beast::http::request<boost::beast::http::string_body> req_;
+  std::shared_ptr<void> res_;
+
+  std::shared_ptr<SoraClient> client_;
+  RTCManager* rtc_manager_;
+  ConnectionSettings conn_settings_;
 };
 
 #endif  // SORA_SESSION_H_

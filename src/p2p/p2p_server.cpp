@@ -5,13 +5,13 @@
 
 P2PServer::P2PServer(boost::asio::io_context& ioc,
                      boost::asio::ip::tcp::endpoint endpoint,
-                     std::shared_ptr<std::string const> const& doc_root,
+                     std::string doc_root,
                      RTCManager* rtc_manager,
                      ConnectionSettings conn_settings)
     : ioc_(ioc),
       acceptor_(ioc),
       socket_(ioc),
-      doc_root_(doc_root),
+      doc_root_(std::make_shared<std::string>(std::move(doc_root))),
       rtc_manager_(rtc_manager),
       conn_settings_(conn_settings) {
   boost::system::error_code ec;
@@ -60,11 +60,12 @@ void P2PServer::DoAccept() {
 void P2PServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
-  } else {
-    std::make_shared<P2PSession>(ioc_, std::move(socket_), doc_root_,
-                                 rtc_manager_, conn_settings_)
-        ->Run();
+    return;
   }
+
+  P2PSession::Create(ioc_, std::move(socket_), doc_root_, rtc_manager_,
+                     conn_settings_)
+      ->Run();
 
   DoAccept();
 }

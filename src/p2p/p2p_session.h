@@ -22,13 +22,22 @@
 
 // 1つの HTTP リクエストを処理するためのクラス
 class P2PSession : public std::enable_shared_from_this<P2PSession> {
- public:
   P2PSession(boost::asio::io_context& ioc,
              boost::asio::ip::tcp::socket socket,
              std::shared_ptr<std::string const> const& doc_root,
              RTCManager* rtc_manager,
              ConnectionSettings conn_settings);
 
+ public:
+  static std::shared_ptr<P2PSession> Create(
+      boost::asio::io_context& ioc,
+      boost::asio::ip::tcp::socket socket,
+      std::shared_ptr<std::string const> const& doc_root,
+      RTCManager* rtc_manager,
+      ConnectionSettings conn_settings) {
+    return std::shared_ptr<P2PSession>(new P2PSession(
+        ioc, std::move(socket), doc_root, rtc_manager, conn_settings));
+  }
   void Run();
 
  private:

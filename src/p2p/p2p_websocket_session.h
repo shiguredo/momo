@@ -21,16 +21,21 @@
 class P2PWebsocketSession
     : public std::enable_shared_from_this<P2PWebsocketSession>,
       public RTCMessageSender {
- public:
   P2PWebsocketSession(boost::asio::io_context& ioc,
+                      boost::asio::ip::tcp::socket socket,
                       RTCManager* rtc_manager,
                       ConnectionSettings conn_settings);
-  ~P2PWebsocketSession();
+
+ public:
   static std::shared_ptr<P2PWebsocketSession> Create(
       boost::asio::io_context& ioc,
       boost::asio::ip::tcp::socket socket,
       RTCManager* rtc_manager,
-      ConnectionSettings conn_settings);
+      ConnectionSettings conn_settings) {
+    return std::shared_ptr<P2PWebsocketSession>(new P2PWebsocketSession(
+        ioc, std::move(socket), rtc_manager, conn_settings));
+  }
+  ~P2PWebsocketSession();
 
   void Run(boost::beast::http::request<boost::beast::http::string_body> req);
 

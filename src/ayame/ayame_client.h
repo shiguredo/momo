@@ -24,10 +24,17 @@
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
                     public RTCMessageSender {
- public:
   AyameClient(boost::asio::io_context& ioc,
               RTCManager* manager,
               ConnectionSettings conn_settings);
+
+ public:
+  static std::shared_ptr<AyameClient> Create(boost::asio::io_context& ioc,
+                                             RTCManager* manager,
+                                             ConnectionSettings conn_settings) {
+    return std::shared_ptr<AyameClient>(
+        new AyameClient(ioc, manager, conn_settings));
+  }
   ~AyameClient();
 
   void Reset();
