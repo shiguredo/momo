@@ -1,19 +1,23 @@
 #ifndef SDL_RENDERER_H_
 #define SDL_RENDERER_H_
 
-#include <SDL.h>
-
-#include <boost/asio.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "api/media_stream_interface.h"
-#include "api/scoped_refptr.h"
-#include "api/video/video_frame.h"
-#include "api/video/video_sink_interface.h"
-#include "rtc/video_track_receiver.h"
-#include "rtc_base/critical_section.h"
+// SDL
+#include <SDL.h>
+
+// Boost
+#include <boost/asio.hpp>
+
+// WebRTC
+#include <api/media_stream_interface.h>
+#include <api/scoped_refptr.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_sink_interface.h>
+#include <rtc/video_track_receiver.h>
+#include <rtc_base/critical_section.h>
 
 class SDLRenderer : public VideoTrackReceiver {
  public:

@@ -1,8 +1,9 @@
 #include "nvcodec_h264_encoder.h"
 
-#include "libyuv.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "rtc_base/logging.h"
+// WebRTC
+#include <libyuv.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <rtc_base/logging.h>
 
 #include "rtc/native_buffer.h"
 
@@ -198,8 +199,8 @@ int32_t NvCodecH264Encoder::Encode(
         dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     for (int y = 0; y < frame_buffer->height(); y++) {
       memcpy((uint8_t*)map.pData + y * map.RowPitch,
-             frame_buffer->Data() + frame_buffer->raw_width() * y,
-             frame_buffer->raw_width());
+             frame_buffer->Data() + frame_buffer->RawWidth() * y,
+             frame_buffer->RawWidth());
     }
   } else {
     rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
@@ -222,7 +223,7 @@ int32_t NvCodecH264Encoder::Encode(
     NativeBuffer* native_buffer =
         dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
     cuda_->CopyNative(nv_encoder_.get(), native_buffer->Data(),
-                      native_buffer->length(), native_buffer->width(),
+                      native_buffer->Length(), native_buffer->width(),
                       native_buffer->height());
   } else {
     rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =

@@ -67,4 +67,4 @@ class DynModule {
     return f(args...);                                          \
   }
 
-#endif // DYN_DYN_H_
+#endif  // DYN_DYN_H_

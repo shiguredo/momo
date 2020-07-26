@@ -12,7 +12,6 @@
 #include <iostream>
 #include <memory>
 
-
 // WebRTC
 #include <api/video/i420_buffer.h>
 #include <modules/desktop_capture/cropped_desktop_frame.h>

@@ -1,6 +1,7 @@
 #ifndef DYN_CUDA_H_
 #define DYN_CUDA_H_
 
+// CUDA
 #include <cuda.h>
 
 #include "dyn.h"

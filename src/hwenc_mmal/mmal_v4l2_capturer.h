@@ -1,15 +1,15 @@
-#ifndef V4L2_MMAL_CAPTURE_H_
-#define V4L2_MMAL_CAPTURE_H_
+#ifndef MMAL_V4L2_CAPTURER_H_
+#define MMAL_V4L2_CAPTURER_H_
 
 extern "C" {
-#include "bcm_host.h"
-#include "interface/mmal/mmal.h"
-#include "interface/mmal/mmal_format.h"
-#include "interface/mmal/util/mmal_connection.h"
-#include "interface/mmal/util/mmal_default_components.h"
-#include "interface/mmal/util/mmal_util.h"
-#include "interface/mmal/util/mmal_util_params.h"
-#include "interface/vcos/vcos.h"
+#include <bcm_host.h>
+#include <interface/mmal/mmal.h>
+#include <interface/mmal/mmal_format.h>
+#include <interface/mmal/util/mmal_connection.h>
+#include <interface/mmal/util/mmal_default_components.h>
+#include <interface/mmal/util/mmal_util.h>
+#include <interface/mmal/util/mmal_util_params.h>
+#include <interface/vcos/vcos.h>
 }
 
 #include <stddef.h>
@@ -19,15 +19,15 @@ extern "C" {
 #include <mutex>
 #include <queue>
 
-#include "rtc_base/critical_section.h"
+// WebRTC
+#include <rtc_base/critical_section.h>
+#include <v4l2_video_capturer/v4l2_video_capturer.h>
 
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
-
-class MMALV4L2Capture : public V4L2VideoCapture {
+class MMALV4L2Capturer : public V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(ConnectionSettings cs);
-  MMALV4L2Capture();
-  ~MMALV4L2Capture();
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(ConnectionSettings cs);
+  MMALV4L2Capturer();
+  ~MMALV4L2Capturer();
 
  private:
   struct FrameParams {
@@ -39,13 +39,13 @@ class MMALV4L2Capture : public V4L2VideoCapture {
     int64_t timestamp;
   };
 
-  static rtc::scoped_refptr<V4L2VideoCapture> Create(
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       ConnectionSettings cs,
       size_t capture_device_index);
   int32_t StartCapture(ConnectionSettings cs) override;
   int32_t StopCapture() override;
-  bool useNativeBuffer() override;
+  bool UseNativeBuffer() override;
   bool OnCaptured(struct v4l2_buffer& buf) override;
   static void MMALInputCallbackFunction(MMAL_PORT_T* port,
                                         MMAL_BUFFER_HEADER_T* buffer);
@@ -72,4 +72,4 @@ class MMALV4L2Capture : public V4L2VideoCapture {
   size_t decoded_buffer_size_;
 };
 
-#endif  // V4L2_MMAL_CAPTURE_H_
+#endif  // MMAL_V4L2_CAPTURER_H_

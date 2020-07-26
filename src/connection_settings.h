@@ -2,15 +2,19 @@
 #define CONNECTION_SETTINGS_H_
 
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <string>
 
-#include "api/rtp_parameters.h"
+// nlohmann/json
+#include <nlohmann/json.hpp>
+
+// WebRTC
+#include <api/rtp_parameters.h>
+
 #include "video_codec_info.h"
 
 struct ConnectionSettings {
-  std::string camera_name = "";
 #if USE_ROS
+  std::string camera_name = "";
   bool image_compressed = false;
   std::string audio_topic_name = "";
   int audio_topic_rate = 16000;
@@ -84,7 +88,7 @@ struct ConnectionSettings {
     int width;
     int height;
   };
-  Size getSize() {
+  Size GetSize() {
     if (resolution == "QVGA") {
       return {320, 240};
     } else if (resolution == "VGA") {
@@ -108,7 +112,7 @@ struct ConnectionSettings {
   }
 
   // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
-  webrtc::DegradationPreference getPriority() {
+  webrtc::DegradationPreference GetPriority() {
     if (priority == "FRAMERATE") {
       return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
     } else if (priority == "RESOLUTION") {
@@ -119,8 +123,7 @@ struct ConnectionSettings {
 
   friend std::ostream& operator<<(std::ostream& os,
                                   const ConnectionSettings& cs) {
-    os << "no_google_stun: " << (cs.no_google_stun ? "true" : "false")
-       << "\n";
+    os << "no_google_stun: " << (cs.no_google_stun ? "true" : "false") << "\n";
     os << "no_video_device: " << (cs.no_video_device ? "true" : "false")
        << "\n";
     os << "no_audio_device: " << (cs.no_audio_device ? "true" : "false")

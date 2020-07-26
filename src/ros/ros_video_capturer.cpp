@@ -1,44 +1,47 @@
-#include "ros_video_capture.h"
+#include "ros_video_capturer.h"
 
 #include <string.h>
 #include <unistd.h>
 
-#include "api/video/i420_buffer.h"
-#include "rtc_base/log_sinks.h"
-#include "sensor_msgs/image_encodings.h"
-#include "third_party/libyuv/include/libyuv.h"
+// ROS
+#include <sensor_msgs/image_encodings.h>
 
-ROSVideoCapture::ROSVideoCapture(ConnectionSettings cs) {
+// WebRTC
+#include <api/video/i420_buffer.h>
+#include <rtc_base/log_sinks.h>
+#include <third_party/libyuv/include/libyuv.h>
+
+ROSVideoCapturer::ROSVideoCapturer(ConnectionSettings cs) {
   ros::NodeHandle nh;
   if (cs.image_compressed) {
     sub_ = nh.subscribe<sensor_msgs::CompressedImage>(
         cs.camera_name, 1,
-        boost::bind(&ROSVideoCapture::ROSCallbackCompressed, this, _1));
+        boost::bind(&ROSVideoCapturer::ROSCallbackCompressed, this, _1));
   } else {
     sub_ = nh.subscribe<sensor_msgs::Image>(
         cs.camera_name, 1,
-        boost::bind(&ROSVideoCapture::ROSCallbackRaw, this, _1));
+        boost::bind(&ROSVideoCapturer::ROSCallbackRaw, this, _1));
   }
 
   spinner_ = new ros::AsyncSpinner(1);
   spinner_->start();
 }
 
-ROSVideoCapture::~ROSVideoCapture() {
+ROSVideoCapturer::~ROSVideoCapturer() {
   Destroy();
 }
 
-void ROSVideoCapture::Destroy() {
+void ROSVideoCapturer::Destroy() {
   spinner_->stop();
 }
 
-void ROSVideoCapture::ROSCallbackRaw(const sensor_msgs::ImageConstPtr& image) {
+void ROSVideoCapturer::ROSCallbackRaw(const sensor_msgs::ImageConstPtr& image) {
   ROSCallback(image->header.stamp, image->data.data(), image->data.size(),
               image->width, image->height,
               ConvertEncodingType(image->encoding));
 }
 
-void ROSVideoCapture::ROSCallbackCompressed(
+void ROSVideoCapturer::ROSCallbackCompressed(
     const sensor_msgs::CompressedImageConstPtr& image) {
   int width, height;
   if (libyuv::MJPGSize(image->data.data(), image->data.size(), &width,
@@ -50,7 +53,7 @@ void ROSVideoCapture::ROSCallbackCompressed(
               width, height, libyuv::FOURCC_MJPG);
 }
 
-uint32_t ROSVideoCapture::ConvertEncodingType(const std::string encoding) {
+uint32_t ROSVideoCapturer::ConvertEncodingType(const std::string encoding) {
   if (encoding == sensor_msgs::image_encodings::RGB8) {
     return libyuv::FOURCC_RAW;
   } else if (encoding == sensor_msgs::image_encodings::BGR8) {
@@ -63,12 +66,12 @@ uint32_t ROSVideoCapture::ConvertEncodingType(const std::string encoding) {
   return libyuv::FOURCC_ANY;
 }
 
-void ROSVideoCapture::ROSCallback(ros::Time ros_time,
-                                  const uint8_t* sample,
-                                  size_t sample_size,
-                                  int src_width,
-                                  int src_height,
-                                  uint32_t fourcc) {
+void ROSVideoCapturer::ROSCallback(ros::Time ros_time,
+                                   const uint8_t* sample,
+                                   size_t sample_size,
+                                   int src_width,
+                                   int src_height,
+                                   uint32_t fourcc) {
   rtc::scoped_refptr<webrtc::I420Buffer> dst_buffer(
       webrtc::I420Buffer::Create(src_width, src_height));
   dst_buffer->InitializeData();

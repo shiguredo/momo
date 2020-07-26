@@ -339,28 +339,26 @@ target_sources(momo
     src/util.cpp
     src/watchdog.cpp
     src/ssl_verifier.cpp
-    src/ayame/ayame_server.cpp
-    src/ayame/ayame_websocket_client.cpp
-    src/p2p/p2p_connection.cpp
+    src/ayame/ayame_client.cpp
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
-    src/rtc/connection.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/h264_format.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
-    src/rtc/manager.cpp
     src/rtc/native_buffer.cpp
-    src/rtc/observer.cpp
+    src/rtc/peer_connection_observer.cpp
+    src/rtc/rtc_connection.cpp
+    src/rtc/rtc_manager.cpp
+    src/rtc/rtc_ssl_verifier.cpp
     src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
-    src/signal_listener.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
-    src/sora/sora_websocket_client.cpp
-    src/ws/websocket.cpp
+    src/sora/sora_client.cpp
+    src/websocket.cpp
 )
 
 target_include_directories(momo PRIVATE src)
@@ -426,7 +424,7 @@ if (USE_ROS)
     PRIVATE
       src/ros/ros_audio_device.cpp
       src/ros/ros_audio_device_module.cpp
-      src/ros/ros_video_capture.cpp
+      src/ros/ros_video_capturer.cpp
   )
   target_compile_definitions(momo PRIVATE HAVE_JPEG=1)
   target_include_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/include)
@@ -706,7 +704,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_mmal/mmal_h264_decoder.cpp
             src/hwenc_mmal/mmal_buffer.cpp
             src/hwenc_mmal/mmal_h264_encoder.cpp
-            src/hwenc_mmal/mmal_v4l2_capture.cpp
+            src/hwenc_mmal/mmal_v4l2_capturer.cpp
         )
 
         if (TARGET_OS_LINUX STREQUAL "raspberry-pi-os")

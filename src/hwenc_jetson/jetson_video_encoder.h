@@ -9,24 +9,28 @@
  *
  */
 
-#ifndef jetson_video_encoder_H_
-#define jetson_video_encoder_H_
-
-#include <linux/videodev2.h>
+#ifndef JETSON_VIDEO_ENCODER_H_
+#define JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
 #include <memory>
 #include <queue>
 
+// Linux
+#include <linux/videodev2.h>
+
+// WebRTC
+#include <api/video_codecs/video_encoder.h>
+#include <common_video/h264/h264_bitstream_parser.h>
+#include <common_video/include/bitrate_adjuster.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
+#include <rtc_base/critical_section.h>
+
+// Jetson Linux Multimedia API
 #include "NvJpegDecoder.h"
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
-#include "api/video_codecs/video_encoder.h"
-#include "common_video/h264/h264_bitstream_parser.h"
-#include "common_video/include/bitrate_adjuster.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
-#include "rtc_base/critical_section.h"
 
 class ProcessThread;
 
@@ -141,4 +145,4 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
 };
 
-#endif  // jetson_video_encoder_H_
+#endif  // JETSON_VIDEO_ENCODER_H_

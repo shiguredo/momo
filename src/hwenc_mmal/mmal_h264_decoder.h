@@ -1,7 +1,5 @@
 /*
  *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
  *  tree. An additional intellectual property rights grant can be found
  *  in the file PATENTS.  All contributing project authors may
@@ -9,23 +7,24 @@
  *
  */
 
-#ifndef MMAL_VIDEO_ENCODER_H_
-#define MMAL_VIDEO_ENCODER_H_
+#ifndef MMAL_H264_DECODER_H_
+#define MMAL_H264_DECODER_H_
 
 extern "C" {
-#include "bcm_host.h"
-#include "interface/mmal/mmal.h"
-#include "interface/mmal/mmal_format.h"
-#include "interface/mmal/util/mmal_connection.h"
-#include "interface/mmal/util/mmal_default_components.h"
-#include "interface/mmal/util/mmal_util.h"
-#include "interface/mmal/util/mmal_util_params.h"
-#include "interface/vcos/vcos.h"
+#include <bcm_host.h>
+#include <interface/mmal/mmal.h>
+#include <interface/mmal/mmal_format.h>
+#include <interface/mmal/util/mmal_connection.h>
+#include <interface/mmal/util/mmal_default_components.h>
+#include <interface/mmal/util/mmal_util.h>
+#include <interface/mmal/util/mmal_util_params.h>
+#include <interface/vcos/vcos.h>
 }
 
-#include "api/video_codecs/video_decoder.h"
-#include "common_video/include/i420_buffer_pool.h"
-#include "rtc_base/critical_section.h"
+// WebRTC
+#include <api/video_codecs/video_decoder.h>
+#include <common_video/include/i420_buffer_pool.h>
+#include <rtc_base/critical_section.h>
 
 class MMALH264Decoder : public webrtc::VideoDecoder {
  public:
@@ -72,4 +71,4 @@ class MMALH264Decoder : public webrtc::VideoDecoder {
   webrtc::I420BufferPool buffer_pool_;
 };
 
-#endif  // Jetson_VIDEO_ENCODER_H_
+#endif  // MMAL_H264_DECODER_H_

@@ -9,13 +9,16 @@
  *
  */
 
-#ifndef Jetson_VIDEO_ENCODER_H_
-#define Jetson_VIDEO_ENCODER_H_
+#ifndef JETSON_VIDEO_DECODER_H_
+#define JETSON_VIDEO_DECODER_H_
 
-#include "NvVideoDecoder.h"
-#include "api/video_codecs/video_decoder.h"
-#include "common_video/include/i420_buffer_pool.h"
-#include "rtc_base/platform_thread.h"
+// WebRTC
+#include <api/video_codecs/video_decoder.h>
+#include <common_video/include/i420_buffer_pool.h>
+#include <rtc_base/platform_thread.h>
+
+// Jetson Linux Multimedia API
+#include <NvVideoDecoder.h>
 
 class JetsonVideoDecoder : public webrtc::VideoDecoder {
  public:
@@ -59,4 +62,4 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   int dst_dma_fd_;
 };
 
-#endif  // Jetson_VIDEO_ENCODER_H_
+#endif  // JETSON_VIDEO_DECODER_H_

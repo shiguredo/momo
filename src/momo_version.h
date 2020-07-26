@@ -1,5 +1,5 @@
-#ifndef MOMO_VERSION_H_INCLUDED
-#define MOMO_VERSION_H_INCLUDED
+#ifndef MOMO_VERSION_H_
+#define MOMO_VERSION_H_
 
 #include <string>
 
@@ -10,4 +10,4 @@ class MomoVersion {
   static std::string GetEnvironmentName();
 };
 
-#endif  // MOMO_VERSION_H_INCLUDED
+#endif  // MOMO_VERSION_H_

@@ -3,7 +3,7 @@
 
 #include "dyn.h"
 
-// defs
+// CUDA
 #include <nvcuvid.h>
 
 namespace dyn {

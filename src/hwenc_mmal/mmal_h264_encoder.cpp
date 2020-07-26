@@ -14,14 +14,16 @@
 #include <limits>
 #include <string>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+// WebRTC
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <rtc_base/checks.h>
+#include <rtc_base/logging.h>
+#include <system_wrappers/include/metrics.h>
+#include <third_party/libyuv/include/libyuv/convert.h>
+#include <third_party/libyuv/include/libyuv/convert_from.h>
+#include <third_party/libyuv/include/libyuv/video_common.h>
+
 #include "mmal_buffer.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "system_wrappers/include/metrics.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
-#include "third_party/libyuv/include/libyuv/convert_from.h"
-#include "third_party/libyuv/include/libyuv/video_common.h"
 
 #define H264HWENC_HEADER_DEBUG 0
 

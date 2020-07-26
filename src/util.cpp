@@ -2,25 +2,32 @@
 
 #include <regex>
 
-// external libraries
+// CLI11
 #include <CLI/CLI.hpp>
+
+// Boost
 #include <boost/beast/version.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/preprocessor/stringize.hpp>
+
+// WebRTC
+#include <rtc_base/helpers.h>
+
+// nlohamnn/json
 #include <nlohmann/json.hpp>
 
-#include "momo_version.h"
-#include "rtc_base/helpers.h"
 #if USE_ROS
-#include "ros/ros.h"
+#include <ros/ros.h>
 #endif
+
+#include "momo_version.h"
 
 using json = nlohmann::json;
 
 #if USE_ROS
 
-void Util::parseArgs(int argc,
+void Util::ParseArgs(int argc,
                      char* argv[],
                      bool& use_test,
                      bool& use_ayame,
@@ -40,8 +47,7 @@ void Util::parseArgs(int argc,
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
-  local_nh.param<bool>("no_google_stun", cs.no_google_stun,
-                       cs.no_google_stun);
+  local_nh.param<bool>("no_google_stun", cs.no_google_stun, cs.no_google_stun);
   local_nh.param<bool>("no_video_device", cs.no_video_device,
                        cs.no_video_device);
   local_nh.param<bool>("no_audio_device", cs.no_audio_device,
@@ -119,7 +125,7 @@ void Util::parseArgs(int argc,
 
 #else
 
-void Util::parseArgs(int argc,
+void Util::ParseArgs(int argc,
                      char* argv[],
                      bool& use_test,
                      bool& use_ayame,
@@ -205,8 +211,7 @@ void Util::parseArgs(int argc,
       },
       "");
 
-  app.add_flag("--no-google-stun", cs.no_google_stun,
-               "Do not use google stun");
+  app.add_flag("--no-google-stun", cs.no_google_stun, "Do not use google stun");
   app.add_flag("--no-video-device", cs.no_video_device,
                "Do not use video device");
   app.add_flag("--no-audio-device", cs.no_audio_device,
@@ -538,28 +543,28 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
   list_codecs(info.h264_decoders);
 }
 
-std::string Util::generateRandomChars() {
-  return generateRandomChars(32);
+std::string Util::GenerateRandomChars() {
+  return GenerateRandomChars(32);
 }
 
-std::string Util::generateRandomChars(size_t length) {
+std::string Util::GenerateRandomChars(size_t length) {
   std::string result;
   rtc::CreateRandomString(length, &result);
   return result;
 }
 
-std::string Util::generateRandomNumericChars(size_t length) {
-  auto randomNumerics = []() -> char {
+std::string Util::GenerateRandomNumericChars(size_t length) {
+  auto random_numerics = []() -> char {
     const char charset[] = "0123456789";
     const size_t max_index = (sizeof(charset) - 1);
     return charset[rand() % max_index];
   };
   std::string result(length, 0);
-  std::generate_n(result.begin(), length, randomNumerics);
+  std::generate_n(result.begin(), length, random_numerics);
   return result;
 }
 
-std::string Util::iceConnectionStateToString(
+std::string Util::IceConnectionStateToString(
     webrtc::PeerConnectionInterface::IceConnectionState state) {
   switch (state) {
     case webrtc::PeerConnectionInterface::kIceConnectionNew:
@@ -585,7 +590,7 @@ std::string Util::iceConnectionStateToString(
 namespace http = boost::beast::http;
 using string_view = boost::beast::string_view;
 
-string_view Util::mimeType(string_view path) {
+string_view Util::MimeType(string_view path) {
   using boost::beast::iequals;
   auto const ext = [&path] {
     auto const pos = path.rfind(".");
@@ -639,7 +644,7 @@ string_view Util::mimeType(string_view path) {
   return "application/text";
 }
 
-http::response<http::string_body> Util::badRequest(
+http::response<http::string_body> Util::BadRequest(
     const http::request<http::string_body>& req,
     string_view why) {
   http::response<http::string_body> res{http::status::bad_request,
@@ -652,7 +657,7 @@ http::response<http::string_body> Util::badRequest(
   return res;
 }
 
-http::response<http::string_body> Util::notFound(
+http::response<http::string_body> Util::NotFound(
     const http::request<http::string_body>& req,
     string_view target) {
   http::response<http::string_body> res{http::status::not_found, req.version()};
@@ -664,7 +669,7 @@ http::response<http::string_body> Util::notFound(
   return res;
 }
 
-http::response<http::string_body> Util::serverError(
+http::response<http::string_body> Util::ServerError(
     const http::request<http::string_body>& req,
     string_view what) {
   http::response<http::string_body> res{http::status::internal_server_error,

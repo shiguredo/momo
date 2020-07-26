@@ -1,11 +1,16 @@
 #ifndef SERIAL_DATA_MANAGER_H_
 #define SERIAL_DATA_MANAGER_H_
+
+#include <memory>
 #include <vector>
 
+// Boost
 #include <boost/asio.hpp>
 
-#include "rtc/data_manager.h"
-#include "rtc_base/critical_section.h"
+// WebRTC
+#include <rtc_base/critical_section.h>
+
+#include "rtc/rtc_data_manager.h"
 #include "serial_data_channel.h"
 
 class SerialDataChannel;
@@ -32,13 +37,13 @@ class SerialDataManager : public RTCDataManager {
  private:
   SerialDataManager(boost::asio::io_context& ioc);
   bool Connect(std::string device, unsigned int rate);
-  void doCloseSerial();
-  void doRead();
-  void onRead(const boost::system::error_code& error, size_t bytes_transferred);
-  void sendLineFromSerial();
-  void startWrite(std::vector<uint8_t> v);
-  void doWrite();
-  void onWrite(const boost::system::error_code& error);
+  void DoCloseSerial();
+  void DoRead();
+  void OnRead(const boost::system::error_code& error, size_t bytes_transferred);
+  void SendLineFromSerial();
+  void StartWrite(std::vector<uint8_t> v);
+  void DoWrite();
+  void OnWrite(const boost::system::error_code& error);
 
   boost::asio::serial_port serial_port_;
   std::function<void(std::function<void()>)> post_;

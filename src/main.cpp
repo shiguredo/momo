@@ -6,24 +6,24 @@
 #include <thread>
 #include <vector>
 
-#include "rtc_base/log_sinks.h"
+// WebRTC
+#include <rtc_base/log_sinks.h>
+#include <rtc_base/string_utils.h>
 
 #if USE_ROS
 #include "ros/ros_log_sink.h"
-#include "ros/ros_video_capture.h"
-#include "signal_listener.h"
+#include "ros/ros_video_capturer.h"
 #else
 
 #if USE_SCREEN_CAPTURER
 #include "rtc/screen_video_capturer.h"
-#include "rtc_base/string_utils.h"
 #endif
 
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
-#include "hwenc_mmal/mmal_v4l2_capture.h"
+#include "hwenc_mmal/mmal_v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -37,10 +37,11 @@
 #include "sdl_renderer/sdl_renderer.h"
 #endif
 
-#include "ayame/ayame_server.h"
+#include "ayame/ayame_client.h"
 #include "connection_settings.h"
 #include "p2p/p2p_server.h"
-#include "rtc/manager.h"
+#include "rtc/rtc_manager.h"
+#include "sora/sora_client.h"
 #include "sora/sora_server.h"
 #include "util.h"
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::parseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
+  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
 
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
   rtc::LogMessage::LogTimestamps();
@@ -89,7 +90,7 @@ int main(int argc, char* argv[]) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
         return nullptr;
       }
-      auto size = cs.getSize();
+      auto size = cs.GetSize();
       rtc::scoped_refptr<ScreenVideoCapturer> capturer(
           new rtc::RefCountedObject<ScreenVideoCapturer>(
               sources[0].id, size.width, size.height, cs.framerate));
@@ -98,23 +99,23 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if USE_ROS
-    rtc::scoped_refptr<ROSVideoCapture> capturer(
-        new rtc::RefCountedObject<ROSVideoCapture>(cs));
+    rtc::scoped_refptr<ROSVideoCapturer> capturer(
+        new rtc::RefCountedObject<ROSVideoCapturer>(cs));
     return capturer;
 #else  // USE_ROS
-    auto size = cs.getSize();
+    auto size = cs.GetSize();
 #if defined(__APPLE__)
     return MacCapturer::Create(size.width, size.height, cs.framerate,
                                cs.video_device);
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
     if (cs.use_native) {
-      return MMALV4L2Capture::Create(cs);
+      return MMALV4L2Capturer::Create(cs);
     } else {
-      return V4L2VideoCapture::Create(cs);
+      return V4L2VideoCapturer::Create(cs);
     }
 #else
-    return V4L2VideoCapture::Create(cs);
+    return V4L2VideoCapturer::Create(cs);
 #endif
 #else
     return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate,
@@ -144,6 +145,8 @@ int main(int argc, char* argv[]) {
 
   {
     boost::asio::io_context ioc{1};
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
+        work_guard(ioc.get_executor());
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
     if (!cs.serial_device.empty()) {
@@ -159,15 +162,24 @@ int main(int argc, char* argv[]) {
     signals.async_wait(
         [&](const boost::system::error_code&, int) { ioc.stop(); });
 
+    std::shared_ptr<SoraClient> sora_client;
+    std::shared_ptr<AyameClient> ayame_client;
+
     if (use_sora) {
+      sora_client = SoraClient::Create(ioc, rtc_manager.get(), cs);
+
+      // SoraServer を起動しない場合と、SoraServer を起動して --auto が指定されている場合は即座に接続する。
+      // SoraServer を起動するけど --auto が指定されていない場合、SoraServer の API が呼ばれるまで接続しない。
+      if (cs.sora_port < 0 || cs.sora_port >= 0 && cs.sora_auto_connect) {
+        sora_client->Connect();
+      }
+
       if (cs.sora_port >= 0) {
         const boost::asio::ip::tcp::endpoint endpoint{
             boost::asio::ip::make_address("127.0.0.1"),
             static_cast<unsigned short>(cs.sora_port)};
-        std::make_shared<SoraServer>(ioc, endpoint, rtc_manager.get(), cs)
-            ->run();
-      } else {
-        std::make_shared<SoraServer>(ioc, rtc_manager.get(), cs)->run();
+        SoraServer::Create(ioc, endpoint, sora_client, rtc_manager.get(), cs)
+            ->Run();
       }
     }
 
@@ -175,14 +187,14 @@ int main(int argc, char* argv[]) {
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
           static_cast<unsigned short>(cs.test_port)};
-      std::make_shared<P2PServer>(
-          ioc, endpoint, std::make_shared<std::string>(cs.test_document_root),
-          rtc_manager.get(), cs)
-          ->run();
+      P2PServer::Create(ioc, endpoint, cs.test_document_root, rtc_manager.get(),
+                        cs)
+          ->Run();
     }
 
     if (use_ayame) {
-      std::make_shared<AyameServer>(ioc, rtc_manager.get(), cs)->run();
+      ayame_client = AyameClient::Create(ioc, rtc_manager.get(), cs);
+      ayame_client->Connect();
     }
 
 #if USE_SDL2
