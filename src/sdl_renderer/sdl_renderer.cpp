@@ -70,26 +70,28 @@ void SDLRenderer::SetFullScreen(bool fullscreen) {
 void SDLRenderer::PollEvent() {
   SDL_Event e;
   // 必ずメインスレッドから呼び出す
-  SDL_PollEvent(&e);
-  if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED &&
-      e.window.windowID == SDL_GetWindowID(window_)) {
-    rtc::CritScope lock(&sinks_lock_);
-    width_ = e.window.data1;
-    height_ = e.window.data2;
-    SetOutlines();
-  }
-  if (e.type == SDL_KEYUP) {
-    switch (e.key.keysym.sym) {
-      case SDLK_f:
-        SetFullScreen(!IsFullScreen());
-        break;
-      case SDLK_q:
-        std::raise(SIGTERM);
-        break;
+  while (SDL_PollEvent(&e) > 0) {
+    if (e.type == SDL_WINDOWEVENT &&
+        e.window.event == SDL_WINDOWEVENT_RESIZED &&
+        e.window.windowID == SDL_GetWindowID(window_)) {
+      rtc::CritScope lock(&sinks_lock_);
+      width_ = e.window.data1;
+      height_ = e.window.data2;
+      SetOutlines();
     }
-  }
-  if (e.type == SDL_QUIT) {
-    std::raise(SIGTERM);
+    if (e.type == SDL_KEYUP) {
+      switch (e.key.keysym.sym) {
+        case SDLK_f:
+          SetFullScreen(!IsFullScreen());
+          break;
+        case SDLK_q:
+          std::raise(SIGTERM);
+          break;
+      }
+    }
+    if (e.type == SDL_QUIT) {
+      std::raise(SIGTERM);
+    }
   }
 }
 
