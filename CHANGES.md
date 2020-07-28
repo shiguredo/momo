@@ -11,9 +11,16 @@
 
 ## develop
 
+- [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
+    - @melpon
+- [FIX] `SDL_PollEvent` の扱い方を修正
+    - @melpon
+- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
+    - @melpon
+
 ## 2020.8
 
-- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と　`ubuntu-18.04_armv8_jetson_xavier` に変更
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と `ubuntu-18.04_armv8_jetson_xavier` に変更
     - @tnoho
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
     - @hakobera
