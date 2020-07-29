@@ -11,6 +11,13 @@
 
 ## develop
 
+## 2020.8.1
+
+- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+    - @voluntas
+
+## 2020.8
+
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と　`ubuntu-18.04_armv8_jetson_xavier` に変更
     - @tnoho
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
