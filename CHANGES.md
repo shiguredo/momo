@@ -18,6 +18,11 @@
 - [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
     - @melpon
 
+## 2020.8.1
+
+- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+    - @voluntas
+
 ## 2020.8
 
 - [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と `ubuntu-18.04_armv8_jetson_xavier` に変更
