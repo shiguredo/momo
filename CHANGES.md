@@ -20,7 +20,7 @@
 
 ## 2020.8.1
 
-- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+- [UPDATE] `libwebrtc` を `M85.4183@{#}` に上げる
     - @voluntas
 
 ## 2020.8
