@@ -158,17 +158,25 @@ void Util::ParseArgs(int argc,
       },
       "");
 
-  auto is_valid_h264 = CLI::Validator(
+  auto is_valid_h26x = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_H264
-        return std::string();
-#else
         if (input == "H264") {
+#if USE_H264
+          return std::string();
+#else
           return "Not available because your device does not have this "
                  "feature.";
+#endif
+        }
+        if (input == "H265") {
+#if USE_H265
+          return std::string();
+#else
+          return "Not available because your device does not have this "
+                 "feature.";
+#endif
         }
         return std::string();
-#endif
       },
       "");
 
@@ -312,6 +320,10 @@ void Util::ParseArgs(int argc,
         ->transform(f(info.h264_encoders));
     app.add_flag("--h264-decoder", cs.h264_decoder, "H.264 Decoder")
         ->transform(f(info.h264_decoders));
+    app.add_flag("--h265-encoder", cs.h265_encoder, "H.265 Encoder")
+        ->transform(f(info.h265_encoders));
+    app.add_flag("--h265-decoder", cs.h265_decoder, "H.265 Decoder")
+        ->transform(f(info.h265_decoders));
   }
 
   auto is_serial_setting_format = CLI::Validator(
@@ -377,8 +389,8 @@ void Util::ParseArgs(int argc,
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
       ->add_set("--video-codec", cs.sora_video_codec,
-                {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
-      ->check(is_valid_h264);
+                {"", "VP8", "VP9", "AV1", "H264", "H265"}, "Video codec for send")
+      ->check(is_valid_h26x);
   sora_app->add_set("--audio-codec", cs.sora_audio_codec, {"", "OPUS"},
                     "Audio codec for send");
   sora_app
@@ -541,6 +553,12 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
   list_codecs(info.h264_encoders);
   std::cout << "  Decoder:" << std::endl;
   list_codecs(info.h264_decoders);
+  std::cout << "" << std::endl;
+  std::cout << "H265:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.h265_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.h265_decoders);
 }
 
 std::string Util::GenerateRandomChars() {

@@ -16,6 +16,7 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
   VideoCodecInfo::Type vp9_encoder_;
   VideoCodecInfo::Type av1_encoder_;
   VideoCodecInfo::Type h264_encoder_;
+  VideoCodecInfo::Type h265_encoder_;
   std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory_;
   std::unique_ptr<MomoVideoEncoderFactory> internal_encoder_factory_;
 
@@ -24,6 +25,7 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
                           VideoCodecInfo::Type vp9_encoder,
                           VideoCodecInfo::Type av1_encoder,
                           VideoCodecInfo::Type h264_encoder,
+                          VideoCodecInfo::Type h265_encoder,
                           bool simulcast);
   virtual ~MomoVideoEncoderFactory() {}
 

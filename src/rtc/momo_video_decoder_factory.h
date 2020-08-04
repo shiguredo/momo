@@ -14,13 +14,15 @@ class MomoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   VideoCodecInfo::Type vp9_decoder_;
   VideoCodecInfo::Type av1_decoder_;
   VideoCodecInfo::Type h264_decoder_;
+  VideoCodecInfo::Type h265_decoder_;
   std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory_;
 
  public:
   MomoVideoDecoderFactory(VideoCodecInfo::Type vp8_decoder,
                           VideoCodecInfo::Type vp9_decoder,
                           VideoCodecInfo::Type av1_decoder,
-                          VideoCodecInfo::Type h264_decoder);
+                          VideoCodecInfo::Type h264_decoder,
+                          VideoCodecInfo::Type h265_decoder);
   virtual ~MomoVideoDecoderFactory() {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;

@@ -217,16 +217,24 @@ async function makeOffer() {
     })
     console.log('createOffer() success in promise, SDP=', sessionDescription.sdp);
     switch (document.getElementById('codec').value) {
+      case 'H265':
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
+        break;
       case 'H264':
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H265');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
         break;
       case 'VP8':
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H265');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
         break;
       case 'VP9':
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H265');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
         break;
     }

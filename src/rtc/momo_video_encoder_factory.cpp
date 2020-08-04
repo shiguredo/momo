@@ -38,17 +38,19 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     VideoCodecInfo::Type vp9_encoder,
     VideoCodecInfo::Type av1_encoder,
     VideoCodecInfo::Type h264_encoder,
+    VideoCodecInfo::Type h265_encoder,
     bool simulcast)
     : vp8_encoder_(vp8_encoder),
       vp9_encoder_(vp9_encoder),
       av1_encoder_(av1_encoder),
-      h264_encoder_(h264_encoder) {
+      h264_encoder_(h264_encoder),
+      h265_encoder_(h265_encoder) {
 #if defined(__APPLE__)
   video_encoder_factory_ = CreateObjCEncoderFactory();
 #endif
   if (simulcast) {
     internal_encoder_factory_.reset(new MomoVideoEncoderFactory(
-        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false));
+        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, h265_encoder, false));
   }
 }
 std::vector<webrtc::SdpVideoFormat>
@@ -115,6 +117,18 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
     }
   }
 
+  // H265
+  if (h265_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_encoder_factory_ から H265 を拾ってくる
+    for (auto format : video_encoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
+  } else if (h264_encoder_ != VideoCodecInfo::Type::NotSupported) {
+    // その他のエンコーダの場合は手動で追加
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
+  }
   return supported_codecs;
 }
 
@@ -142,6 +156,14 @@ MomoVideoEncoderFactory::QueryVideoEncoder(
     } else {
       info.is_hardware_accelerated =
           h264_encoder_ != VideoCodecInfo::Type::Software;
+    }
+  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+    assert(h265_encoder_ != VideoCodecInfo::Type::NotSupported);
+    if (h265_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_encoder_factory_->QueryVideoEncoder(format);
+    } else {
+      info.is_hardware_accelerated =
+          h265_encoder_ != VideoCodecInfo::Type::Software;
     }
   } else {
     RTC_LOG(LS_ERROR) << "Unknown format: " << format.name;
@@ -216,6 +238,21 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
         return std::unique_ptr<webrtc::VideoEncoder>(
             absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
       });
+    }
+#endif
+  }
+
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(__APPLE__)
+    if (h265_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_encoder_factory_->CreateVideoEncoder(format);
+    }
+#endif
+
+#if USE_JETSON_ENCODER
+    if (h265_encoder_ == VideoCodecInfo::Type::Jetson) {
+      return std::unique_ptr<webrtc::VideoEncoder>(
+          absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
     }
 #endif
   }

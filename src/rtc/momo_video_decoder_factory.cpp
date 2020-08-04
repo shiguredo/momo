@@ -48,11 +48,13 @@ MomoVideoDecoderFactory::MomoVideoDecoderFactory(
     VideoCodecInfo::Type vp8_decoder,
     VideoCodecInfo::Type vp9_decoder,
     VideoCodecInfo::Type av1_decoder,
-    VideoCodecInfo::Type h264_decoder)
+    VideoCodecInfo::Type h264_decoder,
+    VideoCodecInfo::Type h265_decoder)
     : vp8_decoder_(vp8_decoder),
       vp9_decoder_(vp9_decoder),
       av1_decoder_(av1_decoder),
-      h264_decoder_(h264_decoder) {
+      h264_decoder_(h264_decoder),
+      h265_decoder_(h265_decoder) {
 #if defined(__APPLE__)
   video_decoder_factory_ = CreateObjCDecoderFactory();
 #endif
@@ -163,6 +165,15 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
     if (h264_decoder_ == VideoCodecInfo::Type::MMAL) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<MMALH264Decoder>());
+    }
+#endif
+  }
+
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if USE_JETSON_ENCODER
+    if (h265_decoder_ == VideoCodecInfo::Type::Jetson) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_H265));
     }
 #endif
   }

@@ -15,6 +15,7 @@ set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウ�
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
+set(USE_H265 OFF CACHE BOOL "H265 を利用するかどうか")
 set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
@@ -62,6 +63,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(TARGET_OS "macos")
   set(TARGET_ARCH "x86_64")
   set(USE_H264 ON)
+  set(USE_H265 ON)
   set(USE_SDL2 ON)
   set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
@@ -148,6 +150,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
   set(TARGET_ARCH_ARM "armv8")
   set(USE_JETSON_ENCODER ON)
   set(USE_H264 ON)
+  set(USE_H265 ON)
   set(USE_SDL2 ON)
   set(USE_LINUX_PULSE_AUDIO ON)
   set(BOOST_ROOT_DIR /root/boost)
@@ -170,6 +173,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_xavier")
   set(TARGET_ARCH_ARM "armv8")
   set(USE_JETSON_ENCODER ON)
   set(USE_H264 ON)
+  set(USE_H265 ON)
   set(USE_SDL2 ON)
   set(USE_LINUX_PULSE_AUDIO ON)
   set(BOOST_ROOT_DIR /root/boost)
@@ -378,6 +382,7 @@ target_compile_definitions(momo
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
+    USE_H265=$<BOOL:${USE_H265}>
     USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
     USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>

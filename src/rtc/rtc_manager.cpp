@@ -116,6 +116,7 @@ RTCManager::RTCManager(
                 resolve(cs.vp9_encoder, info.vp9_encoders),
                 resolve(cs.av1_encoder, info.av1_encoders),
                 resolve(cs.h264_encoder, info.h264_encoders),
+                resolve(cs.h265_encoder, info.h265_encoders),
                 conn_settings.sora_simulcast));
     media_dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
@@ -123,7 +124,8 @@ RTCManager::RTCManager(
                 resolve(cs.vp8_decoder, info.vp8_decoders),
                 resolve(cs.vp9_decoder, info.vp9_decoders),
                 resolve(cs.av1_decoder, info.av1_decoders),
-                resolve(cs.h264_decoder, info.h264_decoders)));
+                resolve(cs.h264_decoder, info.h264_decoders),
+                resolve(cs.h265_decoder, info.h265_decoders)));
   }
 
   media_dependencies.audio_mixer = nullptr;
