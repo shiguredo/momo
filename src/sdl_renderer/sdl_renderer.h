@@ -16,6 +16,7 @@
 #include <api/scoped_refptr.h>
 #include <api/video/video_frame.h>
 #include <api/video/video_sink_interface.h>
+#include <rtc/rtc_manager.h>
 #include <rtc/video_track_receiver.h>
 #include <rtc_base/critical_section.h>
 
@@ -30,6 +31,7 @@ class SDLRenderer : public VideoTrackReceiver {
   int RenderThread();
 
   void SetOutlines();
+  void SetRTCManager(RTCManager* rtc_manager);
   void AddTrack(webrtc::VideoTrackInterface* track) override;
   void RemoveTrack(webrtc::VideoTrackInterface* track) override;
 
@@ -76,6 +78,9 @@ class SDLRenderer : public VideoTrackReceiver {
  private:
   bool IsFullScreen();
   void SetFullScreen(bool fullscreen);
+  SDL_Rect GetCameraButtonDstRect();
+  SDL_Rect GetMicButtonDstRect();
+  bool CheckCollision(int x, int y, SDL_Rect rect);
   void PollEvent();
 
   rtc::CriticalSection sinks_lock_;
@@ -92,6 +97,13 @@ class SDLRenderer : public VideoTrackReceiver {
   int height_;
   int rows_;
   int cols_;
+  SDL_Texture* button_camera_enabled_texture_;
+  SDL_Texture* button_camera_disabled_texture_;
+  SDL_Texture* button_mic_enabled_texture_;
+  SDL_Texture* button_mic_disabled_texture_;
+  const SDL_Rect button_size_ = {0, 0, 100, 100};
+  RTCManager* rtc_manager_;
+  bool is_menu_displayed_;
 };
 
 #endif

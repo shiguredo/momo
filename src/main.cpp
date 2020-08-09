@@ -138,6 +138,7 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+  sdl_renderer->SetRTCManager(rtc_manager.get());
 #else
   std::unique_ptr<RTCManager> rtc_manager(
       new RTCManager(cs, std::move(capturer), nullptr));

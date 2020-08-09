@@ -20,6 +20,7 @@ set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAu
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
+set(SDL2_IMAGE_ROOT_DIR "" CACHE PATH "SDL2_image のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2_image を利用する")
 set(JSON_ROOT_DIR "" CACHE PATH "nlohmann/json のインストール先ディレクトリ")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
 set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
@@ -66,6 +67,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
   set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
+  set(SDL2_IMAGE_ROOT_DIR ${_INSTALL_DIR}/SDL2_image)
   set(JSON_ROOT_DIR ${_INSTALL_DIR}/json)
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
@@ -320,6 +322,11 @@ find_package(JSON REQUIRED)
 find_package(CLI11 REQUIRED)
 if (USE_SDL2)
   find_package(SDL2 REQUIRED)
+
+  find_package(PkgConfig REQUIRED)
+  set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH True)
+  list(APPEND CMAKE_PREFIX_PATH ${SDL2_IMAGE_ROOT_DIR})
+  pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
 endif()
 
 add_executable(momo)
@@ -392,12 +399,14 @@ if (USE_SDL2)
     PRIVATE
       _THREAD_SAFE
   )
+  target_include_directories(momo PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
 
   if (TARGET SDL2::SDL2-static)
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2-static
         SDL2::SDL2main
+        ${pkgcfg_lib_SDL2_IMAGE_SDL2_image}
     )
   else()
     target_link_directories(momo PRIVATE ${SDL2_LIBDIR})

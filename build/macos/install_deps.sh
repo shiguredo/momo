@@ -136,3 +136,29 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
   popd
 fi
 echo $SDL2_VERSION > $SDL2_VERSION_FILE
+
+# SDL2_image
+SDL2_IMAGE_VERSION_FILE="$INSTALL_DIR/sdl2_image.version"
+SDL2_IMAGE_CHANGED=0
+if [ ! -e $SDL2_IMAGE_VERSION_FILE -o "$SDL2_IMAGE_VERSION" != "`cat $SDL2_IMAGE_VERSION_FILE`" ]; then
+  SDL2_IMAGE_CHANGED=1
+fi
+
+if [ $SDL2_IMAGE_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2_IMAGE/lib/libSDL2_IMAGE.a ]; then
+  rm -rf $SOURCE_DIR/SDL2_image
+  rm -rf $BUILD_DIR/SDL2_image
+  rm -rf $INSTALL_DIR/SDL2_image
+  mkdir -p $SOURCE_DIR/SDL2_image
+  mkdir -p $BUILD_DIR/SDL2_image
+  ../../script/setup_sdl2_image.sh $SDL2_IMAGE_VERSION $SOURCE_DIR/SDL2_image
+  pushd $BUILD_DIR/SDL2_image
+    SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
+      CC="$INSTALL_DIR/llvm/clang/bin/clang --sysroot=$SYSROOT" \
+      CXX="$INSTALL_DIR/llvm/clang/bin/clang++ --sysroot=$SYSROOT -nostdinc++" \
+      SDL2_CONFIG="$BUILD_DIR/SDL2/sdl2-config" \
+      $SOURCE_DIR/SDL2_image/source/configure --disable-shared --prefix=$INSTALL_DIR/SDL2_image
+    make -j$JOBS
+    make install
+  popd
+fi
+echo $SDL2_IMAGE_VERSION > $SDL2_IMAGE_VERSION_FILE

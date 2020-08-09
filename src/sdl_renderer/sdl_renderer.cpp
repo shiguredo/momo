@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <csignal>
+#include <SDL_image.h>
 
 // WebRTC
 #include <api/video/i420_buffer.h>
@@ -21,7 +22,12 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
       width_(width),
       height_(height),
       rows_(1),
-      cols_(1) {
+      cols_(1),
+      button_camera_enabled_texture_(nullptr),
+      button_camera_disabled_texture_(nullptr),
+      button_mic_enabled_texture_(nullptr),
+      button_mic_disabled_texture_(nullptr),
+      is_menu_displayed_(false) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_Init failed " << SDL_GetError();
     return;
@@ -67,6 +73,22 @@ void SDLRenderer::SetFullScreen(bool fullscreen) {
   SDL_ShowCursor(fullscreen ? SDL_DISABLE : SDL_ENABLE);
 }
 
+SDL_Rect SDLRenderer::GetCameraButtonDstRect() {
+  int window_width, window_height;
+  SDL_GetWindowSize(window_, &window_width, &window_height);
+  return {window_width - button_size_.w - 100, window_height - button_size_.h, button_size_.w, button_size_.h};
+}
+
+SDL_Rect SDLRenderer::GetMicButtonDstRect() {
+  int window_width, window_height;
+  SDL_GetWindowSize(window_, &window_width, &window_height);
+  return {window_width - button_size_.w, window_height - button_size_.h, button_size_.w, button_size_.h};
+}
+
+bool SDLRenderer::CheckCollision(int x, int y, SDL_Rect rect) {
+  return rect.x < x && x < rect.x + rect.w && rect.y < y && y < rect.y + rect.h;
+}
+
 void SDLRenderer::PollEvent() {
   SDL_Event e;
   // 必ずメインスレッドから呼び出す
@@ -87,6 +109,35 @@ void SDLRenderer::PollEvent() {
         case SDLK_q:
           std::raise(SIGTERM);
           break;
+      }
+    }
+    if (e.type == SDL_MOUSEMOTION) {
+      int mouse_position_x, mouse_position_y;
+      SDL_GetMouseState(&mouse_position_x, &mouse_position_y);
+
+      SDL_Rect camera_button_dst_rect = GetCameraButtonDstRect();
+      SDL_Rect mic_button_dst_rect = GetMicButtonDstRect();
+      is_menu_displayed_ = CheckCollision(mouse_position_x, mouse_position_y, camera_button_dst_rect) ||
+          CheckCollision(mouse_position_x, mouse_position_y, mic_button_dst_rect);
+    }
+    if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
+      int mouse_position_x, mouse_position_y;
+      SDL_GetMouseState(&mouse_position_x, &mouse_position_y);
+
+      if (is_menu_displayed_) {
+        SDL_Rect camera_button_dst_rect = GetCameraButtonDstRect();
+        if (CheckCollision(mouse_position_x, mouse_position_y, camera_button_dst_rect)) {
+          if (rtc_manager_ != nullptr) {
+            rtc_manager_->SetVideoEnabled(!rtc_manager_->IsVideoEnabled());
+          }
+        }
+
+        SDL_Rect mic_button_dst_rect = GetMicButtonDstRect();
+        if (CheckCollision(mouse_position_x, mouse_position_y, mic_button_dst_rect)) {
+          if (rtc_manager_ != nullptr) {
+            rtc_manager_->SetAudioEnabled(!rtc_manager_->IsAudioEnabled());
+          }
+        }
       }
     }
     if (e.type == SDL_QUIT) {
@@ -146,9 +197,34 @@ int SDLRenderer::RenderThread() {
         // flip (自画像とか？)
         //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
         SDL_RenderCopy(renderer_, texture, &image_rect, &draw_rect);
-
         SDL_DestroyTexture(texture);
       }
+
+      // ボタンの texture を1度のみ初期化する
+      if (button_camera_enabled_texture_ == nullptr) {
+        SDL_Surface* button_camera_enabled_surface_ = IMG_Load("./html/camera-enabled.png");
+        SDL_Surface* button_camera_disabled_surface_ = IMG_Load("./html/camera-disabled.png");
+        SDL_Surface* button_mic_enabled_surface_ = IMG_Load("./html/mic-enabled.png");
+        SDL_Surface* button_mic_disabled_surface_ = IMG_Load("./html/mic-disabled.png");
+
+        button_camera_enabled_texture_ = SDL_CreateTextureFromSurface(renderer_, button_camera_enabled_surface_);
+        button_camera_disabled_texture_ = SDL_CreateTextureFromSurface(renderer_, button_camera_disabled_surface_);
+        button_mic_enabled_texture_ = SDL_CreateTextureFromSurface(renderer_, button_mic_enabled_surface_);
+        button_mic_disabled_texture_ = SDL_CreateTextureFromSurface(renderer_, button_mic_disabled_surface_);
+
+        SDL_FreeSurface(button_camera_enabled_surface_);
+        SDL_FreeSurface(button_camera_disabled_surface_);
+        SDL_FreeSurface(button_mic_enabled_surface_);
+        SDL_FreeSurface(button_mic_disabled_surface_);
+      }
+
+      if (is_menu_displayed_) {
+        SDL_Rect camera_button_dst_rect = GetCameraButtonDstRect();
+        SDL_RenderCopy(renderer_, rtc_manager_->IsVideoEnabled() ? button_camera_enabled_texture_ : button_camera_disabled_texture_, &button_size_, &camera_button_dst_rect);
+        SDL_Rect mic_button_dst_rect = GetMicButtonDstRect();
+        SDL_RenderCopy(renderer_, rtc_manager_->IsAudioEnabled() ? button_mic_enabled_texture_ : button_mic_disabled_texture_, &button_size_, &mic_button_dst_rect);
+      }
+
       SDL_RenderPresent(renderer_);
 
       if (dispatch_) {
@@ -334,6 +410,10 @@ void SDLRenderer::SetOutlines() {
   }
   rows_ = rows;
   cols_ = cols;
+}
+
+void SDLRenderer::SetRTCManager(RTCManager* rtc_manager) {
+  rtc_manager_ = rtc_manager;
 }
 
 void SDLRenderer::AddTrack(webrtc::VideoTrackInterface* track) {

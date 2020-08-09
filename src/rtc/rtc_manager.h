@@ -25,6 +25,10 @@ class RTCManager {
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
   void InitTracks(RTCConnection* conn);
+  bool IsAudioEnabled();
+  bool IsVideoEnabled();
+  void SetAudioEnabled(bool enabled);
+  void SetVideoEnabled(bool enabled);
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;

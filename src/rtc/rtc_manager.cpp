@@ -258,3 +258,23 @@ void RTCManager::InitTracks(RTCConnection* conn) {
     }
   }
 }
+
+bool RTCManager::IsAudioEnabled() {
+  return (audio_track_ != nullptr) && audio_track_->enabled();
+}
+
+bool RTCManager::IsVideoEnabled() {
+  return (video_track_ != nullptr) && video_track_->enabled();
+}
+
+void RTCManager::SetAudioEnabled(bool enabled) {
+  if (audio_track_) {
+    audio_track_->set_enabled(enabled);
+  }
+}
+
+void RTCManager::SetVideoEnabled(bool enabled) {
+  if (video_track_) {
+    video_track_->set_enabled(enabled);
+  }
+}
