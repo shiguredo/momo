@@ -9,6 +9,13 @@
 - FIX
     - バグ修正
 
+## feature/h265
+
+- [CHANGE] `libwebrtc` を `M85.4183@{#2}` の H.265 対応版に上げる
+    - @tnoho
+- [ADD] macOS での H265 対応を追加
+    - @tnoho
+
 ## develop
 
 - [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
