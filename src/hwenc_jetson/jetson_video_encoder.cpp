@@ -561,7 +561,6 @@ int32_t JetsonVideoEncoder::Encode(
     v4l2_buf.memory = V4L2_MEMORY_DMABUF;
     encoder_->output_plane.mapOutputBuffers(v4l2_buf, output_plane_fd_[v4l2_buf.index]);
 
-
     NvBufferRect src_rect, dest_rect;
     src_rect.top = 0;
     src_rect.left = 0;
@@ -632,6 +631,13 @@ int32_t JetsonVideoEncoder::Encode(
   v4l2_buf.timestamp.tv_usec =
       input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
 
+  if (use_mjpeg_) {
+    if (encoder_->output_plane.unmapOutputBuffers(v4l2_buf.index,
+                                                  output_plane_fd_[v4l2_buf.index]) < 0)
+    {
+      RTC_LOG(LS_ERROR) << "Failed to unmapOutputBuffers at encoder output_plane";
+    }
+  }
   if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
     return WEBRTC_VIDEO_CODEC_ERROR;
