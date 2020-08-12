@@ -84,21 +84,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   int32_t JetsonConfigure();
   void JetsonRelease();
-  void SendEOS(NvV4l2Element* element);
-  static bool ConvertFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
-                                              NvBuffer* buffer,
-                                              NvBuffer* shared_buffer,
-                                              void* data);
-  bool ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
-                               NvBuffer* buffer,
-                               NvBuffer* shared_buffer);
-  static bool EncodeOutputCallbackFunction(struct v4l2_buffer* v4l2_buf,
-                                           NvBuffer* buffer,
-                                           NvBuffer* shared_buffer,
-                                           void* data);
-  bool EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
-                            NvBuffer* buffer,
-                            NvBuffer* shared_buffer);
+  void SendEOS();
   static bool EncodeFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
                                              NvBuffer* buffer,
                                              NvBuffer* shared_buffer,
@@ -113,7 +99,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
   NvJPEGDecoder* decoder_;
-  NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
   std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
   uint32_t framerate_;
@@ -137,10 +122,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   rtc::CriticalSection frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
-  std::mutex enc0_buffer_mtx_;
-  std::condition_variable enc0_buffer_cond_;
-  bool enc0_buffer_ready_ = false;
-  std::queue<NvBuffer*>* enc0_buffer_queue_;
+  int output_plane_fd_[32];
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
 };

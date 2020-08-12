@@ -9,6 +9,11 @@
 - FIX
     - バグ修正
 
+## feature/new-converter
+
+- [CHANGE] Jetson の NvVideoConverter を NvBufferTransform に変更
+    - @tnoho
+
 ## develop
 
 - [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
