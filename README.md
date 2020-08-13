@@ -172,9 +172,6 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
-- Jetson AGX Xavier 対応
-- Jetson Xavier NX 対応
-- Jetson Nano
 - Raspberry Pi 4
     - [ ] H.265 ハードウェアデコーダ対応
 - AV1 対応
@@ -190,7 +187,6 @@ limitations under the License.
         - Windows 10
 - Intel Media SDK 対応
     - [ ] VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
-- Simulcast 対応
 - 録画対応
     - MP4 形式での出力
 - ROS Melodic 対応
