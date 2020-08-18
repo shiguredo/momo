@@ -322,11 +322,6 @@ find_package(JSON REQUIRED)
 find_package(CLI11 REQUIRED)
 if (USE_SDL2)
   find_package(SDL2 REQUIRED)
-
-  find_package(PkgConfig REQUIRED)
-  set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH True)
-  list(APPEND CMAKE_PREFIX_PATH ${SDL2_IMAGE_ROOT_DIR})
-  pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
 endif()
 
 add_executable(momo)
@@ -399,14 +394,14 @@ if (USE_SDL2)
     PRIVATE
       _THREAD_SAFE
   )
-  target_include_directories(momo PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
+  target_include_directories(momo PRIVATE ${SDL2_IMAGE_ROOT_DIR}/include/SDL2)
 
   if (TARGET SDL2::SDL2-static)
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2-static
         SDL2::SDL2main
-        ${pkgcfg_lib_SDL2_IMAGE_SDL2_image}
+        ${SDL2_IMAGE_ROOT_DIR}/lib/libSDL2_image.a
     )
   else()
     target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
