@@ -649,6 +649,7 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
+            src/hwenc_jetson/jetson_buffer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp

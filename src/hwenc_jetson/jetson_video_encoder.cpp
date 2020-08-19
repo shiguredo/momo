@@ -48,7 +48,6 @@ struct nal_entry {
 
 JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
     : callback_(nullptr),
-      decoder_(nullptr),
       encoder_(nullptr),
       configured_framerate_(30),
       configured_width_(0),
@@ -122,9 +121,6 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
           ? webrtc::VideoContentType::SCREENSHARE
           : webrtc::VideoContentType::UNSPECIFIED;
 
-  decoder_ = NvJPEGDecoder::createJPEGDecoder("jpegdec");
-  INIT_ERROR(!decoder_, "Failed to createJPEGDecoder");
-
   gof_.SetGofInfoVP9(webrtc::TemporalStructureMode::kTemporalStructureMode1);
   gof_idx_ = 0;
   RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
@@ -134,10 +130,6 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
 int32_t JetsonVideoEncoder::Release() {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   JetsonRelease();
-  if (decoder_) {
-    delete decoder_;
-    decoder_ = nullptr;
-  }
   RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -260,6 +252,12 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     INIT_ERROR(ret < 0, "Failed to qBuffer at encoder capture_plane");
   }
 
+  conv_thread_quit_ = false;
+  conv_thread_.reset(
+      new rtc::PlatformThread(JetsonVideoEncoder::ConverterThreadFunction, this,
+                              "ConverterThread", rtc::kHighPriority));
+  conv_thread_->Start();
+
   configured_framerate_ = framerate_;
   configured_width_ = width_;
   configured_height_ = height_;
@@ -270,6 +268,14 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 void JetsonVideoEncoder::JetsonRelease() {
   if (!encoder_)
     return;
+  if (conv_thread_) {
+    {
+      rtc::CritScope cs(&conv_crit_sect_);
+      conv_thread_quit_ = true;
+    }
+    conv_thread_->Stop();
+    conv_thread_.reset();
+  }
   SendEOS();
   encoder_->capture_plane.waitForDQThread(2000);
   encoder_->capture_plane.deinitPlane();
@@ -313,6 +319,103 @@ void JetsonVideoEncoder::SendEOS() {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
     }
   }
+}
+
+void JetsonVideoEncoder::ConverterThreadFunction(void* obj) {
+  JetsonVideoEncoder* _this = static_cast<JetsonVideoEncoder*>(obj);
+  while (_this->ConverterProcess()) {
+  }
+}
+
+bool JetsonVideoEncoder::ConverterProcess() {
+  rtc::CritScope cs(&conv_crit_sect_);
+
+  if (conv_thread_quit_) {
+    return false;
+  }
+
+  if (!jetson_buffers_.empty()) {
+    std::shared_ptr<JetsonBuffer> jetson_buffer = jetson_buffers_.front();
+    jetson_buffers_.pop();
+
+    EncodeStart(jetson_buffer->GetFd(), jetson_buffer->GetTimestampUs());
+  }
+
+  usleep(0);
+  return true;
+}
+
+int32_t JetsonVideoEncoder::EncodeStart(int input_fd, uint64_t timestamp_us) {
+  struct v4l2_buffer v4l2_buf;
+  struct v4l2_plane planes[MAX_PLANES];
+
+  memset(&v4l2_buf, 0, sizeof(v4l2_buf));
+  memset(planes, 0, sizeof(planes));
+  v4l2_buf.m.planes = planes;
+
+  NvBuffer* buffer;
+
+  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " output_plane.getNumBuffers: "
+                      << encoder_->output_plane.getNumBuffers()
+                      << " output_plane.getNumQueuedBuffers: "
+                      << encoder_->output_plane.getNumQueuedBuffers();
+
+  if (encoder_->output_plane.getNumQueuedBuffers() ==
+      encoder_->output_plane.getNumBuffers()) {
+    if (encoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
+      RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  } else {
+    buffer = encoder_->output_plane.getNthBuffer(
+        encoder_->output_plane.getNumQueuedBuffers());
+    v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
+    encoder_->output_plane.mapOutputBuffers(v4l2_buf, output_plane_fd_[v4l2_buf.index]);
+  }
+
+  v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+  v4l2_buf.memory = V4L2_MEMORY_DMABUF;
+  v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
+  v4l2_buf.timestamp.tv_sec = timestamp_us / rtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_usec = timestamp_us % rtc::kNumMicrosecsPerSec;
+
+  planes[0].bytesused = 1234;
+
+  if (raw_width_ != configured_width_ || raw_height_ != configured_height_) {
+    NvBufferRect src_rect, dest_rect;
+    src_rect.top = 0;
+    src_rect.left = 0;
+    src_rect.width = raw_width_;
+    src_rect.height = raw_height_;
+    dest_rect.top = 0;
+    dest_rect.left = 0;
+    dest_rect.width = configured_width_;
+    dest_rect.height = configured_height_;
+
+    NvBufferTransformParams transform_params;
+    memset(&transform_params, 0, sizeof(transform_params));
+    transform_params.transform_flag = NVBUFFER_TRANSFORM_FILTER;
+    transform_params.transform_flip = NvBufferTransform_None;
+    transform_params.transform_filter = NvBufferTransform_Filter_Smart;
+    transform_params.src_rect = src_rect;
+    transform_params.dst_rect = dest_rect;
+    if (NvBufferTransform(input_fd, output_plane_fd_[v4l2_buf.index],
+                          &transform_params) == -1) {
+      RTC_LOG(LS_ERROR) << "Failed to NvBufferTransform";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    planes[0].m.fd = output_plane_fd_[v4l2_buf.index];
+  } else {
+    planes[0].m.fd = input_fd;
+  }
+
+
+  if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
+    RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 bool JetsonVideoEncoder::EncodeFinishedCallbackFunction(
@@ -476,13 +579,19 @@ int32_t JetsonVideoEncoder::Encode(
   }
 
   int fd = 0;
+  std::unique_ptr<NvJPEGDecoder> decoder;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     use_mjpeg_ = true;
     NativeBuffer* native_buffer =
         dynamic_cast<NativeBuffer*>(frame_buffer.get());
-    int ret = decoder_->decodeToFd(fd, (unsigned char*)native_buffer->Data(),
+    decoder.reset(NvJPEGDecoder::createJPEGDecoder("jpegdec"));
+    if (!decoder) {
+      RTC_LOG(LS_ERROR) << "Failed to createJPEGDecoder";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    int ret = decoder->decodeToFd(fd, (unsigned char*)native_buffer->Data(),
                                    native_buffer->Length(), decode_pixfmt_,
                                    raw_width_, raw_height_);
     if (ret < 0) {
@@ -499,6 +608,7 @@ int32_t JetsonVideoEncoder::Encode(
                      << "x" << configured_height_ << " to "
                      << frame_buffer->width() << "x" << frame_buffer->height()
                      << " framerate:" << framerate_;
+    rtc::CritScope lock(&conv_crit_sect_);
     JetsonRelease();
     if (JetsonConfigure() != WEBRTC_VIDEO_CODEC_OK) {
       RTC_LOG(LS_ERROR) << "Failed to JetsonConfigure";
@@ -521,6 +631,7 @@ int32_t JetsonVideoEncoder::Encode(
 
   SetFramerate(framerate_);
   SetBitrateBps(bitrate_adjuster_->GetAdjustedBitrateBps());
+
   {
     rtc::CritScope lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
@@ -530,117 +641,10 @@ int32_t JetsonVideoEncoder::Encode(
         input_frame.rotation(), input_frame.color_space()));
   }
 
-  struct v4l2_buffer v4l2_buf;
-  struct v4l2_plane planes[MAX_PLANES];
-
-  memset(&v4l2_buf, 0, sizeof(v4l2_buf));
-  memset(planes, 0, sizeof(planes));
-  v4l2_buf.m.planes = planes;
-
-  NvBuffer* buffer;
-
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " output_plane.getNumBuffers: "
-                      << encoder_->output_plane.getNumBuffers()
-                      << " output_plane.getNumQueuedBuffers: "
-                      << encoder_->output_plane.getNumQueuedBuffers();
-
-  if (encoder_->output_plane.getNumQueuedBuffers() ==
-      encoder_->output_plane.getNumBuffers()) {
-    if (encoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
-      RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-  } else {
-    buffer = encoder_->output_plane.getNthBuffer(
-        encoder_->output_plane.getNumQueuedBuffers());
-    v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
-  }
-
-  if (use_mjpeg_) {
-    v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-    v4l2_buf.memory = V4L2_MEMORY_DMABUF;
-    encoder_->output_plane.mapOutputBuffers(v4l2_buf, output_plane_fd_[v4l2_buf.index]);
-
-    NvBufferRect src_rect, dest_rect;
-    src_rect.top = 0;
-    src_rect.left = 0;
-    src_rect.width = raw_width_;
-    src_rect.height = raw_height_;
-    dest_rect.top = 0;
-    dest_rect.left = 0;
-    dest_rect.width = configured_width_;
-    dest_rect.height = configured_height_;
-
-    NvBufferTransformParams transform_params;
-    /* Indicates which of the transform parameters are valid */
-    memset(&transform_params,0,sizeof(transform_params));
-    transform_params.transform_flag = NVBUFFER_TRANSFORM_FILTER;
-    transform_params.transform_flip = NvBufferTransform_None;
-    transform_params.transform_filter = NvBufferTransform_Filter_Smart;
-    transform_params.src_rect = src_rect;
-    transform_params.dst_rect = dest_rect;
-    if (NvBufferTransform(fd, output_plane_fd_[v4l2_buf.index],
-                          &transform_params) == -1) {
-      RTC_LOG(LS_ERROR) << "Failed to NvBufferTransform";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    
-    planes[0].m.fd = output_plane_fd_[v4l2_buf.index];
-    planes[0].bytesused = 1234;
-  } else {
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer =
-        frame_buffer->ToI420();
-    for (uint32_t i = 0; i < buffer->n_planes; i++) {
-      const uint8_t* source_data;
-      int source_stride;
-      if (i == 0) {
-        source_data = i420_buffer->DataY();
-        source_stride = i420_buffer->StrideY();
-      } else if (i == 1) {
-        source_data = i420_buffer->DataU();
-        source_stride = i420_buffer->StrideU();
-      } else if (i == 2) {
-        source_data = i420_buffer->DataV();
-        source_stride = i420_buffer->StrideV();
-      } else {
-        break;
-      }
-      NvBuffer::NvBufferPlane& plane = buffer->planes[i];
-      std::streamsize bytes_to_read = plane.fmt.bytesperpixel * plane.fmt.width;
-      uint8_t* input_data = plane.data;
-      plane.bytesused = 0;
-      for (uint32_t j = 0; j < plane.fmt.height; j++) {
-        memcpy(input_data, source_data + (source_stride * j), bytes_to_read);
-        input_data += plane.fmt.stride;
-      }
-      plane.bytesused = plane.fmt.stride * plane.fmt.height;
-    }
-
-    for (int i = 0; i < MAX_PLANES; i++) {
-      if (NvBufferMemSyncForDevice(buffer->planes[i].fd, i,
-                                   (void**)&buffer->planes[i].data) < 0) {
-        RTC_LOG(LS_ERROR) << "Failed to NvBufferMemSyncForDevice";
-        return WEBRTC_VIDEO_CODEC_ERROR;
-      }
-    }
-  }
-
-  v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
-  v4l2_buf.timestamp.tv_sec =
-      input_frame.timestamp_us() / rtc::kNumMicrosecsPerSec;
-  v4l2_buf.timestamp.tv_usec =
-      input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
-
-  if (use_mjpeg_) {
-    if (encoder_->output_plane.unmapOutputBuffers(v4l2_buf.index,
-                                                  output_plane_fd_[v4l2_buf.index]) < 0)
-    {
-      RTC_LOG(LS_ERROR) << "Failed to unmapOutputBuffers at encoder output_plane";
-    }
-  }
-  if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
-    RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
-    return WEBRTC_VIDEO_CODEC_ERROR;
+  {
+    rtc::CritScope lock(&conv_crit_sect_);
+    jetson_buffers_.push(std::make_shared<JetsonBuffer>(
+        fd, input_frame.timestamp_us(), std::move(decoder)));
   }
 
   return WEBRTC_VIDEO_CODEC_OK;

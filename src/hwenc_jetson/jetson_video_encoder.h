@@ -26,11 +26,14 @@
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <rtc_base/critical_section.h>
+#include <rtc_base/platform_thread.h>
 
 // Jetson Linux Multimedia API
 #include "NvJpegDecoder.h"
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
+
+#include "jetson_buffer.h"
 
 class ProcessThread;
 
@@ -85,6 +88,9 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t JetsonConfigure();
   void JetsonRelease();
   void SendEOS();
+  static void ConverterThreadFunction(void* obj);
+  bool ConverterProcess();
+  int32_t EncodeStart(int input_fd, uint64_t timestamp_us);
   static bool EncodeFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
                                              NvBuffer* buffer,
                                              NvBuffer* shared_buffer,
@@ -98,7 +104,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
-  NvJPEGDecoder* decoder_;
   NvVideoEncoder* encoder_;
   std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
   uint32_t framerate_;
@@ -114,6 +119,12 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t configured_width_;
   int32_t configured_height_;
   bool use_mjpeg_;
+
+
+  std::unique_ptr<rtc::PlatformThread> conv_thread_;
+  rtc::CriticalSection conv_crit_sect_;
+  bool conv_thread_quit_ RTC_GUARDED_BY(conv_crit_sect_);
+  std::queue<std::shared_ptr<JetsonBuffer>> jetson_buffers_;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
