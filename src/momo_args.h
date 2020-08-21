@@ -110,16 +110,6 @@ struct MomoArgs {
     auto height = std::atoi(resolution.substr(pos + 1).c_str());
     return {std::max(16, width), std::max(16, height)};
   }
-
-  // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
-  webrtc::DegradationPreference GetPriority() {
-    if (priority == "FRAMERATE") {
-      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
-    } else if (priority == "RESOLUTION") {
-      return webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
-    }
-    return webrtc::DegradationPreference::BALANCED;
-  }
 };
 
 #endif
