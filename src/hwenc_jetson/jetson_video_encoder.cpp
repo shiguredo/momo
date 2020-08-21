@@ -149,7 +149,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     INIT_ERROR(ret < 0, "Failed to converter setOutputPlaneFormat");
 
     ret = converter_->setCapturePlaneFormat(
-        V4L2_PIX_FMT_YUV420M, width_, height_, V4L2_NV_BUFFER_LAYOUT_PITCH);
+        V4L2_PIX_FMT_YUV420M, width_, height_, V4L2_NV_BUFFER_LAYOUT_BLOCKLINEAR);
     INIT_ERROR(ret < 0, "Failed to converter setCapturePlaneFormat");
 
     ret = converter_->setCropRect(0, 0, raw_width_, raw_height_);
@@ -158,10 +158,22 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     ret = converter_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false,
                                               false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
-
-    ret = converter_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 10, false,
-                                               false);
-    INIT_ERROR(ret < 0, "Failed to setupPlane at converter capture_plane");
+    
+    NvBufferCreateParams create_params = {0};
+    create_params.width = width_;
+    create_params.height = height_;
+    create_params.layout = NvBufferLayout_BlockLinear;
+    create_params.payloadType = NvBufferPayload_SurfArray;
+    create_params.colorFormat = NvBufferColorFormat_YUV420;
+    create_params.nvbuf_tag = NvBufferTag_VIDEO_ENC;
+    for (int i = 0; i < CONVERTER_CAPTURE_NUM; i++)
+    {
+      ret = NvBufferCreateEx(&dmabuff_fd[i], &create_params);
+      INIT_ERROR(ret < 0, "Failed to NvBufferCreateEx at converter");
+    }
+    
+    ret = converter_->capture_plane.reqbufs(V4L2_MEMORY_DMABUF, CONVERTER_CAPTURE_NUM);
+    INIT_ERROR(ret < 0, "Failed to reqbufs at converter capture_plane");
 
     ret = converter_->output_plane.setStreamStatus(true);
     INIT_ERROR(ret < 0, "Failed to setStreamStatus at converter output_plane");
@@ -241,14 +253,14 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 
   if (use_mjpeg_) {
     ret =
-        encoder_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 10, false, false);
+        encoder_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
   } else {
-    ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 10, true, false);
+    ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
   }
 
-  ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 10, true, false);
+  ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
   INIT_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
   ret = encoder_->subscribeEvent(V4L2_EVENT_EOS, 0, 0);
@@ -263,14 +275,19 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   if (use_mjpeg_) {
     converter_->capture_plane.startDQThread(this);
 
-    for (uint32_t i = 0; i < converter_->capture_plane.getNumBuffers(); i++) {
+    for (uint32_t i = 0; i < CONVERTER_CAPTURE_NUM; i++) {
       struct v4l2_buffer v4l2_buf;
       struct v4l2_plane planes[MAX_PLANES];
+
       memset(&v4l2_buf, 0, sizeof(v4l2_buf));
       memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
+
       v4l2_buf.index = i;
       v4l2_buf.m.planes = planes;
-      ret = converter_->capture_plane.qBuffer(v4l2_buf, NULL);
+      v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      v4l2_buf.memory = V4L2_MEMORY_DMABUF;
+      v4l2_buf.m.planes[0].m.fd = dmabuff_fd[i];
+      ret = converter_->capture_plane.qBuffer(v4l2_buf, nullptr);
       INIT_ERROR(ret < 0, "Failed to qBuffer at converter capture_plane");
     }
 
@@ -321,6 +338,13 @@ void JetsonVideoEncoder::JetsonRelease() {
   encoder_ = nullptr;
   if (converter_) {
     converter_->capture_plane.waitForDQThread(2000);
+    for(int i = 0; i < CONVERTER_CAPTURE_NUM; i++)
+    {
+      if(dmabuff_fd[i] != 0)
+      {
+        NvBufferDestroy(dmabuff_fd[i]);
+      }
+    }
     delete converter_;
     converter_ = nullptr;
   }
@@ -369,6 +393,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
     RTC_LOG(LS_ERROR) << __FUNCTION__ << " v4l2_buf is null";
     return false;
   }
+  
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
     while (enc0_buffer_queue_->empty()) {
@@ -384,10 +409,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
 
   enc0_qbuf.index = enc0_buffer->index;
   enc0_qbuf.m.planes = planes;
-
-  for (int i = 0; i < MAX_PLANES; i++) {
-    enc0_qbuf.m.planes[i].bytesused = v4l2_buf->m.planes[i].bytesused;
-  }
+  buffer->planes[0].fd = dmabuff_fd[v4l2_buf->index];
 
   enc0_qbuf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   enc0_qbuf.timestamp.tv_sec = v4l2_buf->timestamp.tv_sec;
@@ -432,22 +454,19 @@ bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
 
   conv_qbuf.index = shared_buffer->index;
   conv_qbuf.m.planes = planes;
-
+  conv_qbuf.m.planes[0].m.fd = dmabuff_fd[shared_buffer->index];
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
+    enc0_buffer_queue_->push(buffer);
+
     if (converter_->capture_plane.qBuffer(conv_qbuf, nullptr) < 0) {
       RTC_LOG(LS_ERROR) << __FUNCTION__
                         << "Failed to qBuffer at converter capture_plane";
       return false;
     }
-    enc0_buffer_queue_->push(buffer);
+
     enc0_buffer_ready_ = true;
     enc0_buffer_cond_.notify_all();
-  }
-
-  if (conv_qbuf.m.planes[0].bytesused == 0) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
-    return false;
   }
 
   return true;
@@ -469,6 +488,7 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     RTC_LOG(LS_INFO) << __FUNCTION__ << " v4l2_buf is null";
     return false;
   }
+
   if (buffer->planes[0].bytesused == 0) {
     RTC_LOG(LS_INFO) << __FUNCTION__ << " buffer size is zero";
     return false;

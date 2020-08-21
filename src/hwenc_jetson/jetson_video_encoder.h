@@ -32,6 +32,8 @@
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
 
+#define CONVERTER_CAPTURE_NUM 2
+
 class ProcessThread;
 
 class JetsonVideoEncoder : public webrtc::VideoEncoder {
@@ -131,6 +133,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t configured_width_;
   int32_t configured_height_;
   bool use_mjpeg_;
+  int dmabuff_fd[CONVERTER_CAPTURE_NUM];
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
