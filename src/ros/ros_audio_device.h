@@ -24,11 +24,15 @@
 #include <rtc_base/system/file_wrapper.h>
 #include <rtc_base/time_utils.h>
 
-#include "connection_settings.h"
+struct ROSAudioDeviceConfig {
+  std::string audio_topic_name = "";
+  int audio_topic_rate = 16000;
+  int audio_topic_ch = 1;
+};
 
 class ROSAudioDevice : public webrtc::AudioDeviceGeneric {
  public:
-  ROSAudioDevice(ConnectionSettings conn_settings);
+  ROSAudioDevice(ROSAudioDeviceConfig config);
   ~ROSAudioDevice() override;
 
   // Retrieve the currently utilized audio layer
@@ -127,7 +131,7 @@ class ROSAudioDevice : public webrtc::AudioDeviceGeneric {
   bool RecROSCallback(const audio_common_msgs::AudioDataConstPtr& msg);
   void PlayThreadProcess();
 
-  ConnectionSettings _conn_settings;
+  ROSAudioDeviceConfig _config;
 
   int32_t _playout_index;
   int32_t _record_index;

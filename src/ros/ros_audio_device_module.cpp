@@ -20,17 +20,17 @@
 #include <system_wrappers/include/metrics.h>
 
 ROSAudioDeviceModule::ROSAudioDeviceModule(
-    ConnectionSettings conn_settings,
+    ROSAudioDeviceModuleConfig config,
     webrtc::TaskQueueFactory* task_queue_factory)
-    : _conn_settings(conn_settings), task_queue_factory_(task_queue_factory) {
+    : config_(std::move(config)), task_queue_factory_(task_queue_factory) {
   RTC_LOG(INFO) << "Current setting use ROS Audio";
 }
 
 rtc::scoped_refptr<webrtc::AudioDeviceModule> ROSAudioDeviceModule::Create(
-    ConnectionSettings conn_settings,
+    ROSAudioDeviceModuleConfig config,
     webrtc::TaskQueueFactory* task_queue_factory) {
   RTC_LOG(INFO) << __FUNCTION__;
-  return new rtc::RefCountedObject<ROSAudioDeviceModule>(conn_settings,
+  return new rtc::RefCountedObject<ROSAudioDeviceModule>(std::move(config),
                                                          task_queue_factory);
 }
 
@@ -61,7 +61,8 @@ int32_t ROSAudioDeviceModule::Init() {
 
   audio_device_buffer_.reset(
       new webrtc::AudioDeviceBuffer(task_queue_factory_));
-  audio_device_.reset(new ROSAudioDevice(_conn_settings));
+  ROSAudioDeviceConfig config = config_;
+  audio_device_.reset(new ROSAudioDevice(config));
   RTC_CHECK(audio_device_);
 
   this->AttachAudioBuffer();

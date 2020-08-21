@@ -15,28 +15,30 @@
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
 
-#include "connection_settings.h"
 #include "p2p_websocket_session.h"
 #include "rtc/rtc_manager.h"
 #include "util.h"
+
+struct P2PSessionConfig {
+  bool no_google_stun = false;
+  std::string doc_root;
+};
 
 // 1つの HTTP リクエストを処理するためのクラス
 class P2PSession : public std::enable_shared_from_this<P2PSession> {
   P2PSession(boost::asio::io_context& ioc,
              boost::asio::ip::tcp::socket socket,
-             std::shared_ptr<std::string const> const& doc_root,
              RTCManager* rtc_manager,
-             ConnectionSettings conn_settings);
+             P2PSessionConfig config);
 
  public:
   static std::shared_ptr<P2PSession> Create(
       boost::asio::io_context& ioc,
       boost::asio::ip::tcp::socket socket,
-      std::shared_ptr<std::string const> const& doc_root,
       RTCManager* rtc_manager,
-      ConnectionSettings conn_settings) {
-    return std::shared_ptr<P2PSession>(new P2PSession(
-        ioc, std::move(socket), doc_root, rtc_manager, conn_settings));
+      P2PSessionConfig config) {
+    return std::shared_ptr<P2PSession>(
+        new P2PSession(ioc, std::move(socket), rtc_manager, std::move(config)));
   }
   void Run();
 
@@ -74,12 +76,11 @@ class P2PSession : public std::enable_shared_from_this<P2PSession> {
   boost::asio::ip::tcp::socket socket_;
   boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> strand_;
   boost::beast::flat_buffer buffer_;
-  std::shared_ptr<std::string const> doc_root_;
   boost::beast::http::request<boost::beast::http::string_body> req_;
   std::shared_ptr<void> res_;
 
   RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
+  P2PSessionConfig config_;
 };
 
 #endif  // P2P_SESSION_H_

@@ -20,25 +20,26 @@
 // nlohmann/json
 #include <nlohmann/json.hpp>
 
-#include "connection_settings.h"
 #include "rtc/rtc_manager.h"
 #include "sora_client.h"
+
+struct SoraSessionConfig {};
 
 // HTTP の１回のリクエストに対して答えるためのクラス
 class SoraSession : public std::enable_shared_from_this<SoraSession> {
   SoraSession(boost::asio::ip::tcp::socket socket,
               std::shared_ptr<SoraClient> client,
               RTCManager* rtc_manager,
-              ConnectionSettings conn_settings);
+              SoraSessionConfig config);
 
  public:
   static std::shared_ptr<SoraSession> Create(
       boost::asio::ip::tcp::socket socket,
       std::shared_ptr<SoraClient> client,
       RTCManager* rtc_manager,
-      ConnectionSettings conn_settings) {
-    return std::shared_ptr<SoraSession>(
-        new SoraSession(std::move(socket), client, rtc_manager, conn_settings));
+      SoraSessionConfig config) {
+    return std::shared_ptr<SoraSession>(new SoraSession(
+        std::move(socket), client, rtc_manager, std::move(config)));
   }
 
   void Run();
@@ -83,7 +84,7 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
 
   std::shared_ptr<SoraClient> client_;
   RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
+  SoraSessionConfig config_;
 };
 
 #endif  // SORA_SESSION_H_

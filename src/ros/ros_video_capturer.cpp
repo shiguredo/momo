@@ -11,15 +11,15 @@
 #include <rtc_base/log_sinks.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-ROSVideoCapturer::ROSVideoCapturer(ConnectionSettings cs) {
+ROSVideoCapturer::ROSVideoCapturer(ROSVideoCapturerConfig config) {
   ros::NodeHandle nh;
-  if (cs.image_compressed) {
+  if (config.image_compressed) {
     sub_ = nh.subscribe<sensor_msgs::CompressedImage>(
-        cs.camera_name, 1,
+        config.camera_name, 1,
         boost::bind(&ROSVideoCapturer::ROSCallbackCompressed, this, _1));
   } else {
     sub_ = nh.subscribe<sensor_msgs::Image>(
-        cs.camera_name, 1,
+        config.camera_name, 1,
         boost::bind(&ROSVideoCapturer::ROSCallbackRaw, this, _1));
   }
 

@@ -15,25 +15,34 @@
 // nlohmann/json
 #include <nlohmann/json.hpp>
 
-#include "connection_settings.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
 #include "watchdog.h"
 #include "websocket.h"
 
+struct AyameClientConfig {
+  bool insecure = false;
+  bool no_google_stun = false;
+
+  std::string signaling_host;
+  std::string room_id;
+  std::string client_id;
+  std::string signaling_key;
+};
+
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
                     public RTCMessageSender {
   AyameClient(boost::asio::io_context& ioc,
               RTCManager* manager,
-              ConnectionSettings conn_settings);
+              AyameClientConfig config);
 
  public:
   static std::shared_ptr<AyameClient> Create(boost::asio::io_context& ioc,
                                              RTCManager* manager,
-                                             ConnectionSettings conn_settings) {
+                                             AyameClientConfig config) {
     return std::shared_ptr<AyameClient>(
-        new AyameClient(ioc, manager, conn_settings));
+        new AyameClient(ioc, manager, std::move(config)));
   }
   ~AyameClient();
 
@@ -81,7 +90,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
 
   RTCManager* manager_;
   std::shared_ptr<RTCConnection> connection_;
-  ConnectionSettings conn_settings_;
+  AyameClientConfig config_;
 
   int retry_count_;
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;

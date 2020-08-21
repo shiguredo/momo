@@ -7,12 +7,12 @@ SoraServer::SoraServer(boost::asio::io_context& ioc,
                        boost::asio::ip::tcp::endpoint endpoint,
                        std::shared_ptr<SoraClient> client,
                        RTCManager* rtc_manager,
-                       ConnectionSettings conn_settings)
+                       SoraServerConfig config)
     : acceptor_(ioc),
       socket_(ioc),
       client_(client),
       rtc_manager_(rtc_manager),
-      conn_settings_(conn_settings) {
+      config_(std::move(config)) {
   boost::system::error_code ec;
 
   // Open the acceptor
@@ -60,8 +60,9 @@ void SoraServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
   } else {
+    SoraSessionConfig config;
     SoraSession::Create(std::move(socket_), client_, rtc_manager_,
-                        conn_settings_)
+                        std::move(config))
         ->Run();
   }
 
