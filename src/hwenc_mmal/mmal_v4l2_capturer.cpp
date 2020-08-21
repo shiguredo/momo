@@ -85,7 +85,7 @@ MMALV4L2Capturer::~MMALV4L2Capturer() {
   mmal_pool_destroy(resizer_pool_out_);
 }
 
-int32_t MMALV4L2Capturer::StartCapture(V4L2VideoCapturer config) {
+int32_t MMALV4L2Capturer::StartCapture(V4L2VideoCapturerConfig config) {
   return V4L2VideoCapturer::StartCapture(config);
 }
 
