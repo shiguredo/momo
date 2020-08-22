@@ -412,8 +412,8 @@ void Util::ParseArgs(int argc,
   sora_app->add_option("--port", args.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
   sora_app
-      ->add_flag("--simulcast", args.sora_simulcast,
-                 "Use simulcast (default: false)")
+      ->add_option("--simulcast", args.sora_simulcast,
+                   "Use simulcast (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
