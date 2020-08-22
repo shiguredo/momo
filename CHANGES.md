@@ -17,6 +17,8 @@
     - @melpon
 - [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
     - @melpon
+- [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
+    - @melpon
 
 ## 2020.8.1
 

@@ -397,7 +397,10 @@ void Util::ParseArgs(int argc,
   sora_app
       ->add_option("--audio-bitrate", args.sora_audio_bitrate, "Audio bitrate")
       ->check(CLI::Range(0, 510));
-  sora_app->add_flag("--multistream", args.sora_multistream, "Use multistream");
+  sora_app
+      ->add_option("--multistream", args.sora_multistream,
+                   "Use multistream (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app->add_set(
       "--role", args.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
@@ -408,7 +411,10 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(1, 10));
   sora_app->add_option("--port", args.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
-  sora_app->add_flag("--simulcast", args.sora_simulcast, "Use simulcast");
+  sora_app
+      ->add_flag("--simulcast", args.sora_simulcast,
+                 "Use simulcast (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
