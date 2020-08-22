@@ -17,16 +17,25 @@
 #include <memory>
 
 // WebRTC
-#include <connection_settings.h>
 #include <modules/video_capture/video_capture_defines.h>
 #include <modules/video_capture/video_capture_impl.h>
 #include <rtc/scalable_track_source.h>
 #include <rtc_base/critical_section.h>
 #include <rtc_base/platform_thread.h>
 
+struct V4L2VideoCapturerConfig {
+  std::string video_device;
+  int width = 640;
+  int height = 480;
+  int framerate = 30;
+  bool force_i420 = false;
+  bool use_native = false;
+};
+
 class V4L2VideoCapturer : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(ConnectionSettings cs);
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+      V4L2VideoCapturerConfig config);
   static void LogDeviceList(
       webrtc::VideoCaptureModule::DeviceInfo* device_info);
   V4L2VideoCapturer();
@@ -34,7 +43,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
 
   int32_t Init(const char* deviceUniqueId,
                const std::string& specifiedVideoDevice);
-  virtual int32_t StartCapture(ConnectionSettings cs);
+  virtual int32_t StartCapture(V4L2VideoCapturerConfig config);
   virtual int32_t StopCapture();
   virtual bool UseNativeBuffer() override;
   virtual bool OnCaptured(struct v4l2_buffer& buf);
@@ -54,7 +63,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
  private:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      ConnectionSettings cs,
+      V4L2VideoCapturerConfig config,
       size_t capture_device_index);
   bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
 

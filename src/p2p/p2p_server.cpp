@@ -1,19 +1,16 @@
 #include "p2p_server.h"
 
-#include "p2p_session.h"
 #include "util.h"
 
 P2PServer::P2PServer(boost::asio::io_context& ioc,
                      boost::asio::ip::tcp::endpoint endpoint,
-                     std::string doc_root,
                      RTCManager* rtc_manager,
-                     ConnectionSettings conn_settings)
+                     P2PServerConfig config)
     : ioc_(ioc),
       acceptor_(ioc),
       socket_(ioc),
-      doc_root_(std::make_shared<std::string>(std::move(doc_root))),
       rtc_manager_(rtc_manager),
-      conn_settings_(conn_settings) {
+      config_(std::move(config)) {
   boost::system::error_code ec;
 
   // Open the acceptor
@@ -63,9 +60,8 @@ void P2PServer::OnAccept(boost::system::error_code ec) {
     return;
   }
 
-  P2PSession::Create(ioc_, std::move(socket_), doc_root_, rtc_manager_,
-                     conn_settings_)
-      ->Run();
+  P2PSessionConfig config = config_;
+  P2PSession::Create(ioc_, std::move(socket_), rtc_manager_, config_)->Run();
 
   DoAccept();
 }

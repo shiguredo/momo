@@ -19,8 +19,8 @@ const size_t kPlayoutNumChannels = 1;
 const size_t kPlayoutBufferSize =
     kPlayoutFixedSampleRate / 100 * kPlayoutNumChannels * 2;
 
-ROSAudioDevice::ROSAudioDevice(ConnectionSettings conn_settings)
-    : _conn_settings(conn_settings),
+ROSAudioDevice::ROSAudioDevice(ROSAudioDeviceConfig config)
+    : _config(std::move(config)),
       _ptrAudioBuffer(NULL),
       _recordingBuffer(NULL),
       _playoutBuffer(NULL),
@@ -168,12 +168,11 @@ int32_t ROSAudioDevice::InitRecording() {
     return -1;
   }
 
-  _recordingFramesIn10MS =
-      static_cast<size_t>(_conn_settings.audio_topic_rate / 100);
+  _recordingFramesIn10MS = static_cast<size_t>(_config.audio_topic_rate / 100);
 
   if (_ptrAudioBuffer) {
-    _ptrAudioBuffer->SetRecordingSampleRate(_conn_settings.audio_topic_rate);
-    _ptrAudioBuffer->SetRecordingChannels(_conn_settings.audio_topic_ch);
+    _ptrAudioBuffer->SetRecordingSampleRate(_config.audio_topic_rate);
+    _ptrAudioBuffer->SetRecordingChannels(_config.audio_topic_ch);
   }
   return 0;
 }
@@ -240,14 +239,14 @@ int32_t ROSAudioDevice::StartRecording() {
 
   // Make sure we only create the buffer once.
   _recordingBufferSizeIn10MS =
-      _recordingFramesIn10MS * _conn_settings.audio_topic_ch * 2;
+      _recordingFramesIn10MS * _config.audio_topic_ch * 2;
   if (!_recordingBuffer) {
     _recordingBuffer = new int8_t[_recordingBufferSizeIn10MS];
   }
 
   ros::NodeHandle nh;
   _sub = nh.subscribe<audio_common_msgs::AudioData>(
-      _conn_settings.audio_topic_name, 1,
+      _config.audio_topic_name, 1,
       boost::bind(&ROSAudioDevice::RecROSCallback, this, _1));
 
   _writtenBufferSize = 0;
@@ -381,16 +380,16 @@ int32_t ROSAudioDevice::StereoPlayout(bool& enabled) const {
 }
 
 int32_t ROSAudioDevice::StereoRecordingIsAvailable(bool& available) {
-  available = _conn_settings.audio_topic_ch == 2;
+  available = _config.audio_topic_ch == 2;
   return 0;
 }
 
 int32_t ROSAudioDevice::SetStereoRecording(bool enable) {
-  return ((_conn_settings.audio_topic_ch == 2) == enable) ? 0 : -1;
+  return ((_config.audio_topic_ch == 2) == enable) ? 0 : -1;
 }
 
 int32_t ROSAudioDevice::StereoRecording(bool& enabled) const {
-  enabled = _conn_settings.audio_topic_ch == 2;
+  enabled = _config.audio_topic_ch == 2;
   return 0;
 }
 

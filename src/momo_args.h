@@ -1,5 +1,5 @@
-#ifndef CONNECTION_SETTINGS_H_
-#define CONNECTION_SETTINGS_H_
+#ifndef MOMO_ARGS_H_
+#define MOMO_ARGS_H_
 
 #include <iostream>
 #include <string>
@@ -12,7 +12,7 @@
 
 #include "video_codec_info.h"
 
-struct ConnectionSettings {
+struct MomoArgs {
 #if USE_ROS
   std::string camera_name = "";
   bool image_compressed = false;
@@ -109,46 +109,6 @@ struct ConnectionSettings {
     auto width = std::atoi(resolution.substr(0, pos).c_str());
     auto height = std::atoi(resolution.substr(pos + 1).c_str());
     return {std::max(16, width), std::max(16, height)};
-  }
-
-  // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
-  webrtc::DegradationPreference GetPriority() {
-    if (priority == "FRAMERATE") {
-      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
-    } else if (priority == "RESOLUTION") {
-      return webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
-    }
-    return webrtc::DegradationPreference::BALANCED;
-  }
-
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const ConnectionSettings& cs) {
-    os << "no_google_stun: " << (cs.no_google_stun ? "true" : "false") << "\n";
-    os << "no_video_device: " << (cs.no_video_device ? "true" : "false")
-       << "\n";
-    os << "no_audio_device: " << (cs.no_audio_device ? "true" : "false")
-       << "\n";
-    os << "resolution: " << cs.resolution << "\n";
-    os << "framerate: " << cs.framerate << "\n";
-    os << "fixed_resolution: " << (cs.fixed_resolution ? "true" : "false")
-       << "\n";
-    os << "priority: " << cs.priority << "\n";
-    os << "ayame_signaling_host: " << cs.ayame_signaling_host << "\n";
-    os << "ayame_room_id: " << cs.ayame_room_id << "\n";
-    os << "ayame_client_id: " << cs.ayame_client_id << "\n";
-    os << "sora_signaling_host: " << cs.sora_signaling_host << "\n";
-    os << "sora_channel_id: " << cs.sora_channel_id << "\n";
-    os << "sora_video_codec: " << cs.sora_video_codec << "\n";
-    os << "sora_audio_codec: " << cs.sora_audio_codec << "\n";
-    os << "sora_video_bitrate: " << cs.sora_video_bitrate << "\n";
-    os << "sora_audio_bitrate: " << cs.sora_audio_bitrate << "\n";
-    os << "sora_auto_connect: " << (cs.sora_auto_connect ? "true" : "false")
-       << "\n";
-    os << "sora_metadata: " << cs.sora_metadata << "\n";
-    os << "sora_port: " << cs.sora_port << "\n";
-    os << "test_document_root: " << cs.test_document_root << "\n";
-    os << "test_port: " << cs.test_port << "\n";
-    return os;
   }
 };
 
