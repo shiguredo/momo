@@ -53,7 +53,7 @@ JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
       configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
-      use_mjpeg_(false) {}
+      use_native_(false) {}
 
 JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
@@ -137,8 +137,10 @@ int32_t JetsonVideoEncoder::Release() {
 
 int32_t JetsonVideoEncoder::JetsonConfigure() {
   int ret = 0;
+  bool use_converter = use_native_ &&
+                       (width_ != raw_width_ || height_ != raw_height_);
 
-  if (use_mjpeg_) {
+  if (use_converter) {
     enc0_buffer_queue_ = new std::queue<NvBuffer*>;
 
     converter_ = NvVideoConverter::createVideoConverter("conv");
@@ -217,8 +219,9 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     ret = encoder_->setInsertVuiEnabled(true);
     INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
 
-    // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM もフレームレート出てる気がする
-    ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_MEDIUM);
+    // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM でも Nano, AGX では OK
+    // NX は V4L2_ENC_HW_PRESET_FAST でないとフレームレートがでない
+    ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_FAST);
     INIT_ERROR(ret < 0, "Failed to setHWPresetType");
 
   } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
@@ -251,7 +254,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   ret = encoder_->setFrameRate(framerate_, 1);
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
-  if (use_mjpeg_) {
+  if (use_native_) {
     ret =
         encoder_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
@@ -272,7 +275,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   ret = encoder_->capture_plane.setStreamStatus(true);
   INIT_ERROR(ret < 0, "Failed to setStreamStatus at encoder capture_plane");
 
-  if (use_mjpeg_) {
+  if (use_converter) {
     converter_->capture_plane.startDQThread(this);
 
     for (uint32_t i = 0; i < CONVERTER_CAPTURE_NUM; i++) {
@@ -295,11 +298,13 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
       enc0_buffer_queue_->push(encoder_->output_plane.getNthBuffer(i));
     }
     encoder_->output_plane.setDQThreadCallback(EncodeOutputCallbackFunction);
+    encoder_->output_plane.startDQThread(this);
+
+    native_input_elem_ = converter_;
+  } else {
+    native_input_elem_ = encoder_;
   }
   encoder_->capture_plane.setDQThreadCallback(EncodeFinishedCallbackFunction);
-  if (use_mjpeg_) {
-    encoder_->output_plane.startDQThread(this);
-  }
   encoder_->capture_plane.startDQThread(this);
 
   for (uint32_t i = 0; i < encoder_->capture_plane.getNumBuffers(); i++) {
@@ -638,7 +643,7 @@ int32_t JetsonVideoEncoder::Encode(
       input_frame.video_frame_buffer();
   std::unique_ptr<NvJPEGDecoder> decoder;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
-    use_mjpeg_ = true;
+    use_native_ = true;
     NativeBuffer* native_buffer =
         dynamic_cast<NativeBuffer*>(frame_buffer.get());
 
@@ -652,7 +657,7 @@ int32_t JetsonVideoEncoder::Encode(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   } else {
-    use_mjpeg_ = false;
+    use_native_ = false;
   }
 
   if (frame_buffer->width() != configured_width_ ||
@@ -700,17 +705,20 @@ int32_t JetsonVideoEncoder::Encode(
   memset(planes, 0, sizeof(planes));
   v4l2_buf.m.planes = planes;
 
-  if (use_mjpeg_) {
+  if (use_native_) {
     NvBuffer* buffer;
-    if (converter_->output_plane.getNumQueuedBuffers() ==
-        converter_->output_plane.getNumBuffers()) {
-      if (converter_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
+    if (native_input_elem_->output_plane.getNumQueuedBuffers() ==
+        native_input_elem_->output_plane.getNumBuffers()) {
+      if (native_input_elem_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
         RTC_LOG(LS_ERROR) << "Failed to dqBuffer at converter output_plane";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
+    } else if (native_input_elem_ == encoder_) {
+      buffer = encoder_->output_plane.getNthBuffer(
+          encoder_->output_plane.getNumQueuedBuffers());
+      v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
 
-    v4l2_buf.index = 0;
     planes[0].m.fd = fd;
     planes[0].bytesused = 1234;
 
@@ -720,7 +728,7 @@ int32_t JetsonVideoEncoder::Encode(
     v4l2_buf.timestamp.tv_usec =
         input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
 
-    if (converter_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
+    if (native_input_elem_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at converter output_plane";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
