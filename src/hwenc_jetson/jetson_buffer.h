@@ -29,7 +29,6 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int raw_height,
     int scaled_width,
     int scaled_height,
-    int fd,
     int device_fd,
     struct v4l2_buffer* v4l2_buf);
 
@@ -42,6 +41,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   int RawHeight() const;
   uint32_t PixelFormat() const;
   int GetFd() const;
+  v4l2_buffer* GetV4L2Buffer() const;
   std::shared_ptr<NvJPEGDecoder> GetDecoder() const;
 
  protected:
@@ -60,7 +60,6 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int raw_height,
     int scaled_width,
     int scaled_height,
-    int fd,
     int device_fd,
     struct v4l2_buffer* v4l2_buf);
   ~JetsonBuffer() override;

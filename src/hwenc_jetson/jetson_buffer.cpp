@@ -31,7 +31,6 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int raw_height,
     int scaled_width,
     int scaled_height,
-    int fd,
     int device_fd,
     struct v4l2_buffer* v4l2_buf) {
   return new rtc::RefCountedObject<JetsonBuffer>(
@@ -40,7 +39,6 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
       raw_height,
       scaled_width,
       scaled_height,
-      fd,
       device_fd,
       v4l2_buf);
 }
@@ -79,6 +77,11 @@ int JetsonBuffer::GetFd() const {
   return fd_;
 }
 
+v4l2_buffer* JetsonBuffer::GetV4L2Buffer() const {
+  return v4l2_buf_;
+}
+
+
 std::shared_ptr<NvJPEGDecoder> JetsonBuffer::GetDecoder() const {
   return decoder_;
 }
@@ -107,7 +110,6 @@ JetsonBuffer::JetsonBuffer(
     int raw_height,
     int scaled_width,
     int scaled_height,
-    int fd,
     int device_fd,
     struct v4l2_buffer* v4l2_buf)
     : pixfmt_(pixfmt),
@@ -115,7 +117,7 @@ JetsonBuffer::JetsonBuffer(
       raw_height_(raw_height),
       scaled_width_(scaled_width),
       scaled_height_(scaled_height),
-      fd_(fd),
+      fd_(-1),
       device_fd_(device_fd),
       v4l2_buf_(v4l2_buf) {
 }

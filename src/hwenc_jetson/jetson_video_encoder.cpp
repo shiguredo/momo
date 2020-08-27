@@ -53,7 +53,8 @@ JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
       configured_framerate_(30),
       configured_width_(0),
       configured_height_(0),
-      use_native_(false) {}
+      use_native_(false),
+      use_dmabuff_(false) {}
 
 JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
@@ -159,9 +160,15 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     ret = converter_->setCropRect(0, 0, raw_width_, raw_height_);
     INIT_ERROR(ret < 0, "Failed to converter setCropRect");
 
-    ret = converter_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false,
-                                              false);
-    INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
+    if (use_dmabuff_) {
+      ret = converter_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false,
+                                                false);
+      INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
+    } else {
+      ret = converter_->output_plane.setupPlane(V4L2_MEMORY_USERPTR, 1, false,
+                                                false);
+      INIT_ERROR(ret < 0, "Failed to setupPlane at converter output_plane");
+    }
     
     NvBufferCreateParams create_params = {0};
     create_params.width = width_;
@@ -257,9 +264,15 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   INIT_ERROR(ret < 0, "Failed to setFrameRate");
 
   if (use_native_) {
-    ret =
-        encoder_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false, false);
-    INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+    if (use_dmabuff_ || use_converter) {
+      ret =
+          encoder_->output_plane.setupPlane(V4L2_MEMORY_DMABUF, 1, false, false);
+      INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+    } else {
+      ret =
+          encoder_->output_plane.setupPlane(V4L2_MEMORY_USERPTR, 1, false, false);
+      INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+    }
   } else {
     ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
@@ -374,6 +387,9 @@ void JetsonVideoEncoder::SendEOS(NvV4l2Element* element) {
       }
     }
     planes[0].bytesused = 0;
+    for (int i = 0; i < buffer->n_planes; i++) {
+      buffer->planes[i].bytesused = 0;
+    }
     if (element->output_plane.qBuffer(v4l2_buf, NULL) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
     }
@@ -641,6 +657,8 @@ int32_t JetsonVideoEncoder::Encode(
   }
 
   int fd = 0;
+  uint32_t pixfmt;
+  struct v4l2_buffer* v4l2_buf_orig;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
   std::shared_ptr<NvJPEGDecoder> decoder;
@@ -648,11 +666,21 @@ int32_t JetsonVideoEncoder::Encode(
     use_native_ = true;
     JetsonBuffer* jetson_buffer =
         dynamic_cast<JetsonBuffer*>(frame_buffer.get());
-    fd = jetson_buffer->GetFd();
-    decode_pixfmt_ = jetson_buffer->PixelFormat();
     raw_width_ = jetson_buffer->RawWidth();
     raw_height_ = jetson_buffer->RawHeight();
-    decoder = jetson_buffer->GetDecoder();
+    fd = jetson_buffer->GetFd();
+    if (fd == -1) {
+      use_dmabuff_ = false;
+      pixfmt = jetson_buffer->PixelFormat();
+      v4l2_buf_orig = jetson_buffer->GetV4L2Buffer();
+      if (pixfmt == V4L2_PIX_FMT_YUV420) {
+        decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
+      }
+    } else {
+      use_dmabuff_ = true;
+      decode_pixfmt_ = jetson_buffer->PixelFormat();
+      decoder = jetson_buffer->GetDecoder();
+    }
   } else {
     use_native_ = false;
   }
@@ -710,14 +738,27 @@ int32_t JetsonVideoEncoder::Encode(
         RTC_LOG(LS_ERROR) << "Failed to dqBuffer at converter output_plane";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
-    } else if (native_input_elem_ == encoder_) {
-      buffer = encoder_->output_plane.getNthBuffer(
-          encoder_->output_plane.getNumQueuedBuffers());
-      v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
+    } else if (!use_dmabuff_ || native_input_elem_ == encoder_) {
+      buffer = native_input_elem_->output_plane.getNthBuffer(
+          native_input_elem_->output_plane.getNumQueuedBuffers());
+      v4l2_buf.index = native_input_elem_->output_plane.getNumQueuedBuffers();
     }
-    
-    planes[0].m.fd = fd;
-    planes[0].bytesused = 1234;
+
+    if (use_dmabuff_) {
+      planes[0].m.fd = fd;
+      planes[0].bytesused = 1234;
+    } else if (pixfmt == V4L2_PIX_FMT_YUV420) {
+      size_t offset = 0;
+      for (int i = 0; i < buffer->n_planes; i++)
+      {
+        buffer->planes[i].bytesused = buffer->planes[i].fmt.width *
+                              buffer->planes[i].fmt.bytesperpixel *
+                              buffer->planes[i].fmt.height;
+        buffer->planes[i].data =
+               (uint8_t*)v4l2_buf_orig->m.userptr + offset;
+        offset += buffer->planes[i].bytesused;
+      }
+    }
 
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
     v4l2_buf.timestamp.tv_sec =

@@ -11,6 +11,7 @@
 #include "jetson_v4l2_capturer.h"
 
 // C
+#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -213,12 +214,12 @@ int32_t JetsonV4L2Capturer::StartCapture(ConnectionSettings cs) {
   unsigned int fmts[nFormats];
   if (!cs.force_i420 && (size.width > 640 || size.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
-    fmts[1] = V4L2_PIX_FMT_YUYV;
+    fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YUYV;
     fmts[3] = V4L2_PIX_FMT_UYVY;
     fmts[4] = V4L2_PIX_FMT_JPEG;
   } else {
-    fmts[0] = V4L2_PIX_FMT_YUYV;
+    fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YUYV;
     fmts[2] = V4L2_PIX_FMT_UYVY;
     fmts[3] = V4L2_PIX_FMT_MJPEG;
@@ -388,10 +389,15 @@ bool JetsonV4L2Capturer::UseNativeBuffer() {
 // critical section protected by the caller
 // _pool を初期化してしまっていることを除いて request_camera_buff_mmap と同等
 bool JetsonV4L2Capturer::AllocateVideoBuffers() {
-  uint32_t buff_memory_type = V4L2_MEMORY_MMAP;
-  if (_captureVideoType != webrtc::VideoType::kMJPEG) {
-    buff_memory_type = V4L2_MEMORY_DMABUF;
+  size_t buffer_size = _currentWidth * _currentHeight * 2;
+  uint32_t buff_memory_type;
+  if (_captureVideoType == webrtc::VideoType::kMJPEG) {
+    buff_memory_type = V4L2_MEMORY_MMAP;
+  } else {
+    buff_memory_type = V4L2_MEMORY_USERPTR;
   }
+  size_t page_size = getpagesize();
+  buffer_size = (buffer_size + page_size - 1) & ~(page_size - 1);
 
   struct v4l2_requestbuffers rbuffer;
   memset(&rbuffer, 0, sizeof(v4l2_requestbuffers));
@@ -421,12 +427,11 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
     buffer.memory = buff_memory_type;
     buffer.index = i;
 
-    if (ioctl(_deviceFd, VIDIOC_QUERYBUF, &buffer) < 0) {
-      return false;
-    }
-
     if (buff_memory_type == V4L2_MEMORY_MMAP) {
-      _pool[i].dmabuff_fd = 0;
+      if (ioctl(_deviceFd, VIDIOC_QUERYBUF, &buffer) < 0) {
+        return false;
+      }
+
       _pool[i].start = mmap(NULL, buffer.length, PROT_READ | PROT_WRITE,
                             MAP_SHARED, _deviceFd, buffer.m.offset);
 
@@ -438,32 +443,13 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
 
       _pool[i].length = buffer.length;
     } else {
-      int fd;
-      NvBufferCreateParams inputParams = {0};
-      inputParams.payloadType = NvBufferPayload_SurfArray;
-      inputParams.width = _currentWidth;
-      inputParams.height = _currentHeight;
-      inputParams.layout = NvBufferLayout_Pitch;
-      inputParams.colorFormat = GetNvbuffColorFmt(_captureVideoType);
-      inputParams.nvbuf_tag = NvBufferTag_CAMERA;
-      if (NvBufferCreateEx(&fd, &inputParams) == -1) {
-        RTC_LOG(LS_ERROR) << "Failed to NvBufferCreateEx";
+      _pool[i].length = buffer_size;
+      _pool[i].start = memalign(page_size, buffer_size);
+      if (!_pool[i].start) {
         return false;
-      }
-
-      _pool[i].dmabuff_fd = fd;
-
-      if (NvBufferMemMap(_pool[i].dmabuff_fd, 0, NvBufferMem_Read_Write,
-                         (void**)&_pool[i].start) == -1) {
-        RTC_LOG(LS_ERROR) << "Failed to NvBufferMemMap";
-        return false;
-      }
-      
-      buffer.m.fd = (unsigned long)fd;
-      if (buffer.length != _pool[i].length)
-      {
-        _pool[i].length = buffer.length;
-      }
+		  }
+			buffer.m.userptr	= (unsigned long)_pool[i].start;
+			buffer.length = _pool[i].length;
     }
 
     if (ioctl(_deviceFd, VIDIOC_QBUF, &buffer) < 0) {
@@ -476,10 +462,10 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
 bool JetsonV4L2Capturer::DeAllocateVideoBuffers() {
   // unmap buffers
   for (int i = 0; i < _buffersAllocatedByDevice; i++) {
-    if (_pool[i].dmabuff_fd)
-      NvBufferDestroy(_pool[i].dmabuff_fd);
     if (_captureVideoType == webrtc::VideoType::kMJPEG)
       munmap(_pool[i].start, _pool[i].length);
+    else
+      free(_pool[i].start);
   }
 
   delete[] _pool;
@@ -538,7 +524,7 @@ bool JetsonV4L2Capturer::CaptureProcess() {
       if (_captureVideoType == webrtc::VideoType::kMJPEG) {
         buf.memory = V4L2_MEMORY_MMAP;
       } else {
-        buf.memory = V4L2_MEMORY_DMABUF;
+        buf.memory = V4L2_MEMORY_USERPTR;
       }
       // dequeue a buffer - repeat until dequeued properly!
       while (ioctl(_deviceFd, VIDIOC_DQBUF, &buf) < 0) {
@@ -613,14 +599,11 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
       RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
     }
   } else {
-    NvBufferMemSyncForDevice(_pool[buf.index].dmabuff_fd, 0,
-            (void**)&_pool[buf.index].start);
-
     uint32_t pixfmt;
     if (_captureVideoType == webrtc::VideoType::kYUY2)
       pixfmt = V4L2_PIX_FMT_YUYV;
     else if (_captureVideoType == webrtc::VideoType::kI420)
-      pixfmt = V4L2_PIX_FMT_YUV420M;
+      pixfmt = V4L2_PIX_FMT_YUV420;
     else if (_captureVideoType == webrtc::VideoType::kUYVY)
       pixfmt = V4L2_PIX_FMT_UYVY;
     else {
@@ -631,8 +614,7 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
         JetsonBuffer::Create(
             pixfmt, _currentWidth, _currentHeight,
-            adapted_width, adapted_height,
-            _pool[buf.index].dmabuff_fd, _deviceFd, &buf));
+            adapted_width, adapted_height, _deviceFd, &buf));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)

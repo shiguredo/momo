@@ -71,7 +71,6 @@ class JetsonV4L2Capturer : public ScalableVideoTrackSource {
   struct Buffer {
     void* start;
     size_t length;
-    int dmabuff_fd;
   };
   Buffer* _pool;
 };
