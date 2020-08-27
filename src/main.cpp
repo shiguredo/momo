@@ -24,6 +24,8 @@
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
 #include "hwenc_mmal/mmal_v4l2_capturer.h"
+#elif USE_JETSON_ENCODER
+#include "hwenc_jetson/jetson_v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -111,6 +113,12 @@ int main(int argc, char* argv[]) {
 #if USE_MMAL_ENCODER
     if (cs.use_native) {
       return MMALV4L2Capturer::Create(cs);
+    } else {
+      return V4L2VideoCapturer::Create(cs);
+    }
+#elif USE_JETSON_ENCODER
+    if (cs.use_native) {
+      return JetsonV4L2Capturer::Create(cs);
     } else {
       return V4L2VideoCapturer::Create(cs);
     }

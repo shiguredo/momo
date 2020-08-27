@@ -65,7 +65,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                 int64_t rtpts,
                 webrtc::VideoRotation r,
                 absl::optional<webrtc::ColorSpace> c,
-                std::unique_ptr<NvJPEGDecoder> d)
+                std::shared_ptr<NvJPEGDecoder> d)
         : width(w),
           height(h),
           render_time_ms(rtms),
@@ -74,7 +74,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
           timestamp_rtp(rtpts),
           rotation(r),
           color_space(c),
-          decoder_(std::move(d)) {}
+          decoder_(d) {}
 
     int32_t width;
     int32_t height;
@@ -84,7 +84,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
     int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
     absl::optional<webrtc::ColorSpace> color_space;
-    std::unique_ptr<NvJPEGDecoder> decoder_;
+    std::shared_ptr<NvJPEGDecoder> decoder_;
   };
 
   int32_t JetsonConfigure();

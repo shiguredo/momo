@@ -28,7 +28,7 @@
 // L4T Multimedia API
 #include <nvbuf_utils.h>
 
-#include "rtc/native_buffer.h"
+#include "jetson_buffer.h"
 
 #define H264HWENC_HEADER_DEBUG 0
 #define INIT_ERROR(cond, desc)                 \
@@ -138,7 +138,9 @@ int32_t JetsonVideoEncoder::Release() {
 int32_t JetsonVideoEncoder::JetsonConfigure() {
   int ret = 0;
   bool use_converter = use_native_ &&
-                       (width_ != raw_width_ || height_ != raw_height_);
+                       (width_ != raw_width_ ||
+                        height_ != raw_height_ ||
+                        decode_pixfmt_ != V4L2_PIX_FMT_YUV420M);
 
   if (use_converter) {
     enc0_buffer_queue_ = new std::queue<NvBuffer*>;
@@ -641,21 +643,16 @@ int32_t JetsonVideoEncoder::Encode(
   int fd = 0;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
-  std::unique_ptr<NvJPEGDecoder> decoder;
+  std::shared_ptr<NvJPEGDecoder> decoder;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     use_native_ = true;
-    NativeBuffer* native_buffer =
-        dynamic_cast<NativeBuffer*>(frame_buffer.get());
-
-    decoder.reset(NvJPEGDecoder::createJPEGDecoder("jpegdec"));
-    INIT_ERROR(!decoder, "Failed to createJPEGDecoder");
-    int ret = decoder->decodeToFd(fd, (unsigned char*)native_buffer->Data(),
-                                   native_buffer->Length(), decode_pixfmt_,
-                                   raw_width_, raw_height_);
-    if (ret < 0) {
-      RTC_LOG(LS_ERROR) << "Failed to decodeToFd";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    JetsonBuffer* jetson_buffer =
+        dynamic_cast<JetsonBuffer*>(frame_buffer.get());
+    fd = jetson_buffer->GetFd();
+    decode_pixfmt_ = jetson_buffer->PixelFormat();
+    raw_width_ = jetson_buffer->RawWidth();
+    raw_height_ = jetson_buffer->RawHeight();
+    decoder = jetson_buffer->GetDecoder();
   } else {
     use_native_ = false;
   }
@@ -695,7 +692,7 @@ int32_t JetsonVideoEncoder::Encode(
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
         input_frame.timestamp_us(), input_frame.timestamp(),
         input_frame.rotation(), input_frame.color_space(),
-        std::move(decoder)));
+        decoder));
   }
 
   struct v4l2_buffer v4l2_buf;
@@ -718,7 +715,7 @@ int32_t JetsonVideoEncoder::Encode(
           encoder_->output_plane.getNumQueuedBuffers());
       v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
-
+    
     planes[0].m.fd = fd;
     planes[0].bytesused = 1234;
 
