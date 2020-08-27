@@ -7,6 +7,8 @@
 #include <api/video/i420_buffer.h>
 #include <rtc_base/logging.h>
 
+static const int kBufferAlignment = 64;
+
 rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     uint32_t pixfmt,
     int raw_width,
@@ -30,17 +32,13 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int raw_width,
     int raw_height,
     int scaled_width,
-    int scaled_height,
-    int device_fd,
-    struct v4l2_buffer* v4l2_buf) {
+    int scaled_height) {
   return new rtc::RefCountedObject<JetsonBuffer>(
       pixfmt,
       raw_width,
       raw_height,
       scaled_width,
-      scaled_height,
-      device_fd,
-      v4l2_buf);
+      scaled_height);
 }
 
 webrtc::VideoFrameBuffer::Type JetsonBuffer::type() const {
@@ -69,21 +67,28 @@ int JetsonBuffer::RawHeight() const {
   return raw_height_;
 }
 
-uint32_t JetsonBuffer::PixelFormat() const {
+uint32_t JetsonBuffer::V4L2PixelFormat() const {
   return pixfmt_;
 }
 
-int JetsonBuffer::GetFd() const {
+int JetsonBuffer::DecodedFd() const {
   return fd_;
 }
 
-v4l2_buffer* JetsonBuffer::GetV4L2Buffer() const {
-  return v4l2_buf_;
+std::shared_ptr<NvJPEGDecoder> JetsonBuffer::JpegDecoder() const {
+  return decoder_;
 }
 
+uint8_t* JetsonBuffer::Data() const {
+  return data_.get();
+}
 
-std::shared_ptr<NvJPEGDecoder> JetsonBuffer::GetDecoder() const {
-  return decoder_;
+void JetsonBuffer::SetLength(size_t length) {
+  length_ = length;
+}
+
+size_t JetsonBuffer::Length() const {
+  return length_;
 }
 
 JetsonBuffer::JetsonBuffer(
@@ -100,8 +105,8 @@ JetsonBuffer::JetsonBuffer(
       scaled_width_(scaled_width),
       scaled_height_(scaled_height),
       fd_(fd),
-      device_fd_(-1),
-      decoder_(std::move(decoder)) {
+      decoder_(std::move(decoder)),
+      data_(nullptr) {
 }
 
 JetsonBuffer::JetsonBuffer(
@@ -109,23 +114,15 @@ JetsonBuffer::JetsonBuffer(
     int raw_width,
     int raw_height,
     int scaled_width,
-    int scaled_height,
-    int device_fd,
-    struct v4l2_buffer* v4l2_buf)
+    int scaled_height)
     : pixfmt_(pixfmt),
       raw_width_(raw_width),
       raw_height_(raw_height),
       scaled_width_(scaled_width),
       scaled_height_(scaled_height),
       fd_(-1),
-      device_fd_(device_fd),
-      v4l2_buf_(v4l2_buf) {
-}
-
-JetsonBuffer::~JetsonBuffer() {
-  if (device_fd_ != -1) {
-    if (ioctl(device_fd_, VIDIOC_QBUF, v4l2_buf_) == -1) {
-      RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
-    }
-  }
+      decoder_(nullptr),
+      data_(static_cast<uint8_t*>(
+          webrtc::AlignedMalloc(raw_width_ * raw_height * 2,
+                                kBufferAlignment))) {
 }

@@ -658,7 +658,7 @@ int32_t JetsonVideoEncoder::Encode(
 
   int fd = 0;
   uint32_t pixfmt;
-  struct v4l2_buffer* v4l2_buf_orig;
+  uint8_t* native_data;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
   std::shared_ptr<NvJPEGDecoder> decoder;
@@ -668,18 +668,18 @@ int32_t JetsonVideoEncoder::Encode(
         dynamic_cast<JetsonBuffer*>(frame_buffer.get());
     raw_width_ = jetson_buffer->RawWidth();
     raw_height_ = jetson_buffer->RawHeight();
-    fd = jetson_buffer->GetFd();
+    fd = jetson_buffer->DecodedFd();
     if (fd == -1) {
       use_dmabuff_ = false;
-      pixfmt = jetson_buffer->PixelFormat();
-      v4l2_buf_orig = jetson_buffer->GetV4L2Buffer();
+      pixfmt = jetson_buffer->V4L2PixelFormat();
       if (pixfmt == V4L2_PIX_FMT_YUV420) {
         decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
       }
+      native_data = jetson_buffer->Data();
     } else {
       use_dmabuff_ = true;
-      decode_pixfmt_ = jetson_buffer->PixelFormat();
-      decoder = jetson_buffer->GetDecoder();
+      decode_pixfmt_ = jetson_buffer->V4L2PixelFormat();
+      decoder = jetson_buffer->JpegDecoder();
     }
   } else {
     use_native_ = false;
@@ -754,8 +754,7 @@ int32_t JetsonVideoEncoder::Encode(
         buffer->planes[i].bytesused = buffer->planes[i].fmt.width *
                               buffer->planes[i].fmt.bytesperpixel *
                               buffer->planes[i].fmt.height;
-        buffer->planes[i].data =
-               (uint8_t*)v4l2_buf_orig->m.userptr + offset;
+        buffer->planes[i].data = native_data + offset;
         offset += buffer->planes[i].bytesused;
       }
     }

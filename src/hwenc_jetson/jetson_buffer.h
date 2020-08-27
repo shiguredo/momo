@@ -7,6 +7,7 @@
 // WebRTC
 #include <api/video/video_frame.h>
 #include <common_video/include/video_frame_buffer.h>
+#include <rtc_base/memory/aligned_malloc.h>
 
 // Jetson Linux Multimedia API
 #include "nvbuf_utils.h"
@@ -28,9 +29,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int raw_width,
     int raw_height,
     int scaled_width,
-    int scaled_height,
-    int device_fd,
-    struct v4l2_buffer* v4l2_buf);
+    int scaled_height);
 
   Type type() const override;
   int width() const override;
@@ -39,10 +38,12 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
 
   int RawWidth() const;
   int RawHeight() const;
-  uint32_t PixelFormat() const;
-  int GetFd() const;
-  v4l2_buffer* GetV4L2Buffer() const;
-  std::shared_ptr<NvJPEGDecoder> GetDecoder() const;
+  uint32_t V4L2PixelFormat() const;
+  int DecodedFd() const;
+  std::shared_ptr<NvJPEGDecoder> JpegDecoder() const;
+  uint8_t* Data() const;
+  void SetLength(size_t size);
+  size_t Length() const;
 
  protected:
   JetsonBuffer(
@@ -59,10 +60,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int raw_width,
     int raw_height,
     int scaled_width,
-    int scaled_height,
-    int device_fd,
-    struct v4l2_buffer* v4l2_buf);
-  ~JetsonBuffer() override;
+    int scaled_height);
 
  private:
   uint32_t pixfmt_;
@@ -71,8 +69,8 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   const int scaled_width_;
   const int scaled_height_;
   const int fd_;
-  const int device_fd_;
-  struct v4l2_buffer* v4l2_buf_;
-  std::shared_ptr<NvJPEGDecoder> decoder_;
+  const std::shared_ptr<NvJPEGDecoder> decoder_;
+  const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
+  size_t length_;
 };
 #endif  // JETSON_BUFFER_H_
