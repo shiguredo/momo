@@ -10,31 +10,33 @@
 static const int kBufferAlignment = 64;
 
 rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
-    uint32_t pixfmt,
+    webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
     int scaled_width,
     int scaled_height,
     int fd,
+    uint32_t pixfmt,
     std::unique_ptr<NvJPEGDecoder> decoder) {
   return new rtc::RefCountedObject<JetsonBuffer>(
-      pixfmt,
+      video_type,
       raw_width,
       raw_height,
       scaled_width,
       scaled_height,
       fd,
+      pixfmt,
       std::move(decoder));
 }
 
 rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
-    uint32_t pixfmt,
+    webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
     int scaled_width,
     int scaled_height) {
   return new rtc::RefCountedObject<JetsonBuffer>(
-      pixfmt,
+      video_type,
       raw_width,
       raw_height,
       scaled_width,
@@ -43,6 +45,11 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
 
 webrtc::VideoFrameBuffer::Type JetsonBuffer::type() const {
   return Type::kNative;
+}
+
+
+webrtc::VideoType JetsonBuffer::VideoType() const {
+  return video_type_;
 }
 
 int JetsonBuffer::width() const {
@@ -67,12 +74,12 @@ int JetsonBuffer::RawHeight() const {
   return raw_height_;
 }
 
-uint32_t JetsonBuffer::V4L2PixelFormat() const {
-  return pixfmt_;
-}
-
 int JetsonBuffer::DecodedFd() const {
   return fd_;
+}
+
+uint32_t JetsonBuffer::V4L2PixelFormat() const {
+  return pixfmt_;
 }
 
 std::shared_ptr<NvJPEGDecoder> JetsonBuffer::JpegDecoder() const {
@@ -92,37 +99,41 @@ size_t JetsonBuffer::Length() const {
 }
 
 JetsonBuffer::JetsonBuffer(
-    uint32_t pixfmt,
+    webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
     int scaled_width,
     int scaled_height,
     int fd,
+    uint32_t pixfmt,
     std::unique_ptr<NvJPEGDecoder> decoder)
-    : pixfmt_(pixfmt),
+    : video_type_(video_type),
       raw_width_(raw_width),
       raw_height_(raw_height),
       scaled_width_(scaled_width),
       scaled_height_(scaled_height),
       fd_(fd),
+      pixfmt_(pixfmt),
       decoder_(std::move(decoder)),
       data_(nullptr) {
 }
 
 JetsonBuffer::JetsonBuffer(
-    uint32_t pixfmt,
+    webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
     int scaled_width,
     int scaled_height)
-    : pixfmt_(pixfmt),
+    : video_type_(video_type),
       raw_width_(raw_width),
       raw_height_(raw_height),
       scaled_width_(scaled_width),
       scaled_height_(scaled_height),
       fd_(-1),
+      pixfmt_(0),
       decoder_(nullptr),
       data_(static_cast<uint8_t*>(
-          webrtc::AlignedMalloc(raw_width_ * raw_height * 2,
-                                kBufferAlignment))) {
+          webrtc::AlignedMalloc(
+              webrtc::CalcBufferSize(video_type, raw_width, raw_height),
+              kBufferAlignment))) {
 }

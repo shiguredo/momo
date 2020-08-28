@@ -7,6 +7,7 @@ class JetsonV4L2Capturer : public V4L2VideoCapturer {
  public:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(ConnectionSettings cs);
 
+  bool UseNativeBuffer() override;
  private:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,

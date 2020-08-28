@@ -657,7 +657,7 @@ int32_t JetsonVideoEncoder::Encode(
   }
 
   int fd = 0;
-  uint32_t pixfmt;
+  webrtc::VideoType video_type;
   uint8_t* native_data;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
@@ -666,20 +666,31 @@ int32_t JetsonVideoEncoder::Encode(
     use_native_ = true;
     JetsonBuffer* jetson_buffer =
         dynamic_cast<JetsonBuffer*>(frame_buffer.get());
+    video_type = jetson_buffer->VideoType();
     raw_width_ = jetson_buffer->RawWidth();
     raw_height_ = jetson_buffer->RawHeight();
-    fd = jetson_buffer->DecodedFd();
-    if (fd == -1) {
-      use_dmabuff_ = false;
-      pixfmt = jetson_buffer->V4L2PixelFormat();
-      if (pixfmt == V4L2_PIX_FMT_YUV420) {
-        decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
-      }
-      native_data = jetson_buffer->Data();
-    } else {
+    if (video_type == webrtc::VideoType::kMJPEG) {
       use_dmabuff_ = true;
+      fd = jetson_buffer->DecodedFd();
       decode_pixfmt_ = jetson_buffer->V4L2PixelFormat();
       decoder = jetson_buffer->JpegDecoder();
+    } else {
+      use_dmabuff_ = false;
+      if (video_type == webrtc::VideoType::kYUY2) {
+        decode_pixfmt_ = V4L2_PIX_FMT_YUYV;
+      } else if (video_type == webrtc::VideoType::kI420) {
+        decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
+      } else if (video_type == webrtc::VideoType::kYV12) {
+        decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
+      } else if (video_type == webrtc::VideoType::kNV12) {
+        decode_pixfmt_ = V4L2_PIX_FMT_NV12M;
+      } else if (video_type == webrtc::VideoType::kUYVY) {
+        decode_pixfmt_ = V4L2_PIX_FMT_UYVY;
+      } else {
+        RTC_LOG(LS_ERROR) << "Unsupported VideoType";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      native_data = jetson_buffer->Data();
     }
   } else {
     use_native_ = false;
@@ -747,7 +758,14 @@ int32_t JetsonVideoEncoder::Encode(
     if (use_dmabuff_) {
       planes[0].m.fd = fd;
       planes[0].bytesused = 1234;
-    } else if (pixfmt == V4L2_PIX_FMT_YUV420) {
+    } else if (video_type == webrtc::VideoType::kYUY2 ||
+               video_type == webrtc::VideoType::kUYVY) {
+      buffer->planes[0].bytesused = buffer->planes[0].fmt.width *
+                            buffer->planes[0].fmt.bytesperpixel *
+                            buffer->planes[0].fmt.height;
+      buffer->planes[0].data = native_data;
+    } else if (video_type == webrtc::VideoType::kI420 ||
+               video_type == webrtc::VideoType::kNV12) {
       size_t offset = 0;
       for (int i = 0; i < buffer->n_planes; i++)
       {
@@ -757,6 +775,22 @@ int32_t JetsonVideoEncoder::Encode(
         buffer->planes[i].data = native_data + offset;
         offset += buffer->planes[i].bytesused;
       }
+    } else if (video_type == webrtc::VideoType::kYV12) {
+      size_t offset = 0;
+      buffer->planes[0].bytesused = buffer->planes[0].fmt.width *
+                            buffer->planes[0].fmt.bytesperpixel *
+                            buffer->planes[0].fmt.height;
+      buffer->planes[0].data = native_data;
+      offset += buffer->planes[0].bytesused;
+      buffer->planes[2].bytesused = buffer->planes[1].fmt.width *
+                            buffer->planes[1].fmt.bytesperpixel *
+                            buffer->planes[1].fmt.height;
+      buffer->planes[2].data = native_data + offset;
+      offset += buffer->planes[2].bytesused;
+      buffer->planes[1].bytesused = buffer->planes[2].fmt.width *
+                            buffer->planes[2].fmt.bytesperpixel *
+                            buffer->planes[2].fmt.height;
+      buffer->planes[1].data = native_data + offset;
     }
 
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;

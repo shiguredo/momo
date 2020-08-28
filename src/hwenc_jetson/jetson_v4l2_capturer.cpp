@@ -37,6 +37,10 @@ rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
   return nullptr;
 }
 
+bool JetsonV4L2Capturer::UseNativeBuffer() {
+  return true;  
+}
+
 rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
     ConnectionSettings cs,
@@ -102,8 +106,8 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
 
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
         JetsonBuffer::Create(
-            pixfmt, width, height, adapted_width, adapted_height,
-            fd, std::move(decoder)));
+            _captureVideoType, width, height, adapted_width, adapted_height,
+            fd, pixfmt, std::move(decoder)));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
@@ -113,21 +117,9 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
                 .build());
 
   } else {
-    uint32_t pixfmt;
-    if (_captureVideoType == webrtc::VideoType::kYUY2)
-      pixfmt = V4L2_PIX_FMT_YUYV;
-    else if (_captureVideoType == webrtc::VideoType::kI420)
-      pixfmt = V4L2_PIX_FMT_YUV420;
-    else if (_captureVideoType == webrtc::VideoType::kUYVY)
-      pixfmt = V4L2_PIX_FMT_UYVY;
-    else {
-      RTC_LOG(LS_ERROR) << " Unsupported pixel format";
-      return false;
-    }
-
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
         JetsonBuffer::Create(
-            pixfmt, _currentWidth, _currentHeight,
+            _captureVideoType, _currentWidth, _currentHeight,
             adapted_width, adapted_height));
     RTC_LOG(LS_ERROR) << " buf.bytesused=" << buf.bytesused;
     memcpy(jetson_buffer->Data(), (unsigned char*)_pool[buf.index].start,
