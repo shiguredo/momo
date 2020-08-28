@@ -128,10 +128,10 @@ int main(int argc, char* argv[]) {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #elif USE_JETSON_ENCODER
-    if (cs.use_native) {
-      return JetsonV4L2Capturer::Create(cs);
+    if (v4l2_config.use_native) {
+      return JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {
-      return V4L2VideoCapturer::Create(cs);
+      return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #else
     return V4L2VideoCapturer::Create(std::move(v4l2_config));

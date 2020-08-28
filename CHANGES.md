@@ -9,13 +9,10 @@
 - FIX
     - バグ修正
 
-## feature/new-converter
-
-- [CHANGE] Jetson の NvVideoConverter を NvBufferTransform に変更
-    - @tnoho
-
 ## develop
 
+- [CHANGE] Jetson のフレーム変換順序を変更
+    - @tnoho
 - [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
     - @melpon
 - [FIX] `SDL_PollEvent` の扱い方を修正
