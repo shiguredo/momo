@@ -76,6 +76,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
     for (int plane = 0; plane < params.num_planes; plane++) {
       ret = NvBufferMemMap (fd_, plane, NvBufferMem_Read, &data_addr);
       if (ret == 0) {
+        NvBufferMemSyncForCpu (fd_, plane, &data_addr);
         int height;
         int v_stride;
         if (plane == 0) {
