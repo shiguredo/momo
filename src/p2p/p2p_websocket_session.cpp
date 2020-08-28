@@ -15,10 +15,10 @@ using json = nlohmann::json;
 P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
                                          boost::asio::ip::tcp::socket socket,
                                          RTCManager* rtc_manager,
-                                         ConnectionSettings conn_settings)
+                                         P2PWebsocketSessionConfig config)
     : ws_(new Websocket(std::move(socket))),
       rtc_manager_(rtc_manager),
-      conn_settings_(conn_settings),
+      config_(std::move(config)),
       watchdog_(ioc, std::bind(&P2PWebsocketSession::OnWatchdogExpired, this)) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 }
@@ -161,7 +161,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
 std::shared_ptr<RTCConnection> P2PWebsocketSession::CreateRTCConnection() {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers servers;
-  if (!conn_settings_.no_google_stun) {
+  if (!config_.no_google_stun) {
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";
     servers.push_back(ice_server);

@@ -33,91 +33,97 @@ void Util::ParseArgs(int argc,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
-                     ConnectionSettings& cs) {
+                     MomoArgs& args) {
   ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
 
   ros::NodeHandle nh;
-  cs.camera_name = nh.resolveName("image");
-  cs.audio_topic_name = nh.resolveName("audio");
+  args.camera_name = nh.resolveName("image");
+  args.audio_topic_name = nh.resolveName("audio");
 
   ros::NodeHandle local_nh("~");
-  local_nh.param<bool>("compressed", cs.image_compressed, cs.image_compressed);
+  local_nh.param<bool>("compressed", args.image_compressed,
+                       args.image_compressed);
 
   local_nh.param<bool>("use_test", use_test, use_test);
   local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
   local_nh.param<bool>("use_sora", use_sora, use_sora);
 
-  local_nh.param<bool>("no_google_stun", cs.no_google_stun, cs.no_google_stun);
-  local_nh.param<bool>("no_video_device", cs.no_video_device,
-                       cs.no_video_device);
-  local_nh.param<bool>("no_audio_device", cs.no_audio_device,
-                       cs.no_audio_device);
-  local_nh.param<bool>("force_i420", cs.force_i420, cs.force_i420);
-  local_nh.param<bool>("use_native", cs.use_native, cs.use_native);
+  local_nh.param<bool>("no_google_stun", args.no_google_stun,
+                       args.no_google_stun);
+  local_nh.param<bool>("no_video_device", args.no_video_device,
+                       args.no_video_device);
+  local_nh.param<bool>("no_audio_device", args.no_audio_device,
+                       args.no_audio_device);
+  local_nh.param<bool>("force_i420", args.force_i420, args.force_i420);
+  local_nh.param<bool>("use_native", args.use_native, args.use_native);
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  local_nh.param<std::string>("video_device", cs.video_device, cs.video_device);
+  local_nh.param<std::string>("video_device", args.video_device,
+                              args.video_device);
 #endif
-  local_nh.param<std::string>("sora_video_codec", cs.sora_video_codec,
-                              cs.sora_video_codec);
-  local_nh.param<std::string>("sora_audio_codec", cs.sora_audio_codec,
-                              cs.sora_audio_codec);
-  local_nh.param<int>("sora_video_bitrate", cs.sora_video_bitrate,
-                      cs.sora_video_bitrate);
-  local_nh.param<int>("sora_audio_bitrate", cs.sora_audio_bitrate,
-                      cs.sora_audio_bitrate);
-  local_nh.param<std::string>("resolution", cs.resolution, cs.resolution);
-  local_nh.param<int>("framerate", cs.framerate, cs.framerate);
-  local_nh.param<int>("audio_topic_rate", cs.audio_topic_rate,
-                      cs.audio_topic_rate);
-  local_nh.param<int>("audio_topic_ch", cs.audio_topic_ch, cs.audio_topic_ch);
-  local_nh.param<std::string>("priority", cs.priority, cs.priority);
-  local_nh.param<int>("sora_port", cs.sora_port, cs.sora_port);
-  local_nh.param<int>("test_port", cs.test_port, cs.test_port);
-  local_nh.param<bool>("insecure", cs.insecure, cs.insecure);
+  local_nh.param<std::string>("sora_video_codec", args.sora_video_codec,
+                              args.sora_video_codec);
+  local_nh.param<std::string>("sora_audio_codec", args.sora_audio_codec,
+                              args.sora_audio_codec);
+  local_nh.param<int>("sora_video_bitrate", args.sora_video_bitrate,
+                      args.sora_video_bitrate);
+  local_nh.param<int>("sora_audio_bitrate", args.sora_audio_bitrate,
+                      args.sora_audio_bitrate);
+  local_nh.param<std::string>("resolution", args.resolution, args.resolution);
+  local_nh.param<int>("framerate", args.framerate, args.framerate);
+  local_nh.param<int>("audio_topic_rate", args.audio_topic_rate,
+                      args.audio_topic_rate);
+  local_nh.param<int>("audio_topic_ch", args.audio_topic_ch,
+                      args.audio_topic_ch);
+  local_nh.param<std::string>("priority", args.priority, args.priority);
+  local_nh.param<int>("sora_port", args.sora_port, args.sora_port);
+  local_nh.param<int>("test_port", args.test_port, args.test_port);
+  local_nh.param<bool>("insecure", args.insecure, args.insecure);
   local_nh.param<int>("log_level", log_level, log_level);
 
   // オーディオフラグ
   local_nh.param<bool>("disable_echo_cancellation",
-                       cs.disable_echo_cancellation,
-                       cs.disable_echo_cancellation);
+                       args.disable_echo_cancellation,
+                       args.disable_echo_cancellation);
   local_nh.param<bool>("disable_auto_gain_control",
-                       cs.disable_auto_gain_control,
-                       cs.disable_auto_gain_control);
+                       args.disable_auto_gain_control,
+                       args.disable_auto_gain_control);
   local_nh.param<bool>("disable_noise_suppression",
-                       cs.disable_noise_suppression,
-                       cs.disable_noise_suppression);
-  local_nh.param<bool>("disable_highpass_filter", cs.disable_highpass_filter,
-                       cs.disable_highpass_filter);
-  local_nh.param<bool>("disable_typing_detection", cs.disable_typing_detection,
-                       cs.disable_typing_detection);
+                       args.disable_noise_suppression,
+                       args.disable_noise_suppression);
+  local_nh.param<bool>("disable_highpass_filter", args.disable_highpass_filter,
+                       args.disable_highpass_filter);
+  local_nh.param<bool>("disable_typing_detection",
+                       args.disable_typing_detection,
+                       args.disable_typing_detection);
   local_nh.param<bool>("disable_residual_echo_detector",
-                       cs.disable_residual_echo_detector,
-                       cs.disable_residual_echo_detector);
+                       args.disable_residual_echo_detector,
+                       args.disable_residual_echo_detector);
 
   if (use_sora && local_nh.hasParam("SIGNALING_URL") &&
       local_nh.hasParam("CHANNEL_ID")) {
-    local_nh.getParam("SIGNALING_URL", cs.sora_signaling_host);
-    local_nh.getParam("CHANNEL_ID", cs.sora_channel_id);
-    local_nh.param<bool>("auto", cs.sora_auto_connect, cs.sora_auto_connect);
+    local_nh.getParam("SIGNALING_URL", args.sora_signaling_host);
+    local_nh.getParam("CHANNEL_ID", args.sora_channel_id);
+    local_nh.param<bool>("auto", args.sora_auto_connect,
+                         args.sora_auto_connect);
 
     std::string sora_metadata;
     local_nh.param<std::string>("metadata", sora_metadata, "");
 
     // メタデータのパース
     if (!sora_metadata.empty()) {
-      cs.sora_metadata = json::parse(sora_metadata);
+      args.sora_metadata = json::parse(sora_metadata);
     }
   } else if (use_test) {
-    local_nh.param<std::string>("document_root", cs.test_document_root,
+    local_nh.param<std::string>("document_root", args.test_document_root,
                                 get_current_dir_name());
   } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") &&
              local_nh.hasParam("ROOM_ID")) {
-    local_nh.getParam("SIGNALING_URL", cs.ayame_signaling_host);
-    local_nh.getParam("ROOM_ID", cs.ayame_room_id);
-    local_nh.param<std::string>("client_id", cs.ayame_client_id,
-                                cs.ayame_client_id);
-    local_nh.param<std::string>("signaling_key", cs.ayame_signaling_key,
-                                cs.ayame_signaling_key);
+    local_nh.getParam("SIGNALING_URL", args.ayame_signaling_host);
+    local_nh.getParam("ROOM_ID", args.ayame_room_id);
+    local_nh.param<std::string>("client_id", args.ayame_client_id,
+                                args.ayame_client_id);
+    local_nh.param<std::string>("signaling_key", args.ayame_signaling_key,
+                                args.ayame_signaling_key);
   } else {
     exit(1);
   }
@@ -131,7 +137,7 @@ void Util::ParseArgs(int argc,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
-                     ConnectionSettings& cs) {
+                     MomoArgs& args) {
   CLI::App app("Momo - WebRTC Native Client");
   app.set_help_all_flag("--help-all",
                         "Print help message for all modes and exit");
@@ -211,79 +217,82 @@ void Util::ParseArgs(int argc,
       },
       "");
 
-  app.add_flag("--no-google-stun", cs.no_google_stun, "Do not use google stun");
-  app.add_flag("--no-video-device", cs.no_video_device,
+  app.add_flag("--no-google-stun", args.no_google_stun,
+               "Do not use google stun");
+  app.add_flag("--no-video-device", args.no_video_device,
                "Do not use video device");
-  app.add_flag("--no-audio-device", cs.no_audio_device,
+  app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag(
-         "--force-i420", cs.force_i420,
+         "--force-i420", args.force_i420,
          "Prefer I420 format for video capture (only on supported devices)")
       ->check(is_valid_force_i420);
-  app.add_flag("--use-native", cs.use_native,
+  app.add_flag("--use-native", args.use_native,
                "Perform MJPEG deoode and video resize by hardware acceleration "
                "(only on supported devices)")
       ->check(is_valid_use_native);
 #if defined(__APPLE__) || defined(_WIN32)
-  app.add_option("--video-device", cs.video_device,
+  app.add_option("--video-device", args.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");
 #elif defined(__linux__)
-  app.add_option("--video-device", cs.video_device,
+  app.add_option("--video-device", args.video_device,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)")
       ->check(CLI::ExistingFile);
 #endif
-  app.add_option("--resolution", cs.resolution,
+  app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
                  "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
-  app.add_option("--framerate", cs.framerate, "Video framerate")
+  app.add_option("--framerate", args.framerate, "Video framerate")
       ->check(CLI::Range(1, 60));
-  app.add_flag("--fixed-resolution", cs.fixed_resolution,
+  app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
-  app.add_set("--priority", cs.priority, {"BALANCE", "FRAMERATE", "RESOLUTION"},
+  app.add_set("--priority", args.priority,
+              {"BALANCE", "FRAMERATE", "RESOLUTION"},
               "Preference in video degradation (experimental)");
-  app.add_flag("--use-sdl", cs.use_sdl,
+  app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
-  app.add_flag("--show-me", cs.show_me, "Show self video (if SDL is available)")
+  app.add_flag("--show-me", args.show_me,
+               "Show self video (if SDL is available)")
       ->check(is_sdl_available);
-  app.add_option("--window-width", cs.window_width,
+  app.add_option("--window-width", args.window_width,
                  "Window width for videos (if SDL is available)")
       ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
-  app.add_option("--window-height", cs.window_height,
+  app.add_option("--window-height", args.window_height,
                  "Window height for videos (if SDL is available)")
       ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
-  app.add_flag("--fullscreen", cs.fullscreen,
+  app.add_flag("--fullscreen", args.fullscreen,
                "Use fullscreen window for videos (if SDL is available)")
       ->check(is_sdl_available);
   app.add_flag("--version", version, "Show version information");
-  app.add_flag("--insecure", cs.insecure,
+  app.add_flag("--insecure", args.insecure,
                "Allow insecure server connections when using SSL");
   auto log_level_map = std::vector<std::pair<std::string, int> >(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
-  app.add_flag("--screen-capture", cs.screen_capture, "Capture screen")
+  app.add_flag("--screen-capture", args.screen_capture, "Capture screen")
       ->check(is_valid_screen_capture);
 
   // オーディオフラグ
-  app.add_flag("--disable-echo-cancellation", cs.disable_echo_cancellation,
+  app.add_flag("--disable-echo-cancellation", args.disable_echo_cancellation,
                "Disable echo cancellation for audio");
-  app.add_flag("--disable-auto-gain-control", cs.disable_auto_gain_control,
+  app.add_flag("--disable-auto-gain-control", args.disable_auto_gain_control,
                "Disable auto gain control for audio");
-  app.add_flag("--disable-noise-suppression", cs.disable_noise_suppression,
+  app.add_flag("--disable-noise-suppression", args.disable_noise_suppression,
                "Disable noise suppression for audio");
-  app.add_flag("--disable-highpass-filter", cs.disable_highpass_filter,
+  app.add_flag("--disable-highpass-filter", args.disable_highpass_filter,
                "Disable highpass filter for audio");
-  app.add_flag("--disable-typing-detection", cs.disable_typing_detection,
+  app.add_flag("--disable-typing-detection", args.disable_typing_detection,
                "Disable typing detection for audio");
   app.add_flag("--disable-residual-echo-detector",
-               cs.disable_residual_echo_detector,
+               args.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
 
   // ビデオエンコーダ
@@ -296,21 +305,21 @@ void Util::ParseArgs(int argc,
       return CLI::CheckedTransformer(VideoCodecInfo::GetValidMappingInfo(x),
                                      CLI::ignore_case);
     };
-    app.add_flag("--vp8-encoder", cs.vp8_encoder, "VP8 Encoder")
+    app.add_flag("--vp8-encoder", args.vp8_encoder, "VP8 Encoder")
         ->transform(f(info.vp8_encoders));
-    app.add_flag("--vp8-decoder", cs.vp8_decoder, "VP8 Decoder")
+    app.add_flag("--vp8-decoder", args.vp8_decoder, "VP8 Decoder")
         ->transform(f(info.vp8_decoders));
-    app.add_flag("--vp9-encoder", cs.vp9_encoder, "VP9 Encoder")
+    app.add_flag("--vp9-encoder", args.vp9_encoder, "VP9 Encoder")
         ->transform(f(info.vp9_encoders));
-    app.add_flag("--vp9-decoder", cs.vp9_decoder, "VP9 Decoder")
+    app.add_flag("--vp9-decoder", args.vp9_decoder, "VP9 Decoder")
         ->transform(f(info.vp9_decoders));
-    app.add_flag("--av1-encoder", cs.av1_encoder, "AV1 Encoder")
+    app.add_flag("--av1-encoder", args.av1_encoder, "AV1 Encoder")
         ->transform(f(info.av1_encoders));
-    app.add_flag("--av1-decoder", cs.av1_decoder, "AV1 Decoder")
+    app.add_flag("--av1-decoder", args.av1_decoder, "AV1 Decoder")
         ->transform(f(info.av1_decoders));
-    app.add_flag("--h264-encoder", cs.h264_encoder, "H.264 Encoder")
+    app.add_flag("--h264-encoder", args.h264_encoder, "H.264 Encoder")
         ->transform(f(info.h264_encoders));
-    app.add_flag("--h264-decoder", cs.h264_decoder, "H.264 Decoder")
+    app.add_flag("--h264-decoder", args.h264_decoder, "H.264 Decoder")
         ->transform(f(info.h264_decoders));
   }
 
@@ -344,61 +353,68 @@ void Util::ParseArgs(int argc,
       app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
   test_app
-      ->add_option("--document-root", cs.test_document_root,
+      ->add_option("--document-root", args.test_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
-  test_app->add_option("--port", cs.test_port, "Port number (default: 8080)")
+  test_app->add_option("--port", args.test_port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
 
   ayame_app
-      ->add_option("SIGNALING-URL", cs.ayame_signaling_host, "Signaling URL")
+      ->add_option("SIGNALING-URL", args.ayame_signaling_host, "Signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", cs.ayame_room_id, "Room ID")->required();
-  ayame_app->add_option("--client-id", cs.ayame_client_id, "Client ID");
-  ayame_app->add_option("--signaling-key", cs.ayame_signaling_key,
+  ayame_app->add_option("ROOM-ID", args.ayame_room_id, "Room ID")->required();
+  ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
+  ayame_app->add_option("--signaling-key", args.ayame_signaling_key,
                         "Signaling key");
 
-  sora_app->add_option("SIGNALING-URL", cs.sora_signaling_host, "Signaling URL")
+  sora_app
+      ->add_option("SIGNALING-URL", args.sora_signaling_host, "Signaling URL")
       ->required();
-  sora_app->add_option("CHANNEL-ID", cs.sora_channel_id, "Channel ID")
+  sora_app->add_option("CHANNEL-ID", args.sora_channel_id, "Channel ID")
       ->required();
-  sora_app->add_flag("--auto", cs.sora_auto_connect,
+  sora_app->add_flag("--auto", args.sora_auto_connect,
                      "Connect to Sora automatically");
 
   auto bool_map = std::vector<std::pair<std::string, bool> >(
       {{"false", false}, {"true", true}});
   sora_app
-      ->add_option("--video", cs.sora_video,
+      ->add_option("--video", args.sora_video,
                    "Send video to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_option("--audio", cs.sora_audio,
+      ->add_option("--audio", args.sora_audio,
                    "Send audio to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_set("--video-codec", cs.sora_video_codec,
+      ->add_set("--video-codec", args.sora_video_codec,
                 {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec", cs.sora_audio_codec, {"", "OPUS"},
+  sora_app->add_set("--audio-codec", args.sora_audio_codec, {"", "OPUS"},
                     "Audio codec for send");
   sora_app
-      ->add_option("--video-bitrate", cs.sora_video_bitrate, "Video bitrate")
+      ->add_option("--video-bitrate", args.sora_video_bitrate, "Video bitrate")
       ->check(CLI::Range(0, 30000));
   sora_app
-      ->add_option("--audio-bitrate", cs.sora_audio_bitrate, "Audio bitrate")
+      ->add_option("--audio-bitrate", args.sora_audio_bitrate, "Audio bitrate")
       ->check(CLI::Range(0, 510));
-  sora_app->add_flag("--multistream", cs.sora_multistream, "Use multistream");
+  sora_app
+      ->add_option("--multistream", args.sora_multistream,
+                   "Use multistream (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app->add_set(
-      "--role", cs.sora_role,
+      "--role", args.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
       "Role (default: upstream)");
   sora_app
-      ->add_option("--spotlight", cs.sora_spotlight,
+      ->add_option("--spotlight", args.sora_spotlight,
                    "Stream count delivered in spotlight")
       ->check(CLI::Range(1, 10));
-  sora_app->add_option("--port", cs.sora_port, "Port number (default: -1)")
+  sora_app->add_option("--port", args.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
-  sora_app->add_flag("--simulcast", cs.sora_simulcast, "Use simulcast");
+  sora_app
+      ->add_option("--simulcast", args.sora_simulcast,
+                   "Use simulcast (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
@@ -423,8 +439,8 @@ void Util::ParseArgs(int argc,
   }
 
   // サイマルキャストは VP8, H264 のみで動作する
-  if (cs.sora_simulcast && cs.sora_video_codec != "VP8" &&
-      cs.sora_video_codec != "H264") {
+  if (args.sora_simulcast && args.sora_video_codec != "VP8" &&
+      args.sora_video_codec != "H264") {
     std::cerr << "Simulcast works only --video-codec=VP8 or --video-codec=H264."
               << std::endl;
     exit(1);
@@ -433,17 +449,17 @@ void Util::ParseArgs(int argc,
   if (!serial_setting.empty()) {
     auto separater_pos = serial_setting.find(',');
     std::string baudrate_str = serial_setting.substr(separater_pos + 1);
-    cs.serial_device = serial_setting.substr(0, separater_pos);
-    cs.serial_rate = std::stoi(baudrate_str);
+    args.serial_device = serial_setting.substr(0, separater_pos);
+    args.serial_rate = std::stoi(baudrate_str);
   }
 
   // メタデータのパース
   if (!sora_metadata.empty()) {
-    cs.sora_metadata = json::parse(sora_metadata);
+    args.sora_metadata = json::parse(sora_metadata);
   }
 
-  if (cs.test_document_root.empty()) {
-    cs.test_document_root = boost::filesystem::current_path().string();
+  if (args.test_document_root.empty()) {
+    args.test_document_root = boost::filesystem::current_path().string();
   }
 
   if (version) {

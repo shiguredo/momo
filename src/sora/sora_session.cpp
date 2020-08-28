@@ -14,11 +14,11 @@ using json = nlohmann::json;
 SoraSession::SoraSession(boost::asio::ip::tcp::socket socket,
                          std::shared_ptr<SoraClient> client,
                          RTCManager* rtc_manager,
-                         ConnectionSettings conn_settings)
+                         SoraSessionConfig config)
     : socket_(std::move(socket)),
       client_(client),
       rtc_manager_(rtc_manager),
-      conn_settings_(conn_settings) {}
+      config_(std::move(config)) {}
 
 void SoraSession::Run() {
   DoRead();

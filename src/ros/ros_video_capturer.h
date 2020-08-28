@@ -6,12 +6,16 @@
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/Image.h>
 
-#include "connection_settings.h"
 #include "rtc/scalable_track_source.h"
+
+struct ROSVideoCapturerConfig {
+  std::string camera_name = "";
+  bool image_compressed = false;
+};
 
 class ROSVideoCapturer : public ScalableVideoTrackSource {
  public:
-  explicit ROSVideoCapturer(ConnectionSettings cs);
+  explicit ROSVideoCapturer(ROSVideoCapturerConfig config);
   ~ROSVideoCapturer();
 
   void Destroy();

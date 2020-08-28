@@ -12,11 +12,14 @@
 #include <boost/beast/http/string_body.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "connection_settings.h"
 #include "rtc/rtc_manager.h"
 #include "util.h"
 #include "watchdog.h"
 #include "websocket.h"
+
+struct P2PWebsocketSessionConfig {
+  bool no_google_stun = false;
+};
 
 class P2PWebsocketSession
     : public std::enable_shared_from_this<P2PWebsocketSession>,
@@ -24,16 +27,16 @@ class P2PWebsocketSession
   P2PWebsocketSession(boost::asio::io_context& ioc,
                       boost::asio::ip::tcp::socket socket,
                       RTCManager* rtc_manager,
-                      ConnectionSettings conn_settings);
+                      P2PWebsocketSessionConfig config);
 
  public:
   static std::shared_ptr<P2PWebsocketSession> Create(
       boost::asio::io_context& ioc,
       boost::asio::ip::tcp::socket socket,
       RTCManager* rtc_manager,
-      ConnectionSettings conn_settings) {
+      P2PWebsocketSessionConfig config) {
     return std::shared_ptr<P2PWebsocketSession>(new P2PWebsocketSession(
-        ioc, std::move(socket), rtc_manager, conn_settings));
+        ioc, std::move(socket), rtc_manager, std::move(config)));
   }
   ~P2PWebsocketSession();
 
@@ -66,7 +69,7 @@ class P2PWebsocketSession
   WatchDog watchdog_;
 
   RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
+  P2PWebsocketSessionConfig config_;
 
   std::shared_ptr<RTCConnection> connection_;
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;

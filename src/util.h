@@ -7,7 +7,7 @@
 #include <boost/beast/http/string_body.hpp>
 
 #include "api/peer_connection_interface.h"
-#include "connection_settings.h"
+#include "momo_args.h"
 #include "video_codec_info.h"
 
 class Util {
@@ -18,7 +18,7 @@ class Util {
                         bool& use_ayame,
                         bool& use_sora,
                         int& log_level,
-                        ConnectionSettings& cs);
+                        MomoArgs& args);
   static std::string GenerateRandomChars();
   static std::string GenerateRandomChars(size_t length);
   static std::string GenerateRandomNumericChars(size_t length);
