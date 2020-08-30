@@ -340,7 +340,7 @@ int32_t V4L2VideoCapturer::StopCapture() {
       webrtc::MutexLock lock(&capture_lock_);
       quit_ = true;
     }
-    // Make sure the capture thread stop stop using the critsect.
+    // Make sure the capture thread stop stop using the capture_lock_.
     _captureThread->Stop();
     _captureThread.reset();
   }
