@@ -596,6 +596,7 @@ elseif (TARGET_OS STREQUAL "linux")
       X11
       Xau
       Xdmcp
+      Xtst
       xcb
       plds4
       Xext
