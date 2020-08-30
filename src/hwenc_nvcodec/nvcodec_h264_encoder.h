@@ -48,8 +48,7 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
  private:
   std::mutex mutex_;
   webrtc::EncodedImageCallback* callback_ = nullptr;
-  webrtc::BitrateAdjuster bitrate_adjuster_ =
-      webrtc::BitrateAdjuster(0.5, 0.95);
+  webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_ = 0;
   uint32_t max_bitrate_bps_ = 0;
 
