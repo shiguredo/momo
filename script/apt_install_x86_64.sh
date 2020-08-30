@@ -8,6 +8,7 @@ apt-get -y install tzdata
 echo 'Asia/Tokyo' > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
+# libtinfo5 は Ubuntu 20.04 のために入れたが将来的に不要になる可能性がある
 apt-get -y install \
   build-essential \
   curl \
@@ -16,6 +17,7 @@ apt-get -y install \
   libc6-dev \
   libexpat1-dev \
   libgtk-3-dev \
+  libtinfo5 \
   libnspr4-dev \
   libnss3-dev \
   libpulse-dev \
