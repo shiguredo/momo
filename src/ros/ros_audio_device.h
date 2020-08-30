@@ -140,7 +140,7 @@ class ROSAudioDevice : public webrtc::AudioDeviceGeneric {
   int8_t* _playoutBuffer;    // In bytes.
   uint32_t _recordingFramesLeft;
   uint32_t _playoutFramesLeft;
-  webrtc::Mutex _critSect;
+  webrtc::Mutex _mutex;
 
   size_t _recordingBufferSizeIn10MS;
   size_t _recordingFramesIn10MS;
