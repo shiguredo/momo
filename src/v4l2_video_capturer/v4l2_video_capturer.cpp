@@ -188,7 +188,7 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
     }
   }
 
-  rtc::CritScope critScope(&_captureCritSect);
+  webrtc::MutexLock lock(&capture_lock_);
   // first open /dev/video device
   if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
     RTC_LOG(LS_INFO) << "error in opening " << _videoDevice
@@ -337,7 +337,7 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
 int32_t V4L2VideoCapturer::StopCapture() {
   if (_captureThread) {
     {
-      rtc::CritScope cs(&_captureCritSect);
+      webrtc::MutexLock lock(&capture_lock_);
       quit_ = true;
     }
     // Make sure the capture thread stop stop using the critsect.
@@ -345,7 +345,7 @@ int32_t V4L2VideoCapturer::StopCapture() {
     _captureThread.reset();
   }
 
-  rtc::CritScope cs(&_captureCritSect);
+  webrtc::MutexLock lock(&capture_lock_);
   if (_captureStarted) {
     _captureStarted = false;
 
@@ -462,7 +462,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
   }
 
   {
-    rtc::CritScope cs(&_captureCritSect);
+    webrtc::MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;

@@ -20,8 +20,8 @@
 #include <modules/video_capture/video_capture_defines.h>
 #include <modules/video_capture/video_capture_impl.h>
 #include <rtc/scalable_track_source.h>
-#include <rtc_base/critical_section.h>
 #include <rtc_base/platform_thread.h>
+#include <rtc_base/synchronization/mutex.h>
 
 struct V4L2VideoCapturerConfig {
   std::string video_device;
@@ -76,8 +76,8 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
 
   // TODO(pbos): Stop using unique_ptr and resetting the thread.
   std::unique_ptr<rtc::PlatformThread> _captureThread;
-  rtc::CriticalSection _captureCritSect;
-  bool quit_ RTC_GUARDED_BY(_captureCritSect);
+  webrtc::Mutex capture_lock_;
+  bool quit_ RTC_GUARDED_BY(capture_lock_);
   std::string _videoDevice;
 
   int32_t _buffersAllocatedByDevice;

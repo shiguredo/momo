@@ -133,7 +133,7 @@ int32_t ROSAudioDevice::PlayoutIsAvailable(bool& available) {
 }
 
 int32_t ROSAudioDevice::InitPlayout() {
-  rtc::CritScope lock(&_critSect);
+  webrtc::MutexLock lock(&_critSect);
 
   if (_playing) {
     return -1;
@@ -162,7 +162,7 @@ int32_t ROSAudioDevice::RecordingIsAvailable(bool& available) {
 }
 
 int32_t ROSAudioDevice::InitRecording() {
-  rtc::CritScope lock(&_critSect);
+  webrtc::MutexLock lock(&_critSect);
 
   if (_recording) {
     return -1;
@@ -208,7 +208,7 @@ int32_t ROSAudioDevice::StartPlayout() {
 
 int32_t ROSAudioDevice::StopPlayout() {
   {
-    rtc::CritScope lock(&_critSect);
+    webrtc::MutexLock lock(&_critSect);
     _playing = false;
   }
 
@@ -217,7 +217,7 @@ int32_t ROSAudioDevice::StopPlayout() {
     _ptrThreadPlay.reset();
   }
 
-  rtc::CritScope lock(&_critSect);
+  webrtc::MutexLock lock(&_critSect);
 
   _playoutFramesLeft = 0;
   delete[] _playoutBuffer;
@@ -260,7 +260,7 @@ int32_t ROSAudioDevice::StartRecording() {
 
 int32_t ROSAudioDevice::StopRecording() {
   {
-    rtc::CritScope lock(&_critSect);
+    webrtc::MutexLock lock(&_critSect);
     if (!_recording) {
       return -1;
     }
@@ -271,7 +271,7 @@ int32_t ROSAudioDevice::StopRecording() {
     _spinner->stop();
   }
 
-  rtc::CritScope lock(&_critSect);
+  webrtc::MutexLock lock(&_critSect);
   _recordingFramesLeft = 0;
   if (_recordingBuffer) {
     delete[] _recordingBuffer;
@@ -398,7 +398,7 @@ int32_t ROSAudioDevice::PlayoutDelay(uint16_t& delayMS) const {
 }
 
 void ROSAudioDevice::AttachAudioBuffer(webrtc::AudioDeviceBuffer* audioBuffer) {
-  rtc::CritScope lock(&_critSect);
+  webrtc::MutexLock lock(&_critSect);
 
   _ptrAudioBuffer = audioBuffer;
 
