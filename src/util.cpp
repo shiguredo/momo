@@ -60,13 +60,15 @@ void Util::ParseArgs(int argc,
   local_nh.param<std::string>("video_device", args.video_device,
                               args.video_device);
 #endif
-  local_nh.param<std::string>("sora_video_codec", args.sora_video_codec_type,
-                              args.sora_video_codec);
-  local_nh.param<std::string>("sora_audio_codec", args.sora_audio_codec_type,
-                              args.sora_audio_codec);
-  local_nh.param<int>("sora_video_bitrate", args.sora_video_bit_rate,
+  local_nh.param<std::string>("sora_video_codec_type",
+                              args.sora_video_codec_type,
+                              args.sora_video_codec_type);
+  local_nh.param<std::string>("sora_audio_codec_type",
+                              args.sora_audio_codec_type,
+                              args.sora_audio_codec_type);
+  local_nh.param<int>("sora_video_bit_rate", args.sora_video_bit_rate,
                       args.sora_video_bit_rate);
-  local_nh.param<int>("sora_audio_bitrate", args.sora_audio_bit_rate,
+  local_nh.param<int>("sora_audio_bit_rate", args.sora_audio_bit_rate,
                       args.sora_audio_bit_rate);
   local_nh.param<std::string>("resolution", args.resolution, args.resolution);
   local_nh.param<int>("framerate", args.framerate, args.framerate);
