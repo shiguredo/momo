@@ -25,7 +25,7 @@
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
-#include <rtc_base/critical_section.h>
+#include "rtc_base/synchronization/mutex.h"
 
 // Jetson Linux Multimedia API
 #include "NvJpegDecoder.h"
@@ -142,7 +142,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
 
-  rtc::CriticalSection frame_params_lock_;
+  webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   std::mutex enc0_buffer_mtx_;
   std::condition_variable enc0_buffer_cond_;

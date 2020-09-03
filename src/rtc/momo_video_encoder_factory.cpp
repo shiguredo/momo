@@ -118,38 +118,6 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   return supported_codecs;
 }
 
-webrtc::VideoEncoderFactory::CodecInfo
-MomoVideoEncoderFactory::QueryVideoEncoder(
-    const webrtc::SdpVideoFormat& format) const {
-  CodecInfo info;
-  info.has_internal_source = false;
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
-    assert(vp8_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        vp8_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
-    assert(vp9_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        vp9_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
-    assert(av1_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        av1_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-    assert(h264_encoder_ != VideoCodecInfo::Type::NotSupported);
-    if (h264_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
-      return video_encoder_factory_->QueryVideoEncoder(format);
-    } else {
-      info.is_hardware_accelerated =
-          h264_encoder_ != VideoCodecInfo::Type::Software;
-    }
-  } else {
-    RTC_LOG(LS_ERROR) << "Unknown format: " << format.name;
-    std::exit(1);
-  }
-  return info;
-}
-
 std::unique_ptr<webrtc::VideoEncoder>
 MomoVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {

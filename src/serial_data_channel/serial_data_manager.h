@@ -8,7 +8,7 @@
 #include <boost/asio.hpp>
 
 // WebRTC
-#include <rtc_base/critical_section.h>
+#include <rtc_base/synchronization/mutex.h>
 
 #include "rtc/rtc_data_manager.h"
 #include "serial_data_channel.h"
@@ -47,7 +47,7 @@ class SerialDataManager : public RTCDataManager {
 
   boost::asio::serial_port serial_port_;
   std::function<void(std::function<void()>)> post_;
-  rtc::CriticalSection channels_lock_;
+  webrtc::Mutex channels_lock_;
   std::vector<SerialDataChannel*> serial_data_channels_;
 
   std::unique_ptr<uint8_t[]> read_buffer_;

@@ -531,7 +531,7 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
 
   std::unique_ptr<FrameParams> params;
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     do {
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
@@ -641,7 +641,6 @@ webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
     info.scaling_settings =
         VideoEncoder::ScalingSettings(kLowVp9QpThreshold, kHighVp9QpThreshold);
   }
-  info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
@@ -725,7 +724,7 @@ int32_t JetsonVideoEncoder::Encode(
   SetFramerate(framerate_);
   SetBitrateBps(bitrate_adjuster_->GetAdjustedBitrateBps());
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),

@@ -128,7 +128,7 @@ bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
   ResizerFillBuffer();
 
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
         configured_width_, configured_height_, timestamp_us));
   }
@@ -181,7 +181,7 @@ void MMALV4L2Capturer::ResizerOutputCallback(MMAL_PORT_T* port,
                                              MMAL_BUFFER_HEADER_T* buffer) {
   std::unique_ptr<FrameParams> params;
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     do {
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
