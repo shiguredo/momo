@@ -11,7 +11,7 @@
 
 ## develop
 
-- [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
+- [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
     - @melpon
 - [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
     - @melpon
