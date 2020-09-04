@@ -19,10 +19,6 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
-#if USE_ROS
-#include "ros/ros_audio_device_module.h"
-#endif
-
 #include "momo_video_decoder_factory.h"
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
@@ -75,18 +71,7 @@ RTCManager::RTCManager(
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-#if USE_ROS
-  ROSAudioDeviceModuleConfig ros_audio_config;
-  ros_audio_config.audio_topic_name = config_.audio_topic_name;
-  ros_audio_config.audio_topic_rate = config_.audio_topic_rate;
-  ros_audio_config.audio_topic_ch = config_.audio_topic_ch;
-  media_dependencies.adm =
-      worker_thread_->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
-          RTC_FROM_HERE, [&] {
-            return ROSAudioDeviceModule::Create(
-                ros_audio_config, dependencies.task_queue_factory.get());
-          });
-#elif defined(_WIN32)
+#if defined(_WIN32)
   media_dependencies.adm =
       worker_thread_->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
           RTC_FROM_HERE, [&] {

@@ -17,121 +17,9 @@
 // nlohamnn/json
 #include <nlohmann/json.hpp>
 
-#if USE_ROS
-#include <ros/ros.h>
-#endif
-
 #include "momo_version.h"
 
 using json = nlohmann::json;
-
-#if USE_ROS
-
-void Util::ParseArgs(int argc,
-                     char* argv[],
-                     bool& use_test,
-                     bool& use_ayame,
-                     bool& use_sora,
-                     int& log_level,
-                     MomoArgs& args) {
-  ros::init(argc, argv, "momo", ros::init_options::AnonymousName);
-
-  ros::NodeHandle nh;
-  args.camera_name = nh.resolveName("image");
-  args.audio_topic_name = nh.resolveName("audio");
-
-  ros::NodeHandle local_nh("~");
-  local_nh.param<bool>("compressed", args.image_compressed,
-                       args.image_compressed);
-
-  local_nh.param<bool>("use_test", use_test, use_test);
-  local_nh.param<bool>("use_ayame", use_ayame, use_ayame);
-  local_nh.param<bool>("use_sora", use_sora, use_sora);
-
-  local_nh.param<bool>("no_google_stun", args.no_google_stun,
-                       args.no_google_stun);
-  local_nh.param<bool>("no_video_device", args.no_video_device,
-                       args.no_video_device);
-  local_nh.param<bool>("no_audio_device", args.no_audio_device,
-                       args.no_audio_device);
-  local_nh.param<bool>("force_i420", args.force_i420, args.force_i420);
-  local_nh.param<bool>("use_native", args.use_native, args.use_native);
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER
-  local_nh.param<std::string>("video_device", args.video_device,
-                              args.video_device);
-#endif
-  local_nh.param<std::string>("sora_video_codec_type",
-                              args.sora_video_codec_type,
-                              args.sora_video_codec_type);
-  local_nh.param<std::string>("sora_audio_codec_type",
-                              args.sora_audio_codec_type,
-                              args.sora_audio_codec_type);
-  local_nh.param<int>("sora_video_bit_rate", args.sora_video_bit_rate,
-                      args.sora_video_bit_rate);
-  local_nh.param<int>("sora_audio_bit_rate", args.sora_audio_bit_rate,
-                      args.sora_audio_bit_rate);
-  local_nh.param<std::string>("resolution", args.resolution, args.resolution);
-  local_nh.param<int>("framerate", args.framerate, args.framerate);
-  local_nh.param<int>("audio_topic_rate", args.audio_topic_rate,
-                      args.audio_topic_rate);
-  local_nh.param<int>("audio_topic_ch", args.audio_topic_ch,
-                      args.audio_topic_ch);
-  local_nh.param<std::string>("priority", args.priority, args.priority);
-  local_nh.param<int>("sora_port", args.sora_port, args.sora_port);
-  local_nh.param<int>("test_port", args.test_port, args.test_port);
-  local_nh.param<bool>("insecure", args.insecure, args.insecure);
-  local_nh.param<int>("log_level", log_level, log_level);
-
-  // オーディオフラグ
-  local_nh.param<bool>("disable_echo_cancellation",
-                       args.disable_echo_cancellation,
-                       args.disable_echo_cancellation);
-  local_nh.param<bool>("disable_auto_gain_control",
-                       args.disable_auto_gain_control,
-                       args.disable_auto_gain_control);
-  local_nh.param<bool>("disable_noise_suppression",
-                       args.disable_noise_suppression,
-                       args.disable_noise_suppression);
-  local_nh.param<bool>("disable_highpass_filter", args.disable_highpass_filter,
-                       args.disable_highpass_filter);
-  local_nh.param<bool>("disable_typing_detection",
-                       args.disable_typing_detection,
-                       args.disable_typing_detection);
-  local_nh.param<bool>("disable_residual_echo_detector",
-                       args.disable_residual_echo_detector,
-                       args.disable_residual_echo_detector);
-
-  if (use_sora && local_nh.hasParam("SIGNALING_URL") &&
-      local_nh.hasParam("CHANNEL_ID")) {
-    local_nh.getParam("SIGNALING_URL", args.sora_signaling_host);
-    local_nh.getParam("CHANNEL_ID", args.sora_channel_id);
-    local_nh.param<bool>("auto", args.sora_auto_connect,
-                         args.sora_auto_connect);
-
-    std::string sora_metadata;
-    local_nh.param<std::string>("metadata", sora_metadata, "");
-
-    // メタデータのパース
-    if (!sora_metadata.empty()) {
-      args.sora_metadata = json::parse(sora_metadata);
-    }
-  } else if (use_test) {
-    local_nh.param<std::string>("document_root", args.test_document_root,
-                                get_current_dir_name());
-  } else if (use_ayame && local_nh.hasParam("SIGNALING_URL") &&
-             local_nh.hasParam("ROOM_ID")) {
-    local_nh.getParam("SIGNALING_URL", args.ayame_signaling_host);
-    local_nh.getParam("ROOM_ID", args.ayame_room_id);
-    local_nh.param<std::string>("client_id", args.ayame_client_id,
-                                args.ayame_client_id);
-    local_nh.param<std::string>("signaling_key", args.ayame_signaling_key,
-                                args.ayame_signaling_key);
-  } else {
-    exit(1);
-  }
-}
-
-#else
 
 void Util::ParseArgs(int argc,
                      char* argv[],
@@ -507,8 +395,6 @@ void Util::ParseArgs(int argc,
     use_ayame = true;
   }
 }
-
-#endif
 
 void Util::ShowVideoCodecs(VideoCodecInfo info) {
   // VP8:

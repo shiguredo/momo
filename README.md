@@ -43,10 +43,6 @@ Momo はデータチャネルを利用しシリアルに直接読み書きが可
 
 Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
 
-### ROS への対応
-
-[ROS](http://www.ros.org/) ノードとしても利用可能です。
-
 ### AV1 への対応
 
 Momo 同士で SDL 機能を利用して libwebrtc が対応している AV1 が利用可能です。
@@ -98,8 +94,6 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
-- Ubuntu 16.04 x86_64 ROS Kinetic
-    - http://wiki.ros.org/kinetic
 
 ## 使ってみる
 
@@ -196,8 +190,6 @@ limitations under the License.
 - Simulcast 対応
 - 録画対応
     - MP4 形式での出力
-- ROS Melodic 対応
-- ROS2 対応
 
 ## Momo についての電子書籍
 

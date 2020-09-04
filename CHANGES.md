@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
+    - @melpon
 - [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
     - @melpon
 - [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
