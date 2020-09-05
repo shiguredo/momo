@@ -46,17 +46,18 @@ struct MomoArgs {
   bool sora_video = true;
   bool sora_audio = true;
   // 空文字の場合コーデックは Sora 側で決める
-  std::string sora_video_codec = "";
-  std::string sora_audio_codec = "";
+  std::string sora_video_codec_type = "";
+  std::string sora_audio_codec_type = "";
   // 0 の場合ビットレートは Sora 側で決める
-  int sora_video_bitrate = 0;
-  int sora_audio_bitrate = 0;
+  int sora_video_bit_rate = 0;
+  int sora_audio_bit_rate = 0;
   bool sora_auto_connect = false;
   nlohmann::json sora_metadata;
   // upstream or downstream
   std::string sora_role = "upstream";
   bool sora_multistream = false;
-  int sora_spotlight = -1;
+  bool sora_spotlight = false;
+  int sora_spotlight_number = 0;
   int sora_port = -1;
   bool sora_simulcast = false;
 

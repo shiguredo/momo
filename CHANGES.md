@@ -13,13 +13,23 @@
 
 - [CHANGE] Jetson のフレーム変換順序を変更
     - @tnoho
-- [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
-    - @melpon
-- [FIX] `SDL_PollEvent` の扱い方を修正
-    - @melpon
-- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
+- [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
     - @melpon
 - [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
+    - @melpon
+- [CHANGE] `--audio-bitrate` を `--audio-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--video-bitrate` を `--video-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--audio-codec` を `--audio-codec-type` に変更
+    - @melpon
+- [CHANGE] `--video-codec` を `--video-codec-type` に変更
+    - @melpon
+- [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
+    - @melpon
+- [ADD] `--spotlight-number INT` の引数を追加
+    - @melpon
+- [FIX] `SDL_PollEvent` の扱い方を修正
     - @melpon
 
 ## 2020.8.1
