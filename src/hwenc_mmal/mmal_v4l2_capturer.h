@@ -20,7 +20,7 @@ extern "C" {
 #include <queue>
 
 // WebRTC
-#include <rtc_base/critical_section.h>
+#include <rtc_base/synchronization/mutex.h>
 
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 
@@ -70,7 +70,7 @@ class MMALV4L2Capturer : public V4L2VideoCapturer {
   MMAL_POOL_T* resizer_pool_out_;
   int32_t configured_width_;
   int32_t configured_height_;
-  rtc::CriticalSection frame_params_lock_;
+  webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   unsigned int decoded_buffer_num_;
   size_t decoded_buffer_size_;

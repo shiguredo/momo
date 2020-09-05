@@ -33,6 +33,8 @@
     - @melpon
 - [FIX] `SDL_PollEvent` の扱い方を修正
     - @melpon
+- [UPDATE] `libwebrtc` を `M86.4240@{#1}` に上げる
+    - @voluntas
 
 ## 2020.8.1
 

@@ -58,7 +58,7 @@ int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  rtc::CritScope lock(&config_lock_);
+  webrtc::MutexLock lock(&config_lock_);
 
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
@@ -125,7 +125,7 @@ void MMALH264Decoder::MMALOutputCallback(MMAL_PORT_T* port,
                    << " length:" << buffer->length;
 
   if (buffer->cmd == MMAL_EVENT_FORMAT_CHANGED) {
-    rtc::CritScope lock(&config_lock_);
+    webrtc::MutexLock lock(&config_lock_);
     MMAL_EVENT_FORMAT_CHANGED_T* event = mmal_event_format_changed_get(buffer);
 
     width_ = event->format->es->video.width;
