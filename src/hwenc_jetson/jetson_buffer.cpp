@@ -62,64 +62,116 @@ int JetsonBuffer::height() const {
 }
 
 rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-      webrtc::I420Buffer::Create(raw_width_, raw_height_);
   if (video_type_ == webrtc::VideoType::kMJPEG) {
+    rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
+        webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
+    int32_t buffer_width = ((scaled_width_ + 15) / 16) * 16;
+    int32_t buffer_height = ((scaled_height_ + 15) / 16) * 16;
+
+    NvBufferCreateParams input_params = {0};
+    input_params.payloadType = NvBufferPayload_SurfArray;
+    input_params.width = buffer_width;
+    input_params.height = buffer_height;
+    input_params.layout = NvBufferLayout_Pitch;
+    input_params.colorFormat = NvBufferColorFormat_YUV420;
+    input_params.nvbuf_tag = NvBufferTag_NONE;
+
+    int dmabuf_fd;
+    if (NvBufferCreateEx(&dmabuf_fd, &input_params) == -1) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferCreateEx";
+      return scaled_buffer;
+    }
+
     NvBufferParams params = {0};
     if (NvBufferGetParams(fd_, &params) == -1) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferGetParams";
-      return i420_buffer;
+      return scaled_buffer;
     }
+
+    NvBufferRect src_rect, dest_rect;
+    src_rect.top = 0;
+    src_rect.left = 0;
+    src_rect.width = params.width[0];
+    src_rect.height = params.height[0];
+    dest_rect.top = 0;
+    dest_rect.left = 0;
+    dest_rect.width = buffer_width;
+    dest_rect.height = buffer_height;
+
+    NvBufferTransformParams trans_params;
+    memset(&trans_params, 0, sizeof(trans_params));
+    trans_params.transform_flag = NVBUFFER_TRANSFORM_FILTER;
+    trans_params.transform_flip = NvBufferTransform_None;
+    trans_params.transform_filter = NvBufferTransform_Filter_Smart;
+    trans_params.src_rect = src_rect;
+    trans_params.dst_rect = dest_rect;
+
+    if (NvBufferTransform(fd_, dmabuf_fd, &trans_params) == -1) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferTransform";
+      return scaled_buffer;
+    }
+
+    NvBufferParams dmabuf_params = {0};
+    if (NvBufferGetParams(dmabuf_fd, &dmabuf_params) == -1) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferGetParams";
+      return scaled_buffer;
+    }
+
     int ret;
     void *data_addr;
     uint8_t* dest_addr;
-    for (int plane = 0; plane < params.num_planes; plane++) {
-      ret = NvBufferMemMap (fd_, plane, NvBufferMem_Read, &data_addr);
+    for (int plane = 0; plane < dmabuf_params.num_planes; plane++) {
+      ret = NvBufferMemMap (dmabuf_fd, plane, NvBufferMem_Read, &data_addr);
       if (ret == 0) {
-        NvBufferMemSyncForCpu (fd_, plane, &data_addr);
-        int height;
-        int v_stride;
+        NvBufferMemSyncForCpu (dmabuf_fd, plane, &data_addr);
+        int height, width;
         if (plane == 0) {
-          dest_addr = i420_buffer.get()->MutableDataY();
-          height = raw_height_;
-          v_stride = 1;
+          dest_addr = scaled_buffer.get()->MutableDataY();
+          width = scaled_width_;
+          height = scaled_height_;
         } else if (plane == 1) {
-          dest_addr = i420_buffer.get()->MutableDataU();
-          height = (raw_height_ + 1) >> 1;
-          v_stride = 2;
+          dest_addr = scaled_buffer.get()->MutableDataU();
+          width = (scaled_width_ + 1) >> 1;
+          height = (scaled_height_ + 1) >> 1;
         } else if (plane == 2) {
-          dest_addr = i420_buffer.get()->MutableDataV();
-          height = (raw_height_ + 1) >> 1;
-          v_stride = 2;
+          dest_addr = scaled_buffer.get()->MutableDataV();
+          width = (scaled_width_ + 1) >> 1;
+          height = (scaled_height_ + 1) >> 1;
         }
         for (int i = 0; i < height; i++)
         {
-          memcpy(dest_addr + params.width[plane] * i, 
-                (uint8_t*)data_addr + params.pitch[plane] * i * v_stride,
-                params.width[plane]);
+          memcpy(dest_addr + width * i, 
+                (uint8_t*)data_addr + dmabuf_params.pitch[plane] * i,
+                width);
         }
       }
-      NvBufferMemUnMap (fd_, plane, &data_addr);
+      NvBufferMemUnMap (dmabuf_fd, plane, &data_addr);
       if (ret == -1) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferMemMap plane=" << plane;
-        return i420_buffer;
+        return scaled_buffer;
       }
     }
+
+    NvBufferDestroy(dmabuf_fd);
+
+    return scaled_buffer;
   } else {
+    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+        webrtc::I420Buffer::Create(raw_width_, raw_height_);
     const int conversionResult = libyuv::ConvertToI420(
         data_.get(), length_, i420_buffer.get()->MutableDataY(),
         i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
         i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
         i420_buffer.get()->StrideV(), 0, 0, raw_width_, raw_height_, raw_width_,
         raw_height_, libyuv::kRotate0, ConvertVideoType(video_type_));
+    if (raw_width_ == scaled_width_ && raw_height_ == scaled_height_) {
+      return i420_buffer;
+    }
+    rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
+        webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
+    scaled_buffer->ScaleFrom(*i420_buffer->ToI420());
+    return scaled_buffer;
   }
-  if (raw_width_ == scaled_width_ && raw_height_ == scaled_height_) {
-    return i420_buffer;
-  }
-  rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
-      webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
-  scaled_buffer->ScaleFrom(*i420_buffer->ToI420());
-  return scaled_buffer;
 }
 
 int JetsonBuffer::RawWidth() const {
