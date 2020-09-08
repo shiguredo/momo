@@ -132,9 +132,11 @@ void SoraClient::DoSendConnect() {
     json_message["simulcast"] = true;
   }
 
-  if (config_.spotlight > 0) {
-    json_message["multistream"] = true;
-    json_message["spotlight"] = config_.spotlight;
+  if (config_.spotlight) {
+    json_message["spotlight"] = true;
+  }
+  if (config_.spotlight && config_.spotlight_number > 0) {
+    json_message["spotlight_number"] = config_.spotlight_number;
   }
 
   if (!config_.metadata.is_null()) {
@@ -144,31 +146,31 @@ void SoraClient::DoSendConnect() {
   if (!config_.video) {
     // video: false の場合はそのまま設定
     json_message["video"] = false;
-  } else if (config_.video && config_.video_codec.empty() &&
-             config_.video_bitrate == 0) {
+  } else if (config_.video && config_.video_codec_type.empty() &&
+             config_.video_bit_rate == 0) {
     // video: true の場合、その他のオプションの設定が行われてなければ true を設定
     json_message["video"] = true;
   } else {
     // それ以外はちゃんとオプションを設定する
-    if (!config_.video_codec.empty()) {
-      json_message["video"]["codec_type"] = config_.video_codec;
+    if (!config_.video_codec_type.empty()) {
+      json_message["video"]["codec_type"] = config_.video_codec_type;
     }
-    if (config_.video_bitrate != 0) {
-      json_message["video"]["bit_rate"] = config_.video_bitrate;
+    if (config_.video_bit_rate != 0) {
+      json_message["video"]["bit_rate"] = config_.video_bit_rate;
     }
   }
 
   if (!config_.audio) {
     json_message["audio"] = false;
-  } else if (config_.audio && config_.audio_codec.empty() &&
-             config_.audio_bitrate == 0) {
+  } else if (config_.audio && config_.audio_codec_type.empty() &&
+             config_.audio_bit_rate == 0) {
     json_message["audio"] = true;
   } else {
-    if (!config_.audio_codec.empty()) {
-      json_message["audio"]["codec_type"] = config_.audio_codec;
+    if (!config_.audio_codec_type.empty()) {
+      json_message["audio"]["codec_type"] = config_.audio_codec_type;
     }
-    if (config_.audio_bitrate != 0) {
-      json_message["audio"]["bit_rate"] = config_.audio_bitrate;
+    if (config_.audio_bit_rate != 0) {
+      json_message["audio"]["bit_rate"] = config_.audio_bit_rate;
     }
   }
 

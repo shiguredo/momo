@@ -60,14 +60,16 @@ void Util::ParseArgs(int argc,
   local_nh.param<std::string>("video_device", args.video_device,
                               args.video_device);
 #endif
-  local_nh.param<std::string>("sora_video_codec", args.sora_video_codec,
-                              args.sora_video_codec);
-  local_nh.param<std::string>("sora_audio_codec", args.sora_audio_codec,
-                              args.sora_audio_codec);
-  local_nh.param<int>("sora_video_bitrate", args.sora_video_bitrate,
-                      args.sora_video_bitrate);
-  local_nh.param<int>("sora_audio_bitrate", args.sora_audio_bitrate,
-                      args.sora_audio_bitrate);
+  local_nh.param<std::string>("sora_video_codec_type",
+                              args.sora_video_codec_type,
+                              args.sora_video_codec_type);
+  local_nh.param<std::string>("sora_audio_codec_type",
+                              args.sora_audio_codec_type,
+                              args.sora_audio_codec_type);
+  local_nh.param<int>("sora_video_bit_rate", args.sora_video_bit_rate,
+                      args.sora_video_bit_rate);
+  local_nh.param<int>("sora_audio_bit_rate", args.sora_audio_bit_rate,
+                      args.sora_audio_bit_rate);
   local_nh.param<std::string>("resolution", args.resolution, args.resolution);
   local_nh.param<int>("framerate", args.framerate, args.framerate);
   local_nh.param<int>("audio_topic_rate", args.audio_topic_rate,
@@ -386,16 +388,18 @@ void Util::ParseArgs(int argc,
                    "Send audio to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_set("--video-codec", args.sora_video_codec,
+      ->add_set("--video-codec-type", args.sora_video_codec_type,
                 {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec", args.sora_audio_codec, {"", "OPUS"},
-                    "Audio codec for send");
+  sora_app->add_set("--audio-codec-type", args.sora_audio_codec_type,
+                    {"", "OPUS"}, "Audio codec for send");
   sora_app
-      ->add_option("--video-bitrate", args.sora_video_bitrate, "Video bitrate")
+      ->add_option("--video-bit-rate", args.sora_video_bit_rate,
+                   "Video bit rate")
       ->check(CLI::Range(0, 30000));
   sora_app
-      ->add_option("--audio-bitrate", args.sora_audio_bitrate, "Audio bitrate")
+      ->add_option("--audio-bit-rate", args.sora_audio_bit_rate,
+                   "Audio bit rate")
       ->check(CLI::Range(0, 510));
   sora_app
       ->add_option("--multistream", args.sora_multistream,
@@ -405,10 +409,12 @@ void Util::ParseArgs(int argc,
       "--role", args.sora_role,
       {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
       "Role (default: upstream)");
+  sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_option("--spotlight", args.sora_spotlight,
+      ->add_option("--spotlight-number", args.sora_spotlight_number,
                    "Stream count delivered in spotlight")
-      ->check(CLI::Range(1, 10));
+      ->check(CLI::Range(0, 8));
   sora_app->add_option("--port", args.sora_port, "Port number (default: -1)")
       ->check(CLI::Range(-1, 65535));
   sora_app
@@ -439,8 +445,8 @@ void Util::ParseArgs(int argc,
   }
 
   // サイマルキャストは VP8, H264 のみで動作する
-  if (args.sora_simulcast && args.sora_video_codec != "VP8" &&
-      args.sora_video_codec != "H264") {
+  if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
+      args.sora_video_codec_type != "H264") {
     std::cerr << "Simulcast works only --video-codec=VP8 or --video-codec=H264."
               << std::endl;
     exit(1);
