@@ -1,11 +1,11 @@
 # 変更履歴
 
+- CHANGE
+    - 下位互換のない変更
 - UPDATE
     - 下位互換がある変更
 - ADD
     - 下位互換がある追加
-- CHANGE
-    - 下位互換のない変更
 - FIX
     - バグ修正
 
@@ -27,6 +27,14 @@
     - @melpon
 - [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
     - @melpon
+- [UPDATE] cmake を 3.18.2 に上げる
+    - @voluntas
+- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
+    - @melpon
+- [UPDATE] `libwebrtc` を `M86.4240@{#1}` に上げる
+    - @voluntas
+- [UPDATE] json を 3.9.1 に上げる
+    - @voluntas
 - [ADD] `--spotlight-number INT` の引数を追加
     - @melpon
 - [FIX] `SDL_PollEvent` の扱い方を修正
