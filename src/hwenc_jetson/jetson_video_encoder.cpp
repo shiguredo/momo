@@ -179,7 +179,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     create_params.nvbuf_tag = NvBufferTag_VIDEO_ENC;
     for (int i = 0; i < CONVERTER_CAPTURE_NUM; i++)
     {
-      ret = NvBufferCreateEx(&dmabuff_fd[i], &create_params);
+      ret = NvBufferCreateEx(&dmabuff_fd_[i], &create_params);
       INIT_ERROR(ret < 0, "Failed to NvBufferCreateEx at converter");
     }
     
@@ -304,7 +304,7 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
       v4l2_buf.m.planes = planes;
       v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       v4l2_buf.memory = V4L2_MEMORY_DMABUF;
-      v4l2_buf.m.planes[0].m.fd = dmabuff_fd[i];
+      v4l2_buf.m.planes[0].m.fd = dmabuff_fd_[i];
       ret = converter_->capture_plane.qBuffer(v4l2_buf, nullptr);
       INIT_ERROR(ret < 0, "Failed to qBuffer at converter capture_plane");
     }
@@ -360,9 +360,9 @@ void JetsonVideoEncoder::JetsonRelease() {
     converter_->capture_plane.waitForDQThread(2000);
     for(int i = 0; i < CONVERTER_CAPTURE_NUM; i++)
     {
-      if(dmabuff_fd[i] != 0)
+      if(dmabuff_fd_[i] != 0)
       {
-        NvBufferDestroy(dmabuff_fd[i]);
+        NvBufferDestroy(dmabuff_fd_[i]);
       }
     }
     delete converter_;
@@ -419,10 +419,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
   
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
-    while (enc0_buffer_queue_->empty()) {
-      enc0_buffer_cond_.wait(lock, [this] { return enc0_buffer_ready_; });
-      enc0_buffer_ready_ = false;
-    }
+    enc0_buffer_cond_.wait(lock, [this] { return !enc0_buffer_queue_->empty(); });
     enc0_buffer = enc0_buffer_queue_->front();
     enc0_buffer_queue_->pop();
   }
@@ -432,7 +429,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
 
   enc0_qbuf.index = enc0_buffer->index;
   enc0_qbuf.m.planes = planes;
-  buffer->planes[0].fd = dmabuff_fd[v4l2_buf->index];
+  buffer->planes[0].fd = dmabuff_fd_[v4l2_buf->index];
 
   enc0_qbuf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   enc0_qbuf.timestamp.tv_sec = v4l2_buf->timestamp.tv_sec;
@@ -477,7 +474,7 @@ bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
 
   conv_qbuf.index = shared_buffer->index;
   conv_qbuf.m.planes = planes;
-  conv_qbuf.m.planes[0].m.fd = dmabuff_fd[shared_buffer->index];
+  conv_qbuf.m.planes[0].m.fd = dmabuff_fd_[shared_buffer->index];
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
     enc0_buffer_queue_->push(buffer);
@@ -488,7 +485,6 @@ bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
       return false;
     }
 
-    enc0_buffer_ready_ = true;
     enc0_buffer_cond_.notify_all();
   }
 
@@ -664,7 +660,7 @@ int32_t JetsonVideoEncoder::Encode(
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     use_native_ = true;
     JetsonBuffer* jetson_buffer =
-        dynamic_cast<JetsonBuffer*>(frame_buffer.get());
+        static_cast<JetsonBuffer*>(frame_buffer.get());
     video_type = jetson_buffer->VideoType();
     raw_width_ = jetson_buffer->RawWidth();
     raw_height_ = jetson_buffer->RawHeight();
@@ -790,6 +786,9 @@ int32_t JetsonVideoEncoder::Encode(
                             buffer->planes[2].fmt.bytesperpixel *
                             buffer->planes[2].fmt.height;
       buffer->planes[1].data = native_data + offset;
+    } else {
+      RTC_LOG(LS_ERROR) << "Unsupported webrtc::VideoType";
+      return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;

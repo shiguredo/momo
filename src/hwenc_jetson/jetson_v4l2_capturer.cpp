@@ -106,7 +106,7 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
         JetsonBuffer::Create(
             _captureVideoType, width, height, adapted_width, adapted_height,
-            fd, pixfmt, std::move(decoder)));
+            fd, pixfmt, decoder.release()));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)

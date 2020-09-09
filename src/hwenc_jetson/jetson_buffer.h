@@ -24,7 +24,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    std::unique_ptr<NvJPEGDecoder> decoder);
+    NvJPEGDecoder* decoder);
 
   static rtc::scoped_refptr<JetsonBuffer> Create(
     webrtc::VideoType video_type,
@@ -57,7 +57,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    std::unique_ptr<NvJPEGDecoder> decoder);
+    NvJPEGDecoder* decoder);
 
   JetsonBuffer(
     webrtc::VideoType video_type,

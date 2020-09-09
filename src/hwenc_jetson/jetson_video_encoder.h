@@ -135,7 +135,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   bool use_native_;
   NvV4l2Element* native_input_elem_;
   bool use_dmabuff_;
-  int dmabuff_fd[CONVERTER_CAPTURE_NUM];
+  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
