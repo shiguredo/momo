@@ -18,7 +18,7 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    NvJPEGDecoder* decoder) {
+    std::shared_ptr<NvJPEGDecoder> decoder) {
   return new rtc::RefCountedObject<JetsonBuffer>(
       video_type,
       raw_width,
@@ -214,7 +214,7 @@ JetsonBuffer::JetsonBuffer(
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    NvJPEGDecoder* decoder)
+    std::shared_ptr<NvJPEGDecoder> decoder)
     : video_type_(video_type),
       raw_width_(raw_width),
       raw_height_(raw_height),
