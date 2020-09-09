@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] Jetson のフレーム変換順序を変更
+    - @tnoho
 - [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
     - @melpon
 - [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする

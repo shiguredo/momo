@@ -32,6 +32,8 @@
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
 
+#define CONVERTER_CAPTURE_NUM 2
+
 class ProcessThread;
 
 class JetsonVideoEncoder : public webrtc::VideoEncoder {
@@ -62,7 +64,8 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                 int64_t tsus,
                 int64_t rtpts,
                 webrtc::VideoRotation r,
-                absl::optional<webrtc::ColorSpace> c)
+                absl::optional<webrtc::ColorSpace> c,
+                std::shared_ptr<NvJPEGDecoder> d)
         : width(w),
           height(h),
           render_time_ms(rtms),
@@ -70,7 +73,8 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
           timestamp_us(tsus),
           timestamp_rtp(rtpts),
           rotation(r),
-          color_space(c) {}
+          color_space(c),
+          decoder_(d) {}
 
     int32_t width;
     int32_t height;
@@ -80,6 +84,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
     int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
     absl::optional<webrtc::ColorSpace> color_space;
+    std::shared_ptr<NvJPEGDecoder> decoder_;
   };
 
   int32_t JetsonConfigure();
@@ -112,7 +117,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
-  NvJPEGDecoder* decoder_;
   NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
   std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
@@ -128,7 +132,10 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
-  bool use_mjpeg_;
+  bool use_native_;
+  NvV4l2Element* native_input_elem_;
+  bool use_dmabuff_;
+  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
