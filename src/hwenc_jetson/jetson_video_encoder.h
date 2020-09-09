@@ -146,7 +146,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   std::mutex enc0_buffer_mtx_;
   std::condition_variable enc0_buffer_cond_;
-  bool enc0_buffer_ready_ = false;
   std::queue<NvBuffer*>* enc0_buffer_queue_;
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
