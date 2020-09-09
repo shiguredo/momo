@@ -419,10 +419,7 @@ bool JetsonVideoEncoder::ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
   
   {
     std::unique_lock<std::mutex> lock(enc0_buffer_mtx_);
-    while (enc0_buffer_queue_->empty()) {
-      enc0_buffer_cond_.wait(lock, [this] { return enc0_buffer_ready_; });
-      enc0_buffer_ready_ = false;
-    }
+    enc0_buffer_cond_.wait(lock, [this] { return !enc0_buffer_queue_->empty(); });
     enc0_buffer = enc0_buffer_queue_->front();
     enc0_buffer_queue_->pop();
   }
@@ -488,7 +485,6 @@ bool JetsonVideoEncoder::EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
       return false;
     }
 
-    enc0_buffer_ready_ = true;
     enc0_buffer_cond_.notify_all();
   }
 
