@@ -49,12 +49,6 @@ struct RTCManagerConfig {
     }
     return webrtc::DegradationPreference::BALANCED;
   }
-
-#if USE_ROS
-  std::string audio_topic_name = "";
-  int audio_topic_rate = 16000;
-  int audio_topic_ch = 1;
-#endif
 };
 
 class RTCManager {

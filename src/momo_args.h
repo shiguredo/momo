@@ -13,14 +13,6 @@
 #include "video_codec_info.h"
 
 struct MomoArgs {
-#if USE_ROS
-  std::string camera_name = "";
-  bool image_compressed = false;
-  std::string audio_topic_name = "";
-  int audio_topic_rate = 16000;
-  int audio_topic_ch = 1;
-#endif
-
   bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;

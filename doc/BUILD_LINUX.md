@@ -74,14 +74,3 @@ $ ./build.sh ubuntu-18.04_x86_64
 ```
 
 うまくいかない場合は `./build.sh --clean ubuntu-18.04_x86_64 && ./build.sh ubuntu-18.04_x86_64` を試してみてください。それでもだめな場合は Discord にお願いします。
-
-
-## Ubuntu 16.04 (x86_64) 向け ROS 対応バイナリを作成する
-
-build ディレクトリ以下で ./build.sh ubuntu-16.04_x86_64_ros と打つことで Momo の Ubuntu 16.04 x86_64 ROS 向けバイナリが生成されます。
-
-```shell
-$ ./build.sh ubuntu-16.04_x86_64_ros
-```
-
-うまくいかない場合は `./build.sh --clean ubuntu-16.04_x86_64_ros && ./build.sh ubuntu-16.04_x86_64_ros` を試してみてください。それでもだめな場合は Discord にお願いします。

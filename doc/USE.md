@@ -52,10 +52,6 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
-### ROS ノードとして Momo を使ってみる
-
-- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
-
 ## Q&A
 
 Q&A に関しては [QA.md](QA.md) をお読みください。

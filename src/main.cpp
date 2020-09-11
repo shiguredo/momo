@@ -10,11 +10,6 @@
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/string_utils.h>
 
-#if USE_ROS
-#include "ros/ros_log_sink.h"
-#include "ros/ros_video_capturer.h"
-#else
-
 #if USE_SCREEN_CAPTURER
 #include "rtc/screen_video_capturer.h"
 #endif
@@ -30,7 +25,6 @@
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
-#endif
 #endif
 
 #include "serial_data_channel/serial_data_manager.h"
@@ -62,10 +56,6 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::LogTimestamps();
   rtc::LogMessage::LogThreads();
 
-#if USE_ROS
-  std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
-  rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-#else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
                                    10));
@@ -75,7 +65,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-#endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
     if (args.no_video_device) {
@@ -99,14 +88,6 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-#if USE_ROS
-    ROSVideoCapturerConfig ros_vc_config;
-    ros_vc_config.camera_name = args.camera_name;
-    ros_vc_config.image_compressed = args.image_compressed;
-    rtc::scoped_refptr<ROSVideoCapturer> capturer(
-        new rtc::RefCountedObject<ROSVideoCapturer>(std::move(ros_vc_config)));
-    return capturer;
-#else  // USE_ROS
     auto size = args.GetSize();
 #if defined(__APPLE__)
     return MacCapturer::Create(size.width, size.height, args.framerate,
@@ -140,7 +121,6 @@ int main(int argc, char* argv[]) {
     return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,
                                        args.video_device);
 #endif
-#endif  // USE_ROS
   })();
 
   if (!capturer && !args.no_video_device) {
