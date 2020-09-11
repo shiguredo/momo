@@ -1,11 +1,11 @@
 # 変更履歴
 
+- CHANGE
+    - 下位互換のない変更
 - UPDATE
     - 下位互換がある変更
 - ADD
     - 下位互換がある追加
-- CHANGE
-    - 下位互換のない変更
 - FIX
     - バグ修正
 
@@ -13,6 +13,8 @@
 
 - [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
     - @melpon
+- [CHANGE] Jetson のフレーム変換順序を変更
+    - @tnoho
 - [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
     - @melpon
 - [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
@@ -27,9 +29,13 @@
     - @melpon
 - [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
     - @melpon
+- [UPDATE] cmake を 3.18.2 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M86.4240@{#1}` に上げる
+    - @voluntas
+- [UPDATE] json を 3.9.1 に上げる
+    - @voluntas
 - [ADD] `--spotlight-number INT` の引数を追加
-    - @melpon
-- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
     - @melpon
 - [FIX] `SDL_PollEvent` の扱い方を修正
     - @melpon

@@ -188,7 +188,7 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
     }
   }
 
-  rtc::CritScope critScope(&_captureCritSect);
+  webrtc::MutexLock lock(&capture_lock_);
   // first open /dev/video device
   if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
     RTC_LOG(LS_INFO) << "error in opening " << _videoDevice
@@ -199,20 +199,24 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 5;
+  const int nFormats = 7;
   unsigned int fmts[nFormats];
   if (!config.force_i420 && (config.width > 640 || config.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
-    fmts[2] = V4L2_PIX_FMT_YUYV;
-    fmts[3] = V4L2_PIX_FMT_UYVY;
-    fmts[4] = V4L2_PIX_FMT_JPEG;
+    fmts[2] = V4L2_PIX_FMT_YVU420;
+    fmts[3] = V4L2_PIX_FMT_NV12;
+    fmts[4] = V4L2_PIX_FMT_YUYV;
+    fmts[5] = V4L2_PIX_FMT_UYVY;
+    fmts[6] = V4L2_PIX_FMT_JPEG;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
-    fmts[1] = V4L2_PIX_FMT_YUYV;
-    fmts[2] = V4L2_PIX_FMT_UYVY;
-    fmts[3] = V4L2_PIX_FMT_MJPEG;
-    fmts[4] = V4L2_PIX_FMT_JPEG;
+    fmts[1] = V4L2_PIX_FMT_YVU420;
+    fmts[2] = V4L2_PIX_FMT_NV12;
+    fmts[3] = V4L2_PIX_FMT_YUYV;
+    fmts[4] = V4L2_PIX_FMT_UYVY;
+    fmts[5] = V4L2_PIX_FMT_MJPEG;
+    fmts[6] = V4L2_PIX_FMT_JPEG;
   }
 
   // Enumerate image formats.
@@ -255,6 +259,10 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
     _captureVideoType = webrtc::VideoType::kYUY2;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
     _captureVideoType = webrtc::VideoType::kI420;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)
+    _captureVideoType = webrtc::VideoType::kYV12;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
@@ -337,15 +345,15 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
 int32_t V4L2VideoCapturer::StopCapture() {
   if (_captureThread) {
     {
-      rtc::CritScope cs(&_captureCritSect);
+      webrtc::MutexLock lock(&capture_lock_);
       quit_ = true;
     }
-    // Make sure the capture thread stop stop using the critsect.
+    // Make sure the capture thread stop stop using the capture_lock_.
     _captureThread->Stop();
     _captureThread.reset();
   }
 
-  rtc::CritScope cs(&_captureCritSect);
+  webrtc::MutexLock lock(&capture_lock_);
   if (_captureStarted) {
     _captureStarted = false;
 
@@ -462,7 +470,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
   }
 
   {
-    rtc::CritScope cs(&_captureCritSect);
+    webrtc::MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;

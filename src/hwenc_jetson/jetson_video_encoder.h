@@ -25,12 +25,14 @@
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
-#include <rtc_base/critical_section.h>
+#include "rtc_base/synchronization/mutex.h"
 
 // Jetson Linux Multimedia API
 #include "NvJpegDecoder.h"
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
+
+#define CONVERTER_CAPTURE_NUM 2
 
 class ProcessThread;
 
@@ -62,7 +64,8 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                 int64_t tsus,
                 int64_t rtpts,
                 webrtc::VideoRotation r,
-                absl::optional<webrtc::ColorSpace> c)
+                absl::optional<webrtc::ColorSpace> c,
+                std::shared_ptr<NvJPEGDecoder> d)
         : width(w),
           height(h),
           render_time_ms(rtms),
@@ -70,7 +73,8 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
           timestamp_us(tsus),
           timestamp_rtp(rtpts),
           rotation(r),
-          color_space(c) {}
+          color_space(c),
+          decoder_(d) {}
 
     int32_t width;
     int32_t height;
@@ -80,6 +84,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
     int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
     absl::optional<webrtc::ColorSpace> color_space;
+    std::shared_ptr<NvJPEGDecoder> decoder_;
   };
 
   int32_t JetsonConfigure();
@@ -112,7 +117,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
-  NvJPEGDecoder* decoder_;
   NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
   std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
@@ -128,18 +132,20 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t height_;
   int32_t configured_width_;
   int32_t configured_height_;
-  bool use_mjpeg_;
+  bool use_native_;
+  NvV4l2Element* native_input_elem_;
+  bool use_dmabuff_;
+  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
 
-  rtc::CriticalSection frame_params_lock_;
+  webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   std::mutex enc0_buffer_mtx_;
   std::condition_variable enc0_buffer_cond_;
-  bool enc0_buffer_ready_ = false;
   std::queue<NvBuffer*>* enc0_buffer_queue_;
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;

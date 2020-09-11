@@ -539,6 +539,7 @@ elseif (TARGET_OS STREQUAL "linux")
       X11
       Xau
       Xdmcp
+      Xtst
       xcb
       plds4
       Xext
@@ -592,6 +593,8 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
+            src/hwenc_jetson/jetson_buffer.cpp
+            src/hwenc_jetson/jetson_v4l2_capturer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp

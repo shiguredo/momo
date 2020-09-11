@@ -29,7 +29,7 @@ $ tree
 ```
 $ sudo apt-get update
 $ sudo apt-get upgrade
-$ sudo apt-get install libnspr4 libnss3 libsdl2-dev
+$ sudo apt-get install libnspr4 libnss3
 ```
 
 ### Raspberry-Pi-OS で Raspberry Pi の Raspberry Pi 用カメラを利用する場合
