@@ -123,13 +123,17 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
     if (vp8_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::VP8Encoder::Create();
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::VP8Encoder::Create();
+      });
     }
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     if (vp9_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+      });
     }
 #if USE_JETSON_ENCODER
     if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
@@ -144,7 +148,9 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
     if (av1_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::CreateLibaomAv1Encoder();
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::CreateLibaomAv1Encoder();
+      });
     }
 #endif
   }
