@@ -29,8 +29,6 @@
     - @melpon
 - [UPDATE] cmake を 3.18.2 に上げる
     - @voluntas
-- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
-    - @melpon
 - [UPDATE] `libwebrtc` を `M86.4240@{#1}` に上げる
     - @voluntas
 - [UPDATE] json を 3.9.1 に上げる
