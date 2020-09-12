@@ -286,6 +286,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
             params.scale_resolution_down_by =
                 p["scaleResolutionDownBy"].get<double>();
           }
+          if (p.contains("maxFramerate")) {
+            params.max_framerate = p["maxFramerate"].get<double>();
+          }
           encoding_parameters.push_back(params);
         }
         connection_->SetEncodingParameters(std::move(encoding_parameters));
