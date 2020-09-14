@@ -31,7 +31,7 @@
     - @melpon
 - [UPDATE] cmake を 3.18.2 に上げる
     - @voluntas
-- [UPDATE] `libwebrtc` を `M86.4240@{#1}` に上げる
+- [UPDATE] `libwebrtc` を `M86.4240@{#2}` に上げる
     - @voluntas
 - [UPDATE] json を 3.9.1 に上げる
     - @voluntas
