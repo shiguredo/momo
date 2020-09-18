@@ -40,9 +40,22 @@
 #include "sora/sora_server.h"
 #include "util.h"
 
+#ifdef _WIN32
+// ScopedCOMInitializer がここに定義されてるので利用する
+#include <modules/audio_device/win/core_audio_utility_win.h>
+#endif
+
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 int main(int argc, char* argv[]) {
+#ifdef _WIN32
+  webrtc::webrtc_win::ScopedCOMInitializer com_initializer(webrtc::webrtc_win::ScopedCOMInitializer::kMTA);
+  if (!com_initializer.Succeeded()) {
+    std::cerr << "CoInitializeEx failed" << std::endl;
+    return 1;
+  }
+#endif
+
   MomoArgs args;
 
   bool use_test = false;
