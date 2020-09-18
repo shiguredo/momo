@@ -195,21 +195,21 @@ void Util::ParseArgs(int argc,
       return CLI::CheckedTransformer(VideoCodecInfo::GetValidMappingInfo(x),
                                      CLI::ignore_case);
     };
-    app.add_flag("--vp8-encoder", args.vp8_encoder, "VP8 Encoder")
+    app.add_option("--vp8-encoder", args.vp8_encoder, "VP8 Encoder")
         ->transform(f(info.vp8_encoders));
-    app.add_flag("--vp8-decoder", args.vp8_decoder, "VP8 Decoder")
+    app.add_option("--vp8-decoder", args.vp8_decoder, "VP8 Decoder")
         ->transform(f(info.vp8_decoders));
-    app.add_flag("--vp9-encoder", args.vp9_encoder, "VP9 Encoder")
+    app.add_option("--vp9-encoder", args.vp9_encoder, "VP9 Encoder")
         ->transform(f(info.vp9_encoders));
-    app.add_flag("--vp9-decoder", args.vp9_decoder, "VP9 Decoder")
+    app.add_option("--vp9-decoder", args.vp9_decoder, "VP9 Decoder")
         ->transform(f(info.vp9_decoders));
-    app.add_flag("--av1-encoder", args.av1_encoder, "AV1 Encoder")
+    app.add_option("--av1-encoder", args.av1_encoder, "AV1 Encoder")
         ->transform(f(info.av1_encoders));
-    app.add_flag("--av1-decoder", args.av1_decoder, "AV1 Decoder")
+    app.add_option("--av1-decoder", args.av1_decoder, "AV1 Decoder")
         ->transform(f(info.av1_decoders));
-    app.add_flag("--h264-encoder", args.h264_encoder, "H.264 Encoder")
+    app.add_option("--h264-encoder", args.h264_encoder, "H.264 Encoder")
         ->transform(f(info.h264_encoders));
-    app.add_flag("--h264-decoder", args.h264_decoder, "H.264 Decoder")
+    app.add_option("--h264-decoder", args.h264_decoder, "H.264 Decoder")
         ->transform(f(info.h264_decoders));
   }
 
