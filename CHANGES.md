@@ -29,6 +29,8 @@
     - @melpon
 - [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
     - @melpon
+- [UPDATE] Boost 1.74.0 にアップデートする
+    - @voluntas
 - [UPDATE] cmake を 3.18.2 に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `M86.4240@{#4}` に上げる
