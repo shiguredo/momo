@@ -416,7 +416,7 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
     initialize_params_.maxEncodeHeight = height_;
 
     //encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
-    encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
+    //encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
     encode_config.rcParams.averageBitRate = target_bitrate_bps_;
     encode_config.rcParams.maxBitRate = max_bitrate_bps_;
 
