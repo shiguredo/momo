@@ -166,7 +166,7 @@ int NvDecoder::HandleVideoSequence(CUVIDEOFORMAT *pVideoFormat)
 
     CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(m_cuContext));
     NVDEC_API_CALL(dyn::cuvidGetDecoderCaps(&decodecaps));
-    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
 
     if(!decodecaps.bIsSupported){
         NVDEC_THROW_ERROR("Codec not supported on this GPU", CUDA_ERROR_NOT_SUPPORTED);
@@ -306,7 +306,7 @@ int NvDecoder::HandleVideoSequence(CUVIDEOFORMAT *pVideoFormat)
 
     CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(m_cuContext));
     NVDEC_API_CALL(dyn::cuvidCreateDecoder(&m_hDecoder, &videoDecodeCreateInfo));
-    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
     STOP_TIMER("Session Initialization Time: ");
     return nDecodeSurface;
 }
@@ -416,7 +416,7 @@ int NvDecoder::ReconfigureDecoder(CUVIDEOFORMAT *pVideoFormat)
     START_TIMER
     CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(m_cuContext));
     NVDEC_API_CALL(dyn::cuvidReconfigureDecoder(m_hDecoder, &reconfigParams));
-    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
     STOP_TIMER("Session Reconfigure Time: ");
 
     return nDecodeSurface;
@@ -454,7 +454,7 @@ int NvDecoder::setReconfigParams(const Rect *pCropRect, const Dim *pResizeDim)
         {
             CUDA_DRVAPI_CALL(dyn::cuCtxPushCurrent(m_cuContext));
             CUDA_DRVAPI_CALL(dyn::cuMemFree((CUdeviceptr)pFrame));
-            CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+            CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
         }
         else
         {
@@ -522,7 +522,7 @@ int NvDecoder::HandlePictureDisplay(CUVIDPARSERDISPINFO *pDispInfo) {
                 {
                     CUDA_DRVAPI_CALL(dyn::cuMemAlloc((CUdeviceptr *)&pFrame, GetFrameSize()));
                 }
-                CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+                CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
             }
             else
             {
@@ -558,7 +558,7 @@ int NvDecoder::HandlePictureDisplay(CUVIDPARSERDISPINFO *pDispInfo) {
         CUDA_DRVAPI_CALL(dyn::cuMemcpy2DAsync(&m, m_cuvidStream));
     }
     CUDA_DRVAPI_CALL(dyn::cuStreamSynchronize(m_cuvidStream));
-    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(NULL));
+    CUDA_DRVAPI_CALL(dyn::cuCtxPopCurrent(nullptr));
 
     if ((int)m_vTimestamp.size() < m_nDecodedFrame) {
         m_vTimestamp.resize(m_vpFrame.size());
@@ -595,7 +595,7 @@ NvDecoder::~NvDecoder() {
 
     START_TIMER
     dyn::cuCtxPushCurrent(m_cuContext);
-    dyn::cuCtxPopCurrent(NULL);
+    dyn::cuCtxPopCurrent(nullptr);
 
     if (m_hParser) {
         dyn::cuvidDestroyVideoParser(m_hParser);
@@ -613,7 +613,7 @@ NvDecoder::~NvDecoder() {
         {
             dyn::cuCtxPushCurrent(m_cuContext);
             dyn::cuMemFree((CUdeviceptr)pFrame);
-            dyn::cuCtxPopCurrent(NULL);
+            dyn::cuCtxPopCurrent(nullptr);
         }
         else
         {

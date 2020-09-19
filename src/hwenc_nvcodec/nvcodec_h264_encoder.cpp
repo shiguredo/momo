@@ -406,8 +406,8 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
   initialize_params_.encodeConfig = &encode_config;
   try {
     nv_encoder_->CreateDefaultEncoderParams(
-        &initialize_params_, NV_ENC_CODEC_H264_GUID,
-        NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID);
+        &initialize_params_, NV_ENC_CODEC_H264_GUID, NV_ENC_PRESET_P3_GUID,
+        NV_ENC_TUNING_INFO_LOW_LATENCY);
 
     //initialize_params_.enablePTD = 1;
     initialize_params_.frameRateDen = 1;
@@ -441,9 +441,9 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
 
     nv_encoder_->CreateEncoder(&initialize_params_);
 
-    RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                  << " bitrate_bps_:" << target_bitrate_bps_
-                  << " maxBitRate:" << encode_config.rcParams.maxBitRate;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+                     << " bitrate_bps_:" << target_bitrate_bps_
+                     << " maxBitRate:" << encode_config.rcParams.maxBitRate;
   } catch (const NVENCException& e) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
     return WEBRTC_VIDEO_CODEC_ERROR;

@@ -29,6 +29,7 @@
 #include <thread>
 #include <list>
 #include <condition_variable>
+#include "dyn/cuda.h"
 
 extern simplelogger::Logger *logger;
 
@@ -36,7 +37,7 @@ extern simplelogger::Logger *logger;
 inline bool check(CUresult e, int iLine, const char *szFile) {
     if (e != CUDA_SUCCESS) {
         const char *szErrName = NULL;
-        cuGetErrorName(e, &szErrName);
+        dyn::cuGetErrorName(e, &szErrName);
         LOG(FATAL) << "CUDA driver API error " << szErrName << " at line " << iLine << " in file " << szFile;
         return false;
     }

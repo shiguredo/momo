@@ -135,4 +135,4 @@ RUN set -ex \
   && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub \
   && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
   && apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-10.0 clang-8
+  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-11.0 clang-10
