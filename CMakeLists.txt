@@ -195,9 +195,9 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
-  set(CMAKE_C_COMPILER clang-8)
-  set(CMAKE_CXX_COMPILER clang++-8)
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
+  set(CMAKE_C_COMPILER clang-10)
+  set(CMAKE_CXX_COMPILER clang++-10)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -218,9 +218,9 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
-  set(CMAKE_C_COMPILER clang-8)
-  set(CMAKE_CXX_COMPILER clang++-8)
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
+  set(CMAKE_C_COMPILER clang-10)
+  set(CMAKE_CXX_COMPILER clang++-10)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -574,7 +574,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_30"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)

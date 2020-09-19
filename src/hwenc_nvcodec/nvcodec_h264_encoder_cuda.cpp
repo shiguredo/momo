@@ -8,101 +8,9 @@
 
 #include "dyn/cuda.h"
 
-#ifdef __cuda_cuda_h__
-inline bool check(CUresult e, int iLine, const char* szFile) {
-  if (e != CUDA_SUCCESS) {
-    const char* szErrName = NULL;
-    dyn::cuGetErrorName(e, &szErrName);
-    std::cerr << "CUDA driver API error " << szErrName << " at line " << iLine
-              << " in file " << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-#endif
-
-#ifdef __CUDA_RUNTIME_H__
-inline bool check(cudaError_t e, int iLine, const char* szFile) {
-  if (e != cudaSuccess) {
-    std::cerr << "CUDA runtime API error " << cudaGetErrorName(e) << " at line "
-              << iLine << " in file " << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-#endif
-
-#ifdef _NV_ENCODEAPI_H_
-inline bool check(NVENCSTATUS e, int iLine, const char* szFile) {
-  const char* aszErrName[] = {
-      "NV_ENC_SUCCESS",
-      "NV_ENC_ERR_NO_ENCODE_DEVICE",
-      "NV_ENC_ERR_UNSUPPORTED_DEVICE",
-      "NV_ENC_ERR_INVALID_ENCODERDEVICE",
-      "NV_ENC_ERR_INVALID_DEVICE",
-      "NV_ENC_ERR_DEVICE_NOT_EXIST",
-      "NV_ENC_ERR_INVALID_PTR",
-      "NV_ENC_ERR_INVALID_EVENT",
-      "NV_ENC_ERR_INVALID_PARAM",
-      "NV_ENC_ERR_INVALID_CALL",
-      "NV_ENC_ERR_OUT_OF_MEMORY",
-      "NV_ENC_ERR_ENCODER_NOT_INITIALIZED",
-      "NV_ENC_ERR_UNSUPPORTED_PARAM",
-      "NV_ENC_ERR_LOCK_BUSY",
-      "NV_ENC_ERR_NOT_ENOUGH_BUFFER",
-      "NV_ENC_ERR_INVALID_VERSION",
-      "NV_ENC_ERR_MAP_FAILED",
-      "NV_ENC_ERR_NEED_MORE_INPUT",
-      "NV_ENC_ERR_ENCODER_BUSY",
-      "NV_ENC_ERR_EVENT_NOT_REGISTERD",
-      "NV_ENC_ERR_GENERIC",
-      "NV_ENC_ERR_INCOMPATIBLE_CLIENT_KEY",
-      "NV_ENC_ERR_UNIMPLEMENTED",
-      "NV_ENC_ERR_RESOURCE_REGISTER_FAILED",
-      "NV_ENC_ERR_RESOURCE_NOT_REGISTERED",
-      "NV_ENC_ERR_RESOURCE_NOT_MAPPED",
-  };
-  if (e != NV_ENC_SUCCESS) {
-    std::cerr << "NVENC error " << aszErrName[e] << " at line " << iLine
-              << " in file " << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-#endif
-
-#ifdef _WINERROR_
-inline bool check(HRESULT e, int iLine, const char* szFile) {
-  if (e != S_OK) {
-    std::cerr << "HRESULT error 0x" << (void*)e << " at line " << iLine
-              << " in file " << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-#endif
-
-#if defined(__gl_h_) || defined(__GL_H__)
-inline bool check(GLenum e, int iLine, const char* szFile) {
-  if (e != 0) {
-    std::cerr << "GLenum error " << e << " at line " << iLine << " in file "
-              << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-#endif
-
-inline bool check(int e, int iLine, const char* szFile) {
-  if (e < 0) {
-    std::cerr << "General error " << e << " at line " << iLine << " in file "
-              << szFile << std::endl;
-    return false;
-  }
-  return true;
-}
-
-#define ck(call) check(call, __LINE__, __FILE__)
+// どこかにグローバルな logger の定義が必要
+simplelogger::Logger* logger =
+    simplelogger::LoggerFactory::CreateConsoleLogger();
 
 class NvCodecH264EncoderCudaImpl {
  public:
@@ -290,17 +198,16 @@ void NvCodecH264EncoderCudaImpl::CopyNative(NvEncoder* nv_encoder,
                                             int height) {
   if (nv_decoder_ == nullptr) {
     std::cout << "Use JPEG Decoder" << std::endl;
-    nv_decoder_ = new NvDecoder(cu_context_, true, cudaVideoCodec_JPEG, nullptr,
-                                false, true);
+    nv_decoder_ =
+        new NvDecoder(cu_context_, true, cudaVideoCodec_JPEG, false, true);
   }
-  uint8_t** frames = nullptr;
-  int frame_count = 0;
-  nv_decoder_->Decode((const uint8_t*)ptr, size, &frames, &frame_count);
+  int frame_count = nv_decoder_->Decode((const uint8_t*)ptr, size);
 
   for (int i = 0; i < frame_count; i++) {
+    uint8_t* frame = nv_decoder_->GetFrame();
     const NvEncInputFrame* input_frame = nv_encoder->GetNextInputFrame();
     NvEncoderCuda::CopyToDeviceFrame(
-        cu_context_, (void*)frames[i], nv_decoder_->GetDeviceFramePitch(),
+        cu_context_, frame, nv_decoder_->GetDeviceFramePitch(),
         (CUdeviceptr)input_frame->inputPtr, (int)input_frame->pitch, width,
         height, CU_MEMORYTYPE_DEVICE, input_frame->bufferFormat,
         input_frame->chromaOffsets, input_frame->numChromaPlanes);

@@ -1,5 +1,5 @@
 /*
-* Copyright 2017-2019 NVIDIA Corporation.  All rights reserved.
+* Copyright 2017-2020 NVIDIA Corporation.  All rights reserved.
 *
 * Please refer to the NVIDIA end user license agreement (EULA) associated
 * with this source code for terms and conditions that govern your use of
@@ -10,9 +10,6 @@
 */
 
 #include "NvEncoder/NvEncoder.h"
-#if !defined(_WIN32)
-#include <dlfcn.h>
-#endif
 
 #ifndef _WIN32
 #include <cstring>
@@ -172,7 +169,7 @@ NvEncoder::~NvEncoder()
     }
 }
 
-void NvEncoder::CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeParams, GUID codecGuid, GUID presetGuid)
+void NvEncoder::CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeParams, GUID codecGuid, GUID presetGuid, NV_ENC_TUNING_INFO tuningInfo)
 {
     if (!m_hEncoder)
     {
@@ -224,12 +221,20 @@ void NvEncoder::CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeP
 
     pIntializeParams->encodeConfig->rcParams.rateControlMode = NV_ENC_PARAMS_RC_CONSTQP;
 
-    if (pIntializeParams->presetGUID != NV_ENC_PRESET_LOSSLESS_DEFAULT_GUID
-        && pIntializeParams->presetGUID != NV_ENC_PRESET_LOSSLESS_HP_GUID)
+    if (!m_bMotionEstimationOnly)
     {
-        pIntializeParams->encodeConfig->rcParams.constQP = { 28, 31, 25 };
+        pIntializeParams->tuningInfo = tuningInfo;
+        NV_ENC_PRESET_CONFIG presetConfig = { NV_ENC_PRESET_CONFIG_VER, { NV_ENC_CONFIG_VER } };
+        m_nvenc.nvEncGetEncodePresetConfigEx(m_hEncoder, codecGuid, presetGuid, tuningInfo, &presetConfig);
+        memcpy(pIntializeParams->encodeConfig, &presetConfig.presetCfg, sizeof(NV_ENC_CONFIG));
     }
-
+    else
+    {
+        m_encodeConfig.version = NV_ENC_CONFIG_VER;
+        m_encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CONSTQP;
+        m_encodeConfig.rcParams.constQP = { 28, 31, 25 };
+    }
+    
     if (pIntializeParams->encodeGUID == NV_ENC_CODEC_H264_GUID)
     {
         if (m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444 || m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
@@ -318,11 +323,17 @@ void NvEncoder::CreateEncoder(const NV_ENC_INITIALIZE_PARAMS* pEncoderParams)
     else
     {
         NV_ENC_PRESET_CONFIG presetConfig = { NV_ENC_PRESET_CONFIG_VER, { NV_ENC_CONFIG_VER } };
-        m_nvenc.nvEncGetEncodePresetConfig(m_hEncoder, pEncoderParams->encodeGUID, NV_ENC_PRESET_DEFAULT_GUID, &presetConfig);
-        memcpy(&m_encodeConfig, &presetConfig.presetCfg, sizeof(NV_ENC_CONFIG));
-        m_encodeConfig.version = NV_ENC_CONFIG_VER;
-        m_encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CONSTQP;
-        m_encodeConfig.rcParams.constQP = { 28, 31, 25 };
+        if (!m_bMotionEstimationOnly)
+        {
+            m_nvenc.nvEncGetEncodePresetConfigEx(m_hEncoder, pEncoderParams->encodeGUID, pEncoderParams->presetGUID, pEncoderParams->tuningInfo, &presetConfig);
+            memcpy(&m_encodeConfig, &presetConfig.presetCfg, sizeof(NV_ENC_CONFIG));
+        }
+        else
+        {
+            m_encodeConfig.version = NV_ENC_CONFIG_VER;
+            m_encodeConfig.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CONSTQP;
+            m_encodeConfig.rcParams.constQP = { 28, 31, 25 };
+        }
     }
     m_initializeParams.encodeConfig = &m_encodeConfig;
 
