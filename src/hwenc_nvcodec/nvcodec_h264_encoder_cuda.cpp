@@ -198,8 +198,8 @@ void NvCodecH264EncoderCudaImpl::CopyNative(NvEncoder* nv_encoder,
                                             int height) {
   if (nv_decoder_ == nullptr) {
     std::cout << "Use JPEG Decoder" << std::endl;
-    nv_decoder_ =
-        new NvDecoder(cu_context_, true, cudaVideoCodec_JPEG, false, true);
+    nv_decoder_ = new NvDecoder(cu_context_, true, cudaVideoCodec_JPEG, false,
+                                true, nullptr, nullptr, 3840, 2160);
   }
   int frame_count = nv_decoder_->Decode((const uint8_t*)ptr, size);
 
