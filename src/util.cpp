@@ -250,7 +250,7 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(0, 65535));
 
   ayame_app
-      ->add_option("SIGNALING-URL", args.ayame_signaling_host, "Signaling URL")
+      ->add_option("SIGNALING-URL", args.ayame_signaling_url, "Signaling URL")
       ->required();
   ayame_app->add_option("ROOM-ID", args.ayame_room_id, "Room ID")->required();
   ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
@@ -258,7 +258,7 @@ void Util::ParseArgs(int argc,
                         "Signaling key");
 
   sora_app
-      ->add_option("SIGNALING-URL", args.sora_signaling_host, "Signaling URL")
+      ->add_option("SIGNALING-URL", args.sora_signaling_url, "Signaling URL")
       ->required();
   sora_app->add_option("CHANNEL-ID", args.sora_channel_id, "Channel ID")
       ->required();

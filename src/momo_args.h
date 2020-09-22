@@ -33,7 +33,7 @@ struct MomoArgs {
   bool insecure = false;
   bool screen_capture = false;
 
-  std::string sora_signaling_host = "wss://example.com/signaling";
+  std::string sora_signaling_url = "wss://example.com/signaling";
   std::string sora_channel_id;
   bool sora_video = true;
   bool sora_audio = true;
@@ -56,7 +56,7 @@ struct MomoArgs {
   std::string test_document_root;
   int test_port = 8080;
 
-  std::string ayame_signaling_host;
+  std::string ayame_signaling_url;
   std::string ayame_room_id;
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";

@@ -14,7 +14,7 @@
 using json = nlohmann::json;
 
 bool AyameClient::ParseURL(URLParts& parts) const {
-  std::string url = config_.signaling_host;
+  std::string url = config_.signaling_url;
 
   if (!URLParts::Parse(url, parts)) {
     throw std::exception();
@@ -66,7 +66,7 @@ void AyameClient::Connect() {
 
   watchdog_.Enable(30);
 
-  ws_->Connect(config_.signaling_host,
+  ws_->Connect(config_.signaling_url,
                std::bind(&AyameClient::OnConnect, shared_from_this(),
                          std::placeholders::_1));
 }

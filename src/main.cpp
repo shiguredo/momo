@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
     if (use_sora) {
       SoraClientConfig config;
       config.insecure = args.insecure;
-      config.signaling_host = args.sora_signaling_host;
+      config.signaling_url = args.sora_signaling_url;
       config.channel_id = args.sora_channel_id;
       config.video = args.sora_video;
       config.audio = args.sora_audio;
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
       AyameClientConfig config;
       config.insecure = args.insecure;
       config.no_google_stun = args.no_google_stun;
-      config.signaling_host = args.ayame_signaling_host;
+      config.signaling_url = args.ayame_signaling_url;
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;
       config.signaling_key = args.ayame_signaling_key;

@@ -17,7 +17,7 @@
 using json = nlohmann::json;
 
 bool SoraClient::ParseURL(URLParts& parts) const {
-  std::string url = config_.signaling_host;
+  std::string url = config_.signaling_url;
 
   if (!URLParts::Parse(url, parts)) {
     throw std::exception();
@@ -80,7 +80,7 @@ void SoraClient::Connect() {
 
   watchdog_.Enable(30);
 
-  ws_->Connect(config_.signaling_host,
+  ws_->Connect(config_.signaling_url,
                std::bind(&SoraClient::OnConnect, shared_from_this(),
                          std::placeholders::_1));
 }
