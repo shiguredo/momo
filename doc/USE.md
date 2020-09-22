@@ -223,13 +223,13 @@ Options:
                               Send video to sora (default: true)
   --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send audio to sora (default: true)
-  --video-codec TEXT:{,AV1,H264,VP8,VP9}
+  --video-codec-type TEXT:{,AV1,H264,VP8,VP9}
                               Video codec for send
-  --audio-codec TEXT:{,OPUS}  Audio codec for send
-  --video-bitrate INT:INT in [0 - 30000]
-                              Video bitrate
-  --audio-bitrate INT:INT in [0 - 510]
-                              Audio bitrate
+  --audio-codec-type TEXT:{,OPUS}
+  --video-bit-rate INT:INT in [0 - 30000]
+                              Video bit rate
+  --audio-bit-rate INT:INT in [0 - 510]
+                              Audio bit rate
   --multistream BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use multistream (default: false)
   --role TEXT:{downstream,recvonly,sendonly,sendrecv,upstream}
