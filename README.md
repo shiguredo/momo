@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m86.4240.2-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4183)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m86.4240.9-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4183)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
