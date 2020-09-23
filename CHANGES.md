@@ -35,7 +35,7 @@
     - @voluntas
 - [UPDATE] json を 3.9.1 に上げる
     - @voluntas
-- [UPDATE] `libwebrtc` を `M86.4240@{#4}` に上げる
+- [UPDATE] `libwebrtc` を `M86.4240@{#9}` に上げる
     - @voluntas
 - [ADD] `--spotlight-number INT` の引数を追加
     - @melpon
