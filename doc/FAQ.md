@@ -81,3 +81,7 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 以下の記事を参考にしてみてください。
 
 [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
+
+## Mac で 60fps を利用できますか？
+
+利用できません。60fps を使ってみたい場合は Jetson Nano などをご利用ください。
