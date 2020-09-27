@@ -31,7 +31,7 @@
     - @melpon
 - [UPDATE] Boost 1.74.0 に上げる
     - @voluntas
-- [UPDATE] cmake を 3.18.2 に上げる
+- [UPDATE] cmake を 3.18.3 に上げる
     - @voluntas
 - [UPDATE] json を 3.9.1 に上げる
     - @voluntas
