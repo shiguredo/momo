@@ -130,8 +130,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   uint32_t raw_height_;
   int32_t width_;
   int32_t height_;
-  int32_t configured_width_;
-  int32_t configured_height_;
   bool use_native_;
   NvV4l2Element* native_input_elem_;
   bool use_dmabuff_;

@@ -51,8 +51,6 @@ JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
       converter_(nullptr),
       encoder_(nullptr),
       configured_framerate_(30),
-      configured_width_(0),
-      configured_height_(0),
       use_native_(false),
       use_dmabuff_(false) {}
 
@@ -70,7 +68,6 @@ bool JetsonVideoEncoder::IsSupportedVP9() {
 int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                        int32_t number_of_cores,
                                        size_t max_payload_size) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   RTC_DCHECK(codec_settings);
 
   int32_t release_ret = Release();
@@ -130,9 +127,7 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
 }
 
 int32_t JetsonVideoEncoder::Release() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " Start";
   JetsonRelease();
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " End";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -334,8 +329,6 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   }
 
   configured_framerate_ = framerate_;
-  configured_width_ = width_;
-  configured_height_ = height_;
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -691,13 +684,7 @@ int32_t JetsonVideoEncoder::Encode(
     use_native_ = false;
   }
 
-  if (frame_buffer->width() != configured_width_ ||
-      frame_buffer->height() != configured_height_) {
-    RTC_LOG(LS_INFO) << "Encoder reinitialized from " << configured_width_
-                     << "x" << configured_height_ << " to "
-                     << frame_buffer->width() << "x" << frame_buffer->height()
-                     << " framerate:" << framerate_;
-    JetsonRelease();
+  if (encoder_ == nullptr) {
     if (JetsonConfigure() != WEBRTC_VIDEO_CODEC_OK) {
       RTC_LOG(LS_ERROR) << "Failed to JetsonConfigure";
       return WEBRTC_VIDEO_CODEC_ERROR;
