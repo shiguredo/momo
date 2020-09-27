@@ -10,7 +10,6 @@ set(TARGET_OS "" CACHE STRING "ビルド対象の動作する OS。\n有効な�
 set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な OS の情報。")
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv6, armv7, armv8")
-set(USE_ROS OFF CACHE BOOL "ROS を使っているかどうか")
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
@@ -106,27 +105,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv7")
   set(TARGET_ARCH_ARM "armv7")
   set(USE_MMAL_ENCODER ON)
   set(USE_H264 ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(JSON_ROOT_DIR /root/json)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-  set(Boost_ARCHITECTURE 32)
-
-  list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/arm-linux-gnueabihf/cmake/SDL2)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspberry-pi-os")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv8")
   set(USE_SDL2 ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(SDL2_ROOT_DIR /root/SDL2)
@@ -140,7 +118,24 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
-  list(APPEND CMAKE_PREFIX_PATH /root/rootfs/usr/lib/aarch64-linux-gnu/cmake/SDL2)
+  set(Boost_ARCHITECTURE 32)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "raspberry-pi-os")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(BOOST_ROOT_DIR /root/boost)
+  set(JSON_ROOT_DIR /root/json)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
 
@@ -188,20 +183,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_xavier")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-16.04_x86_64_ros")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-16.04")
-  set(TARGET_ARCH "x86_64")
-  set(USE_ROS ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(JSON_ROOT_DIR /root/json)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(WEBRTC_LIBRARY_NAME "webrtc_nolibcxx")
-  set(CLANG_ROOT /root/llvm/clang)
-
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
 
   set(TARGET_OS "linux")
@@ -218,9 +199,9 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
-  set(CMAKE_C_COMPILER clang-8)
-  set(CMAKE_CXX_COMPILER clang++-8)
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
+  set(CMAKE_C_COMPILER clang-10)
+  set(CMAKE_CXX_COMPILER clang++-10)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -241,26 +222,15 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-8 を利用する
-  set(CMAKE_C_COMPILER clang-8)
-  set(CMAKE_CXX_COMPILER clang++-8)
+  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
+  set(CMAKE_C_COMPILER clang-10)
+  set(CMAKE_CXX_COMPILER clang++-10)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
 else()
 endif()
-
-if (USE_ROS)
-  if (TARGET_OS_LINUX STREQUAL "ubuntu-16.04")
-    set(ROS_VERSION "kinetic")
-  elseif (TARGET_OS_LINUX STREQUAL "ubuntu-18.04")
-    set(ROS_VERSION "melodic")
-  else()
-    message(FATAL_ERROR "ROS_VERSION が決定できません")
-  endif()
-endif()
-
 
 if (NOT "${CLANG_ROOT}" STREQUAL "")
   set(CMAKE_C_COMPILER ${CLANG_ROOT}/bin/clang)
@@ -377,7 +347,6 @@ target_link_libraries(momo
 target_compile_definitions(momo
   PRIVATE
     OPENSSL_IS_BORINGSSL
-    USE_ROS=$<BOOL:${USE_ROS}>
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
@@ -419,30 +388,6 @@ if (USE_SDL2)
         "-framework ForceFeedback"
     )
   endif()
-endif()
-
-if (USE_ROS)
-  target_sources(momo
-    PRIVATE
-      src/ros/ros_audio_device.cpp
-      src/ros/ros_audio_device_module.cpp
-      src/ros/ros_video_capturer.cpp
-  )
-  target_compile_definitions(momo PRIVATE HAVE_JPEG=1)
-  target_include_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/include)
-  target_link_directories(momo PRIVATE ${SYSROOT}/opt/ros/${ROS_VERSION}/lib)
-  target_link_libraries(momo
-    PRIVATE
-      message_filters
-      roscpp
-      rosconsole
-      roscpp_serialization
-      rostime
-      xmlrpcpp
-      cpp_common
-      rosconsole_log4cxx
-      rosconsole_backend_interface
-  )
 endif()
 
 if (USE_LIBCXX)
@@ -590,10 +535,8 @@ elseif (TARGET_OS STREQUAL "linux")
     PRIVATE
       WEBRTC_POSIX
   )
-  if (NOT USE_ROS)
-    # USE_ROS=OFF かつ Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
-    target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE)
-  endif()
+  # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
+  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE)
 
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo
@@ -601,6 +544,7 @@ elseif (TARGET_OS STREQUAL "linux")
       X11
       Xau
       Xdmcp
+      Xtst
       xcb
       plds4
       Xext
@@ -635,7 +579,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_30"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
@@ -654,6 +598,8 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
+            src/hwenc_jetson/jetson_buffer.cpp
+            src/hwenc_jetson/jetson_v4l2_capturer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp

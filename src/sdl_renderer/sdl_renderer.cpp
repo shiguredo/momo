@@ -74,7 +74,7 @@ void SDLRenderer::PollEvent() {
     if (e.type == SDL_WINDOWEVENT &&
         e.window.event == SDL_WINDOWEVENT_RESIZED &&
         e.window.windowID == SDL_GetWindowID(window_)) {
-      rtc::CritScope lock(&sinks_lock_);
+      webrtc::MutexLock lock(&sinks_lock_);
       width_ = e.window.data1;
       height_ = e.window.data2;
       SetOutlines();
@@ -97,7 +97,7 @@ void SDLRenderer::PollEvent() {
 
 void SDLRenderer::SetDispatchFunction(
     std::function<void(std::function<void()>)> dispatch) {
-  rtc::CritScope lock(&sinks_lock_);
+  webrtc::MutexLock lock(&sinks_lock_);
   dispatch_ = std::move(dispatch);
 }
 
@@ -118,12 +118,12 @@ int SDLRenderer::RenderThread() {
   while (running_) {
     start_time = SDL_GetTicks();
     {
-      rtc::CritScope lock(&sinks_lock_);
+      webrtc::MutexLock lock(&sinks_lock_);
       SDL_RenderClear(renderer_);
       for (const VideoTrackSinkVector::value_type& sinks : sinks_) {
         Sink* sink = sinks.second.get();
 
-        rtc::CritScope frame_lock(sink->GetCriticalSection());
+        webrtc::MutexLock frame_lock(sink->GetMutex());
 
         if (!sink->GetOutlineChanged())
           continue;
@@ -190,7 +190,7 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     return;
   if (frame.width() == 0 || frame.height() == 0)
     return;
-  rtc::CritScope lock(GetCriticalSection());
+  webrtc::MutexLock lock(GetMutex());
   if (outline_changed_ || frame.width() != input_width_ ||
       frame.height() != input_height_) {
     int width, height;
@@ -244,7 +244,7 @@ void SDLRenderer::Sink::SetOutlineRect(int x, int y, int width, int height) {
   if (outline_width_ == width && outline_height_ == height) {
     return;
   }
-  rtc::CritScope lock(GetCriticalSection());
+  webrtc::MutexLock lock(GetMutex());
   offset_y_ = 0;
   offset_x_ = 0;
   outline_width_ = width;
@@ -253,7 +253,7 @@ void SDLRenderer::Sink::SetOutlineRect(int x, int y, int width, int height) {
   outline_changed_ = true;
 }
 
-rtc::CriticalSection* SDLRenderer::Sink::GetCriticalSection() {
+webrtc::Mutex* SDLRenderer::Sink::GetMutex() {
   return &frame_params_lock_;
 }
 
@@ -338,13 +338,13 @@ void SDLRenderer::SetOutlines() {
 
 void SDLRenderer::AddTrack(webrtc::VideoTrackInterface* track) {
   std::unique_ptr<Sink> sink(new Sink(this, track));
-  rtc::CritScope lock(&sinks_lock_);
+  webrtc::MutexLock lock(&sinks_lock_);
   sinks_.push_back(std::make_pair(track, std::move(sink)));
   SetOutlines();
 }
 
 void SDLRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
-  rtc::CritScope lock(&sinks_lock_);
+  webrtc::MutexLock lock(&sinks_lock_);
   sinks_.erase(
       std::remove_if(sinks_.begin(), sinks_.end(),
                      [track](const VideoTrackSinkVector::value_type& sink) {

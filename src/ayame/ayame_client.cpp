@@ -14,7 +14,7 @@
 using json = nlohmann::json;
 
 bool AyameClient::ParseURL(URLParts& parts) const {
-  std::string url = conn_settings_.ayame_signaling_host;
+  std::string url = config_.signaling_url;
 
   if (!URLParts::Parse(url, parts)) {
     throw std::exception();
@@ -32,11 +32,11 @@ bool AyameClient::ParseURL(URLParts& parts) const {
 
 AyameClient::AyameClient(boost::asio::io_context& ioc,
                          RTCManager* manager,
-                         ConnectionSettings conn_settings)
+                         AyameClientConfig config)
     : ioc_(ioc),
       manager_(manager),
       retry_count_(0),
-      conn_settings_(conn_settings),
+      config_(std::move(config)),
       watchdog_(ioc, std::bind(&AyameClient::OnWatchdogExpired, this)) {
   Reset();
 }
@@ -55,8 +55,7 @@ void AyameClient::Reset() {
 
   URLParts parts;
   if (ParseURL(parts)) {
-    ws_.reset(
-        new Websocket(Websocket::ssl_tag(), ioc_, conn_settings_.insecure));
+    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
   } else {
     ws_.reset(new Websocket(ioc_));
   }
@@ -67,7 +66,7 @@ void AyameClient::Connect() {
 
   watchdog_.Enable(30);
 
-  ws_->Connect(conn_settings_.ayame_signaling_host,
+  ws_->Connect(config_.signaling_url,
                std::bind(&AyameClient::OnConnect, shared_from_this(),
                          std::placeholders::_1));
 }
@@ -112,16 +111,16 @@ void AyameClient::DoRegister() {
   json json_message = {
       {"type", "register"},
       {"clientId", Util::GenerateRandomChars()},
-      {"roomId", conn_settings_.ayame_room_id},
+      {"roomId", config_.room_id},
       {"ayameClient", MomoVersion::GetClientName()},
       {"libwebrtc", MomoVersion::GetLibwebrtcName()},
       {"environment", MomoVersion::GetEnvironmentName()},
   };
-  if (conn_settings_.ayame_client_id != "") {
-    json_message["clientId"] = conn_settings_.ayame_client_id;
+  if (config_.client_id != "") {
+    json_message["clientId"] = config_.client_id;
   }
-  if (conn_settings_.ayame_signaling_key != "") {
-    json_message["key"] = conn_settings_.ayame_signaling_key;
+  if (config_.signaling_key != "") {
+    json_message["key"] = config_.signaling_key;
   }
   ws_->WriteText(json_message.dump());
 }
@@ -154,7 +153,7 @@ void AyameClient::SetIceServersFromConfig(json json_message) {
       }
     }
   }
-  if (ice_servers_.empty() && !conn_settings_.no_google_stun) {
+  if (ice_servers_.empty() && !config_.no_google_stun) {
     // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
     webrtc::PeerConnectionInterface::IceServer ice_server;
     ice_server.uri = "stun:stun.l.google.com:19302";

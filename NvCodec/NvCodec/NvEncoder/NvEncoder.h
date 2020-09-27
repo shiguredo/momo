@@ -1,5 +1,5 @@
 /*
-* Copyright 2017-2019 NVIDIA Corporation.  All rights reserved.
+* Copyright 2017-2020 NVIDIA Corporation.  All rights reserved.
 *
 * Please refer to the NVIDIA end user license agreement (EULA) associated
 * with this source code for terms and conditions that govern your use of
@@ -19,6 +19,9 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#endif
 
 /**
 * @brief Exception class for error reporting from NvEncodeAPI calls.
@@ -178,7 +181,7 @@ public:
     *  directly or override them with application-specific settings before
     *  using them in CreateEncoder() function.
     */
-    void CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeParams, GUID codecGuid, GUID presetGuid);
+    void CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeParams, GUID codecGuid, GUID presetGuid, NV_ENC_TUNING_INFO tuningInfo = NV_ENC_TUNING_INFO_UNDEFINED);
 
     /**
     *  @brief  This function is used to get the current initialization parameters,
@@ -251,6 +254,10 @@ public:
     */
     static uint32_t GetWidthInBytes(const NV_ENC_BUFFER_FORMAT bufferFormat, const uint32_t width);
 
+    /**
+    *  @brief This function returns the number of allocated buffers.
+    */
+    uint32_t GetEncoderBufferCount() const { return m_nEncoderBuffer; }
 protected:
 
     /**

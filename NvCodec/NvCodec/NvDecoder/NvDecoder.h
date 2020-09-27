@@ -1,5 +1,5 @@
 /*
-* Copyright 2017-2018 NVIDIA Corporation.  All rights reserved.
+* Copyright 2017-2020 NVIDIA Corporation.  All rights reserved.
 *
 * Please refer to the NVIDIA end user license agreement (EULA) associated
 * with this source code for terms and conditions that govern your use of
@@ -19,7 +19,8 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
-#include "nvcuvid.h"
+#include "../Utils/NvCodecUtils.h"
+#include "dyn/nvcuvid.h"
 
 /**
 * @brief Exception class for error reporting from the decode API.
@@ -88,9 +89,9 @@ public:
     *  Application must call this function to initialize the decoder, before
     *  starting to decode any frames.
     */
-    NvDecoder(CUcontext cuContext, bool bUseDeviceFrame, cudaVideoCodec eCodec, std::mutex *pMutex = NULL, bool bLowLatency = false,
+    NvDecoder(CUcontext cuContext, bool bUseDeviceFrame, cudaVideoCodec eCodec, bool bLowLatency = false,
               bool bDeviceFramePitched = false, const Rect *pCropRect = NULL, const Dim *pResizeDim = NULL,
-              int maxWidth = 0, int maxHeight = 0);
+              int maxWidth = 0, int maxHeight = 0, unsigned int clkRate = 1000);
     ~NvDecoder();
 
     /**
@@ -149,46 +150,46 @@ public:
     CUVIDEOFORMAT GetVideoFormatInfo() { assert(m_nWidth); return m_videoFormat; }
 
     /**
+    *   @brief  This function is used to get codec string from codec id
+    */
+    const char *GetCodecString(cudaVideoCodec eCodec);
+
+    /**
     *   @brief  This function is used to print information about the video stream
     */
     std::string GetVideoInfo() const { return m_videoInfo.str(); }
 
     /**
-    *   @brief  This function decodes a frame and returns frames that are available for display.
-        The frames should be used or buffered before making subsequent calls to the Decode function again
+    *   @brief  This function decodes a frame and returns the number of frames that are available for
+    *   display. All frames that are available for display should be read before making a subsequent decode call.
     *   @param  pData - pointer to the data buffer that is to be decoded
     *   @param  nSize - size of the data buffer in bytes
-    *   @param  pppFrame - CUvideopacketflags for setting decode options
-    *   @param  pnFrameReturned	 - pointer to array of decoded frames that are returned
-    *   @param  flags - CUvideopacketflags for setting decode options	
-    *   @param  ppTimestamp - pointer to array of timestamps for decoded frames that are returned
-    *   @param  timestamp - presentation timestamp
-    *   @param  stream - CUstream to be used for post-processing operations
+    *   @param  nFlags - CUvideopacketflags for setting decode options
+    *   @param  nTimestamp - presentation timestamp
     */
-    bool Decode(const uint8_t *pData, int nSize, uint8_t ***pppFrame, int *pnFrameReturned, uint32_t flags = 0, int64_t **ppTimestamp = NULL, int64_t timestamp = 0, CUstream stream = 0);
+    int Decode(const uint8_t *pData, int nSize, int nFlags = 0, int64_t nTimestamp = 0);
+
+    /**
+    *   @brief  This function returns a decoded frame and timestamp. This function should be called in a loop for
+    *   fetching all the frames that are available for display.
+    */
+    uint8_t* GetFrame(int64_t* pTimestamp = nullptr);
+
 
     /**
     *   @brief  This function decodes a frame and returns the locked frame buffers
     *   This makes the buffers available for use by the application without the buffers
     *   getting overwritten, even if subsequent decode calls are made. The frame buffers
-    *   remain locked, until ::UnlockFrame() is called
-    *   @param  pData - pointer to the data buffer that is to be decoded
-    *   @param  nSize - size of the data buffer in bytes
-    *   @param  pppFrame - CUvideopacketflags for setting decode options
-    *   @param  pnFrameReturned	 - pointer to array of decoded frames that are returned
-    *   @param  flags - CUvideopacketflags for setting decode options	
-    *   @param  ppTimestamp - pointer to array of timestamps for decoded frames that are returned
-    *   @param  timestamp - presentation timestamp	
-    *   @param  stream - CUstream to be used for post-processing operations
+    *   remain locked, until UnlockFrame() is called
     */
-    bool DecodeLockFrame(const uint8_t *pData, int nSize, uint8_t ***pppFrame, int *pnFrameReturned, uint32_t flags = 0, int64_t **ppTimestamp = NULL, int64_t timestamp = 0, CUstream stream = 0);
+    uint8_t* GetLockedFrame(int64_t* pTimestamp = nullptr);
 
     /**
     *   @brief  This function unlocks the frame buffer and makes the frame buffers available for write again
     *   @param  ppFrame - pointer to array of frames that are to be unlocked	
     *   @param  nFrame - number of frames to be unlocked
     */
-    void UnlockFrame(uint8_t **ppFrame, int nFrame);
+    void UnlockFrame(uint8_t **pFrame);
 
     /**
     *   @brief  This function allow app to set decoder reconfig params
@@ -197,6 +198,11 @@ public:
     */
     int setReconfigParams(const Rect * pCropRect, const Dim * pResizeDim);
 
+    // start a timer
+    void   startTimer() { m_stDecode_time.Start(); }
+
+    // stop the timer
+    double stopTimer() { return m_stDecode_time.Stop(); }
 private:
     /**
     *   @brief  Callback function to be registered for getting a callback when decoding of sequence starts
@@ -239,7 +245,6 @@ private:
 private:
     CUcontext m_cuContext = NULL;
     CUvideoctxlock m_ctxLock;
-    std::mutex *m_pMutex;
     CUvideoparser m_hParser = NULL;
     CUvideodecoder m_hDecoder = NULL;
     bool m_bUseDeviceFrame;
@@ -257,9 +262,7 @@ private:
     CUVIDEOFORMAT m_videoFormat = {};
     Rect m_displayRect = {};
     // stock of frames
-    std::vector<uint8_t *> m_vpFrame; 
-    // decoded frames for return
-    std::vector<uint8_t *> m_vpFrameRet;
+    std::vector<uint8_t *> m_vpFrame;
     // timestamps of decoded frames
     std::vector<int64_t> m_vTimestamp;
     int m_nDecodedFrame = 0, m_nDecodedFrameReturned = 0;
@@ -277,4 +280,5 @@ private:
     unsigned int m_nMaxWidth = 0, m_nMaxHeight = 0;
     bool m_bReconfigExternal = false;
     bool m_bReconfigExtPPChange = false;
+    StopWatch m_stDecode_time;
 };

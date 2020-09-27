@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m85.4183.2-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4183)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m86.4240.9-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4183)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -9,6 +9,10 @@
 
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
+
+## 時雨堂のオープンソースソフトウェアについて
+
+利用前に https://github.com/shiguredo/oss をお読みください。
 
 ## WebRTC Native Client Momo について
 
@@ -39,10 +43,6 @@ Momo はデータチャネルを利用しシリアルに直接読み書きが可
 
 Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
 
-### ROS への対応
-
-[ROS](http://www.ros.org/) ノードとしても利用可能です。
-
 ### AV1 への対応
 
 Momo 同士で SDL 機能を利用して libwebrtc が対応している AV1 が利用可能です。
@@ -59,13 +59,6 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 詳細については下記をご確認ください。
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
-
-## 開発について
-
-Momo はオープンソースソフトウェアですが、開発についてはオープンではありません。
-そのためコメントやプルリクエストを頂いてもすぐには採用はしません。
-
-まずは Discord にてご連絡ください。
 
 ## 既知の問題について
 
@@ -101,8 +94,6 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
-- Ubuntu 16.04 x86_64 ROS Kinetic
-    - http://wiki.ros.org/kinetic
 
 ## 使ってみる
 
@@ -118,9 +109,9 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
 
-## Q&A
+## FAQ
 
-[QA.md](doc/QA.md) をお読みください。
+[FAQ.md](doc/FAQ.md) をお読みください。
 
 ## バージョン番号について
 
@@ -173,24 +164,24 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Raspberry Pi 4
-    - [ ] H.265 ハードウェアデコーダ対応
+    - H.265 ハードウェアデコーダ対応
 - AV1 対応
-    - [ ] Windows
+    - Windows
 - 統計機能
-    - [ ] Ayame のシグナリング 経由での出力
+    - Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
-    - [ ] VP8 / VP9 / H.264 ハードウェアデコーダ対応
+    - VP8 / VP9 / H.264 ハードウェアデコーダ対応
+        - Ubuntu 20.04
         - Ubuntu 18.04
         - Windows 10
-    - [ ] MotionJPEG ハードウェアデコーダ対応
+    - MotionJPEG ハードウェアデコーダ対応
+        - Ubuntu 20.04
         - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
-    - [ ] VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
+    - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - 録画対応
     - MP4 形式での出力
-- ROS Melodic 対応
-- ROS2 対応
 
 ## Momo についての電子書籍
 
@@ -255,7 +246,6 @@ H.265 ハードウェアエンコーダ **のみ** を利用している Momo �
 
 - [カメラ無しのラズパイとmomoでテスト映像をWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
 - [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
-- [ティアフォーにおける自動運転車両の遠隔監視・操縦システムのご紹介 \- Tier IV Tech Blog](https://tech.tier4.jp/entry/2019/01/22/170032)
 - [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
 - [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)
 - [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)

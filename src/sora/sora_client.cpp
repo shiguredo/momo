@@ -17,7 +17,7 @@
 using json = nlohmann::json;
 
 bool SoraClient::ParseURL(URLParts& parts) const {
-  std::string url = conn_settings_.sora_signaling_host;
+  std::string url = config_.signaling_url;
 
   if (!URLParts::Parse(url, parts)) {
     throw std::exception();
@@ -49,11 +49,11 @@ std::shared_ptr<RTCConnection> SoraClient::GetRTCConnection() const {
 
 SoraClient::SoraClient(boost::asio::io_context& ioc,
                        RTCManager* manager,
-                       ConnectionSettings conn_settings)
+                       SoraClientConfig config)
     : ioc_(ioc),
       manager_(manager),
       retry_count_(0),
-      conn_settings_(conn_settings),
+      config_(std::move(config)),
       watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)) {
   Reset();
 }
@@ -69,8 +69,7 @@ void SoraClient::Reset() {
 
   URLParts parts;
   if (ParseURL(parts)) {
-    ws_.reset(
-        new Websocket(Websocket::ssl_tag(), ioc_, conn_settings_.insecure));
+    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
   } else {
     ws_.reset(new Websocket(ioc_));
   }
@@ -81,7 +80,7 @@ void SoraClient::Connect() {
 
   watchdog_.Enable(30);
 
-  ws_->Connect(conn_settings_.sora_signaling_host,
+  ws_->Connect(config_.signaling_url,
                std::bind(&SoraClient::OnConnect, shared_from_this(),
                          std::placeholders::_1));
 }
@@ -116,61 +115,62 @@ void SoraClient::DoRead() {
 }
 
 void SoraClient::DoSendConnect() {
-  const auto& cs = conn_settings_;
   json json_message = {
       {"type", "connect"},
-      {"role", cs.sora_role},
-      {"channel_id", cs.sora_channel_id},
+      {"role", config_.role},
+      {"channel_id", config_.channel_id},
       {"sora_client", MomoVersion::GetClientName()},
       {"libwebrtc", MomoVersion::GetLibwebrtcName()},
       {"environment", MomoVersion::GetEnvironmentName()},
   };
 
-  if (cs.sora_multistream) {
+  if (config_.multistream) {
     json_message["multistream"] = true;
   }
 
-  if (cs.sora_simulcast) {
+  if (config_.simulcast) {
     json_message["simulcast"] = true;
   }
 
-  if (cs.sora_spotlight > 0) {
-    json_message["multistream"] = true;
-    json_message["spotlight"] = cs.sora_spotlight;
+  if (config_.spotlight) {
+    json_message["spotlight"] = true;
+  }
+  if (config_.spotlight && config_.spotlight_number > 0) {
+    json_message["spotlight_number"] = config_.spotlight_number;
   }
 
-  if (!cs.sora_metadata.is_null()) {
-    json_message["metadata"] = cs.sora_metadata;
+  if (!config_.metadata.is_null()) {
+    json_message["metadata"] = config_.metadata;
   }
 
-  if (!cs.sora_video) {
+  if (!config_.video) {
     // video: false の場合はそのまま設定
     json_message["video"] = false;
-  } else if (cs.sora_video && cs.sora_video_codec.empty() &&
-             cs.sora_video_bitrate == 0) {
+  } else if (config_.video && config_.video_codec_type.empty() &&
+             config_.video_bit_rate == 0) {
     // video: true の場合、その他のオプションの設定が行われてなければ true を設定
     json_message["video"] = true;
   } else {
     // それ以外はちゃんとオプションを設定する
-    if (!cs.sora_video_codec.empty()) {
-      json_message["video"]["codec_type"] = cs.sora_video_codec;
+    if (!config_.video_codec_type.empty()) {
+      json_message["video"]["codec_type"] = config_.video_codec_type;
     }
-    if (cs.sora_video_bitrate != 0) {
-      json_message["video"]["bit_rate"] = cs.sora_video_bitrate;
+    if (config_.video_bit_rate != 0) {
+      json_message["video"]["bit_rate"] = config_.video_bit_rate;
     }
   }
 
-  if (!cs.sora_audio) {
+  if (!config_.audio) {
     json_message["audio"] = false;
-  } else if (cs.sora_audio && cs.sora_audio_codec.empty() &&
-             cs.sora_audio_bitrate == 0) {
+  } else if (config_.audio && config_.audio_codec_type.empty() &&
+             config_.audio_bit_rate == 0) {
     json_message["audio"] = true;
   } else {
-    if (!cs.sora_audio_codec.empty()) {
-      json_message["audio"]["codec_type"] = cs.sora_audio_codec;
+    if (!config_.audio_codec_type.empty()) {
+      json_message["audio"]["codec_type"] = config_.audio_codec_type;
     }
-    if (cs.sora_audio_bitrate != 0) {
-      json_message["audio"]["bit_rate"] = cs.sora_audio_bitrate;
+    if (config_.audio_bit_rate != 0) {
+      json_message["audio"]["bit_rate"] = config_.audio_bit_rate;
     }
   }
 
@@ -211,7 +211,7 @@ void SoraClient::CreatePeerFromConfig(json jconfig) {
   // macOS のサイマルキャスト時、なぜか無限に解像度が落ちていくので、
   // それを回避するために cpu_adaptation を無効にする。
 #if defined(__APPLE__)
-  if (conn_settings_.sora_simulcast) {
+  if (config_.simulcast) {
     rtc_config.set_cpu_adaptation(false);
   }
 #endif
@@ -256,7 +256,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
       // トラックを追加する必要があるため、ここで初期化する
       manager_->InitTracks(connection_.get());
 
-      if (conn_settings_.sora_simulcast) {
+      if (config_.simulcast) {
         std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
 
         // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
@@ -285,6 +285,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
           if (p.contains("scaleResolutionDownBy")) {
             params.scale_resolution_down_by =
                 p["scaleResolutionDownBy"].get<double>();
+          }
+          if (p.contains("maxFramerate")) {
+            params.max_framerate = p["maxFramerate"].get<double>();
           }
           encoding_parameters.push_back(params);
         }

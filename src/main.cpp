@@ -10,11 +10,6 @@
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/string_utils.h>
 
-#if USE_ROS
-#include "ros/ros_log_sink.h"
-#include "ros/ros_video_capturer.h"
-#else
-
 #if USE_SCREEN_CAPTURER
 #include "rtc/screen_video_capturer.h"
 #endif
@@ -24,11 +19,12 @@
 #elif defined(__linux__)
 #if USE_MMAL_ENCODER
 #include "hwenc_mmal/mmal_v4l2_capturer.h"
+#elif USE_JETSON_ENCODER
+#include "hwenc_jetson/jetson_v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
-#endif
 #endif
 
 #include "serial_data_channel/serial_data_manager.h"
@@ -38,33 +34,41 @@
 #endif
 
 #include "ayame/ayame_client.h"
-#include "connection_settings.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
 #include "sora/sora_client.h"
 #include "sora/sora_server.h"
 #include "util.h"
 
+#ifdef _WIN32
+// ScopedCOMInitializer がここに定義されてるので利用する
+#include <modules/audio_device/win/core_audio_utility_win.h>
+#endif
+
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 int main(int argc, char* argv[]) {
-  ConnectionSettings cs;
+#ifdef _WIN32
+  webrtc::webrtc_win::ScopedCOMInitializer com_initializer(webrtc::webrtc_win::ScopedCOMInitializer::kMTA);
+  if (!com_initializer.Succeeded()) {
+    std::cerr << "CoInitializeEx failed" << std::endl;
+    return 1;
+  }
+#endif
+
+  MomoArgs args;
 
   bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
   int log_level = rtc::LS_NONE;
 
-  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, cs);
+  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, args);
 
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
   rtc::LogMessage::LogTimestamps();
   rtc::LogMessage::LogThreads();
 
-#if USE_ROS
-  std::unique_ptr<rtc::LogSink> log_sink(new ROSLogSink());
-  rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-#else
   std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
       new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
                                    10));
@@ -74,15 +78,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
-#endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
-    if (cs.no_video_device) {
+    if (args.no_video_device) {
       return nullptr;
     }
 
 #if USE_SCREEN_CAPTURER
-    if (cs.screen_capture) {
+    if (args.screen_capture) {
       RTC_LOG(LS_INFO) << "Screen capturer source list: "
                        << ScreenVideoCapturer::GetSourceListString();
       webrtc::DesktopCapturer::SourceList sources;
@@ -90,57 +93,94 @@ int main(int argc, char* argv[]) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
         return nullptr;
       }
-      auto size = cs.GetSize();
+      auto size = args.GetSize();
       rtc::scoped_refptr<ScreenVideoCapturer> capturer(
           new rtc::RefCountedObject<ScreenVideoCapturer>(
-              sources[0].id, size.width, size.height, cs.framerate));
+              sources[0].id, size.width, size.height, args.framerate));
       return capturer;
     }
 #endif
 
-#if USE_ROS
-    rtc::scoped_refptr<ROSVideoCapturer> capturer(
-        new rtc::RefCountedObject<ROSVideoCapturer>(cs));
-    return capturer;
-#else  // USE_ROS
-    auto size = cs.GetSize();
+    auto size = args.GetSize();
 #if defined(__APPLE__)
-    return MacCapturer::Create(size.width, size.height, cs.framerate,
-                               cs.video_device);
+    return MacCapturer::Create(size.width, size.height, args.framerate,
+                               args.video_device);
 #elif defined(__linux__)
+    V4L2VideoCapturerConfig v4l2_config;
+    v4l2_config.video_device = args.video_device;
+    v4l2_config.width = size.width;
+    v4l2_config.height = size.height;
+    v4l2_config.framerate = args.framerate;
+    v4l2_config.force_i420 = args.force_i420;
+    v4l2_config.use_native = args.use_native;
+
 #if USE_MMAL_ENCODER
-    if (cs.use_native) {
-      return MMALV4L2Capturer::Create(cs);
+    if (v4l2_config.use_native) {
+      MMALV4L2CapturerConfig mmal_config = v4l2_config;
+      return MMALV4L2Capturer::Create(std::move(mmal_config));
     } else {
-      return V4L2VideoCapturer::Create(cs);
+      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+    }
+#elif USE_JETSON_ENCODER
+    if (v4l2_config.use_native) {
+      return JetsonV4L2Capturer::Create(std::move(v4l2_config));
+    } else {
+      return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #else
-    return V4L2VideoCapturer::Create(cs);
+    return V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif
 #else
-    return DeviceVideoCapturer::Create(size.width, size.height, cs.framerate,
-                                       cs.video_device);
+    return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,
+                                       args.video_device);
 #endif
-#endif  // USE_ROS
   })();
 
-  if (!capturer && !cs.no_video_device) {
+  if (!capturer && !args.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
   }
 
+  RTCManagerConfig rtcm_config;
+  rtcm_config.insecure = args.insecure;
+
+  rtcm_config.no_video_device = args.no_video_device;
+  rtcm_config.no_audio_device = args.no_audio_device;
+
+  rtcm_config.fixed_resolution = args.fixed_resolution;
+  rtcm_config.show_me = args.show_me;
+  rtcm_config.simulcast = args.sora_simulcast;
+
+  rtcm_config.disable_echo_cancellation = args.disable_echo_cancellation;
+  rtcm_config.disable_auto_gain_control = args.disable_auto_gain_control;
+  rtcm_config.disable_noise_suppression = args.disable_noise_suppression;
+  rtcm_config.disable_highpass_filter = args.disable_highpass_filter;
+  rtcm_config.disable_typing_detection = args.disable_typing_detection;
+  rtcm_config.disable_residual_echo_detector =
+      args.disable_residual_echo_detector;
+
+  rtcm_config.vp8_encoder = args.vp8_encoder;
+  rtcm_config.vp8_decoder = args.vp8_decoder;
+  rtcm_config.vp9_encoder = args.vp9_encoder;
+  rtcm_config.vp9_decoder = args.vp9_decoder;
+  rtcm_config.av1_encoder = args.av1_encoder;
+  rtcm_config.av1_decoder = args.av1_decoder;
+  rtcm_config.h264_encoder = args.h264_encoder;
+  rtcm_config.h264_decoder = args.h264_decoder;
+
+  rtcm_config.priority = args.priority;
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
-  if (cs.use_sdl) {
-    sdl_renderer.reset(
-        new SDLRenderer(cs.window_width, cs.window_height, cs.fullscreen));
+  if (args.use_sdl) {
+    sdl_renderer.reset(new SDLRenderer(args.window_width, args.window_height,
+                                       args.fullscreen));
   }
 
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), sdl_renderer.get()));
+  std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
+      std::move(rtcm_config), std::move(capturer), sdl_renderer.get()));
 #else
   std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(cs, std::move(capturer), nullptr));
+      new RTCManager(std::move(rtcm_config), std::move(capturer), nullptr));
 #endif
 
   {
@@ -149,9 +189,9 @@ int main(int argc, char* argv[]) {
         work_guard(ioc.get_executor());
 
     std::unique_ptr<RTCDataManager> data_manager = nullptr;
-    if (!cs.serial_device.empty()) {
+    if (!args.serial_device.empty()) {
       data_manager =
-          SerialDataManager::Create(ioc, cs.serial_device, cs.serial_rate);
+          SerialDataManager::Create(ioc, args.serial_device, args.serial_rate);
       if (!data_manager) {
         return 1;
       }
@@ -166,34 +206,67 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<AyameClient> ayame_client;
 
     if (use_sora) {
-      sora_client = SoraClient::Create(ioc, rtc_manager.get(), cs);
+      SoraClientConfig config;
+      config.insecure = args.insecure;
+      config.signaling_url = args.sora_signaling_url;
+      config.channel_id = args.sora_channel_id;
+      config.video = args.sora_video;
+      config.audio = args.sora_audio;
+      config.video_codec_type = args.sora_video_codec_type;
+      config.audio_codec_type = args.sora_audio_codec_type;
+      config.video_bit_rate = args.sora_video_bit_rate;
+      config.audio_bit_rate = args.sora_audio_bit_rate;
+      config.metadata = args.sora_metadata;
+      config.role = args.sora_role;
+      config.multistream = args.sora_multistream;
+      config.spotlight = args.sora_spotlight;
+      config.spotlight_number = args.sora_spotlight_number;
+      config.port = args.sora_port;
+      config.simulcast = args.sora_simulcast;
+
+      sora_client =
+          SoraClient::Create(ioc, rtc_manager.get(), std::move(config));
 
       // SoraServer を起動しない場合と、SoraServer を起動して --auto が指定されている場合は即座に接続する。
       // SoraServer を起動するけど --auto が指定されていない場合、SoraServer の API が呼ばれるまで接続しない。
-      if (cs.sora_port < 0 || cs.sora_port >= 0 && cs.sora_auto_connect) {
+      if (args.sora_port < 0 || args.sora_port >= 0 && args.sora_auto_connect) {
         sora_client->Connect();
       }
 
-      if (cs.sora_port >= 0) {
+      if (args.sora_port >= 0) {
+        SoraServerConfig config;
         const boost::asio::ip::tcp::endpoint endpoint{
             boost::asio::ip::make_address("127.0.0.1"),
-            static_cast<unsigned short>(cs.sora_port)};
-        SoraServer::Create(ioc, endpoint, sora_client, rtc_manager.get(), cs)
+            static_cast<unsigned short>(args.sora_port)};
+        SoraServer::Create(ioc, endpoint, sora_client, rtc_manager.get(),
+                           config)
             ->Run();
       }
     }
 
     if (use_test) {
+      P2PServerConfig config;
+      config.no_google_stun = args.no_google_stun;
+      config.doc_root = args.test_document_root;
+
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
-          static_cast<unsigned short>(cs.test_port)};
-      P2PServer::Create(ioc, endpoint, cs.test_document_root, rtc_manager.get(),
-                        cs)
+          static_cast<unsigned short>(args.test_port)};
+      P2PServer::Create(ioc, endpoint, rtc_manager.get(), std::move(config))
           ->Run();
     }
 
     if (use_ayame) {
-      ayame_client = AyameClient::Create(ioc, rtc_manager.get(), cs);
+      AyameClientConfig config;
+      config.insecure = args.insecure;
+      config.no_google_stun = args.no_google_stun;
+      config.signaling_url = args.ayame_signaling_url;
+      config.room_id = args.ayame_room_id;
+      config.client_id = args.ayame_client_id;
+      config.signaling_key = args.ayame_signaling_key;
+
+      ayame_client =
+          AyameClient::Create(ioc, rtc_manager.get(), std::move(config));
       ayame_client->Connect();
     }
 

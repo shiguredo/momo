@@ -18,15 +18,13 @@
 
 P2PSession::P2PSession(boost::asio::io_context& ioc,
                        boost::asio::ip::tcp::socket socket,
-                       std::shared_ptr<std::string const> const& doc_root,
                        RTCManager* rtc_manager,
-                       ConnectionSettings conn_settings)
+                       P2PSessionConfig config)
     : ioc_(ioc),
       socket_(std::move(socket)),
       strand_(socket_.get_executor()),
-      doc_root_(doc_root),
       rtc_manager_(rtc_manager),
-      conn_settings_(conn_settings) {}
+      config_(std::move(config)) {}
 
 // Start the asynchronous operation
 void P2PSession::Run() {
@@ -60,8 +58,10 @@ void P2PSession::OnRead(boost::system::error_code ec,
   // WebSocket の upgrade リクエスト
   if (req_.target() == "/ws") {
     if (boost::beast::websocket::is_upgrade(req_)) {
+      P2PWebsocketSessionConfig config;
+      config.no_google_stun = config_.no_google_stun;
       P2PWebsocketSession::Create(ioc_, std::move(socket_), rtc_manager_,
-                                  conn_settings_)
+                                  std::move(config))
           ->Run(std::move(req_));
       return;
     } else {
@@ -90,7 +90,7 @@ void P2PSession::HandleRequest() {
 
   // Build the path to the requested file
   boost::filesystem::path path =
-      boost::filesystem::path(*doc_root_) / std::string(req.target());
+      boost::filesystem::path(config_.doc_root) / std::string(req.target());
 
   if (req.target().back() == '/')
     path.append("index.html");

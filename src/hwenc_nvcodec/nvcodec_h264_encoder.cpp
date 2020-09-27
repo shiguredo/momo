@@ -357,7 +357,6 @@ webrtc::VideoEncoder::EncoderInfo NvCodecH264Encoder::GetEncoderInfo() const {
   info.implementation_name = "NvCodec H264";
   info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
       kLowH264QpThreshold, kHighH264QpThreshold);
-  info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
@@ -407,8 +406,8 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
   initialize_params_.encodeConfig = &encode_config;
   try {
     nv_encoder_->CreateDefaultEncoderParams(
-        &initialize_params_, NV_ENC_CODEC_H264_GUID,
-        NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID);
+        &initialize_params_, NV_ENC_CODEC_H264_GUID, NV_ENC_PRESET_P3_GUID,
+        NV_ENC_TUNING_INFO_LOW_LATENCY);
 
     //initialize_params_.enablePTD = 1;
     initialize_params_.frameRateDen = 1;
@@ -417,7 +416,7 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
     initialize_params_.maxEncodeHeight = height_;
 
     //encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
-    encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
+    //encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
     encode_config.rcParams.averageBitRate = target_bitrate_bps_;
     encode_config.rcParams.maxBitRate = max_bitrate_bps_;
 
@@ -442,9 +441,9 @@ int32_t NvCodecH264Encoder::InitNvEnc() {
 
     nv_encoder_->CreateEncoder(&initialize_params_);
 
-    RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                  << " bitrate_bps_:" << target_bitrate_bps_
-                  << " maxBitRate:" << encode_config.rcParams.maxBitRate;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+                     << " bitrate_bps_:" << target_bitrate_bps_
+                     << " maxBitRate:" << encode_config.rcParams.maxBitRate;
   } catch (const NVENCException& e) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
     return WEBRTC_VIDEO_CODEC_ERROR;

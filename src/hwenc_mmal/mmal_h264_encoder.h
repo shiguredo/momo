@@ -34,7 +34,7 @@ extern "C" {
 #include <common_video/include/bitrate_adjuster.h>
 #include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
-#include <rtc_base/critical_section.h>
+#include <rtc_base/synchronization/mutex.h>
 
 class ProcessThread;
 
@@ -115,7 +115,7 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
 
-  rtc::CriticalSection frame_params_lock_;
+  webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   webrtc::EncodedImage encoded_image_;
   std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;

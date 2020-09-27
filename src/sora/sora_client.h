@@ -15,25 +15,44 @@
 // nlohmann/json
 #include <nlohmann/json.hpp>
 
-#include "connection_settings.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
 #include "watchdog.h"
 #include "websocket.h"
 
+struct SoraClientConfig {
+  std::string signaling_url = "wss://example.com/signaling";
+  std::string channel_id;
+
+  bool insecure = false;
+  bool video = true;
+  bool audio = true;
+  std::string video_codec_type = "";
+  std::string audio_codec_type = "";
+  int video_bit_rate = 0;
+  int audio_bit_rate = 0;
+  nlohmann::json metadata;
+  std::string role = "sendonly";
+  bool multistream = false;
+  bool spotlight = false;
+  int spotlight_number = 0;
+  int port = -1;
+  bool simulcast = false;
+};
+
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
                    public RTCMessageSender {
   SoraClient(boost::asio::io_context& ioc,
              RTCManager* manager,
-             ConnectionSettings conn_settings);
+             SoraClientConfig config);
 
  public:
   static std::shared_ptr<SoraClient> Create(boost::asio::io_context& ioc,
                                             RTCManager* manager,
-                                            ConnectionSettings conn_settings) {
+                                            SoraClientConfig config) {
     return std::shared_ptr<SoraClient>(
-        new SoraClient(ioc, manager, conn_settings));
+        new SoraClient(ioc, manager, std::move(config)));
   }
   ~SoraClient();
 
@@ -86,7 +105,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
   RTCManager* manager_;
   std::shared_ptr<RTCConnection> connection_;
-  ConnectionSettings conn_settings_;
+  SoraClientConfig config_;
 
   int retry_count_;
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;

@@ -1,11 +1,11 @@
 # 変更履歴
 
+- CHANGE
+    - 下位互換のない変更
 - UPDATE
     - 下位互換がある変更
 - ADD
     - 下位互換がある追加
-- CHANGE
-    - 下位互換のない変更
 - FIX
     - バグ修正
 
@@ -18,12 +18,38 @@
 
 ## develop
 
-- [CHANGE] `raspberry-pi-os_armv7` から SDL を削除
+- [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
+    - @melpon
+- [CHANGE] Jetson のフレーム変換順序を変更
+    - @tnoho
+- [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
+    - @melpon
+- [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
+    - @melpon
+- [CHANGE] `--audio-bitrate` を `--audio-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--video-bitrate` を `--video-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--audio-codec` を `--audio-codec-type` に変更
+    - @melpon
+- [CHANGE] `--video-codec` を `--video-codec-type` に変更
+    - @melpon
+- [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
+    - @melpon
+- [UPDATE] Boost 1.74.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.18.2 に上げる
+    - @voluntas
+- [UPDATE] json を 3.9.1 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M86.4240@{#9}` に上げる
+    - @voluntas
+- [ADD] `--spotlight-number INT` の引数を追加
     - @melpon
 - [FIX] `SDL_PollEvent` の扱い方を修正
     - @melpon
-- [UPDATE] `raspberry-pi-os_armv8` の SDL を自前ビルドにして依存ライブラリをできるだけ少なくする
-    - @melpon
+- [FIX] スクリーンキャプチャの前に `CoInitializeEx` が必要になっていたのを修正
+    - @torikizi @melpon
 
 ## 2020.8.1
 

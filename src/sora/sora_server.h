@@ -11,16 +11,17 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-#include "connection_settings.h"
 #include "rtc/rtc_manager.h"
 #include "sora_client.h"
+
+struct SoraServerConfig {};
 
 class SoraServer : public std::enable_shared_from_this<SoraServer> {
   SoraServer(boost::asio::io_context& ioc,
              boost::asio::ip::tcp::endpoint endpoint,
              std::shared_ptr<SoraClient> client,
              RTCManager* rtc_manager,
-             ConnectionSettings conn_settings);
+             SoraServerConfig config);
 
  public:
   static std::shared_ptr<SoraServer> Create(
@@ -28,9 +29,9 @@ class SoraServer : public std::enable_shared_from_this<SoraServer> {
       boost::asio::ip::tcp::endpoint endpoint,
       std::shared_ptr<SoraClient> client,
       RTCManager* rtc_manager,
-      ConnectionSettings conn_settings) {
+      SoraServerConfig config) {
     return std::shared_ptr<SoraServer>(
-        new SoraServer(ioc, endpoint, client, rtc_manager, conn_settings));
+        new SoraServer(ioc, endpoint, client, rtc_manager, std::move(config)));
   }
 
   void Run();
@@ -45,7 +46,7 @@ class SoraServer : public std::enable_shared_from_this<SoraServer> {
 
   std::shared_ptr<SoraClient> client_;
   RTCManager* rtc_manager_;
-  ConnectionSettings conn_settings_;
+  SoraServerConfig config_;
 };
 
 #endif

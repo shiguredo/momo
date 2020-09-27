@@ -154,6 +154,12 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+#if defined(__APPLE__)
+    if (h264_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_decoder_factory_->CreateVideoDecoder(format);
+    }
+#endif
+
 #if USE_JETSON_ENCODER
     if (h264_decoder_ == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(

@@ -25,7 +25,7 @@ SerialDataManager::SerialDataManager(boost::asio::io_context& ioc)
 
 SerialDataManager::~SerialDataManager() {
   {
-    rtc::CritScope lock(&channels_lock_);
+    webrtc::MutexLock lock(&channels_lock_);
     for (SerialDataChannel* serial_data_channel : serial_data_channels_) {
       delete serial_data_channel;
     }
@@ -36,12 +36,12 @@ SerialDataManager::~SerialDataManager() {
 
 void SerialDataManager::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
-  rtc::CritScope lock(&channels_lock_);
+  webrtc::MutexLock lock(&channels_lock_);
   serial_data_channels_.push_back(new SerialDataChannel(this, data_channel));
 }
 
 void SerialDataManager::OnClosed(SerialDataChannel* serial_data_channel) {
-  rtc::CritScope lock(&channels_lock_);
+  webrtc::MutexLock lock(&channels_lock_);
   serial_data_channels_.erase(
       std::remove(serial_data_channels_.begin(), serial_data_channels_.end(),
                   serial_data_channel),
@@ -134,7 +134,7 @@ void SerialDataManager::OnRead(const boost::system::error_code& error,
   read_line_buffer_.insert(read_line_buffer_.end(), read_buffer_.get(),
                            read_buffer_.get() + bytes_transferred);
   {
-    rtc::CritScope lock(&channels_lock_);
+    webrtc::MutexLock lock(&channels_lock_);
     SendLineFromSerial();
   }
   DoRead();

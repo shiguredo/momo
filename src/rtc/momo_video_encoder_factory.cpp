@@ -132,58 +132,22 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   return supported_codecs;
 }
 
-webrtc::VideoEncoderFactory::CodecInfo
-MomoVideoEncoderFactory::QueryVideoEncoder(
-    const webrtc::SdpVideoFormat& format) const {
-  CodecInfo info;
-  info.has_internal_source = false;
-  if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
-    assert(vp8_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        vp8_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
-    assert(vp9_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        vp9_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
-    assert(av1_encoder_ != VideoCodecInfo::Type::NotSupported);
-    info.is_hardware_accelerated =
-        av1_encoder_ != VideoCodecInfo::Type::Software;
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-    assert(h264_encoder_ != VideoCodecInfo::Type::NotSupported);
-    if (h264_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
-      return video_encoder_factory_->QueryVideoEncoder(format);
-    } else {
-      info.is_hardware_accelerated =
-          h264_encoder_ != VideoCodecInfo::Type::Software;
-    }
-  } else if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
-    assert(h265_encoder_ != VideoCodecInfo::Type::NotSupported);
-    if (h265_encoder_ == VideoCodecInfo::Type::VideoToolbox) {
-      return video_encoder_factory_->QueryVideoEncoder(format);
-    } else {
-      info.is_hardware_accelerated =
-          h265_encoder_ != VideoCodecInfo::Type::Software;
-    }
-  } else {
-    RTC_LOG(LS_ERROR) << "Unknown format: " << format.name;
-    std::exit(1);
-  }
-  return info;
-}
-
 std::unique_ptr<webrtc::VideoEncoder>
 MomoVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
     if (vp8_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::VP8Encoder::Create();
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::VP8Encoder::Create();
+      });
     }
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     if (vp9_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+      });
     }
 #if USE_JETSON_ENCODER
     if (vp9_encoder_ == VideoCodecInfo::Type::Jetson) {
@@ -198,7 +162,9 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
     if (av1_encoder_ == VideoCodecInfo::Type::Software) {
-      return webrtc::CreateLibaomAv1Encoder();
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return webrtc::CreateLibaomAv1Encoder();
+      });
     }
 #endif
   }

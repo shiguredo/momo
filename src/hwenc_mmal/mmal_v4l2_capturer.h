@@ -20,12 +20,16 @@ extern "C" {
 #include <queue>
 
 // WebRTC
-#include <rtc_base/critical_section.h>
-#include <v4l2_video_capturer/v4l2_video_capturer.h>
+#include <rtc_base/synchronization/mutex.h>
+
+#include "v4l2_video_capturer/v4l2_video_capturer.h"
+
+typedef V4L2VideoCapturerConfig MMALV4L2CapturerConfig;
 
 class MMALV4L2Capturer : public V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(ConnectionSettings cs);
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+      MMALV4L2CapturerConfig config);
   MMALV4L2Capturer();
   ~MMALV4L2Capturer();
 
@@ -41,9 +45,9 @@ class MMALV4L2Capturer : public V4L2VideoCapturer {
 
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      ConnectionSettings cs,
+      MMALV4L2CapturerConfig config,
       size_t capture_device_index);
-  int32_t StartCapture(ConnectionSettings cs) override;
+  int32_t StartCapture(V4L2VideoCapturerConfig config) override;
   int32_t StopCapture() override;
   bool UseNativeBuffer() override;
   bool OnCaptured(struct v4l2_buffer& buf) override;
@@ -66,7 +70,7 @@ class MMALV4L2Capturer : public V4L2VideoCapturer {
   MMAL_POOL_T* resizer_pool_out_;
   int32_t configured_width_;
   int32_t configured_height_;
-  rtc::CriticalSection frame_params_lock_;
+  webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   unsigned int decoded_buffer_num_;
   size_t decoded_buffer_size_;
