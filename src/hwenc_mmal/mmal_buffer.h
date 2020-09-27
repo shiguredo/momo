@@ -1,13 +1,13 @@
-#ifndef NATIVE_BUFFER_H_
-#define NATIVE_BUFFER_H_
+#ifndef MMAL_BUFFER_H_
+#define MMAL_BUFFER_H_
 
 extern "C" {
-#include "interface/mmal/mmal.h"
+#include <interface/mmal/mmal.h>
 }
 
-#include "api/video/video_frame.h"
-#include "common_video/include/video_frame_buffer.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include <api/video/video_frame.h>
+#include <common_video/include/video_frame_buffer.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
 
 class MMALBuffer : public webrtc::I420BufferInterface {
  public:
@@ -35,4 +35,4 @@ class MMALBuffer : public webrtc::I420BufferInterface {
   const int width_;
   const int height_;
 };
-#endif  // NATIVE_BUFFER_H_
+#endif  // MMAL_BUFFER_H_

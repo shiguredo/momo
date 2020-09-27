@@ -4,7 +4,7 @@
 
 set -e
 
-for file in `find src -type f`; do
+for file in `find src -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.mm' \)`; do
   echo applying $file
   clang-format -i -style=file $file
 done

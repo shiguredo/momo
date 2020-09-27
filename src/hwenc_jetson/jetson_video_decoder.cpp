@@ -13,13 +13,16 @@
 
 #include <unistd.h>
 
-#include "modules/video_coding/include/video_error_codes.h"
-#include "nvbuf_utils.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/time_utils.h"
-#include "system_wrappers/include/metrics.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
+// WebRTC
+#include <modules/video_coding/include/video_error_codes.h>
+#include <rtc_base/checks.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/time_utils.h>
+#include <system_wrappers/include/metrics.h>
+#include <third_party/libyuv/include/libyuv/convert.h>
+
+// L4T Multimedia API
+#include <nvbuf_utils.h>
 
 #define INIT_ERROR(cond, desc)                 \
   if (cond) {                                  \
@@ -172,8 +175,8 @@ bool JetsonVideoDecoder::JetsonRelease() {
     if (capture_loop_) {
       eos_ = true;
       SendEOS(decoder_);
-      while (decoder_->output_plane.getNumQueuedBuffers() > 0 &&
-             !got_error_ && !decoder_->isInError()) {
+      while (decoder_->output_plane.getNumQueuedBuffers() > 0 && !got_error_ &&
+             !decoder_->isInError()) {
         struct v4l2_buffer v4l2_buf;
         struct v4l2_plane planes[MAX_PLANES];
 
@@ -200,7 +203,6 @@ bool JetsonVideoDecoder::JetsonRelease() {
   }
   return true;
 }
-
 
 void JetsonVideoDecoder::SendEOS(NvV4l2Element* element) {
   if (element->output_plane.getStreamStatus()) {
@@ -252,8 +254,8 @@ void JetsonVideoDecoder::CaptureLoop() {
     SetCapture();
   }
 
-  while (
-      !(eos_ || got_error_ || decoder_->isInError() || !capture_loop_->IsRunning())) {
+  while (!(eos_ || got_error_ || decoder_->isInError() ||
+           !capture_loop_->IsRunning())) {
     ret = decoder_->dqEvent(event, false);
     if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
       SetCapture();

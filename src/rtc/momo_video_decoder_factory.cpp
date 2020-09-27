@@ -1,5 +1,6 @@
 #include "momo_video_decoder_factory.h"
 
+// WebRTC
 #include <absl/strings/match.h>
 #include <api/video_codecs/sdp_video_format.h>
 #include <media/base/codec.h>
@@ -151,6 +152,12 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+#if defined(__APPLE__)
+    if (h264_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_decoder_factory_->CreateVideoDecoder(format);
+    }
+#endif
+
 #if USE_JETSON_ENCODER
     if (h264_decoder_ == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(

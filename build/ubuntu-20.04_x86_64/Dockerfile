@@ -88,11 +88,41 @@ RUN \
     -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
     -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
     -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
-    -DPTHREADS=ON \
     -DBUILD_SHARED_LIBS=OFF \
-    -DPULSEAUDIO=OFF \
-    -DESD=OFF \
+    -DSDL_ATOMIC=OFF \
+    -DSDL_AUDIO=OFF \
+    -DSDL_VIDEO=ON \
+    -DSDL_RENDER=ON \
+    -DSDL_EVENTS=ON \
+    -DSDL_JOYSTICK=ON \
+    -DSDL_HAPTIC=ON \
+    -DSDL_POWER=ON \
+    -DSDL_THREADS=ON \
+    -DSDL_TIMERS=OFF \
+    -DSDL_FILE=OFF \
+    -DSDL_LOADSO=ON \
+    -DSDL_CPUINFO=OFF \
+    -DSDL_FILESYSTEM=OFF \
+    -DSDL_DLOPEN=ON \
+    -DSDL_SENSOR=ON \
+    -DVIDEO_OPENGL=ON \
+    -DVIDEO_OPENGLES=ON \
+    -DVIDEO_RPI=OFF \
     -DVIDEO_WAYLAND=OFF \
+    -DVIDEO_X11=ON \
+    -DX11_SHARED=OFF \
+    -DVIDEO_X11_XCURSOR=OFF \
+    -DVIDEO_X11_XINERAMA=OFF \
+    -DVIDEO_X11_XINPUT=OFF \
+    -DVIDEO_X11_XRANDR=OFF \
+    -DVIDEO_X11_XSCRNSAVER=OFF \
+    -DVIDEO_X11_XSHAPE=OFF \
+    -DVIDEO_X11_XVM=OFF \
+    -DVIDEO_VULKAN=OFF \
+    -DVIDEO_VIVANTE=OFF \
+    -DVIDEO_COCOA=OFF \
+    -DVIDEO_METAL=OFF \
+    -DVIDEO_KMSDRM=OFF \
   && make -j`nproc` \
   && make install
 
@@ -105,4 +135,4 @@ RUN set -ex \
   && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub \
   && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/ /" \
   && apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-10.0 clang-8
+  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda-11.0 clang-10

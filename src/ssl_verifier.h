@@ -1,5 +1,5 @@
-#ifndef SSL_VERIFIER_H_INCLUDED
-#define SSL_VERIFIER_H_INCLUDED
+#ifndef SSL_VERIFIER_H_
+#define SSL_VERIFIER_H_
 
 #include <string>
 
@@ -18,4 +18,4 @@ class SSLVerifier {
   static bool LoadBuiltinSSLRootCertificates(X509_STORE* store);
 };
 
-#endif  // SSL_VERIFIER_H_INCLUDED
+#endif  // SSL_VERIFIER_H_

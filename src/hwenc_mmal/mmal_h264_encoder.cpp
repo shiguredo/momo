@@ -14,14 +14,16 @@
 #include <limits>
 #include <string>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+// WebRTC
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <rtc_base/checks.h>
+#include <rtc_base/logging.h>
+#include <system_wrappers/include/metrics.h>
+#include <third_party/libyuv/include/libyuv/convert.h>
+#include <third_party/libyuv/include/libyuv/convert_from.h>
+#include <third_party/libyuv/include/libyuv/video_common.h>
+
 #include "mmal_buffer.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "system_wrappers/include/metrics.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
-#include "third_party/libyuv/include/libyuv/convert_from.h"
-#include "third_party/libyuv/include/libyuv/video_common.h"
 
 #define H264HWENC_HEADER_DEBUG 0
 
@@ -270,7 +272,7 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
 
   std::unique_ptr<FrameParams> params;
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     do {
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
@@ -375,7 +377,6 @@ webrtc::VideoEncoder::EncoderInfo MMALH264Encoder::GetEncoderInfo() const {
   info.implementation_name = "MMAL H264";
   info.scaling_settings =
       VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
-  info.is_hardware_accelerated = true;
   info.has_internal_source = false;
   return info;
 }
@@ -427,7 +428,7 @@ int32_t MMALH264Encoder::Encode(
   SetBitrateBps(bitrate_adjuster_.GetAdjustedBitrateBps());
   SetFramerateFps(target_framerate_fps_);
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),

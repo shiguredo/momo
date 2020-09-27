@@ -14,12 +14,13 @@
 #include <string>
 #include <vector>
 
-#include "api/media_stream_interface.h"
-#include "api/scoped_refptr.h"
-#include "base/RTCMacros.h"
-#include "modules/video_capture/video_capture.h"
-#include "rtc/scalable_track_source.h"
-#include "rtc_base/thread.h"
+// WebRTC
+#include <api/media_stream_interface.h>
+#include <api/scoped_refptr.h>
+#include <base/RTCMacros.h>
+#include <modules/video_capture/video_capture.h>
+#include <rtc/scalable_track_source.h>
+#include <rtc_base/thread.h>
 
 RTC_FWD_DECL_OBJC_CLASS(AVCaptureDevice);
 RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
@@ -51,4 +52,4 @@ class MacCapturer : public ScalableVideoTrackSource,
   RTCVideoSourceAdapter* adapter_;
 };
 
-#endif  // TEST_MAC_CAPTURER_H_
+#endif  // MAC_CAPTURER_H_

@@ -1,5 +1,4 @@
 #include "momo_version.h"
-#include "momo_version.gen.h"
 
 #include <fstream>
 #include <sstream>
@@ -14,9 +13,12 @@
 #include <windows.h>
 #endif
 
+#include "momo_version.gen.h"
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <sys/utsname.h>
 #endif
+
 #if defined(__APPLE__)
 #include "mac_helper/macos_version.h"
 #endif

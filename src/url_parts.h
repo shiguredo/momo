@@ -3,11 +3,7 @@
 
 #include <string>
 
-/*
-適当な URL パーサ
-
-Boost.Beast の URL パーサはまだ [PR の段階](https://github.com/boostorg/beast/pull/1231) なので、自前で適当に作っておく。
-*/
+// 適当な URL パーサ
 struct URLParts {
   std::string scheme;
   std::string user_pass;
@@ -17,7 +13,7 @@ struct URLParts {
 
   // 適当 URL パース
   // scheme://[user_pass@]host[:port][/path_query_fragment]
-  static bool parse(std::string url, URLParts& parts) {
+  static bool Parse(std::string url, URLParts& parts) {
     auto n = url.find("://");
     if (n == std::string::npos) {
       return false;

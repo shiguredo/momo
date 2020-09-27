@@ -16,10 +16,7 @@ class NvCodecH264EncoderCuda {
   NvCodecH264EncoderCuda();
   ~NvCodecH264EncoderCuda();
 
-  void Copy(NvEncoder* nv_encoder,
-            const void* ptr,
-            int width,
-            int height);
+  void Copy(NvEncoder* nv_encoder, const void* ptr, int width, int height);
   void CopyNative(NvEncoder* nv_encoder,
                   const void* ptr,
                   int size,

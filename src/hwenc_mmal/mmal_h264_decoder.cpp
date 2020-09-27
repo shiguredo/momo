@@ -13,13 +13,14 @@
 
 #include <unistd.h>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "modules/video_coding/include/video_error_codes.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/time_utils.h"
-#include "system_wrappers/include/metrics.h"
-#include "third_party/libyuv/include/libyuv/convert.h"
+// WebRTC
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <modules/video_coding/include/video_error_codes.h>
+#include <rtc_base/checks.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/time_utils.h>
+#include <system_wrappers/include/metrics.h>
+#include <third_party/libyuv/include/libyuv/convert.h>
 
 MMALH264Decoder::MMALH264Decoder()
     : decoder_(nullptr),
@@ -57,7 +58,7 @@ int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  rtc::CritScope lock(&config_lock_);
+  webrtc::MutexLock lock(&config_lock_);
 
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
@@ -124,7 +125,7 @@ void MMALH264Decoder::MMALOutputCallback(MMAL_PORT_T* port,
                    << " length:" << buffer->length;
 
   if (buffer->cmd == MMAL_EVENT_FORMAT_CHANGED) {
-    rtc::CritScope lock(&config_lock_);
+    webrtc::MutexLock lock(&config_lock_);
     MMAL_EVENT_FORMAT_CHANGED_T* event = mmal_event_format_changed_get(buffer);
 
     width_ = event->format->es->video.width;

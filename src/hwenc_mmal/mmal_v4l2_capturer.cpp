@@ -1,17 +1,19 @@
-#include "mmal_v4l2_capture.h"
+#include "mmal_v4l2_capturer.h"
 
+// Linux
 #include <linux/videodev2.h>
 #include <sys/ioctl.h>
 
-#include "modules/video_capture/video_capture_factory.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
+// WebRTC
+#include <modules/video_capture/video_capture_factory.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/ref_counted_object.h>
 
 #include "mmal_buffer.h"
 
-rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
-    ConnectionSettings cs) {
-  rtc::scoped_refptr<V4L2VideoCapture> capturer;
+rtc::scoped_refptr<V4L2VideoCapturer> MMALV4L2Capturer::Create(
+    MMALV4L2CapturerConfig config) {
+  rtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!device_info) {
@@ -22,19 +24,19 @@ rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
   LogDeviceList(device_info.get());
 
   for (int i = 0; i < device_info->NumberOfDevices(); ++i) {
-    capturer = Create(device_info.get(), cs, i);
+    capturer = Create(device_info.get(), config, i);
     if (capturer) {
       RTC_LOG(LS_INFO) << "Get Capture";
       return capturer;
     }
   }
-  RTC_LOG(LS_ERROR) << "Failed to create V4L2VideoCapture";
+  RTC_LOG(LS_ERROR) << "Failed to create V4L2VideoCapturer";
   return nullptr;
 }
 
-rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
+rtc::scoped_refptr<V4L2VideoCapturer> MMALV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    ConnectionSettings cs,
+    MMALV4L2CapturerConfig config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -44,24 +46,23 @@ rtc::scoped_refptr<V4L2VideoCapture> MMALV4L2Capture::Create(
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }
-  rtc::scoped_refptr<V4L2VideoCapture> v4l2_capturer(
-      new rtc::RefCountedObject<MMALV4L2Capture>());
-  if (v4l2_capturer->Init((const char*)&unique_name, cs.video_device) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to create MMALV4L2Capture(" << unique_name
+  rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer(
+      new rtc::RefCountedObject<MMALV4L2Capturer>());
+  if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
+    RTC_LOG(LS_WARNING) << "Failed to create MMALV4L2Capturer(" << unique_name
                         << ")";
     return nullptr;
   }
-  if (v4l2_capturer->StartCapture(cs) < 0) {
-    auto size = cs.getSize();
-    RTC_LOG(LS_WARNING) << "Failed to start MMALV4L2Capture(w = " << size.width
-                        << ", h = " << size.height << ", fps = " << cs.framerate
-                        << ")";
+  if (v4l2_capturer->StartCapture(config) < 0) {
+    RTC_LOG(LS_WARNING) << "Failed to start MMALV4L2Capturer(w = "
+                        << config.width << ", h = " << config.height
+                        << ", fps = " << config.framerate << ")";
     return nullptr;
   }
   return v4l2_capturer;
 }
 
-MMALV4L2Capture::MMALV4L2Capture()
+MMALV4L2Capturer::MMALV4L2Capturer()
     : component_in_(nullptr),
       decoder_(nullptr),
       resizer_(nullptr),
@@ -74,28 +75,29 @@ MMALV4L2Capture::MMALV4L2Capture()
       webrtc::CalcBufferSize(webrtc::VideoType::kI420, VCOS_ALIGN_UP(1920, 32),
                              VCOS_ALIGN_UP(1080, 16));
   // 出力のプールはまとめないと、リサイズ時にエンコーダに送ったフレームが破棄される場合がある
-  resizer_pool_out_ = mmal_pool_create(decoded_buffer_num_, decoded_buffer_size_);
+  resizer_pool_out_ =
+      mmal_pool_create(decoded_buffer_num_, decoded_buffer_size_);
 }
 
-MMALV4L2Capture::~MMALV4L2Capture() {
+MMALV4L2Capturer::~MMALV4L2Capturer() {
   std::lock_guard<std::mutex> lock(mtx_);
   MMALRelease();
   mmal_pool_destroy(resizer_pool_out_);
 }
 
-int32_t MMALV4L2Capture::StartCapture(ConnectionSettings cs) {
-  return V4L2VideoCapture::StartCapture(cs);
+int32_t MMALV4L2Capturer::StartCapture(V4L2VideoCapturerConfig config) {
+  return V4L2VideoCapturer::StartCapture(config);
 }
 
-int32_t MMALV4L2Capture::StopCapture() {
-  return V4L2VideoCapture::StopCapture();
+int32_t MMALV4L2Capturer::StopCapture() {
+  return V4L2VideoCapturer::StopCapture();
 }
 
-bool MMALV4L2Capture::useNativeBuffer() {
+bool MMALV4L2Capturer::UseNativeBuffer() {
   return true;
 }
 
-bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
+bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
   const int64_t timestamp_us = rtc::TimeMicros();
 
   int adapted_width;
@@ -126,7 +128,7 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
   ResizerFillBuffer();
 
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     frame_params_.push(absl::make_unique<FrameParams>(
         configured_width_, configured_height_, timestamp_us));
   }
@@ -152,34 +154,34 @@ bool MMALV4L2Capture::OnCaptured(struct v4l2_buffer& buf) {
   return true;
 }
 
-void MMALV4L2Capture::MMALInputCallbackFunction(MMAL_PORT_T* port,
-                                                MMAL_BUFFER_HEADER_T* buffer) {
-  ((MMALV4L2Capture*)port->userdata)->MMALInputCallback(port, buffer);
+void MMALV4L2Capturer::MMALInputCallbackFunction(MMAL_PORT_T* port,
+                                                 MMAL_BUFFER_HEADER_T* buffer) {
+  ((MMALV4L2Capturer*)port->userdata)->MMALInputCallback(port, buffer);
 }
 
-void MMALV4L2Capture::MMALInputCallback(MMAL_PORT_T* port,
-                                        MMAL_BUFFER_HEADER_T* buffer) {
+void MMALV4L2Capturer::MMALInputCallback(MMAL_PORT_T* port,
+                                         MMAL_BUFFER_HEADER_T* buffer) {
   mmal_buffer_header_release(buffer);
 }
 
-void MMALV4L2Capture::ResizerFillBuffer() {
+void MMALV4L2Capturer::ResizerFillBuffer() {
   MMAL_BUFFER_HEADER_T* resizer_out;
   while ((resizer_out = mmal_queue_get(resizer_pool_out_->queue)) != NULL) {
     mmal_port_send_buffer(resizer_->output[0], resizer_out);
   }
 }
 
-void MMALV4L2Capture::ResizerOutputCallbackFunction(
+void MMALV4L2Capturer::ResizerOutputCallbackFunction(
     MMAL_PORT_T* port,
     MMAL_BUFFER_HEADER_T* buffer) {
-  ((MMALV4L2Capture*)port->userdata)->ResizerOutputCallback(port, buffer);
+  ((MMALV4L2Capturer*)port->userdata)->ResizerOutputCallback(port, buffer);
 }
 
-void MMALV4L2Capture::ResizerOutputCallback(MMAL_PORT_T* port,
-                                            MMAL_BUFFER_HEADER_T* buffer) {
+void MMALV4L2Capturer::ResizerOutputCallback(MMAL_PORT_T* port,
+                                             MMAL_BUFFER_HEADER_T* buffer) {
   std::unique_ptr<FrameParams> params;
   {
-    rtc::CritScope lock(&frame_params_lock_);
+    webrtc::MutexLock lock(&frame_params_lock_);
     do {
       if (frame_params_.empty()) {
         RTC_LOG(LS_WARNING)
@@ -210,7 +212,7 @@ void MMALV4L2Capture::ResizerOutputCallback(MMAL_PORT_T* port,
               .build());
 }
 
-int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
+int32_t MMALV4L2Capturer::MMALConfigure(int32_t width, int32_t height) {
   MMAL_PORT_T* port_in;
   MMAL_FOURCC_T input_format;
 
@@ -374,7 +376,7 @@ int32_t MMALV4L2Capture::MMALConfigure(int32_t width, int32_t height) {
   return 0;
 }
 
-void MMALV4L2Capture::MMALRelease() {
+void MMALV4L2Capturer::MMALRelease() {
   if (resizer_) {
     mmal_component_disable(resizer_);
     if (decoder_) {

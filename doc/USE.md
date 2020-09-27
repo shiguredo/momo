@@ -52,13 +52,9 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
-### ROS ノードとして Momo を使ってみる
+## FAQ
 
-- Momo を ROS ノードとして使ってみたい人は [USE_ROS.md](USE_ROS.md) をお読みください。
-
-## Q&A
-
-Q&A に関しては [QA.md](QA.md) をお読みください。
+FAQ に関しては [FAQ.md](FAQ.md) をお読みください。
 
 ## コマンド
 
@@ -227,21 +223,25 @@ Options:
                               Send video to sora (default: true)
   --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send audio to sora (default: true)
-  --video-codec TEXT:{,AV1,H264,VP8,VP9}
+  --video-codec-type TEXT:{,AV1,H264,VP8,VP9}
                               Video codec for send
-  --audio-codec TEXT:{,OPUS}  Audio codec for send
-  --video-bitrate INT:INT in [0 - 30000]
-                              Video bitrate
-  --audio-bitrate INT:INT in [0 - 510]
-                              Audio bitrate
-  --multistream               Use multistream
+  --audio-codec-type TEXT:{,OPUS}
+  --video-bit-rate INT:INT in [0 - 30000]
+                              Video bit rate
+  --audio-bit-rate INT:INT in [0 - 510]
+                              Audio bit rate
+  --multistream BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Use multistream (default: false)
   --role TEXT:{downstream,recvonly,sendonly,sendrecv,upstream}
                               Role (default: upstream)
-  --spotlight INT:INT in [1 - 10]
+  --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Use spotlight
+  --spotlight-number INT:INT in [0 - 8]
                               Stream count delivered in spotlight
   --port INT:INT in [-1 - 65535]
                               Port number (default: -1)
-  --simulcast                 Use simulcast
+  --simulcast BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Use simulcast (default: false)
   --metadata TEXT:JSON Value  Signaling metadata used in connect message
 ```
 

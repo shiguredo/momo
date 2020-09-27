@@ -52,6 +52,18 @@ class DynModule {
 };
 }  // namespace dyn
 
+// text の定義を全て展開した上で文字列化する。
+// 単純に #text とした場合、全て展開する前に文字列化されてしまう
+
+#if defined(_WIN32)
+#define DYN_STRINGIZE(text) DYN_STRINGIZE_((text))
+#define DYN_STRINGIZE_(x) DYN_STRINGIZE_I x
+#else
+#define DYN_STRINGIZE(text) DYN_STRINGIZE_I(text)
+#endif
+
+#define DYN_STRINGIZE_I(text) #text
+
 #define DYN_REGISTER(soname, func)                              \
   template <class... Args>                                      \
   inline auto func(Args... args) {                              \
@@ -60,11 +72,11 @@ class DynModule {
     if (module == nullptr) {                                    \
       exit(1);                                                  \
     }                                                           \
-    auto f = (func_type)dlsym(module, #func);                   \
+    auto f = (func_type)dlsym(module, DYN_STRINGIZE(func));     \
     if (f == nullptr) {                                         \
       exit(1);                                                  \
     }                                                           \
     return f(args...);                                          \
   }
 
-#endif // DYN_DYN_H_
+#endif  // DYN_DYN_H_

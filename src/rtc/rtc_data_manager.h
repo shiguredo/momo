@@ -1,7 +1,8 @@
-#ifndef DATA_MANAGER_H_
-#define DATA_MANAGER_H_
+#ifndef RTC_DATA_MANAGER_H_
+#define RTC_DATA_MANAGER_H_
 
-#include "api/data_channel_interface.h"
+// WebRTC
+#include <api/data_channel_interface.h>
 
 class RTCDataManager {
  public:

@@ -1,42 +1,43 @@
-#ifndef RTC_UTIL_H_
-#define RTC_UTIL_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
+// Boost
 #include <boost/beast/core/string.hpp>
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 
 #include "api/peer_connection_interface.h"
-#include "connection_settings.h"
+#include "momo_args.h"
 #include "video_codec_info.h"
 
 class Util {
  public:
-  static void parseArgs(int argc,
+  static void ParseArgs(int argc,
                         char* argv[],
                         bool& use_test,
                         bool& use_ayame,
                         bool& use_sora,
                         int& log_level,
-                        ConnectionSettings& cs);
-  static std::string generateRandomChars();
-  static std::string generateRandomChars(size_t length);
-  static std::string generateRandomNumericChars(size_t length);
-  static std::string iceConnectionStateToString(
+                        MomoArgs& args);
+  static std::string GenerateRandomChars();
+  static std::string GenerateRandomChars(size_t length);
+  static std::string GenerateRandomNumericChars(size_t length);
+  static std::string IceConnectionStateToString(
       webrtc::PeerConnectionInterface::IceConnectionState state);
 
   // MIME type をファイル名の拡張子から調べる
-  static boost::beast::string_view mimeType(boost::beast::string_view path);
+  static boost::beast::string_view MimeType(boost::beast::string_view path);
 
   // エラーレスポンスをいい感じに作る便利関数
   static boost::beast::http::response<boost::beast::http::string_body>
-  badRequest(
+  BadRequest(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::beast::string_view why);
-  static boost::beast::http::response<boost::beast::http::string_body> notFound(
+  static boost::beast::http::response<boost::beast::http::string_body> NotFound(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::beast::string_view target);
   static boost::beast::http::response<boost::beast::http::string_body>
-  serverError(
+  ServerError(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::beast::string_view what);
 

@@ -1,29 +1,67 @@
 # 変更履歴
 
+- CHANGE
+    - 下位互換のない変更
 - UPDATE
     - 下位互換がある変更
 - ADD
     - 下位互換がある追加
-- CHANGE
-    - 下位互換のない変更
 - FIX
     - バグ修正
 
 ## develop
 
+## 2020.9
+
+- [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
+    - @melpon
+- [CHANGE] Jetson のフレーム変換順序を変更
+    - @tnoho
+- [CHANGE] `raspberry-pi-os_armv8` から SDL を削除
+    - @melpon
+- [CHANGE] `--multistream` と `--simulcast` に引数 true/false の指定を必要にする
+    - @melpon
+- [CHANGE] `--audio-bitrate` を `--audio-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--video-bitrate` を `--video-bit-rate` に変更
+    - @melpon
+- [CHANGE] `--audio-codec` を `--audio-codec-type` に変更
+    - @melpon
+- [CHANGE] `--video-codec` を `--video-codec-type` に変更
+    - @melpon
+- [CHANGE] `--spotlight INT` を `--spotlight BOOL` に変更（true/false で指定）
+    - @melpon
+- [UPDATE] Boost 1.74.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.18.3 に上げる
+    - @voluntas
+- [UPDATE] json を 3.9.1 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M86.4240@{#10}` に上げる
+    - @voluntas
+- [ADD] `--spotlight-number INT` の引数を追加
+    - @melpon
+- [FIX] `SDL_PollEvent` の扱い方を修正
+    - @melpon
+- [FIX] スクリーンキャプチャの前に `CoInitializeEx` が必要になっていたのを修正
+    - @torikizi @melpon
+
 ## 2020.8.1
 
-- [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
+- [UPDATE] `libwebrtc` を `M85.4183@{#2}` に上げる
     - @voluntas
 
 ## 2020.8
 
-- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と　`ubuntu-18.04_armv8_jetson_xavier` に変更
+- [CHANGE] パッケージ名 `ubuntu-18.04_armv8_jetson` を `ubuntu-18.04_armv8_jetson_nano` と `ubuntu-18.04_armv8_jetson_xavier` に変更
     - @tnoho
 - [ADD] macOS でも全画面スクリーンキャプチャ機能を利用できるようにする
     - @hakobera
 - [ADD] Jetson Xavier シリーズで VP9 HWA を有効にする
     - @tnoho @melpon
+- [ADD] サイマルキャストへの対応を追加
+    - Sora モードで利用可能
+    - @melpon @shino
 - [UPDATE] Jetson の RootFS 構築方法をリポジトリからの取得に変更
     - @tnoho
 - [UPDATE] `libwebrtc` を `M85.4183@{#1}` に上げる
