@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2020.9
+
 - [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
     - @melpon
 - [CHANGE] Jetson のフレーム変換順序を変更
