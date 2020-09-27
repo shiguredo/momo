@@ -288,10 +288,10 @@ void Util::ParseArgs(int argc,
                    "Send audio to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_set("--video-codec", args.sora_video_codec_type,
+      ->add_set("--video-codec-type", args.sora_video_codec_type,
                 {"", "VP8", "VP9", "AV1", "H264", "H265"}, "Video codec for send")
       ->check(is_valid_h26x);
-  sora_app->add_set("--audio-codec", args.sora_audio_codec_type,
+  sora_app->add_set("--audio-codec-type", args.sora_audio_codec_type,
                     {"", "OPUS"}, "Audio codec for send");
   sora_app
       ->add_option("--video-bit-rate", args.sora_video_bit_rate,

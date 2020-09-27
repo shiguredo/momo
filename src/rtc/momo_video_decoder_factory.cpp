@@ -108,6 +108,19 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
     }
   }
 
+  // H265
+  if (h265_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から H265 を拾ってくる
+    for (auto format : video_decoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
+  } else if (h265_decoder_ != VideoCodecInfo::Type::NotSupported) {
+    // その他のデコーダの場合は手動で追加
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
+  }
+
   return supported_codecs;
 }
 
@@ -176,6 +189,12 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(__APPLE__)
+    if (h265_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+      return video_decoder_factory_->CreateVideoDecoder(format);
+    }
+#endif
+
 #if USE_JETSON_ENCODER
     if (h265_decoder_ == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
