@@ -4,8 +4,8 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pic-os_armv7.tar.gz` を利用してください
-- Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspberry-pic-os_armv6.tar.gz` を利用してください
+- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv7.tar.gz` を利用してください
+- Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv6.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
