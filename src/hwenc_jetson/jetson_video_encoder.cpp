@@ -1019,7 +1019,7 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
         codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
       }
     }
-    RTC_LOG(LS_ERROR) << "key_frame=" << key_frame << " size=" << size
+    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size
                         << " qp=" << encoded_image_.qp_;
   }
 
