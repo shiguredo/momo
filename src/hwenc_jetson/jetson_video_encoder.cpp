@@ -241,7 +241,13 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
     ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_FAST);
     INIT_ERROR(ret < 0, "Failed to setHWPresetType");
   } else if (codec_.codecType == webrtc::kVideoCodecVP8) {
-    ret = encoder_->setQpRange(20, 45, 20, 45, 20, 45);
+    uint32_t qp_min =
+      codec_.mode == webrtc::VideoCodecMode::kScreensharing ? 12 : 2;
+    uint32_t qp_max = 56;
+    if (codec_.qpMax >= qp_min) {
+      qp_max = codec_.qpMax;
+    }
+    ret = encoder_->setQpRange(qp_min, qp_max, qp_min, qp_max, qp_min, qp_max);
 
     // V4L2_ENC_HW_PRESET_ULTRAFAST を指定しないと 30fps 出ない
     ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_ULTRAFAST);
@@ -984,15 +990,11 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     codec_specific.codecType = codec_.codecType;
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
       webrtc::vp8::GetQp(buffer, size, &encoded_image_.qp_);
-      RTC_LOG(LS_ERROR) << "key_frame=" << key_frame << " size=" << size
-                          << " qp=" << encoded_image_.qp_;
       sending_encoded_image_->qp_ = encoded_image_.qp_;
       codec_specific.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
       codec_specific.codecSpecific.VP8.nonReference = false;
     } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
       webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
-      RTC_LOG(LS_ERROR) << "key_frame=" << key_frame << " size=" << size
-                          << " qp=" << encoded_image_.qp_;
       sending_encoded_image_->qp_ = encoded_image_.qp_;
       codec_specific.codecSpecific.VP9.inter_pic_predicted =
           key_frame ? false : true;
@@ -1016,6 +1018,8 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
         codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
       }
     }
+    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size
+                        << " qp=" << encoded_image_.qp_;
   }
 
   webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
