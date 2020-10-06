@@ -992,6 +992,7 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
       webrtc::vp8::GetQp(buffer, size, &encoded_image_.qp_);
       sending_encoded_image_->qp_ = encoded_image_.qp_;
       codec_specific.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
+      // nonReference かを知ることはできなかった
       codec_specific.codecSpecific.VP8.nonReference = false;
     } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
       webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
@@ -1018,7 +1019,7 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
         codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
       }
     }
-    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size
+    RTC_LOG(LS_ERROR) << "key_frame=" << key_frame << " size=" << size
                         << " qp=" << encoded_image_.qp_;
   }
 
