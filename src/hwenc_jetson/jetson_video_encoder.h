@@ -41,6 +41,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   explicit JetsonVideoEncoder(const cricket::VideoCodec& codec);
   ~JetsonVideoEncoder() override;
 
+  static bool IsSupportedVP8();
   static bool IsSupportedVP9();
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,

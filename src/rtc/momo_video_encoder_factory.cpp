@@ -56,8 +56,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
 
   // VP8
-  // 今のところ Software のみ
-  if (vp8_encoder_ == VideoCodecInfo::Type::Software) {
+  if (vp8_encoder_ == VideoCodecInfo::Type::Software ||
+      vp8_encoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   }
 
@@ -127,6 +127,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
         return webrtc::VP8Encoder::Create();
       });
     }
+#if USE_JETSON_ENCODER
+    if (vp8_encoder_ == VideoCodecInfo::Type::Jetson) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+      });
+    }
+#endif
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
