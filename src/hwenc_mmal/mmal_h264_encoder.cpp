@@ -502,7 +502,6 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
 
   uint8_t zero_count = 0;
   size_t nal_start_idx = 0;
-  std::vector<nal_entry> nals;
   for (size_t i = 0; i < size; i++) {
     uint8_t data = buffer[i];
     if ((i != 0) && (i == nal_start_idx)) {
@@ -512,10 +511,6 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
       }
     }
     if (data == 0x01 && zero_count >= 2) {
-      if (nal_start_idx != 0) {
-        nals.push_back(
-            {nal_start_idx, i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
-      }
       nal_start_idx = i + 1;
     }
     if (data == 0x00) {
@@ -523,16 +518,6 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
     } else {
       zero_count = 0;
     }
-  }
-  if (nal_start_idx != 0) {
-    nals.push_back({nal_start_idx, size - nal_start_idx});
-  }
-
-  webrtc::RTPFragmentationHeader frag_header;
-  frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
-  for (size_t i = 0; i < nals.size(); i++) {
-    frag_header.fragmentationOffset[i] = nals[i].offset;
-    frag_header.fragmentationLength[i] = nals[i].size;
   }
 
   webrtc::CodecSpecificInfo codec_specific;
@@ -546,7 +531,7 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
   sending_encoded_image_->qp_ = encoded_image_.qp_;
 
   webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-      *sending_encoded_image_, &codec_specific, &frag_header);
+      *sending_encoded_image_, &codec_specific);
   if (result.error != webrtc::EncodedImageCallback::Result::OK) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << " OnEncodedImage failed error:" << result.error;

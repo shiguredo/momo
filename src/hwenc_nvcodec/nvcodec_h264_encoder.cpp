@@ -257,52 +257,24 @@ int32_t NvCodecH264Encoder::Encode(
     encoded_image_->rotation_ = frame.rotation();
     encoded_image_->SetColorSpace(frame.color_space());
     encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-    //RTC_LOG(LS_ERROR) << __FUNCTION__ << " packet.size():" << packet.size();
 
-    //printf("###########");
     uint8_t zero_count = 0;
     size_t nal_start_idx = 0;
-    std::vector<nal_entry> nals;
     for (size_t i = 0; i < packet.size(); i++) {
       uint8_t data = packet.data()[i];
-      //if (i < 100) printf(" %02x", data);
       if ((i != 0) && (i == nal_start_idx)) {
-        //printf("-header");
         if ((data & 0x1F) == 0x05) {
-          //printf("-IDR(%02x)", (data & 0x1F));
           encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameKey;
         }
       }
       if (data == 0x01 && zero_count >= 2) {
-        if (nal_start_idx != 0) {
-          nals.push_back({nal_start_idx,
-                          i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4)});
-          //printf(" nal_size: %d ", i - nal_start_idx + 1 - (zero_count == 2 ? 3 : 4));
-        }
         nal_start_idx = i + 1;
-        //printf(" nal_start_idx: %d\n", nal_start_idx);
       }
       if (data == 0x00) {
         zero_count++;
       } else {
         zero_count = 0;
       }
-    }
-    if (nal_start_idx != 0) {
-      nals.push_back({nal_start_idx, packet.size() - nal_start_idx});
-      //printf(" nal_size: %d packet.size(): %d \n", packet.size() - nal_start_idx , packet.size());
-    }
-    //printf("\n");
-    //nals.push_back({4, packet.size() - 4});
-
-    //RTC_LOG(LS_ERROR) << __FUNCTION__ << "  nals.size():" << nals.size();
-
-    webrtc::RTPFragmentationHeader frag_header;
-    frag_header.VerifyAndAllocateFragmentationHeader(nals.size());
-    for (size_t i = 0; i < nals.size(); i++) {
-      frag_header.fragmentationOffset[i] = nals[i].offset;
-      frag_header.fragmentationLength[i] = nals[i].size;
-      //RTC_LOG(LS_ERROR) << __FUNCTION__ << " i:" << i << " offset:" << nals[i].offset << " size:" << nals[i].size;
     }
 
     webrtc::CodecSpecificInfo codec_specific;
@@ -314,7 +286,7 @@ int32_t NvCodecH264Encoder::Encode(
     h264_bitstream_parser_.GetLastSliceQp(&encoded_image_->qp_);
 
     webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-        *encoded_image_, &codec_specific, &frag_header);
+        *encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
       RTC_LOG(LS_ERROR) << __FUNCTION__
                         << " OnEncodedImage failed error:" << result.error;
