@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M86.4280@{#0}` に上げる
+- [UPDATE] `libwebrtc` を `M87.4280@{#0}` に上げる
     - @voluntas
 - [ADD] Jetson Nano で VP8 HWA が利用できるようにする
     - @tnoho
