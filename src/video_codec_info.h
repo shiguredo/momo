@@ -152,6 +152,9 @@ struct VideoCodecInfo {
 #if USE_JETSON_ENCODER
     info.h264_encoders.push_back(Type::Jetson);
     info.h264_decoders.push_back(Type::Jetson);
+    if (JetsonVideoEncoder::IsSupportedVP8()) {
+      info.vp8_encoders.push_back(Type::Jetson);
+    }
     info.vp8_decoders.push_back(Type::Jetson);
     info.vp9_decoders.push_back(Type::Jetson);
     if (JetsonVideoEncoder::IsSupportedVP9()) {
