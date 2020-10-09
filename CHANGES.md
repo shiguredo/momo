@@ -11,6 +11,11 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M86.4280@{#0}` に上げる
+    - @voluntas
+- [ADD] Jetson Nano で VP8 HWA が利用できるようにする
+    - @tnoho
+
 ## 2020.9
 
 - [CHANGE] `ubuntu-16.04_x86_64_ros` を削除
