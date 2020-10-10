@@ -666,7 +666,7 @@ int32_t JetsonVideoEncoder::Encode(
   uint8_t* native_data;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
-  std::shared_ptr<NvJPEGDecoder> decoder;
+  std::shared_ptr<JetsonJpegDecoder> decoder;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     use_native_ = true;
     JetsonBuffer* jetson_buffer =

@@ -27,9 +27,10 @@
 #include "rtc_base/synchronization/mutex.h"
 
 // Jetson Linux Multimedia API
-#include "NvJpegDecoder.h"
 #include "NvVideoConverter.h"
 #include "NvVideoEncoder.h"
+
+#include "jetson_jpeg_decoder.h"
 
 #define CONVERTER_CAPTURE_NUM 2
 
@@ -65,7 +66,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                 int64_t rtpts,
                 webrtc::VideoRotation r,
                 absl::optional<webrtc::ColorSpace> c,
-                std::shared_ptr<NvJPEGDecoder> d)
+                std::shared_ptr<JetsonJpegDecoder> d)
         : width(w),
           height(h),
           render_time_ms(rtms),
@@ -84,7 +85,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
     int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
     absl::optional<webrtc::ColorSpace> color_space;
-    std::shared_ptr<NvJPEGDecoder> decoder_;
+    std::shared_ptr<JetsonJpegDecoder> decoder_;
   };
 
   int32_t JetsonConfigure();

@@ -44,11 +44,14 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   int32_t Init(const char* deviceUniqueId,
                const std::string& specifiedVideoDevice);
   virtual int32_t StartCapture(V4L2VideoCapturerConfig config);
-  virtual int32_t StopCapture();
   virtual bool UseNativeBuffer() override;
-  virtual bool OnCaptured(struct v4l2_buffer& buf);
 
  protected:
+  virtual int32_t StopCapture();
+  virtual bool AllocateVideoBuffers();
+  virtual bool DeAllocateVideoBuffers();
+  virtual bool OnCaptured(struct v4l2_buffer& buf);
+
   int32_t _deviceFd;
   int32_t _currentWidth;
   int32_t _currentHeight;
@@ -69,8 +72,6 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
 
   enum { kNoOfV4L2Bufffers = 4 };
 
-  bool AllocateVideoBuffers();
-  bool DeAllocateVideoBuffers();
   static void CaptureThread(void*);
   bool CaptureProcess();
 
