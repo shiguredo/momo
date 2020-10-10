@@ -2,6 +2,7 @@
 #define JETSON_JPEG_DECODER_POOL_H_
 
 #include <memory>
+#include <mutex>
 #include <queue>
 
 // Jetson Linux Multimedia API
@@ -18,6 +19,7 @@ class JetsonJpegDecoderPool :
   void Push(std::unique_ptr<NvJPEGDecoder> decoder);
 
  private:
+  std::mutex mtx_;
   std::queue<std::unique_ptr<NvJPEGDecoder>> decoder_queue_;
 };
 #endif  // JETSON_JPEG_DECODER_POOL_H_
