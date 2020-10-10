@@ -16,8 +16,6 @@
 
 // WebRTC
 #include <common_video/libyuv/include/webrtc_libyuv.h>
-#include <modules/video_coding/utility/vp8_header_parser.h>
-#include <modules/video_coding/utility/vp9_uncompressed_header_parser.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/time_utils.h>
@@ -118,11 +116,8 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                    << target_bitrate_bps_ << "bit/sec　"
                    << codec_settings->maxBitrate << "kbit/sec　";
 
-  // Initialize encoded image. Default buffer size: size of unencoded data.
+  // Initialize encoded image.
   encoded_image_._completeFrame = true;
-  encoded_image_._encodedWidth = 0;
-  encoded_image_._encodedHeight = 0;
-  encoded_image_.set_size(0);
   encoded_image_.timing_.flags =
       webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
   encoded_image_.content_type_ =
@@ -533,15 +528,6 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
   uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                        v4l2_buf->timestamp.tv_usec;
 
-  v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata;
-  if (encoder_->getMetadata(v4l2_buf->index, enc_metadata) == 0) {
-    if (enc_metadata.KeyFrame) {
-      encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
-    } else {
-      encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-    }
-  }
-
   std::unique_ptr<FrameParams> params;
   {
     webrtc::MutexLock lock(&frame_params_lock_);
@@ -564,15 +550,17 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     }
   }
 
-  encoded_image_._encodedWidth = params->width;
-  encoded_image_._encodedHeight = params->height;
-  encoded_image_.capture_time_ms_ = params->render_time_ms;
-  encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(params->timestamp_rtp);
-  encoded_image_.rotation_ = params->rotation;
-  encoded_image_.SetColorSpace(params->color_space);
+  v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata;
+  if (encoder_->getMetadata(v4l2_buf->index, enc_metadata) != 0) {
+    RTC_LOG(LS_WARNING)
+        << __FUNCTION__
+        << "getMetadata failed. SkipFrame timestamp:"
+        << timestamp;
+    return true;
+  }
 
-  SendFrame(buffer->planes[0].data, buffer->planes[0].bytesused);
+  SendFrame(buffer->planes[0].data, buffer->planes[0].bytesused,
+            std::move(params), enc_metadata);
 
   if (encoder_->capture_plane.qBuffer(*v4l2_buf, NULL) < 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to qBuffer at capture_plane";
@@ -888,34 +876,33 @@ int32_t JetsonVideoEncoder::Encode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
+int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer,
+                                      size_t size,
+                                      std::unique_ptr<FrameParams> params,
+                                      v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata) {
+  encoded_image_.SetTimestamp(params->timestamp_rtp);
+  encoded_image_.SetColorSpace(params->color_space);
+  encoded_image_._encodedWidth = params->width;
+  encoded_image_._encodedHeight = params->height;
+  encoded_image_.capture_time_ms_ = params->render_time_ms;
+  encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
+  encoded_image_.rotation_ = params->rotation;
+  encoded_image_.qp_ = enc_metadata.AvgQP;
+  if (enc_metadata.KeyFrame) {
+    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+  } else {
+    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+  }
+
   webrtc::CodecSpecificInfo codec_specific;
-
+  codec_specific.codecType = codec_.codecType;
   if (codec_.codecType == webrtc::kVideoCodecH264) {
-    sending_encoded_image_.reset(new webrtc::EncodedImage(buffer, size, size));
-    sending_encoded_image_->_frameType = encoded_image_._frameType;
-    sending_encoded_image_->_completeFrame = encoded_image_._completeFrame;
-    sending_encoded_image_->_encodedWidth = encoded_image_._encodedWidth;
-    sending_encoded_image_->_encodedHeight = encoded_image_._encodedHeight;
-    sending_encoded_image_->timing_.flags = encoded_image_.timing_.flags;
-    sending_encoded_image_->content_type_ = encoded_image_.content_type_;
-    sending_encoded_image_->capture_time_ms_ = encoded_image_.capture_time_ms_;
-    sending_encoded_image_->ntp_time_ms_ = encoded_image_.ntp_time_ms_;
-    sending_encoded_image_->SetTimestamp(encoded_image_.Timestamp());
-    sending_encoded_image_->rotation_ = encoded_image_.rotation_;
-    if (encoded_image_.ColorSpace() != nullptr) {
-      sending_encoded_image_->SetColorSpace(*encoded_image_.ColorSpace());
-    }
+    auto encoded_image_buffer = 
+        webrtc::EncodedImageBuffer::Create(buffer, size);
+    encoded_image_.SetEncodedData(encoded_image_buffer);
 
-    codec_specific.codecType = webrtc::kVideoCodecH264;
     codec_specific.codecSpecific.H264.packetization_mode =
         webrtc::H264PacketizationMode::NonInterleaved;
-
-    h264_bitstream_parser_.ParseBitstream(buffer, size);
-    h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
-    RTC_LOG(LS_VERBOSE) << __FUNCTION__
-                        << " last slice qp:" << encoded_image_.qp_;
-    sending_encoded_image_->qp_ = encoded_image_.qp_;
   } else if (codec_.codecType == webrtc::kVideoCodecVP9 ||
              codec_.codecType == webrtc::kVideoCodecVP8) {
     // VP8, VP9 はIVFヘッダーがエンコードフレームについているので取り除く
@@ -927,41 +914,23 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
     buffer += 12;
     size -= 12;
 
-    sending_encoded_image_.reset(new webrtc::EncodedImage(buffer, size, size));
-    sending_encoded_image_->_frameType = encoded_image_._frameType;
-    sending_encoded_image_->_completeFrame = encoded_image_._completeFrame;
-    sending_encoded_image_->_encodedWidth = encoded_image_._encodedWidth;
-    sending_encoded_image_->_encodedHeight = encoded_image_._encodedHeight;
-    sending_encoded_image_->timing_.flags = encoded_image_.timing_.flags;
-    sending_encoded_image_->content_type_ = encoded_image_.content_type_;
-    sending_encoded_image_->capture_time_ms_ = encoded_image_.capture_time_ms_;
-    sending_encoded_image_->ntp_time_ms_ = encoded_image_.ntp_time_ms_;
-    sending_encoded_image_->SetTimestamp(encoded_image_.Timestamp());
-    sending_encoded_image_->rotation_ = encoded_image_.rotation_;
-    if (encoded_image_.ColorSpace() != nullptr) {
-      sending_encoded_image_->SetColorSpace(*encoded_image_.ColorSpace());
-    }
-    const bool key_frame =
-        encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+    auto encoded_image_buffer = 
+        webrtc::EncodedImageBuffer::Create(buffer, size);
+    encoded_image_.SetEncodedData(encoded_image_buffer);
 
-    if (key_frame) {
-      gof_idx_ = 0;
-    }
-    codec_specific.codecType = codec_.codecType;
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
-      webrtc::vp8::GetQp(buffer, size, &encoded_image_.qp_);
-      sending_encoded_image_->qp_ = encoded_image_.qp_;
       codec_specific.codecSpecific.VP8.keyIdx = webrtc::kNoKeyIdx;
       // nonReference かを知ることはできなかった
       codec_specific.codecSpecific.VP8.nonReference = false;
     } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
-      webrtc::vp9::GetQp(buffer, size, &encoded_image_.qp_);
-      sending_encoded_image_->qp_ = encoded_image_.qp_;
+      if (enc_metadata.KeyFrame) {
+        gof_idx_ = 0;
+      }
       codec_specific.codecSpecific.VP9.inter_pic_predicted =
-          key_frame ? false : true;
+          enc_metadata.KeyFrame ? false : true;
       codec_specific.codecSpecific.VP9.flexible_mode = false;
       codec_specific.codecSpecific.VP9.ss_data_available =
-          key_frame ? true : false;
+          enc_metadata.KeyFrame ? true : false;
       codec_specific.codecSpecific.VP9.temporal_idx = webrtc::kNoTemporalIdx;
       codec_specific.codecSpecific.VP9.temporal_up_switch = true;
       codec_specific.codecSpecific.VP9.inter_layer_predicted = false;
@@ -979,12 +948,14 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer, size_t size) {
         codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
       }
     }
-    RTC_LOG(LS_VERBOSE) << "key_frame=" << key_frame << " size=" << size
-                        << " qp=" << encoded_image_.qp_;
   }
 
+  RTC_LOG(LS_VERBOSE) << "key_frame=" << enc_metadata.KeyFrame
+                      << " size=" << size
+                      << " qp=" << encoded_image_.qp_;
+
   webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-      *sending_encoded_image_, &codec_specific);
+      encoded_image_, &codec_specific);
   if (result.error != webrtc::EncodedImageCallback::Result::OK) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << " OnEncodedImage failed error:" << result.error;

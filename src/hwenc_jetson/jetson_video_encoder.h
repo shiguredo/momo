@@ -21,7 +21,6 @@
 
 // WebRTC
 #include <api/video_codecs/video_encoder.h>
-#include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
@@ -114,7 +113,10 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                               NvBuffer* shared_buffer);
   void SetFramerate(uint32_t framerate);
   void SetBitrateBps(uint32_t bitrate_bps);
-  int32_t SendFrame(unsigned char* buffer, size_t size);
+  int32_t SendFrame(unsigned char* buffer,
+                    size_t size,
+                    std::unique_ptr<FrameParams> params,
+                    v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata);
 
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
@@ -136,8 +138,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   bool use_dmabuff_;
   int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
-  webrtc::H264BitstreamParser h264_bitstream_parser_;
-
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
 
@@ -147,7 +147,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   std::condition_variable enc0_buffer_cond_;
   std::queue<NvBuffer*>* enc0_buffer_queue_;
   webrtc::EncodedImage encoded_image_;
-  std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
 };
 
 #endif  // JETSON_VIDEO_ENCODER_H_
