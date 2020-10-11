@@ -22,9 +22,9 @@ https://momo.shiguredo.jp/
 
 ### ハードウェアエンコーダへの対応
 
+- NVIDIA Jetson に搭載されている H.264 や VP8 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
 - Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用しています
-- NVIDIA Jetson に搭載されている H.264 や VP8 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
 
 ### 4K 30fps での配信
