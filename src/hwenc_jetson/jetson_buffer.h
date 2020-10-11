@@ -12,7 +12,8 @@
 
 // Jetson Linux Multimedia API
 #include "nvbuf_utils.h"
-#include "NvJpegDecoder.h"
+
+#include "jetson_jpeg_decoder.h"
 
 class JetsonBuffer : public webrtc::VideoFrameBuffer {
  public:
@@ -24,7 +25,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    std::shared_ptr<NvJPEGDecoder> decoder);
+    std::shared_ptr<JetsonJpegDecoder> decoder);
 
   static rtc::scoped_refptr<JetsonBuffer> Create(
     webrtc::VideoType video_type,
@@ -43,7 +44,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   int RawHeight() const;
   int DecodedFd() const;
   uint32_t V4L2PixelFormat() const;
-  std::shared_ptr<NvJPEGDecoder> JpegDecoder() const;
+  std::shared_ptr<JetsonJpegDecoder> JpegDecoder() const;
   uint8_t* Data() const;
   void SetLength(size_t size);
   size_t Length() const;
@@ -57,7 +58,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
     int scaled_height,
     int fd,
     uint32_t pixfmt,
-    std::shared_ptr<NvJPEGDecoder> decoder);
+    std::shared_ptr<JetsonJpegDecoder> decoder);
 
   JetsonBuffer(
     webrtc::VideoType video_type,
@@ -74,7 +75,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   const int scaled_height_;
   const int fd_;
   const uint32_t pixfmt_;
-  const std::shared_ptr<NvJPEGDecoder> decoder_;
+  const std::shared_ptr<JetsonJpegDecoder> decoder_;
   const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
   size_t length_;
 };
