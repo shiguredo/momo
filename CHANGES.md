@@ -13,6 +13,8 @@
 
 - [UPDATE] `libwebrtc` を `M87.4280@{#0}` に上げる
     - @voluntas
+- [UPDATE] cmake を 3.18.4 に上げる
+    - @voluntas
 - [ADD] Jetson Nano で VP8 HWA が利用できるようにする
     - @tnoho
 
