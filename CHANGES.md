@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M87.4280@{#0}` に上げる
+- [UPDATE] `libwebrtc` を `M87.4280@{#5}` に上げる
     - @tnoho @voluntas
 - [UPDATE] cmake を 3.18.4 に上げる
     - @voluntas
