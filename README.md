@@ -195,6 +195,9 @@ limitations under the License.
     - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - 録画対応
     - MP4 形式での出力
+    - WebM 形式での出力
+- 録画合成対応
+- Sora E2EE 対応
 
 ## Momo についての電子書籍
 
