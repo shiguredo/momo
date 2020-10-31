@@ -28,7 +28,7 @@
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
+[Ayame Labo](https://ayame-labo.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
