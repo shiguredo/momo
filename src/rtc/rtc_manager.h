@@ -21,6 +21,7 @@ struct RTCManagerConfig {
   bool fixed_resolution = false;
   bool show_me = false;
   bool simulcast = false;
+  bool hardware_encoder_only = false;
 
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;

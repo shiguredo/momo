@@ -38,31 +38,38 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     VideoCodecInfo::Type vp9_encoder,
     VideoCodecInfo::Type av1_encoder,
     VideoCodecInfo::Type h264_encoder,
-    bool simulcast)
+    bool simulcast,
+    bool hardware_encoder_only)
     : vp8_encoder_(vp8_encoder),
       vp9_encoder_(vp9_encoder),
       av1_encoder_(av1_encoder),
-      h264_encoder_(h264_encoder) {
+      h264_encoder_(h264_encoder),
+      hardware_encoder_only_(hardware_encoder_only) {
 #if defined(__APPLE__)
   video_encoder_factory_ = CreateObjCEncoderFactory();
 #endif
   if (simulcast) {
     internal_encoder_factory_.reset(new MomoVideoEncoderFactory(
-        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false));
+        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false,
+        hardware_encoder_only));
   }
 }
 std::vector<webrtc::SdpVideoFormat>
 MomoVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
 
+  // hardware_encoder_only_ == true の場合、Software なコーデックは含めない
+
   // VP8
-  if (vp8_encoder_ == VideoCodecInfo::Type::Software ||
+  if ((vp8_encoder_ == VideoCodecInfo::Type::Software &&
+       !hardware_encoder_only_) ||
       vp8_encoder_ == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   }
 
   // VP9
-  if (vp9_encoder_ == VideoCodecInfo::Type::Software) {
+  if (vp9_encoder_ == VideoCodecInfo::Type::Software &&
+      !hardware_encoder_only_) {
     for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
       supported_codecs.push_back(format);
     }
@@ -77,7 +84,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
 
   // AV1
   // 今のところ Software のみ
-  if (av1_encoder_ == VideoCodecInfo::Type::Software) {
+  if (av1_encoder_ == VideoCodecInfo::Type::Software &&
+      !hardware_encoder_only_) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   }
 
@@ -108,7 +116,9 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       }
     }
 #endif
-  } else if (h264_encoder_ != VideoCodecInfo::Type::NotSupported) {
+  } else if ((h264_encoder_ == VideoCodecInfo::Type::Software &&
+              !hardware_encoder_only_) ||
+             h264_encoder_ != VideoCodecInfo::Type::NotSupported) {
     // その他のエンコーダの場合は手動で追加
     for (const webrtc::SdpVideoFormat& format : h264_codecs) {
       supported_codecs.push_back(format);
