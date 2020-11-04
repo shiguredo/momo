@@ -204,6 +204,15 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
+  } else if (!config.force_i420 &&
+             (config.width > 640 || config.height > 480)) {
+    fmts[0] = V4L2_PIX_FMT_MJPEG;
+    fmts[1] = V4L2_PIX_FMT_YUV420;
+    fmts[2] = V4L2_PIX_FMT_YVU420;
+    fmts[3] = V4L2_PIX_FMT_NV12;
+    fmts[4] = V4L2_PIX_FMT_YUYV;
+    fmts[5] = V4L2_PIX_FMT_UYVY;
+    fmts[6] = V4L2_PIX_FMT_JPEG;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YVU420;
