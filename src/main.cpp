@@ -34,6 +34,7 @@
 #endif
 
 #include "ayame/ayame_client.h"
+#include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
 #include "sora/sora_client.h"
@@ -205,6 +206,10 @@ int main(int argc, char* argv[]) {
 
     std::shared_ptr<SoraClient> sora_client;
     std::shared_ptr<AyameClient> ayame_client;
+    std::shared_ptr<P2PServer> p2p_server;
+
+    MetricsServerConfig metrics_config;
+    std::shared_ptr<StatsCollector> stats_collector;
 
     if (use_sora) {
       SoraClientConfig config;
@@ -243,6 +248,8 @@ int main(int argc, char* argv[]) {
                            config)
             ->Run();
       }
+
+      stats_collector = sora_client;
     }
 
     if (use_test) {
@@ -253,8 +260,11 @@ int main(int argc, char* argv[]) {
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
           static_cast<unsigned short>(args.test_port)};
-      P2PServer::Create(ioc, endpoint, rtc_manager.get(), std::move(config))
-          ->Run();
+      p2p_server = P2PServer::Create(ioc, endpoint, rtc_manager.get(),
+                                     std::move(config));
+      p2p_server->Run();
+
+      stats_collector = p2p_server;
     }
 
     if (use_ayame) {
@@ -269,6 +279,17 @@ int main(int argc, char* argv[]) {
       ayame_client =
           AyameClient::Create(ioc, rtc_manager.get(), std::move(config));
       ayame_client->Connect();
+
+      stats_collector = ayame_client;
+    }
+
+    if (args.metrics_port >= 0) {
+      const boost::asio::ip::tcp::endpoint metrics_endpoint{
+          boost::asio::ip::make_address("0.0.0.0"),
+          static_cast<unsigned short>(args.metrics_port)};
+      MetricsServer::Create(ioc, metrics_endpoint, rtc_manager.get(),
+                            stats_collector, std::move(metrics_config))
+          ->Run();
     }
 
 #if USE_SDL2

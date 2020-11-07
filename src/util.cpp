@@ -244,6 +244,9 @@ void Util::ParseArgs(int argc,
          "Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]")
       ->check(is_serial_setting_format);
 
+  app.add_option("--metrics-port", args.metrics_port, "Metrics server port number (default: -1)")
+      ->check(CLI::Range(-1, 65535));
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(

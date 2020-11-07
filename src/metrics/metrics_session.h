@@ -1,53 +1,58 @@
-#ifndef P2P_SESSION_H_
-#define P2P_SESSION_H_
+#ifndef METRICS_SESSION_H_
+#define METRICS_SESSION_H_
 
 #include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
 
-// nlohmann/json
+// nlohman/json
+#include <nlohmann/json.hpp>
+
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
 
-#include "p2p_websocket_session.h"
 #include "rtc/rtc_manager.h"
+#include "stats_collector.h"
 #include "util.h"
 
-struct P2PSessionConfig {
-  bool no_google_stun = false;
-  std::string doc_root;
-};
+struct MetricsSessionConfig {};
 
 // 1つの HTTP リクエストを処理するためのクラス
-class P2PSession : public std::enable_shared_from_this<P2PSession> {
-  P2PSession(boost::asio::io_context& ioc,
-             boost::asio::ip::tcp::socket socket,
-             RTCManager* rtc_manager,
-             P2PSessionConfig config);
+class MetricsSession : public std::enable_shared_from_this<MetricsSession> {
+  MetricsSession(boost::asio::io_context& ioc,
+                 boost::asio::ip::tcp::socket socket,
+                 RTCManager* rtc_manager,
+                 std::shared_ptr<StatsCollector> stats_collector,
+                 MetricsSessionConfig config);
 
  public:
-  static std::shared_ptr<P2PSession> Create(boost::asio::io_context& ioc,
-                                            boost::asio::ip::tcp::socket socket,
-                                            RTCManager* rtc_manager,
-                                            P2PSessionConfig config) {
-    return std::shared_ptr<P2PSession>(
-        new P2PSession(ioc, std::move(socket), rtc_manager, std::move(config)));
+  static std::shared_ptr<MetricsSession> Create(
+      boost::asio::io_context& ioc,
+      boost::asio::ip::tcp::socket socket,
+      RTCManager* rtc_manager,
+      std::shared_ptr<StatsCollector> stats_collector,
+      MetricsSessionConfig config) {
+    return std::shared_ptr<MetricsSession>(
+        new MetricsSession(ioc, std::move(socket), rtc_manager, stats_collector,
+                           std::move(config)));
   }
   void Run();
-
-  std::shared_ptr<RTCConnection> GetRTCConnection() const;
 
  private:
   void DoRead();
   void OnRead(boost::system::error_code ec, std::size_t bytes_transferred);
 
-  void HandleRequest();
+  static boost::beast::http::response<boost::beast::http::string_body>
+  CreateOKWithJSON(
+      const boost::beast::http::request<boost::beast::http::string_body>& req,
+      nlohmann::json json_message);
 
   template <class Body, class Fields>
   void SendResponse(boost::beast::http::response<Body, Fields> msg) {
@@ -61,10 +66,9 @@ class P2PSession : public std::enable_shared_from_this<P2PSession> {
     // Write the response
     boost::beast::http::async_write(
         socket_, *sp,
-        boost::asio::bind_executor(
-            strand_, std::bind(&P2PSession::OnWrite, shared_from_this(),
-                               std::placeholders::_1, std::placeholders::_2,
-                               sp->need_eof())));
+        std::bind(&MetricsSession::OnWrite, shared_from_this(),
+                  std::placeholders::_1, std::placeholders::_2,
+                  sp->need_eof()));
   }
 
   void OnWrite(boost::system::error_code ec,
@@ -81,9 +85,8 @@ class P2PSession : public std::enable_shared_from_this<P2PSession> {
   std::shared_ptr<void> res_;
 
   RTCManager* rtc_manager_;
-  P2PSessionConfig config_;
-
-  std::shared_ptr<P2PWebsocketSession> ws_session_;
+  MetricsSessionConfig config_;
+  std::shared_ptr<StatsCollector> stats_collector_;
 };
 
-#endif  // P2P_SESSION_H_
+#endif  // METRICS_SESSION_H_

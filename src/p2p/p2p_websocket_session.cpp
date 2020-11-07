@@ -12,6 +12,15 @@
 
 using json = nlohmann::json;
 
+std::shared_ptr<RTCConnection> P2PWebsocketSession::GetRTCConnection() const {
+  if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
+                        kIceConnectionConnected) {
+    return connection_;
+  } else {
+    return nullptr;
+  }
+}
+
 P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
                                          boost::asio::ip::tcp::socket socket,
                                          RTCManager* rtc_manager,

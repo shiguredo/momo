@@ -15,6 +15,7 @@
 // nlohmann/json
 #include <nlohmann/json.hpp>
 
+#include "metrics/stats_collector.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
@@ -32,7 +33,8 @@ struct AyameClientConfig {
 };
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
-                    public RTCMessageSender {
+                    public RTCMessageSender,
+                    public StatsCollector {
   AyameClient(boost::asio::io_context& ioc,
               RTCManager* manager,
               AyameClientConfig config);
@@ -49,6 +51,10 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void Reset();
   void Connect();
   void Close();
+
+  void GetStats(std::function<
+                void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+                    callback) override;
 
  private:
   void ReconnectAfter();

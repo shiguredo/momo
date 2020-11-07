@@ -16,6 +16,14 @@
 
 #include "util.h"
 
+std::shared_ptr<RTCConnection> P2PSession::GetRTCConnection() const {
+  if (ws_session_) {
+    return ws_session_->GetRTCConnection();
+  } else {
+    return nullptr;
+  }
+}
+
 P2PSession::P2PSession(boost::asio::io_context& ioc,
                        boost::asio::ip::tcp::socket socket,
                        RTCManager* rtc_manager,
@@ -60,9 +68,9 @@ void P2PSession::OnRead(boost::system::error_code ec,
     if (boost::beast::websocket::is_upgrade(req_)) {
       P2PWebsocketSessionConfig config;
       config.no_google_stun = config_.no_google_stun;
-      P2PWebsocketSession::Create(ioc_, std::move(socket_), rtc_manager_,
-                                  std::move(config))
-          ->Run(std::move(req_));
+      ws_session_ = P2PWebsocketSession::Create(
+          ioc_, std::move(socket_), rtc_manager_, std::move(config));
+      ws_session_->Run(std::move(req_));
       return;
     } else {
       SendResponse(Util::BadRequest(std::move(req_), "Not upgrade request"));
