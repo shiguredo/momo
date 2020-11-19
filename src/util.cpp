@@ -46,7 +46,7 @@ void Util::ParseArgs(int argc,
       "");
   auto is_valid_hw_mjpeg_decoder = CLI::Validator(
       [](std::string input) -> std::string {
-        if (input == "true") {
+        if (input == "1") {
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
           return std::string();
 #else
