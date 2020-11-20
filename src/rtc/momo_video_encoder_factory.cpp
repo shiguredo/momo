@@ -148,14 +148,15 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     }
 
     if (use_software) {
-      std::cerr << "現在の設定ではソフトウェアエンコーダを利用できません。"
+      std::cerr
+          << "The software encoder is not available at the current setting."
+          << std::endl;
+      std::cerr << "Check the list of available encoders by specifying "
+                   "--video-codec-engines."
                 << std::endl;
-      std::cerr << "--video-codec-engines "
-                   "を指定して利用可能なエンコーダの一覧を確認して下さい。"
-                << std::endl;
-      std::cerr << "ソフトウェアエンコーダを利用可能にするには "
-                   "--hw-mjpeg-decoder=false を指定して下さい。"
-                << std::endl;
+      std::cerr
+          << "To enable software encoders, specify --hw-mjpeg-decoder=false."
+          << std::endl;
       std::exit(1);
     }
   }
