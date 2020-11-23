@@ -12,9 +12,9 @@
 ## develop
 
 - [CHANGE] `--use-native` を `--hw-mjpeg-decoder=<bool>` に変更して、ソフトウェアエンコーダとの組み合わせを不可にする
-    - @melpon
-- [UPDATE] `libwebrtc` を `M87.4280@{#10}` に上げる
-    - @tnoho @voluntas
+    - @melpon @tnoho
+- [UPDATE] `libwebrtc` を `M88.4324@{#0}` に上げる
+    - @tnoho @melpon @voluntas
 - [UPDATE] cmake を 3.18.4 に上げる
     - @voluntas
 - [ADD] Jetson Nano で VP8 HWA が利用できるようにする
