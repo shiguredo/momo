@@ -41,15 +41,15 @@
 #include "util.h"
 
 #ifdef _WIN32
-// ScopedCOMInitializer がここに定義されてるので利用する
-#include <modules/audio_device/win/core_audio_utility_win.h>
+#include <rtc_base/win/scoped_com_initializer.h>
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
-  webrtc::webrtc_win::ScopedCOMInitializer com_initializer(webrtc::webrtc_win::ScopedCOMInitializer::kMTA);
+  webrtc::ScopedCOMInitializer com_initializer(
+      webrtc::ScopedCOMInitializer::kMTA);
   if (!com_initializer.Succeeded()) {
     std::cerr << "CoInitializeEx failed" << std::endl;
     return 1;
