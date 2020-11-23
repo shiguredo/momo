@@ -81,6 +81,7 @@ jobs:
         timeout-minutes: 120
   notification:
     name: Slack Notification
+    runs-on: ubuntu-latest
     needs:
       - build-windows
       - build-macos
