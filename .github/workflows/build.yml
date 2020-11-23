@@ -232,7 +232,7 @@ jobs:
       needs.create-release.result == 'failure' ||
       needs.upload-assets.result == 'failure'
     steps:
-        uses: rtCamp/action-slack-notify@v2.1.0
+      - uses: rtCamp/action-slack-notify@v2.1.0
         env:
           SLACK_CHANNEL: momo
           SLACK_COLOR: danger
