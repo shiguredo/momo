@@ -226,16 +226,18 @@ jobs:
       - build-linux
       - create-release
       - upload-assets
-    if: |
-      needs.build-windows.result == 'failure' ||
-      needs.build-macos.result == 'failure' ||
-      needs.build-linux.result == 'failure' ||
-      needs.create-release.result == 'failure' ||
-      needs.upload-assets.result == 'failure'
+    if: always()
     steps:
-      - uses: rtCamp/action-slack-notify@v2.1.0
+      - uses: actions/checkout@v2
+      - uses: rtCamp/action-slack-notify@v2
+        if: |
+          needs.build-windows.result == 'failure' ||
+          needs.build-macos.result == 'failure' ||
+          needs.build-linux.result == 'failure' ||
+          needs.create-release.result == 'failure' ||
+          needs.upload-assets.result == 'failure'
         env:
-          SLACK_CHANNEL: momo
+          SLACK_CHANNEL: open-momo
           SLACK_COLOR: danger
           SLACK_TITLE: Failure build
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
