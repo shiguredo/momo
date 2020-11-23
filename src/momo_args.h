@@ -17,7 +17,12 @@ struct MomoArgs {
   bool no_video_device = false;
   bool no_audio_device = false;
   bool force_i420 = false;
-  bool use_native = false;
+  // Jetson の場合だけデフォルト true
+#if USE_JETSON_ENCODER
+  bool hw_mjpeg_decoder = true;
+#else
+  bool hw_mjpeg_decoder = false;
+#endif
   std::string video_device = "";
   std::string resolution = "VGA";
   int framerate = 30;

@@ -54,14 +54,14 @@ $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 ## Raspberry Pi 向けの追加のオプション
 
-### --use-native
+### --hw-mjpeg-decoder
 
 **USB カメラの場合は無理に利用する必要はありません**
 
-`--use-native` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
+`--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 
 ```shell
-$ ./momo --use-native --no-audio-device test
+$ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
 ### --force-i420
@@ -78,17 +78,17 @@ $ ./momo --force-i420 --no-audio-device test
 
 [Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合](#raspbian-で-raspberry-pi-の-raspberry-pi-用カメラを利用する場合)通りに設定されているか確認してください。特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
 
-Raspberry Pi 専用カメラ利用時には `--use-native --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
+Raspberry Pi 専用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
 ```shell
-$ ./momo --resolution=HD --force-i420 --use-native test
+$ ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder true test
 ```
 
 がリアルタイムでの最高解像度設定となります。
 
-## Raspberry Pi で USB カメラ利用時に use-native を使ってもフレームレートが出ない
+## Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない
 
-USB カメラ利用時には `--use-native` を使わない方がフレームレートは出ます。しかし `--use-native` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
+USB カメラ利用時には `--hw-mjpeg-decoder` を使わない方がフレームレートは出ます。しかし `--hw-mjpeg-decoder` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
 
 ```
 gpu_mem=256

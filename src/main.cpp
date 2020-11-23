@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     v4l2_config.height = size.height;
     v4l2_config.framerate = args.framerate;
     v4l2_config.force_i420 = args.force_i420;
-    v4l2_config.use_native = args.use_native;
+    v4l2_config.use_native = args.hw_mjpeg_decoder;
 
 #if USE_MMAL_ENCODER
     if (v4l2_config.use_native) {
@@ -150,6 +150,7 @@ int main(int argc, char* argv[]) {
   rtcm_config.fixed_resolution = args.fixed_resolution;
   rtcm_config.show_me = args.show_me;
   rtcm_config.simulcast = args.sora_simulcast;
+  rtcm_config.hardware_encoder_only = args.hw_mjpeg_decoder;
 
   rtcm_config.disable_echo_cancellation = args.disable_echo_cancellation;
   rtcm_config.disable_auto_gain_control = args.disable_auto_gain_control;

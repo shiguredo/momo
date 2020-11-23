@@ -1,5 +1,7 @@
 #include "momo_video_encoder_factory.h"
 
+#include <iostream>
+
 // WebRTC
 #include <absl/memory/memory.h>
 #include <absl/strings/match.h>
@@ -38,17 +40,20 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     VideoCodecInfo::Type vp9_encoder,
     VideoCodecInfo::Type av1_encoder,
     VideoCodecInfo::Type h264_encoder,
-    bool simulcast)
+    bool simulcast,
+    bool hardware_encoder_only)
     : vp8_encoder_(vp8_encoder),
       vp9_encoder_(vp9_encoder),
       av1_encoder_(av1_encoder),
-      h264_encoder_(h264_encoder) {
+      h264_encoder_(h264_encoder),
+      hardware_encoder_only_(hardware_encoder_only) {
 #if defined(__APPLE__)
   video_encoder_factory_ = CreateObjCEncoderFactory();
 #endif
   if (simulcast) {
     internal_encoder_factory_.reset(new MomoVideoEncoderFactory(
-        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false));
+        vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false,
+        hardware_encoder_only));
   }
 }
 std::vector<webrtc::SdpVideoFormat>
@@ -108,7 +113,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       }
     }
 #endif
-  } else if (h264_encoder_ != VideoCodecInfo::Type::NotSupported) {
+  } else if ((h264_encoder_ == VideoCodecInfo::Type::Software) ||
+             h264_encoder_ != VideoCodecInfo::Type::NotSupported) {
     // その他のエンコーダの場合は手動で追加
     for (const webrtc::SdpVideoFormat& format : h264_codecs) {
       supported_codecs.push_back(format);
@@ -121,6 +127,40 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
 std::unique_ptr<webrtc::VideoEncoder>
 MomoVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
+  // hardware_encoder_only_ == true の場合、Software なコーデックだったら強制終了する
+  if (hardware_encoder_only_) {
+    bool use_software = false;
+    if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName) &&
+        vp8_encoder_ == VideoCodecInfo::Type::Software) {
+      use_software = true;
+    }
+    if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName) &&
+        vp9_encoder_ == VideoCodecInfo::Type::Software) {
+      use_software = true;
+    }
+    if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName) &&
+        av1_encoder_ == VideoCodecInfo::Type::Software) {
+      use_software = true;
+    }
+    if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName) &&
+        h264_encoder_ == VideoCodecInfo::Type::Software) {
+      use_software = true;
+    }
+
+    if (use_software) {
+      std::cerr
+          << "The software encoder is not available at the current setting."
+          << std::endl;
+      std::cerr << "Check the list of available encoders by specifying "
+                   "--video-codec-engines."
+                << std::endl;
+      std::cerr
+          << "To enable software encoders, specify --hw-mjpeg-decoder=false."
+          << std::endl;
+      std::exit(1);
+    }
+  }
+
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
     if (vp8_encoder_ == VideoCodecInfo::Type::Software) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {

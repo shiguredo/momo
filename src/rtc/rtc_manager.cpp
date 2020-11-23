@@ -102,7 +102,8 @@ RTCManager::RTCManager(
                 resolve(cf.vp8_encoder, info.vp8_encoders),
                 resolve(cf.vp9_encoder, info.vp9_encoders),
                 resolve(cf.av1_encoder, info.av1_encoders),
-                resolve(cf.h264_encoder, info.h264_encoders), cf.simulcast));
+                resolve(cf.h264_encoder, info.h264_encoders), cf.simulcast,
+                cf.hardware_encoder_only));
     media_dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
             absl::make_unique<MomoVideoDecoderFactory>(

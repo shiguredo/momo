@@ -38,12 +38,12 @@ $ tree
 
 ## Jetson Nano 向けの追加のオプション
 
-### --use-native
+### --hw-mjpeg-decoder
 
-`--use-native` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
+`--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 
 ```shell
-$ ./momo --use-native --no-audio-device test
+$ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
 ## 4K@30 を出すためにやること
