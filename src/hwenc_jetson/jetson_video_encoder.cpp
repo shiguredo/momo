@@ -117,7 +117,6 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                    << codec_settings->maxBitrate << "kbit/sec　";
 
   // Initialize encoded image.
-  encoded_image_._completeFrame = true;
   encoded_image_.timing_.flags =
       webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
   encoded_image_.content_type_ =

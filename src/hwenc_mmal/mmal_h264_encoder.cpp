@@ -78,7 +78,6 @@ int32_t MMALH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
-  encoded_image_._completeFrame = true;
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
@@ -487,7 +486,6 @@ int32_t MMALH264Encoder::Encode(
 int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
   sending_encoded_image_.reset(new webrtc::EncodedImage(buffer, size, size));
   sending_encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-  sending_encoded_image_->_completeFrame = encoded_image_._completeFrame;
   sending_encoded_image_->_encodedWidth = encoded_image_._encodedWidth;
   sending_encoded_image_->_encodedHeight = encoded_image_._encodedHeight;
   sending_encoded_image_->timing_.flags = encoded_image_.timing_.flags;
