@@ -241,21 +241,22 @@ int32_t NvCodecH264Encoder::Encode(
   }
 
   for (std::vector<uint8_t>& packet : v_packet_) {
-    encoded_image_.reset(
-        new webrtc::EncodedImage(packet.data(), packet.size(), packet.size()));
-    encoded_image_->_encodedWidth = width_;
-    encoded_image_->_encodedHeight = height_;
-    encoded_image_->content_type_ =
+    auto encoded_image_buffer =
+        webrtc::EncodedImageBuffer::Create(packet.data(), packet.size());
+    encoded_image_.SetEncodedData(encoded_image_buffer);
+    encoded_image_._encodedWidth = width_;
+    encoded_image_._encodedHeight = height_;
+    encoded_image_.content_type_ =
         (mode_ == webrtc::VideoCodecMode::kScreensharing)
             ? webrtc::VideoContentType::SCREENSHARE
             : webrtc::VideoContentType::UNSPECIFIED;
-    encoded_image_->timing_.flags = webrtc::VideoSendTiming::kInvalid;
-    encoded_image_->SetTimestamp(frame.timestamp());
-    encoded_image_->ntp_time_ms_ = frame.ntp_time_ms();
-    encoded_image_->capture_time_ms_ = frame.render_time_ms();
-    encoded_image_->rotation_ = frame.rotation();
-    encoded_image_->SetColorSpace(frame.color_space());
-    encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+    encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
+    encoded_image_.SetTimestamp(frame.timestamp());
+    encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
+    encoded_image_.capture_time_ms_ = frame.render_time_ms();
+    encoded_image_.rotation_ = frame.rotation();
+    encoded_image_.SetColorSpace(frame.color_space());
+    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
 
     uint8_t zero_count = 0;
     size_t nal_start_idx = 0;
@@ -263,7 +264,7 @@ int32_t NvCodecH264Encoder::Encode(
       uint8_t data = packet.data()[i];
       if ((i != 0) && (i == nal_start_idx)) {
         if ((data & 0x1F) == 0x05) {
-          encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameKey;
+          encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
         }
       }
       if (data == 0x01 && zero_count >= 2) {
@@ -284,8 +285,8 @@ int32_t NvCodecH264Encoder::Encode(
     h264_bitstream_parser_.ParseBitstream(packet.data(), packet.size());
     h264_bitstream_parser_.GetLastSliceQp(&encoded_image_->qp_);
 
-    webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-        *encoded_image_, &codec_specific);
+    webrtc::EncodedImageCallback::Result result =
+        callback_->OnEncodedImage(encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
       RTC_LOG(LS_ERROR) << __FUNCTION__
                         << " OnEncodedImage failed error:" << result.error;

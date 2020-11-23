@@ -484,19 +484,9 @@ int32_t MMALH264Encoder::Encode(
 }
 
 int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
-  sending_encoded_image_.reset(new webrtc::EncodedImage(buffer, size, size));
-  sending_encoded_image_->_frameType = webrtc::VideoFrameType::kVideoFrameDelta;
-  sending_encoded_image_->_encodedWidth = encoded_image_._encodedWidth;
-  sending_encoded_image_->_encodedHeight = encoded_image_._encodedHeight;
-  sending_encoded_image_->timing_.flags = encoded_image_.timing_.flags;
-  sending_encoded_image_->content_type_ = encoded_image_.content_type_;
-  sending_encoded_image_->capture_time_ms_ = encoded_image_.capture_time_ms_;
-  sending_encoded_image_->ntp_time_ms_ = encoded_image_.ntp_time_ms_;
-  sending_encoded_image_->SetTimestamp(encoded_image_.Timestamp());
-  sending_encoded_image_->rotation_ = encoded_image_.rotation_;
-  if (encoded_image_.ColorSpace() != nullptr) {
-    sending_encoded_image_->SetColorSpace(*encoded_image_.ColorSpace());
-  }
+  auto encoded_image_buffer = webrtc::EncodedImageBuffer::Create(buffer, size);
+  encoded_image_.SetEncodedData(encoded_image_buffer);
+  encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
 
   uint8_t zero_count = 0;
   size_t nal_start_idx = 0;
@@ -504,8 +494,7 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
     uint8_t data = buffer[i];
     if ((i != 0) && (i == nal_start_idx)) {
       if ((data & 0x1F) == 0x05) {
-        sending_encoded_image_->_frameType =
-            webrtc::VideoFrameType::kVideoFrameKey;
+        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
       }
     }
     if (data == 0x01 && zero_count >= 2) {
@@ -526,10 +515,9 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
   h264_bitstream_parser_.ParseBitstream(buffer, size);
   h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " last slice qp:" << encoded_image_.qp_;
-  sending_encoded_image_->qp_ = encoded_image_.qp_;
 
-  webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-      *sending_encoded_image_, &codec_specific);
+  webrtc::EncodedImageCallback::Result result =
+      callback_->OnEncodedImage(encoded_image_, &codec_specific);
   if (result.error != webrtc::EncodedImageCallback::Result::OK) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << " OnEncodedImage failed error:" << result.error;
