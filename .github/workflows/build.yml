@@ -217,3 +217,24 @@ jobs:
           asset_path: ${{ steps.env.outputs.package_name }}/${{ steps.env.outputs.package_name }}
           asset_name: ${{ steps.env.outputs.package_name }}
           asset_content_type: ${{ steps.env.outputs.content_type }}
+  notification:
+    name: Slack Notification
+    needs:
+      - build-windows
+      - build-macos
+      - build-linux
+      - create-release
+      - upload-assets
+    if: |
+      needs.build-windows.result == 'failure' ||
+      needs.build-macos.result == 'failure' ||
+      needs.build-linux.result == 'failure' ||
+      needs.create-release.result == 'failure' ||
+      needs.upload-assets.result == 'failure'
+    steps:
+        uses: rtCamp/action-slack-notify@v2.1.0
+        env:
+          SLACK_CHANNEL: momo
+          SLACK_COLOR: danger
+          SLACK_TITLE: Failure build
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

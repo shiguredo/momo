@@ -79,3 +79,20 @@ jobs:
       - run: ./build.sh --no-tty --no-mount ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
+  notification:
+    name: Slack Notification
+    needs:
+      - build-windows
+      - build-macos
+      - build-linux
+    if: |
+      needs.build-windows.result == 'failure' ||
+      needs.build-macos.result == 'failure' ||
+      needs.build-linux.result == 'failure'
+    steps:
+        uses: rtCamp/action-slack-notify@v2.1.0
+        env:
+          SLACK_CHANNEL: momo
+          SLACK_COLOR: danger
+          SLACK_TITLE: Failure build
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
