@@ -13,7 +13,7 @@ Sora モードでのみ利用可能です。利用可能な映像コーデック
 
 Sora モードでのみ利用可能です。
 
-`Sora と Momo で WebRTC の AV1 を試す <https://gist.github.com/voluntas/db82783b6a3f012977e6de641a16181e>`_
+[Sora と Momo で WebRTC の AV1 を試す](https://gist.github.com/voluntas/db82783b6a3f012977e6de641a16181e)
 
 ## 認証局の証明書を追加できますか？
 
