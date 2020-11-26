@@ -56,12 +56,9 @@ $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 ### --hw-mjpeg-decoder
 
-**USB カメラの場合は無理に利用する必要はありません**
-
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 
-[Logicool C920](https://www.logicool.co.jp/ja-jp/product/hd-pro-webcam-c920s) など、一部の USB
-カメラを使用している場合にのみ利用可能なオプションとなります。
+USB カメラの場合、一部の MJPEG に対応した USBカメラを使用している場合にのみ利用可能なオプションとなります。
 
 ```shell
 $ ./momo --hw-mjpeg-decoder true --no-audio-device test
