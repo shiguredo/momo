@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2020.10
+
 - [CHANGE] `--use-native` を `--hw-mjpeg-decoder=<bool>` に変更して、ソフトウェアエンコーダとの組み合わせを不可にする
     - @melpon @tnoho
 - [UPDATE] `libwebrtc` を `M88.4324@{#0}` に上げる
