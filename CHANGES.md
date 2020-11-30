@@ -11,6 +11,17 @@
 
 ## develop
 
+## 2020.10
+
+- [CHANGE] `--use-native` を `--hw-mjpeg-decoder=<bool>` に変更して、ソフトウェアエンコーダとの組み合わせを不可にする
+    - @melpon @tnoho
+- [UPDATE] `libwebrtc` を `M88.4324@{#0}` に上げる
+    - @tnoho @melpon @voluntas
+- [UPDATE] cmake を 3.18.4 に上げる
+    - @voluntas
+- [ADD] Jetson Nano で VP8 HWA が利用できるようにする
+    - @tnoho
+
 ## 2020.9
 
 - [CHANGE] `ubuntu-16.04_x86_64_ros` を削除

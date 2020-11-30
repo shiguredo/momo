@@ -14,7 +14,7 @@
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
-#include <common_video/include/i420_buffer_pool.h>
+#include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/platform_thread.h>
 
 // Jetson Linux Multimedia API
@@ -55,7 +55,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   uint32_t input_format_;
   NvVideoDecoder* decoder_;
   webrtc::DecodedImageCallback* decode_complete_callback_;
-  webrtc::I420BufferPool buffer_pool_;
+  webrtc::VideoFrameBufferPool buffer_pool_;
   std::unique_ptr<rtc::PlatformThread> capture_loop_;
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;

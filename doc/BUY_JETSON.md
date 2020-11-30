@@ -4,12 +4,16 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 ## Jetson Nano
 
-- [Jetson Nano 開発者キット B01](https://www.switch-science.com/catalog/6239/)
-    - スイッチサイエンス
+- [NVIDIA Jetson Nano 2GB 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-nano-2gb/jetson-nano-2gb)
+    - 菱洋エレクトロ株式会社
+    - Jetson Nano 2G 本体はこちらがおすすめです
+- [NVIDIA Jetson Nano 開発者キット](https://ryoyo-direct.jp/shopping/jetson-nano/jetson-nano)
+    - 菱洋エレクトロ株式会社
     - Jetson Nano 本体はこちらがおすすめです
 - [【OLIOSPECオリジナル】NVIDIA Jetson Nano Developer kit用ケース\(長尾製作所製\)](https://www.oliospec.com/shopdetail/000000008491/)
     - OLIOSPEC
     - ケースはこちらがおすすめです
+    - **このケースは Jetson Nano 2G では利用できない可能性があります**
 - [Micron MTSD032AHC6MS\-1WT 32GB 産業用microSDカード](https://www.oliospec.com/shop/shopdetail.html?brandcode=000000007374)
     - OLIOSPEC
     - SD カードはこちらがおすすめです

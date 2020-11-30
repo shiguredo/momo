@@ -12,8 +12,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
     - test モードでは test.html が HTTPS ではないため getUserMedia を使用できません
 - この機能は Windows または macOS または Linux で利用できます
 - この機能を以下の組み合わせで利用するとパフォーマンスに影響が出るため避けてください
-    - --use-native と --show-me を併用する組み合わせ
-    - --use-native と非ハードウェアエンコードの組み合わせ
+    - --hw-mjpeg-decoder=true と --show-me を併用する組み合わせ
 
 ## SDL コマンド引数
 
@@ -42,7 +41,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - ルーム ID を推測されにくい値に変更して下さい
 
 ```
-./momo --resolution VGA --no-audio-device --use-sdl --show-me ayame wss://ayame-lite.shiguredo.jp/signaling momo-sdl-ayame
+./momo --resolution VGA --no-audio-device --use-sdl --show-me ayame wss://ayame-labo.shiguredo.jp/signaling momo-sdl-ayame
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07.png)](https://gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07)

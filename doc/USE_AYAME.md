@@ -4,28 +4,28 @@ Ayame は時雨堂が開発し OSS として公開している、 WebRTC シグ�
 
 [OpenAyame プロジェクト](https://gist.github.com/voluntas/90cc9686a11de2f1acca845c6278a824)
 
-## Ayame を利用したサービス Ayame Lite を利用する
+## Ayame を利用したサービス Ayame Labo を利用する
 
-Ayame を利用してシグナリングサーバを立てるのが面倒な人向けに Ayame Lite を提供しています。
+Ayame を利用してシグナリングサーバを立てるのが面倒な人向けに Ayame Labo を提供しています。
 
-Ayame Lite は時雨堂が提供している Ayame を利用したサービスです。無料で利用可能です。
+Ayame Labo は時雨堂が提供している Ayame を利用したサービスです。無料で利用可能です。
 
-https://ayame-lite.shiguredo.jp/beta
+https://ayame-labo.shiguredo.jp/
 
-### Ayame Lite にサインアップしない場合
+### Ayame Labo にサインアップしない場合
 
-Ayame Lite はサインアップせずにシグナリングサーバを利用可能です。
+Ayame Labo はサインアップせずにシグナリングサーバを利用可能です。
 
 ここではルーム ID は `open-momo` としておりますが、必ず推測されにくい値に変更してください。
 
 ```shell
-./momo --no-audio-device ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
+./momo --no-audio-device ayame wss://ayame-labo.shiguredo.jp/signaling open-momo
 ```
 
 Windows の場合:
 
 ```
-.\momo.exe --no-audio-device ayame wss://ayame-lite.shiguredo.jp/signaling open-momo
+.\momo.exe --no-audio-device ayame wss://ayame-labo.shiguredo.jp/signaling open-momo
 ```
 
 
@@ -33,9 +33,9 @@ Ayame SDK のオンラインサンプルを利用します。 URL の引数に `
 
 https://openayame.github.io/ayame-web-sdk-samples/recvonly.html?roomId=open-momo
 
-### Ayame Lite にサインアップする場合
+### Ayame Labo にサインアップする場合
 
-Ayame Lite にサインアップした場合はルーム ID に GitHub ユーザ名を先頭に指定する必要があります。
+Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ名を先頭に指定する必要があります。
 例えば GitHub ユーザ名が `shiguredo` の場合は `shiguredo@open-momo` となります。
 
 - ルーム ID に `GitHub ユーザ名` を先頭に指定する必要があります
@@ -44,13 +44,13 @@ Ayame Lite にサインアップした場合はルーム ID に GitHub ユーザ
     - ここではシグナリングキーを `xyz` としています
 
 ```shell
-./momo --no-audio-device ayame wss://ayame-lite.shiguredo.jp/signaling shiguredo@open-momo --signaling-key xyz
+./momo --no-audio-device ayame wss://ayame-labo.shiguredo.jp/signaling shiguredo@open-momo --signaling-key xyz
 ```
 
 Windows の場合:
 
 ```
-.\momo.exe --no-audio-device ayame wss://ayame-lite.shiguredo.jp/signaling shiguredo@open-momo --signaling-key xyz
+.\momo.exe --no-audio-device ayame wss://ayame-labo.shiguredo.jp/signaling shiguredo@open-momo --signaling-key xyz
 ```
 
 Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。

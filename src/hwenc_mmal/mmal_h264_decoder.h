@@ -23,7 +23,7 @@ extern "C" {
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
-#include <common_video/include/i420_buffer_pool.h>
+#include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/synchronization/mutex.h>
 
 class MMALH264Decoder : public webrtc::VideoDecoder {
@@ -68,7 +68,7 @@ class MMALH264Decoder : public webrtc::VideoDecoder {
   int32_t width_;
   int32_t height_;
   webrtc::DecodedImageCallback* decode_complete_callback_;
-  webrtc::I420BufferPool buffer_pool_;
+  webrtc::VideoFrameBufferPool buffer_pool_;
 };
 
 #endif  // MMAL_H264_DECODER_H_

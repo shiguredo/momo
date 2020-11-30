@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m86.4240.10-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4240)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m88.4324-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4324)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -22,9 +22,9 @@ https://momo.shiguredo.jp/
 
 ### ハードウェアエンコーダへの対応
 
+- NVIDIA Jetson に搭載されている H.264 や VP8 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
 - Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用しています
-- NVIDIA Jetson に搭載されている H.264 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
 
 ### 4K 30fps での配信
@@ -59,6 +59,10 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 詳細については下記をご確認ください。
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
+
+また Momo についてのつぶやきは以下にまとめてあります。
+
+https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter
 
 ## 既知の問題について
 
@@ -191,6 +195,9 @@ limitations under the License.
     - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
 - 録画対応
     - MP4 形式での出力
+    - WebM 形式での出力
+- 録画合成対応
+- Sora E2EE 対応
 
 ## Momo についての電子書籍
 
@@ -244,13 +251,4 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
 - Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要
     - [QuickSync \- H\.264 patent licensing fees](https://software.intel.com/en-us/forums/intel-media-sdk/topic/494720)
 
-## 利用例など
-
-- [カメラ無しのラズパイとmomoでテスト映像をWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
-- [libwebRTCでFakeVideoしてみた \- Qiita](https://qiita.com/aikw/items/efb3726eb808a913d9da)
-- [Run WebRTC Native Client Momo on Raspberry Pi 3B \| SHIROKU\.NET](https://shiroku.net/robotics/run-webrtc-native-client-momo-on-raspberry-pi-3b/)
-- [WebRTC Native Client Momo がスゲエ – papalagi\.org](https://papalagi.org/blog/archives/635)
-- [ラズパイのmomoで音声付きでWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/33e335fb46f26bbd3431)
-- [ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
-- [ラズパイのmomoでステレオ音声でWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/6c07129caa5a08d5d172)
 

@@ -200,8 +200,12 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
   const int nFormats = 7;
-  unsigned int fmts[nFormats];
-  if (!config.force_i420 && (config.width > 640 || config.height > 480)) {
+  unsigned int fmts[nFormats] = {};
+  if (config.use_native) {
+    fmts[0] = V4L2_PIX_FMT_MJPEG;
+    fmts[1] = V4L2_PIX_FMT_JPEG;
+  } else if (!config.force_i420 &&
+             (config.width > 640 || config.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;

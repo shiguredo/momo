@@ -311,8 +311,8 @@ void JetsonVideoDecoder::CaptureLoop() {
       }
 
       rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-          buffer_pool_.CreateBuffer(buffer->planes[0].fmt.width,
-                                    buffer->planes[0].fmt.height);
+          buffer_pool_.CreateI420Buffer(buffer->planes[0].fmt.width,
+                                        buffer->planes[0].fmt.height);
       if (!i420_buffer.get()) {
         // Pool has too many pending frames.
         RTC_HISTOGRAM_BOOLEAN(

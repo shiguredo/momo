@@ -156,7 +156,7 @@ void MMALH264Decoder::MMALOutputCallback(MMAL_PORT_T* port,
 
 void MMALH264Decoder::SendFrame(MMAL_BUFFER_HEADER_T* buffer) {
   rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-      buffer_pool_.CreateBuffer(width_, height_);
+      buffer_pool_.CreateI420Buffer(width_, height_);
   if (!i420_buffer.get()) {
     return;
   }

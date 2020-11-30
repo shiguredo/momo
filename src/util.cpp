@@ -44,13 +44,17 @@ void Util::ParseArgs(int argc,
 #endif
       },
       "");
-  auto is_valid_use_native = CLI::Validator(
+  auto is_valid_hw_mjpeg_decoder = CLI::Validator(
       [](std::string input) -> std::string {
+        if (input == "1") {
 #if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
-        return std::string();
+          return std::string();
 #else
-        return "Not available because your device does not have this feature.";
+          return "Not available because your device does not have this "
+                 "feature.";
 #endif
+        }
+        return std::string();
       },
       "");
 
@@ -107,6 +111,9 @@ void Util::ParseArgs(int argc,
       },
       "");
 
+  auto bool_map = std::vector<std::pair<std::string, bool>>(
+      {{"false", false}, {"true", true}});
+
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
   app.add_flag("--no-video-device", args.no_video_device,
@@ -117,10 +124,12 @@ void Util::ParseArgs(int argc,
          "--force-i420", args.force_i420,
          "Prefer I420 format for video capture (only on supported devices)")
       ->check(is_valid_force_i420);
-  app.add_flag("--use-native", args.use_native,
-               "Perform MJPEG deoode and video resize by hardware acceleration "
-               "(only on supported devices)")
-      ->check(is_valid_use_native);
+  app.add_option(
+         "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
+         "Perform MJPEG deoode and video resize by hardware acceleration "
+         "(only on supported devices)")
+      ->check(is_valid_hw_mjpeg_decoder)
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,
                  "Use the video device specified by an index or a name "
@@ -265,8 +274,6 @@ void Util::ParseArgs(int argc,
   sora_app->add_flag("--auto", args.sora_auto_connect,
                      "Connect to Sora automatically");
 
-  auto bool_map = std::vector<std::pair<std::string, bool> >(
-      {{"false", false}, {"true", true}});
   sora_app
       ->add_option("--video", args.sora_video,
                    "Send video to sora (default: true)")

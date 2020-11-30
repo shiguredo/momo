@@ -28,7 +28,7 @@
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-[Ayame Lite](https://ayame-lite.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
+[Ayame Labo](https://ayame-labo.shiguredo.jp/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
@@ -87,7 +87,7 @@ Options:
   --no-video-device           Do not use video device
   --no-audio-device           Do not use audio device
   --force-i420                Prefer I420 format for video capture (only on supported devices)
-  --use-native                Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
+  --hw-mjpeg-decoder          Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
   --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
   --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
   --framerate INT:INT in [1 - 60]

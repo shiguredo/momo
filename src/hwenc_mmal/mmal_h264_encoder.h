@@ -118,7 +118,6 @@ class MMALH264Encoder : public webrtc::VideoEncoder {
   webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   webrtc::EncodedImage encoded_image_;
-  std::unique_ptr<webrtc::EncodedImage> sending_encoded_image_;
   std::unique_ptr<uint8_t[]> encoded_image_buffer_;
   size_t encoded_buffer_length_;
 };
