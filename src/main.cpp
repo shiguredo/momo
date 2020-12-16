@@ -285,7 +285,8 @@ int main(int argc, char* argv[]) {
 
     if (args.metrics_port >= 0) {
       const boost::asio::ip::tcp::endpoint metrics_endpoint{
-          boost::asio::ip::make_address("0.0.0.0"),
+          boost::asio::ip::make_address(
+              args.metrics_allow_external_ip ? "0.0.0.0" : "127.0.0.1"),
           static_cast<unsigned short>(args.metrics_port)};
       MetricsServer::Create(ioc, metrics_endpoint, rtc_manager.get(),
                             stats_collector, std::move(metrics_config))

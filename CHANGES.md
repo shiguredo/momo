@@ -14,6 +14,8 @@
 - [UPDATE] `libwebrtc` を `M88.4324@{#2}` に上げる
     - @voluntas
 - [ADD] 統計情報を HTTP API で取得できるようにする
+    - 統計情報サーバーのポート番号を指定する `--metrics-port INT` を追加
+    - ループバック (127.0.0.1 で listen) がデフォルト、グローバル (0.0.0.0 で listen) アクセスを許可する場合は `--metrics-allow-external-ip` 引数を指定する
     - @hakobera
 
 ## 2020.10
