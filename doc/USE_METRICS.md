@@ -35,7 +35,7 @@ http://127.0.0.1:8081/metrics にブラウザ、または `curl` などの HTTP 
   "version": "MomoVersion::GetClientName() の戻り値",
   "libwebrtc": "MomoVersion::GetLibwebrtcName() の戻り値",
   "environment": "MomoVersion::GetEnvironmentName() の戻り値",
-  "stats": "RTCConnection.GetStats() の結果を JSON 化した文字列。Sora モードの pong メッセージに含まれるものと同じ"
+  "stats": [`werbrtc::RTCStats`, ...] // Sora モードの pong メッセージに含まれるものと同じ"
 }
 ```
 

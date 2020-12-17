@@ -64,15 +64,12 @@ void MetricsSession::OnRead(boost::system::error_code ec,
       stats_collector_->GetStats(
           [self](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            std::string stats = report ? report->ToJson() : "[]"; 
             json json_message = {
                 {"version", MomoVersion::GetClientName()},
                 {"libwebrtc", MomoVersion::GetLibwebrtcName()},
                 {"environment", MomoVersion::GetEnvironmentName()},
-                {"stats", "[]"}};
-
-            if (report) {
-              json_message["stats"] = report->ToJson();
-            }
+                {"stats", json::parse(stats)}};
 
             self->SendResponse(
                 CreateOKWithJSON(self->req_, std::move(json_message)));
