@@ -42,6 +42,8 @@ class P2PWebsocketSession
 
   void Run(boost::beast::http::request<boost::beast::http::string_body> req);
 
+  std::shared_ptr<RTCConnection> GetRTCConnection() const;
+
  private:
   void OnWatchdogExpired();
   void DoAccept(

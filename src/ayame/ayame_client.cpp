@@ -30,6 +30,18 @@ bool AyameClient::ParseURL(URLParts& parts) const {
   }
 }
 
+void AyameClient::GetStats(
+    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+        callback) {
+  if (connection_ && rtc_state_ ==
+                         webrtc::PeerConnectionInterface::IceConnectionState::
+                             kIceConnectionConnected) {
+    connection_->GetStats(std::move(callback));
+  } else {
+    callback(nullptr);
+  }
+}
+
 AyameClient::AyameClient(boost::asio::io_context& ioc,
                          RTCManager* manager,
                          AyameClientConfig config)

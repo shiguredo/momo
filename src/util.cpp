@@ -171,7 +171,7 @@ void Util::ParseArgs(int argc,
   app.add_flag("--version", version, "Show version information");
   app.add_flag("--insecure", args.insecure,
                "Allow insecure server connections when using SSL");
-  auto log_level_map = std::vector<std::pair<std::string, int> >(
+  auto log_level_map = std::vector<std::pair<std::string, int>>(
       {{"verbose", 0}, {"info", 1}, {"warning", 2}, {"error", 3}, {"none", 4}});
   app.add_option("--log-level", log_level, "Log severity level threshold")
       ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
@@ -243,6 +243,12 @@ void Util::ParseArgs(int argc,
          "--serial", serial_setting,
          "Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]")
       ->check(is_serial_setting_format);
+
+  app.add_option("--metrics-port", args.metrics_port,
+                 "Metrics server port number (default: -1)")
+      ->check(CLI::Range(-1, 65535));
+  app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
+               "Allow access to Metrics server from external IP");
 
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
