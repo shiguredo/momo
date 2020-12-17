@@ -12,8 +12,6 @@
 #include <codecvt>
 #endif
 
-#include <future>
-
 #include "momo_version.h"
 #include "util.h"
 
@@ -62,23 +60,23 @@ void MetricsSession::OnRead(boost::system::error_code ec,
 
   if (req_.method() == boost::beast::http::verb::get) {
     if (req_.target() == "/metrics") {
-      json json_message = {{"version", MomoVersion::GetClientName()},
-                           {"libwebrtc", MomoVersion::GetLibwebrtcName()},
-                           {"environment", MomoVersion::GetEnvironmentName()},
-                           {"stats", "[]"}};
-
-      std::promise<void> promise;
-      std::future<void> future = promise.get_future();
+      std::shared_ptr<MetricsSession> self(shared_from_this());
       stats_collector_->GetStats(
-          [this, &promise, &json_message](
+          [self](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            json json_message = {
+                {"version", MomoVersion::GetClientName()},
+                {"libwebrtc", MomoVersion::GetLibwebrtcName()},
+                {"environment", MomoVersion::GetEnvironmentName()},
+                {"stats", "[]"}};
+
             if (report) {
               json_message["stats"] = report->ToJson();
             }
-            SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
-            promise.set_value();
+
+            self->SendResponse(
+                CreateOKWithJSON(self->req_, std::move(json_message)));
           });
-      future.get();
     } else {
       SendResponse(Util::NotFound(req_, req_.target()));
     }
