@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M88.4324@{#2}` に上げる
+- [UPDATE] `libwebrtc` を `M88.4324@{#3}` に上げる
     - @voluntas
 
 ## 2020.10
