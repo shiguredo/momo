@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2020.11
+
+- [UPDATE] cmake を 3.19.2 に上げる
+    - @voluntas
 - [UPDATE] `libwebrtc` を `M88.4324@{#3}` に上げる
     - @voluntas
 - [ADD] 統計情報を HTTP API で取得できるようにする
