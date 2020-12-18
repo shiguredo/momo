@@ -47,6 +47,17 @@ std::shared_ptr<RTCConnection> SoraClient::GetRTCConnection() const {
   }
 }
 
+void SoraClient::GetStats(
+    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+        callback) {
+  std::shared_ptr<RTCConnection> rtc_conn = GetRTCConnection();
+  if (rtc_conn) {
+    rtc_conn->GetStats(std::move(callback));
+  } else {
+    callback(nullptr);
+  }
+}
+
 SoraClient::SoraClient(boost::asio::io_context& ioc,
                        RTCManager* manager,
                        SoraClientConfig config)

@@ -1,26 +1,16 @@
-#include "p2p_server.h"
+#include "metrics_server.h"
 
-#include "util.h"
-
-void P2PServer::GetStats(
-    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
-        callback) {
-  if (p2p_session_ && p2p_session_->GetRTCConnection()) {
-    p2p_session_->GetRTCConnection()->GetStats(std::move(callback));
-  } else {
-    callback(nullptr);
-  }
-}
-
-P2PServer::P2PServer(boost::asio::io_context& ioc,
-                     boost::asio::ip::tcp::endpoint endpoint,
-                     RTCManager* rtc_manager,
-                     P2PServerConfig config)
+MetricsServer::MetricsServer(boost::asio::io_context& ioc,
+                             boost::asio::ip::tcp::endpoint endpoint,
+                             RTCManager* rtc_manager,
+                             std::shared_ptr<StatsCollector> stats_collector,
+                             MetricsServerConfig config)
     : ioc_(ioc),
       acceptor_(ioc),
       socket_(ioc),
       rtc_manager_(rtc_manager),
-      config_(std::move(config)) {
+      stats_collector_(stats_collector),
+      config_(config) {
   boost::system::error_code ec;
 
   // Open the acceptor
@@ -52,28 +42,28 @@ P2PServer::P2PServer(boost::asio::io_context& ioc,
   }
 }
 
-void P2PServer::Run() {
+void MetricsServer::Run() {
   if (!acceptor_.is_open())
     return;
   DoAccept();
 }
 
-void P2PServer::DoAccept() {
+void MetricsServer::DoAccept() {
   acceptor_.async_accept(socket_,
-                         std::bind(&P2PServer::OnAccept, shared_from_this(),
+                         std::bind(&MetricsServer::OnAccept, shared_from_this(),
                                    std::placeholders::_1));
 }
 
-void P2PServer::OnAccept(boost::system::error_code ec) {
+void MetricsServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
     return;
   }
 
-  P2PSessionConfig config = config_;
-  p2p_session_ =
-      P2PSession::Create(ioc_, std::move(socket_), rtc_manager_, config_);
-  p2p_session_->Run();
+  MetricsSessionConfig config;
+  MetricsSession::Create(ioc_, std::move(socket_), rtc_manager_,
+                         stats_collector_, std::move(config))
+      ->Run();
 
   DoAccept();
 }
