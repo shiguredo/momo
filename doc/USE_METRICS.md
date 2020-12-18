@@ -54,4 +54,6 @@ http://127.0.0.1:8081/metrics にブラウザ、または `curl` などの HTTP 
 
 統計情報の `stats` フィールドに含まれる内容の詳細は　W3C の標準仕様 [Identifiers for WebRTC's Statistics API](https://www.w3.org/TR/webrtc-stats/) を参考にしてください。
 
-ただし、2020年12月時点で、この標準仕様はドラフトバージョンであり、また、Momo が利用している libwebrtc バージョンによっては実装されていないものもありますので、注意してください。
+ただし、 2020 年 12 月時点で、この標準仕様はドラフトバージョンであり、また、Momo が利用している libwebrtc バージョンによっては実装されていないものもありますので、注意してください。
+
+[自宅の Jetson で動いている WebRTC Native Client Momo を外出先でいい感じに監視する方法](https://zenn.dev/hakobera/articles/c0553faa1223324d6aff)

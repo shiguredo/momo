@@ -52,6 +52,12 @@ Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出�
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 
+## Momo の統計情報を取得する
+
+Momo では統計情報を見るようにメトリクス API を用意しています。
+
+[USE_METRICS.md](USE_METRICS.md) をお読みください。
+
 ## FAQ
 
 FAQ に関しては [FAQ.md](FAQ.md) をお読みください。
