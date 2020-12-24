@@ -197,7 +197,8 @@ limitations under the License.
     - MP4 形式での出力
     - WebM 形式での出力
 - 録画合成対応
-- Sora E2EE 対応
+- Sora モード利用時の E2EE 機能
+- Ayame モード利用時のコーデック指定機能
 
 ## Momo についての電子書籍
 
