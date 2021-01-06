@@ -89,7 +89,10 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-- macOS 11.0 x86_64 以降
+- macOS 11 x86_64 以降
+    - 2021 年内に終了予定
+- macOS 11 arm64 以降
+    - 準備中
 - Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
