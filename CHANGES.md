@@ -13,6 +13,8 @@
 
 - [UPDATE] GitHub Actions の macOS ビルドを macos-11.0 に変更する
     - @voluntas
+- [UPDATE] Boost 1.75.0 に上げる
+    - @voluntas
 
 ## 2020.11
 
