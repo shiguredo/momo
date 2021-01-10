@@ -15,6 +15,8 @@
     - @voluntas
 - [UPDATE] Boost 1.75.0 に上げる
     - @voluntas
+- [ADD] サイマルキャストの active と adaptivePtime に対応
+    - @melpon
 
 ## 2020.11
 
