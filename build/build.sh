@@ -168,7 +168,6 @@ case "$PACKAGE" in
       --build-arg WEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
       --build-arg BOOST_VERSION=$BOOST_VERSION \
       --build-arg SDL2_VERSION=$SDL2_VERSION \
-      --build-arg JSON_VERSION=$JSON_VERSION \
       --build-arg CLI11_VERSION=$CLI11_VERSION \
       --build-arg CMAKE_VERSION=$CMAKE_VERSION \
       --build-arg CUDA_VERSION=$CUDA_VERSION \
