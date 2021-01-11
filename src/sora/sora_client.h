@@ -11,9 +11,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
-
-// nlohmann/json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "metrics/stats_collector.h"
 #include "rtc/rtc_manager.h"
@@ -33,7 +31,7 @@ struct SoraClientConfig {
   std::string audio_codec_type = "";
   int video_bit_rate = 0;
   int audio_bit_rate = 0;
-  nlohmann::json metadata;
+  boost::json::value metadata;
   std::string role = "sendonly";
   bool multistream = false;
   bool spotlight = false;
@@ -81,7 +79,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void CreatePeerFromConfig(nlohmann::json jconfig);
+  void CreatePeerFromConfig(boost::json::value jconfig);
 
  private:
   void OnConnect(boost::system::error_code ec);

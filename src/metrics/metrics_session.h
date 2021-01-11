@@ -6,9 +6,6 @@
 #include <memory>
 #include <string>
 
-// nlohman/json
-#include <nlohmann/json.hpp>
-
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -17,6 +14,7 @@
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
+#include <boost/json.hpp>
 
 #include "rtc/rtc_manager.h"
 #include "stats_collector.h"
@@ -52,7 +50,7 @@ class MetricsSession : public std::enable_shared_from_this<MetricsSession> {
   static boost::beast::http::response<boost::beast::http::string_body>
   CreateOKWithJSON(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
-      nlohmann::json json_message);
+      boost::json::value json_message);
 
   template <class Body, class Fields>
   void SendResponse(boost::beast::http::response<Body, Fields> msg) {

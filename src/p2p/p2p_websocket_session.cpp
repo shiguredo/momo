@@ -4,13 +4,9 @@
 #include <boost/asio/bind_executor.hpp>
 #include <boost/beast/websocket/error.hpp>
 #include <boost/beast/websocket/stream.hpp>
-
-// nlohmann/json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "util.h"
-
-using json = nlohmann::json;
 
 std::shared_ptr<RTCConnection> P2PWebsocketSession::GetRTCConnection() const {
   if (rtc_state_ == webrtc::PeerConnectionInterface::IceConnectionState::
@@ -43,10 +39,10 @@ void P2PWebsocketSession::Run(
 }
 
 void P2PWebsocketSession::OnWatchdogExpired() {
-  json ping_message = {
+  boost::json::value ping_message = {
       {"type", "ping"},
   };
-  ws_->WriteText(std::move(ping_message.dump()));
+  ws_->WriteText(boost::json::serialize(ping_message));
   watchdog_.Reset();
 }
 
@@ -91,30 +87,19 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     ~Guard() { f(); }
   } guard = {[this]() { DoRead(); }};
 
-  json recv_message;
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": recv_string=" << recv_string;
 
-  try {
-    recv_message = json::parse(recv_string);
-  } catch (json::parse_error& e) {
+  boost::json::error_code jec;
+  boost::json::value recv_message = boost::json::parse(recv_string, jec);
+  if (jec) {
     return;
   }
 
-  std::string type;
-  try {
-    type = recv_message["type"].get<std::string>();
-  } catch (json::type_error& e) {
-    return;
-  }
+  std::string type = recv_message.at("type").as_string().c_str();
 
   if (type == "offer") {
-    std::string sdp;
-    try {
-      sdp = recv_message["sdp"].get<std::string>();
-    } catch (json::type_error& e) {
-      return;
-    }
+    std::string sdp = recv_message.at("sdp").as_string().c_str();
 
     connection_ = CreateRTCConnection();
     connection_->SetOffer(sdp, [this]() {
@@ -122,8 +107,8 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
-            json json_desc = {{"type", "answer"}, {"sdp", sdp}};
-            std::string str_desc = json_desc.dump();
+            boost::json::value json_desc = {{"type", "answer"}, {"sdp", sdp}};
+            std::string str_desc = boost::json::serialize(json_desc);
             ws_->WriteText(std::move(str_desc));
           });
     });
@@ -131,36 +116,25 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     if (!connection_) {
       return;
     }
-    std::string sdp;
-    try {
-      sdp = recv_message["sdp"].get<std::string>();
-    } catch (json::type_error& e) {
-      return;
-    }
+    std::string sdp = recv_message.at("sdp").as_string().c_str();
     connection_->SetAnswer(sdp);
   } else if (type == "candidate") {
     if (!connection_) {
       return;
     }
-    int sdp_mlineindex = 0;
-    std::string sdp_mid, candidate;
-    try {
-      json ice = recv_message["ice"];
-      sdp_mid = ice["sdpMid"].get<std::string>();
-      sdp_mlineindex = ice["sdpMLineIndex"].get<int>();
-      candidate = ice["candidate"].get<std::string>();
-    } catch (json::type_error& e) {
-      return;
-    }
+    boost::json::value ice = recv_message.at("ice");
+    std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
+    int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
+    std::string candidate = ice.at("candidate").as_string().c_str();
     connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "close" || type == "bye") {
     connection_ = nullptr;
   } else if (type == "register") {
-    json accept_message = {
+    boost::json::value accept_message = {
         {"type", "accept"},
         {"isExistUser", true},
     };
-    ws_->WriteText(std::move(accept_message.dump()));
+    ws_->WriteText(boost::json::serialize(accept_message));
     watchdog_.Enable(30);
   } else {
     return;
@@ -196,10 +170,10 @@ void P2PWebsocketSession::OnIceCandidate(const std::string sdp_mid,
                                          const std::string sdp) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
-  json json_cand = {{"type", "candidate"}};
+  boost::json::object json_cand = {{"type", "candidate"}};
   json_cand["ice"] = {{"candidate", sdp},
                       {"sdpMLineIndex", sdp_mlineindex},
                       {"sdpMid", sdp_mid}};
-  std::string str_cand = json_cand.dump();
+  std::string str_cand = boost::json::serialize(json_cand);
   ws_->WriteText(str_cand);
 }
