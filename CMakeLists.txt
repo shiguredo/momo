@@ -52,9 +52,28 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows")
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${SDL2_ROOT_DIR}/cmake)
   list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR} ${SDL2_ROOT_DIR})
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "macos")
+elseif(MOMO_PACKAGE_NAME STREQUAL "macos_arm64")
 
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos/_install)
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos_arm64/_install)
+
+  set(TARGET_OS "macos")
+  set(TARGET_ARCH "arm64")
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_SCREEN_CAPTURER ON)
+  set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
+  set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
+  set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
+  set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
+  set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "macos_x86_64")
+
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos_x86_64/_install)
 
   set(TARGET_OS "macos")
   set(TARGET_ARCH "x86_64")
@@ -262,6 +281,17 @@ if (TARGET_OS STREQUAL "linux")
   endif()
 endif()
 
+if (TARGET_OS STREQUAL "macos")
+  if (TARGET_ARCH STREQUAL "x86_64")
+    set(ARCH_NAME x86_64-apple-darwin)
+  else()
+    set(ARCH_NAME aarch64-apple-darwin)
+    set(CMAKE_SYSTEM_PROCESSOR arm64)
+  endif()
+
+  set(CMAKE_C_COMPILER_TARGET ${ARCH_NAME})
+  set(CMAKE_CXX_COMPILER_TARGET ${ARCH_NAME})
+endif()
 
 project(momo C CXX)
 
@@ -481,7 +511,7 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/objc_codec_factory_helper.mm
   )
 
-  target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString)
+  target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString -mmacosx-version-min=11.0)
   target_link_options(momo PRIVATE -ObjC)
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 

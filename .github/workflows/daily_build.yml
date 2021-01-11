@@ -31,8 +31,14 @@ jobs:
         working-directory: build
         timeout-minutes: 120
   build-macos:
-    name: Build momo for macOS
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - arm64
+          - x86_64
+    name: Build momo for macOS_${{ matrix.arch }}
+    runs-on: macos-11.0
     steps:
       - uses: actions/checkout@v2
       - name: Get Versions
@@ -46,7 +52,7 @@ jobs:
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
-      - run: ./build.sh macos
+      - run: ./build.sh macos_${{ matrix.arch }}
         working-directory: build
         timeout-minutes: 120
   build-linux:

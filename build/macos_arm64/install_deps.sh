@@ -4,6 +4,8 @@ cd "`dirname $0`"
 
 set -ex
 
+ARCH_NAME="aarch64-apple-darwin"
+
 SOURCE_DIR="`pwd`/_source"
 BUILD_DIR="`pwd`/_build"
 INSTALL_DIR="`pwd`/_install"
@@ -47,7 +49,7 @@ fi
 
 if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
   rm -rf $INSTALL_DIR/webrtc
-  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION macos $INSTALL_DIR $SOURCE_DIR
+  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION macos_arm64 $INSTALL_DIR $SOURCE_DIR
 fi
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
 
@@ -74,9 +76,13 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
     ./b2 \
       cflags=" \
+        -target $ARCH_NAME \
+        -mmacosx-version-min=11.0 \
         --sysroot=$SYSROOT \
       " \
       cxxflags=" \
+        -target $ARCH_NAME \
+        -mmacosx-version-min=11.0 \
         -isystem $INSTALL_DIR/llvm/libcxx/include \
         -nostdinc++ \
         --sysroot=$SYSROOT \
@@ -114,9 +120,9 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
     # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
     # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
-    CC="$INSTALL_DIR/llvm/clang/bin/clang --sysroot=$SYSROOT" \
-      CXX="$INSTALL_DIR/llvm/clang/bin/clang++ --sysroot=$SYSROOT -nostdinc++" \
-      $SOURCE_DIR/SDL2/source/configure --disable-shared --prefix=$INSTALL_DIR/SDL2
+    CC="$INSTALL_DIR/llvm/clang/bin/clang -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
+      CXX="$INSTALL_DIR/llvm/clang/bin/clang++ -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT -nostdinc++" \
+      $SOURCE_DIR/SDL2/source/configure --host=$ARCH_NAME --disable-shared --prefix=$INSTALL_DIR/SDL2
     make -j$JOBS
     make install
   popd

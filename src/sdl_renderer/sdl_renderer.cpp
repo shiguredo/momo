@@ -41,6 +41,13 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
     SetFullScreen(true);
   }
 
+  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  if (renderer_ == nullptr) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
+                      << SDL_GetError();
+    return;
+  }
+
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
 }
 
@@ -50,6 +57,9 @@ SDLRenderer::~SDLRenderer() {
   SDL_WaitThread(thread_, &ret);
   if (ret != 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL Thread error:" << ret;
+  }
+  if (renderer_) {
+    SDL_DestroyRenderer(renderer_);
   }
   if (window_) {
     SDL_DestroyWindow(window_);
@@ -106,12 +116,6 @@ int SDLRenderer::RenderThreadExec(void* data) {
 }
 
 int SDLRenderer::RenderThread() {
-  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
-  if (renderer_ == nullptr) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
-                      << SDL_GetError();
-    return 1;
-  }
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
 
   uint32_t start_time, duration;
@@ -158,8 +162,6 @@ int SDLRenderer::RenderThread() {
     duration = SDL_GetTicks() - start_time;
     SDL_Delay(FRAME_INTERVAL - (duration % FRAME_INTERVAL));
   }
-
-  SDL_DestroyRenderer(renderer_);
 
   return 0;
 }

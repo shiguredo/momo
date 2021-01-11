@@ -8,7 +8,8 @@ PROGRAM="$0"
 
 _PACKAGES=" \
   windows \
-  macos \
+  macos_arm64 \
+  macos_x86_64 \
   raspberry-pi-os_armv6 \
   raspberry-pi-os_armv7 \
   raspberry-pi-os_armv8 \
@@ -85,18 +86,23 @@ case "$PACKAGE" in
     echo "Windows では build.bat を利用してください。"
     exit 1
     ;;
-  "macos" )
+  macos_* )
     if [ $FLAG_CLEAN -eq 1 ]; then
-      rm -rf ../_build/macos
-      rm -rf macos/_source
-      rm -rf macos/_build
-      rm -rf macos/_install
+      rm -rf ../_build/$PACKAGE
+      rm -rf $PACKAGE/_source
+      rm -rf $PACKAGE/_build
+      rm -rf $PACKAGE/_install
       exit 0
     fi
 
-    ./macos/install_deps.sh
+    MACOS_ARCH="arm64"
+    if [ $PACKAGE -eq "macos_x86_64" ]; then
+      MACOS_ARCH="x86_64"
+    fi
 
-    source ./macos/_install/webrtc/VERSIONS
+    ./$PACKAGE/install_deps.sh
+
+    source ./$PACKAGE/_install/webrtc/VERSIONS
 
     if [ -z "$JOBS" ]; then
       JOBS=`sysctl -n hw.logicalcpu_max`
@@ -109,7 +115,7 @@ case "$PACKAGE" in
     pushd ../_build/$PACKAGE
       cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DMOMO_PACKAGE_NAME="macos" \
+        -DMOMO_PACKAGE_NAME="$PACKAGE" \
         -DMOMO_VERSION="$MOMO_VERSION" \
         -DMOMO_COMMIT="$MOMO_COMMIT" \
         -DWEBRTC_BUILD_VERSION="$WEBRTC_BUILD_VERSION" \
@@ -124,20 +130,20 @@ case "$PACKAGE" in
 
       pushd ..
         # パッケージのバイナリを作る
-        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
-        rm -f _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz
-        mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
-        cp    _build/macos/momo _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
-        cp    LICENSE           _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
-        cp    NOTICE            _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/
-        cp -r html              _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}/html
+        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
+        rm -f _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}.tar.gz
+        mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${arch}
+        cp    _build/${PACKAGE}/momo _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
+        cp    LICENSE                _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
+        cp    NOTICE                 _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
+        cp -r html                   _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/html
         pushd _package
-          tar czf momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+          tar czf momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}.tar.gz momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
         popd
 
-        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}
+        rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
         echo ""
-        echo "パッケージが _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz に生成されました。"
+        echo "パッケージが _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}.tar.gz に生成されました。"
       popd
     fi
 
