@@ -132,7 +132,7 @@ case "$PACKAGE" in
         # パッケージのバイナリを作る
         rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
         rm -f _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}.tar.gz
-        mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${arch}
+        mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
         cp    _build/${PACKAGE}/momo _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
         cp    LICENSE                _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
         cp    NOTICE                 _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}/
