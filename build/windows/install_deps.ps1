@@ -103,6 +103,7 @@ if (!(Test-Path "$INSTALL_DIR\SDL2\include\SDL2\SDL.h")) {
       -G "Visual Studio 16 2019" `
       -DFORCE_STATIC_VCRT=ON `
       -DBUILD_SHARED_LIBS=OFF `
+      -DHAVE_LIBC=ON `
       "-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR_SLASH}/SDL2" `
       $SOURCE_DIR\SDL2
 
