@@ -92,7 +92,6 @@ https://github.com/shiguredo/momo/releases
 - macOS 11 x86_64 以降
     - 2021 年内に終了予定
 - macOS 11 arm64 以降
-    - 準備中
 - Windows 10.1809 x86_64 以降
 
 ### 以下はビルドが通ること以外は確認していません
