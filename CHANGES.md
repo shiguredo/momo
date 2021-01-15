@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2021.1
+
 - [UPDATE] cmake を 3.19.3 に上げる
     - @voluntas
 - [UPDATE] GitHub Actions の macOS ビルドを macos-11.0 に変更する
