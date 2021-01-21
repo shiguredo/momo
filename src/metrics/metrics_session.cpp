@@ -7,6 +7,7 @@
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/json.hpp>
 
 #ifdef _WIN32
 #include <codecvt>
@@ -14,8 +15,6 @@
 
 #include "momo_version.h"
 #include "util.h"
-
-using json = nlohmann::json;
 
 MetricsSession::MetricsSession(boost::asio::io_context& ioc,
                                boost::asio::ip::tcp::socket socket,
@@ -64,12 +63,12 @@ void MetricsSession::OnRead(boost::system::error_code ec,
       stats_collector_->GetStats(
           [self](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            std::string stats = report ? report->ToJson() : "[]"; 
-            json json_message = {
+            std::string stats = report ? report->ToJson() : "[]";
+            boost::json::value json_message = {
                 {"version", MomoVersion::GetClientName()},
                 {"libwebrtc", MomoVersion::GetLibwebrtcName()},
                 {"environment", MomoVersion::GetEnvironmentName()},
-                {"stats", json::parse(stats)}};
+                {"stats", boost::json::parse(stats)}};
 
             self->SendResponse(
                 CreateOKWithJSON(self->req_, std::move(json_message)));
@@ -106,13 +105,13 @@ void MetricsSession::DoClose() {
 boost::beast::http::response<boost::beast::http::string_body>
 MetricsSession::CreateOKWithJSON(
     const boost::beast::http::request<boost::beast::http::string_body>& req,
-    json json_message) {
+    boost::json::value json_message) {
   boost::beast::http::response<boost::beast::http::string_body> res{
       boost::beast::http::status::ok, 11};
   res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(boost::beast::http::field::content_type, "application/json");
   res.keep_alive(req.keep_alive());
-  res.body() = json_message.dump();
+  res.body() = boost::json::serialize(json_message);
   res.prepare_payload();
 
   return res;

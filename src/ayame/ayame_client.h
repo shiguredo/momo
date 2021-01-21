@@ -11,9 +11,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
-
-// nlohmann/json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "metrics/stats_collector.h"
 #include "rtc/rtc_manager.h"
@@ -65,7 +63,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void DoRead();
   void DoRegister();
   void DoSendPong();
-  void SetIceServersFromConfig(nlohmann::json json_message);
+  void SetIceServersFromConfig(boost::json::value json_message);
   void CreatePeerConnection();
 
  private:

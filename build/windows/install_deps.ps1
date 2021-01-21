@@ -70,6 +70,7 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
       --prefix=$INSTALL_DIR\boost `
       --build-dir=$BUILD_DIR\boost `
       --with-filesystem `
+      --with-json `
       --layout=system `
       address-model=64 `
       link=static `
@@ -102,6 +103,7 @@ if (!(Test-Path "$INSTALL_DIR\SDL2\include\SDL2\SDL.h")) {
       -G "Visual Studio 16 2019" `
       -DFORCE_STATIC_VCRT=ON `
       -DBUILD_SHARED_LIBS=OFF `
+      -DHAVE_LIBC=ON `
       "-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR_SLASH}/SDL2" `
       $SOURCE_DIR\SDL2
 
@@ -129,24 +131,5 @@ if (!(Test-Path "$INSTALL_DIR\CLI11\include\CLI\CLI.hpp")) {
   Push-Location $INSTALL_DIR
     7z x $_FILE
     Move-Item CLI11-${CLI11_VERSION} CLI11
-  Pop-Location
-}
-
-# nlohmann/json の取得
-
-if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
-  $_URL = "https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/include.zip"
-  $_FILE = "$SOURCE_DIR\json.zip"
-  # ダウンロード
-  Push-Location $SOURCE_DIR
-    if (!(Test-Path $_FILE)) {
-      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
-    }
-  Pop-Location
-  # 展開(=インストール)
-  mkdir "$INSTALL_DIR\json" -ErrorAction Ignore
-  # Expand-Archive -Path $_FILE -DestinationPath "$INSTALL_DIR\json"
-  Push-Location $INSTALL_DIR\json
-    7z x $_FILE
   Pop-Location
 }

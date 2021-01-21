@@ -16,9 +16,7 @@
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/write.hpp>
-
-// nlohmann/json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "rtc/rtc_manager.h"
 #include "sora_client.h"
@@ -57,7 +55,7 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
   static boost::beast::http::response<boost::beast::http::string_body>
   CreateOKWithJSON(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
-      nlohmann::json json_message);
+      boost::json::value json_message);
 
   template <class Body, class Fields>
   void SendResponse(boost::beast::http::response<Body, Fields> msg) {

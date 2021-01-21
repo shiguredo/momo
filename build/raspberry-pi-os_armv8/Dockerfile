@@ -67,12 +67,8 @@ RUN \
     -j`nproc` \
     --ignore-site-config \
     --prefix=/root/boost \
-    --with-filesystem
-
-# nlohmann/json の取得
-
-ARG JSON_VERSION
-RUN git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git /root/json
+    --with-filesystem \
+    --with-json
 
 # CLI11 の取得
 

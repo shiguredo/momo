@@ -2,16 +2,12 @@
 
 // boost
 #include <boost/beast/websocket/stream.hpp>
-
-// json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "momo_version.h"
 #include "ssl_verifier.h"
 #include "url_parts.h"
 #include "util.h"
-
-using json = nlohmann::json;
 
 bool AyameClient::ParseURL(URLParts& parts) const {
   std::string url = config_.signaling_url;
@@ -120,7 +116,7 @@ void AyameClient::DoRead() {
 }
 
 void AyameClient::DoRegister() {
-  json json_message = {
+  boost::json::value json_message = {
       {"type", "register"},
       {"clientId", Util::GenerateRandomChars()},
       {"roomId", config_.room_id},
@@ -129,37 +125,37 @@ void AyameClient::DoRegister() {
       {"environment", MomoVersion::GetEnvironmentName()},
   };
   if (config_.client_id != "") {
-    json_message["clientId"] = config_.client_id;
+    json_message.as_object()["clientId"] = config_.client_id;
   }
   if (config_.signaling_key != "") {
-    json_message["key"] = config_.signaling_key;
+    json_message.as_object()["key"] = config_.signaling_key;
   }
-  ws_->WriteText(json_message.dump());
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 
 void AyameClient::DoSendPong() {
-  json json_message = {{"type", "pong"}};
-  ws_->WriteText(json_message.dump());
+  boost::json::value json_message = {{"type", "pong"}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 
-void AyameClient::SetIceServersFromConfig(json json_message) {
+void AyameClient::SetIceServersFromConfig(boost::json::value json_message) {
   // 返却されてきた iceServers を セットする
-  if (json_message.contains("iceServers")) {
-    auto jservers = json_message["iceServers"];
+  if (json_message.as_object().count("iceServers") != 0) {
+    auto jservers = json_message.at("iceServers");
     if (jservers.is_array()) {
-      for (auto jserver : jservers) {
+      for (auto jserver : jservers.as_array()) {
         webrtc::PeerConnectionInterface::IceServer ice_server;
-        if (jserver.contains("username")) {
-          ice_server.username = jserver["username"].get<std::string>();
+        if (jserver.as_object().count("username") != 0) {
+          ice_server.username = jserver.at("username").as_string().c_str();
         }
-        if (jserver.contains("credential")) {
-          ice_server.password = jserver["credential"].get<std::string>();
+        if (jserver.as_object().count("credential") != 0) {
+          ice_server.password = jserver.at("credential").as_string().c_str();
         }
-        auto jurls = jserver["urls"];
-        for (const std::string url : jurls) {
-          ice_server.urls.push_back(url);
+        auto jurls = jserver.at("urls");
+        for (const auto url : jurls.as_array()) {
+          ice_server.urls.push_back(url.as_string().c_str());
           RTC_LOG(LS_INFO) << __FUNCTION__
-                           << ": iceserver.url=" << std::string(url);
+                           << ": iceserver.url=" << url.as_string();
         }
         ice_servers_.push_back(ice_server);
       }
@@ -225,23 +221,23 @@ void AyameClient::OnRead(boost::system::error_code ec,
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
-  auto json_message = json::parse(text);
-  const std::string type = json_message["type"];
+  auto json_message = boost::json::parse(text);
+  const std::string type = json_message.at("type").as_string().c_str();
   if (type == "accept") {
     SetIceServersFromConfig(json_message);
     CreatePeerConnection();
     // isExistUser フラグが存在するか確認する
     auto is_exist_user = false;
-    if (json_message.contains("isExistUser")) {
+    if (json_message.as_object().count("isExistUser") != 0) {
       has_is_exist_user_flag_ = true;
-      is_exist_user = json_message["isExistUser"];
+      is_exist_user = json_message.at("isExistUser").as_bool();
     }
 
     auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
       std::string sdp;
       desc->ToString(&sdp);
-      json json_message = {{"type", "offer"}, {"sdp", sdp}};
-      ws_->WriteText(json_message.dump());
+      boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
+      ws_->WriteText(boost::json::serialize(json_message));
     };
 
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
@@ -258,7 +254,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     if (!has_is_exist_user_flag_) {
       CreatePeerConnection();
     }
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetOffer(sdp, [this]() {
       boost::asio::post(ioc_, [this, self = shared_from_this()]() {
         if (!is_send_offer_ || !has_is_exist_user_flag_) {
@@ -266,23 +262,22 @@ void AyameClient::OnRead(boost::system::error_code ec,
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
                 desc->ToString(&sdp);
-                json json_message = {{"type", "answer"}, {"sdp", sdp}};
-                ws_->WriteText(json_message.dump());
+                boost::json::value json_message = {{"type", "answer"},
+                                                   {"sdp", sdp}};
+                ws_->WriteText(boost::json::serialize(json_message));
               });
         }
         is_send_offer_ = false;
       });
     });
   } else if (type == "answer") {
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetAnswer(sdp);
   } else if (type == "candidate") {
-    int sdp_mlineindex = 0;
-    std::string sdp_mid, candidate;
-    json ice = json_message["ice"];
-    sdp_mid = ice["sdpMid"].get<std::string>();
-    sdp_mlineindex = ice["sdpMLineIndex"].get<int>();
-    candidate = ice["candidate"].get<std::string>();
+    boost::json::value ice = json_message.at("ice");
+    std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
+    int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
+    std::string candidate = ice.at("candidate").as_string().c_str();
     connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
   } else if (type == "ping") {
     watchdog_.Reset();
@@ -311,14 +306,14 @@ void AyameClient::OnIceCandidate(const std::string sdp_mid,
                                  const int sdp_mlineindex,
                                  const std::string sdp) {
   // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
-  json json_message = {
+  boost::json::value json_message = {
       {"type", "candidate"},
   };
   // ice プロパティの中に object で candidate 情報をセットして送信する
-  json_message["ice"] = {{"candidate", sdp},
-                         {"sdpMLineIndex", sdp_mlineindex},
-                         {"sdpMid", sdp_mid}};
-  ws_->WriteText(json_message.dump());
+  json_message.as_object()["ice"] = {{"candidate", sdp},
+                                     {"sdpMLineIndex", sdp_mlineindex},
+                                     {"sdpMid", sdp_mid}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 
 void AyameClient::DoIceConnectionStateChange(

@@ -3,13 +3,9 @@
 // Boost
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/version.hpp>
-
-// nlohman/json
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "util.h"
-
-using json = nlohmann::json;
 
 SoraSession::SoraSession(boost::asio::ip::tcp::socket socket,
                          std::shared_ptr<SoraClient> client,
@@ -51,13 +47,14 @@ void SoraSession::OnRead(boost::system::error_code ec,
     if (req_.target() == "/connect/status") {
       std::string state =
           Util::IceConnectionStateToString(client_->GetRTCConnectionState());
-      json json_message = {{"state", state}};
+      boost::json::value json_message = {{"state", state}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute/status") {
       std::shared_ptr<RTCConnection> rtc_conn = client_->GetRTCConnection();
       if (rtc_conn) {
-        json json_message = {{"audio", !rtc_conn->IsAudioEnabled()},
-                             {"video", !rtc_conn->IsVideoEnabled()}};
+        boost::json::value json_message = {
+            {"audio", !rtc_conn->IsAudioEnabled()},
+            {"video", !rtc_conn->IsVideoEnabled()}};
         SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
       } else {
         SendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
@@ -68,17 +65,16 @@ void SoraSession::OnRead(boost::system::error_code ec,
   } else if (req_.method() == boost::beast::http::verb::post) {
     if (req_.target() == "/connect") {
       client_->Connect();
-      json json_message = {{"result", true}};
+      boost::json::value json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/close") {
       client_->Close();
-      json json_message = {{"result", true}};
+      boost::json::value json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute") {
-      json recv_json;
-      try {
-        recv_json = json::parse(req_.body());
-      } catch (json::parse_error& e) {
+      boost::json::error_code ec;
+      boost::json::value recv_json = boost::json::parse(req_.body(), ec);
+      if (ec) {
         SendResponse(Util::BadRequest(req_, "Invalid JSON"));
         return;
       }
@@ -88,20 +84,15 @@ void SoraSession::OnRead(boost::system::error_code ec,
         SendResponse(Util::ServerError(req_, "Create RTC Connection Failed"));
         return;
       }
-      try {
-        bool audioMute = recv_json["audio"].get<bool>();
-        rtc_conn->SetAudioEnabled(!audioMute);
-      } catch (json::type_error& e) {
-      }
+      bool audioMute = recv_json.at("audio").as_bool();
+      rtc_conn->SetAudioEnabled(!audioMute);
 
-      try {
-        bool videoMute = recv_json["video"].get<bool>();
-        rtc_conn->SetVideoEnabled(!videoMute);
-      } catch (json::type_error& e) {
-      }
+      bool videoMute = recv_json.at("video").as_bool();
+      rtc_conn->SetVideoEnabled(!videoMute);
 
-      json json_message = {{"audio", !rtc_conn->IsAudioEnabled()},
-                           {"video", !rtc_conn->IsVideoEnabled()}};
+      boost::json::value json_message = {
+          {"audio", !rtc_conn->IsAudioEnabled()},
+          {"video", !rtc_conn->IsVideoEnabled()}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else {
       SendResponse(Util::BadRequest(req_, "Invalid Request"));
@@ -143,13 +134,13 @@ void SoraSession::DoClose() {
 boost::beast::http::response<boost::beast::http::string_body>
 SoraSession::CreateOKWithJSON(
     const boost::beast::http::request<boost::beast::http::string_body>& req,
-    json json_message) {
+    boost::json::value json_message) {
   boost::beast::http::response<boost::beast::http::string_body> res{
       boost::beast::http::status::ok, 11};
   res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(boost::beast::http::field::content_type, "application/json");
   res.keep_alive(req.keep_alive());
-  res.body() = json_message.dump();
+  res.body() = boost::json::serialize(json_message);
   res.prepare_payload();
 
   return res;

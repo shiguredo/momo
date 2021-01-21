@@ -59,8 +59,14 @@ jobs:
           name: windows.env
           path: windows.env
   build-macos:
-    name: Build momo for macOS
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - arm64
+          - x86_64
+    name: Build momo for macOS_${{ matrix.arch }}
+    runs-on: macos-11.0
     steps:
       - uses: actions/checkout@v2
       - name: Get Versions
@@ -74,7 +80,7 @@ jobs:
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
-      - run: ./build.sh --package macos
+      - run: ./build.sh --package macos_${{ matrix.arch }}
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
@@ -82,9 +88,9 @@ jobs:
         run: |
           source VERSION
           MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz" >> macos.env
-          echo "CONTENT_TYPE=application/gzip" >> macos.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}.tar.gz"
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz" >> macos_${{ matrix.arch }}.env
+          echo "CONTENT_TYPE=application/gzip" >> macos_${{ matrix.arch }}.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v1
@@ -94,8 +100,8 @@ jobs:
       - name: Upload Environment
         uses: actions/upload-artifact@v1
         with:
-          name: macos.env
-          path: macos.env
+          name: macos_${{ matrix.arch }}.env
+          path: macos_${{ matrix.arch }}.env
   build-linux:
     strategy:
       fail-fast: false
@@ -181,7 +187,8 @@ jobs:
       matrix:
         name:
           - windows
-          - macos
+          - macos_arm64
+          - macos_x86_64
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8

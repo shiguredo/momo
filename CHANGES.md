@@ -11,6 +11,21 @@
 
 ## develop
 
+## 2021.1
+
+- [UPDATE] cmake を 3.19.3 に上げる
+    - @voluntas
+- [UPDATE] GitHub Actions の macOS ビルドを macos-11.0 に変更する
+    - @voluntas
+- [UPDATE] Boost 1.75.0 に上げる
+    - @voluntas
+- [UPDATE] nlohmann/json を Boost.JSON に変更
+    - @melpon
+- [ADD] サイマルキャストの active と adaptivePtime に対応
+    - @melpon
+- [ADD] Apple Silicon 対応
+    - @hakobera
+
 ## 2020.11
 
 - [UPDATE] cmake を 3.19.2 に上げる
