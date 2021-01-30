@@ -10,9 +10,9 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+- `momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz`
     - Jetson Nano
-- momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz
+- `momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz`
     - Jetson Xavier NX または Jetson AGX Xavier
 
 ## ダウンロードしたパッケージ、解凍後の構成
