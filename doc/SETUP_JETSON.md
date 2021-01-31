@@ -46,7 +46,7 @@ $ tree
 $ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
-## 4K@30 を出すためにやること
+## 4K@30fps を出すためにやること
 
 ### 実行時のコマンドについて
 
@@ -84,24 +84,26 @@ error 5 getting ext_ctrl Tilt (Absolute)
 error 5 getting ext_ctrl Zoom, Absolute
 ```
 
-## 4K@30 の実行例
+## 4K@30fps の実行例
 
-ここでは実際に 4K@30 を実行する方法を記載します。
+ここでは実際に 4K@30fps を実行する方法を記載します。
 
 ### 事前確認
 
-- Jetson シリーズ向けのセットアップが全て完了していること
-- 4K@30fps が可能なカメラであること
-- Sora/Sora Labo のアカウントの用意があること
+4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
+
+- Jetson シリーズで momo を使うためのセットアップが全て完了している
+- 4K@30fps が可能なカメラがセットされている
+- Sora/Sora Labo のアカウントの用意がある
 
 ### 実行コマンド
 
 ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。Sora Labo や Sora での実行についての詳細は [USE_SORA.md](USE_SORA.md) をお読みください。
 
-コマンドは VP8 HWA 有で実行します。
+コマンドは VP8 HWA 有 マルチストリーム 10000bps で実行します。
 
 ```shell
-$ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution FHD --log-level 2 sora wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo --video true --audio true --video-codec-type VP8 --video-bit-rate 10000 --auto --role sendonly --multistream true --metadata '{"signaling_key": "xyz"}'
+$ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo --video true --audio true --video-codec-type VP8 --video-bit-rate 10000 --auto --role sendonly --multistream true --metadata '{"signaling_key": "xyz"}'
 ```
 
 ### 実行結果
