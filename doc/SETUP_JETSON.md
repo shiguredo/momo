@@ -83,3 +83,33 @@ error 5 getting ext_ctrl Tilt (Absolute)
                      focus_auto 0x009a090c (bool)   : default=1 value=1
 error 5 getting ext_ctrl Zoom, Absolute
 ```
+
+## 4K@30 の実行例
+
+ここでは実際に 4K@30 を実行する方法を記載します。
+
+### 事前確認
+
+- Jetson シリーズ向けのセットアップが全て完了していること
+- 4K@30fps が可能なカメラであること
+- Sora/Sora Labo のアカウントの用意があること
+
+### 実行コマンド
+
+ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。Sora Labo や Sora での実行についての詳細は [USE_SORA.md](USE_SORA.md) をお読みください。
+
+コマンドは VP8 HWA 有で実行します。
+
+```shell
+$ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution FHD --log-level 2 sora wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo --video true --audio true --video-codec-type VP8 --video-bit-rate 10000 --auto --role sendonly --multistream true --metadata '{"signaling_key": "xyz"}'
+```
+
+### 実行結果
+
+このように 4K(3840x2160) で 30 fps が出ていることが確認できます。
+
+[![Image from Gyazo](https://i.gyazo.com/177519876a497aa3cdf166c3ae5f80d5.png)](https://gyazo.com/177519876a497aa3cdf166c3ae5f80d5)
+
+### それでも 30fps がでない場合
+
+もう一度 `4K@30 を出すためにやること` を確認してみてください。
