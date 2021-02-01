@@ -135,9 +135,15 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 
 ### 実行結果
 
-Chrome の `chrome://webrtc-internals` で確認をすると、このように 4K(3840x2160) で 30 fps が出ていることが確認できます。
+実行結果の確認はChrome の `chrome://webrtc-internals` を利用します。
+
+`chrome://webrtc-internals` を確認すると以下のように 4K(3840x2160) で 30 fps が出ていることが確認できます。
 
 [![Image from Gyazo](https://i.gyazo.com/df47a19994982ed963e84d88adf4f407.png)](https://gyazo.com/df47a19994982ed963e84d88adf4f407)
+
+Sora Labo を利用している場合はリモート統計機能を利用することで確認することができます。
+
+[![Image from Gyazo](https://i.gyazo.com/314e5ef5cc6ad4f9ad8583fada720809.png)](https://gyazo.com/314e5ef5cc6ad4f9ad8583fada720809)
 
 ### それでも 30fps がでない場合
 
