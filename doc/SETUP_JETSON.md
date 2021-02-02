@@ -120,7 +120,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     - `--framerate 30` は フレームレートを 30 に設定しています
     - `--resolution 4K` は解像度を 4K に設定しています
     - `--log-level 2` は error と warning のログを出力するように設定しています
-    - `sora` は接続を Sora とするように設定しています
+    - `sora` は Sora モードを利用するように設定しています
 - `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
     - `wss://sora-labo.shiguredo.jp/signaling` はシグナリング URL の設定をしています
     - `shiguredo@sora-labo` はチャネル ID を設定しています
