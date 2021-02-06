@@ -267,7 +267,8 @@ void SoraClient::OnRead(boost::system::error_code ec,
       // トラックを追加する必要があるため、ここで初期化する
       manager_->InitTracks(connection_.get());
 
-      if (config_.simulcast) {
+      if (config_.simulcast &&
+          json_message.as_object().count("encodings") != 0) {
         std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
 
         // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
