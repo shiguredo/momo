@@ -512,8 +512,8 @@ int32_t MMALH264Encoder::SendFrame(unsigned char* buffer, size_t size) {
   codec_specific.codecSpecific.H264.packetization_mode =
       webrtc::H264PacketizationMode::NonInterleaved;
 
-  h264_bitstream_parser_.ParseBitstream(buffer, size);
-  h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
+  h264_bitstream_parser_.ParseBitstream(encoded_image_);
+  encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
   RTC_LOG(LS_INFO) << __FUNCTION__ << " last slice qp:" << encoded_image_.qp_;
 
   webrtc::EncodedImageCallback::Result result =
