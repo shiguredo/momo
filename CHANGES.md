@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M89.4389@{#4}` に上げる
+    - @tnoho
+- [CHANGE] M89 で使用不可になったため対応ピクセルフォーマットから `NV12` を削除
+    - @tnoho
 - [UPDATE] JetPack を 4.5 にする
     - @tnoho
 

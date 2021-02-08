@@ -199,7 +199,7 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 7;
+  const int nFormats = 6;
   unsigned int fmts[nFormats] = {};
   if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
@@ -209,18 +209,16 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;
-    fmts[3] = V4L2_PIX_FMT_NV12;
-    fmts[4] = V4L2_PIX_FMT_YUYV;
-    fmts[5] = V4L2_PIX_FMT_UYVY;
-    fmts[6] = V4L2_PIX_FMT_JPEG;
+    fmts[3] = V4L2_PIX_FMT_YUYV;
+    fmts[4] = V4L2_PIX_FMT_UYVY;
+    fmts[5] = V4L2_PIX_FMT_JPEG;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YVU420;
-    fmts[2] = V4L2_PIX_FMT_NV12;
-    fmts[3] = V4L2_PIX_FMT_YUYV;
-    fmts[4] = V4L2_PIX_FMT_UYVY;
-    fmts[5] = V4L2_PIX_FMT_MJPEG;
-    fmts[6] = V4L2_PIX_FMT_JPEG;
+    fmts[2] = V4L2_PIX_FMT_YUYV;
+    fmts[3] = V4L2_PIX_FMT_UYVY;
+    fmts[4] = V4L2_PIX_FMT_MJPEG;
+    fmts[5] = V4L2_PIX_FMT_JPEG;
   }
 
   // Enumerate image formats.
@@ -265,8 +263,6 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
     _captureVideoType = webrtc::VideoType::kI420;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)
     _captureVideoType = webrtc::VideoType::kYV12;
-  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
-    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||

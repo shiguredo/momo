@@ -282,8 +282,8 @@ int32_t NvCodecH264Encoder::Encode(
     codec_specific.codecSpecific.H264.packetization_mode =
         webrtc::H264PacketizationMode::NonInterleaved;
 
-    h264_bitstream_parser_.ParseBitstream(packet.data(), packet.size());
-    h264_bitstream_parser_.GetLastSliceQp(&encoded_image_.qp_);
+    h264_bitstream_parser_.ParseBitstream(encoded_image_);
+    encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
 
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
