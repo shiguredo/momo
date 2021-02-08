@@ -15,6 +15,8 @@
     - @tnoho
 - [CHANGE] M89 で使用不可になったため対応ピクセルフォーマットから `NV12` を削除
     - @tnoho
+- [UPDATE] JetPack を 4.5 にする
+    - @tnoho
 
 ## 2021.1
 
