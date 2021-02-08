@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] JetPack を 4.5 にする
+    - @tnoho
+
 ## 2021.1
 
 - [UPDATE] cmake を 3.19.3 に上げる
