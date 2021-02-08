@@ -135,7 +135,7 @@ YYYY.RELEASE[.FIX]
 Apache License 2.0
 
 ```
-Copyright 2015-2020, tnoho (Original Author)
+Copyright 2015-202, tnoho (Original Author)
 Copyright 2018-2021, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
