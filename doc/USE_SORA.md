@@ -4,7 +4,9 @@ Sora は時雨堂が開発、販売している商用 WebRTC SFU 製品です。
 
 https://sora.shiguredo.jp/
 
-ここでは無料で Sora を試すことのできる [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
+ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
+
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
 
 ## Sora Labo を使う
 

@@ -15,6 +15,12 @@ Sora モードでのみ利用可能です。
 
 [Sora と Momo で WebRTC の AV1 を試す](https://gist.github.com/voluntas/db82783b6a3f012977e6de641a16181e)
 
+## データチャネルは利用できますか？
+
+シリアル経由でのみデータチャネルが利用可能です。
+
+[USE_SERIAL.md](USE_SERIAL.md)
+
 ## 認証局の証明書を追加できますか？
 
 `SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。

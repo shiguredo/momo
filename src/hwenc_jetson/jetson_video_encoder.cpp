@@ -686,8 +686,6 @@ int32_t JetsonVideoEncoder::Encode(
         decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
       } else if (video_type == webrtc::VideoType::kYV12) {
         decode_pixfmt_ = V4L2_PIX_FMT_YUV420M;
-      } else if (video_type == webrtc::VideoType::kNV12) {
-        decode_pixfmt_ = V4L2_PIX_FMT_NV12M;
       } else if (video_type == webrtc::VideoType::kUYVY) {
         decode_pixfmt_ = V4L2_PIX_FMT_UYVY;
       } else {
@@ -762,8 +760,7 @@ int32_t JetsonVideoEncoder::Encode(
                             buffer->planes[0].fmt.bytesperpixel *
                             buffer->planes[0].fmt.height;
       buffer->planes[0].data = native_data;
-    } else if (video_type == webrtc::VideoType::kI420 ||
-               video_type == webrtc::VideoType::kNV12) {
+    } else if (video_type == webrtc::VideoType::kI420) {
       size_t offset = 0;
       for (int i = 0; i < buffer->n_planes; i++)
       {

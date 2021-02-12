@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m88.4324-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4324)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m89.4389-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4389)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -23,10 +23,10 @@ https://momo.shiguredo.jp/
 
 ### ハードウェアエンコーダへの対応
 
-- NVIDIA Jetson に搭載されている H.264 や VP8 や VP9 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
-- Raspberry Pi の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
-- Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用しています
-- NVIDIA ビデオカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用しています
+- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されている VP8 や VP9 や H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
+- Apple macOS に搭載されている H.264 ハードウェアエンコーダー機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することが可能です
+- NVIDIA グラフィックスカードに搭載されている H.264 ハードウェアエンコーダー機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することが可能です
 
 ### 4K 30fps での配信
 
@@ -135,7 +135,7 @@ YYYY.RELEASE[.FIX]
 Apache License 2.0
 
 ```
-Copyright 2015-2020, tnoho (Original Author)
+Copyright 2015-202, tnoho (Original Author)
 Copyright 2018-2021, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");

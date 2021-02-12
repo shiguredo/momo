@@ -10,9 +10,9 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz
+- `momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz`
     - Jetson Nano
-- momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz
+- `momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz`
     - Jetson Xavier NX または Jetson AGX Xavier
 
 ## ダウンロードしたパッケージ、解凍後の構成
@@ -46,7 +46,7 @@ $ tree
 $ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
-## 4K@30 を出すためにやること
+## 4K@30fps を出すためにやること
 
 ### 実行時のコマンドについて
 
@@ -83,3 +83,68 @@ error 5 getting ext_ctrl Tilt (Absolute)
                      focus_auto 0x009a090c (bool)   : default=1 value=1
 error 5 getting ext_ctrl Zoom, Absolute
 ```
+
+## 4K@30fps の実行例
+
+ここでは Jetson Nano を使って 4K@30fps を実行する方法を記載します。
+
+### 事前確認
+
+4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
+
+- Jetson Nano で momo を使うためのセットアップが全て完了している
+- 4K@30fps が可能なカメラがセットされている
+- Sora/Sora Labo のアカウントの用意がある
+
+### 実行してみる
+
+ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
+
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
+
+コマンド例を以下に記載します。
+
+```shell
+$ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
+    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
+    --video true --audio true \
+    --video-codec-type VP8 --video-bit-rate 15000 \
+    --auto --role sendonly --multistream true \
+    --metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'
+```
+
+コマンド例の構成は以下のようになっています。
+
+- ./momo ~ sora までは momo に対して行うパラメータになっています。
+    - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
+    - `--framerate 30` は フレームレートを 30 に設定しています
+    - `--resolution 4K` は解像度を 4K に設定しています
+    - `--log-level 2` は error と warning のログを出力するように設定しています
+    - `sora` は Sora モードを利用するように設定しています
+- `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
+    - `wss://sora-labo.shiguredo.jp/signaling` はシグナリング URL の設定をしています
+    - `shiguredo@sora-labo` はチャネル ID を設定しています
+    - `--video true` は Sora への映像送信を有効に設定しています
+    - `--audio true` は Sora への音声送信を有効に設定しています
+    - `--video-codec-type VP8` はコーデックを VP8 に設定しています
+    - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
+    - `--auto` は Sora との自動接続を有効に設定しています
+    - `--role sendonly` は送信時の役割を送信のみで設定しています
+    - `--multistream true` はマルチストリームを有効に設定しています
+    - `--metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'` は Sora Labo のシグナリングキーをメタデータに設定しています
+
+### 実行結果
+
+実行結果の確認はChrome の `chrome://webrtc-internals` を利用します。
+
+`chrome://webrtc-internals` を確認すると以下のように 4K(3840x2160) で 30 fps が出ていることが確認できます。
+
+[![Image from Gyazo](https://i.gyazo.com/df47a19994982ed963e84d88adf4f407.png)](https://gyazo.com/df47a19994982ed963e84d88adf4f407)
+
+Sora Labo を利用している場合はリモート統計機能を利用することで確認することができます。
+
+[![Image from Gyazo](https://i.gyazo.com/314e5ef5cc6ad4f9ad8583fada720809.png)](https://gyazo.com/314e5ef5cc6ad4f9ad8583fada720809)
+
+### それでも 30fps がでない場合
+
+もう一度 `4K@30 を出すためにやること` を確認してみてください。
