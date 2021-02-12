@@ -11,12 +11,14 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M89.4389@{#4}` に上げる
-    - @tnoho
 - [CHANGE] M89 で使用不可になったため対応ピクセルフォーマットから `NV12` を削除
+    - @tnoho
+- [UPDATE] `libwebrtc` を `M89.4389@{#4}` に上げる
     - @tnoho
 - [UPDATE] JetPack を 4.5 にする
     - @tnoho
+- [UPDATE] cmake を 3.19.4 に上げる
+    - @voluntas
 
 ## 2021.1
 
