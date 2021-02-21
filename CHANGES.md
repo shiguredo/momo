@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドでは動作しなくなったため Jetson 専用に変更
+    - @tnoho
+
 ## 2021.2
 
 - [CHANGE] M89 で使用不可になったため対応ピクセルフォーマットから `NV12` を削除
