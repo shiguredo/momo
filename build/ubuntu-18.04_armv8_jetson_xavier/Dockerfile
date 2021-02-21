@@ -30,7 +30,7 @@ RUN /root/jetson.sh
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8 /root /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8_jetson_xavier /root /root
 
 # コンパイラの取得
 
