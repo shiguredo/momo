@@ -9,7 +9,7 @@
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read https://github.com/shiguredo/oss before use.
+Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
@@ -135,7 +135,7 @@ YYYY.RELEASE[.FIX]
 Apache License 2.0
 
 ```
-Copyright 2015-202, tnoho (Original Author)
+Copyright 2015-2021, tnoho (Original Author)
 Copyright 2018-2021, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -201,6 +201,7 @@ limitations under the License.
     - WebM 形式での出力
 - 録画合成対応
 - Sora モード利用時の E2EE 機能
+- Windows / macOS 署名対応
 
 ## Momo についての電子書籍
 
