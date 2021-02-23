@@ -11,7 +11,7 @@
 
 ## develop
 
-- [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドでは動作しなくなったため Jetson 専用に変更
+- [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドで Jetson が動かない問題を解消
     - @tnoho
 
 ## 2021.2
