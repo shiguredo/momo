@@ -11,8 +11,14 @@
 
 ## develop
 
-- [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドで Jetson が動かない問題を解消
+## 2021.2.1
+
+- [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドで Jetson が動かない問題を解消する
     - @tnoho
+- [UPDATE] `libwebrtc` を `M89.4389@{#5}` に上げる
+    - @tnoho
+- [UPDATE] cmake を 3.19.5 に上げる
+    - @voluntas
 
 ## 2021.2
 
