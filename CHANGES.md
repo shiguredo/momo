@@ -11,6 +11,11 @@
 
 ## develop
 
+- [UPDATE] cmake を 3.19.6 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M89.4389@{#7}` に上げる
+    - @voluntas
+
 ## 2021.2.1
 
 - [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドで Jetson が動かない問題を解消する
