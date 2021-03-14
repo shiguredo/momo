@@ -102,7 +102,7 @@ case "$PACKAGE" in
 
     ./$PACKAGE/install_deps.sh
 
-    source ./$PACKAGE/_install/webrtc/VERSIONS
+    source ./$PACKAGE/_install/webrtc/release/VERSIONS
 
     if [ -z "$JOBS" ]; then
       JOBS=`sysctl -n hw.logicalcpu_max`
