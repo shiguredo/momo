@@ -57,7 +57,31 @@ JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
 }
 
+// 標準出力や標準エラーに出力されないようにいろいろする
+struct SuppressErrors {
+  SuppressErrors() {
+    old_stdout = stdout;
+    old_stderr = stderr;
+    old_log_level = log_level;
+    stdout = fopen("/dev/null", "w");
+    stderr = fopen("/dev/null", "w");
+    log_level = -1;
+  }
+  ~SuppressErrors() {
+    fclose(stdout);
+    fclose(stderr);
+    stdout = old_stdout;
+    stderr = old_stderr;
+    log_level = old_log_level;
+  }
+  FILE* old_stdout;
+  FILE* old_stderr;
+  int old_log_level;
+};
+
 bool JetsonVideoEncoder::IsSupportedVP8() {
+  SuppressErrors sup;
+
   auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
   auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_VP8, 1024, 768,
                                             2 * 1024 * 1024);
@@ -65,6 +89,8 @@ bool JetsonVideoEncoder::IsSupportedVP8() {
 }
 
 bool JetsonVideoEncoder::IsSupportedVP9() {
+  SuppressErrors sup;
+
   auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
   auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_VP9, 1024, 768,
                                             2 * 1024 * 1024);
