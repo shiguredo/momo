@@ -41,6 +41,7 @@ $ tree
 ### --hw-mjpeg-decoder
 
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
+Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
 
 ```shell
 $ ./momo --hw-mjpeg-decoder=true --no-audio-device test
