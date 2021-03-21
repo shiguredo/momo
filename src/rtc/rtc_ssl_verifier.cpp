@@ -1,7 +1,7 @@
 #include "rtc_ssl_verifier.h"
 
 // WebRTC
-#include <rtc_base/openssl_certificate.h>
+#include <rtc_base/boringssl_certificate.h>
 
 #include "ssl_verifier.h"
 
@@ -12,6 +12,10 @@ bool RTCSSLVerifier::Verify(const rtc::SSLCertificate& certificate) {
   if (insecure_) {
     return true;
   }
-  return SSLVerifier::VerifyX509(
-      static_cast<const rtc::OpenSSLCertificate&>(certificate).x509());
+  CRYPTO_BUFFER* cert = static_cast<const rtc::BoringSSLCertificate&>(certificate).cert_buffer();
+  bssl::UniquePtr<X509> x509(X509_parse_from_buffer(cert));
+  if (!x509) {
+    return false;
+  }
+  return SSLVerifier::VerifyX509(x509.get());
 }
