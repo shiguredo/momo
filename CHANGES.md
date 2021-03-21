@@ -18,6 +18,9 @@
 - [FIX] `momo --verson` 実行時にエラーメッセージが出るのを修正
     - HW エンコーダが利用できるかをチェックしている際に利用できない場合に標準出力にエラーが出てしまうのを抑制するという方法で修正
     - @melpon @torikizi
+- [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正
+    - TURN-TLS でセグフォする問題を解決
+    - @melpon @tnoho
 
 ## 2021.2.1
 
