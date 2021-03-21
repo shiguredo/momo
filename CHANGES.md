@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2021.2.2
+
 - [UPDATE] cmake を 3.19.6 に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `M89.4389@{#7}` に上げる
