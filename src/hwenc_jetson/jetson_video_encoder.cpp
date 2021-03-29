@@ -902,6 +902,13 @@ int32_t JetsonVideoEncoder::SendFrame(unsigned char* buffer,
                                       size_t size,
                                       std::unique_ptr<FrameParams> params,
                                       v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata) {
+  if (!callback_) {
+    RTC_LOG(LS_WARNING)
+        << "InitEncode() has been called, but a callback function "
+        << "has not been set with RegisterEncodeCompleteCallback()";
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+
   encoded_image_.SetTimestamp(params->timestamp_rtp);
   encoded_image_.SetColorSpace(params->color_space);
   encoded_image_._encodedWidth = params->width;
