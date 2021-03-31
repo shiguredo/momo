@@ -11,10 +11,12 @@
 
 ## develop
 
+## 2021.2.3
+
+- [UPDATE] cmake を 3.20.0 に上げる
+    - @melpon @voluntas
 - [FIX] Jetson で HW エンコーダー指定時に、初期化タイミングによって、まれにセグフォが発生する問題を修正する
     - @enm10k
-- [UPDATE] cmake を 3.20.0 に上げる
-    - @voluntas
 
 ## 2021.2.2
 
