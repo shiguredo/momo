@@ -43,11 +43,6 @@ class MMALH264Decoder : public webrtc::VideoDecoder {
 
   int32_t Release() override;
 
-  // Returns true if the decoder prefer to decode frames late.
-  // That is, it can not decode infinite number of frames before the decoded
-  // frame is consumed.
-  bool PrefersLateDecoding() const override;
-
   const char* ImplementationName() const override;
 
  private:

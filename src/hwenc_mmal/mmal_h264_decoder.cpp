@@ -93,10 +93,6 @@ int32_t MMALH264Decoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-bool MMALH264Decoder::PrefersLateDecoding() const {
-  return true;
-}
-
 const char* MMALH264Decoder::ImplementationName() const {
   return "MMAL H264";
 }
