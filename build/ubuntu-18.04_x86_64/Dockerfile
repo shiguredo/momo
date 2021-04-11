@@ -40,6 +40,7 @@ RUN \
   && ./b2 \
     cxxflags=' \
       -D_LIBCPP_ABI_UNSTABLE \
+      -D_LIBCPP_DISABLE_AVAILABILITY \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
     ' \

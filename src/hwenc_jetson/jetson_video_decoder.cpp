@@ -125,10 +125,6 @@ int32_t JetsonVideoDecoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-bool JetsonVideoDecoder::PrefersLateDecoding() const {
-  return true;
-}
-
 const char* JetsonVideoDecoder::ImplementationName() const {
   return "Jetson Video";
 }

@@ -552,7 +552,7 @@ elseif (TARGET_OS STREQUAL "linux")
       WEBRTC_POSIX
   )
   # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
-  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE)
+  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE _LIBCPP_DISABLE_AVAILABILITY)
 
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo
