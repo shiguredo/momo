@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M90.4430@{#3}` に上げる
+    - @voluntas
 - [UPDATE] Boost 1.76.0 に上げる
     - @voluntas
 
