@@ -16,7 +16,11 @@ OUTPUT_DIR=$2
 
 set -ex
 
-. $WEBRTC_DIR/VERSIONS
+if [ -e $WEBRTC_DIR/VERSIONS ]; then
+  . $WEBRTC_DIR/VERSIONS
+else
+  . $WEBRTC_DIR/release/VERSIONS
+fi
 
 # tools の update.py を叩いて特定バージョンの clang バイナリを拾う
 mkdir -p $OUTPUT_DIR/llvm

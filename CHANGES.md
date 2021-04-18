@@ -11,6 +11,26 @@
 
 ## develop
 
+## 2021.2.3
+
+- [UPDATE] cmake を 3.20.0 に上げる
+    - @melpon @voluntas
+- [FIX] Jetson で HW エンコーダー指定時に、初期化タイミングによって、まれにセグフォが発生する問題を修正する
+    - @enm10k
+
+## 2021.2.2
+
+- [UPDATE] cmake を 3.19.6 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M89.4389@{#7}` に上げる
+    - @voluntas
+- [FIX] `momo --verson` 実行時にエラーメッセージが出るのを修正
+    - HW エンコーダが利用できるかをチェックしている際に利用できない場合に標準出力にエラーが出てしまうのを抑制するという方法で修正
+    - @melpon @torikizi
+- [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正
+    - TURN-TLS でセグフォする問題を解決
+    - @melpon @tnoho
+
 ## 2021.2.1
 
 - [FIX] ubuntu-18.04_armv8 向け libwebrtc ビルドで Jetson が動かない問題を解消する

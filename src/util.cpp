@@ -344,7 +344,7 @@ void Util::ParseArgs(int argc,
   // サイマルキャストは VP8, H264 のみで動作する
   if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
       args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec=VP8 or --video-codec=H264."
+    std::cerr << "Simulcast works only --video-codec-type=VP8 or --video-codec-type=H264."
               << std::endl;
     exit(1);
   }

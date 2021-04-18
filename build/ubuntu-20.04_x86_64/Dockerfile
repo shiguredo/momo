@@ -40,6 +40,7 @@ RUN \
   && ./b2 \
     cxxflags=' \
       -D_LIBCPP_ABI_UNSTABLE \
+      -D_LIBCPP_DISABLE_AVAILABILITY \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
     ' \
@@ -66,7 +67,7 @@ RUN git clone --branch v$CLI11_VERSION --depth 1 https://github.com/CLIUtils/CLI
 # CMake のインストール
 ARG CMAKE_VERSION
 COPY script/get_cmake.sh /root/
-RUN /root/get_cmake.sh "$CMAKE_VERSION" Linux /root
+RUN /root/get_cmake.sh "$CMAKE_VERSION" linux /root
 ENV PATH "/root/cmake/bin:$PATH"
 
 # SDL2 のビルド
