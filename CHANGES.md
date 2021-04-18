@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Boost 1.76.0 に上げる
+    - @voluntas
+
 ## 2021.2.3
 
 - [UPDATE] cmake を 3.20.0 に上げる
