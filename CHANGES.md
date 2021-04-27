@@ -11,6 +11,17 @@
 
 ## develop
 
+## 2021.3
+
+- [UPDATE] `libwebrtc` を `M90.4430@{#3}` に上げる
+    - @voluntas
+- [UPDATE] Boost 1.76.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.20.1 に上げる
+    - @voluntas
+- [FIX] サイマルキャストのエラー・メッセージで示されていたオプションが古かったので修正する
+    - @enm10k
+
 ## 2021.2.3
 
 - [UPDATE] cmake を 3.20.0 に上げる
