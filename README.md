@@ -46,7 +46,7 @@ Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://ww
 
 ### AV1 への対応
 
-Momo 同士で SDL 機能を利用して libwebrtc が対応している AV1 が利用可能です。
+AV1 の送受信に対応済みです。
 
 ## 動画
 
