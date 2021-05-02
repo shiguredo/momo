@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
       if (!data_manager) {
         return 1;
       }
-      rtc_manager->SetDataManager(data_manager.get());
+      rtc_manager->AddDataManager(data_manager.get());
     }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
@@ -229,6 +229,7 @@ int main(int argc, char* argv[]) {
       config.spotlight_number = args.sora_spotlight_number;
       config.port = args.sora_port;
       config.simulcast = args.sora_simulcast;
+      config.data_channel_signaling = args.sora_data_channel_signaling;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));

@@ -16,6 +16,7 @@
 #include "metrics/stats_collector.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
+#include "sora_data_channel.h"
 #include "url_parts.h"
 #include "watchdog.h"
 #include "websocket.h"
@@ -38,11 +39,13 @@ struct SoraClientConfig {
   int spotlight_number = 0;
   int port = -1;
   bool simulcast = false;
+  bool data_channel_signaling = false;
 };
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
                    public RTCMessageSender,
-                   public StatsCollector {
+                   public StatsCollector,
+                   public SoraDataChannelObserver {
   SoraClient(boost::asio::io_context& ioc,
              RTCManager* manager,
              SoraClientConfig config);
@@ -64,9 +67,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
       const;
   std::shared_ptr<RTCConnection> GetRTCConnection() const;
 
-  void GetStats(
-      std::function<void(
-          const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback) override;
+  void GetStats(std::function<
+                void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+                    callback) override;
 
  private:
   void ReconnectAfter();
@@ -79,7 +82,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void CreatePeerFromConfig(boost::json::value jconfig);
+  void DoSendUpdate(const std::string& sdp);
+  std::shared_ptr<RTCConnection> CreateRTCConnection(
+      boost::json::value jconfig);
 
  private:
   void OnConnect(boost::system::error_code ec);
@@ -87,6 +92,13 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
+
+ private:
+  // DataChannel 周りのコールバック
+  void OnStateChange(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  void OnMessage(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+                 const webrtc::DataBuffer& buffer) override;
 
  private:
   // WebRTC からのコールバック
@@ -104,6 +116,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
  private:
   boost::asio::io_context& ioc_;
   std::unique_ptr<Websocket> ws_;
+  std::unique_ptr<SoraDataChannel> dc_;
 
   std::atomic_bool destructed_ = {false};
 

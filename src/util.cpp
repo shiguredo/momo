@@ -318,6 +318,10 @@ void Util::ParseArgs(int argc,
       ->add_option("--simulcast", args.sora_simulcast,
                    "Use simulcast (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
+                   "Use DataChannel for Sora signaling (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
@@ -344,7 +348,8 @@ void Util::ParseArgs(int argc,
   // サイマルキャストは VP8, H264 のみで動作する
   if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
       args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec-type=VP8 or --video-codec-type=H264."
+    std::cerr << "Simulcast works only --video-codec-type=VP8 or "
+                 "--video-codec-type=H264."
               << std::endl;
     exit(1);
   }
@@ -373,11 +378,11 @@ void Util::ParseArgs(int argc,
               << std::endl;
     std::cout << std::endl;
     std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
-              << std::endl;
+                                                        << std::endl;
     std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-              << std::endl;
+                                                          << std::endl;
     std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-              << std::endl;
+                                                           << std::endl;
     std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }
