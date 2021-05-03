@@ -288,6 +288,19 @@ void SoraClient::OnRead(boost::system::error_code ec,
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
+    // data_channel_signaling=true を設定したけど、
+    // サーバの設定によって data_channel_signaling が有効にならなかった場合は警告を出す。
+    if (config_.data_channel_signaling) {
+      auto it = json_message.as_object().find("data_channel_signaling");
+      if (it == json_message.as_object().end() || !it->value().as_bool()) {
+        std::string message =
+            "--data-channel-signaling=true が指定されましたが、Data Channel "
+            "signaling は有効になりませんでした";
+        RTC_LOG(LS_WARNING) << message;
+        std::cerr << message << std::endl;
+      }
+    }
+
     connection_ = CreateRTCConnection(json_message.at("config"));
     const std::string sdp = json_message.at("sdp").as_string().c_str();
 
