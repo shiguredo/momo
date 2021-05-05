@@ -20,7 +20,7 @@ _PACKAGES=" \
 "
 
 function show_help() {
-  echo "$PROGRAM [--clean] [--package] [--no-cache] [--no-tty] [--no-mount] <package>"
+  echo "$PROGRAM [--clean] [--package] [--no-cache] [--no-tty] [--no-mount] [--debug] <package>"
   echo "<package>:"
   for package in $_PACKAGES; do
     echo "  - $package"
@@ -32,6 +32,7 @@ FLAG_CLEAN=0
 FLAG_PACKAGE=0
 DOCKER_BUILD_FLAGS=""
 DOCKER_MOUNT_TYPE=mount
+DEBUG=0
 
 while [ $# -ne 0 ]; do
   case "$1" in
@@ -40,6 +41,7 @@ while [ $# -ne 0 ]; do
     "--no-cache" ) DOCKER_BUILD_FLAGS="$DOCKER_BUILD_FLAGS --no-cache" ;;
     "--no-tty" ) DOCKER_BUILD_FLAGS="$DOCKER_BUILD_FLAGS --progress=plain" ;;
     "--no-mount" ) DOCKER_MOUNT_TYPE=nomount ;;
+    "--debug" ) DEBUG=1 ;;
     --* )
       show_help
       exit 1
@@ -111,10 +113,16 @@ case "$PACKAGE" in
       fi
     fi
 
+    if [ $DEBUG -eq 1 ]; then
+      BUILD_TYPE=Debug
+    else
+      BUILD_TYPE=Release
+    fi
+
     mkdir -p ../_build/$PACKAGE
     pushd ../_build/$PACKAGE
       cmake \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
         -DMOMO_PACKAGE_NAME="$PACKAGE" \
         -DMOMO_VERSION="$MOMO_VERSION" \
         -DMOMO_COMMIT="$MOMO_COMMIT" \
