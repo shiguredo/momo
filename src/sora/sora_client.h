@@ -16,7 +16,7 @@
 #include "metrics/stats_collector.h"
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
-#include "sora_data_channel.h"
+#include "sora_data_channel_on_asio.h"
 #include "url_parts.h"
 #include "watchdog.h"
 #include "websocket.h"
@@ -40,6 +40,7 @@ struct SoraClientConfig {
   int port = -1;
   bool simulcast = false;
   bool data_channel_signaling = false;
+  bool ignore_disconnect_websocket = false;
 };
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
@@ -58,6 +59,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
         new SoraClient(ioc, manager, std::move(config)));
   }
   ~SoraClient();
+  void Close(std::function<void()> on_close);
 
   void Reset();
   void Connect();
@@ -115,8 +117,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
  private:
   boost::asio::io_context& ioc_;
-  std::unique_ptr<Websocket> ws_;
-  std::unique_ptr<SoraDataChannel> dc_;
+  std::shared_ptr<Websocket> ws_;
+  std::shared_ptr<SoraDataChannelOnAsio> dc_;
+  bool ignore_disconnect_websocket_;
 
   std::atomic_bool destructed_ = {false};
 

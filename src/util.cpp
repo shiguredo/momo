@@ -322,6 +322,12 @@ void Util::ParseArgs(int argc,
       ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
                    "Use DataChannel for Sora signaling (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--ignore-disconnect-websocket",
+                   args.sora_ignore_disconnect_websocket,
+                   "Ignore WebSocket disconnection if using Data Channel "
+                   "(default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {

@@ -230,6 +230,8 @@ int main(int argc, char* argv[]) {
       config.port = args.sora_port;
       config.simulcast = args.sora_simulcast;
       config.data_channel_signaling = args.sora_data_channel_signaling;
+      config.ignore_disconnect_websocket =
+          args.sora_ignore_disconnect_websocket;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));

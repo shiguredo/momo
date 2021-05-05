@@ -225,8 +225,11 @@ void Websocket::OnRead(read_callback_t on_read,
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
   }
 
-  const auto text = boost::beast::buffers_to_string(read_buffer_.data());
-  read_buffer_.consume(read_buffer_.size());
+  std::string text;
+  if (!ec) {
+    text = boost::beast::buffers_to_string(read_buffer_.data());
+    read_buffer_.consume(read_buffer_.size());
+  }
 
   std::move(on_read)(ec, bytes_transferred, std::move(text));
 }
