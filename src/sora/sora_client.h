@@ -63,7 +63,6 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
   void Reset();
   void Connect();
-  void Close();
 
   webrtc::PeerConnectionInterface::IceConnectionState GetRTCConnectionState()
       const;

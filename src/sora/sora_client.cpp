@@ -84,11 +84,11 @@ void SoraClient::Close(std::function<void()> on_close) {
   ws_ = nullptr;
 
   if (dc && ws) {
-    dc->Close([ws = std::move(ws), on_close]() {
-      ws->Close([on_close](boost::system::error_code&) { on_close(); });
+    dc->Close([dc, ws = std::move(ws), on_close]() {
+      ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
     });
   } else if (!dc && ws) {
-    ws->Close([on_close](boost::system::error_code&) { on_close(); });
+    ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
   } else {
     on_close();
   }
@@ -289,16 +289,6 @@ std::shared_ptr<RTCConnection> SoraClient::CreateRTCConnection(
     manager_->AddDataManager(dc_.get());
   }
   return manager_->CreateConnection(rtc_config, this);
-}
-
-void SoraClient::Close() {
-  ws_->Close(std::bind(&SoraClient::OnClose, shared_from_this(),
-                       std::placeholders::_1));
-}
-
-void SoraClient::OnClose(boost::system::error_code ec) {
-  if (ec)
-    return MOMO_BOOST_ERROR(ec, "close");
 }
 
 void SoraClient::OnRead(boost::system::error_code ec,
@@ -569,7 +559,7 @@ void SoraClient::OnMessage(
       RTC_LOG(LS_INFO) << "WebSocket closed successfully";
       auto ws = ws_;
       ws_ = nullptr;
-      ws->Close([](boost::system::error_code&) {});
+      ws->Close([ws](boost::system::error_code) {});
     }
   }
 }

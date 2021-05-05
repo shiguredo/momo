@@ -24,7 +24,7 @@ mkdir -p $OUTPUT_DIR
 pushd $OUTPUT_DIR
   if [ ! -e $CACHE_DIR/boost_$BOOST_VERSION_UNDERSCORE.tar.gz ]; then
     mkdir -p $CACHE_DIR
-    curl -Lo $CACHE_DIR/boost_$BOOST_VERSION_UNDERSCORE.tar.gz https://dl.bintray.com/boostorg/release/$BOOST_VERSION/source/boost_$BOOST_VERSION_UNDERSCORE.tar.gz
+    curl -fLo $CACHE_DIR/boost_$BOOST_VERSION_UNDERSCORE.tar.gz https://boostorg.jfrog.io/artifactory/main/release/$BOOST_VERSION/source/boost_$BOOST_VERSION_UNDERSCORE.tar.gz
   fi
 
   rm -rf source

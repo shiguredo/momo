@@ -68,7 +68,7 @@ void SoraSession::OnRead(boost::system::error_code ec,
       boost::json::value json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/close") {
-      client_->Close();
+      client_->Close([]() {});
       boost::json::value json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute") {
