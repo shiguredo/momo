@@ -97,10 +97,7 @@ case "$PACKAGE" in
       exit 0
     fi
 
-    MACOS_ARCH="arm64"
-    if [ $PACKAGE -eq "macos_x86_64" ]; then
-      MACOS_ARCH="x86_64"
-    fi
+    MACOS_ARCH="`uname -m`"
 
     ./$PACKAGE/install_deps.sh
 
@@ -138,7 +135,6 @@ case "$PACKAGE" in
 
       pushd ..
         # パッケージのバイナリを作る
-        MACOS_ARCH=${PACKAGE#"macos_"}
         rm -rf _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
         rm -f _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}.tar.gz
         mkdir -p _package/momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${MACOS_ARCH}
