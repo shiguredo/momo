@@ -6,7 +6,7 @@
 #include <pc/video_track_source.h>
 
 #include "rtc_connection.h"
-#include "rtc_data_manager.h"
+#include "rtc_data_manager_dispatcher.h"
 #include "rtc_message_sender.h"
 #include "scalable_track_source.h"
 #include "video_codec_info.h"
@@ -58,7 +58,7 @@ class RTCManager {
              rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
              VideoTrackReceiver* receiver);
   ~RTCManager();
-  void SetDataManager(RTCDataManager* data_manager);
+  void AddDataManager(std::shared_ptr<RTCDataManager> data_manager);
   std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
@@ -73,7 +73,7 @@ class RTCManager {
   std::unique_ptr<rtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
   VideoTrackReceiver* receiver_;
-  RTCDataManager* data_manager_;
+  RTCDataManagerDispatcher data_manager_dispatcher_;
 };
 
 #endif

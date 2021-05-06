@@ -49,12 +49,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: windows.env
           path: windows.env
@@ -93,12 +93,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: macos_${{ matrix.arch }}.env
           path: macos_${{ matrix.arch }}.env
@@ -141,12 +141,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.name }}.env
           path: ${{ matrix.name }}.env
@@ -173,7 +173,7 @@ jobs:
         shell: bash
         run: echo "UPLOAD_URL='${{ steps.create_release.outputs.upload_url }}'" > create-release.env
       - name: Upload create-release Environment
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: create-release.env
           path: create-release.env
@@ -197,12 +197,14 @@ jobs:
           - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     steps:
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v2
         with:
           name: ${{ matrix.name }}.env
-      - uses: actions/download-artifact@v1
+          path: ${{ matrix.name }}.env
+      - uses: actions/download-artifact@v2
         with:
           name: create-release.env
+          path: create-release.env
       - name: Env to output
         shell: bash
         run: |
@@ -212,9 +214,10 @@ jobs:
           echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v2
         with:
           name: ${{ steps.env.outputs.package_name }}
+          path: ${{ steps.env.outputs.package_name }}
       - name: Upload ${{ matrix.name }} Release Asset
         uses: actions/upload-release-asset@v1.0.1
         env:

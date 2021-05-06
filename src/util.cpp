@@ -318,6 +318,27 @@ void Util::ParseArgs(int argc,
       ->add_option("--simulcast", args.sora_simulcast,
                    "Use simulcast (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
+                   "Use DataChannel for Sora signaling (default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--data-channel-signaling-timeout",
+                   args.sora_data_channel_signaling_timeout,
+                   "Timeout for Data Channel in seconds (default: 30)")
+      ->check(CLI::PositiveNumber);
+  sora_app
+      ->add_option("--ignore-disconnect-websocket",
+                   args.sora_ignore_disconnect_websocket,
+                   "Ignore WebSocket disconnection if using Data Channel "
+                   "(default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--close-websocket", args.sora_close_websocket,
+                   "Close WebSocket when starting to use Data Channel "
+                   "(only if --ignore-disconnect-websocket=true) "
+                   "(default: true)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
@@ -344,7 +365,8 @@ void Util::ParseArgs(int argc,
   // サイマルキャストは VP8, H264 のみで動作する
   if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
       args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec-type=VP8 or --video-codec-type=H264."
+    std::cerr << "Simulcast works only --video-codec-type=VP8 or "
+                 "--video-codec-type=H264."
               << std::endl;
     exit(1);
   }
@@ -373,11 +395,11 @@ void Util::ParseArgs(int argc,
               << std::endl;
     std::cout << std::endl;
     std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
-              << std::endl;
+                                                        << std::endl;
     std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-              << std::endl;
+                                                          << std::endl;
     std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-              << std::endl;
+                                                           << std::endl;
     std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }

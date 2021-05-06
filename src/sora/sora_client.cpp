@@ -61,17 +61,41 @@ SoraClient::SoraClient(boost::asio::io_context& ioc,
       manager_(manager),
       retry_count_(0),
       config_(std::move(config)),
-      watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)) {
+      watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)),
+      ignore_disconnect_websocket_(false) {
   Reset();
 }
 
 SoraClient::~SoraClient() {
   destructed_ = true;
+  // 一応閉じる努力はする
+  if (dc_) {
+    dc_->Close([]() {});
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+  }
   // ここで OnIceConnectionStateChange が呼ばれる
   connection_ = nullptr;
 }
 
+void SoraClient::Close(std::function<void()> on_close) {
+  auto dc = std::move(dc_);
+  dc_ = nullptr;
+  auto ws = std::move(ws_);
+  ws_ = nullptr;
+
+  if (dc && ws) {
+    dc->Close([dc, ws = std::move(ws), on_close]() {
+      ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
+    });
+  } else if (!dc && ws) {
+    ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
+  } else {
+    on_close();
+  }
+}
+
 void SoraClient::Reset() {
+  watchdog_.Disable();
   connection_ = nullptr;
 
   URLParts parts;
@@ -79,6 +103,9 @@ void SoraClient::Reset() {
     ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
   } else {
     ws_.reset(new Websocket(ioc_));
+  }
+  if (config_.data_channel_signaling) {
+    dc_.reset(new SoraDataChannelOnAsio(ioc_, this));
   }
 }
 
@@ -101,9 +128,12 @@ void SoraClient::ReconnectAfter() {
 }
 
 void SoraClient::OnWatchdogExpired() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
-  Reset();
-  Connect();
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " closing...";
+  Close([this]() {
+    RTC_LOG(LS_INFO) << __FUNCTION__ << " closed and reconnecting...";
+    Reset();
+    Connect();
+  });
 }
 
 void SoraClient::OnConnect(boost::system::error_code ec) {
@@ -111,6 +141,7 @@ void SoraClient::OnConnect(boost::system::error_code ec) {
     ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "Handshake");
   }
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " connected";
 
   DoRead();
   DoSendConnect();
@@ -185,6 +216,14 @@ void SoraClient::DoSendConnect() {
     }
   }
 
+  if (config_.data_channel_signaling) {
+    json_message["data_channel_signaling"] = config_.data_channel_signaling;
+  }
+  if (config_.ignore_disconnect_websocket) {
+    json_message["ignore_disconnect_websocket"] =
+        config_.ignore_disconnect_websocket;
+  }
+
   ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraClient::DoSendPong() {
@@ -194,12 +233,31 @@ void SoraClient::DoSendPong() {
 void SoraClient::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
-  boost::json::value json_message = {{"type", "pong"}, {"stats", stats}};
-  std::string str = R"({"type":"pong","stats":)" + stats + "}";
-  ws_->WriteText(std::move(str));
+  if (dc_ && dc_->IsOpen("stats")) {
+    // DataChannel が使える場合は type: stats で DataChannel に送る
+    std::string str = R"({"type":"stats","stats":)" + stats + "}";
+    webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), false);
+    dc_->Send("stats", data);
+  } else {
+    std::string str = R"({"type":"pong","stats":)" + stats + "}";
+    ws_->WriteText(std::move(str));
+  }
+}
+void SoraClient::DoSendUpdate(const std::string& sdp) {
+  if (dc_ && dc_->IsOpen("signaling")) {
+    // DataChannel が使える場合は type: re-answer で DataChannel に送る
+    boost::json::value json_message = {{"type", "re-answer"}, {"sdp", sdp}};
+    webrtc::DataBuffer data(
+        rtc::CopyOnWriteBuffer(boost::json::serialize(json_message)), false);
+    dc_->Send("signaling", data);
+  } else {
+    boost::json::value json_message = {{"type", "update"}, {"sdp", sdp}};
+    ws_->WriteText(boost::json::serialize(json_message));
+  }
 }
 
-void SoraClient::CreatePeerFromConfig(boost::json::value jconfig) {
+std::shared_ptr<RTCConnection> SoraClient::CreateRTCConnection(
+    boost::json::value jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
@@ -227,17 +285,10 @@ void SoraClient::CreatePeerFromConfig(boost::json::value jconfig) {
   }
 #endif
 
-  connection_ = manager_->CreateConnection(rtc_config, this);
-}
-
-void SoraClient::Close() {
-  ws_->Close(std::bind(&SoraClient::OnClose, shared_from_this(),
-                       std::placeholders::_1));
-}
-
-void SoraClient::OnClose(boost::system::error_code ec) {
-  if (ec)
-    return MOMO_BOOST_ERROR(ec, "close");
+  if (dc_ != nullptr) {
+    manager_->AddDataManager(dc_);
+  }
+  return manager_->CreateConnection(rtc_config, this);
 }
 
 void SoraClient::OnRead(boost::system::error_code ec,
@@ -251,88 +302,148 @@ void SoraClient::OnRead(boost::system::error_code ec,
   if (ec == boost::asio::error::operation_aborted)
     return;
 
-  if (ec)
+  if (ec) {
+    // Data Channel のみの通信をする場合、WebSocket が切断されてもエラーとして扱わない
+    if (ignore_disconnect_websocket_) {
+      return;
+    }
+    // WS が切れたら再接続する
+    watchdog_.Disable();
+    Close([this]() {
+      Reset();
+      Connect();
+    });
     return MOMO_BOOST_ERROR(ec, "Read");
+  }
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
-    CreatePeerFromConfig(json_message.at("config"));
+    // data_channel_signaling=true を設定したけど、
+    // サーバの設定によって data_channel_signaling が有効にならなかった場合は警告を出す。
+    if (config_.data_channel_signaling) {
+      auto it = json_message.as_object().find("data_channel_signaling");
+      if (it == json_message.as_object().end() || !it->value().as_bool()) {
+        std::string message =
+            "--data-channel-signaling=true が指定されましたが、Data Channel "
+            "signaling は有効になりませんでした";
+        RTC_LOG(LS_WARNING) << message;
+        std::cerr << message << std::endl;
+      }
+      // DataChannel のタイムアウト時間を設定する
+      watchdog_.Enable(config_.data_channel_signaling_timeout);
+    }
+    // WebSocket の切断では接続が切れたと判断しないフラグ
+    {
+      auto it = json_message.as_object().find("ignore_disconnect_websocket");
+      if (it != json_message.as_object().end()) {
+        ignore_disconnect_websocket_ = it->value().as_bool();
+      }
+    }
+
+    connection_ = CreateRTCConnection(json_message.at("config"));
     const std::string sdp = json_message.at("sdp").as_string().c_str();
 
-    connection_->SetOffer(sdp, [this, json_message]() {
-      // simulcast では offer の setRemoteDescription が終わった後に
-      // トラックを追加する必要があるため、ここで初期化する
-      manager_->InitTracks(connection_.get());
-
-      if (config_.simulcast &&
-          json_message.as_object().count("encodings") != 0) {
-        std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
-
-        // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
-        auto encodings_json = json_message.at("encodings").as_array();
-        for (auto v : encodings_json) {
-          auto p = v.as_object();
-          webrtc::RtpEncodingParameters params;
-          // absl::optional<uint32_t> ssrc;
-          // double bitrate_priority = kDefaultBitratePriority;
-          // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
-          // Priority network_priority = Priority::kLow;
-          // absl::optional<int> max_bitrate_bps;
-          // absl::optional<int> min_bitrate_bps;
-          // absl::optional<double> max_framerate;
-          // absl::optional<int> num_temporal_layers;
-          // absl::optional<double> scale_resolution_down_by;
-          // bool active = true;
-          // std::string rid;
-          // bool adaptive_ptime = false;
-          params.rid = p["rid"].as_string().c_str();
-          if (p.count("maxBitrate") != 0) {
-            params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
-          }
-          if (p.count("minBitrate") != 0) {
-            params.min_bitrate_bps = p["minBitrate"].to_number<int>();
-          }
-          if (p.count("scaleResolutionDownBy") != 0) {
-            params.scale_resolution_down_by =
-                p["scaleResolutionDownBy"].to_number<double>();
-          }
-          if (p.count("maxFramerate") != 0) {
-            params.max_framerate = p["maxFramerate"].to_number<double>();
-          }
-          if (p.count("active") != 0) {
-            params.active = p["active"].as_bool();
-          }
-          if (p.count("adaptivePtime") != 0) {
-            params.adaptive_ptime = p["adaptivePtime"].as_bool();
-          }
-          encoding_parameters.push_back(params);
+    connection_->SetOffer(sdp, [self = shared_from_this(), json_message]() {
+      boost::asio::post(self->ioc_, [self, json_message]() {
+        if (!self->connection_) {
+          return;
         }
-        connection_->SetEncodingParameters(std::move(encoding_parameters));
-      }
 
-      connection_->CreateAnswer(
-          [this](webrtc::SessionDescriptionInterface* desc) {
-            std::string sdp;
-            desc->ToString(&sdp);
-            boost::json::value json_message = {{"type", "answer"},
-                                               {"sdp", sdp}};
-            ws_->WriteText(boost::json::serialize(json_message));
-          });
+        // simulcast では offer の setRemoteDescription が終わった後に
+        // トラックを追加する必要があるため、ここで初期化する
+        self->manager_->InitTracks(self->connection_.get());
+
+        if (self->config_.simulcast &&
+            json_message.as_object().count("encodings") != 0) {
+          std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+
+          // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+          auto encodings_json = json_message.at("encodings").as_array();
+          for (auto v : encodings_json) {
+            auto p = v.as_object();
+            webrtc::RtpEncodingParameters params;
+            // absl::optional<uint32_t> ssrc;
+            // double bitrate_priority = kDefaultBitratePriority;
+            // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+            // Priority network_priority = Priority::kLow;
+            // absl::optional<int> max_bitrate_bps;
+            // absl::optional<int> min_bitrate_bps;
+            // absl::optional<double> max_framerate;
+            // absl::optional<int> num_temporal_layers;
+            // absl::optional<double> scale_resolution_down_by;
+            // bool active = true;
+            // std::string rid;
+            // bool adaptive_ptime = false;
+            params.rid = p["rid"].as_string().c_str();
+            if (p.count("maxBitrate") != 0) {
+              params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
+            }
+            if (p.count("minBitrate") != 0) {
+              params.min_bitrate_bps = p["minBitrate"].to_number<int>();
+            }
+            if (p.count("scaleResolutionDownBy") != 0) {
+              params.scale_resolution_down_by =
+                  p["scaleResolutionDownBy"].to_number<double>();
+            }
+            if (p.count("maxFramerate") != 0) {
+              params.max_framerate = p["maxFramerate"].to_number<double>();
+            }
+            if (p.count("active") != 0) {
+              params.active = p["active"].as_bool();
+            }
+            if (p.count("adaptivePtime") != 0) {
+              params.adaptive_ptime = p["adaptivePtime"].as_bool();
+            }
+            encoding_parameters.push_back(params);
+          }
+          self->connection_->SetEncodingParameters(
+              std::move(encoding_parameters));
+        }
+
+        self->connection_->CreateAnswer(
+            [self](webrtc::SessionDescriptionInterface* desc) {
+              std::string sdp;
+              desc->ToString(&sdp);
+
+              boost::asio::post(self->ioc_, [self, sdp]() {
+                if (!self->connection_) {
+                  return;
+                }
+
+                boost::json::value json_message = {{"type", "answer"},
+                                                   {"sdp", sdp}};
+                self->ws_->WriteText(boost::json::serialize(json_message));
+              });
+            });
+      });
     });
   } else if (type == "update") {
+    if (connection_ == nullptr) {
+      return;
+    }
     const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [this]() {
-      connection_->CreateAnswer(
-          [this](webrtc::SessionDescriptionInterface* desc) {
-            std::string sdp;
-            desc->ToString(&sdp);
-            boost::json::value json_message = {{"type", "update"},
-                                               {"sdp", sdp}};
-            ws_->WriteText(boost::json::serialize(json_message));
-          });
+    connection_->SetOffer(sdp, [self = shared_from_this()]() {
+      boost::asio::post(self->ioc_, [self]() {
+        if (!self->connection_) {
+          return;
+        }
+
+        self->connection_->CreateAnswer(
+            [self](webrtc::SessionDescriptionInterface* desc) {
+              std::string sdp;
+              desc->ToString(&sdp);
+              boost::asio::post(self->ioc_, [self, sdp]() {
+                if (!self->connection_) {
+                  return;
+                }
+
+                self->DoSendUpdate(sdp);
+              });
+            });
+      });
     });
   } else if (type == "notify") {
     const std::string event_type =
@@ -363,15 +474,96 @@ void SoraClient::OnRead(boost::system::error_code ec,
     auto it = json_message.as_object().find("stats");
     if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
-          [this](
+          [self = shared_from_this()](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            DoSendPong(report);
+            self->DoSendPong(report);
           });
     } else {
       DoSendPong();
     }
   }
   DoRead();
+}
+
+void SoraClient::OnStateChange(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
+
+void SoraClient::OnMessage(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+    const webrtc::DataBuffer& buffer) {
+  if (!dc_) {
+    return;
+  }
+
+  std::string label = data_channel->label();
+  std::string data((const char*)buffer.data.cdata(),
+                   (const char*)buffer.data.cdata() + buffer.size());
+  RTC_LOG(LS_INFO) << "label=" << label << " data=" << data;
+
+  // ハンドリングする必要のあるラベル以外は何もしない
+  if (label != "signaling" && label != "stats") {
+    return;
+  }
+
+  boost::json::error_code ec;
+  auto json = boost::json::parse(data, ec);
+  if (ec) {
+    RTC_LOG(LS_ERROR) << "JSON Parse Error ec=" << ec.message();
+    return;
+  }
+
+  watchdog_.Reset();
+
+  if (label == "signaling") {
+    const std::string type = json.at("type").as_string().c_str();
+    if (type == "re-offer") {
+      const std::string sdp = json.at("sdp").as_string().c_str();
+      connection_->SetOffer(sdp, [self = shared_from_this()]() {
+        boost::asio::post(self->ioc_, [self]() {
+          if (!self->connection_) {
+            return;
+          }
+          self->connection_->CreateAnswer(
+              [self](webrtc::SessionDescriptionInterface* desc) {
+                std::string sdp;
+                desc->ToString(&sdp);
+                boost::asio::post(self->ioc_, [self, sdp]() {
+                  if (!self->connection_) {
+                    return;
+                  }
+                  self->DoSendUpdate(sdp);
+                });
+              });
+        });
+      });
+    }
+  }
+
+  if (label == "stats") {
+    connection_->GetStats(
+        [self = shared_from_this()](
+            const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+          self->DoSendPong(report);
+        });
+
+    // Data Channel のみの通信をする場合、すべてのチャンネルが開いたら WS を切断する。
+    // Data Channel への切り替えが終わってからゆっくり切断する必要があるのだけど、
+    // stats を受信したタイミングあたりが丁度良さそうなのでここで切断する。
+    if (!ignore_disconnect_websocket_ || !ws_ || !config_.close_websocket) {
+      return;
+    }
+    std::vector<std::string> labels = {"stats", "notify", "push", "e2ee",
+                                       "signaling"};
+    if (std::all_of(labels.begin(), labels.end(),
+                    [dc = dc_](const std::string& label) {
+                      return dc->IsOpen(label);
+                    })) {
+      RTC_LOG(LS_INFO) << "WebSocket closed successfully";
+      auto ws = ws_;
+      ws_ = nullptr;
+      ws->Close([ws](boost::system::error_code) {});
+    }
+  }
 }
 
 // WebRTC からのコールバック

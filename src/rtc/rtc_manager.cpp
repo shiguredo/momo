@@ -30,7 +30,7 @@ RTCManager::RTCManager(
     RTCManagerConfig config,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
-    : config_(std::move(config)), receiver_(receiver), data_manager_(nullptr) {
+    : config_(std::move(config)), receiver_(receiver) {
   rtc::InitializeSSL();
 
   network_thread_ = rtc::Thread::CreateWithSocketServer();
@@ -187,8 +187,8 @@ RTCManager::~RTCManager() {
   rtc::CleanupSSL();
 }
 
-void RTCManager::SetDataManager(RTCDataManager* data_manager) {
-  data_manager_ = data_manager;
+void RTCManager::AddDataManager(std::shared_ptr<RTCDataManager> data_manager) {
+  data_manager_dispatcher_.Add(data_manager);
 }
 
 std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
@@ -197,7 +197,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
-      new PeerConnectionObserver(sender, receiver_, data_manager_));
+      new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
 
   // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
