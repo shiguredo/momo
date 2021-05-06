@@ -286,7 +286,7 @@ std::shared_ptr<RTCConnection> SoraClient::CreateRTCConnection(
 #endif
 
   if (dc_ != nullptr) {
-    manager_->AddDataManager(dc_.get());
+    manager_->AddDataManager(dc_);
   }
   return manager_->CreateConnection(rtc_config, this);
 }

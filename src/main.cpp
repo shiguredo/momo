@@ -190,14 +190,15 @@ int main(int argc, char* argv[]) {
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
         work_guard(ioc.get_executor());
 
-    std::unique_ptr<RTCDataManager> data_manager = nullptr;
+    std::shared_ptr<RTCDataManager> data_manager = nullptr;
     if (!args.serial_device.empty()) {
-      data_manager =
-          SerialDataManager::Create(ioc, args.serial_device, args.serial_rate);
+      data_manager = std::shared_ptr<RTCDataManager>(
+          SerialDataManager::Create(ioc, args.serial_device, args.serial_rate)
+              .release());
       if (!data_manager) {
         return 1;
       }
-      rtc_manager->AddDataManager(data_manager.get());
+      rtc_manager->AddDataManager(data_manager);
     }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
