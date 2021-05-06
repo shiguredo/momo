@@ -60,7 +60,9 @@ struct MomoArgs {
   int sora_port = -1;
   bool sora_simulcast = false;
   bool sora_data_channel_signaling = false;
+  int sora_data_channel_signaling_timeout = 30;
   bool sora_ignore_disconnect_websocket = false;
+  bool sora_close_websocket = true;
 
   std::string test_document_root;
   int test_port = 8080;

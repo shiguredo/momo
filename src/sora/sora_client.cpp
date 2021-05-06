@@ -332,6 +332,8 @@ void SoraClient::OnRead(boost::system::error_code ec,
         RTC_LOG(LS_WARNING) << message;
         std::cerr << message << std::endl;
       }
+      // DataChannel のタイムアウト時間を設定する
+      watchdog_.Enable(config_.data_channel_signaling_timeout);
     }
     // WebSocket の切断では接続が切れたと判断しないフラグ
     {
@@ -547,7 +549,7 @@ void SoraClient::OnMessage(
     // Data Channel のみの通信をする場合、すべてのチャンネルが開いたら WS を切断する。
     // Data Channel への切り替えが終わってからゆっくり切断する必要があるのだけど、
     // stats を受信したタイミングあたりが丁度良さそうなのでここで切断する。
-    if (!ignore_disconnect_websocket_ || !ws_) {
+    if (!ignore_disconnect_websocket_ || !ws_ || !config_.close_websocket) {
       return;
     }
     std::vector<std::string> labels = {"stats", "notify", "push", "e2ee",

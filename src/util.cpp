@@ -323,10 +323,21 @@ void Util::ParseArgs(int argc,
                    "Use DataChannel for Sora signaling (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
+      ->add_option("--data-channel-signaling-timeout",
+                   args.sora_data_channel_signaling_timeout,
+                   "Timeout for Data Channel in seconds (default: 30)")
+      ->check(CLI::PositiveNumber);
+  sora_app
       ->add_option("--ignore-disconnect-websocket",
                    args.sora_ignore_disconnect_websocket,
                    "Ignore WebSocket disconnection if using Data Channel "
                    "(default: false)")
+      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--close-websocket", args.sora_close_websocket,
+                   "Close WebSocket when starting to use Data Channel "
+                   "(only if --ignore-disconnect-websocket=true) "
+                   "(default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
 
   auto is_json = CLI::Validator(
