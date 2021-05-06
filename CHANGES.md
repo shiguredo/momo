@@ -11,6 +11,13 @@
 
 ## develop
 
+- [ADD] Sora の DataChannel を使ったシグナリングに対応し、以下のオプションを追加
+    - `--data-channel-signaling`
+    - `--data-channel-signaling-timeout`
+    - `--ignore-disconnect-websocket`
+    - `--close-websocket`
+    - @melpon
+
 ## 2021.3
 
 - [UPDATE] `libwebrtc` を `M90.4430@{#3}` に上げる
