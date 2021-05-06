@@ -307,12 +307,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
     if (ignore_disconnect_websocket_) {
       return;
     }
-    // WS が切れたら再接続する
-    watchdog_.Disable();
-    Close([this]() {
-      Reset();
-      Connect();
-    });
+    // とりあえず WS や DC を閉じておいて、後で再接続が起きるようにする
+    ReconnectAfter();
+    Close([]() {});
     return MOMO_BOOST_ERROR(ec, "Read");
   }
 
