@@ -247,15 +247,14 @@ void SoraClient::DoSendPong(
     ws_->WriteText(std::move(str));
   }
 }
-void SoraClient::DoSendUpdate(const std::string& sdp) {
+void SoraClient::DoSendUpdate(const std::string& sdp, std::string type) {
+  boost::json::value json_message = {{"type", type}, {"sdp", sdp}};
   if (dc_ && dc_->IsOpen("signaling")) {
-    // DataChannel が使える場合は type: re-answer で DataChannel に送る
-    boost::json::value json_message = {{"type", "re-answer"}, {"sdp", sdp}};
+    // DataChannel が使える場合は DataChannel に送る
     webrtc::DataBuffer data(
         rtc::CopyOnWriteBuffer(boost::json::serialize(json_message)), false);
     dc_->Send("signaling", data);
   } else {
-    boost::json::value json_message = {{"type", "update"}, {"sdp", sdp}};
     ws_->WriteText(boost::json::serialize(json_message));
   }
 }
@@ -421,27 +420,28 @@ void SoraClient::OnRead(boost::system::error_code ec,
             });
       });
     });
-  } else if (type == "update") {
+  } else if (type == "update" || type == "re-offer") {
     if (connection_ == nullptr) {
       return;
     }
+    std::string answer_type = type == "update" ? "update" : "re-answer";
     const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [self = shared_from_this()]() {
-      boost::asio::post(self->ioc_, [self]() {
+    connection_->SetOffer(sdp, [self = shared_from_this(), answer_type]() {
+      boost::asio::post(self->ioc_, [self, answer_type]() {
         if (!self->connection_) {
           return;
         }
 
         self->connection_->CreateAnswer(
-            [self](webrtc::SessionDescriptionInterface* desc) {
+            [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
               std::string sdp;
               desc->ToString(&sdp);
-              boost::asio::post(self->ioc_, [self, sdp]() {
+              boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
                 if (!self->connection_) {
                   return;
                 }
 
-                self->DoSendUpdate(sdp);
+                self->DoSendUpdate(sdp, answer_type);
               });
             });
       });
@@ -532,7 +532,7 @@ void SoraClient::OnMessage(
                   if (!self->connection_) {
                     return;
                   }
-                  self->DoSendUpdate(sdp);
+                  self->DoSendUpdate(sdp, "re-answer");
                 });
               });
         });
