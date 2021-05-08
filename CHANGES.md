@@ -19,6 +19,8 @@
     - @melpon
 - [ADD] WS の re-offer に対応
     - @melpon
+- [FIX] active: false に対応
+    - @melpon
 
 ## 2021.3
 

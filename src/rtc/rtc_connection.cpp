@@ -335,6 +335,18 @@ void RTCConnection::SetEncodingParameters(
                      << transceiver->sender()->GetParameters().encodings.size();
   }
 
+  for (auto enc : encodings) {
+    RTC_LOG(LS_INFO) << "SetEncodingParameters: rid=" << enc.rid
+                     << " active=" << (enc.active ? "true" : "false")
+                     << " max_framerate="
+                     << (enc.max_framerate ? std::to_string(*enc.max_framerate)
+                                           : std::string("nullopt"))
+                     << " scale_resolution_down_by="
+                     << (enc.scale_resolution_down_by
+                             ? std::to_string(*enc.scale_resolution_down_by)
+                             : std::string("nullopt"));
+  }
+
   // setRD のあとの direction は recv only になる。
   // 現状 sender.track.streamIds を取れないので connection ID との比較もできない。
   // video upstream 持っているときは、ひとつめの video type transceiver を
@@ -355,7 +367,65 @@ void RTCConnection::SetEncodingParameters(
   rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
       video_transceiver->sender();
   webrtc::RtpParameters parameters = sender->GetParameters();
-  parameters.encodings = std::move(encodings);
+  parameters.encodings = encodings;
+  sender->SetParameters(parameters);
+  mid_ = *video_transceiver->mid();
+
+  encodings_ = encodings;
+}
+
+void RTCConnection::ResetEncodingParameters() {
+  if (encodings_.empty() || mid_.empty()) {
+    return;
+  }
+
+  for (auto enc : encodings_) {
+    RTC_LOG(LS_INFO) << "ResetEncodingParameters: rid=" << enc.rid
+                     << " active=" << (enc.active ? "true" : "false")
+                     << " max_framerate="
+                     << (enc.max_framerate ? std::to_string(*enc.max_framerate)
+                                           : std::string("nullopt"))
+                     << " scale_resolution_down_by="
+                     << (enc.scale_resolution_down_by
+                             ? std::to_string(*enc.scale_resolution_down_by)
+                             : std::string("nullopt"));
+  }
+
+  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  for (auto transceiver : connection_->GetTransceivers()) {
+    if (transceiver->mid() == mid_) {
+      video_transceiver = transceiver;
+      break;
+    }
+  }
+
+  if (video_transceiver == nullptr) {
+    RTC_LOG(LS_ERROR) << "video transceiver not found";
+    return;
+  }
+
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+      video_transceiver->sender();
+  webrtc::RtpParameters parameters = sender->GetParameters();
+  std::vector<webrtc::RtpEncodingParameters> new_encodings = encodings_;
+
+  // ssrc を上書きする
+  for (auto& enc : new_encodings) {
+    auto it =
+        std::find_if(parameters.encodings.begin(), parameters.encodings.end(),
+                     [&enc](const webrtc::RtpEncodingParameters& p) {
+                       return p.rid == enc.rid;
+                     });
+    if (it == parameters.encodings.end()) {
+      RTC_LOG(LS_WARNING) << "Specified rid [" << enc.rid << "] not found";
+      return;
+    }
+    RTC_LOG(LS_INFO) << "Set ssrc: rid=" << enc.rid << " ssrc="
+                     << (it->ssrc ? std::to_string(*it->ssrc)
+                                  : std::string("nullopt"));
+    enc.ssrc = it->ssrc;
+  }
+  parameters.encodings = new_encodings;
   sender->SetParameters(parameters);
 }
 
