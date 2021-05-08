@@ -432,6 +432,11 @@ void SoraClient::OnRead(boost::system::error_code ec,
           return;
         }
 
+        // エンコーディングパラメータの情報がクリアされるので設定し直す
+        if (self->config_.simulcast) {
+          self->connection_->ResetEncodingParameters();
+        }
+
         self->connection_->CreateAnswer(
             [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
               std::string sdp;
@@ -524,6 +529,12 @@ void SoraClient::OnMessage(
           if (!self->connection_) {
             return;
           }
+
+          // エンコーディングパラメータの情報がクリアされるので設定し直す
+          if (self->config_.simulcast) {
+            self->connection_->ResetEncodingParameters();
+          }
+
           self->connection_->CreateAnswer(
               [self](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
