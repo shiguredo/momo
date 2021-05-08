@@ -91,7 +91,6 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
  private:
   void OnConnect(boost::system::error_code ec);
-  void OnClose(boost::system::error_code ec);
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
