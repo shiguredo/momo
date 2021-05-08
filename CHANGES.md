@@ -17,6 +17,8 @@
     - `--ignore-disconnect-websocket`
     - `--close-websocket`
     - @melpon
+- [ADD] WS の re-offer に対応
+    - @melpon
 
 ## 2021.3
 
