@@ -93,15 +93,20 @@ class SoraDataChannel : public RTCDataManager {
     if (data_channel->state() == webrtc::DataChannelInterface::kClosed) {
       labels_.erase(data_channel->label());
       thunks_.erase(thunk);
+      data_channel->UnregisterObserver();
+      RTC_LOG(LS_INFO) << "DataChannel closed label=" << data_channel->label();
     }
     auto observer = observer_;
-    auto on_close = std::move(on_close_);
-    on_close_ = nullptr;
+    auto on_close = on_close_;
     auto empty = thunks_.empty();
+    if (on_close != nullptr && empty) {
+      on_close_ = nullptr;
+    }
     mutex_.Unlock();
     observer->OnStateChange(data_channel);
     // すべての Data Channel が閉じたら通知する
     if (on_close != nullptr && empty) {
+      RTC_LOG(LS_INFO) << "DataChannel closed all";
       on_close();
     }
     mutex_.Lock();

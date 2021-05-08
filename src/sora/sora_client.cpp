@@ -19,7 +19,6 @@ bool SoraClient::ParseURL(URLParts& parts) const {
     throw std::exception();
   }
 
-  std::string default_port;
   if (parts.scheme == "wss") {
     return true;
   } else if (parts.scheme == "ws") {
