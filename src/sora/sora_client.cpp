@@ -321,9 +321,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
-    // data_channel_signaling=true を設定したけど、
-    // サーバの設定によって data_channel_signaling が有効にならなかった場合は警告を出す。
     if (config_.data_channel_signaling) {
+      // data_channel_signaling=true を設定したけど、
+      // サーバの設定によって data_channel_signaling が有効にならなかった場合は警告を出す。
       auto it = json_message.as_object().find("data_channel_signaling");
       if (it == json_message.as_object().end() || !it->value().as_bool()) {
         std::string message =
@@ -334,6 +334,13 @@ void SoraClient::OnRead(boost::system::error_code ec,
       }
       // DataChannel のタイムアウト時間を設定する
       watchdog_.Enable(config_.data_channel_signaling_timeout);
+      // data_channel_signaling が有効ならラベル一覧を取得する
+      if (it != json_message.as_object().end() && it->value().as_bool()) {
+        for (auto label : json_message.at("data_channel_labels").as_array()) {
+          data_channel_lables_.push_back(
+              std::string(label.as_string().c_str()));
+        }
+      }
     }
     // WebSocket の切断では接続が切れたと判断しないフラグ
     {
@@ -564,9 +571,7 @@ void SoraClient::OnMessage(
     if (!ignore_disconnect_websocket_ || !ws_ || !config_.close_websocket) {
       return;
     }
-    std::vector<std::string> labels = {"stats", "notify", "push", "e2ee",
-                                       "signaling"};
-    if (std::all_of(labels.begin(), labels.end(),
+    if (std::all_of(data_channel_lables_.begin(), data_channel_lables_.end(),
                     [dc = dc_](const std::string& label) {
                       return dc->IsOpen(label);
                     })) {
