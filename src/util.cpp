@@ -325,7 +325,7 @@ void Util::ParseArgs(int argc,
   sora_app
       ->add_option("--data-channel-signaling-timeout",
                    args.sora_data_channel_signaling_timeout,
-                   "Timeout for Data Channel in seconds (default: 30)")
+                   "Timeout for Data Channel in seconds (default: 180)")
       ->check(CLI::PositiveNumber);
   sora_app
       ->add_option("--ignore-disconnect-websocket",
