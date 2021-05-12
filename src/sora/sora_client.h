@@ -40,7 +40,7 @@ struct SoraClientConfig {
   int port = -1;
   bool simulcast = false;
   bool data_channel_signaling = false;
-  int data_channel_signaling_timeout = 30;
+  int data_channel_signaling_timeout = 180;
   bool ignore_disconnect_websocket = false;
   bool close_websocket = true;
 };

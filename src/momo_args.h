@@ -60,7 +60,7 @@ struct MomoArgs {
   int sora_port = -1;
   bool sora_simulcast = false;
   bool sora_data_channel_signaling = false;
-  int sora_data_channel_signaling_timeout = 30;
+  int sora_data_channel_signaling_timeout = 180;
   bool sora_ignore_disconnect_websocket = false;
   bool sora_close_websocket = true;
 
