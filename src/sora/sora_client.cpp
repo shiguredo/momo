@@ -334,13 +334,6 @@ void SoraClient::OnRead(boost::system::error_code ec,
       }
       // DataChannel のタイムアウト時間を設定する
       watchdog_.Enable(config_.data_channel_signaling_timeout);
-      // data_channel_signaling が有効ならラベル一覧を取得する
-      if (it != json_message.as_object().end() && it->value().as_bool()) {
-        for (auto label : json_message.at("data_channel_labels").as_array()) {
-          data_channel_lables_.push_back(
-              std::string(label.as_string().c_str()));
-        }
-      }
     }
     // WebSocket の切断では接続が切れたと判断しないフラグ
     {
@@ -494,6 +487,16 @@ void SoraClient::OnRead(boost::system::error_code ec,
     } else {
       DoSendPong();
     }
+  } else if (type == "switch") {
+    // type == "switch" が来たらすべての Data Channel のチャンネルが開いているという意味になるので、
+    // DC のみの通信をする場合は WS を切断する。
+    if (ignore_disconnect_websocket_ && ws_ && config_.close_websocket) {
+      RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
+      auto ws = ws_;
+      ws_ = nullptr;
+      ws->Close([ws](boost::system::error_code) {});
+      return;
+    }
   }
   DoRead();
 }
@@ -564,22 +567,6 @@ void SoraClient::OnMessage(
             const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
           self->DoSendPong(report);
         });
-
-    // Data Channel のみの通信をする場合、すべてのチャンネルが開いたら WS を切断する。
-    // Data Channel への切り替えが終わってからゆっくり切断する必要があるのだけど、
-    // stats を受信したタイミングあたりが丁度良さそうなのでここで切断する。
-    if (!ignore_disconnect_websocket_ || !ws_ || !config_.close_websocket) {
-      return;
-    }
-    if (std::all_of(data_channel_lables_.begin(), data_channel_lables_.end(),
-                    [dc = dc_](const std::string& label) {
-                      return dc->IsOpen(label);
-                    })) {
-      RTC_LOG(LS_INFO) << "WebSocket closed successfully";
-      auto ws = ws_;
-      ws_ = nullptr;
-      ws->Close([ws](boost::system::error_code) {});
-    }
   }
 }
 
