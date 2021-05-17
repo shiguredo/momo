@@ -87,11 +87,16 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 x86_64
 - Ubuntu 20.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
+    - 2023 年 4 月末にて終了
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- Ubuntu 20.04 ARMv8 Jetson
+    - ＪｅｔＰａｃｋ 5 がリリースされ次第対応予定
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - macOS 11 x86_64 以降
-    - 2021 年内に終了予定
+    - 2022 年末にて終了
 - macOS 11 arm64 以降
 - Windows 10.1809 x86_64 以降
 
