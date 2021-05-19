@@ -126,16 +126,6 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 [FAQ.md](doc/FAQ.md) をお読みください。
 
-## バージョン番号について
-
-```
-YYYY.RELEASE[.FIX]
-```
-
-- YYYY は年
-- RELEASE はその年にリリースした回数
-- FIX はオプションでバグフィックス対応のみのアップデートに利用
-
 ## ライセンス
 
 Apache License 2.0
