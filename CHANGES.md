@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M91.4472@{#9}` に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.20.3 に上げる
+    - @voluntas
 - [ADD] Sora モードの DataChannel を使ったシグナリングに対応
     - 以下のオプションを追加
     - `--data-channel-signaling`
