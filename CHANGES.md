@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M92.4515@{#1}` に上げる
+- [UPDATE] `libwebrtc` を `M91.4472@{#9}` に上げる
     - @voluntas
 - [UPDATE] cmake を 3.20.3 に上げる
     - @voluntas
