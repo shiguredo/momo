@@ -11,9 +11,7 @@ Sora モードでのみ利用可能です。利用可能な映像コーデック
 
 ## AV1 は利用できますか？
 
-Sora モードでのみ利用可能です。
-
-[Sora と Momo で WebRTC の AV1 を試す](https://gist.github.com/voluntas/db82783b6a3f012977e6de641a16181e)
+利用可能です。
 
 ## データチャネルは利用できますか？
 

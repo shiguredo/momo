@@ -16,6 +16,7 @@
 - [UPDATE] cmake を 3.20.3 に上げる
     - @voluntas
 - [ADD] Sora モードの DataChannel を使ったシグナリングに対応
+    - Sora 2021.1 から利用可能です
     - 以下のオプションを追加
     - `--data-channel-signaling`
     - `--data-channel-signaling-timeout`
@@ -23,6 +24,7 @@
     - `--close-websocket`
     - @melpon
 - [ADD] Sora モードのシグナリング re-offer に対応
+    - Sora 2021.1 から利用可能です
     - @melpon
 - [FIX] Sora モードのサイマルキャスト active: false に対応
     - @melpon
