@@ -4,6 +4,10 @@
 
 Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
+## コーデックの指定やビットレートを利用できますか？
+
+Momo 側からの指定は WebRTC SFU Sora を利用したときだけ可能です。
+
 ## サイマルキャストは利用できますか？
 
 Sora モードでのみ利用可能です。利用可能な映像コーデックは VP8 と H.264 です。
