@@ -88,8 +88,6 @@ void SoraClient::Close(std::function<void()> on_close) {
   if (dc && ws) {
     dc->Close(
         [dc, connection, ws = std::move(ws), on_close]() {
-          boost::json::value disconnect = {{"type", "disconnect"}};
-          ws->WriteText(boost::json::serialize(disconnect));
           ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
         },
         config_.disconnect_wait_timeout);
@@ -464,9 +462,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
       DoRead();
       return;
     }
-    if (!using_datachannel_) {
-      watchdog_.Reset();
-    }
+    watchdog_.Reset();
     auto it = json_message.as_object().find("stats");
     if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
