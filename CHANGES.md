@@ -21,7 +21,7 @@
     - `--data-channel-signaling`
     - `--data-channel-signaling-timeout`
     - `--ignore-disconnect-websocket`
-    - `--close-websocket`
+    - `--disconnect-wait-timeout`
     - @melpon
 - [ADD] Sora モードのシグナリング re-offer に対応
     - Sora 2021.1 から利用可能です
