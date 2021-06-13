@@ -325,6 +325,7 @@ void Util::ParseArgs(int argc,
   sora_app
       ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
                    "Use DataChannel for Sora signaling (default: none)")
+      ->type_name("TEXT")
       ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
   sora_app
       ->add_option("--data-channel-signaling-timeout",
@@ -336,6 +337,7 @@ void Util::ParseArgs(int argc,
                    args.sora_ignore_disconnect_websocket,
                    "Ignore WebSocket disconnection if using Data Channel "
                    "(default: none)")
+      ->type_name("TEXT")
       ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
   sora_app
       ->add_option(
