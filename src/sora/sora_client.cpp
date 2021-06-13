@@ -11,6 +11,7 @@
 #include "ssl_verifier.h"
 #include "url_parts.h"
 #include "util.h"
+#include "zlib_helper.h"
 
 bool SoraClient::ParseURL(URLParts& parts) const {
   std::string url = config_.signaling_url;
@@ -60,8 +61,7 @@ SoraClient::SoraClient(boost::asio::io_context& ioc,
       manager_(manager),
       retry_count_(0),
       config_(std::move(config)),
-      watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)),
-      ignore_disconnect_websocket_(false) {
+      watchdog_(ioc, std::bind(&SoraClient::OnWatchdogExpired, this)) {
   Reset();
 }
 
@@ -69,7 +69,7 @@ SoraClient::~SoraClient() {
   destructed_ = true;
   // 一応閉じる努力はする
   if (dc_) {
-    dc_->Close([dc = dc_]() {});
+    dc_->Close([dc = dc_]() {}, config_.disconnect_wait_timeout);
     dc_ = nullptr;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
   }
@@ -86,12 +86,19 @@ void SoraClient::Close(std::function<void()> on_close) {
   connection_ = nullptr;
 
   if (dc && ws) {
-    dc->Close([dc, connection, ws = std::move(ws), on_close]() {
-      ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
-    });
+    dc->Close(
+        [dc, connection, ws = std::move(ws), on_close]() {
+          boost::json::value disconnect = {{"type", "disconnect"}};
+          ws->WriteText(boost::json::serialize(disconnect));
+          ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
+        },
+        config_.disconnect_wait_timeout);
   } else if (dc && !ws) {
-    dc->Close([dc, connection, on_close]() { on_close(); });
+    dc->Close([dc, connection, on_close]() { on_close(); },
+              config_.disconnect_wait_timeout);
   } else if (!dc && ws) {
+    boost::json::value disconnect = {{"type", "disconnect"}};
+    ws->WriteText(boost::json::serialize(disconnect));
     ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
   } else {
     on_close();
@@ -108,9 +115,8 @@ void SoraClient::Reset() {
   } else {
     ws_.reset(new Websocket(ioc_));
   }
-  if (config_.data_channel_signaling) {
-    dc_.reset(new SoraDataChannelOnAsio(ioc_, this));
-  }
+
+  dc_.reset(new SoraDataChannelOnAsio(ioc_, this));
 }
 
 void SoraClient::Connect() {
@@ -221,11 +227,11 @@ void SoraClient::DoSendConnect() {
   }
 
   if (config_.data_channel_signaling) {
-    json_message["data_channel_signaling"] = config_.data_channel_signaling;
+    json_message["data_channel_signaling"] = *config_.data_channel_signaling;
   }
   if (config_.ignore_disconnect_websocket) {
     json_message["ignore_disconnect_websocket"] =
-        config_.ignore_disconnect_websocket;
+        *config_.ignore_disconnect_websocket;
   }
 
   ws_->WriteText(boost::json::serialize(json_message));
@@ -237,11 +243,10 @@ void SoraClient::DoSendPong() {
 void SoraClient::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
-  if (dc_ && dc_->IsOpen("stats")) {
+  if (dc_ && using_datachannel_ && dc_->IsOpen("stats")) {
     // DataChannel が使える場合は type: stats で DataChannel に送る
     std::string str = R"({"type":"stats","reports":)" + stats + "}";
-    webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), false);
-    dc_->Send("stats", data);
+    SendDataChannel("stats", str);
   } else {
     std::string str = R"({"type":"pong","stats":)" + stats + "}";
     ws_->WriteText(std::move(str));
@@ -249,11 +254,9 @@ void SoraClient::DoSendPong(
 }
 void SoraClient::DoSendUpdate(const std::string& sdp, std::string type) {
   boost::json::value json_message = {{"type", type}, {"sdp", sdp}};
-  if (dc_ && dc_->IsOpen("signaling")) {
+  if (dc_ && using_datachannel_ && dc_->IsOpen("signaling")) {
     // DataChannel が使える場合は DataChannel に送る
-    webrtc::DataBuffer data(
-        rtc::CopyOnWriteBuffer(boost::json::serialize(json_message)), false);
-    dc_->Send("signaling", data);
+    SendDataChannel("signaling", boost::json::serialize(json_message));
   } else {
     ws_->WriteText(boost::json::serialize(json_message));
   }
@@ -288,9 +291,7 @@ std::shared_ptr<RTCConnection> SoraClient::CreateRTCConnection(
   }
 #endif
 
-  if (dc_ != nullptr) {
-    manager_->AddDataManager(dc_);
-  }
+  manager_->AddDataManager(dc_);
   return manager_->CreateConnection(rtc_config, this);
 }
 
@@ -306,10 +307,6 @@ void SoraClient::OnRead(boost::system::error_code ec,
     return;
 
   if (ec) {
-    // Data Channel のみの通信をする場合、WebSocket が切断されてもエラーとして扱わない
-    if (ignore_disconnect_websocket_) {
-      return;
-    }
     // とりあえず WS や DC を閉じておいて、後で再接続が起きるようにする
     ReconnectAfter();
     Close([]() {});
@@ -321,25 +318,16 @@ void SoraClient::OnRead(boost::system::error_code ec,
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
-    if (config_.data_channel_signaling) {
-      // data_channel_signaling=true を設定したけど、
-      // サーバの設定によって data_channel_signaling が有効にならなかった場合は警告を出す。
-      auto it = json_message.as_object().find("data_channel_signaling");
-      if (it == json_message.as_object().end() || !it->value().as_bool()) {
-        std::string message =
-            "--data-channel-signaling=true が指定されましたが、Data Channel "
-            "signaling は有効になりませんでした";
-        RTC_LOG(LS_WARNING) << message;
-        std::cerr << message << std::endl;
-      }
-      // DataChannel のタイムアウト時間を設定する
-      watchdog_.Enable(config_.data_channel_signaling_timeout);
-    }
-    // WebSocket の切断では接続が切れたと判断しないフラグ
+    // Data Channel の圧縮されたデータが送られてくるラベルを覚えておく
     {
-      auto it = json_message.as_object().find("ignore_disconnect_websocket");
+      auto it = json_message.as_object().find("data_channels");
       if (it != json_message.as_object().end()) {
-        ignore_disconnect_websocket_ = it->value().as_bool();
+        const auto& ar = it->value().as_array();
+        for (const auto& v : ar) {
+          if (v.at("compress").as_bool()) {
+            compressed_labels_.insert(v.at("label").as_string().c_str());
+          }
+        }
       }
     }
 
@@ -476,7 +464,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
       DoRead();
       return;
     }
-    watchdog_.Reset();
+    if (!using_datachannel_) {
+      watchdog_.Reset();
+    }
     auto it = json_message.as_object().find("stats");
     if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
@@ -487,18 +477,32 @@ void SoraClient::OnRead(boost::system::error_code ec,
     } else {
       DoSendPong();
     }
-  } else if (type == "switch") {
-    // type == "switch" が来たらすべての Data Channel のチャンネルが開いているという意味になるので、
-    // DC のみの通信をする場合は WS を切断する。
-    if (ignore_disconnect_websocket_ && ws_ && config_.close_websocket) {
+  } else if (type == "switched") {
+    // Data Channel による通信の開始
+    using_datachannel_ = true;
+
+    // ignore_disconnect_websocket == true の場合は WS を切断する
+    auto it = json_message.as_object().find("ignore_disconnect_websocket");
+    if (it != json_message.as_object().end() && it->value().as_bool() && ws_) {
       RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
       auto ws = ws_;
       ws_ = nullptr;
       ws->Close([ws](boost::system::error_code) {});
+
+      watchdog_.Enable(config_.data_channel_signaling_timeout);
       return;
     }
   }
   DoRead();
+}
+
+void SoraClient::SendDataChannel(const std::string& label,
+                                 const std::string& input) {
+  RTC_LOG(LS_INFO) << "Send DataChannel label=" << label << " data=" << input;
+  bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
+  const std::string& str = compressed ? ZlibHelper::Compress(input) : input;
+  webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), compressed);
+  dc_->Send(label, data);
 }
 
 void SoraClient::OnStateChange(
@@ -512,8 +516,15 @@ void SoraClient::OnMessage(
   }
 
   std::string label = data_channel->label();
-  std::string data((const char*)buffer.data.cdata(),
-                   (const char*)buffer.data.cdata() + buffer.size());
+  bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
+  std::string data;
+  if (compressed) {
+    data = ZlibHelper::Uncompress(buffer.data.cdata(), buffer.size());
+  } else {
+    data.assign((const char*)buffer.data.cdata(),
+                (const char*)buffer.data.cdata() + buffer.size());
+  }
+
   RTC_LOG(LS_INFO) << "label=" << label << " data=" << data;
 
   // ハンドリングする必要のあるラベル以外は何もしない

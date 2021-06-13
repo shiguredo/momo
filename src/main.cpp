@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
           args.sora_data_channel_signaling_timeout;
       config.ignore_disconnect_websocket =
           args.sora_ignore_disconnect_websocket;
-      config.close_websocket = args.sora_close_websocket;
+      config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));

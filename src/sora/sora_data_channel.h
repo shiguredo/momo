@@ -51,9 +51,11 @@ class SoraDataChannel : public RTCDataManager {
     if (it == labels_.end()) {
       return;
     }
-    std::string str((const char*)data.data.cdata(),
-                    (const char*)data.data.cdata() + data.size());
-    RTC_LOG(LS_INFO) << "Send DataChannel label=" << label << " data=" << str;
+    if (!data.binary) {
+      std::string str((const char*)data.data.cdata(),
+                      (const char*)data.data.cdata() + data.size());
+      RTC_LOG(LS_INFO) << "Send DataChannel label=" << label << " data=" << str;
+    }
     auto data_channel = it->second;
     data_channel->Send(data);
   }

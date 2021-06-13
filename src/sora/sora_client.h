@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 
 // Boost
@@ -39,10 +40,10 @@ struct SoraClientConfig {
   int spotlight_number = 0;
   int port = -1;
   bool simulcast = false;
-  bool data_channel_signaling = false;
+  boost::optional<bool> data_channel_signaling;
   int data_channel_signaling_timeout = 180;
-  bool ignore_disconnect_websocket = false;
-  bool close_websocket = true;
+  boost::optional<bool> ignore_disconnect_websocket;
+  int disconnect_wait_timeout = 5;
 };
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,
@@ -96,6 +97,9 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
               std::string text);
 
  private:
+  void SendDataChannel(const std::string& label, const std::string& input);
+
+ private:
   // DataChannel 周りのコールバック
   void OnStateChange(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
@@ -119,7 +123,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   boost::asio::io_context& ioc_;
   std::shared_ptr<Websocket> ws_;
   std::shared_ptr<SoraDataChannelOnAsio> dc_;
-  bool ignore_disconnect_websocket_;
+  bool using_datachannel_ = false;
+  std::set<std::string> compressed_labels_;
 
   std::atomic_bool destructed_ = {false};
 

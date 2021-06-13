@@ -10,6 +10,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/json.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
 // WebRTC
@@ -109,6 +110,9 @@ void Util::ParseArgs(int argc,
 
   auto bool_map = std::vector<std::pair<std::string, bool>>(
       {{"false", false}, {"true", true}});
+  auto optional_bool_map =
+      std::vector<std::pair<std::string, boost::optional<bool>>>(
+          {{"false", false}, {"true", true}, {"none", boost::none}});
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
@@ -320,8 +324,8 @@ void Util::ParseArgs(int argc,
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
       ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
-                   "Use DataChannel for Sora signaling (default: false)")
-      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+                   "Use DataChannel for Sora signaling (default: none)")
+      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
   sora_app
       ->add_option("--data-channel-signaling-timeout",
                    args.sora_data_channel_signaling_timeout,
@@ -331,14 +335,13 @@ void Util::ParseArgs(int argc,
       ->add_option("--ignore-disconnect-websocket",
                    args.sora_ignore_disconnect_websocket,
                    "Ignore WebSocket disconnection if using Data Channel "
-                   "(default: false)")
-      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+                   "(default: none)")
+      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
   sora_app
-      ->add_option("--close-websocket", args.sora_close_websocket,
-                   "Close WebSocket when starting to use Data Channel "
-                   "(only if --ignore-disconnect-websocket=true) "
-                   "(default: true)")
-      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+      ->add_option(
+          "--disconnect-wait-timeout", args.sora_disconnect_wait_timeout,
+          "Disconnecting timeout for Data Channel in seconds (default: 5)")
+      ->check(CLI::PositiveNumber);
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
