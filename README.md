@@ -97,7 +97,7 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - macOS 11 x86_64 以降
-    - 2022 年末にて終了
+    - 2021 年末にて終了
 - macOS 11 arm64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -197,6 +197,7 @@ limitations under the License.
     - WebM 形式での出力
 - 録画合成対応
 - Sora モード利用時の E2EE 機能
+- Sora モード利用時の DataChannel 機能
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍
