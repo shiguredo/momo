@@ -68,8 +68,11 @@ SoraClient::SoraClient(boost::asio::io_context& ioc,
 SoraClient::~SoraClient() {
   destructed_ = true;
   // 一応閉じる努力はする
-  if (dc_) {
-    dc_->Close([dc = dc_]() {}, config_.disconnect_wait_timeout);
+  if (using_datachannel_ && dc_) {
+    webrtc::DataBuffer disconnect =
+        ConvertToDataBuffer("signaling", R"({"type":"disconnect"})");
+    dc_->Close(
+        disconnect, [dc = dc_]() {}, config_.disconnect_wait_timeout);
     dc_ = nullptr;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
   }
@@ -85,19 +88,30 @@ void SoraClient::Close(std::function<void()> on_close) {
   auto connection = std::move(connection_);
   connection_ = nullptr;
 
-  if (dc && ws) {
+  if (using_datachannel_ && ws) {
+    webrtc::DataBuffer disconnect =
+        ConvertToDataBuffer("signaling", R"({"type":"disconnect"})");
     dc->Close(
-        [dc, connection, ws = std::move(ws), on_close]() {
-          ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
+        disconnect,
+        [self = shared_from_this(), dc, connection, ws = std::move(ws),
+         on_close]() {
+          ws->Close(
+              [self, ws, on_close](boost::system::error_code) { on_close(); });
         },
         config_.disconnect_wait_timeout);
-  } else if (dc && !ws) {
-    dc->Close([dc, connection, on_close]() { on_close(); },
-              config_.disconnect_wait_timeout);
-  } else if (!dc && ws) {
+  } else if (using_datachannel_ && !ws) {
+    webrtc::DataBuffer disconnect =
+        ConvertToDataBuffer("signaling", R"({"type":"disconnect"})");
+    dc->Close(
+        disconnect, [dc, connection, on_close]() { on_close(); },
+        config_.disconnect_wait_timeout);
+  } else if (!using_datachannel_ && ws) {
     boost::json::value disconnect = {{"type", "disconnect"}};
-    ws->WriteText(boost::json::serialize(disconnect));
-    ws->Close([ws, on_close](boost::system::error_code) { on_close(); });
+    ws->WriteText(boost::json::serialize(disconnect),
+                  [self = shared_from_this(), ws](boost::system::error_code,
+                                                  std::size_t) {});
+    ws->Close([self = shared_from_this(), ws,
+               on_close](boost::system::error_code) { on_close(); });
   } else {
     on_close();
   }
@@ -155,9 +169,11 @@ void SoraClient::OnConnect(boost::system::error_code ec) {
   DoSendConnect();
 }
 void SoraClient::DoRead() {
-  ws_->Read(std::bind(&SoraClient::OnRead, shared_from_this(),
-                      std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3));
+  ws_->Read([self = shared_from_this(), ws = ws_](boost::system::error_code ec,
+                                                  std::size_t bytes_transferred,
+                                                  std::string text) {
+    self->OnRead(ec, bytes_transferred, std::move(text));
+  });
 }
 
 void SoraClient::DoSendConnect() {
@@ -245,7 +261,7 @@ void SoraClient::DoSendPong(
     // DataChannel が使える場合は type: stats で DataChannel に送る
     std::string str = R"({"type":"stats","reports":)" + stats + "}";
     SendDataChannel("stats", str);
-  } else {
+  } else if (ws_) {
     std::string str = R"({"type":"pong","stats":)" + stats + "}";
     ws_->WriteText(std::move(str));
   }
@@ -255,7 +271,7 @@ void SoraClient::DoSendUpdate(const std::string& sdp, std::string type) {
   if (dc_ && using_datachannel_ && dc_->IsOpen("signaling")) {
     // DataChannel が使える場合は DataChannel に送る
     SendDataChannel("signaling", boost::json::serialize(json_message));
-  } else {
+  } else if (ws_) {
     ws_->WriteText(boost::json::serialize(json_message));
   }
 }
@@ -483,7 +499,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
       RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
       auto ws = ws_;
       ws_ = nullptr;
-      ws->Close([ws](boost::system::error_code) {});
+      ws->Close([self = shared_from_this(), ws](boost::system::error_code) {});
 
       watchdog_.Enable(config_.data_channel_signaling_timeout);
       return;
@@ -492,12 +508,18 @@ void SoraClient::OnRead(boost::system::error_code ec,
   DoRead();
 }
 
+webrtc::DataBuffer SoraClient::ConvertToDataBuffer(const std::string& label,
+                                                   const std::string& input) {
+  bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
+  RTC_LOG(LS_INFO) << "Convert to DataBuffer: label=" << label
+                   << " compressed=" << compressed << " input=" << input;
+  const std::string& str = compressed ? ZlibHelper::Compress(input) : input;
+  return webrtc::DataBuffer(rtc::CopyOnWriteBuffer(str), compressed);
+}
+
 void SoraClient::SendDataChannel(const std::string& label,
                                  const std::string& input) {
-  RTC_LOG(LS_INFO) << "Send DataChannel label=" << label << " data=" << input;
-  bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
-  const std::string& str = compressed ? ZlibHelper::Compress(input) : input;
-  webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), compressed);
+  webrtc::DataBuffer data = ConvertToDataBuffer(label, input);
   dc_->Send(label, data);
 }
 
@@ -507,7 +529,7 @@ void SoraClient::OnStateChange(
 void SoraClient::OnMessage(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
     const webrtc::DataBuffer& buffer) {
-  if (!dc_) {
+  if (!using_datachannel_ || !dc_) {
     return;
   }
 

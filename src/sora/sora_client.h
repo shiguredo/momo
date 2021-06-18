@@ -97,6 +97,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
               std::string text);
 
  private:
+  webrtc::DataBuffer ConvertToDataBuffer(const std::string& label,
+                                         const std::string& input);
   void SendDataChannel(const std::string& label, const std::string& input);
 
  private:
