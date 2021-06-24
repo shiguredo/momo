@@ -75,8 +75,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   static void CaptureThread(void*);
   bool CaptureProcess();
 
-  // TODO(pbos): Stop using unique_ptr and resetting the thread.
-  std::unique_ptr<rtc::PlatformThread> _captureThread;
+  rtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   std::string _videoDevice;

@@ -321,12 +321,11 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   }
 
   // start capture thread;
-  if (!_captureThread) {
+  if (_captureThread.empty()) {
     quit_ = false;
-    _captureThread.reset(
-        new rtc::PlatformThread(V4L2VideoCapturer::CaptureThread, this,
-                                "CaptureThread", rtc::kHighPriority));
-    _captureThread->Start();
+    _captureThread = rtc::PlatformThread::SpawnJoinable(
+        std::bind(V4L2VideoCapturer::CaptureThread, this), "CaptureThread",
+        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
   }
 
   // Needed to start UVC camera - from the uvcview application
@@ -343,14 +342,12 @@ int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
 }
 
 int32_t V4L2VideoCapturer::StopCapture() {
-  if (_captureThread) {
+  if (!_captureThread.empty()) {
     {
       webrtc::MutexLock lock(&capture_lock_);
       quit_ = true;
     }
-    // Make sure the capture thread stop stop using the capture_lock_.
-    _captureThread->Stop();
-    _captureThread.reset();
+    _captureThread.Finalize();
   }
 
   webrtc::MutexLock lock(&capture_lock_);

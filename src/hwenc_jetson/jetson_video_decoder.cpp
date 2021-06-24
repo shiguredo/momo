@@ -155,12 +155,11 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
   ret = decoder_->output_plane.setStreamStatus(true);
   INIT_ERROR(ret < 0, "Failed to setStreamStatus at decoder output_plane");
 
-  if (!capture_loop_) {
+  if (capture_loop_.empty()) {
     eos_ = false;
-    capture_loop_.reset(
-        new rtc::PlatformThread(JetsonVideoDecoder::CaptureLoopFunction, this,
-                                "CaptureLoop", rtc::kHighPriority));
-    capture_loop_->Start();
+    capture_loop_ = rtc::PlatformThread::SpawnJoinable(
+        std::bind(JetsonVideoDecoder::CaptureLoopFunction, this), "CaptureLoop",
+        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -168,7 +167,7 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
 
 bool JetsonVideoDecoder::JetsonRelease() {
   if (decoder_) {
-    if (capture_loop_) {
+    if (!capture_loop_.empty()) {
       eos_ = true;
       SendEOS(decoder_);
       while (decoder_->output_plane.getNumQueuedBuffers() > 0 && !got_error_ &&
@@ -187,8 +186,7 @@ bool JetsonVideoDecoder::JetsonRelease() {
           break;
         }
       }
-      capture_loop_->Stop();
-      capture_loop_.reset();
+      capture_loop_.Finalize();
     }
     delete decoder_;
     decoder_ = nullptr;
@@ -250,8 +248,7 @@ void JetsonVideoDecoder::CaptureLoop() {
     SetCapture();
   }
 
-  while (!(eos_ || got_error_ || decoder_->isInError() ||
-           !capture_loop_->IsRunning())) {
+  while (!(eos_ || got_error_ || decoder_->isInError())) {
     ret = decoder_->dqEvent(event, false);
     if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
       SetCapture();
