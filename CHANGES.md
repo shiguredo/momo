@@ -17,6 +17,8 @@
     - @melpon
 - [UPDATE] cmake を 3.20.3 に上げる
     - @voluntas
+- [UPDATE] CLI11 を 2.0.0 に上げる
+    - @melpon
 - [ADD] Sora モードの DataChannel を使ったシグナリングに対応
     - Sora 2021.1 から利用可能です
     - 以下のオプションを追加
