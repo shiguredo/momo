@@ -148,9 +148,9 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
-  app.add_set("--priority", args.priority,
-              {"BALANCE", "FRAMERATE", "RESOLUTION"},
-              "Preference in video degradation (experimental)");
+  app.add_option("--priority", args.priority,
+                 "Preference in video degradation (experimental)")
+      ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
@@ -289,11 +289,14 @@ void Util::ParseArgs(int argc,
                    "Send audio to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_set("--video-codec-type", args.sora_video_codec_type,
-                {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
+      ->add_option("--video-codec-type", args.sora_video_codec_type,
+                   "Video codec for send")
+      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264"}))
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec-type", args.sora_audio_codec_type,
-                    {"", "OPUS"}, "Audio codec for send");
+  sora_app
+      ->add_option("--audio-codec-type", args.sora_audio_codec_type,
+                   "Audio codec for send")
+      ->check(CLI::IsMember({"", "OPUS"}));
   sora_app
       ->add_option("--video-bit-rate", args.sora_video_bit_rate,
                    "Video bit rate")
@@ -306,10 +309,9 @@ void Util::ParseArgs(int argc,
       ->add_option("--multistream", args.sora_multistream,
                    "Use multistream (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
-  sora_app->add_set(
-      "--role", args.sora_role,
-      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
-      "Role (default: upstream)");
+  sora_app->add_option(
+      "--role", args.sora_role,"Role (default: upstream)")->check(CLI::IsMember(
+      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"}));
   sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
