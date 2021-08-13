@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] cmake を 3.21.1 に上げる
+    - @voluntas
 - [UPDATE] `sdl2` を `2.0.16` に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `M91.4472@{#9}` に上げる
