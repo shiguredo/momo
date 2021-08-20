@@ -13,12 +13,8 @@
 
 - [UPDATE] cmake を 3.21.1 に上げる
     - @voluntas
-- [UPDATE] `libwebrtc` を `M91.4472@{#9}` に上げる
-    - @voluntas
 - [UPDATE] `libwebrtc` を `M92.4515@{#9}` に上げる
     - @melpon
-- [UPDATE] cmake を 3.20.3 に上げる
-    - @voluntas
 - [UPDATE] CLI11 を 2.0.0 に上げる
     - @melpon
 - [UPDATE] AES-GCM を候補に含める
