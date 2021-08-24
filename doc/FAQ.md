@@ -99,3 +99,11 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラでしか機能しません。
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
+
+##  Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
+
+Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。 
+
+設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
+
+プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
