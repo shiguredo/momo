@@ -11,7 +11,9 @@
 
 ## develop
 
-- [UPDATE] cmake を 3.21.1 に上げる
+- [UPDATE] Boost 1.77.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.21.2 に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `M92.4515@{#9}` に上げる
     - @melpon
