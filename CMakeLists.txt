@@ -65,7 +65,11 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos_arm64")
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release/lib)
+  if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+    set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/debug/lib)
+  else()
+    set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release/lib)
+  endif()
   set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
 
   set(USE_LIBCXX ON)
@@ -84,7 +88,11 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos_x86_64")
   set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release/lib)
+  if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+    set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/debug/lib)
+  else()
+    set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/release/lib)
+  endif()
   set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
 
   set(USE_LIBCXX ON)
@@ -330,7 +338,6 @@ target_sources(momo
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
     src/rtc/device_video_capturer.cpp
-    src/rtc/h264_format.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
     src/rtc/native_buffer.cpp

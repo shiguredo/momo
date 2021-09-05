@@ -25,8 +25,6 @@
 #include "hwenc_mmal/mmal_h264_decoder.h"
 #endif
 
-#include "h264_format.h"
-
 namespace {
 
 bool IsFormatSupported(
@@ -83,14 +81,14 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
 
   // H264
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "1"),
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "0"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "1"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "0")};
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "0"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "0")};
 
   if (h264_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
     // VideoToolbox の場合は video_decoder_factory_ から H264 を拾ってくる

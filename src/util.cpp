@@ -10,6 +10,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/json.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
 // WebRTC
@@ -109,6 +110,9 @@ void Util::ParseArgs(int argc,
 
   auto bool_map = std::vector<std::pair<std::string, bool>>(
       {{"false", false}, {"true", true}});
+  auto optional_bool_map =
+      std::vector<std::pair<std::string, boost::optional<bool>>>(
+          {{"false", false}, {"true", true}, {"none", boost::none}});
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
@@ -144,9 +148,9 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
-  app.add_set("--priority", args.priority,
-              {"BALANCE", "FRAMERATE", "RESOLUTION"},
-              "Preference in video degradation (experimental)");
+  app.add_option("--priority", args.priority,
+                 "Preference in video degradation (experimental)")
+      ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
@@ -285,11 +289,14 @@ void Util::ParseArgs(int argc,
                    "Send audio to sora (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
-      ->add_set("--video-codec-type", args.sora_video_codec_type,
-                {"", "VP8", "VP9", "AV1", "H264"}, "Video codec for send")
+      ->add_option("--video-codec-type", args.sora_video_codec_type,
+                   "Video codec for send")
+      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264"}))
       ->check(is_valid_h264);
-  sora_app->add_set("--audio-codec-type", args.sora_audio_codec_type,
-                    {"", "OPUS"}, "Audio codec for send");
+  sora_app
+      ->add_option("--audio-codec-type", args.sora_audio_codec_type,
+                   "Audio codec for send")
+      ->check(CLI::IsMember({"", "OPUS"}));
   sora_app
       ->add_option("--video-bit-rate", args.sora_video_bit_rate,
                    "Video bit rate")
@@ -302,10 +309,9 @@ void Util::ParseArgs(int argc,
       ->add_option("--multistream", args.sora_multistream,
                    "Use multistream (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
-  sora_app->add_set(
-      "--role", args.sora_role,
-      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"},
-      "Role (default: upstream)");
+  sora_app->add_option(
+      "--role", args.sora_role,"Role (default: upstream)")->check(CLI::IsMember(
+      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"}));
   sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app
@@ -318,6 +324,28 @@ void Util::ParseArgs(int argc,
       ->add_option("--simulcast", args.sora_simulcast,
                    "Use simulcast (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
+                   "Use DataChannel for Sora signaling (default: none)")
+      ->type_name("TEXT")
+      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option("--data-channel-signaling-timeout",
+                   args.sora_data_channel_signaling_timeout,
+                   "Timeout for Data Channel in seconds (default: 180)")
+      ->check(CLI::PositiveNumber);
+  sora_app
+      ->add_option("--ignore-disconnect-websocket",
+                   args.sora_ignore_disconnect_websocket,
+                   "Ignore WebSocket disconnection if using Data Channel "
+                   "(default: none)")
+      ->type_name("TEXT")
+      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
+  sora_app
+      ->add_option(
+          "--disconnect-wait-timeout", args.sora_disconnect_wait_timeout,
+          "Disconnecting timeout for Data Channel in seconds (default: 5)")
+      ->check(CLI::PositiveNumber);
 
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
@@ -344,7 +372,8 @@ void Util::ParseArgs(int argc,
   // サイマルキャストは VP8, H264 のみで動作する
   if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
       args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec-type=VP8 or --video-codec-type=H264."
+    std::cerr << "Simulcast works only --video-codec-type=VP8 or "
+                 "--video-codec-type=H264."
               << std::endl;
     exit(1);
   }
@@ -373,11 +402,11 @@ void Util::ParseArgs(int argc,
               << std::endl;
     std::cout << std::endl;
     std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
-              << std::endl;
+                                                        << std::endl;
     std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-              << std::endl;
+                                                          << std::endl;
     std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-              << std::endl;
+                                                           << std::endl;
     std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }

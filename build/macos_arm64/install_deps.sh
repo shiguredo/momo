@@ -47,7 +47,7 @@ if [ ! -e $WEBRTC_VERSION_FILE -o "$WEBRTC_BUILD_VERSION" != "`cat $WEBRTC_VERSI
   WEBRTC_CHANGED=1
 fi
 
-if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
+if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/webrtc/release/lib/libwebrtc.a ]; then
   rm -rf $INSTALL_DIR/webrtc
   ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION macos_arm64 $INSTALL_DIR $SOURCE_DIR
 fi

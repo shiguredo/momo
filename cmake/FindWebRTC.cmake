@@ -14,7 +14,8 @@ if(WebRTC_FOUND)
       ${WebRTC_INCLUDE_DIR}
       ${WebRTC_INCLUDE_DIR}/third_party/abseil-cpp
       ${WebRTC_INCLUDE_DIR}/third_party/boringssl/src/include
-      ${WebRTC_INCLUDE_DIR}/third_party/libyuv/include)
+      ${WebRTC_INCLUDE_DIR}/third_party/libyuv/include
+      ${WebRTC_INCLUDE_DIR}/third_party/zlib)
 
     if (APPLE)
       list(APPEND _DIRS

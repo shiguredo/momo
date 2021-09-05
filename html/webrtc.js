@@ -220,14 +220,22 @@ async function makeOffer() {
       case 'H264':
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
         break;
       case 'VP8':
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
         break;
       case 'VP9':
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
         sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
+        break;
+      case 'AV1':
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
+        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
         break;
     }
     await peerConnection.setLocalDescription(sessionDescription);

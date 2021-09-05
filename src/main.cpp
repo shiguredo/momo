@@ -190,14 +190,15 @@ int main(int argc, char* argv[]) {
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
         work_guard(ioc.get_executor());
 
-    std::unique_ptr<RTCDataManager> data_manager = nullptr;
+    std::shared_ptr<RTCDataManager> data_manager = nullptr;
     if (!args.serial_device.empty()) {
-      data_manager =
-          SerialDataManager::Create(ioc, args.serial_device, args.serial_rate);
+      data_manager = std::shared_ptr<RTCDataManager>(
+          SerialDataManager::Create(ioc, args.serial_device, args.serial_rate)
+              .release());
       if (!data_manager) {
         return 1;
       }
-      rtc_manager->SetDataManager(data_manager.get());
+      rtc_manager->AddDataManager(data_manager);
     }
 
     boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
@@ -229,6 +230,12 @@ int main(int argc, char* argv[]) {
       config.spotlight_number = args.sora_spotlight_number;
       config.port = args.sora_port;
       config.simulcast = args.sora_simulcast;
+      config.data_channel_signaling = args.sora_data_channel_signaling;
+      config.data_channel_signaling_timeout =
+          args.sora_data_channel_signaling_timeout;
+      config.ignore_disconnect_websocket =
+          args.sora_ignore_disconnect_websocket;
+      config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));

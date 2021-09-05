@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m90.4430-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4430)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m92.4515-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4515)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -46,7 +46,7 @@ Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://ww
 
 ### AV1 への対応
 
-Momo 同士で SDL 機能を利用して libwebrtc が対応している AV1 が利用可能です。
+AV1 の送受信に対応済みです。
 
 ## 動画
 
@@ -85,13 +85,19 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi Zero
     - Raspberry Pi 1
 - Ubuntu 18.04 x86_64
+    - 2023 年 4 月末にて終了
 - Ubuntu 20.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
+    - 2023 年 4 月末にて終了
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- Ubuntu 20.04 ARMv8 Jetson
+    - JetPack 5 がリリースされ次第対応予定
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - macOS 11 x86_64 以降
-    - 2021 年内に終了予定
+    - 2021 年末にて終了
 - macOS 11 arm64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -119,16 +125,6 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 ## FAQ
 
 [FAQ.md](doc/FAQ.md) をお読みください。
-
-## バージョン番号について
-
-```
-YYYY.RELEASE[.FIX]
-```
-
-- YYYY は年
-- RELEASE はその年にリリースした回数
-- FIX はオプションでバグフィックス対応のみのアップデートに利用
 
 ## ライセンス
 
@@ -201,6 +197,7 @@ limitations under the License.
     - WebM 形式での出力
 - 録画合成対応
 - Sora モード利用時の E2EE 機能
+- Sora モード利用時の DataChannel 機能
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍

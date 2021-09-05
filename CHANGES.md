@@ -11,6 +11,32 @@
 
 ## develop
 
+## 2021.4
+
+- [UPDATE] Boost 1.77.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.21.2 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `M92.4515@{#9}` に上げる
+    - @melpon
+- [UPDATE] CLI11 を 2.0.0 に上げる
+    - @melpon
+- [UPDATE] AES-GCM を候補に含める
+    - @melpon
+- [ADD] Sora モードの DataChannel を使ったシグナリングに対応
+    - Sora 2021.1 から利用可能です
+    - 以下のオプションを追加
+    - `--data-channel-signaling`
+    - `--data-channel-signaling-timeout`
+    - `--ignore-disconnect-websocket`
+    - `--disconnect-wait-timeout`
+    - @melpon
+- [ADD] Sora モードのシグナリング re-offer に対応
+    - Sora 2021.1 から利用可能です
+    - @melpon
+- [FIX] Sora モードのサイマルキャスト active: false に対応
+    - @melpon
+
 ## 2021.3
 
 - [UPDATE] `libwebrtc` を `M90.4430@{#3}` に上げる

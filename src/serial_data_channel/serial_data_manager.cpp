@@ -3,10 +3,8 @@
 
 #include "serial_data_manager.h"
 
+#include <functional>
 #include <iostream>
-
-// Boost
-#include <boost/bind.hpp>
 
 // WebRTC
 #include <rtc_base/log_sinks.h>
@@ -118,9 +116,8 @@ void SerialDataManager::DoRead() {
   }
   serial_port_.async_read_some(
       boost::asio::buffer(read_buffer_.get(), read_buffer_size_),
-      boost::bind(&SerialDataManager::OnRead, this,
-                  boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));
+      std::bind(&SerialDataManager::OnRead, this, std::placeholders::_1,
+                std::placeholders::_2));
 }
 
 void SerialDataManager::OnRead(const boost::system::error_code& error,
@@ -171,10 +168,9 @@ void SerialDataManager::DoWrite() {
   } else {
     write_length_ = SERIAL_TX_BUFFER_SIZE;
   }
-  async_write(serial_port_,
-              boost::asio::buffer(write_buffer_.data(), write_length_),
-              boost::bind(&SerialDataManager::OnWrite, this,
-                          boost::asio::placeholders::error));
+  async_write(
+      serial_port_, boost::asio::buffer(write_buffer_.data(), write_length_),
+      std::bind(&SerialDataManager::OnWrite, this, std::placeholders::_1));
 }
 
 void SerialDataManager::OnWrite(const boost::system::error_code& error) {

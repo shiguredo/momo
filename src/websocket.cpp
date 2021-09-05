@@ -61,7 +61,7 @@ Websocket::Websocket(boost::asio::ip::tcp::socket socket)
 }
 
 Websocket::~Websocket() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << "Websocket::~Websocket this=" << (void*)this;
 }
 
 bool Websocket::IsSSL() const {
@@ -221,12 +221,18 @@ void Websocket::DoRead(read_callback_t on_read) {
 void Websocket::OnRead(read_callback_t on_read,
                        boost::system::error_code ec,
                        std::size_t bytes_transferred) {
+  RTC_LOG(LS_INFO) << "Websocket::OnRead this=" << (void*)this
+                   << " ec=" << ec.message();
+
   if (ec) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
   }
 
-  const auto text = boost::beast::buffers_to_string(read_buffer_.data());
-  read_buffer_.consume(read_buffer_.size());
+  std::string text;
+  if (!ec) {
+    text = boost::beast::buffers_to_string(read_buffer_.data());
+    read_buffer_.consume(read_buffer_.size());
+  }
 
   std::move(on_read)(ec, bytes_transferred, std::move(text));
 }
@@ -272,6 +278,9 @@ void Websocket::DoWrite() {
 
 void Websocket::OnWrite(boost::system::error_code ec,
                         std::size_t bytes_transferred) {
+  RTC_LOG(LS_INFO) << "Websocket::OnWrite this=" << (void*)this
+                   << " ec=" << ec.message();
+
   if (ec) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
   }
@@ -307,5 +316,8 @@ void Websocket::DoClose(close_callback_t on_close) {
 
 void Websocket::OnClose(close_callback_t on_close,
                         boost::system::error_code ec) {
+  RTC_LOG(LS_INFO) << "Websocket::OnClose this=" << (void*)this
+                   << " ec=" << ec.message();
+
   on_close(ec);
 }
