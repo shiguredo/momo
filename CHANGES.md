@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2021.4.1
+
+- [FIX] Windows 版リリース時の Invoke-WebRequest を curl に擬態する
+    - @melpon
+
 ## 2021.4
 
 - [UPDATE] Boost 1.77.0 に上げる
