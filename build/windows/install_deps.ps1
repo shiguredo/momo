@@ -53,7 +53,8 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   # ダウンロードと展開
   Push-Location $SOURCE_DIR
     if (!(Test-Path $_FILE)) {
-      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+      # curl に擬態しないとアーカイブではなく HTML コンテンツが降ってきてしまう
+      Invoke-WebRequest -Headers @{"User-Agent"="curl/7.55.1"} -Uri $_URL -OutFile $_FILE
     }
     Remove-Item boost -Force -Recurse -ErrorAction Ignore
     Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse -ErrorAction Ignore
