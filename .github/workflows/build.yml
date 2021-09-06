@@ -32,7 +32,7 @@ jobs:
         with:
           path: _cache\boost
           key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v4
-      - run: .\build.bat -package
+      - run: "& .\\build.ps1 -package"
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
