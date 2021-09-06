@@ -31,8 +31,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: _cache\boost
-          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v3
-      - run: .\build.bat -package
+          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
+      - run: "& .\\build.ps1 -package"
         working-directory: build
         timeout-minutes: 120
       - name: Output package name
