@@ -409,7 +409,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
             [self](webrtc::SessionDescriptionInterface* desc) {
               std::string sdp;
               desc->ToString(&sdp);
-
+              self->manager_->SetParameters();
               boost::asio::post(self->ioc_, [self, sdp]() {
                 if (!self->connection_) {
                   return;
@@ -443,6 +443,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
             [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
               std::string sdp;
               desc->ToString(&sdp);
+              self->manager_->SetParameters();
               boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
                 if (!self->connection_) {
                   return;

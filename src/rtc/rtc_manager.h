@@ -42,11 +42,12 @@ struct RTCManagerConfig {
   std::string priority = "BALANCE";
 
   // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
+  // 定義名と実挙動が異なる為、↑という解釈は誤りで、優先したい方をそのまま設定すれば良い
   webrtc::DegradationPreference GetPriority() {
     if (priority == "FRAMERATE") {
-      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
-    } else if (priority == "RESOLUTION") {
       return webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+    } else if (priority == "RESOLUTION") {
+      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
     }
     return webrtc::DegradationPreference::BALANCED;
   }
@@ -63,11 +64,13 @@ class RTCManager {
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
   void InitTracks(RTCConnection* conn);
+  void SetParameters();
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::unique_ptr<rtc::Thread> network_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<rtc::Thread> signaling_thread_;

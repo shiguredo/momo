@@ -236,6 +236,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
       std::string sdp;
       desc->ToString(&sdp);
+      manager_->SetParameters();
       boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
       ws_->WriteText(boost::json::serialize(json_message));
     };
@@ -262,6 +263,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
                 desc->ToString(&sdp);
+                manager_->SetParameters();
                 boost::json::value json_message = {{"type", "answer"},
                                                    {"sdp", sdp}};
                 ws_->WriteText(boost::json::serialize(json_message));
