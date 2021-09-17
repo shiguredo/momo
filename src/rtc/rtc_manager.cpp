@@ -244,11 +244,9 @@ void RTCManager::InitTracks(RTCConnection* conn) {
 }
 
 void RTCManager::SetParameters() {
-  if (video_sender_) {
-    webrtc::RtpParameters parameters = video_sender_->GetParameters();
-    parameters.degradation_preference = config_.GetPriority();
-    video_sender_->SetParameters(parameters);
-  } else {
-    RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot set parameters";
-  }
+  if (!video_sender_) { return; }
+
+  webrtc::RtpParameters parameters = video_sender_->GetParameters();
+  parameters.degradation_preference = config_.GetPriority();
+  video_sender_->SetParameters(parameters);
 }

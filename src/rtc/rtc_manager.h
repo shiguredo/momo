@@ -39,10 +39,8 @@ struct RTCManagerConfig {
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
 
-  std::string priority = "BALANCE";
+  std::string priority = "FRAMERATE";
 
-  // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
-  // 定義名と実挙動が異なる為、↑という解釈は誤りで、優先したい方をそのまま設定すれば良い
   webrtc::DegradationPreference GetPriority() {
     if (priority == "FRAMERATE") {
       return webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
