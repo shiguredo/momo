@@ -94,6 +94,10 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 利用できません。60fps を使ってみたい場合は Jetson Nano などをご利用ください。
 
+## Sora モードで DataChannel メッセージングは利用できますか？
+
+Momo では Sora の DataChannel メッセージングに対応する予定はありません。 Sora C++ SDK にて対応予定です。
+
 ## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
 RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラでしか機能しません。
