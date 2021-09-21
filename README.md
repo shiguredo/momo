@@ -197,7 +197,6 @@ limitations under the License.
     - WebM 形式での出力
 - 録画合成対応
 - Sora モード利用時の E2EE 機能
-- Sora モード利用時の DataChannel 機能
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍
