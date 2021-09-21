@@ -149,7 +149,7 @@ void Util::ParseArgs(int argc,
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
   app.add_option("--priority", args.priority,
-                 "Preference in video degradation")
+                 "Specifies the quality that is maintained against video degradation")
       ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
