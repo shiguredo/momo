@@ -27,7 +27,7 @@ struct MomoArgs {
   std::string resolution = "VGA";
   int framerate = 30;
   bool fixed_resolution = false;
-  std::string priority = "BALANCE";
+  std::string priority = "FRAMERATE";
   bool use_sdl = false;
   bool show_me = false;
   int window_width = 640;

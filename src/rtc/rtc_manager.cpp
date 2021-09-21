@@ -236,13 +236,17 @@ void RTCManager::InitTracks(RTCConnection* conn) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_add_result = connection->AddTrack(video_track_, {stream_id});
     if (video_add_result.ok()) {
-      rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender =
-          video_add_result.value();
-      webrtc::RtpParameters parameters = video_sender->GetParameters();
-      parameters.degradation_preference = config_.GetPriority();
-      video_sender->SetParameters(parameters);
+      video_sender_ = video_add_result.value();
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
     }
   }
+}
+
+void RTCManager::SetParameters() {
+  if (!video_sender_) { return; }
+
+  webrtc::RtpParameters parameters = video_sender_->GetParameters();
+  parameters.degradation_preference = config_.GetPriority();
+  video_sender_->SetParameters(parameters);
 }
