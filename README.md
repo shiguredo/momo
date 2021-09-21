@@ -30,7 +30,7 @@ https://momo.shiguredo.jp/
 
 ### 4K 30fps での配信
 
-Momo はハードウェアエンコーダを利用することで WebRTC で 4K 30fps の配信を実現可能です
+Momo はハードウェアエンコーダを利用することで WebRTC で 4K 60fps の配信を実現可能です
 
 ### サイマルキャストへの対応
 
