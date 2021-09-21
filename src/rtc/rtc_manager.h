@@ -39,14 +39,13 @@ struct RTCManagerConfig {
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
 
-  std::string priority = "BALANCE";
+  std::string priority = "FRAMERATE";
 
-  // FRAMERATE が優先のときは RESOLUTION をデグレさせていく
   webrtc::DegradationPreference GetPriority() {
     if (priority == "FRAMERATE") {
-      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
-    } else if (priority == "RESOLUTION") {
       return webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+    } else if (priority == "RESOLUTION") {
+      return webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
     }
     return webrtc::DegradationPreference::BALANCED;
   }
@@ -63,11 +62,13 @@ class RTCManager {
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
   void InitTracks(RTCConnection* conn);
+  void SetParameters();
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::unique_ptr<rtc::Thread> network_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<rtc::Thread> signaling_thread_;
