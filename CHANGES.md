@@ -11,6 +11,10 @@
 
 ## develop
 
+- [FIX] SetParameters() するタイミングを SetLocalDescription() の処理後に変更する事で Priority が動作するようにする
+    - @tsuyoshiii
+- [FIX] Priority から DegradationPreference への変換を実動作に合わせる
+
 ## 2021.4.1
 
 - [FIX] Windows 版リリース時の Invoke-WebRequest を curl に擬態する
