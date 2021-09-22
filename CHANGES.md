@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `m93.4577.8.1` に上げる
+    - @voluntas
+
 ## 2021.4.2
 
 - [FIX] SetParameters() するタイミングを SetLocalDescription() の処理後に変更する事で Priority が動作するようにする
