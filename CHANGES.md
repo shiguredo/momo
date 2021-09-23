@@ -13,6 +13,9 @@
 
 - [UPDATE] `libwebrtc` を `m93.4577.8.1` に上げる
     - @voluntas
+- [CHANGE] libwebrtc m93 で `__config_site` が必要になったため追加
+    - zakuro からの移植
+    - @melpon @voluntas
 
 ## 2021.4.2
 
