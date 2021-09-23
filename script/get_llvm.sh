@@ -26,7 +26,7 @@ fi
 mkdir -p $OUTPUT_DIR/llvm
 pushd $OUTPUT_DIR/llvm
   if [ ! -e tools/.git ]; then
-    git clone https://chromium.googlesource.com/chromium/src/tools
+    git clone $WEBRTC_SRC_TOOLS_URL
   fi
   pushd tools
     git fetch
@@ -38,10 +38,22 @@ popd
 # 特定バージョンの libcxx を利用する
 pushd $OUTPUT_DIR/llvm
   if [ ! -e libcxx/.git ]; then
-    git clone https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx
+    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL
   fi
   pushd libcxx
     git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK
+    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT
   popd
+popd
+
+# __config_site のために特定バージョンの buildtools を取得する
+pushd $OUTPUT_DIR/llvm
+  if [ ! -e buildtools/.git ]; then
+    git clone $WEBRTC_SRC_BUILDTOOLS_URL
+  fi
+  pushd buildtools
+    git fetch
+    git reset --hard $WEBRTC_SRC_BUILDTOOLS_COMMIT
+  popd
+  cp $OUTPUT_DIR/llvm/buildtools/third_party/libc++/__config_site $OUTPUT_DIR/llvm/libcxx/include/
 popd
