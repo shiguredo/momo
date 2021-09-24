@@ -401,8 +401,23 @@ void SoraClient::OnRead(boost::system::error_code ec,
             }
             encoding_parameters.push_back(params);
           }
+
+          std::string mid;
+          {
+            // TODO(melpon): しばらく mid が無い可能性も考慮するが、そのうち必須にする
+            auto it = json_message.as_object().find("mid");
+            if (it != json_message.as_object().end()) {
+              const auto& midobj = it->value().as_object();
+              // video: false の場合は video フィールドが mid が無いのでチェックする
+              it = midobj.find("video");
+              if (it != midobj.end()) {
+                mid = it->value().as_string().c_str();
+              }
+            }
+          }
+          RTC_LOG(LS_INFO) << "mid: " << mid;
           self->connection_->SetEncodingParameters(
-              std::move(encoding_parameters));
+              mid, std::move(encoding_parameters));
         }
 
         self->connection_->CreateAnswer(
