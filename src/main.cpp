@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
     if (use_sora) {
       SoraClientConfig config;
       config.insecure = args.insecure;
-      config.signaling_url = args.sora_signaling_url;
+      config.signaling_urls = args.sora_signaling_urls;
       config.channel_id = args.sora_channel_id;
       config.video = args.sora_video;
       config.audio = args.sora_audio;

@@ -13,19 +13,21 @@
 #include "util.h"
 #include "zlib_helper.h"
 
-bool SoraClient::ParseURL(URLParts& parts) const {
-  std::string url = config_.signaling_url;
-
+bool SoraClient::ParseURL(const std::string& url,
+                          URLParts& parts,
+                          bool& ssl) const {
   if (!URLParts::Parse(url, parts)) {
-    throw std::exception();
+    return false;
   }
 
   if (parts.scheme == "wss") {
+    ssl = true;
     return true;
   } else if (parts.scheme == "ws") {
-    return false;
+    ssl = false;
+    return true;
   } else {
-    throw std::exception();
+    return false;
   }
 }
 
@@ -121,13 +123,8 @@ void SoraClient::Reset() {
   watchdog_.Disable();
   connection_ = nullptr;
 
-  URLParts parts;
-  if (ParseURL(parts)) {
-    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
-  } else {
-    ws_.reset(new Websocket(ioc_));
-  }
-
+  connecting_wss_.clear();
+  ws_.reset();
   dc_.reset(new SoraDataChannelOnAsio(ioc_, this));
 }
 
@@ -136,9 +133,27 @@ void SoraClient::Connect() {
 
   watchdog_.Enable(30);
 
-  ws_->Connect(config_.signaling_url,
-               std::bind(&SoraClient::OnConnect, shared_from_this(),
-                         std::placeholders::_1));
+  ws_.reset();
+  connecting_wss_.clear();
+
+  for (const auto& url : config_.signaling_urls) {
+    URLParts parts;
+    bool ssl;
+    if (!ParseURL(url, parts, ssl)) {
+      RTC_LOG(LS_ERROR) << "Invalid URL: url=" << url;
+      continue;
+    }
+
+    std::shared_ptr<Websocket> ws;
+    if (ssl) {
+      ws.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
+    } else {
+      ws.reset(new Websocket(ioc_));
+    }
+    ws->Connect(url, std::bind(&SoraClient::OnConnect, shared_from_this(),
+                               std::placeholders::_1, url, ws));
+    connecting_wss_.push_back(ws);
+  }
 }
 
 void SoraClient::ReconnectAfter() {
@@ -158,16 +173,85 @@ void SoraClient::OnWatchdogExpired() {
   });
 }
 
-void SoraClient::OnConnect(boost::system::error_code ec) {
+void SoraClient::OnConnect(boost::system::error_code ec,
+                           std::string url,
+                           std::shared_ptr<Websocket> ws) {
+  connecting_wss_.erase(
+      std::remove_if(connecting_wss_.begin(), connecting_wss_.end(),
+                     [ws](std::shared_ptr<Websocket> p) { return p == ws; }),
+      connecting_wss_.end());
+  if (ec) {
+    // すべての接続がうまくいかなかったら再接続フローに入る
+    if (!ws_ && connecting_wss_.empty()) {
+      ReconnectAfter();
+    }
+    return MOMO_BOOST_ERROR(ec, "Handshake");
+  }
+  if (ws_) {
+    // 既に他の接続が先に完了していたので、切断する
+    ws->Close([self = shared_from_this(), ws](boost::system::error_code) {});
+    return;
+  }
+
+  ws_ = ws;
+  connected_signaling_url_ = url;
+  RTC_LOG(LS_INFO) << "connected: url=" << url;
+
+  DoRead();
+  DoSendConnect(false);
+}
+
+void SoraClient::Redirect(std::string url) {
+  ws_->Read([self = shared_from_this(), url](boost::system::error_code ec,
+                                             std::size_t bytes_transferred,
+                                             std::string text) {
+    auto on_close = [self, url](boost::system::error_code ec) {
+      // close 処理に成功してても失敗してても処理は続ける
+      URLParts parts;
+      bool ssl;
+      if (!self->ParseURL(url, parts, ssl)) {
+        RTC_LOG(LS_ERROR) << "Invalid URL: url=" << url;
+        return;
+      }
+
+      std::shared_ptr<Websocket> ws;
+      if (ssl) {
+        ws.reset(new Websocket(Websocket::ssl_tag(), self->ioc_,
+                               self->config_.insecure));
+      } else {
+        ws.reset(new Websocket(self->ioc_));
+      }
+      ws->Connect(url, std::bind(&SoraClient::OnRedirect, self,
+                                 std::placeholders::_1, url, ws));
+    };
+
+    // type: redirect の後、サーバは切断してるはずなので、正常に処理が終わるのはおかしい
+    if (!ec) {
+      RTC_LOG(LS_WARNING) << "Unexpected success to read";
+      // 強制的に閉じる
+      self->ws_->Close(on_close);
+      return;
+    }
+    on_close(
+        boost::system::errc::make_error_code(boost::system::errc::success));
+  });
+}
+void SoraClient::OnRedirect(boost::system::error_code ec,
+                            std::string url,
+                            std::shared_ptr<Websocket> ws) {
   if (ec) {
     ReconnectAfter();
     return MOMO_BOOST_ERROR(ec, "Handshake");
   }
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " connected";
+
+  ws_ = ws;
+  connected_signaling_url_ = url;
+  RTC_LOG(LS_INFO) << "redirected: url=" << url;
 
   DoRead();
-  DoSendConnect();
+  DoSendConnect(true);
 }
+
 void SoraClient::DoRead() {
   ws_->Read([self = shared_from_this(), ws = ws_](boost::system::error_code ec,
                                                   std::size_t bytes_transferred,
@@ -176,7 +260,7 @@ void SoraClient::DoRead() {
   });
 }
 
-void SoraClient::DoSendConnect() {
+void SoraClient::DoSendConnect(bool redirect) {
   boost::json::object json_message = {
       {"type", "connect"},
       {"role", config_.role},
@@ -185,6 +269,10 @@ void SoraClient::DoSendConnect() {
       {"libwebrtc", MomoVersion::GetLibwebrtcName()},
       {"environment", MomoVersion::GetEnvironmentName()},
   };
+
+  if (redirect) {
+    json_message["redirect"] = true;
+  }
 
   if (config_.multistream) {
     json_message["multistream"] = true;
@@ -331,7 +419,13 @@ void SoraClient::OnRead(boost::system::error_code ec,
 
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
-  if (type == "offer") {
+  if (type == "redirect") {
+    const std::string location =
+        json_message.at("location").as_string().c_str();
+    Redirect(location);
+    // Redirect の中で次の Read をしているのでここで return する
+    return;
+  } else if (type == "offer") {
     // Data Channel の圧縮されたデータが送られてくるラベルを覚えておく
     {
       auto it = json_message.as_object().find("data_channels");
