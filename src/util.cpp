@@ -148,8 +148,9 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(1, 60));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
-  app.add_option("--priority", args.priority,
-                 "Specifies the quality that is maintained against video degradation")
+  app.add_option(
+         "--priority", args.priority,
+         "Specifies the quality that is maintained against video degradation")
       ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
@@ -265,17 +266,20 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(0, 65535));
 
   ayame_app
-      ->add_option("SIGNALING-URL", args.ayame_signaling_url, "Signaling URL")
+      ->add_option("--signaling-url", args.ayame_signaling_url, "Signaling URL")
       ->required();
-  ayame_app->add_option("ROOM-ID", args.ayame_room_id, "Room ID")->required();
+  ayame_app->add_option("--channel-id", args.ayame_room_id, "Channel ID")
+      ->required();
   ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", args.ayame_signaling_key,
                         "Signaling key");
 
   sora_app
-      ->add_option("SIGNALING-URL", args.sora_signaling_url, "Signaling URL")
+      ->add_option("--signaling-url", args.sora_signaling_urls,
+                   "Signaling URLs")
+      ->take_all()
       ->required();
-  sora_app->add_option("CHANNEL-ID", args.sora_channel_id, "Channel ID")
+  sora_app->add_option("--channel-id", args.sora_channel_id, "Channel ID")
       ->required();
   sora_app->add_flag("--auto", args.sora_auto_connect,
                      "Connect to Sora automatically");
@@ -309,9 +313,9 @@ void Util::ParseArgs(int argc,
       ->add_option("--multistream", args.sora_multistream,
                    "Use multistream (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
-  sora_app->add_option(
-      "--role", args.sora_role,"Role (default: upstream)")->check(CLI::IsMember(
-      {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"}));
+  sora_app->add_option("--role", args.sora_role, "Role (default: upstream)")
+      ->check(CLI::IsMember(
+          {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"}));
   sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app

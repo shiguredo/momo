@@ -21,6 +21,10 @@
 - [FIX] libwebrtc m93 で api/video-track_source_proxy.h が pc/video_track_source_proxy.h に移動したのを修正
     - zakuro からの移植
     - @melpon @voluntas
+- [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
+    - @melpon
+- [ADD] 複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
+    - @melpon
 
 ## 2021.4.2
 
