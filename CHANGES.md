@@ -15,10 +15,10 @@
     - @voluntas
 - [UPDATE] signaling mid 対応
     - @melpon
-- [CHANGE] libwebrtc m93 で `__config_site` が必要になったため追加
+- [FIX] libwebrtc m93 で `__config_site` が必要になったため追加
     - zakuro からの移植
     - @melpon @voluntas
-- [CHANGE] libwebrtc m93 で api/video-track_source_proxy.h が pc/video_track_source_proxy.h に移動したのを修正
+- [FIX] libwebrtc m93 で api/video-track_source_proxy.h が pc/video_track_source_proxy.h に移動したのを修正
     - zakuro からの移植
     - @melpon @voluntas
 
