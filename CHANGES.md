@@ -11,9 +11,13 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `m93.4577.8.1` に上げる
+- [UPDATE] `libwebrtc` を `m94.4606.3.3` に上げる
     - @voluntas
+- [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
+    - @melpon
 - [UPDATE] signaling mid 対応
+    - @melpon
+- [ADD] 複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
     - @melpon
 - [FIX] libwebrtc m93 で `__config_site` が必要になったため追加
     - zakuro からの移植
@@ -21,10 +25,6 @@
 - [FIX] libwebrtc m93 で api/video-track_source_proxy.h が pc/video_track_source_proxy.h に移動したのを修正
     - zakuro からの移植
     - @melpon @voluntas
-- [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
-    - @melpon
-- [ADD] 複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
-    - @melpon
 
 ## 2021.4.2
 
