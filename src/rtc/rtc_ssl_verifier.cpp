@@ -12,10 +12,8 @@ bool RTCSSLVerifier::Verify(const rtc::SSLCertificate& certificate) {
   if (insecure_) {
     return true;
   }
-  CRYPTO_BUFFER* cert = static_cast<const rtc::BoringSSLCertificate&>(certificate).cert_buffer();
-  bssl::UniquePtr<X509> x509(X509_parse_from_buffer(cert));
-  if (!x509) {
-    return false;
-  }
-  return SSLVerifier::VerifyX509(x509.get());
+  SSL* ssl = static_cast<const rtc::BoringSSLCertificate&>(certificate).ssl();
+  X509* x509 = SSL_get_peer_certificate(ssl);
+  STACK_OF(X509)* chain = SSL_get_peer_cert_chain(ssl);
+  return SSLVerifier::VerifyX509(x509, chain);
 }
