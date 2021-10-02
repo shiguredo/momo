@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2021.4.3
+
+- [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する
+    - @melpon
+
 ## 2021.4.2
 
 - [FIX] SetParameters() するタイミングを SetLocalDescription() の処理後に変更する事で Priority が動作するようにする

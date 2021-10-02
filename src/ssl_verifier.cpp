@@ -54,33 +54,38 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )";
 
-const char dst_root[] = R"(
-# Issuer: CN=DST Root CA X3 O=Digital Signature Trust Co.
-# Subject: CN=DST Root CA X3 O=Digital Signature Trust Co.
-# Label: "DST Root CA X3"
-# Serial: 91299735575339953335919266965803778155
-# MD5 Fingerprint: 41:03:52:dc:0f:f7:50:1b:16:f0:02:8e:ba:6f:45:c5
-# SHA1 Fingerprint: da:c9:02:4f:54:d8:f6:df:94:93:5f:b1:73:26:38:ca:6a:d7:7c:13
-# SHA256 Fingerprint: 06:87:26:03:31:a7:24:03:d9:09:f1:05:e6:9b:cf:0d:32:e1:bd:24:93:ff:c6:d9:20:6d:11:bc:d6:77:07:39
+const char lets_encrypt_r3[] = R"(
+# Subject: C = US, O = Let's Encrypt, CN = R3
+# Issuer: C = US, O = Internet Security Research Group, CN = ISRG Root X1
 -----BEGIN CERTIFICATE-----
-MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/
-MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
-DkRTVCBSb290IENBIFgzMB4XDTAwMDkzMDIxMTIxOVoXDTIxMDkzMDE0MDExNVow
-PzEkMCIGA1UEChMbRGlnaXRhbCBTaWduYXR1cmUgVHJ1c3QgQ28uMRcwFQYDVQQD
-Ew5EU1QgUm9vdCBDQSBYMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
-AN+v6ZdQCINXtMxiZfaQguzH0yxrMMpb7NnDfcdAwRgUi+DoM3ZJKuM/IUmTrE4O
-rz5Iy2Xu/NMhD2XSKtkyj4zl93ewEnu1lcCJo6m67XMuegwGMoOifooUMM0RoOEq
-OLl5CjH9UL2AZd+3UWODyOKIYepLYYHsUmu5ouJLGiifSKOeDNoJjj4XLh7dIN9b
-xiqKqy69cK3FCxolkHRyxXtqqzTWMIn/5WgTe1QLyNau7Fqckh49ZLOMxt+/yUFw
-7BZy1SbsOFU5Q9D8/RhcQPGX69Wam40dutolucbY38EVAjqr2m7xPi71XAicPNaD
-aeQQmxkqtilX4+U9m5/wAl0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNV
-HQ8BAf8EBAMCAQYwHQYDVR0OBBYEFMSnsaR7LHH62+FLkHX/xBVghYkQMA0GCSqG
-SIb3DQEBBQUAA4IBAQCjGiybFwBcqR7uKGY3Or+Dxz9LwwmglSBd49lZRNI+DT69
-ikugdB/OEIKcdBodfpga3csTS7MgROSR6cz8faXbauX+5v3gTt23ADq1cEmv8uXr
-AvHRAosZy5Q6XkjEGB5YGV8eAlrwDPGxrancWYaLbumR9YbK+rlmM6pZW87ipxZz
-R8srzJmwN0jP41ZL9c8PDHIyh8bwRLtTcm1D9SZImlJnt1ir/md2cXjbDaJWFBM5
-JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo
-Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ
+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
+nLRbwHOoq7hHwg==
 -----END CERTIFICATE-----
 )";
 
@@ -131,11 +136,26 @@ bool SSLVerifier::LoadBuiltinSSLRootCertificates(X509_STORE* store) {
   return count_of_added_certs > 0;
 }
 
-bool SSLVerifier::VerifyX509(X509* x509) {
+bool SSLVerifier::VerifyX509(X509* x509, STACK_OF(X509) * chain) {
   {
-    char subject_name[256];
-    X509_NAME_oneline(X509_get_subject_name(x509), subject_name, 256);
-    RTC_LOG(LS_INFO) << "Verifying " << subject_name;
+    char data[256];
+    RTC_LOG(LS_INFO) << "cert:";
+    X509_NAME_oneline(X509_get_subject_name(x509), data, sizeof(data));
+    RTC_LOG(LS_INFO) << "  subject = " << data;
+    X509_NAME_oneline(X509_get_issuer_name(x509), data, sizeof(data));
+    RTC_LOG(LS_INFO) << "  issuer  = " << data;
+
+    if (chain != nullptr) {
+      int n = sk_X509_num(chain);
+      for (int i = 0; i < n; i++) {
+        X509* x = sk_X509_value(chain, i);
+        RTC_LOG(LS_INFO) << "chain[" << i << "]:";
+        X509_NAME_oneline(X509_get_subject_name(x), data, sizeof(data));
+        RTC_LOG(LS_INFO) << "  subject = " << data;
+        X509_NAME_oneline(X509_get_issuer_name(x), data, sizeof(data));
+        RTC_LOG(LS_INFO) << "  issuer  = " << data;
+      }
+    }
   }
 
   X509_STORE* store = nullptr;
@@ -157,12 +177,18 @@ bool SSLVerifier::VerifyX509(X509* x509) {
     RTC_LOG(LS_ERROR) << "X509_STORE_new failed";
     return false;
   }
+  int r;
+  r = X509_STORE_set_flags(store, X509_V_FLAG_TRUSTED_FIRST);
+  if (r == 0) {
+    RTC_LOG(LS_ERROR) << "X509_STORE_set_flags failed";
+    return false;
+  }
 
   // Let's Encrypt の証明書を追加
   if (!AddCert(isrg_root, store)) {
     return false;
   }
-  if (!AddCert(dst_root, store)) {
+  if (!AddCert(lets_encrypt_r3, store)) {
     return false;
   }
 
@@ -177,8 +203,7 @@ bool SSLVerifier::VerifyX509(X509* x509) {
     RTC_LOG(LS_ERROR) << "X509_STORE_CTX_new failed";
     return false;
   }
-  int r;
-  r = X509_STORE_CTX_init(ctx, store, x509, nullptr);
+  r = X509_STORE_CTX_init(ctx, store, x509, chain);
   if (r == 0) {
     RTC_LOG(LS_ERROR) << "X509_STORE_CTX_init failed";
     return false;

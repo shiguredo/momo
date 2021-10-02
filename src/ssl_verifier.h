@@ -9,7 +9,7 @@
 // 自前で SSL の証明書検証を行うためのクラス
 class SSLVerifier {
  public:
-  static bool VerifyX509(X509* x509);
+  static bool VerifyX509(X509* x509, STACK_OF(X509) * chain);
 
  private:
   // PEM 形式のルート証明書を追加する

@@ -51,8 +51,9 @@ Websocket::Websocket(Websocket::ssl_tag,
         if (insecure) {
           return true;
         }
-        X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-        return SSLVerifier::VerifyX509(cert);
+        X509* cert = X509_STORE_CTX_get0_cert(ctx.native_handle());
+        STACK_OF(X509)* chain = X509_STORE_CTX_get0_chain(ctx.native_handle());
+        return SSLVerifier::VerifyX509(cert, chain);
       });
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
