@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `m94.4606.3.3` に上げる
+- [UPDATE] `libwebrtc` を `m94.4606.3.4` に上げる
     - @voluntas
 - [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
     - @melpon
