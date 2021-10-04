@@ -248,6 +248,14 @@ Options:
                               Port number (default: -1)
   --simulcast BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use simulcast (default: false)
+  --data-channel-signaling TEXT:value in {false-> 0,true-> 1,none->--} OR { 0, 1,--}
+                              Use DataChannel for Sora signaling (default: none)
+  --data-channel-signaling-timeout INT:POSITIVE
+                              Timeout for Data Channel in seconds (default: 180)
+  --ignore-disconnect-websocket TEXT:value in {false-> 0,true-> 1,none->--} OR { 0, 1,--}
+                              Ignore WebSocket disconnection if using Data Channel (default: none)
+  --disconnect-wait-timeout INT:POSITIVE
+                              Disconnecting timeout for Data Channel in seconds (default: 5)
   --metadata TEXT:JSON Value  Signaling metadata used in connect message
 ```
 
