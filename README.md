@@ -162,7 +162,7 @@ limitations under the License.
 - Windows / Linux 版 スクリーンキャプチャ対応
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
-## 優先実装が可能な機能一覧
+### 優先実装が可能な機能一覧
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
