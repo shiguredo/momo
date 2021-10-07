@@ -215,7 +215,7 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
-https://discord.gg/gmEuZye
+https://discord.gg/shiguredo
 
 ### バグ報告
 
