@@ -31,7 +31,7 @@ bool IsFormatSupported(
     const std::vector<webrtc::SdpVideoFormat>& supported_formats,
     const webrtc::SdpVideoFormat& format) {
   for (const webrtc::SdpVideoFormat& supported_format : supported_formats) {
-    if (cricket::IsSameCodec(format.name, format.parameters,
+    if (format.IsSameCodec(format.name, format.parameters,
                              supported_format.name,
                              supported_format.parameters)) {
       return true;
