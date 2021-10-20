@@ -31,9 +31,7 @@ bool IsFormatSupported(
     const std::vector<webrtc::SdpVideoFormat>& supported_formats,
     const webrtc::SdpVideoFormat& format) {
   for (const webrtc::SdpVideoFormat& supported_format : supported_formats) {
-    if (format.IsSameCodec(format.name, format.parameters,
-                             supported_format.name,
-                             supported_format.parameters)) {
+    if (format.IsSameCodec(supported_format)) {
       return true;
     }
   }
