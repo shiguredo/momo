@@ -71,10 +71,18 @@ fi
 
 source $MOMO_DIR/VERSION
 
+DOCKER_PLATFORM=""
+if [ "`uname -sm`" = "Darwin arm64" ]; then
+  # M1 Mac の場合は --platform を指定する
+  DOCKER_PLATFORM="--platform=linux/amd64"
+fi
+
+
 # マウントするかどうかで大きく分岐する
 if [ "$MOUNT_TYPE" = "mount" ]; then
   # マウントする場合は、単純にマウントしてビルドするだけ
   docker run \
+    $DOCKER_PLATFORM \
     -it \
     --rm \
     -v "$WORK_DIR/..:/root/momo" \
@@ -125,7 +133,7 @@ else
 
     # ベースイメージから構築したコンテナに転送してビルドし、
     # ビルドが完了したら成果物や中間ファイルを取り出す
-    docker container create -it --name momo-$PACKAGE_NAME "$DOCKER_IMAGE"
+    docker container create $DOCKER_PLATFORM -it --name momo-$PACKAGE_NAME "$DOCKER_IMAGE"
     docker container start momo-$PACKAGE_NAME
 
     # 転送用の momo のソースを生成（中間ファイルも含める）
