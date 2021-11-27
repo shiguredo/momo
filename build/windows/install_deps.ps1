@@ -22,7 +22,7 @@ mkdir $CACHE_DIR -ErrorAction Ignore
 
 # WebRTC の取得
 
-if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
+if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
   $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows.zip"
   $_FILE = "$SOURCE_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"

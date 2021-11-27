@@ -194,7 +194,6 @@ void RTCManager::AddDataManager(std::shared_ptr<RTCDataManager> data_manager) {
 std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
-  rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
@@ -244,7 +243,9 @@ void RTCManager::InitTracks(RTCConnection* conn) {
 }
 
 void RTCManager::SetParameters() {
-  if (!video_sender_) { return; }
+  if (!video_sender_) {
+    return;
+  }
 
   webrtc::RtpParameters parameters = video_sender_->GetParameters();
   parameters.degradation_preference = config_.GetPriority();
