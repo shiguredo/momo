@@ -35,14 +35,13 @@ MMALH264Decoder::~MMALH264Decoder() {
   Release();
 }
 
-int32_t MMALH264Decoder::InitDecode(const webrtc::VideoCodec* codec_settings,
-                                    int32_t number_of_cores) {
-  RTC_LOG(LS_ERROR) << __FUNCTION__;
+bool MMALH264Decoder::Configure(const Settings& settings) {
+  RTC_LOG(LS_INFO) << __FUNCTION__;
   if (MMALConfigure() != WEBRTC_VIDEO_CODEC_OK) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to MMALConfigure";
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    return false;
   }
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
