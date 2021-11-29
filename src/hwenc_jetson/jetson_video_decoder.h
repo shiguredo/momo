@@ -25,8 +25,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   JetsonVideoDecoder(uint32_t input_format);
   ~JetsonVideoDecoder() override;
 
-  int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
-                     int32_t number_of_cores) override;
+  bool Configure(const Settings& settings) override;
 
   int32_t Decode(const webrtc::EncodedImage& input_image,
                  bool missing_frames,
