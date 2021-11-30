@@ -11,8 +11,10 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `m94.4606.3.4` に上げる
-    - @voluntas
+## 2021.5.0
+
+- [UPDATE] `libwebrtc` を `97.4692.0.4` に上げる
+    - @melpon @voluntas
 - [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
     - @melpon
 - [UPDATE] signaling mid 対応
