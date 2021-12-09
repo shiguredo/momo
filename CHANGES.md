@@ -13,6 +13,8 @@
 
 ## 2021.5.0
 
+- [UPDATE] cmake を 3.22.1 に上げる
+    - @voluntas
 - [UPDATE] CLI11 を 2.1.2 に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `97.4692.0.4` に上げる
