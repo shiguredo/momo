@@ -40,7 +40,7 @@ struct MomoArgs {
   int metrics_port = -1;
   bool metrics_allow_external_ip = false;
 
-  std::string sora_signaling_url = "wss://example.com/signaling";
+  std::vector<std::string> sora_signaling_urls;
   std::string sora_channel_id;
   bool sora_video = true;
   bool sora_audio = true;

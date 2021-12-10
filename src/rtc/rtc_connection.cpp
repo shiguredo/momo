@@ -318,6 +318,7 @@ std::string RtpTransceiverDirectionToString(
 }
 
 void RTCConnection::SetEncodingParameters(
+    std::string mid,
     std::vector<webrtc::RtpEncodingParameters> encodings) {
   for (auto transceiver : connection_->GetTransceivers()) {
     RTC_LOG(LS_INFO) << "transceiver mid="
@@ -347,15 +348,26 @@ void RTCConnection::SetEncodingParameters(
                              : std::string("nullopt"));
   }
 
-  // setRD のあとの direction は recv only になる。
-  // 現状 sender.track.streamIds を取れないので connection ID との比較もできない。
-  // video upstream 持っているときは、ひとつめの video type transceiver を
-  // 自分が send すべき transceiver と決め打ちする。
   rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
-  for (auto transceiver : connection_->GetTransceivers()) {
-    if (transceiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
-      video_transceiver = transceiver;
-      break;
+  if (mid.empty()) {
+    // TODO(melpon): mid が手に入るようになったので、こっちの実装はそのうち消す
+
+    // setRD のあとの direction は recv only になる。
+    // 現状 sender.track.streamIds を取れないので connection ID との比較もできない。
+    // video upstream 持っているときは、ひとつめの video type transceiver を
+    // 自分が send すべき transceiver と決め打ちする。
+    for (auto transceiver : connection_->GetTransceivers()) {
+      if (transceiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+        video_transceiver = transceiver;
+        break;
+      }
+    }
+  } else {
+    for (auto transceiver : connection_->GetTransceivers()) {
+      if (transceiver->mid() && *transceiver->mid() == mid) {
+        video_transceiver = transceiver;
+        break;
+      }
     }
   }
 

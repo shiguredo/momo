@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m92.4515-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4515)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m9.4692-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4692)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -30,7 +30,7 @@ https://momo.shiguredo.jp/
 
 ### 4K 30fps での配信
 
-Momo はハードウェアエンコーダを利用することで WebRTC で 4K 30fps の配信を実現可能です
+Momo はハードウェアエンコーダを利用することで WebRTC で 4K 60fps の配信を実現可能です
 
 ### サイマルキャストへの対応
 
@@ -162,10 +162,15 @@ limitations under the License.
 - Windows / Linux 版 スクリーンキャプチャ対応
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
-## 優先実装が可能な機能一覧
+### 優先実装が可能な機能一覧
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
+- Jetson AGX Orin 対応
+    - AV1 ハードウェアエンコーダ対応
+    - AV1 ハードウェアデコーダ対応
+    - H.265 ハードウェアエンコーダ対応
+    - H.265 ハードウェアデコーダ対応
 - Jetson AGX Xavier 対応
     - H.265 ハードウェアエンコーダ対応
     - H.265 ハードウェアデコーダ対応
@@ -197,7 +202,6 @@ limitations under the License.
     - WebM 形式での出力
 - 録画合成対応
 - Sora モード利用時の E2EE 機能
-- Sora モード利用時の DataChannel 機能
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍
@@ -216,7 +220,7 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
-https://discord.gg/gmEuZye
+https://discord.gg/shiguredo
 
 ### バグ報告
 
@@ -251,5 +255,3 @@ H.264 ハードウェアエンコーダ **のみ** を利用している Momo �
     - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダライセンス費用は別途、団体との契約が必要
     - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
-
-

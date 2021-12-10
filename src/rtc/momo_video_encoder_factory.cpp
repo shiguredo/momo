@@ -8,7 +8,7 @@
 #include <api/video_codecs/sdp_video_format.h>
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
-#include <media/base/vp9_profile.h>
+#include <api/video_codecs/vp9_profile.h>
 #include <media/engine/simulcast_encoder_adapter.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp8/include/vp8.h>

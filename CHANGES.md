@@ -11,6 +11,29 @@
 
 ## develop
 
+## 2021.5.0
+
+- [UPDATE] sdl2 を 2.0.18 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.21.4 に上げる
+    - @voluntas
+- [UPDATE] CLI11 を 2.1.2 に上げる
+    - @voluntas
+- [UPDATE] `libwebrtc` を `97.4692.0.4` に上げる
+    - @melpon @voluntas
+- [CHANGE] シグナリング URL、チャンネル ID の指定に `--signaling-url`, `--channel-id` オプションを必須にする
+    - @melpon
+- [UPDATE] signaling mid 対応
+    - @melpon
+- [ADD] 複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
+    - @melpon
+- [FIX] libwebrtc m93 で `__config_site` が必要になったため追加
+    - zakuro からの移植
+    - @melpon @voluntas
+- [FIX] libwebrtc m93 で api/video-track_source_proxy.h が pc/video_track_source_proxy.h に移動したのを修正
+    - zakuro からの移植
+    - @melpon @voluntas
+
 ## 2021.4.3
 
 - [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する

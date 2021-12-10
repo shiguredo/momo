@@ -57,6 +57,12 @@ while [ $# -ne 0 ]; do
   shift 1
 done
 
+DOCKER_PLATFORM=""
+if [ "`uname -sm`" = "Darwin arm64" ]; then
+  # M1 Mac の場合は --platform を指定する
+  DOCKER_PLATFORM="--platform=linux/amd64"
+fi
+
 _FOUND=0
 for package in $_PACKAGES; do
   if [ "$PACKAGE" = "$package" ]; then
@@ -99,7 +105,7 @@ case "$PACKAGE" in
 
     ./$PACKAGE/install_deps.sh
 
-    source ./$PACKAGE/_install/webrtc/release/VERSIONS
+    source ./$PACKAGE/_install/webrtc/VERSIONS
 
     if [ -z "$JOBS" ]; then
       JOBS=`sysctl -n hw.logicalcpu_max`
@@ -172,7 +178,7 @@ case "$PACKAGE" in
       cp -r ../_cache/boost/* $PACKAGE/_cache/boost/
     fi
 
-    DOCKER_BUILDKIT=1 docker build \
+    DOCKER_BUILDKIT=1 docker build $DOCKER_PLATFORM \
       -t momo/$PACKAGE:m$WEBRTC_BUILD_VERSION \
       $DOCKER_BUILD_FLAGS \
       --build-arg WEBRTC_BUILD_VERSION=$WEBRTC_BUILD_VERSION \
@@ -188,7 +194,7 @@ case "$PACKAGE" in
 
     # キャッシュしたデータを取り出す
     set +e
-    docker container create -it --name momo-$PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION
+    docker $DOCKER_PLATFORM container create -it --name momo-$PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION
     docker container start momo-$PACKAGE
     mkdir -p ../_cache/boost/
     docker container cp momo-$PACKAGE:/root/_cache/boost/. ../_cache/boost/

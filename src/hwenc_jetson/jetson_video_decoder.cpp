@@ -45,13 +45,12 @@ JetsonVideoDecoder::~JetsonVideoDecoder() {
   Release();
 }
 
-int32_t JetsonVideoDecoder::InitDecode(const webrtc::VideoCodec* codec_settings,
-                                       int32_t number_of_cores) {
+bool JetsonVideoDecoder::Configure(const Settings& settings) {
   if (JetsonConfigure() != WEBRTC_VIDEO_CODEC_OK) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to JetsonConfigure";
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    return false;
   }
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
