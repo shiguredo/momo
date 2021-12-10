@@ -23,7 +23,7 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.jp/ にサイ�
 
 ```shell
 ./momo --no-audio-device sora \
-    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
+    wss://node-01.sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
         --role sendonly --metadata '{"signaling_key": "xyz"}'
@@ -37,7 +37,7 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 
 ```shell
 ./momo --resolution VGA --no-audio-device --use-sdl --show-me \
-    sora wss://sora-labo.shiguredo.jp/signaling shiguredo@open-momo \
+    sora wss://node-01.sora-labo.shiguredo.jp/signaling shiguredo@open-momo \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
         --multistream true --role sendrecv --metadata '{"signaling_key": "xyz"}'
@@ -49,7 +49,7 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 
 ```shell
 ./momo --no-audio-device sora \
-    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
+    wss://node-01.sora-labo.shiguredo.jp/signaling shiguredo@sora-labo \
         --simulcast true \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
