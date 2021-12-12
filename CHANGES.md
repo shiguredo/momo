@@ -11,12 +11,15 @@
 
 ## develop
 
+- [UPDATE] cmake を 3.22.1 に上げる
+    - @melpon
+
 ## 2021.5.0
 
 - [UPDATE] sdl2 を 2.0.18 に上げる
     - @voluntas
-- [UPDATE] cmake を 3.22.1 に上げる
-    - @voluntas @melpon
+- [UPDATE] cmake を 3.21.4 に上げる
+    - @voluntas
 - [UPDATE] CLI11 を 2.1.2 に上げる
     - @voluntas
 - [UPDATE] `libwebrtc` を `97.4692.0.4` に上げる
