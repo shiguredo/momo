@@ -197,15 +197,14 @@ Options:
 ```
 $ ./momo ayame --help
 Mode for working with WebRTC Signaling Server Ayame
-Usage: ./momo ayame [OPTIONS] SIGNALING-URL ROOM-ID
-
-Positionals:
-  SIGNALING-URL TEXT REQUIRED Signaling URL
-  ROOM-ID TEXT REQUIRED       Room ID
+Usage: ./momo ayame [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
+  --signaling-url TEXT REQUIRED
+                              Signaling URL
+  --channel-id TEXT REQUIRED  Channel ID
   --client-id TEXT            Client ID
   --signaling-key TEXT        Signaling key
 ```
