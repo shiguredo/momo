@@ -11,7 +11,7 @@
 
 ## develop
 
-## 2021.5.1
+## 2021.6.0
 
 - [UPDATE] Boost 1.78.0 に上げる
     - @voluntas
