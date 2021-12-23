@@ -11,6 +11,15 @@
 
 ## develop
 
+## 2021.6.0
+
+- [UPDATE] Boost 1.78.0 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.22.1 に上げる
+    - @melpon
+- [FIX] CaptureProcessの終了処理修正。selectの戻り値(retVal)と終了フラグ(quit_)の参照順を変更
+    - @KaitoYutaka
+
 ## 2021.5.0
 
 - [UPDATE] sdl2 を 2.0.18 に上げる

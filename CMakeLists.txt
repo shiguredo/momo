@@ -594,7 +594,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++14"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)

@@ -454,23 +454,20 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
   // _deviceFd written only in StartCapture, when this thread isn't running.
   retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
-  if (retVal < 0 && errno != EINTR)  // continue if interrupted
-  {
-    // select failed
-    return false;
-  } else if (retVal == 0) {
-    // select timed out
-    return true;
-  } else if (!FD_ISSET(_deviceFd, &rSet)) {
-    // not event on camera handle
-    return true;
-  }
-
   {
     webrtc::MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;
+    } else if (retVal < 0 && errno != EINTR /* continue if interrupted */) {
+      // select failed
+      return false;
+    } else if (retVal == 0) {
+      // select timed out
+      return true;
+    } else if (!FD_ISSET(_deviceFd, &rSet)) {
+      // not event on camera handle
+      return true;
     }
 
     if (_captureStarted) {
