@@ -459,13 +459,10 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
     if (quit_) {
       return false;
-    }
-
-    if (retVal < 0 && errno != EINTR)  // continue if interrupted
-    {
+    } else if (retVal < 0 && errno != EINTR /* continue if interrupted */) {
       // select failed
       return false;
-    } if (retVal == 0) {
+    } else if (retVal == 0) {
       // select timed out
       return true;
     } else if (!FD_ISSET(_deviceFd, &rSet)) {
