@@ -11,9 +11,10 @@
 
 ## develop
 
+## 2021.5.1
+
 - [UPDATE] cmake を 3.22.1 に上げる
     - @melpon
-
 - [FIX] CaptureProcessの終了処理修正。selectの戻り値(retVal)と終了フラグ(quit_)の参照順を変更
     - @KaitoYutaka
 
