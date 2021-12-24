@@ -111,3 +111,9 @@ Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合
 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
 
 プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
+
+##  Windows で受信した H.264 の映像を SDL で表示をしたい
+
+Windows ではライセンスの問題があるため H.264 の映像を SDL で表示できません。
+
+Windows 環境で SDL の映像を受信したい場合は他のコーデックをご利用ください。
