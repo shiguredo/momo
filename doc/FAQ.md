@@ -111,3 +111,8 @@ Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合
 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
 
 プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
+
+##  Windows で H.264 を利用できますか？
+
+NVIDIA のビデオカードの NVENC を利用することで H.264 が利用可能になります。
+ご利用の環境で H.264 が利用できるかどうかは `./momo --video-codec-engines` を使用して H264 の項目をご確認ください。
