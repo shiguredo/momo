@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `97.4692.4.0` に上げる
+    - @voluntas
+
 ## 2021.6.0
 
 - [UPDATE] Boost 1.78.0 に上げる
