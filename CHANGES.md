@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] JetPack 4.6 に上げる
+    - @tnoho
+
 ## 2021.6.0
 
 - [UPDATE] Boost 1.78.0 に上げる
