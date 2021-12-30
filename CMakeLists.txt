@@ -383,11 +383,10 @@ if (USE_SDL2)
   )
 
 
-  if (TARGET SDL2::SDL2-static)
+  if (TARGET SDL2::SDL2Config)
     target_link_libraries(momo
       PRIVATE
-        SDL2::SDL2-static
-        SDL2::SDL2main
+        SDL2::SDL2Config
     )
   else()
     target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
