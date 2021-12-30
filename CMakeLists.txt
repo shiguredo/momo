@@ -383,15 +383,23 @@ if (USE_SDL2)
   )
 
 
-  if (TARGET SDL2::SDL2Config)
+  if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
     target_link_libraries(momo
       PRIVATE
-        SDL2::SDL2Config
+        SDL2::SDL2-static
+        SDL2::SDL2main
     )
   else()
-    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
-    target_link_libraries(momo PRIVATE SDL2)
-    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    if (TARGET SDL2::SDL2Config)
+      target_link_libraries(momo
+        PRIVATE
+          SDL2::SDL2Config
+      )
+    else()
+      target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
+      target_link_libraries(momo PRIVATE SDL2)
+      target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    endif()
   endif()
 
   if ("${TARGET_OS}" STREQUAL "macos")
