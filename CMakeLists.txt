@@ -382,7 +382,14 @@ if (USE_SDL2)
       _THREAD_SAFE
   )
 
-  if (TARGET SDL2::SDL2Config)
+
+  if ("${SDL2_ROOT_DIR}" STREQUAL "" AND TARGET SDL2::SDL2-static)
+    target_link_libraries(momo
+      PRIVATE
+        SDL2::SDL2-static
+        SDL2::SDL2main
+    )
+  elseif (TARGET SDL2::SDL2Config)
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2Config
