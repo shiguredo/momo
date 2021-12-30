@@ -249,7 +249,7 @@ if (NOT "${BOOST_ROOT_DIR}" STREQUAL "")
 endif()
 
 if (USE_SDL2 AND (NOT "${SDL2_ROOT_DIR}" STREQUAL ""))
-  list(APPEND CMAKE_MODULE_PATH ${SDL2_ROOT_DIR}/lib/cmake)
+  list(APPEND CMAKE_MODULE_PATH ${SDL2_ROOT_DIR}/cmake)
   list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
 endif()
 
@@ -383,16 +383,11 @@ if (USE_SDL2)
   )
 
 
-  if ("${SDL2_ROOT_DIR}" STREQUAL "" AND TARGET SDL2::SDL2-static)
+  if (TARGET SDL2::SDL2-static)
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2-static
         SDL2::SDL2main
-    )
-  elseif (TARGET SDL2::SDL2Config)
-    target_link_libraries(momo
-      PRIVATE
-        SDL2::SDL2Config
     )
   else()
     target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
