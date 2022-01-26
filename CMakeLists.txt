@@ -382,16 +382,24 @@ if (USE_SDL2)
       _THREAD_SAFE
   )
 
-  if (TARGET SDL2::SDL2-static)
+
+  if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2-static
         SDL2::SDL2main
     )
   else()
-    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
-    target_link_libraries(momo PRIVATE SDL2)
-    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    if (TARGET SDL2::SDL2Config)
+      target_link_libraries(momo
+        PRIVATE
+          SDL2::SDL2Config
+      )
+    else()
+      target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
+      target_link_libraries(momo PRIVATE SDL2)
+      target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    endif()
   endif()
 
   if ("${TARGET_OS}" STREQUAL "macos")
@@ -703,8 +711,8 @@ elseif (TARGET_OS STREQUAL "linux")
         target_link_directories(momo PRIVATE ${_VC_PATH}/lib)
         target_link_libraries(momo
           PRIVATE
-            brcmGLESv2
-            brcmEGL
+            GLESv2
+            EGL
             bcm_host
             containers
             vcos
