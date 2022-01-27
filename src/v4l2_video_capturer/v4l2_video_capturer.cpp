@@ -499,11 +499,17 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
 bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
+  unsigned char* start = (unsigned char*)_pool[buf.index].start;
+  unsigned int bytesused = buf.bytesused;
+  if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused > 2 &&
+      !(start[0] == 0xff && start[1] == 0xd8)) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Invalid JPEG buffer frame skipped";
+    return false;
+  }
   if (UseNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
         NativeBuffer::Create(_captureVideoType, _currentWidth, _currentHeight));
-    memcpy(native_buffer->MutableData(), (unsigned char*)_pool[buf.index].start,
-           buf.bytesused);
+    memcpy(native_buffer->MutableData(), start, bytesused);
     native_buffer->SetLength(buf.bytesused);
     dst_buffer = native_buffer;
   } else {
@@ -511,12 +517,12 @@ bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
         webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
     i420_buffer->InitializeData();
     if (libyuv::ConvertToI420(
-            (unsigned char*)_pool[buf.index].start, buf.bytesused,
-            i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
-            i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
-            i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), 0,
-            0, _currentWidth, _currentHeight, _currentWidth, _currentHeight,
-            libyuv::kRotate0, ConvertVideoType(_captureVideoType)) < 0) {
+            start, bytesused, i420_buffer.get()->MutableDataY(),
+            i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+            i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+            i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
+            _currentWidth, _currentHeight, libyuv::kRotate0,
+            ConvertVideoType(_captureVideoType)) < 0) {
       RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
     } else {
       dst_buffer = i420_buffer;

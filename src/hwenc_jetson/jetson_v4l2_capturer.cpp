@@ -35,7 +35,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
 }
 
 bool JetsonV4L2Capturer::UseNativeBuffer() {
-  return true;  
+  return true;
 }
 
 rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
@@ -95,35 +95,39 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
     return false;
   }
 
+  unsigned char* start = (unsigned char*)_pool[buf.index].start;
+  unsigned int bytesused = buf.bytesused;
   if (_captureVideoType == webrtc::VideoType::kMJPEG) {
-    unsigned int bytesused = buf.bytesused;
+    if (bytesused > 2 && !(start[0] == 0xff && start[1] == 0xd8)) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Invalid JPEG buffer frame skipped";
+      return false;
+    }
+
     unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
-    uint8_t *p;
+    uint8_t* p;
     /* v4l2_buf.bytesused may have padding bytes for alignment
         Search for EOF to get exact size */
     if (eosSearchSize > bytesused)
-        eosSearchSize = bytesused;
+      eosSearchSize = bytesused;
     for (unsigned int i = 0; i < eosSearchSize; i++) {
-        p = (uint8_t *)_pool[buf.index].start + bytesused;
-        if ((*(p-2) == 0xff) && (*(p-1) == 0xd9)) {
-            break;
-        }
-        bytesused--;
+      p = start + bytesused;
+      if ((*(p - 2) == 0xff) && (*(p - 1) == 0xd9)) {
+        break;
+      }
+      bytesused--;
     }
 
     auto decoder = jpeg_decoder_pool_->Pop();
     int fd = 0;
     uint32_t width, height, pixfmt;
-    if (decoder->DecodeToFd(fd, (unsigned char *)_pool[buf.index].start,
-        bytesused, pixfmt, width, height) < 0) {
+    if (decoder->DecodeToFd(fd, start, bytesused, pixfmt, width, height) < 0) {
       RTC_LOG(LS_ERROR) << "decodeToFd Failed";
       return false;
     }
 
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
-        JetsonBuffer::Create(
-            _captureVideoType, width, height, adapted_width, adapted_height,
-            fd, pixfmt, std::move(decoder)));
+        JetsonBuffer::Create(_captureVideoType, width, height, adapted_width,
+                             adapted_height, fd, pixfmt, std::move(decoder)));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
@@ -134,12 +138,10 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
 
   } else {
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
-        JetsonBuffer::Create(
-            _captureVideoType, _currentWidth, _currentHeight,
-            adapted_width, adapted_height));
-    memcpy(jetson_buffer->Data(), (unsigned char*)_pool[buf.index].start,
-           buf.bytesused);
-    jetson_buffer->SetLength(buf.bytesused);
+        JetsonBuffer::Create(_captureVideoType, _currentWidth, _currentHeight,
+                             adapted_width, adapted_height));
+    memcpy(jetson_buffer->Data(), start, bytesused);
+    jetson_buffer->SetLength(bytesused);
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
