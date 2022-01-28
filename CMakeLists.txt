@@ -350,7 +350,7 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-set_target_properties(momo PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
 
 target_link_libraries(momo
   PRIVATE
@@ -362,6 +362,8 @@ target_link_libraries(momo
 
 target_compile_definitions(momo
   PRIVATE
+    # std::filesystem を使わないようにする
+    CLI11_HAS_FILESYSTEM=0
     OPENSSL_IS_BORINGSSL
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>

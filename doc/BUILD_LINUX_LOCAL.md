@@ -81,6 +81,7 @@ if [ ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]; then
   pushd $SOURCE_DIR/boost/source
     echo "using clang : : $INSTALL_DIR/llvm/clang/bin/clang++ : ;" > project-config.jam
     ./b2 \
+      cxxstd=17 \
       cxxflags=" \
         -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
@@ -294,6 +295,7 @@ if [ ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]; then
   pushd $SOURCE_DIR/boost/source
     echo "using clang : : $SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts/bin/clang++ : ;" > project-config.jam
     ./b2 \
+      cxxstd=17 \
       cxxflags=" \
         -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
