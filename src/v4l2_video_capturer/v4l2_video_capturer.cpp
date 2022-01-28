@@ -484,12 +484,22 @@ bool V4L2VideoCapturer::CaptureProcess() {
         }
       }
 
-      if (!OnCaptured(buf)) {
-        // enqueue the buffer again
-        if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-          RTC_LOG(LS_INFO) << __FUNCTION__
-                           << " Failed to enqueue capture buffer";
-        }
+      uint8_t* data = (uint8_t*)_pool[buf.index].start;
+      uint32_t bytesused = buf.bytesused;
+      // 一部のカメラ (DELL WB7022) は不正なデータを送ってくることがある。
+      // これをハードウェアJPEGデコーダーに送ると Momo ごとクラッシュしてしまう。
+      // JPEG の先頭は SOI マーカー 0xffd8 で始まるのでチェックして落ちないようにする。
+      if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused > 2 &&
+          !(data[0] == 0xff && data[1] == 0xd8)) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__
+                          << " Invalid JPEG buffer frame skipped";
+      } else {
+        OnCaptured(data, bytesused);
+      }
+
+      // enqueue the buffer again
+      if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
+        RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
       }
     }
   }
@@ -497,27 +507,20 @@ bool V4L2VideoCapturer::CaptureProcess() {
   return true;
 }
 
-bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
+void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  unsigned char* start = (unsigned char*)_pool[buf.index].start;
-  unsigned int bytesused = buf.bytesused;
-  if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused > 2 &&
-      !(start[0] == 0xff && start[1] == 0xd8)) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Invalid JPEG buffer frame skipped";
-    return false;
-  }
   if (UseNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
         NativeBuffer::Create(_captureVideoType, _currentWidth, _currentHeight));
-    memcpy(native_buffer->MutableData(), start, bytesused);
-    native_buffer->SetLength(buf.bytesused);
+    memcpy(native_buffer->MutableData(), data, bytesused);
+    native_buffer->SetLength(bytesused);
     dst_buffer = native_buffer;
   } else {
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
         webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
     i420_buffer->InitializeData();
     if (libyuv::ConvertToI420(
-            start, bytesused, i420_buffer.get()->MutableDataY(),
+            data, bytesused, i420_buffer.get()->MutableDataY(),
             i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
             i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
             i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
@@ -539,10 +542,4 @@ bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
                                          .build();
     OnCapturedFrame(video_frame);
   }
-
-  // enqueue the buffer again
-  if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
-  }
-  return true;
 }
