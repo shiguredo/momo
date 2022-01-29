@@ -9,7 +9,6 @@ on:
     - 'THANKS'
     - 'LICENSE'
     - 'NOTICE'
-  pull_request:
 
 jobs:
   build-windows:

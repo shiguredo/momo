@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Raspberry Pi OS bullseye に対応
+    - @tnoho
 - [UPDATE] JetPack 4.6 に上げる
     - @tnoho
 - [UPDATE] `libwebrtc` を `97.4692.4.0` に上げる
