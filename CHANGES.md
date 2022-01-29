@@ -17,6 +17,8 @@
     - @tnoho
 - [UPDATE] `libwebrtc` を `99.4844.0.0` に上げる
     - @tnoho
+- [UPDATE] sdl2 を 2.0.20 に上げる
+    - @voluntas
 
 
 ## 2021.6.0
