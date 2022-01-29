@@ -38,6 +38,7 @@ RUN \
   && cd /root/boost-source/source \
   && echo 'using clang : : /root/llvm/clang/bin/clang++ : ;' > project-config.jam \
   && ./b2 \
+    cxxstd=17 \
     cxxflags=' \
       -D_LIBCPP_ABI_UNSTABLE \
       -D_LIBCPP_DISABLE_AVAILABILITY \

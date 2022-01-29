@@ -376,7 +376,6 @@ webrtc::VideoEncoder::EncoderInfo MMALH264Encoder::GetEncoderInfo() const {
   info.implementation_name = "MMAL H264";
   info.scaling_settings =
       VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
-  info.has_internal_source = false;
   return info;
 }
 

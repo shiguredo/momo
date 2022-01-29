@@ -31,7 +31,7 @@ pushd $OUTPUT_DIR/llvm
   pushd tools
     git fetch
     git reset --hard $WEBRTC_SRC_TOOLS_COMMIT
-    python clang/scripts/update.py --output-dir=$OUTPUT_DIR/llvm/clang
+    python3 clang/scripts/update.py --output-dir=$OUTPUT_DIR/llvm/clang
   popd
 popd
 

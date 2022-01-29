@@ -12,7 +12,12 @@ on:
 
 jobs:
   build-windows:
-    name: Build momo for Windows
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+    name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -43,9 +48,9 @@ jobs:
           }
           $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
           $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip" >> windows.env
-          echo "CONTENT_TYPE=application/zip" >> windows.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip"
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> windows_${{ matrix.arch }}.env
+          echo "CONTENT_TYPE=application/zip" >> windows_${{ matrix.arch }}.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
@@ -55,8 +60,8 @@ jobs:
       - name: Upload Environment
         uses: actions/upload-artifact@v2
         with:
-          name: windows.env
-          path: windows.env
+          name: windows_${{ matrix.arch }}.env
+          path: windows_${{ matrix.arch }}.env
   build-macos:
     strategy:
       fail-fast: false
@@ -185,7 +190,7 @@ jobs:
       fail-fast: true
       matrix:
         name:
-          - windows
+          - windows_x86_64
           - macos_arm64
           - macos_x86_64
           - raspberry-pi-os_armv6
