@@ -15,8 +15,8 @@
     - @tnoho
 - [UPDATE] JetPack 4.6 に上げる
     - @tnoho
-- [UPDATE] `libwebrtc` を `97.4692.4.0` に上げる
-    - @voluntas
+- [UPDATE] `libwebrtc` を `99.4844.0.0` に上げる
+    - @tnoho
 
 
 ## 2021.6.0
