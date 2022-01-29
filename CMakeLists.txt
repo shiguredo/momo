@@ -34,8 +34,8 @@ set(WEBRTC_BUILD_VERSION "unspecified" CACHE STRING "webrtc-build のバージ�
 set(WEBRTC_READABLE_VERSION "unspecified" CACHE STRING "WebRTC の読みやすいバージョン")
 set(WEBRTC_COMMIT "<commit>" CACHE STRING "WebRTC のコミットハッシュ")
 
-if(MOMO_PACKAGE_NAME STREQUAL "windows")
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/windows/_install)
+if(MOMO_PACKAGE_NAME STREQUAL "windows_x86_64")
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/windows_x86_64/_install)
 
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")

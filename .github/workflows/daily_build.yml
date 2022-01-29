@@ -8,7 +8,12 @@ on:
 
 jobs:
   build-windows:
-    name: Build momo for Windows
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+    name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2

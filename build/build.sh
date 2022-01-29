@@ -90,7 +90,7 @@ popd
 source ../VERSION
 
 case "$PACKAGE" in
-  "windows" )
+  "windows_x86_64" )
     echo "Windows では build.bat を利用してください。"
     exit 1
     ;;
