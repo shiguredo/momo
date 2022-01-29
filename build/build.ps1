@@ -67,10 +67,10 @@ if ($package) {
       Remove-Item "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}" -Force -Recurse
     }
     mkdir -Force "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}"
-    Copy-Item "_build\windows_${WINDOWS_ARCH}\Release\momo.exe" "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}"\
-    Copy-Item LICENSE                                           "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}"\
-    Copy-Item NOTICE                                            "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}"\
-    Copy-Item html                                              "_package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}"\html\ -Recurse
+    Copy-Item _build\windows_${WINDOWS_ARCH}\Release\momo.exe _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}\
+    Copy-Item LICENSE                                         _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}\
+    Copy-Item NOTICE                                          _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}\
+    Copy-Item html                                            _package\momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}\html\ -Recurse
     Push-Location _package
       Compress-Archive -Path "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}" -DestinationPath "momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${WINDOWS_ARCH}.zip"
     Pop-Location
