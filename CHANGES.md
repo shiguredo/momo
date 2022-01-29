@@ -19,6 +19,8 @@
     - @tnoho
 - [UPDATE] sdl2 を 2.0.20 に上げる
     - @voluntas
+- [UPDATE] cmake を 3.22.2 に上げる
+    - @voluntas
 
 
 ## 2021.6.0
