@@ -98,6 +98,10 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 Momo では Sora の DataChannel メッセージングに対応する予定はありません。 Sora C++ SDK にて対応予定です。
 
+## Raspberry Pi OS のレガシー版には対応していますか？
+
+レガシー版には対応せず、最新版にのみ対応していきます。
+
 ## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
 RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラでしか機能しません。
