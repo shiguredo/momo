@@ -26,6 +26,7 @@ apt-get -y install \
   lsb-release \
   python \
   python-dev \
+  python3 \
   rsync \
   sudo \
   vim \
