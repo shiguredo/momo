@@ -21,7 +21,6 @@ apt-get -y install \
   lsb-release \
   multistrap \
   python \
-  python3 \
   rsync \
   sudo \
   vim \
