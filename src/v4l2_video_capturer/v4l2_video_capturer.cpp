@@ -39,6 +39,8 @@
 #include <rtc_base/ref_counted_object.h>
 #include <third_party/libyuv/include/libyuv.h>
 
+#define MJPEG_EOS_SEARCH_SIZE 4096
+
 rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
@@ -489,10 +491,26 @@ bool V4L2VideoCapturer::CaptureProcess() {
       // 一部のカメラ (DELL WB7022) は不正なデータを送ってくることがある。
       // これをハードウェアJPEGデコーダーに送ると Momo ごとクラッシュしてしまう。
       // JPEG の先頭は SOI マーカー 0xffd8 で始まるのでチェックして落ちないようにする。
-      if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused > 2 &&
-          !(data[0] == 0xff && data[1] == 0xd8)) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__
-                          << " Invalid JPEG buffer frame skipped";
+      if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused >= 2) {
+        if (data[0] != 0xff || data[1] != 0xd8) {
+          RTC_LOG(LS_WARNING) << __FUNCTION__
+                              << " Invalid JPEG buffer frame skipped";
+        } else {
+          unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
+          uint8_t* p;
+          /* v4l2_buf.bytesused may have padding bytes for alignment
+              Search for EOF to get exact size */
+          if (eosSearchSize > bytesused)
+            eosSearchSize = bytesused;
+          for (unsigned int i = 0; i < eosSearchSize; i++) {
+            p = data + bytesused;
+            if ((*(p - 2) == 0xff) && (*(p - 1) == 0xd9)) {
+              break;
+            }
+            bytesused--;
+          }
+          OnCaptured(data, bytesused);
+        }
       } else {
         OnCaptured(data, bytesused);
       }

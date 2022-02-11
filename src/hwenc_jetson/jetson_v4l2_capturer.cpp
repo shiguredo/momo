@@ -9,8 +9,6 @@
 
 #include "jetson_buffer.h"
 
-#define MJPEG_EOS_SEARCH_SIZE 4096
-
 rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
     V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
@@ -96,20 +94,6 @@ void JetsonV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   }
 
   if (_captureVideoType == webrtc::VideoType::kMJPEG) {
-    unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
-    uint8_t* p;
-    /* v4l2_buf.bytesused may have padding bytes for alignment
-        Search for EOF to get exact size */
-    if (eosSearchSize > bytesused)
-      eosSearchSize = bytesused;
-    for (unsigned int i = 0; i < eosSearchSize; i++) {
-      p = data + bytesused;
-      if ((*(p - 2) == 0xff) && (*(p - 1) == 0xd9)) {
-        break;
-      }
-      bytesused--;
-    }
-
     auto decoder = jpeg_decoder_pool_->Pop();
     int fd = 0;
     uint32_t width, height, pixfmt;
