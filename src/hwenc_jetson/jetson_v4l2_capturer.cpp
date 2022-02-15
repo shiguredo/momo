@@ -9,8 +9,6 @@
 
 #include "jetson_buffer.h"
 
-#define MJPEG_EOS_SEARCH_SIZE 4096
-
 rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
     V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
@@ -35,7 +33,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
 }
 
 bool JetsonV4L2Capturer::UseNativeBuffer() {
-  return true;  
+  return true;
 }
 
 rtc::scoped_refptr<V4L2VideoCapturer> JetsonV4L2Capturer::Create(
@@ -86,44 +84,27 @@ bool JetsonV4L2Capturer::DeAllocateVideoBuffers() {
   return V4L2VideoCapturer::DeAllocateVideoBuffers();
 }
 
-bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
+void JetsonV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   const int64_t timestamp_us = rtc::TimeMicros();
   int adapted_width, adapted_height, crop_width, crop_height, crop_x, crop_y;
   if (!AdaptFrame(_currentWidth, _currentHeight, timestamp_us, &adapted_width,
                   &adapted_height, &crop_width, &crop_height, &crop_x,
                   &crop_y)) {
-    return false;
+    return;
   }
 
   if (_captureVideoType == webrtc::VideoType::kMJPEG) {
-    unsigned int bytesused = buf.bytesused;
-    unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
-    uint8_t *p;
-    /* v4l2_buf.bytesused may have padding bytes for alignment
-        Search for EOF to get exact size */
-    if (eosSearchSize > bytesused)
-        eosSearchSize = bytesused;
-    for (unsigned int i = 0; i < eosSearchSize; i++) {
-        p = (uint8_t *)_pool[buf.index].start + bytesused;
-        if ((*(p-2) == 0xff) && (*(p-1) == 0xd9)) {
-            break;
-        }
-        bytesused--;
-    }
-
     auto decoder = jpeg_decoder_pool_->Pop();
     int fd = 0;
     uint32_t width, height, pixfmt;
-    if (decoder->DecodeToFd(fd, (unsigned char *)_pool[buf.index].start,
-        bytesused, pixfmt, width, height) < 0) {
+    if (decoder->DecodeToFd(fd, data, bytesused, pixfmt, width, height) < 0) {
       RTC_LOG(LS_ERROR) << "decodeToFd Failed";
-      return false;
+      return;
     }
 
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
-        JetsonBuffer::Create(
-            _captureVideoType, width, height, adapted_width, adapted_height,
-            fd, pixfmt, std::move(decoder)));
+        JetsonBuffer::Create(_captureVideoType, width, height, adapted_width,
+                             adapted_height, fd, pixfmt, std::move(decoder)));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
@@ -134,12 +115,10 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
 
   } else {
     rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
-        JetsonBuffer::Create(
-            _captureVideoType, _currentWidth, _currentHeight,
-            adapted_width, adapted_height));
-    memcpy(jetson_buffer->Data(), (unsigned char*)_pool[buf.index].start,
-           buf.bytesused);
-    jetson_buffer->SetLength(buf.bytesused);
+        JetsonBuffer::Create(_captureVideoType, _currentWidth, _currentHeight,
+                             adapted_width, adapted_height));
+    memcpy(jetson_buffer->Data(), data, bytesused);
+    jetson_buffer->SetLength(bytesused);
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
@@ -148,10 +127,4 @@ bool JetsonV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build());
   }
-
-  // enqueue the buffer again
-  if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
-  }
-  return true;
 }

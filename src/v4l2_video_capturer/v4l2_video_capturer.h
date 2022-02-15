@@ -50,7 +50,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   virtual int32_t StopCapture();
   virtual bool AllocateVideoBuffers();
   virtual bool DeAllocateVideoBuffers();
-  virtual bool OnCaptured(struct v4l2_buffer& buf);
+  virtual void OnCaptured(uint8_t* data, uint32_t bytesused);
 
   int32_t _deviceFd;
   int32_t _currentWidth;

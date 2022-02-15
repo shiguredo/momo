@@ -97,7 +97,7 @@ bool MMALV4L2Capturer::UseNativeBuffer() {
   return true;
 }
 
-bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
+void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   const int64_t timestamp_us = rtc::TimeMicros();
 
   int adapted_width;
@@ -109,7 +109,7 @@ bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
   if (!AdaptFrame(_currentWidth, _currentHeight, timestamp_us, &adapted_width,
                   &adapted_height, &crop_width, &crop_height, &crop_x,
                   &crop_y)) {
-    return false;
+    return;
   }
   std::lock_guard<std::mutex> lock(mtx_);
 
@@ -121,7 +121,7 @@ bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
     MMALRelease();
     if (MMALConfigure(adapted_width, adapted_height) == -1) {
       RTC_LOG(LS_ERROR) << "Failed to MMALConfigure";
-      return false;
+      return;
     }
   }
 
@@ -138,20 +138,14 @@ bool MMALV4L2Capturer::OnCaptured(struct v4l2_buffer& buf) {
     buffer->pts = buffer->dts = timestamp_us;
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
-    buffer->data = (uint8_t*)_pool[buf.index].start;
-    buffer->length = buffer->alloc_size = buf.bytesused;
+    buffer->data = data;
+    buffer->length = buffer->alloc_size = bytesused;
     if (mmal_port_send_buffer(component_in_->input[0], buffer) !=
         MMAL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to send input buffer";
-      return false;
+      return;
     }
   }
-
-  // enqueue the buffer again
-  if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
-  }
-  return true;
 }
 
 void MMALV4L2Capturer::MMALInputCallbackFunction(MMAL_PORT_T* port,

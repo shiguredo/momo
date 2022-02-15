@@ -7,9 +7,11 @@
 
 class JetsonV4L2Capturer : public V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(V4L2VideoCapturerConfig config);
+  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+      V4L2VideoCapturerConfig config);
 
   bool UseNativeBuffer() override;
+
  private:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
@@ -18,7 +20,7 @@ class JetsonV4L2Capturer : public V4L2VideoCapturer {
 
   bool AllocateVideoBuffers() override;
   bool DeAllocateVideoBuffers() override;
-  bool OnCaptured(struct v4l2_buffer& buf) override;
+  void OnCaptured(uint8_t* data, uint32_t bytesused) override;
 
   std::shared_ptr<JetsonJpegDecoderPool> jpeg_decoder_pool_;
 };
