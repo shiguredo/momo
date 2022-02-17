@@ -21,6 +21,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1.1
+        with:
+          vs-version: '[16,17)'
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
