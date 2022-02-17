@@ -31,7 +31,7 @@ const std::string ScreenVideoCapturer::GetSourceListString() {
   if (GetSourceList(&sources)) {
     int i = 0;
     for (webrtc::DesktopCapturer::Source& source : sources) {
-      oss << i++ << " : " << source.title << std::endl;
+      oss << std::to_string(i++) << " : " << source.title << std::endl;
     }
   }
   return oss.str();
