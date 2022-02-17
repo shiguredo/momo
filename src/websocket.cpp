@@ -13,7 +13,11 @@
 #include "util.h"
 
 static boost::asio::ssl::context CreateSSLContext() {
-  boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+  // TLS 1.2 と 1.3 のみ対応
+  SSL_CTX* handle = ::SSL_CTX_new(::TLS_method());
+  SSL_CTX_set_min_proto_version(handle, TLS1_2_VERSION);
+  SSL_CTX_set_max_proto_version(handle, TLS1_3_VERSION);
+  boost::asio::ssl::context ctx(handle);
   //ctx.set_default_verify_paths();
   ctx.set_options(boost::asio::ssl::context::default_workarounds |
                   boost::asio::ssl::context::no_sslv2 |
