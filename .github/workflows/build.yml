@@ -18,11 +18,9 @@ jobs:
         arch:
           - x86_64
     name: Build momo for Windows_${{ matrix.arch }}
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
