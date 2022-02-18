@@ -21,6 +21,8 @@
     - @voluntas
 - [UPDATE] cmake を 3.22.2 に上げる
     - @voluntas
+- [FIX] スクリーンキャプチャが Linux で落ちるのを修正
+    - @tnoho
 
 
 ## 2021.6.0
