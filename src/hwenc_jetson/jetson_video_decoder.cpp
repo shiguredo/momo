@@ -236,7 +236,7 @@ void JetsonVideoDecoder::CaptureLoop() {
       if (errno == EAGAIN) {
         continue;
       } else {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "　Failed to dqEvent at decoder";
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to dqEvent at decoder";
         got_error_ = true;
         break;
       }
@@ -258,6 +258,7 @@ void JetsonVideoDecoder::CaptureLoop() {
     while (1) {
       struct v4l2_buffer v4l2_buf;
       struct v4l2_plane planes[MAX_PLANES];
+      struct v4l2_crop crop;
 
       memset(&v4l2_buf, 0, sizeof(v4l2_buf));
       memset(planes, 0, sizeof(planes));
@@ -275,18 +276,24 @@ void JetsonVideoDecoder::CaptureLoop() {
         break;
       }
 
+      ret = decoder_->capture_plane.getCrop(crop);
+      if (ret == -1) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << " getCrop failed";
+        break;
+      }
+
       uint64_t pts = v4l2_buf.timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                      v4l2_buf.timestamp.tv_usec;
 
       NvBufferRect src_rect, dest_rect;
       src_rect.top = 0;
       src_rect.left = 0;
-      src_rect.width = buffer->planes[0].fmt.width;
-      src_rect.height = buffer->planes[0].fmt.height;
+      src_rect.width = crop.c.width;
+      src_rect.height = crop.c.height;
       dest_rect.top = 0;
       dest_rect.left = 0;
-      dest_rect.width = buffer->planes[0].fmt.width;
-      dest_rect.height = buffer->planes[0].fmt.height;
+      dest_rect.width = crop.c.width;
+      dest_rect.height = crop.c.height;
 
       NvBufferTransformParams transform_params;
       memset(&transform_params, 0, sizeof(transform_params));
@@ -303,8 +310,8 @@ void JetsonVideoDecoder::CaptureLoop() {
       }
 
       rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-          buffer_pool_.CreateI420Buffer(buffer->planes[0].fmt.width,
-                                        buffer->planes[0].fmt.height);
+          buffer_pool_.CreateI420Buffer(crop.c.width,
+                                        crop.c.height);
       if (!i420_buffer.get()) {
         // Pool has too many pending frames.
         RTC_HISTOGRAM_BOOLEAN(
