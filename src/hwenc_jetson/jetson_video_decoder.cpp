@@ -258,7 +258,6 @@ void JetsonVideoDecoder::CaptureLoop() {
     while (1) {
       struct v4l2_buffer v4l2_buf;
       struct v4l2_plane planes[MAX_PLANES];
-      struct v4l2_crop crop;
 
       memset(&v4l2_buf, 0, sizeof(v4l2_buf));
       memset(planes, 0, sizeof(planes));
@@ -276,24 +275,18 @@ void JetsonVideoDecoder::CaptureLoop() {
         break;
       }
 
-      ret = decoder_->capture_plane.getCrop(crop);
-      if (ret == -1) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << " getCrop failed";
-        break;
-      }
-
       uint64_t pts = v4l2_buf.timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                      v4l2_buf.timestamp.tv_usec;
 
       NvBufferRect src_rect, dest_rect;
       src_rect.top = 0;
       src_rect.left = 0;
-      src_rect.width = crop.c.width;
-      src_rect.height = crop.c.height;
+      src_rect.width = width_;
+      src_rect.height = height_;
       dest_rect.top = 0;
       dest_rect.left = 0;
-      dest_rect.width = crop.c.width;
-      dest_rect.height = crop.c.height;
+      dest_rect.width = width_;
+      dest_rect.height = height_;
 
       NvBufferTransformParams transform_params;
       memset(&transform_params, 0, sizeof(transform_params));
@@ -310,8 +303,7 @@ void JetsonVideoDecoder::CaptureLoop() {
       }
 
       rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-          buffer_pool_.CreateI420Buffer(crop.c.width,
-                                        crop.c.height);
+          buffer_pool_.CreateI420Buffer(width_, height_);
       if (!i420_buffer.get()) {
         // Pool has too many pending frames.
         RTC_HISTOGRAM_BOOLEAN(
@@ -376,10 +368,11 @@ int JetsonVideoDecoder::SetCapture() {
   struct v4l2_crop crop;
   ret = decoder_->capture_plane.getCrop(crop);
   INIT_ERROR(ret < 0, "Failed to getCrop at capture_plane");
+  width_ = crop.c.width;
+  height_ = crop.c.height;
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " " << format.fmt.pix_mp.pixelformat
-                   << " " << format.fmt.pix_mp.width << "x"
-                   << format.fmt.pix_mp.height;
+                   << " " << width_ << "x" << height_;
 
   if (dst_dma_fd_ != -1) {
     NvBufferDestroy(dst_dma_fd_);
@@ -388,8 +381,8 @@ int JetsonVideoDecoder::SetCapture() {
 
   NvBufferCreateParams input_params = {0};
   input_params.payloadType = NvBufferPayload_SurfArray;
-  input_params.width = crop.c.width;
-  input_params.height = crop.c.height;
+  input_params.width = width_;
+  input_params.height = height_;
   input_params.layout = NvBufferLayout_Pitch;
   input_params.colorFormat = NvBufferColorFormat_YUV420;
   input_params.nvbuf_tag = NvBufferTag_VIDEO_DEC;

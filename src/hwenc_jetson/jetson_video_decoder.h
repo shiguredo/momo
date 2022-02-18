@@ -54,6 +54,8 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;
+  int32_t width_;
+  int32_t height_;
 };
 
 #endif  // JETSON_VIDEO_DECODER_H_
