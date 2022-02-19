@@ -236,7 +236,7 @@ void JetsonVideoDecoder::CaptureLoop() {
       if (errno == EAGAIN) {
         continue;
       } else {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to dqEvent at decoder";
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to dqEvent at decoder";
         got_error_ = true;
         break;
       }
@@ -295,6 +295,7 @@ void JetsonVideoDecoder::CaptureLoop() {
       transform_params.transform_filter = NvBufferTransform_Filter_Smart;
       transform_params.src_rect = src_rect;
       transform_params.dst_rect = dest_rect;
+      // 何が来ても YUV420 に変換する
       ret = NvBufferTransform(buffer->planes[0].fd, dst_dma_fd_,
                               &transform_params);
       if (ret == -1) {
