@@ -21,6 +21,8 @@
     - @voluntas
 - [UPDATE] cmake を 3.22.2 に上げる
     - @voluntas
+- [ADD] DataChannel を使うことになっていて Offer を行う際には DataChannel を作るように変更
+    - @tnoho
 
 
 ## 2021.6.0
