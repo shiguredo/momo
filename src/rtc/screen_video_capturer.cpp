@@ -31,6 +31,10 @@ const std::string ScreenVideoCapturer::GetSourceListString() {
   if (GetSourceList(&sources)) {
     int i = 0;
     for (webrtc::DesktopCapturer::Source& source : sources) {
+      // ubuntu で画面キャプチャが動かない問題への対策
+      // 原因は正しくつかめていないが std::to_string をはさむことで
+      // セグメンテーション違反となる処理を回避できているのか、
+      // クリーンインストールされた環境においては問題なく動作する。
       oss << std::to_string(i++) << " : " << source.title << std::endl;
     }
   }
