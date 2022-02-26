@@ -15,8 +15,13 @@ metadataオプションのキーや値を囲む「"」を「\\\"」にする必�
 
 PowerShell での実行例：
 ```
-.\momo.exe --no-audio-device sora `
-    wss://sora-labo.shiguredo.jp/signaling shiguredo@sora-labo `
+.\momo.exe --no-audio-device `
+    sora `
+        --signaling-url `
+             wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling `
+             wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling `
+             wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling `
+        --channel-id shiguredo@sora-labo `
         --video-codec-type VP8 --video-bit-rate 500 `
         --audio false `
         --role sendonly --metadata '{\"signaling_key\": \"xyz\"}'
