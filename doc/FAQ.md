@@ -51,7 +51,7 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 ### 動作確認が取れたビデオカード
 
-**是非 Discord の #nvidia-video-codec-sdk チャネルまでご連絡ください**
+**是非 Discord の #momo-nvidia-video-codec-sdk チャネルまでご連絡ください**
 
 - GeForce GTX 1080 Ti
     - @melpon
