@@ -108,9 +108,9 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 ```shell
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
     --signaling-url \
-        wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling \
-        wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling \
-        wss://<IPv4Address>.<ClusterType>.sora.sora-labo.shiguredo.app/signaling \
+        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
+        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
+        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
     --channel-id shiguredo@sora-labo \
     --video true --audio true \
     --video-codec-type VP8 --video-bit-rate 15000 \
