@@ -370,9 +370,9 @@ int JetsonVideoDecoder::SetCapture() {
   ret = decoder_->capture_plane.getCrop(*capture_crop_.get());
   INIT_ERROR(ret < 0, "Failed to getCrop at capture_plane");
 
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " plane format " << format.fmt.pix_mp.pixelformat
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " plane format " << format.fmt.pix_mp.pixelformat
                    << " " << format.fmt.pix_mp.width << "x" << format.fmt.pix_mp.height;
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " crop "
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " crop "
                    << capture_crop_->c.top << "x" << capture_crop_->c.left
                    << " " << capture_crop_->c.width << "x" << format.fmt.pix_mp.height;
 
