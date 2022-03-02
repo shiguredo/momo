@@ -223,7 +223,7 @@ jobs:
           name: ${{ steps.env.outputs.package_name }}
           path: ${{ steps.env.outputs.package_name }}
       - name: Upload ${{ matrix.name }} Release Asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
