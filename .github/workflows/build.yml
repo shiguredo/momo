@@ -20,7 +20,7 @@ jobs:
     name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -72,7 +72,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -121,7 +121,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -242,7 +242,7 @@ jobs:
       - upload-assets
     if: always()
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||
