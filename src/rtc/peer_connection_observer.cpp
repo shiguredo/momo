@@ -10,6 +10,10 @@ PeerConnectionObserver::~PeerConnectionObserver() {
   ClearAllRegisteredTracks();
 }
 
+RTCDataManager* PeerConnectionObserver::DataManager() {
+  return data_manager_;
+}
+
 void PeerConnectionObserver::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
   if (data_manager_ != nullptr) {
