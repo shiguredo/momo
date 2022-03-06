@@ -21,6 +21,8 @@
     - @voluntas
 - [UPDATE] cmake を 3.22.2 に上げる
     - @voluntas
+- [FIX] Jetson のハードウェアデコーダーが出力時に出力サイズでフレームを切り抜いていなかったため修正
+    - @tnoho
 - [FIX] スクリーンキャプチャが Linux で落ちるのを修正
     - @tnoho
 - [ADD] DataChannel を使うことになっていて Offer を行う際には DataChannel を作るように変更
