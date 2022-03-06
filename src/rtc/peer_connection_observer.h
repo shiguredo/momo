@@ -16,6 +16,8 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
       : sender_(sender), receiver_(receiver), data_manager_(data_manager) {}
   ~PeerConnectionObserver();
 
+  RTCDataManager* DataManager();
+
  private:
   void OnSignalingChange(
       webrtc::PeerConnectionInterface::SignalingState new_state) override {}

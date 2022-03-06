@@ -51,7 +51,7 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 ### 動作確認が取れたビデオカード
 
-**是非 Discord の #nvidia-video-codec-sdk チャネルまでご連絡ください**
+**是非 Discord の #momo-nvidia-video-codec-sdk チャネルまでご連絡ください**
 
 - GeForce GTX 1080 Ti
     - @melpon
@@ -108,7 +108,7 @@ RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラ�
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
 
-##  Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
+## Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
 
 Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。 
 
@@ -116,7 +116,15 @@ Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合
 
 プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
 
-##  Windows で H.264 を利用できますか？
+## Windows で H.264 を利用できますか？
 
 NVIDIA のビデオカードの NVENC を利用することで H.264 が利用可能になります。
 ご利用の環境で H.264 が利用できるかどうかは `./momo --video-codec-engines` を使用して H264 の項目をご確認ください。
+
+## Jetson シリーズを使って SDL で Simulcast の H.264 を受信する
+
+Jetson シリーズで Simulcast の H.264 を SDL を使って受信する場合、下部に緑の線が見えることがあります。
+
+これは受信している Simulcast の解像度が H.264 の解像度の仕様に不一致な状態で受信しているためで、 Sora の API を使用して受信する解像度を変更してください。
+
+API の詳細はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/EXPERIMENTAL_API#adcbc8)をお読みください。
