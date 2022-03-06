@@ -20,7 +20,7 @@ jobs:
     name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -72,7 +72,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -121,7 +121,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -165,7 +165,7 @@ jobs:
     steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1.0.0
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -223,7 +223,7 @@ jobs:
           name: ${{ steps.env.outputs.package_name }}
           path: ${{ steps.env.outputs.package_name }}
       - name: Upload ${{ matrix.name }} Release Asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -242,7 +242,7 @@ jobs:
       - upload-assets
     if: always()
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||
