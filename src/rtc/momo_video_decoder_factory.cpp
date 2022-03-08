@@ -169,6 +169,6 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #endif
   }
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }

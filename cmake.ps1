@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$WEBRTC_VERSION_FILE = Join-Path (Resolve-Path ".").Path "build\windows\_install\webrtc\VERSIONS"
+$WEBRTC_VERSION_FILE = Join-Path (Resolve-Path ".").Path "build\windows_x86_64\_install\webrtc\VERSIONS"
 Get-Content $WEBRTC_VERSION_FILE | Foreach-Object{
   if (!$_) {
     continue
@@ -19,12 +19,12 @@ Get-Content $MOMO_VERSION_FILE | Foreach-Object{
 
 $MOMO_COMMIT = "$(git rev-parse HEAD)"
 
-$INSTALL_DIR = (Join-Path (Resolve-Path ".").Path "build\windows\_install").Replace("\", "/")
+$INSTALL_DIR = (Join-Path (Resolve-Path ".").Path "build\windows_x86_64\_install").Replace("\", "/")
 $MODULE_PATH = (Join-Path (Resolve-Path ".").Path "cmake").Replace("\", "/")
-$SDL_MODULE_PATH = (Join-Path (Resolve-Path ".").Path "build\windows\_install\SDL2\cmake").Replace("\", "/")
+$SDL_MODULE_PATH = (Join-Path (Resolve-Path ".").Path "build\windows_x86_64\_install\SDL2\cmake").Replace("\", "/")
 
-mkdir _build\windows -Force -ErrorAction Ignore
-Push-Location _build\windows
+mkdir _build\windows_x86_64 -Force -ErrorAction Ignore
+Push-Location _build\windows_x86_64
   cmake ..\.. -G "Visual Studio 16 2019" `
     -DMOMO_VERSION="$MOMO_VERSION" `
     -DMOMO_COMMIT="$MOMO_COMMIT" `

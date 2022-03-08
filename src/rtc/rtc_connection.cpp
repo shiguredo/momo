@@ -116,6 +116,18 @@ RTCConnection::~RTCConnection() {
 
 void RTCConnection::CreateOffer(OnCreateSuccessFunc on_success,
                                 OnCreateFailureFunc on_failure) {
+  // CreateOffer を行うのは Ayame だけのため、ここで Offer の場合には DataChannel を作ることとした
+  // Momo の性質上 ReOffer することは無いので問題ないと思われる
+  RTCDataManager* data_manager = observer_->DataManager();
+  if (data_manager != nullptr) {
+    webrtc::DataChannelInit config;
+    auto result = connection_->CreateDataChannelOrError("serial", &config);
+    if (!result.ok()) {
+      RTC_LOG(LS_ERROR) << "CreateDataChannel() failed: " << result.error().message();
+    }
+    data_manager->OnDataChannel(result.MoveValue());
+  }
+
   using RTCOfferAnswerOptions =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions;
   RTCOfferAnswerOptions options = RTCOfferAnswerOptions();

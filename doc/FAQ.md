@@ -51,7 +51,7 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 ### 動作確認が取れたビデオカード
 
-**是非 Discord の #nvidia-video-codec-sdk チャネルまでご連絡ください**
+**是非 Discord の #momo-nvidia-video-codec-sdk チャネルまでご連絡ください**
 
 - GeForce GTX 1080 Ti
     - @melpon
@@ -98,16 +98,33 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 Momo では Sora の DataChannel メッセージングに対応する予定はありません。 Sora C++ SDK にて対応予定です。
 
+## Raspberry Pi OS のレガシー版には対応していますか？
+
+レガシー版には対応せず、最新版にのみ対応していきます。
+
 ## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
 RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラでしか機能しません。
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
 
-##  Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
+## Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
 
 Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。 
 
 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
 
 プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
+
+## Windows で H.264 を利用できますか？
+
+NVIDIA のビデオカードの NVENC を利用することで H.264 が利用可能になります。
+ご利用の環境で H.264 が利用できるかどうかは `./momo --video-codec-engines` を使用して H264 の項目をご確認ください。
+
+## Jetson シリーズを使って SDL で Simulcast の H.264 を受信する
+
+Jetson シリーズで Simulcast の H.264 を SDL を使って受信する場合、下部に緑の線が見えることがあります。
+
+これは受信している Simulcast の解像度が H.264 の解像度の仕様に不一致な状態で受信しているためで、 Sora の API を使用して受信する解像度を変更してください。
+
+API の詳細はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/EXPERIMENTAL_API#adcbc8)をお読みください。

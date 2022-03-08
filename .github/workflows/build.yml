@@ -9,14 +9,18 @@ on:
     - 'THANKS'
     - 'LICENSE'
     - 'NOTICE'
-  pull_request:
 
 jobs:
   build-windows:
-    name: Build momo for Windows
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+    name: Build momo for Windows_${{ matrix.arch }}
+    runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -44,9 +48,9 @@ jobs:
           }
           $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
           $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip" >> windows.env
-          echo "CONTENT_TYPE=application/zip" >> windows.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}.zip"
+          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> windows_${{ matrix.arch }}.env
+          echo "CONTENT_TYPE=application/zip" >> windows_${{ matrix.arch }}.env
+          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip"
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
@@ -56,8 +60,8 @@ jobs:
       - name: Upload Environment
         uses: actions/upload-artifact@v2
         with:
-          name: windows.env
-          path: windows.env
+          name: windows_${{ matrix.arch }}.env
+          path: windows_${{ matrix.arch }}.env
   build-macos:
     strategy:
       fail-fast: false
@@ -68,7 +72,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -117,7 +121,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get Versions
         run: |
           source VERSION
@@ -161,7 +165,7 @@ jobs:
     steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1.0.0
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -186,7 +190,7 @@ jobs:
       fail-fast: true
       matrix:
         name:
-          - windows
+          - windows_x86_64
           - macos_arm64
           - macos_x86_64
           - raspberry-pi-os_armv6
@@ -219,7 +223,7 @@ jobs:
           name: ${{ steps.env.outputs.package_name }}
           path: ${{ steps.env.outputs.package_name }}
       - name: Upload ${{ matrix.name }} Release Asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -238,7 +242,7 @@ jobs:
       - upload-assets
     if: always()
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||

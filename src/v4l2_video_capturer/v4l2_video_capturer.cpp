@@ -39,6 +39,8 @@
 #include <rtc_base/ref_counted_object.h>
 #include <third_party/libyuv/include/libyuv.h>
 
+#define MJPEG_EOS_SEARCH_SIZE 4096
+
 rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
@@ -484,12 +486,38 @@ bool V4L2VideoCapturer::CaptureProcess() {
         }
       }
 
-      if (!OnCaptured(buf)) {
-        // enqueue the buffer again
-        if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-          RTC_LOG(LS_INFO) << __FUNCTION__
-                           << " Failed to enqueue capture buffer";
+      uint8_t* data = (uint8_t*)_pool[buf.index].start;
+      uint32_t bytesused = buf.bytesused;
+      // 一部のカメラ (DELL WB7022) は不正なデータを送ってくることがある。
+      // これをハードウェアJPEGデコーダーに送ると Momo ごとクラッシュしてしまう。
+      // JPEG の先頭は SOI マーカー 0xffd8 で始まるのでチェックして落ちないようにする。
+      if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused >= 2) {
+        if (data[0] != 0xff || data[1] != 0xd8) {
+          RTC_LOG(LS_WARNING) << __FUNCTION__
+                              << " Invalid JPEG buffer frame skipped";
+        } else {
+          unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
+          uint8_t* p;
+          /* v4l2_buf.bytesused may have padding bytes for alignment
+              Search for EOF to get exact size */
+          if (eosSearchSize > bytesused)
+            eosSearchSize = bytesused;
+          for (unsigned int i = 0; i < eosSearchSize; i++) {
+            p = data + bytesused;
+            if ((*(p - 2) == 0xff) && (*(p - 1) == 0xd9)) {
+              break;
+            }
+            bytesused--;
+          }
+          OnCaptured(data, bytesused);
         }
+      } else {
+        OnCaptured(data, bytesused);
+      }
+
+      // enqueue the buffer again
+      if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
+        RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
       }
     }
   }
@@ -497,26 +525,25 @@ bool V4L2VideoCapturer::CaptureProcess() {
   return true;
 }
 
-bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
+void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   if (UseNativeBuffer()) {
     rtc::scoped_refptr<NativeBuffer> native_buffer(
         NativeBuffer::Create(_captureVideoType, _currentWidth, _currentHeight));
-    memcpy(native_buffer->MutableData(), (unsigned char*)_pool[buf.index].start,
-           buf.bytesused);
-    native_buffer->SetLength(buf.bytesused);
+    memcpy(native_buffer->MutableData(), data, bytesused);
+    native_buffer->SetLength(bytesused);
     dst_buffer = native_buffer;
   } else {
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
         webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
     i420_buffer->InitializeData();
     if (libyuv::ConvertToI420(
-            (unsigned char*)_pool[buf.index].start, buf.bytesused,
-            i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
-            i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
-            i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), 0,
-            0, _currentWidth, _currentHeight, _currentWidth, _currentHeight,
-            libyuv::kRotate0, ConvertVideoType(_captureVideoType)) < 0) {
+            data, bytesused, i420_buffer.get()->MutableDataY(),
+            i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+            i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+            i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
+            _currentWidth, _currentHeight, libyuv::kRotate0,
+            ConvertVideoType(_captureVideoType)) < 0) {
       RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
     } else {
       dst_buffer = i420_buffer;
@@ -533,10 +560,4 @@ bool V4L2VideoCapturer::OnCaptured(struct v4l2_buffer& buf) {
                                          .build();
     OnCapturedFrame(video_frame);
   }
-
-  // enqueue the buffer again
-  if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
-  }
-  return true;
 }

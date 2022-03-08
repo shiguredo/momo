@@ -34,8 +34,8 @@ set(WEBRTC_BUILD_VERSION "unspecified" CACHE STRING "webrtc-build のバージ�
 set(WEBRTC_READABLE_VERSION "unspecified" CACHE STRING "WebRTC の読みやすいバージョン")
 set(WEBRTC_COMMIT "<commit>" CACHE STRING "WebRTC のコミットハッシュ")
 
-if(MOMO_PACKAGE_NAME STREQUAL "windows")
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/windows/_install)
+if(MOMO_PACKAGE_NAME STREQUAL "windows_x86_64")
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/windows_x86_64/_install)
 
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
@@ -350,7 +350,7 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-set_target_properties(momo PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
 
 target_link_libraries(momo
   PRIVATE
@@ -362,6 +362,9 @@ target_link_libraries(momo
 
 target_compile_definitions(momo
   PRIVATE
+    # CLI11 は C++17 でのビルドにおいて std::filesystem を利用するが、これを clang で解決するには c++fs のリンクが必要になる。
+    # しかし、 libwebrtc の libc++ では std::filesystem が提供されていないため下記のオプションを追加して利用しないようにする。
+    CLI11_HAS_FILESYSTEM=0
     OPENSSL_IS_BORINGSSL
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
@@ -382,16 +385,24 @@ if (USE_SDL2)
       _THREAD_SAFE
   )
 
-  if (TARGET SDL2::SDL2-static)
+
+  if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
     target_link_libraries(momo
       PRIVATE
         SDL2::SDL2-static
         SDL2::SDL2main
     )
   else()
-    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
-    target_link_libraries(momo PRIVATE SDL2)
-    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    if (TARGET SDL2::SDL2Config)
+      target_link_libraries(momo
+        PRIVATE
+          SDL2::SDL2Config
+      )
+    else()
+      target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
+      target_link_libraries(momo PRIVATE SDL2)
+      target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    endif()
   endif()
 
   if ("${TARGET_OS}" STREQUAL "macos")
@@ -703,8 +714,8 @@ elseif (TARGET_OS STREQUAL "linux")
         target_link_directories(momo PRIVATE ${_VC_PATH}/lib)
         target_link_libraries(momo
           PRIVATE
-            brcmGLESv2
-            brcmEGL
+            GLESv2
+            EGL
             bcm_host
             containers
             vcos

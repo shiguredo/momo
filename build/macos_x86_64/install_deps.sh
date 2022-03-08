@@ -79,6 +79,7 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
     echo "using clang : : $INSTALL_DIR/llvm/clang/bin/clang++ : ;" > project-config.jam
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
     ./b2 \
+      cxxstd=17 \
       cflags=" \
         --sysroot=$SYSROOT \
       " \

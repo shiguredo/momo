@@ -329,7 +329,6 @@ webrtc::VideoEncoder::EncoderInfo NvCodecH264Encoder::GetEncoderInfo() const {
   info.implementation_name = "NvCodec H264";
   info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
       kLowH264QpThreshold, kHighH264QpThreshold);
-  info.has_internal_source = false;
   return info;
 }
 

@@ -216,11 +216,13 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     if (frame_aspect > outline_aspect_) {
       width = outline_width_;
       height = width / frame_aspect;
+      offset_x_ = 0;
       offset_y_ = (outline_height_ - height) / 2;
     } else {
       height = outline_height_;
       width = height * frame_aspect;
       offset_x_ = (outline_width_ - width) / 2;
+      offset_y_ = 0;
     }
     if (width_ != width || height_ != height) {
       width_ = width;

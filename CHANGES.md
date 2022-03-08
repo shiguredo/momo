@@ -11,6 +11,25 @@
 
 ## develop
 
+## 2022.1.0
+
+- [UPDATE] Raspberry Pi OS bullseye に対応
+    - @tnoho
+- [UPDATE] JetPack 4.6 に上げる
+    - @tnoho
+- [UPDATE] `libwebrtc` を `99.4844.1.0` に上げる
+    - @tnoho
+- [UPDATE] sdl2 を 2.0.20 に上げる
+    - @voluntas
+- [UPDATE] cmake を 3.22.3 に上げる
+    - @voluntas
+- [ADD] DataChannel を使うことになっていて Offer を行う際には DataChannel を作るように変更
+    - @tnoho
+- [FIX] Jetson のハードウェアデコーダーが出力時に出力サイズでフレームを切り抜いていなかったため修正
+    - @tnoho
+- [FIX] スクリーンキャプチャが Linux で落ちるのを修正
+    - @tnoho
+
 ## 2021.6.0
 
 - [UPDATE] Boost 1.78.0 に上げる
