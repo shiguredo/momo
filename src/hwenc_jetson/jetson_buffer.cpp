@@ -19,15 +19,16 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int fd,
     uint32_t pixfmt,
     std::shared_ptr<JetsonJpegDecoder> decoder) {
-  return new rtc::RefCountedObject<JetsonBuffer>(
-      video_type,
-      raw_width,
-      raw_height,
-      scaled_width,
-      scaled_height,
-      fd,
-      pixfmt,
-      decoder);
+  return rtc::scoped_refptr<JetsonBuffer>(
+      new rtc::RefCountedObject<JetsonBuffer>(
+          video_type,
+          raw_width,
+          raw_height,
+          scaled_width,
+          scaled_height,
+          fd,
+          pixfmt,
+          decoder));
 }
 
 rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
@@ -36,12 +37,13 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int raw_height,
     int scaled_width,
     int scaled_height) {
-  return new rtc::RefCountedObject<JetsonBuffer>(
-      video_type,
-      raw_width,
-      raw_height,
-      scaled_width,
-      scaled_height);
+  return rtc::scoped_refptr<JetsonBuffer>(
+      new rtc::RefCountedObject<JetsonBuffer>(
+          video_type,
+          raw_width,
+          raw_height,
+          scaled_width,
+          scaled_height));
 }
 
 webrtc::VideoFrameBuffer::Type JetsonBuffer::type() const {
