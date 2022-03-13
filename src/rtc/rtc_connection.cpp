@@ -41,9 +41,8 @@ class CreateSessionDescriptionThunk
   static rtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return rtc::scoped_refptr<CreateSessionDescriptionThunk>(
-        new rtc::RefCountedObject<CreateSessionDescriptionThunk>(
-            std::move(on_success), std::move(on_failure)));
+    return rtc::make_ref_counted<CreateSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
   }
 
  protected:
@@ -82,9 +81,8 @@ class SetSessionDescriptionThunk
   static rtc::scoped_refptr<SetSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return rtc::scoped_refptr<SetSessionDescriptionThunk>(
-        new rtc::RefCountedObject<SetSessionDescriptionThunk>(
-            std::move(on_success), std::move(on_failure)));
+    return rtc::make_ref_counted<SetSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
   }
 
  protected:

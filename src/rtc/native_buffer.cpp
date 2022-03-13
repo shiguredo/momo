@@ -17,8 +17,7 @@ int ArgbDataSize(int height, int width) {
 
 rtc::scoped_refptr<NativeBuffer>
 NativeBuffer::Create(webrtc::VideoType video_type, int width, int height) {
-  return rtc::scoped_refptr<NativeBuffer>(
-      new rtc::RefCountedObject<NativeBuffer>(video_type, width, height));
+  return rtc::make_ref_counted<NativeBuffer>(video_type, width, height);
 }
 
 webrtc::VideoFrameBuffer::Type NativeBuffer::type() const {
