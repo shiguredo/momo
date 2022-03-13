@@ -89,8 +89,9 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
     return nullptr;
   }
-  return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps,
-                                                device);
+  return rtc::scoped_refptr<MacCapturer>(
+      new rtc::RefCountedObject<MacCapturer>(
+          width, height, target_fps, device));
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(

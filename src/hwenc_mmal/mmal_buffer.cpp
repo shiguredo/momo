@@ -8,7 +8,8 @@
 rtc::scoped_refptr<MMALBuffer> MMALBuffer::Create(MMAL_BUFFER_HEADER_T* buffer,
                                                   int width,
                                                   int height) {
-  return new rtc::RefCountedObject<MMALBuffer>(buffer, width, height);
+  return rtc::scoped_refptr<MMALBuffer>(
+      new rtc::RefCountedObject<MMALBuffer>(buffer, width, height));
 }
 
 webrtc::VideoFrameBuffer::Type MMALBuffer::type() const {

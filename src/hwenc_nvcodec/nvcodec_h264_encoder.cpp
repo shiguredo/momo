@@ -44,7 +44,7 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
   char szDesc[80];
   size_t result = 0;
   wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
-  RTC_LOG(INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
 #endif
 #ifdef __linux__
   cuda_.reset(new NvCodecH264EncoderCuda());
@@ -312,11 +312,11 @@ void NvCodecH264Encoder::SetRates(
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                << " new_framerate: " << new_framerate
-                << " target_bitrate_bps_:" << target_bitrate_bps_
-                << " new_bitrate:" << new_bitrate
-                << " max_bitrate_bps_:" << max_bitrate_bps_;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+                   << " new_framerate: " << new_framerate
+                   << " target_bitrate_bps_:" << target_bitrate_bps_
+                   << " new_bitrate:" << new_bitrate
+                   << " max_bitrate_bps_:" << max_bitrate_bps_;
   framerate_ = new_framerate;
   target_bitrate_bps_ = new_bitrate;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
