@@ -121,7 +121,7 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
     # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
     # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
-    CC="$INSTALL_DIR/llvm/clang/bin/clang -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
+    CC="$INSTALL_DIR/llvm/clang/bin/clang -std=c99 -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
       CXX="$INSTALL_DIR/llvm/clang/bin/clang++ -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT -nostdinc++" \
       $SOURCE_DIR/SDL2/source/configure --host=$ARCH_NAME --disable-shared --prefix=$INSTALL_DIR/SDL2
     make -j$JOBS
