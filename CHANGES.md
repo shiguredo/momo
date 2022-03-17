@@ -11,6 +11,13 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M89.4389@{#5}` に上げる
+    - @tnoho
+- [FIX] libwebrtc m100 で make_ref_counted を使って scoped_refptr を作るようになったので修正
+    - @tnoho
+- [FIX] SDL のビルドが mac では declaration-after-statement に触れてビルドが通らないのでパッチで回避
+    - @tnoho
+
 ## 2022.1.0
 
 - [UPDATE] Raspberry Pi OS bullseye に対応
