@@ -32,7 +32,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache\boost
           key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
@@ -80,7 +80,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
@@ -129,7 +129,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
