@@ -33,7 +33,7 @@ Momo 1:
 Momo 2:
 
 ```shell
-./momo --use-sdl --show-me ayame ws://[Momo 1のIPアドレス]:8080/ws test
+./momo --use-sdl --show-me ayame  --signaling-url ws://[Momo 1のIPアドレス]:8080/ws --channel-id test
 ```
 
 Google STUN を利用したくない場合は`--no-google-stun`をオプションを追加することで可能になります。
@@ -47,7 +47,7 @@ Momo 1:
 Momo 2:
 
 ```shell
-./momo  --no-google-stun --use-sdl --show-me ayame ws://[Momo 1のIPアドレス]:8080/ws test
+./momo  --no-google-stun --use-sdl --show-me ayame --signaling-url ws://[Momo 1のIPアドレス]:8080/ws --channel-id test
 ```
 
 配信がうまくいくとそれぞれのマシンにお互いの映像と音声が出力されます。  
