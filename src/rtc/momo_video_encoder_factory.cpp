@@ -6,9 +6,9 @@
 #include <absl/memory/memory.h>
 #include <absl/strings/match.h>
 #include <api/video_codecs/sdp_video_format.h>
+#include <api/video_codecs/vp9_profile.h>
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
-#include <api/video_codecs/vp9_profile.h>
 #include <media/engine/simulcast_encoder_adapter.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp8/include/vp8.h>
@@ -39,19 +39,34 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     VideoCodecInfo::Type av1_encoder,
     VideoCodecInfo::Type h264_encoder,
     bool simulcast,
-    bool hardware_encoder_only)
+    bool hardware_encoder_only
+#if defined(__linux__) && USE_NVCODEC_ENCODER
+    ,
+    std::shared_ptr<CudaContext> cuda_context
+#endif
+    )
     : vp8_encoder_(vp8_encoder),
       vp9_encoder_(vp9_encoder),
       av1_encoder_(av1_encoder),
       h264_encoder_(h264_encoder),
-      hardware_encoder_only_(hardware_encoder_only) {
+      hardware_encoder_only_(hardware_encoder_only)
+#if defined(__linux__) && USE_NVCODEC_ENCODER
+      ,
+      cuda_context_(cuda_context)
+#endif
+{
 #if defined(__APPLE__)
   video_encoder_factory_ = CreateObjCEncoderFactory();
 #endif
   if (simulcast) {
     internal_encoder_factory_.reset(new MomoVideoEncoderFactory(
         vp8_encoder, vp9_encoder, av1_encoder, h264_encoder, false,
-        hardware_encoder_only));
+        hardware_encoder_only
+#if defined(__linux__) && USE_NVCODEC_ENCODER
+        ,
+        cuda_context_
+#endif
+        ));
   }
 }
 std::vector<webrtc::SdpVideoFormat>
@@ -232,10 +247,21 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #if USE_NVCODEC_ENCODER
     if (h264_encoder_ == VideoCodecInfo::Type::NVIDIA &&
         NvCodecH264Encoder::IsSupported()) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
-      });
+      return WithSimulcast(
+#if defined(__linux__)
+          format,
+          [cuda_context = cuda_context_](const webrtc::SdpVideoFormat& format) {
+            return std::unique_ptr<webrtc::VideoEncoder>(
+                absl::make_unique<NvCodecH264Encoder>(
+                    cricket::VideoCodec(format), cuda_context));
+#else
+          format,
+          [](const webrtc::SdpVideoFormat& format) {
+            return std::unique_ptr<webrtc::VideoEncoder>(
+                absl::make_unique<NvCodecH264Encoder>(
+                    cricket::VideoCodec(format)));
+#endif
+          });
     }
 #endif
   }

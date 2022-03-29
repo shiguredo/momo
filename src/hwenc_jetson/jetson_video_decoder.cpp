@@ -304,7 +304,8 @@ void JetsonVideoDecoder::CaptureLoop() {
       }
 
       rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-          buffer_pool_.CreateI420Buffer(capture_crop_->c.width, capture_crop_->c.height);
+          buffer_pool_.CreateI420Buffer(capture_crop_->c.width,
+                                        capture_crop_->c.height);
       if (!i420_buffer.get()) {
         // Pool has too many pending frames.
         RTC_HISTOGRAM_BOOLEAN(
@@ -370,11 +371,13 @@ int JetsonVideoDecoder::SetCapture() {
   ret = decoder_->capture_plane.getCrop(*capture_crop_.get());
   INIT_ERROR(ret < 0, "Failed to getCrop at capture_plane");
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " plane format " << format.fmt.pix_mp.pixelformat
-                   << " " << format.fmt.pix_mp.width << "x" << format.fmt.pix_mp.height;
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " crop "
-                   << capture_crop_->c.top << "x" << capture_crop_->c.left
-                   << " " << capture_crop_->c.width << "x" << format.fmt.pix_mp.height;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " plane format "
+                   << format.fmt.pix_mp.pixelformat << " "
+                   << format.fmt.pix_mp.width << "x"
+                   << format.fmt.pix_mp.height;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " crop " << capture_crop_->c.top << "x"
+                   << capture_crop_->c.left << " " << capture_crop_->c.width
+                   << "x" << format.fmt.pix_mp.height;
 
   if (dst_dma_fd_ != -1) {
     NvBufferDestroy(dst_dma_fd_);

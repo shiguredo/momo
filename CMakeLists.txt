@@ -432,10 +432,10 @@ if (USE_SCREEN_CAPTURER)
   if (TARGET_OS STREQUAL "linux")
     target_link_libraries(momo
       PRIVATE
-        gio-2.0
-        gobject-2.0
-        glib-2.0
-        Xext
+        # gio-2.0
+        # gobject-2.0
+        # glib-2.0
+        # Xext
         Xdamage
         Xfixes
         Xcomposite
@@ -568,19 +568,19 @@ elseif (TARGET_OS STREQUAL "linux")
   target_link_libraries(momo
     PRIVATE
       X11
-      Xau
-      Xdmcp
+      # Xau
+      # Xdmcp
       Xtst
-      xcb
-      plds4
+      # xcb
+      # plds4
       Xext
-      expat
+      # expat
       dl
-      nss3
-      nssutil3
-      plc4
-      nspr4
-      rt
+      # nss3
+      # nssutil3
+      # plc4
+      # nspr4
+      # rt
       Threads::Threads
   )
 
@@ -588,8 +588,11 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
+        src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_mjpeg_decoder_cuda.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
@@ -601,7 +604,9 @@ elseif (TARGET_OS STREQUAL "linux")
 
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
+        src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_mjpeg_decoder_cuda.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES

@@ -20,14 +20,8 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     uint32_t pixfmt,
     std::shared_ptr<JetsonJpegDecoder> decoder) {
   return new rtc::RefCountedObject<JetsonBuffer>(
-      video_type,
-      raw_width,
-      raw_height,
-      scaled_width,
-      scaled_height,
-      fd,
-      pixfmt,
-      decoder);
+      video_type, raw_width, raw_height, scaled_width, scaled_height, fd,
+      pixfmt, decoder);
 }
 
 rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
@@ -37,17 +31,12 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int scaled_width,
     int scaled_height) {
   return new rtc::RefCountedObject<JetsonBuffer>(
-      video_type,
-      raw_width,
-      raw_height,
-      scaled_width,
-      scaled_height);
+      video_type, raw_width, raw_height, scaled_width, scaled_height);
 }
 
 webrtc::VideoFrameBuffer::Type JetsonBuffer::type() const {
   return Type::kNative;
 }
-
 
 webrtc::VideoType JetsonBuffer::VideoType() const {
   return video_type_;
@@ -118,12 +107,12 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
     }
 
     int ret;
-    void *data_addr;
+    void* data_addr;
     uint8_t* dest_addr;
     for (int plane = 0; plane < dmabuf_params.num_planes; plane++) {
-      ret = NvBufferMemMap (dmabuf_fd, plane, NvBufferMem_Read, &data_addr);
+      ret = NvBufferMemMap(dmabuf_fd, plane, NvBufferMem_Read, &data_addr);
       if (ret == 0) {
-        NvBufferMemSyncForCpu (dmabuf_fd, plane, &data_addr);
+        NvBufferMemSyncForCpu(dmabuf_fd, plane, &data_addr);
         int height, width;
         if (plane == 0) {
           dest_addr = scaled_buffer.get()->MutableDataY();
@@ -138,16 +127,15 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
           width = (scaled_width_ + 1) >> 1;
           height = (scaled_height_ + 1) >> 1;
         }
-        for (int i = 0; i < height; i++)
-        {
-          memcpy(dest_addr + width * i, 
-                (uint8_t*)data_addr + dmabuf_params.pitch[plane] * i,
-                width);
+        for (int i = 0; i < height; i++) {
+          memcpy(dest_addr + width * i,
+                 (uint8_t*)data_addr + dmabuf_params.pitch[plane] * i, width);
         }
       }
-      NvBufferMemUnMap (dmabuf_fd, plane, &data_addr);
+      NvBufferMemUnMap(dmabuf_fd, plane, &data_addr);
       if (ret == -1) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferMemMap plane=" << plane;
+        RTC_LOG(LS_ERROR) << __FUNCTION__
+                          << " Failed to NvBufferMemMap plane=" << plane;
         return scaled_buffer;
       }
     }
@@ -206,15 +194,14 @@ size_t JetsonBuffer::Length() const {
   return length_;
 }
 
-JetsonBuffer::JetsonBuffer(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height,
-    int fd,
-    uint32_t pixfmt,
-    std::shared_ptr<JetsonJpegDecoder> decoder)
+JetsonBuffer::JetsonBuffer(webrtc::VideoType video_type,
+                           int raw_width,
+                           int raw_height,
+                           int scaled_width,
+                           int scaled_height,
+                           int fd,
+                           uint32_t pixfmt,
+                           std::shared_ptr<JetsonJpegDecoder> decoder)
     : video_type_(video_type),
       raw_width_(raw_width),
       raw_height_(raw_height),
@@ -223,15 +210,13 @@ JetsonBuffer::JetsonBuffer(
       fd_(fd),
       pixfmt_(pixfmt),
       decoder_(decoder),
-      data_(nullptr) {
-}
+      data_(nullptr) {}
 
-JetsonBuffer::JetsonBuffer(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height)
+JetsonBuffer::JetsonBuffer(webrtc::VideoType video_type,
+                           int raw_width,
+                           int raw_height,
+                           int scaled_width,
+                           int scaled_height)
     : video_type_(video_type),
       raw_width_(raw_width),
       raw_height_(raw_height),
@@ -240,8 +225,6 @@ JetsonBuffer::JetsonBuffer(
       fd_(-1),
       pixfmt_(0),
       decoder_(nullptr),
-      data_(static_cast<uint8_t*>(
-          webrtc::AlignedMalloc(
-              webrtc::CalcBufferSize(video_type, raw_width, raw_height),
-              kBufferAlignment))) {
-}
+      data_(static_cast<uint8_t*>(webrtc::AlignedMalloc(
+          webrtc::CalcBufferSize(video_type, raw_width, raw_height),
+          kBufferAlignment))) {}

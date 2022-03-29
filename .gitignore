@@ -40,6 +40,8 @@ webrtc_logs_0
 *.swp
 
 /_build
+/_source
+/_install
 /_package
 /build/windows_*/_source
 /build/windows_*/_build

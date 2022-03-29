@@ -406,11 +406,11 @@ void Util::ParseArgs(int argc,
               << std::endl;
     std::cout << std::endl;
     std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
-                                                        << std::endl;
+              << std::endl;
     std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-                                                          << std::endl;
+              << std::endl;
     std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-                                                           << std::endl;
+              << std::endl;
     std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }

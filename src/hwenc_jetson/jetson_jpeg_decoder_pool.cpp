@@ -15,7 +15,7 @@ std::shared_ptr<JetsonJpegDecoder> JetsonJpegDecoderPool::Pop() {
       decoder_queue_.pop();
     }
   }
-  
+
   std::shared_ptr<JetsonJpegDecoder> decoder(
       new JetsonJpegDecoder(shared_from_this(), std::move(nv_decoder)));
   return decoder;
