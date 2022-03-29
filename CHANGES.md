@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] Ubuntu 20.04 + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で落ちるのを修正 (#221)
+    - @melpon
+
 ## 2022.1.0
 
 - [UPDATE] Raspberry Pi OS bullseye に対応
