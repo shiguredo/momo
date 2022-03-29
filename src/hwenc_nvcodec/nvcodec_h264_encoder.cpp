@@ -6,9 +6,6 @@
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <rtc_base/logging.h>
 
-// NvCodec
-#include <NvDecoder/NvDecoder.h>
-
 #include "rtc/native_buffer.h"
 
 #ifdef __linux__
@@ -33,7 +30,8 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec,
                                        std::shared_ptr<CudaContext> cc)
     : cuda_context_(cc),
 #else
-NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec),
+NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
+    :
 #endif
       bitrate_adjuster_(0.5, 0.95) {
 #ifdef _WIN32
