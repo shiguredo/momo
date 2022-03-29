@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] CLI11 を 2.2.0 に上げる
+    - @voluntas
 - [FIX] Ubuntu 20.04 + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で落ちるのを修正 (#221)
     - @melpon
 
