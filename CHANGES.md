@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] CLI11 を 2.2.0 に上げる
+    - @voluntas
+
 ## 2022.1.0
 
 - [UPDATE] Raspberry Pi OS bullseye に対応
