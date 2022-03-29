@@ -33,7 +33,6 @@
 
 momo
 core
-.vscode
 *.tar.gz
 webrtc_logs_0
 .DS_Store
