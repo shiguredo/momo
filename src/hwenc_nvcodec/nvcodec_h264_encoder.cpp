@@ -257,9 +257,6 @@ int32_t NvCodecH264Encoder::Encode(
         static_cast<webrtc::NV12Buffer*>(frame.video_frame_buffer().get());
     try {
       cuda_->Copy(nv_encoder_.get(), buffer->DataY(), width_, height_);
-    } catch (const NVDECException& e) {
-      RTC_LOG(LS_ERROR) << e.what();
-      return WEBRTC_VIDEO_CODEC_ERROR;
     } catch (const NVENCException& e) {
       RTC_LOG(LS_ERROR) << e.what();
       return WEBRTC_VIDEO_CODEC_ERROR;
