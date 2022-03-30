@@ -1,0 +1,67 @@
+{
+    "configurations": [
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/NvCodec/include",
+                "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/build/windows_x86_64/_install/webrtc/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/build/windows_x86_64/_install/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/build/windows_x86_64/_install/boost/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/CLI11/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/SDL2/include/SDL2",
+                "${workspaceFolder}/_build/windows_x86_64"
+            ],
+            "defines": [
+                "WEBRTC_WINDOWS",
+                "USE_NVCODEC_ENCODER=1",
+                "USE_MMAL_ENCODER=0",
+                "USE_JETSON_ENCODER=0",
+                "USE_H264=1",
+                "USE_SDL2=1",
+                "USE_LINUX_PULSE_AUDIO=0",
+                "USE_SCREEN_CAPTURER=1"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "Ubuntu 20.04 x86_64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/NvCodec/include",
+                "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/webrtc/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/boost/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/CLI11/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/SDL2/include/SDL2",
+                "${workspaceFolder}/_build/ubuntu-20.04_x86_64",
+                "/usr/local/cuda/include"
+            ],
+            "defines": [
+                "WEBRTC_LINUX",
+                "USE_NVCODEC_ENCODER=1",
+                "USE_MMAL_ENCODER=0",
+                "USE_JETSON_ENCODER=0",
+                "USE_H264=1",
+                "USE_SDL2=1",
+                "USE_LINUX_PULSE_AUDIO=0",
+                "USE_SCREEN_CAPTURER=1"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}

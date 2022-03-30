@@ -12,8 +12,8 @@
 
 class JetsonJpegDecoder;
 
-class JetsonJpegDecoderPool :
-    public std::enable_shared_from_this<JetsonJpegDecoderPool> {
+class JetsonJpegDecoderPool
+    : public std::enable_shared_from_this<JetsonJpegDecoderPool> {
  public:
   std::shared_ptr<JetsonJpegDecoder> Pop();
   void Push(std::unique_ptr<NvJPEGDecoder> decoder);

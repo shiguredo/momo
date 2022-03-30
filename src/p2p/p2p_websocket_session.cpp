@@ -87,7 +87,6 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     ~Guard() { f(); }
   } guard = {[this]() { DoRead(); }};
 
-
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": recv_string=" << recv_string;
 
   boost::json::error_code jec;

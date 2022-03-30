@@ -9,19 +9,16 @@
 
 #include <NvEncoder/NvEncoder.h>
 
+#include "cuda/cuda_context.h"
+
 class NvCodecH264EncoderCudaImpl;
 
 class NvCodecH264EncoderCuda {
  public:
-  NvCodecH264EncoderCuda();
+  NvCodecH264EncoderCuda(std::shared_ptr<CudaContext> ctx);
   ~NvCodecH264EncoderCuda();
 
   void Copy(NvEncoder* nv_encoder, const void* ptr, int width, int height);
-  void CopyNative(NvEncoder* nv_encoder,
-                  const void* ptr,
-                  int size,
-                  int width,
-                  int height);
   // 念のため <memory> も include せずポインタを利用する
   NvEncoder* CreateNvEncoder(int width, int height, bool use_native);
 

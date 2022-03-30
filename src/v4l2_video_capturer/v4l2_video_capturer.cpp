@@ -493,8 +493,8 @@ bool V4L2VideoCapturer::CaptureProcess() {
       // JPEG の先頭は SOI マーカー 0xffd8 で始まるのでチェックして落ちないようにする。
       if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused >= 2) {
         if (data[0] != 0xff || data[1] != 0xd8) {
-          RTC_LOG(LS_WARNING) << __FUNCTION__
-                              << " Invalid JPEG buffer frame skipped";
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__ << " Invalid JPEG buffer frame skipped";
         } else {
           unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
           uint8_t* p;
