@@ -113,11 +113,26 @@ void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   }
   std::lock_guard<std::mutex> lock(mtx_);
 
+  //{
+  //  static int n = 0;
+  //  char file[255];
+  //  sprintf(file, "mjpeg/mjpeg%04d.jpg", n);
+  //  n += 1;
+  //  FILE* fp = fopen(file, "wb");
+  //  if (fp == NULL) {
+  //    RTC_LOG(LS_ERROR) << "Failed to open " << file;
+  //    return;
+  //  }
+  //  fwrite(data, 1, bytesused, fp);
+  //  fclose(fp);
+  //}
+
   if (configured_width_ != adapted_width ||
       configured_height_ != adapted_height) {
     RTC_LOG(LS_INFO) << "Resizer reinitialized from " << configured_width_
                      << "x" << configured_height_ << " to " << adapted_width
-                     << "x" << adapted_height;
+                     << "x" << adapted_height << " (current " << _currentWidth
+                     << "x" << _currentHeight << ")";
     MMALRelease();
     if (MMALConfigure(adapted_width, adapted_height) == -1) {
       RTC_LOG(LS_ERROR) << "Failed to MMALConfigure";
@@ -135,6 +150,7 @@ void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
 
   MMAL_BUFFER_HEADER_T* buffer;
   while ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
+    //RTC_LOG(LS_INFO) << "Got input buffer from queue: " << (void*)buffer;
     buffer->pts = buffer->dts = timestamp_us;
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
@@ -161,6 +177,7 @@ void MMALV4L2Capturer::MMALInputCallback(MMAL_PORT_T* port,
 void MMALV4L2Capturer::ResizerFillBuffer() {
   MMAL_BUFFER_HEADER_T* resizer_out;
   while ((resizer_out = mmal_queue_get(resizer_pool_out_->queue)) != NULL) {
+    //RTC_LOG(LS_INFO) << "Got resizer_out from queue: " << (void*)resizer_out;
     mmal_port_send_buffer(resizer_->output[0], resizer_out);
   }
 }

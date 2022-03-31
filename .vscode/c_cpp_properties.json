@@ -61,6 +61,38 @@
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "raspberry-pi-os_armv7 on Ubuntu 20.04 x86_64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/NvCodec/include",
+                "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/webrtc/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/boost/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/CLI11/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/SDL2/include/SDL2",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv7/rootfs/usr/include",
+                "${workspaceFolder}/_build/raspberry-pi-os_armv7",
+            ],
+            "defines": [
+                "WEBRTC_LINUX",
+                "USE_NVCODEC_ENCODER=0",
+                "USE_MMAL_ENCODER=1",
+                "USE_JETSON_ENCODER=0",
+                "USE_H264=1",
+                "USE_SDL2=1",
+                "USE_LINUX_PULSE_AUDIO=0",
+                "USE_SCREEN_CAPTURER=0"
+            ],
+            "compilerPath": "${workspaceFolder}/_install/raspberry-pi-os_armv7/llvm/clang/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
         }
     ],
     "version": 4
