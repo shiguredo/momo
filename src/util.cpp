@@ -251,6 +251,13 @@ void Util::ParseArgs(int argc,
   app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
                "Allow access to Metrics server from external IP");
 
+  app.add_option("--client-cert", args.client_cert,
+                 "Cert file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
+  app.add_option("--client-key", args.client_key,
+                 "Private key file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
@@ -406,11 +413,11 @@ void Util::ParseArgs(int argc,
               << std::endl;
     std::cout << std::endl;
     std::cout << "USE_MMAL_ENCODER=" BOOST_PP_STRINGIZE(USE_MMAL_ENCODER)
-              << std::endl;
+                                                        << std::endl;
     std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-              << std::endl;
+                                                          << std::endl;
     std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-              << std::endl;
+                                                           << std::endl;
     std::cout << "USE_SDL2=" BOOST_PP_STRINGIZE(USE_SDL2) << std::endl;
     exit(0);
   }

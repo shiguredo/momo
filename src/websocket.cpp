@@ -12,7 +12,9 @@
 #include "ssl_verifier.h"
 #include "util.h"
 
-static boost::asio::ssl::context CreateSSLContext() {
+static boost::asio::ssl::context CreateSSLContext(
+    const std::string& client_cert,
+    const std::string& client_key) {
   // TLS 1.2 と 1.3 のみ対応
   SSL_CTX* handle = ::SSL_CTX_new(::TLS_method());
   SSL_CTX_set_min_proto_version(handle, TLS1_2_VERSION);
@@ -23,6 +25,16 @@ static boost::asio::ssl::context CreateSSLContext() {
                   boost::asio::ssl::context::no_sslv2 |
                   boost::asio::ssl::context::no_sslv3 |
                   boost::asio::ssl::context::single_dh_use);
+  if (!client_cert.empty()) {
+    ctx.use_certificate_file(client_cert,
+                             boost::asio::ssl::context_base::file_format::pem);
+    RTC_LOG(LS_INFO) << "client_cert=" << client_cert;
+  }
+  if (!client_key.empty()) {
+    ctx.use_private_key_file(client_key,
+                             boost::asio::ssl::context_base::file_format::pem);
+    RTC_LOG(LS_INFO) << "client_key=" << client_key;
+  }
   return ctx;
 }
 
@@ -34,8 +46,13 @@ Websocket::Websocket(boost::asio::io_context& ioc)
 }
 Websocket::Websocket(Websocket::ssl_tag,
                      boost::asio::io_context& ioc,
-                     bool insecure)
-    : Websocket(Websocket::ssl_tag(), ioc, insecure, CreateSSLContext()) {}
+                     bool insecure,
+                     const std::string& client_cert,
+                     const std::string& client_key)
+    : Websocket(Websocket::ssl_tag(),
+                ioc,
+                insecure,
+                CreateSSLContext(client_cert, client_key)) {}
 Websocket::Websocket(Websocket::ssl_tag,
                      boost::asio::io_context& ioc,
                      bool insecure,
