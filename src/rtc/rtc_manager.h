@@ -53,7 +53,7 @@ struct RTCManagerConfig {
     return webrtc::DegradationPreference::BALANCED;
   }
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if USE_NVCODEC_ENCODER
   std::shared_ptr<CudaContext> cuda_context;
 #endif
 };

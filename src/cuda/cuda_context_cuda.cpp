@@ -4,6 +4,10 @@
 
 #include "dyn/cuda.h"
 
+// どこかにグローバルな logger の定義が必要
+simplelogger::Logger* logger =
+    simplelogger::LoggerFactory::CreateConsoleLogger();
+
 CUcontext GetCudaContext(std::shared_ptr<CudaContext> ctx) {
   return static_cast<CUcontext>(ctx->Context());
 }

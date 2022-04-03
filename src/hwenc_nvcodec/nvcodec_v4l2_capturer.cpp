@@ -52,8 +52,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer(
       new rtc::RefCountedObject<NvCodecV4L2Capturer>());
 
-  v4l2_capturer->decoder_.reset(
-      new NvCodecMjpegDecoderCuda(config.cuda_context));
+  v4l2_capturer->decoder_.reset(new NvCodecDecoderCuda(
+      config.cuda_context, NvCodecDecoderCuda::VideoCodec::JPEG));
 
   if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create NvCodecV4L2Capturer("

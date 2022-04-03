@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if USE_NVCODEC_ENCODER
   auto cuda_context = CudaContext::Create();
 #endif
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.priority = args.priority;
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if USE_NVCODEC_ENCODER
   rtcm_config.cuda_context = cuda_context;
 #endif
 

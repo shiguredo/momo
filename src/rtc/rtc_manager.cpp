@@ -115,7 +115,12 @@ RTCManager::RTCManager(
                 resolve(cf.vp8_decoder, info.vp8_decoders),
                 resolve(cf.vp9_decoder, info.vp9_decoders),
                 resolve(cf.av1_decoder, info.av1_decoders),
-                resolve(cf.h264_decoder, info.h264_decoders)));
+                resolve(cf.h264_decoder, info.h264_decoders)
+#if USE_NVCODEC_ENCODER
+                    ,
+                cf.cuda_context
+#endif
+                ));
   }
 
   media_dependencies.audio_mixer = nullptr;

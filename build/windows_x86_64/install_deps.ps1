@@ -134,3 +134,35 @@ if (!(Test-Path "$INSTALL_DIR\CLI11\include\CLI\CLI.hpp")) {
     Move-Item CLI11-${CLI11_VERSION} CLI11
   Pop-Location
 }
+
+if (!(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
+  if ("$WINCUDA_VERSION" -eq "10.2") {
+    $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
+    $_FILE = "$SOURCE_DIR\cuda_10.2.89_441.22_win10.exe"
+  } elseif ("$WINCUDA_VERSION" -eq "11.0.2") {
+    $_URL = "https://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_451.48_win10.exe"
+    $_FILE = "$SOURCE_DIR\cuda_11.0.2_451.48_win10.exe"
+  } else {
+    # バージョンが増えたらこの分岐を増やしていく
+    throw "CUDA-$WINCUDA_VERSION URL not specified"
+  }
+
+  Push-Location $SOURCE_DIR
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
+  Pop-Location
+  if (Test-Path "$BUILD_DIR\cuda") {
+    Remove-Item "$BUILD_DIR\cuda" -Recurse -Force
+  }
+  mkdir $BUILD_DIR\cuda -Force
+  Push-Location $BUILD_DIR\cuda
+    # サイレントインストールとかせずに、単に展開だけして nvcc を利用する
+    7z x $_FILE
+    if (Test-Path "$INSTALL_DIR\cuda") {
+      Remove-Item $INSTALL_DIR\cuda -Recurse -Force
+    }
+    mkdir $INSTALL_DIR\cuda
+    Move-Item nvcc $INSTALL_DIR\cuda\nvcc
+  Pop-Location
+}

@@ -14,6 +14,7 @@
                 "${workspaceFolder}/build/windows_x86_64/_install/boost/include",
                 "${workspaceFolder}/build/windows_x86_64/_install/CLI11/include",
                 "${workspaceFolder}/build/windows_x86_64/_install/SDL2/include/SDL2",
+                "${workspaceFolder}/build/windows_x86_64/_install/cuda/nvcc/include",
                 "${workspaceFolder}/_build/windows_x86_64"
             ],
             "defines": [

@@ -9,10 +9,6 @@
 #include "cuda/cuda_context_cuda.h"
 #include "dyn/cuda.h"
 
-// どこかにグローバルな logger の定義が必要
-simplelogger::Logger* logger =
-    simplelogger::LoggerFactory::CreateConsoleLogger();
-
 class NvCodecH264EncoderCudaImpl {
  public:
   NvCodecH264EncoderCudaImpl(std::shared_ptr<CudaContext> ctx);
