@@ -626,7 +626,8 @@ elseif (TARGET_OS STREQUAL "linux")
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
         src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_mjpeg_decoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_video_decoder.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
@@ -640,7 +641,7 @@ elseif (TARGET_OS STREQUAL "linux")
     set_source_files_properties(
         src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_mjpeg_decoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES

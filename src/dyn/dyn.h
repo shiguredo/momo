@@ -31,7 +31,7 @@ class DynModule {
 #if defined(_WIN32)
     module_ptr_t module = LoadLibraryA(name);
     if (module == nullptr) {
-        return false;
+      return false;
     }
     FreeLibrary(module);
     return true;
@@ -101,25 +101,25 @@ class DynModule {
 
 // text の定義を全て展開した上で文字列化する。
 // 単純に #text とした場合、全て展開する前に文字列化されてしまう
-#define DYN_STRINGIZE(text) DYN_STRINGIZE_((text))
-
 #if defined(_WIN32)
+#define DYN_STRINGIZE(text) DYN_STRINGIZE_((text))
 #define DYN_STRINGIZE_(x) DYN_STRINGIZE_I x
 #else
-#define DYN_STRINGIZE_(x) DYN_STRINGIZE_I ## x
+#define DYN_STRINGIZE(x) DYN_STRINGIZE_I(x)
 #endif
 
 #define DYN_STRINGIZE_I(text) #text
 
-#define DYN_REGISTER(soname, func)                              \
-  template <class... Args>                                      \
-  inline auto func(Args... args) {                              \
-    typedef std::add_pointer<decltype(::func)>::type func_type; \
-    auto f = (func_type)DynModule::Instance().GetFunc(soname, DYN_STRINGIZE(func)); \
-    if (f == nullptr) {                                         \
-      exit(1);                                                  \
-    }                                                           \
-    return f(args...);                                          \
+#define DYN_REGISTER(soname, func)                                             \
+  template <class... Args>                                                     \
+  inline auto func(Args... args) {                                             \
+    typedef std::add_pointer<decltype(::func)>::type func_type;                \
+    auto f =                                                                   \
+        (func_type)DynModule::Instance().GetFunc(soname, DYN_STRINGIZE(func)); \
+    if (f == nullptr) {                                                        \
+      exit(1);                                                                 \
+    }                                                                          \
+    return f(args...);                                                         \
   }
 
-#endif // DYN_DYN_H_
+#endif  // DYN_DYN_H_
