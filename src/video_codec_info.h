@@ -8,6 +8,7 @@
 
 #if USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
 #if USE_JETSON_ENCODER
@@ -104,6 +105,15 @@ struct VideoCodecInfo {
     if (NvCodecH264Encoder::IsSupported()) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP8)) {
+      info.vp8_decoders.push_back(Type::NVIDIA);
+    }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP9)) {
+      info.vp9_decoders.push_back(Type::NVIDIA);
+    }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::H264)) {
+      info.h264_decoders.push_back(Type::NVIDIA);
+    }
 #endif
 
     info.vp8_encoders.push_back(Type::Software);
@@ -141,6 +151,15 @@ struct VideoCodecInfo {
 #if USE_NVCODEC_ENCODER
     if (NvCodecH264Encoder::IsSupported()) {
       info.h264_encoders.push_back(Type::NVIDIA);
+    }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP8)) {
+      info.vp8_decoders.push_back(Type::NVIDIA);
+    }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP9)) {
+      info.vp9_decoders.push_back(Type::NVIDIA);
+    }
+    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::H264)) {
+      info.h264_decoders.push_back(Type::NVIDIA);
     }
 #endif
 

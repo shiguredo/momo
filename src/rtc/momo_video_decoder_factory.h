@@ -9,6 +9,10 @@
 
 #include "video_codec_info.h"
 
+#if USE_NVCODEC_ENCODER
+#include "cuda/cuda_context.h"
+#endif
+
 class MomoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   VideoCodecInfo::Type vp8_decoder_;
   VideoCodecInfo::Type vp9_decoder_;
@@ -20,13 +24,21 @@ class MomoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   MomoVideoDecoderFactory(VideoCodecInfo::Type vp8_decoder,
                           VideoCodecInfo::Type vp9_decoder,
                           VideoCodecInfo::Type av1_decoder,
-                          VideoCodecInfo::Type h264_decoder);
+                          VideoCodecInfo::Type h264_decoder
+#if USE_NVCODEC_ENCODER
+                          ,
+                          std::shared_ptr<CudaContext> cuda_context
+#endif
+  );
   virtual ~MomoVideoDecoderFactory() {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
   std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
       const webrtc::SdpVideoFormat& format) override;
+#if USE_NVCODEC_ENCODER
+  std::shared_ptr<CudaContext> cuda_context_;
+#endif
 };
 
 #endif  // MOMO_VIDEO_DECODER_FACTORY_H_

@@ -13,4 +13,11 @@ class CudaContext {
   std::shared_ptr<void> impl_;
 };
 
+enum class CudaVideoCodec {
+  H264,
+  VP8,
+  VP9,
+  JPEG,
+};
+
 #endif
