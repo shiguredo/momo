@@ -129,8 +129,8 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 Apache License 2.0
 
 ```
-Copyright 2015-2021, tnoho (Original Author)
-Copyright 2018-2021, Shiguredo Inc.
+Copyright 2015-2022, tnoho (Original Author)
+Copyright 2018-2022, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
