@@ -23,6 +23,8 @@
 struct AyameClientConfig {
   bool insecure = false;
   bool no_google_stun = false;
+  std::string client_cert;
+  std::string client_key;
 
   std::string signaling_url;
   std::string room_id;

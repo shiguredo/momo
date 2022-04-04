@@ -3,7 +3,7 @@
 
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 
-#include "./nvcodec_mjpeg_decoder_cuda.h"
+#include "./nvcodec_decoder_cuda.h"
 
 struct NvCodecV4L2CapturerConfig : V4L2VideoCapturerConfig {
   NvCodecV4L2CapturerConfig(const V4L2VideoCapturerConfig& config) {
@@ -27,7 +27,7 @@ class NvCodecV4L2Capturer : public V4L2VideoCapturer {
 
   void OnCaptured(uint8_t* data, uint32_t bytesused) override;
 
-  std::shared_ptr<NvCodecMjpegDecoderCuda> decoder_;
+  std::shared_ptr<NvCodecDecoderCuda> decoder_;
 };
 
 #endif  // NVCODEC_V4L2_CAPTURER_H_

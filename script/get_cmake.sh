@@ -17,5 +17,6 @@ pushd $OUTPUT_DIR
   curl -LO https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${PLATFORM}-x86_64.tar.gz
   tar xf cmake-${CMAKE_VERSION}-${PLATFORM}-x86_64.tar.gz
   rm cmake-${CMAKE_VERSION}-${PLATFORM}-x86_64.tar.gz
+  rm -rf cmake
   mv cmake-${CMAKE_VERSION}-${PLATFORM}-x86_64 cmake
 popd

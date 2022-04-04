@@ -39,6 +39,8 @@ struct MomoArgs {
   bool screen_capture = false;
   int metrics_port = -1;
   bool metrics_allow_external_ip = false;
+  std::string client_cert;
+  std::string client_key;
 
   std::vector<std::string> sora_signaling_urls;
   std::string sora_channel_id;

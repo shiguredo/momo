@@ -3,12 +3,16 @@
 
 #include "dyn.h"
 
-// CUDA
+// defs
 #include <nvcuvid.h>
 
 namespace dyn {
 
+#if defined(WIN32)
+static const char NVCUVID_SO[] = "nvcuvid.dll";
+#else
 static const char NVCUVID_SO[] = "libnvcuvid.so.1";
+#endif
 DYN_REGISTER(NVCUVID_SO, cuvidCreateDecoder);
 DYN_REGISTER(NVCUVID_SO, cuvidReconfigureDecoder);
 DYN_REGISTER(NVCUVID_SO, cuvidDestroyDecoder);

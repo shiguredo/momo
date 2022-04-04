@@ -1,14 +1,17 @@
 #ifndef DYN_CUDA_H_
 #define DYN_CUDA_H_
 
-// CUDA
 #include <cuda.h>
 
 #include "dyn.h"
 
 namespace dyn {
 
+#if defined(WIN32)
+static const char CUDA_SO[] = "nvcuda.dll";
+#else
 static const char CUDA_SO[] = "libcuda.so.1";
+#endif
 DYN_REGISTER(CUDA_SO, cuInit);
 DYN_REGISTER(CUDA_SO, cuDeviceGet);
 DYN_REGISTER(CUDA_SO, cuDeviceGetCount);

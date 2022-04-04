@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if USE_NVCODEC_ENCODER
   auto cuda_context = CudaContext::Create();
 #endif
 
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.priority = args.priority;
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if USE_NVCODEC_ENCODER
   rtcm_config.cuda_context = cuda_context;
 #endif
 
@@ -261,6 +261,8 @@ int main(int argc, char* argv[]) {
       config.ignore_disconnect_websocket =
           args.sora_ignore_disconnect_websocket;
       config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
+      config.client_cert = args.client_cert;
+      config.client_key = args.client_key;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));
@@ -303,6 +305,8 @@ int main(int argc, char* argv[]) {
       AyameClientConfig config;
       config.insecure = args.insecure;
       config.no_google_stun = args.no_google_stun;
+      config.client_cert = args.client_cert;
+      config.client_key = args.client_key;
       config.signaling_url = args.ayame_signaling_url;
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;
