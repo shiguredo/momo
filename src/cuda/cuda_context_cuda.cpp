@@ -18,16 +18,20 @@ struct CudaContextImpl {
   ~CudaContextImpl() { dyn::cuCtxDestroy(context); }
 };
 
+#define ckerror(call) \
+  if (!ck(call))      \
+  throw std::exception()
+
 std::shared_ptr<CudaContext> CudaContext::Create() {
   CUdevice device;
   CUcontext context;
 
-  ck(dyn::cuInit(0));
-  ck(dyn::cuDeviceGet(&device, 0));
+  ckerror(dyn::cuInit(0));
+  ckerror(dyn::cuDeviceGet(&device, 0));
   char device_name[80];
-  ck(dyn::cuDeviceGetName(device_name, sizeof(device_name), device));
+  ckerror(dyn::cuDeviceGetName(device_name, sizeof(device_name), device));
   std::cout << "GPU in use: " << device_name << std::endl;
-  ck(dyn::cuCtxCreate(&context, 0, device));
+  ckerror(dyn::cuCtxCreate(&context, 0, device));
 
   std::shared_ptr<CudaContextImpl> impl(new CudaContextImpl());
   impl->device = device;
