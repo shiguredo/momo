@@ -128,6 +128,8 @@ int main(int argc, char* argv[]) {
 #if USE_MMAL_ENCODER
     if (v4l2_config.use_native) {
       MMALV4L2CapturerConfig mmal_config = v4l2_config;
+      // サイマルキャストの場合はネイティブフレームを出力しない
+      mmal_config.native_frame_output = !(use_sora && args.sora_simulcast);
       return MMALV4L2Capturer::Create(std::move(mmal_config));
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));

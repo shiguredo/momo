@@ -24,13 +24,22 @@ extern "C" {
 
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 
-typedef V4L2VideoCapturerConfig MMALV4L2CapturerConfig;
+struct MMALV4L2CapturerConfig : V4L2VideoCapturerConfig {
+  MMALV4L2CapturerConfig(const V4L2VideoCapturerConfig& config) {
+    *static_cast<V4L2VideoCapturerConfig*>(this) = config;
+  }
+  // native_frame_output == true の場合、MMAL のデータを kNative なフレームとして渡す。
+  // native_frame_output == false の場合、データをコピーして I420Buffer なフレームを作って渡す。
+  // 前者の方が効率が良いけれども、kNative なフレームはサイマルキャスト時に自動で
+  // リサイズしてくれないので、状況に応じて使い分けるのが良い。
+  bool native_frame_output = false;
+};
 
 class MMALV4L2Capturer : public V4L2VideoCapturer {
  public:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       MMALV4L2CapturerConfig config);
-  MMALV4L2Capturer();
+  MMALV4L2Capturer(const MMALV4L2CapturerConfig& config);
   ~MMALV4L2Capturer();
 
  private:
@@ -74,6 +83,7 @@ class MMALV4L2Capturer : public V4L2VideoCapturer {
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
   unsigned int decoded_buffer_num_;
   size_t decoded_buffer_size_;
+  MMALV4L2CapturerConfig config_;
 };
 
 #endif  // MMAL_V4L2_CAPTURER_H_
