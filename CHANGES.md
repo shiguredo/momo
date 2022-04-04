@@ -19,6 +19,10 @@
     - @voluntas
 - [FIX] Ubuntu 20.04 + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で落ちるのを修正 (#221)
     - @melpon
+- [FIX] Raspberry Pi + H.264 + --hw-mjpeg-decoder true で、カメラの種類によっては動かないことがあるのを修正 (#141)
+    - @melpon
+- [FIX] Raspberry Pi + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で動かないのを修正 (#236)
+    - @melpon
 
 ## 2022.1.0
 
