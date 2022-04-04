@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] `libwebrtc` を `M89.4389@{#5}` に上げる
+- [UPDATE] `libwebrtc` を `M100.4896@{#1}` に上げる
     - @tnoho
 - [FIX] libwebrtc m100 で make_ref_counted を使って scoped_refptr を作るようになったので修正
     - @tnoho
