@@ -17,6 +17,18 @@
     - @tnoho
 - [FIX] SDL のビルドが mac では declaration-after-statement に触れてビルドが通らないのでパッチで回避
     - @tnoho
+- [ADD] `--client-cert` と `--client-key` でクライアント認証をできるようにする
+    - @melpon
+- [ADD] Windows と Ubuntu で NVIDIA VIDEO CODEC SDK を使ったハードウェアデコーダに対応
+    - @melpon
+- [UPDATE] CLI11 を 2.2.0 に上げる
+    - @voluntas
+- [FIX] Ubuntu 20.04 + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で落ちるのを修正 (#221)
+    - @melpon
+- [FIX] Raspberry Pi + H.264 + --hw-mjpeg-decoder true で、カメラの種類によっては動かないことがあるのを修正 (#141)
+    - @melpon
+- [FIX] Raspberry Pi + H.264 + サイマルキャスト + --hw-mjpeg-decoder true で動かないのを修正 (#236)
+    - @melpon
 
 ## 2022.1.0
 

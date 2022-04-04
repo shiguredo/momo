@@ -63,7 +63,8 @@ void AyameClient::Reset() {
 
   URLParts parts;
   if (ParseURL(parts)) {
-    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
+    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure,
+                            config_.client_cert, config_.client_key));
   } else {
     ws_.reset(new Websocket(ioc_));
   }

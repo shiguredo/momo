@@ -22,12 +22,18 @@
 #include <NvEncoder/NvEncoderD3D11.h>
 #endif
 #ifdef __linux__
+#include "cuda/cuda_context.h"
 #include "nvcodec_h264_encoder_cuda.h"
 #endif
 
 class NvCodecH264Encoder : public webrtc::VideoEncoder {
  public:
+#ifdef __linux__
+  explicit NvCodecH264Encoder(const cricket::VideoCodec& codec,
+                              std::shared_ptr<CudaContext> cc);
+#else
   explicit NvCodecH264Encoder(const cricket::VideoCodec& codec);
+#endif
   ~NvCodecH264Encoder() override;
 
   static bool IsSupported();
@@ -63,6 +69,7 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
   std::unique_ptr<NvEncoderD3D11> nv_encoder_;
 #endif
 #ifdef __linux__
+  std::shared_ptr<CudaContext> cuda_context_;
   std::unique_ptr<NvCodecH264EncoderCuda> cuda_;
   std::unique_ptr<NvEncoder> nv_encoder_;
 #endif

@@ -29,13 +29,24 @@ jobs:
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
           echo "::set-output name=boost_version::${BOOST_VERSION}"
+          echo "::set-output name=wincuda_version::${WINCUDA_VERSION}"
         id: versions
+      # Boost はよくダウンロード先に繋がらずエラーになるのでキャッシュする
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache\boost
           key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
+      # CUDA のインストールバイナリのダウンロードは 3GB ぐらいあって、
+      # ビルドの度に取得するのはつらいのでキャッシュする
+      # （インストールする nvcc は解凍後で 100MB 程度なのでキャッシュ可能）
+      - name: Cache NVCC ${{ steps.versions.outputs.wincuda_version }}
+        id: cache-cuda
+        uses: actions/cache@v3
+        with:
+          path: build\windows_x86_64\_install\cuda\nvcc
+          key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v1
       - run: "& .\\build.ps1 -package"
         working-directory: build
         timeout-minutes: 120
@@ -80,7 +91,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
@@ -129,7 +140,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2

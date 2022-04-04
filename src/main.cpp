@@ -21,6 +21,8 @@
 #include "hwenc_mmal/mmal_v4l2_capturer.h"
 #elif USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
+#elif USE_NVCODEC_ENCODER
+#include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -43,6 +45,10 @@
 
 #ifdef _WIN32
 #include <rtc_base/win/scoped_com_initializer.h>
+#endif
+
+#if defined(__linux__) && USE_NVCODEC_ENCODER
+#include "cuda/cuda_context.h"
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
@@ -80,6 +86,10 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
+#if USE_NVCODEC_ENCODER
+  auto cuda_context = CudaContext::Create();
+#endif
+
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
@@ -116,6 +126,8 @@ int main(int argc, char* argv[]) {
 #if USE_MMAL_ENCODER
     if (v4l2_config.use_native) {
       MMALV4L2CapturerConfig mmal_config = v4l2_config;
+      // サイマルキャストの場合はネイティブフレームを出力しない
+      mmal_config.native_frame_output = !(use_sora && args.sora_simulcast);
       return MMALV4L2Capturer::Create(std::move(mmal_config));
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
@@ -123,6 +135,14 @@ int main(int argc, char* argv[]) {
 #elif USE_JETSON_ENCODER
     if (v4l2_config.use_native) {
       return JetsonV4L2Capturer::Create(std::move(v4l2_config));
+    } else {
+      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+    }
+#elif USE_NVCODEC_ENCODER
+    if (v4l2_config.use_native) {
+      NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
+      nvcodec_config.cuda_context = cuda_context;
+      return NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
@@ -169,6 +189,11 @@ int main(int argc, char* argv[]) {
   rtcm_config.h264_decoder = args.h264_decoder;
 
   rtcm_config.priority = args.priority;
+
+#if USE_NVCODEC_ENCODER
+  rtcm_config.cuda_context = cuda_context;
+#endif
+
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {
@@ -234,6 +259,8 @@ int main(int argc, char* argv[]) {
       config.ignore_disconnect_websocket =
           args.sora_ignore_disconnect_websocket;
       config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
+      config.client_cert = args.client_cert;
+      config.client_key = args.client_key;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));
@@ -276,6 +303,8 @@ int main(int argc, char* argv[]) {
       AyameClientConfig config;
       config.insecure = args.insecure;
       config.no_google_stun = args.no_google_stun;
+      config.client_cert = args.client_cert;
+      config.client_key = args.client_key;
       config.signaling_url = args.ayame_signaling_url;
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;

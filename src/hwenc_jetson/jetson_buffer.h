@@ -1,8 +1,8 @@
 #ifndef JETSON_BUFFER_H_
 #define JETSON_BUFFER_H_
 
-#include <memory>
 #include <linux/videodev2.h>
+#include <memory>
 
 // WebRTC
 #include <api/video/video_frame.h>
@@ -18,21 +18,20 @@
 class JetsonBuffer : public webrtc::VideoFrameBuffer {
  public:
   static rtc::scoped_refptr<JetsonBuffer> Create(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height,
-    int fd,
-    uint32_t pixfmt,
-    std::shared_ptr<JetsonJpegDecoder> decoder);
+      webrtc::VideoType video_type,
+      int raw_width,
+      int raw_height,
+      int scaled_width,
+      int scaled_height,
+      int fd,
+      uint32_t pixfmt,
+      std::shared_ptr<JetsonJpegDecoder> decoder);
 
-  static rtc::scoped_refptr<JetsonBuffer> Create(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height);
+  static rtc::scoped_refptr<JetsonBuffer> Create(webrtc::VideoType video_type,
+                                                 int raw_width,
+                                                 int raw_height,
+                                                 int scaled_width,
+                                                 int scaled_height);
 
   Type type() const override;
   webrtc::VideoType VideoType() const;
@@ -50,22 +49,20 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   size_t Length() const;
 
  protected:
-  JetsonBuffer(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height,
-    int fd,
-    uint32_t pixfmt,
-    std::shared_ptr<JetsonJpegDecoder> decoder);
+  JetsonBuffer(webrtc::VideoType video_type,
+               int raw_width,
+               int raw_height,
+               int scaled_width,
+               int scaled_height,
+               int fd,
+               uint32_t pixfmt,
+               std::shared_ptr<JetsonJpegDecoder> decoder);
 
-  JetsonBuffer(
-    webrtc::VideoType video_type,
-    int raw_width,
-    int raw_height,
-    int scaled_width,
-    int scaled_height);
+  JetsonBuffer(webrtc::VideoType video_type,
+               int raw_width,
+               int raw_height,
+               int scaled_width,
+               int scaled_height);
 
  private:
   webrtc::VideoType video_type_;

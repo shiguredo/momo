@@ -251,6 +251,13 @@ void Util::ParseArgs(int argc,
   app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
                "Allow access to Metrics server from external IP");
 
+  app.add_option("--client-cert", args.client_cert,
+                 "Cert file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
+  app.add_option("--client-key", args.client_key,
+                 "Private key file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(

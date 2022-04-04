@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 
 // WebRTC
+#include <api/video/i420_buffer.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ref_counted_object.h>
@@ -47,7 +48,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> MMALV4L2Capturer::Create(
     return nullptr;
   }
   rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer(
-      new rtc::RefCountedObject<MMALV4L2Capturer>());
+      new rtc::RefCountedObject<MMALV4L2Capturer>(config));
   if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create MMALV4L2Capturer(" << unique_name
                         << ")";
@@ -62,13 +63,14 @@ rtc::scoped_refptr<V4L2VideoCapturer> MMALV4L2Capturer::Create(
   return v4l2_capturer;
 }
 
-MMALV4L2Capturer::MMALV4L2Capturer()
+MMALV4L2Capturer::MMALV4L2Capturer(const MMALV4L2CapturerConfig& config)
     : component_in_(nullptr),
       decoder_(nullptr),
       resizer_(nullptr),
       connection_(nullptr),
       configured_width_(0),
-      configured_height_(0) {
+      configured_height_(0),
+      config_(config) {
   bcm_host_init();
   decoded_buffer_num_ = 4;
   decoded_buffer_size_ =
@@ -98,6 +100,30 @@ bool MMALV4L2Capturer::UseNativeBuffer() {
 }
 
 void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
+  // やってくる MJPEG の種類によっては、MMAL が処理できないことがある。
+  // その場合は APP0 マーカーを APP4 に書き換えると良いらしいので、
+  // 適当に置き換えていく。
+  // https://forums.raspberrypi.com/viewtopic.php?t=329233
+  int n = 2;  // SOI は飛ばす
+  while (n < bytesused - 1) {
+    // EOI または SOS マーカーが見つかったら終了する
+    if (data[n] == 0xff && data[n + 1] == 0xd9) {
+      break;
+    }
+    if (data[n] == 0xff && data[n + 1] == 0xda) {
+      break;
+    }
+    if (n >= bytesused - 3) {
+      break;
+    }
+    // APP0 マーカーだったら APP4 マーカーに置き換える
+    if (data[n] == 0xff && data[n + 1] == 0xe0) {
+      data[n + 1] = 0xe4;
+    }
+    int size = (int)data[n + 2] * 256 + (int)data[n + 3];
+    n += 2 + size;
+  }
+
   const int64_t timestamp_us = rtc::TimeMicros();
 
   int adapted_width;
@@ -113,11 +139,26 @@ void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   }
   std::lock_guard<std::mutex> lock(mtx_);
 
+  //{
+  //  static int n = 0;
+  //  char file[255];
+  //  sprintf(file, "mjpeg/mjpeg%04d.jpg", n);
+  //  n += 1;
+  //  FILE* fp = fopen(file, "wb");
+  //  if (fp == NULL) {
+  //    RTC_LOG(LS_ERROR) << "Failed to open " << file;
+  //    return;
+  //  }
+  //  fwrite(data, 1, bytesused, fp);
+  //  fclose(fp);
+  //}
+
   if (configured_width_ != adapted_width ||
       configured_height_ != adapted_height) {
     RTC_LOG(LS_INFO) << "Resizer reinitialized from " << configured_width_
                      << "x" << configured_height_ << " to " << adapted_width
-                     << "x" << adapted_height;
+                     << "x" << adapted_height << " (current " << _currentWidth
+                     << "x" << _currentHeight << ")";
     MMALRelease();
     if (MMALConfigure(adapted_width, adapted_height) == -1) {
       RTC_LOG(LS_ERROR) << "Failed to MMALConfigure";
@@ -135,6 +176,7 @@ void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
 
   MMAL_BUFFER_HEADER_T* buffer;
   while ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
+    //RTC_LOG(LS_INFO) << "Got input buffer from queue: " << (void*)buffer;
     buffer->pts = buffer->dts = timestamp_us;
     buffer->offset = 0;
     buffer->flags = MMAL_BUFFER_HEADER_FLAG_FRAME;
@@ -161,6 +203,7 @@ void MMALV4L2Capturer::MMALInputCallback(MMAL_PORT_T* port,
 void MMALV4L2Capturer::ResizerFillBuffer() {
   MMAL_BUFFER_HEADER_T* resizer_out;
   while ((resizer_out = mmal_queue_get(resizer_pool_out_->queue)) != NULL) {
+    //RTC_LOG(LS_INFO) << "Got resizer_out from queue: " << (void*)resizer_out;
     mmal_port_send_buffer(resizer_->output[0], resizer_out);
   }
 }
@@ -196,14 +239,27 @@ void MMALV4L2Capturer::ResizerOutputCallback(MMAL_PORT_T* port,
     }
   }
 
-  rtc::scoped_refptr<MMALBuffer> mmal_buffer(
-      MMALBuffer::Create(buffer, params->width, params->height));
-  OnFrame(webrtc::VideoFrame::Builder()
-              .set_video_frame_buffer(mmal_buffer)
-              .set_timestamp_rtp(0)
-              .set_timestamp_us(buffer->pts)
-              .set_rotation(webrtc::kVideoRotation_0)
-              .build());
+  if (config_.native_frame_output) {
+    rtc::scoped_refptr<MMALBuffer> mmal_buffer(
+        MMALBuffer::Create(buffer, params->width, params->height));
+    OnFrame(webrtc::VideoFrame::Builder()
+                .set_video_frame_buffer(mmal_buffer)
+                .set_timestamp_rtp(0)
+                .set_timestamp_us(buffer->pts)
+                .set_rotation(webrtc::kVideoRotation_0)
+                .build());
+  } else {
+    auto i420_buffer =
+        webrtc::I420Buffer::Create(params->width, params->height);
+    std::memcpy(i420_buffer->MutableDataY(), buffer->data, buffer->length);
+    OnFrame(webrtc::VideoFrame::Builder()
+                .set_video_frame_buffer(i420_buffer)
+                .set_timestamp_rtp(0)
+                .set_timestamp_us(buffer->pts)
+                .set_rotation(webrtc::kVideoRotation_0)
+                .build());
+    mmal_buffer_header_release(buffer);
+  }
 }
 
 int32_t MMALV4L2Capturer::MMALConfigure(int32_t width, int32_t height) {

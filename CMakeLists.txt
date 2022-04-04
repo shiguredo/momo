@@ -432,10 +432,10 @@ if (USE_SCREEN_CAPTURER)
   if (TARGET_OS STREQUAL "linux")
     target_link_libraries(momo
       PRIVATE
-        gio-2.0
-        gobject-2.0
-        glib-2.0
-        Xext
+        # gio-2.0
+        # gobject-2.0
+        # glib-2.0
+        # Xext
         Xdamage
         Xfixes
         Xcomposite
@@ -502,7 +502,8 @@ if ("${TARGET_OS}" STREQUAL "windows")
       PRIVATE
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
+        NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
+        src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
         NvCodec/include
@@ -511,6 +512,39 @@ if ("${TARGET_OS}" STREQUAL "windows")
       PRIVATE
         DXGI.lib
         D3D11.lib
+    )
+
+    # enable_language(CUDA) は CUDA 用 Visual Studio Integration を利用して CUDA を検出しているが、
+    # CUDA ドライバがインストールできない場所では VS Integration をインストールできないため、
+    # enable_language(CUDA) は利用できない。
+    # なので（deprecated だけど）FindCUDA を利用してコンパイルする。
+
+    set(CUDA_TOOLKIT_ROOT_DIR ${_INSTALL_DIR}/cuda/nvcc)
+    find_package(CUDA REQUIRED)
+
+    set_source_files_properties(
+        src/cuda/cuda_context_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+      PROPERTIES
+        CUDA_SOURCE_PROPERTY_FORMAT OBJ
+    )
+    cuda_compile(CUDA_FILES
+        src/cuda/cuda_context_cuda.cpp
+        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+      OPTIONS
+        -Xcompiler /utf-8
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_sources(momo PRIVATE ${CUDA_FILES})
+    target_include_directories(momo PRIVATE ${CUDA_INCLUDE_DIRS})
+    target_link_libraries(momo
+      PRIVATE
+        ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cudart_static.lib 
+        #${CUDA_LIBRARIES}
     )
   endif()
 elseif (TARGET_OS STREQUAL "macos")
@@ -568,19 +602,19 @@ elseif (TARGET_OS STREQUAL "linux")
   target_link_libraries(momo
     PRIVATE
       X11
-      Xau
-      Xdmcp
+      # Xau
+      # Xdmcp
       Xtst
-      xcb
-      plds4
+      # xcb
+      # plds4
       Xext
-      expat
+      # expat
       dl
-      nss3
-      nssutil3
-      plc4
-      nspr4
-      rt
+      # nss3
+      # nssutil3
+      # plc4
+      # nspr4
+      # rt
       Threads::Threads
   )
 
@@ -588,8 +622,12 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
+        src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_video_decoder.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
@@ -601,7 +639,9 @@ elseif (TARGET_OS STREQUAL "linux")
 
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
+        src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES

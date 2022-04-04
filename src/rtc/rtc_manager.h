@@ -1,10 +1,13 @@
 #ifndef RTC_MANAGER_H_
 #define RTC_MANAGER_H_
 
+#include <memory>
+
 // WebRTC
 #include <api/peer_connection_interface.h>
 #include <pc/video_track_source.h>
 
+#include "cuda/cuda_context.h"
 #include "rtc_connection.h"
 #include "rtc_data_manager_dispatcher.h"
 #include "rtc_message_sender.h"
@@ -49,6 +52,10 @@ struct RTCManagerConfig {
     }
     return webrtc::DegradationPreference::BALANCED;
   }
+
+#if USE_NVCODEC_ENCODER
+  std::shared_ptr<CudaContext> cuda_context;
+#endif
 };
 
 class RTCManager {

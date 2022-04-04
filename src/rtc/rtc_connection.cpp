@@ -123,7 +123,8 @@ void RTCConnection::CreateOffer(OnCreateSuccessFunc on_success,
     webrtc::DataChannelInit config;
     auto result = connection_->CreateDataChannelOrError("serial", &config);
     if (!result.ok()) {
-      RTC_LOG(LS_ERROR) << "CreateDataChannel() failed: " << result.error().message();
+      RTC_LOG(LS_ERROR) << "CreateDataChannel() failed: "
+                        << result.error().message();
     }
     data_manager->OnDataChannel(result.MoveValue());
   }
