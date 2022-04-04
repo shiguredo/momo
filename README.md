@@ -77,6 +77,11 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
+
+- Raspberry Pi OS (64bit) ARMv8
+    - Raspberry Pi 4
+    - Raspberry Pi 3
+    - Raspberry Pi 2
 - Raspberry Pi OS (32bit) ARMv7
     - Raspberry Pi 4
     - Raspberry Pi 3
@@ -100,13 +105,6 @@ https://github.com/shiguredo/momo/releases
     - 2021 年末にて終了
 - macOS 11 arm64 以降
 - Windows 10.1809 x86_64 以降
-
-### 以下はビルドが通ること以外は確認していません
-
-- Raspberry Pi OS (64bit) ARMv8
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
 
 ## 使ってみる
 
