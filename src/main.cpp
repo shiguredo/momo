@@ -105,10 +105,8 @@ int main(int argc, char* argv[]) {
         return nullptr;
       }
       auto size = args.GetSize();
-      rtc::scoped_refptr<ScreenVideoCapturer> capturer(
-          new rtc::RefCountedObject<ScreenVideoCapturer>(
-              sources[0].id, size.width, size.height, args.framerate));
-      return capturer;
+      return rtc::make_ref_counted<ScreenVideoCapturer>(
+          sources[0].id, size.width, size.height, args.framerate);
     }
 #endif
 

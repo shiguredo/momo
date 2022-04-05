@@ -11,6 +11,12 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M100.4896@{#1}` に上げる
+    - @tnoho
+- [FIX] libwebrtc m100 で make_ref_counted を使って scoped_refptr を作るようになったので修正
+    - @tnoho
+- [FIX] SDL のビルドが mac では declaration-after-statement に触れてビルドが通らないのでパッチで回避
+    - @tnoho
 - [ADD] `--client-cert` と `--client-key` でクライアント認証をできるようにする
     - @melpon
 - [ADD] Windows と Ubuntu で NVIDIA VIDEO CODEC SDK を使ったハードウェアデコーダに対応
