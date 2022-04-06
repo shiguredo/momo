@@ -55,6 +55,77 @@ MsdkVideoDecoder::~MsdkVideoDecoder() {
   Release();
 }
 
+bool MsdkVideoDecoder::IsSupported(mfxU32 codec) {
+  std::unique_ptr<DRMLibVA> libva = CreateDRMLibVA();
+  if (!libva) {
+    return false;
+  }
+
+  MFXVideoSession session;
+
+  mfxStatus sts = MFX_ERR_NONE;
+
+  sts = session.SetHandle(static_cast<mfxHandleType>(MFX_HANDLE_VA_DISPLAY),
+                          libva->GetVADisplay());
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  mfxIMPL impl = MFX_IMPL_HARDWARE;
+  sts = session.QueryIMPL(&impl);
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  mfxVersion ver = {{0, 1}};
+  sts = session.QueryVersion(&ver);
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  int width = 640;
+  int height = 480;
+
+  std::unique_ptr<MFXVideoDECODE> decoder;
+  decoder.reset(new MFXVideoDECODE(session));
+
+  mfxVideoParam param;
+  memset(&param, 0, sizeof(param));
+
+  param.mfx.CodecId = codec;
+  param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+  param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+  param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  param.mfx.FrameInfo.CropX = 0;
+  param.mfx.FrameInfo.CropY = 0;
+  param.mfx.FrameInfo.CropW = width;
+  param.mfx.FrameInfo.CropH = height;
+  param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
+  param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
+
+  param.mfx.GopRefDist = 1;
+  param.AsyncDepth = 1;
+  param.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+
+  //qmfxExtCodingOption ext_coding_option;
+  //qmemset(&ext_coding_option, 0, sizeof(ext_coding_option));
+  //qext_coding_option.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
+  //qext_coding_option.Header.BufferSz = sizeof(ext_coding_option);
+  //qext_coding_option.MaxDecFrameBuffering = 1;
+
+  //qmfxExtBuffer* ext_buffers[1];
+  //qext_buffers[0] = (mfxExtBuffer*)&ext_coding_option;
+  //qparam.ExtParam = ext_buffers;
+  //qparam.NumExtParam = sizeof(ext_buffers) / sizeof(ext_buffers[0]);
+
+  sts = decoder->Query(&param, &param);
+  if (sts == MFX_ERR_NONE || sts == MFX_ERR_UNSUPPORTED) {
+    return false;
+  }
+
+  return true;
+}
+
 bool MsdkVideoDecoder::Configure(
     const webrtc::VideoDecoder::Settings& settings) {
   width_ = settings.max_render_resolution().Width();

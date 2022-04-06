@@ -43,6 +43,134 @@ MsdkVideoEncoder::MsdkVideoEncoder(const cricket::VideoCodec& codec)
 }
 MsdkVideoEncoder::~MsdkVideoEncoder() {}
 
+bool MsdkVideoEncoder::IsSupported(mfxU32 codec) {
+  std::unique_ptr<DRMLibVA> libva = CreateDRMLibVA();
+  if (!libva) {
+    return false;
+  }
+
+  MFXVideoSession session;
+
+  mfxStatus sts = MFX_ERR_NONE;
+
+  sts = session.SetHandle(static_cast<mfxHandleType>(MFX_HANDLE_VA_DISPLAY),
+                          libva->GetVADisplay());
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  mfxIMPL impl = MFX_IMPL_HARDWARE;
+  sts = session.QueryIMPL(&impl);
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  mfxVersion ver = {{0, 1}};
+  sts = session.QueryVersion(&ver);
+  if (sts != MFX_ERR_NONE) {
+    return false;
+  }
+
+  std::unique_ptr<MFXVideoENCODE> encoder;
+  encoder.reset(new MFXVideoENCODE(session));
+
+  int framerate = 30;
+  int width = 640;
+  int height = 480;
+
+  mfxVideoParam param;
+  memset(&param, 0, sizeof(param));
+
+  param.mfx.CodecId = codec;
+  if (codec == MFX_CODEC_VP8) {
+    param.mfx.CodecProfile = MFX_PROFILE_VP8_0;
+  } else if (codec == MFX_CODEC_VP9) {
+    param.mfx.CodecProfile = MFX_PROFILE_VP9_0;
+  } else if (codec == MFX_CODEC_AVC) {
+    //param.mfx.CodecProfile = MFX_PROFILE_AVC_HIGH;
+    //param.mfx.CodecLevel = MFX_LEVEL_AVC_51;
+    param.mfx.CodecProfile = MFX_PROFILE_AVC_BASELINE;
+    param.mfx.CodecLevel = MFX_LEVEL_AVC_1;
+  } else if (codec == MFX_CODEC_AV1) {
+    param.mfx.CodecProfile = MFX_PROFILE_AV1_MAIN;
+  }
+  param.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
+  param.mfx.TargetKbps = 3000;
+  param.mfx.MaxKbps = 3000;
+  param.mfx.RateControlMethod = MFX_RATECONTROL_VBR;
+  //param.mfx.NumSlice = 1;
+  //param.mfx.NumRefFrame = 1;
+  param.mfx.FrameInfo.FrameRateExtN = framerate;
+  param.mfx.FrameInfo.FrameRateExtD = 1;
+  param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+  param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+  param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  param.mfx.FrameInfo.CropX = 0;
+  param.mfx.FrameInfo.CropY = 0;
+  param.mfx.FrameInfo.CropW = width;
+  param.mfx.FrameInfo.CropH = height;
+  // Width must be a multiple of 16
+  // Height must be a multiple of 16 in case of frame picture and a multiple of 32 in case of field picture
+  param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
+  param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
+
+  //param.mfx.GopOptFlag = MFX_GOP_STRICT | MFX_GOP_CLOSED;
+  //param.mfx.IdrInterval = codec_settings->H264().keyFrameInterval;
+  //param.mfx.IdrInterval = 0;
+  param.mfx.GopRefDist = 1;
+  //param.mfx.EncodedOrder = 0;
+  param.AsyncDepth = 1;
+  param.IOPattern =
+      MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+
+  mfxExtBuffer* ext_buffers[10];
+  int ext_buffers_size = 0;
+  if (codec == MFX_CODEC_AVC) {
+    mfxExtCodingOption ext_coding_option;
+    memset(&ext_coding_option, 0, sizeof(ext_coding_option));
+    ext_coding_option.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
+    ext_coding_option.Header.BufferSz = sizeof(ext_coding_option);
+    ext_coding_option.AUDelimiter = MFX_CODINGOPTION_OFF;
+    ext_coding_option.MaxDecFrameBuffering = 1;
+    //ext_coding_option.NalHrdConformance = MFX_CODINGOPTION_OFF;
+    //ext_coding_option.VuiVclHrdParameters = MFX_CODINGOPTION_ON;
+    //ext_coding_option.SingleSeiNalUnit = MFX_CODINGOPTION_ON;
+    //ext_coding_option.RefPicMarkRep = MFX_CODINGOPTION_OFF;
+    //ext_coding_option.PicTimingSEI = MFX_CODINGOPTION_OFF;
+    //ext_coding_option.RecoveryPointSEI = MFX_CODINGOPTION_OFF;
+    //ext_coding_option.FramePicture = MFX_CODINGOPTION_OFF;
+    //ext_coding_option.FieldOutput = MFX_CODINGOPTION_ON;
+
+    mfxExtCodingOption2 ext_coding_option2;
+    memset(&ext_coding_option2, 0, sizeof(ext_coding_option2));
+    ext_coding_option2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
+    ext_coding_option2.Header.BufferSz = sizeof(ext_coding_option2);
+    ext_coding_option2.RepeatPPS = MFX_CODINGOPTION_ON;
+    //ext_coding_option2.MaxSliceSize = 1;
+    //ext_coding_option2.AdaptiveI = MFX_CODINGOPTION_ON;
+
+    ext_buffers[0] = (mfxExtBuffer*)&ext_coding_option;
+    ext_buffers[1] = (mfxExtBuffer*)&ext_coding_option2;
+    ext_buffers_size = 2;
+  }
+
+  if (ext_buffers_size != 0) {
+    param.ExtParam = ext_buffers;
+    param.NumExtParam = ext_buffers_size;
+  }
+
+  // MFX_ERR_NONE	The function completed successfully.
+  // MFX_ERR_UNSUPPORTED	The function failed to identify a specific implementation for the required features.
+  // MFX_WRN_PARTIAL_ACCELERATION	The underlying hardware does not fully support the specified video parameters; The encoding may be partially accelerated. Only SDK HW implementations may return this status code.
+  // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
+  sts = encoder->Query(&param, &param);
+  if (sts == MFX_ERR_NONE || sts == MFX_ERR_UNSUPPORTED) {
+    return false;
+  }
+
+  return true;
+}
+
 int32_t MsdkVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                                      int32_t number_of_cores,
                                      size_t max_payload_size) {

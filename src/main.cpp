@@ -87,7 +87,11 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
 #if USE_NVCODEC_ENCODER
-  auto cuda_context = CudaContext::Create();
+  std::shared_ptr<CudaContext> cuda_context;
+  try {
+    cuda_context = CudaContext::Create();
+  } catch (...) {
+  }
 #endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {

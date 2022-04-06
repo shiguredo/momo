@@ -15,11 +15,14 @@
 
 class MsdkVideoDecoder : public webrtc::VideoDecoder {
  public:
-  // MFX_CODEC_AVC
-  // MFX_CODEC_VP8
-  // MFX_CODEC_VP9
   MsdkVideoDecoder(mfxU32 codec_id);
   ~MsdkVideoDecoder() override;
+
+  // MFX_CODEC_VP8
+  // MFX_CODEC_VP9
+  // MFX_CODEC_AVC
+  // MFX_CODEC_AV1
+  static bool IsSupported(mfxU32 codec);
 
   bool Configure(const Settings& settings) override;
 

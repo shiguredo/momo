@@ -53,6 +53,7 @@
             "defines": [
                 "WEBRTC_LINUX",
                 "USE_NVCODEC_ENCODER=1",
+                "USE_MSDK_ENCODER=1",
                 "USE_MMAL_ENCODER=0",
                 "USE_JETSON_ENCODER=0",
                 "USE_H264=1",

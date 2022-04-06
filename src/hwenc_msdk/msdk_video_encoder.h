@@ -14,6 +14,7 @@
 
 // msdk
 #include <mfx/mfxvideo++.h>
+#include <mfx/mfxvp8.h>
 
 #include "vaapi_utils_drm.h"
 
@@ -21,6 +22,12 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
  public:
   explicit MsdkVideoEncoder(const cricket::VideoCodec& codec);
   ~MsdkVideoEncoder() override;
+
+  // MFX_CODEC_VP8
+  // MFX_CODEC_VP9
+  // MFX_CODEC_AVC
+  // MFX_CODEC_AV1
+  static bool IsSupported(mfxU32 codec);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
