@@ -45,6 +45,8 @@
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/boost/include",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/CLI11/include",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/SDL2/include/SDL2",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/msdk/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/libva/include",
                 "${workspaceFolder}/_build/ubuntu-20.04_x86_64",
                 "/usr/local/cuda/include"
             ],
