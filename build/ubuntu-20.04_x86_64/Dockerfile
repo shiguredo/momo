@@ -12,7 +12,7 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloa
 COPY script/apt_install_x86_64.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /root/apt_install_x86_64.sh \
-  apt install libdrm-dev
+  && apt-get -y install libdrm-dev
 
 # WebRTC の取得
 
