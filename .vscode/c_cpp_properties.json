@@ -81,7 +81,7 @@
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/CLI11/include",
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/SDL2/include/SDL2",
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/rootfs/usr/include",
-                "${workspaceFolder}/_build/raspberry-pi-os_armv7",
+                "${workspaceFolder}/_build/raspberry-pi-os_armv7"
             ],
             "defines": [
                 "WEBRTC_LINUX",
