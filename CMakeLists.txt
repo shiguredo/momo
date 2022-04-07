@@ -199,7 +199,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(USE_NVCODEC_ENCODER ON)
-  set(USE_MSDK_ENCODER ON)
   set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(CLI11_ROOT_DIR /root/CLI11)
@@ -227,6 +226,8 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
   set(BOOST_ROOT_DIR /root/boost)
   set(CLI11_ROOT_DIR /root/CLI11)
   set(SDL2_ROOT_DIR /root/SDL2)
+  set(LIBVA_ROOT_DIR /root/libva)
+  set(MSDK_ROOT_DIR /root/msdk)
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
@@ -661,6 +662,7 @@ elseif (TARGET_OS STREQUAL "linux")
     find_package(MSDK REQUIRED)
     target_sources(momo
       PRIVATE
+        src/hwenc_msdk/msdk_session.cpp
         src/hwenc_msdk/msdk_video_decoder.cpp
         src/hwenc_msdk/msdk_video_encoder.cpp
         src/hwenc_msdk/vaapi_utils_drm.cpp

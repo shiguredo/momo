@@ -1,7 +1,7 @@
 find_package(LIBVA REQUIRED)
 
-find_path(MSDK_INCLUDE_DIR NAMES mfx/mfxenc.h PATHS "${MSDK_ROOT_DIR}/include")
-find_library(MSDK_LIBRARY NAMES mfx PATHS "${MSDK_ROOT_DIR}/lib")
+find_path(MSDK_INCLUDE_DIR NAMES mfx/mfxenc.h PATHS "${MSDK_ROOT_DIR}/include" NO_DEFAULT_PATH)
+find_library(MSDK_LIBRARY NAMES mfx PATHS "${MSDK_ROOT_DIR}/lib" NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(MSDK DEFAULT_MSG MSDK_LIBRARY MSDK_INCLUDE_DIR)

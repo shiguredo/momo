@@ -21,8 +21,14 @@
 
 #if USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_video_decoder.h"
-#elif USE_MMAL_ENCODER
+#endif
+
+#if USE_MMAL_ENCODER
 #include "hwenc_mmal/mmal_h264_decoder.h"
+#endif
+
+#if USE_MSDK_ENCODER
+#include "hwenc_msdk/msdk_video_decoder.h"
 #endif
 
 namespace {
@@ -41,51 +47,38 @@ bool IsFormatSupported(
 }  // namespace
 
 MomoVideoDecoderFactory::MomoVideoDecoderFactory(
-    VideoCodecInfo::Type vp8_decoder,
-    VideoCodecInfo::Type vp9_decoder,
-    VideoCodecInfo::Type av1_decoder,
-    VideoCodecInfo::Type h264_decoder
-#if USE_NVCODEC_ENCODER
-    ,
-    std::shared_ptr<CudaContext> cuda_context
-#endif
-    )
-    : vp8_decoder_(vp8_decoder),
-      vp9_decoder_(vp9_decoder),
-      av1_decoder_(av1_decoder),
-      h264_decoder_(h264_decoder)
-#if USE_NVCODEC_ENCODER
-      ,
-      cuda_context_(cuda_context)
-#endif
-{
+    const MomoVideoDecoderFactoryConfig& config)
+    : config_(config) {
 #if defined(__APPLE__)
   video_decoder_factory_ = CreateObjCDecoderFactory();
 #endif
 }
+
 std::vector<webrtc::SdpVideoFormat>
 MomoVideoDecoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
 
   // VP8
-  if (vp8_decoder_ == VideoCodecInfo::Type::Software ||
-      vp8_decoder_ == VideoCodecInfo::Type::Jetson ||
-      vp8_decoder_ == VideoCodecInfo::Type::NVIDIA) {
+  if (config_.vp8_decoder == VideoCodecInfo::Type::Software ||
+      config_.vp8_decoder == VideoCodecInfo::Type::Jetson ||
+      config_.vp8_decoder == VideoCodecInfo::Type::NVIDIA ||
+      config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   }
 
   // VP9
-  if (vp9_decoder_ == VideoCodecInfo::Type::Software ||
-      vp9_decoder_ == VideoCodecInfo::Type::Jetson ||
-      vp9_decoder_ == VideoCodecInfo::Type::NVIDIA) {
+  if (config_.vp9_decoder == VideoCodecInfo::Type::Software ||
+      config_.vp9_decoder == VideoCodecInfo::Type::Jetson ||
+      config_.vp9_decoder == VideoCodecInfo::Type::NVIDIA ||
+      config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
     for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
       supported_codecs.push_back(format);
     }
   }
 
   // AV1
-  // 今のところ Software のみ
-  if (av1_decoder_ == VideoCodecInfo::Type::Software) {
+  if (config_.av1_decoder == VideoCodecInfo::Type::Software ||
+      config_.av1_decoder == VideoCodecInfo::Type::Intel) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
   }
 
@@ -100,14 +93,14 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
       CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
                        webrtc::H264Level::kLevel3_1, "0")};
 
-  if (h264_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+  if (config_.h264_decoder == VideoCodecInfo::Type::VideoToolbox) {
     // VideoToolbox の場合は video_decoder_factory_ から H264 を拾ってくる
     for (auto format : video_decoder_factory_->GetSupportedFormats()) {
       if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
         supported_codecs.push_back(format);
       }
     }
-  } else if (h264_decoder_ != VideoCodecInfo::Type::NotSupported) {
+  } else if (config_.h264_decoder != VideoCodecInfo::Type::NotSupported) {
     // その他のデコーダの場合は手動で追加
     for (const webrtc::SdpVideoFormat& h264_format : h264_codecs) {
       supported_codecs.push_back(h264_format);
@@ -127,47 +120,68 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
 #if USE_NVCODEC_ENCODER
-    if (vp8_decoder_ == VideoCodecInfo::Type::NVIDIA) {
+    if (config_.vp8_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(cuda_context_,
+          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::VP8));
     }
 #endif
+#if USE_MSDK_ENCODER
+    if (config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+                                              MFX_CODEC_VP8));
+    }
+#endif
 #if USE_JETSON_ENCODER
-    if (vp8_decoder_ == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp8_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_VP8));
     }
 #endif
 
-    if (vp8_decoder_ == VideoCodecInfo::Type::Software) {
+    if (config_.vp8_decoder == VideoCodecInfo::Type::Software) {
       return webrtc::VP8Decoder::Create();
     }
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
 #if USE_NVCODEC_ENCODER
-    if (vp9_decoder_ == VideoCodecInfo::Type::NVIDIA) {
+    if (config_.vp9_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(cuda_context_,
+          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::VP9));
     }
 #endif
+#if USE_MSDK_ENCODER
+    if (config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+                                              MFX_CODEC_VP9));
+    }
+#endif
 #if USE_JETSON_ENCODER
-    if (vp9_decoder_ == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp9_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_VP9));
     }
 #endif
 
-    if (vp9_decoder_ == VideoCodecInfo::Type::Software) {
+    if (config_.vp9_decoder == VideoCodecInfo::Type::Software) {
       return webrtc::VP9Decoder::Create();
     }
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
+#if USE_MSDK_ENCODER
+    if (config_.av1_decoder == VideoCodecInfo::Type::Intel) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+                                              MFX_CODEC_AV1));
+    }
+#endif
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
-    if (av1_decoder_ == VideoCodecInfo::Type::Software) {
+    if (config_.av1_decoder == VideoCodecInfo::Type::Software) {
       return webrtc::CreateLibaomAv1Decoder();
     }
 #endif
@@ -175,27 +189,34 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
 #if defined(__APPLE__)
-    if (h264_decoder_ == VideoCodecInfo::Type::VideoToolbox) {
+    if (config_.h264_decoder == VideoCodecInfo::Type::VideoToolbox) {
       return video_decoder_factory_->CreateVideoDecoder(format);
     }
 #endif
 
 #if USE_NVCODEC_ENCODER
-    if (h264_decoder_ == VideoCodecInfo::Type::NVIDIA) {
+    if (config_.h264_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(cuda_context_,
+          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::H264));
     }
 #endif
+#if USE_MSDK_ENCODER
+    if (config_.h264_decoder == VideoCodecInfo::Type::Intel) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+                                              MFX_CODEC_AVC));
+    }
+#endif
 #if USE_JETSON_ENCODER
-    if (h264_decoder_ == VideoCodecInfo::Type::Jetson) {
+    if (config_.h264_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_H264));
     }
 #endif
 
 #if USE_MMAL_ENCODER
-    if (h264_decoder_ == VideoCodecInfo::Type::MMAL) {
+    if (config_.h264_decoder == VideoCodecInfo::Type::MMAL) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<MMALH264Decoder>());
     }

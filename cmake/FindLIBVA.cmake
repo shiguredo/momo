@@ -10,9 +10,9 @@ if(LIBDRM_FOUND)
   endif()
 endif()
 
-find_path(LIBVA_INCLUDE_DIR NAMES va/va.h PATHS "${LIBVA_ROOT_DIR}/include")
-find_library(LIBVA_LIBRARY NAMES va PATHS "${LIBVA_ROOT_DIR}/lib")
-find_library(LIBVA_DRM_LIBRARY NAMES va-drm PATHS "${LIBVA_ROOT_DIR}/lib")
+find_path(LIBVA_INCLUDE_DIR NAMES va/va.h PATHS "${LIBVA_ROOT_DIR}/include" NO_DEFAULT_PATH)
+find_library(LIBVA_LIBRARY NAMES va PATHS "${LIBVA_ROOT_DIR}/lib" NO_DEFAULT_PATH)
+find_library(LIBVA_DRM_LIBRARY NAMES va-drm PATHS "${LIBVA_ROOT_DIR}/lib" NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LIBVA DEFAULT_MSG LIBVA_LIBRARY LIBVA_DRM_LIBRARY LIBVA_INCLUDE_DIR)

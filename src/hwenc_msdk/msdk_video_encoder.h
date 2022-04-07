@@ -16,18 +16,18 @@
 #include <mfx/mfxvideo++.h>
 #include <mfx/mfxvp8.h>
 
-#include "vaapi_utils_drm.h"
+#include "msdk_session.h"
 
 class MsdkVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit MsdkVideoEncoder(const cricket::VideoCodec& codec);
+  explicit MsdkVideoEncoder(std::shared_ptr<MsdkSession> session, mfxU32 codec);
   ~MsdkVideoEncoder() override;
 
   // MFX_CODEC_VP8
   // MFX_CODEC_VP9
   // MFX_CODEC_AVC
   // MFX_CODEC_AV1
-  static bool IsSupported(mfxU32 codec);
+  static bool IsSupported(std::shared_ptr<MsdkSession> session, mfxU32 codec);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -42,6 +42,16 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
  private:
+  static std::unique_ptr<MFXVideoENCODE> CreateEncoder(
+      std::shared_ptr<MsdkSession> session,
+      mfxU32 codec,
+      int width,
+      int height,
+      int framerate,
+      int target_kbps,
+      int max_kbps,
+      bool init);
+
   std::mutex mutex_;
   webrtc::EncodedImageCallback* callback_ = nullptr;
   webrtc::BitrateAdjuster bitrate_adjuster_;
@@ -63,8 +73,8 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
   std::vector<uint8_t> surface_buffer_;
   std::vector<mfxFrameSurface1> surfaces_;
 
-  std::unique_ptr<DRMLibVA> libva_;
-  MFXVideoSession session_;
+  std::shared_ptr<MsdkSession> session_;
+  mfxU32 codec_;
   mfxFrameAllocRequest alloc_request_;
   std::unique_ptr<MFXVideoENCODE> encoder_;
   std::vector<uint8_t> bitstream_buffer_;

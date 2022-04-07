@@ -11,18 +11,19 @@
 #include <mfx/mfxvideo++.h>
 #include <mfx/mfxvp8.h>
 
+#include "msdk_session.h"
 #include "vaapi_utils_drm.h"
 
 class MsdkVideoDecoder : public webrtc::VideoDecoder {
  public:
-  MsdkVideoDecoder(mfxU32 codec_id);
+  MsdkVideoDecoder(std::shared_ptr<MsdkSession> session, mfxU32 codec);
   ~MsdkVideoDecoder() override;
 
   // MFX_CODEC_VP8
   // MFX_CODEC_VP9
   // MFX_CODEC_AVC
   // MFX_CODEC_AV1
-  static bool IsSupported(mfxU32 codec);
+  static bool IsSupported(std::shared_ptr<MsdkSession> session, mfxU32 codec);
 
   bool Configure(const Settings& settings) override;
 
@@ -38,6 +39,13 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   const char* ImplementationName() const override;
 
  private:
+  static std::unique_ptr<MFXVideoDECODE> CreateDecoder(
+      std::shared_ptr<MsdkSession> session,
+      mfxU32 codec,
+      int width,
+      int height,
+      bool init);
+
   bool InitMediaSDK();
   void ReleaseMediaSDK();
 
@@ -46,9 +54,8 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   webrtc::DecodedImageCallback* decode_complete_callback_ = nullptr;
   webrtc::VideoFrameBufferPool buffer_pool_;
 
-  mfxU32 codec_id_;
-  std::unique_ptr<DRMLibVA> libva_;
-  MFXVideoSession session_;
+  mfxU32 codec_;
+  std::shared_ptr<MsdkSession> session_;
   mfxFrameAllocRequest alloc_request_;
   std::unique_ptr<MFXVideoDECODE> decoder_;
   std::vector<uint8_t> surface_buffer_;

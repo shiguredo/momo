@@ -94,6 +94,14 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
+#if USE_MSDK_ENCODER
+  std::shared_ptr<MsdkSession> msdk_session;
+  try {
+    msdk_session = MsdkSession::Create();
+  } catch (...) {
+  }
+#endif
+
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
@@ -196,6 +204,10 @@ int main(int argc, char* argv[]) {
 
 #if USE_NVCODEC_ENCODER
   rtcm_config.cuda_context = cuda_context;
+#endif
+
+#if USE_MSDK_ENCODER
+  rtcm_config.msdk_session = msdk_session;
 #endif
 
 #if USE_SDL2

@@ -15,6 +15,10 @@
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
 
+#if USE_MSDK_ENCODER
+#include "hwenc_msdk/msdk_session.h"
+#endif
+
 struct RTCManagerConfig {
   bool insecure = false;
 
@@ -55,6 +59,9 @@ struct RTCManagerConfig {
 
 #if USE_NVCODEC_ENCODER
   std::shared_ptr<CudaContext> cuda_context;
+#endif
+#if USE_MSDK_ENCODER
+  std::shared_ptr<MsdkSession> msdk_session;
 #endif
 };
 

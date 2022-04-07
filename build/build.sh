@@ -187,6 +187,8 @@ case "$PACKAGE" in
       --build-arg CLI11_VERSION=$CLI11_VERSION \
       --build-arg CMAKE_VERSION=$CMAKE_VERSION \
       --build-arg CUDA_VERSION=$CUDA_VERSION \
+      --build-arg LIBVA_VERSION=$LIBVA_VERSION \
+      --build-arg MSDK_VERSION=$MSDK_VERSION \
       --build-arg PACKAGE_NAME=$PACKAGE \
       $PACKAGE
 

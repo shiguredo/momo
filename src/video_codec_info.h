@@ -169,28 +169,29 @@ struct VideoCodecInfo {
 #endif
 
 #if USE_MSDK_ENCODER
-    if (MsdkVideoEncoder::IsSupported(MFX_CODEC_VP8)) {
+    auto session = MsdkSession::Create();
+    if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
       info.vp8_encoders.push_back(Type::Intel);
     }
-    if (MsdkVideoEncoder::IsSupported(MFX_CODEC_VP9)) {
+    if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
       info.vp9_encoders.push_back(Type::Intel);
     }
-    if (MsdkVideoEncoder::IsSupported(MFX_CODEC_AVC)) {
+    if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
       info.h264_encoders.push_back(Type::Intel);
     }
-    if (MsdkVideoEncoder::IsSupported(MFX_CODEC_AV1)) {
+    if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
       info.av1_encoders.push_back(Type::Intel);
     }
-    if (MsdkVideoDecoder::IsSupported(MFX_CODEC_VP8)) {
+    if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
       info.vp8_decoders.push_back(Type::Intel);
     }
-    if (MsdkVideoDecoder::IsSupported(MFX_CODEC_VP9)) {
+    if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
       info.vp9_decoders.push_back(Type::Intel);
     }
-    if (MsdkVideoDecoder::IsSupported(MFX_CODEC_AVC)) {
+    if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
       info.h264_decoders.push_back(Type::Intel);
     }
-    if (MsdkVideoDecoder::IsSupported(MFX_CODEC_AV1)) {
+    if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
       info.av1_decoders.push_back(Type::Intel);
     }
 #endif

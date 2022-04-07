@@ -4,7 +4,10 @@ cd `dirname $0`
 
 set -ex
 
-# apt install cuda=$CUDA_VERSION clang-10 curl git libxtst-dev libxdamage-dev libxfixes-dev libxrandr-dev libxcomposite-dev libtool
+# apt install cuda=$CUDA_VERSION clang-10 curl git libxtst-dev libxdamage-dev libxfixes-dev libxrandr-dev libxcomposite-dev
+# apt install libtool libdrm-dev
+# 実行時には (libdrm-dev の代わりに) libdrm2 を入れる
+# intel-media-va-driver または intel-media-va-driver-non-free を入れる
 
 PACKAGE_NAME=ubuntu-20.04_x86_64
 PROJECT_DIR=`pwd`/..
@@ -140,6 +143,7 @@ if [ "$CURRENT_VERSION" != "$INSTALLED_VERSION" ]; then
     $SOURCE_DIR/libva/autogen.sh \
       --enable-static \
       --disable-shared \
+      --with-drivers-path=/usr/lib/x86_64-linux-gnu/dri \
       --prefix $INSTALL_DIR/libva
     make -j`nproc`
     rm -rf $INSTALL_DIR/libva
