@@ -13,6 +13,7 @@ set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な C
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
+set(USE_MSDK_ENCODER OFF CACHE BOOL "Intel Media SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
 set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
@@ -40,6 +41,7 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows_x86_64")
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
   set(USE_NVCODEC_ENCODER ON)
+  set(USE_MSDK_ENCODER ON)
   set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(USE_SCREEN_CAPTURER ON)
@@ -220,10 +222,13 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
   set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(USE_NVCODEC_ENCODER ON)
+  set(USE_MSDK_ENCODER ON)
   set(USE_SCREEN_CAPTURER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(CLI11_ROOT_DIR /root/CLI11)
   set(SDL2_ROOT_DIR /root/SDL2)
+  set(LIBVA_ROOT_DIR /root/libva)
+  set(MSDK_ROOT_DIR /root/msdk)
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
   set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
 
@@ -369,6 +374,7 @@ target_compile_definitions(momo
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
+    USE_MSDK_ENCODER=$<BOOL:${USE_MSDK_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
     USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
@@ -547,6 +553,21 @@ if ("${TARGET_OS}" STREQUAL "windows")
         #${CUDA_LIBRARIES}
     )
   endif()
+
+  # Intel Media SDK
+  if (USE_MSDK_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_msdk/msdk_session.cpp
+        src/hwenc_msdk/msdk_video_decoder.cpp
+        src/hwenc_msdk/msdk_video_encoder.cpp
+    )
+    target_include_directories(momo PRIVATE ${_INSTALL_DIR}/msdk/include)
+    target_link_libraries(momo
+      PRIVATE
+        ${_INSTALL_DIR}/msdk/lib/libmfx.lib 
+    )
+  endif()
 elseif (TARGET_OS STREQUAL "macos")
   target_sources(momo
     PRIVATE
@@ -650,6 +671,22 @@ elseif (TARGET_OS STREQUAL "linux")
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
     target_link_libraries(momo PRIVATE cudart_static dl rt)
+  endif()
+
+  # Intel Media SDK
+  if (USE_MSDK_ENCODER)
+    find_package(MSDK REQUIRED)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_msdk/msdk_session.cpp
+        src/hwenc_msdk/msdk_video_decoder.cpp
+        src/hwenc_msdk/msdk_video_encoder.cpp
+        src/hwenc_msdk/vaapi_utils_drm.cpp
+        src/hwenc_msdk/vaapi_utils.cpp
+    )
+    target_link_libraries(momo
+      PRIVATE
+        MSDK::MSDK)
   endif()
 
   if (TARGET_ARCH STREQUAL "arm")

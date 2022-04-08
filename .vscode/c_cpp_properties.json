@@ -15,6 +15,7 @@
                 "${workspaceFolder}/build/windows_x86_64/_install/CLI11/include",
                 "${workspaceFolder}/build/windows_x86_64/_install/SDL2/include/SDL2",
                 "${workspaceFolder}/build/windows_x86_64/_install/cuda/nvcc/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/msdk/include",
                 "${workspaceFolder}/_build/windows_x86_64"
             ],
             "defines": [
@@ -45,12 +46,15 @@
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/boost/include",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/CLI11/include",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/SDL2/include/SDL2",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/msdk/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/libva/include",
                 "${workspaceFolder}/_build/ubuntu-20.04_x86_64",
                 "/usr/local/cuda/include"
             ],
             "defines": [
                 "WEBRTC_LINUX",
                 "USE_NVCODEC_ENCODER=1",
+                "USE_MSDK_ENCODER=1",
                 "USE_MMAL_ENCODER=0",
                 "USE_JETSON_ENCODER=0",
                 "USE_H264=1",
@@ -78,7 +82,7 @@
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/CLI11/include",
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/SDL2/include/SDL2",
                 "${workspaceFolder}/_install/raspberry-pi-os_armv7/rootfs/usr/include",
-                "${workspaceFolder}/_build/raspberry-pi-os_armv7",
+                "${workspaceFolder}/_build/raspberry-pi-os_armv7"
             ],
             "defines": [
                 "WEBRTC_LINUX",

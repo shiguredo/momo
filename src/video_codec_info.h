@@ -11,6 +11,11 @@
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
+#if USE_MSDK_ENCODER
+#include "hwenc_msdk/msdk_video_decoder.h"
+#include "hwenc_msdk/msdk_video_encoder.h"
+#endif
+
 #if USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
@@ -160,6 +165,36 @@ struct VideoCodecInfo {
     }
     if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::H264)) {
       info.h264_decoders.push_back(Type::NVIDIA);
+    }
+#endif
+
+#if USE_MSDK_ENCODER
+    auto session = MsdkSession::Create();
+    if (session != nullptr) {
+      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
+        info.vp8_encoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
+        info.vp9_encoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
+        info.h264_encoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
+        info.av1_encoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
+        info.vp8_decoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
+        info.vp9_decoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
+        info.h264_decoders.push_back(Type::Intel);
+      }
+      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
+        info.av1_decoders.push_back(Type::Intel);
+      }
     }
 #endif
 

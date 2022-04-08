@@ -87,7 +87,19 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
 #if USE_NVCODEC_ENCODER
-  auto cuda_context = CudaContext::Create();
+  std::shared_ptr<CudaContext> cuda_context;
+  try {
+    cuda_context = CudaContext::Create();
+  } catch (...) {
+  }
+#endif
+
+#if USE_MSDK_ENCODER
+  std::shared_ptr<MsdkSession> msdk_session;
+  try {
+    msdk_session = MsdkSession::Create();
+  } catch (...) {
+  }
 #endif
 
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
@@ -192,6 +204,10 @@ int main(int argc, char* argv[]) {
 
 #if USE_NVCODEC_ENCODER
   rtcm_config.cuda_context = cuda_context;
+#endif
+
+#if USE_MSDK_ENCODER
+  rtcm_config.msdk_session = msdk_session;
 #endif
 
 #if USE_SDL2

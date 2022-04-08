@@ -5,6 +5,9 @@ cd `dirname $0`
 set -ex
 
 # apt install cuda=$CUDA_VERSION clang-10 curl git libxtst-dev libxdamage-dev libxfixes-dev libxrandr-dev libxcomposite-dev
+# apt install libtool libdrm-dev
+# 実行時には (libdrm-dev の代わりに) libdrm2 を入れる
+# intel-media-va-driver または intel-media-va-driver-non-free を入れる
 
 PACKAGE_NAME=ubuntu-20.04_x86_64
 PROJECT_DIR=`pwd`/..
@@ -34,6 +37,8 @@ if [ "$CURRENT_VERSION" != "$INSTALLED_VERSION" ]; then
   # Boost のビルド
   $SCRIPT_DIR/setup_boost.sh $BOOST_VERSION $SOURCE_DIR/boost $SOURCE_DIR
   pushd $SOURCE_DIR/boost/source
+    rm -rf $BUILD_DIR/boost
+    rm -rf $INSTALL_DIR/boost
     mkdir -p $BUILD_DIR/boost
     echo "using clang : : $INSTALL_DIR/llvm/clang/bin/clang++ : ;" > project-config.jam
     ./b2 \
@@ -126,6 +131,47 @@ if [ "$CURRENT_VERSION" != "$INSTALLED_VERSION" ]; then
 # apt-get update
 # DEBIAN_FRONTEND=noninteractive apt-get -y install cuda=$CUDA_VERSION clang-10
 
+  # libva
+  rm -rf $SOURCE_DIR/libva
+  git clone --depth 1 --branch $LIBVA_VERSION https://github.com/intel/libva.git $SOURCE_DIR/libva
+  rm -rf $BUILD_DIR/libva
+  mkdir -p $BUILD_DIR/libva
+  pushd $BUILD_DIR/libva
+    CC=$INSTALL_DIR/llvm/clang/bin/clang \
+    CXX=$INSTALL_DIR/llvm/clang/bin/clang++ \
+    CFLAGS="-fPIC" \
+    $SOURCE_DIR/libva/autogen.sh \
+      --enable-static \
+      --disable-shared \
+      --with-drivers-path=/usr/lib/x86_64-linux-gnu/dri \
+      --prefix $INSTALL_DIR/libva
+    make -j`nproc`
+    rm -rf $INSTALL_DIR/libva
+    make install
+  popd
+
+  # Intel Media SDK
+  rm -rf $SOURCE_DIR/msdk
+  git clone --depth 1 --branch intel-mediasdk-$MSDK_VERSION https://github.com/Intel-Media-SDK/MediaSDK.git $SOURCE_DIR/msdk
+  pushd $SOURCE_DIR/msdk
+    find . -name "CMakeLists.txt" | while read line; do sed -i 's/SHARED/STATIC/g' $line; done
+  popd
+  rm -rf $BUILD_DIR/msdk
+  mkdir -p $BUILD_DIR/msdk
+  pushd $BUILD_DIR/msdk
+    cmake \
+      -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/msdk \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH=$INSTALL_DIR/libva \
+      -DCMAKE_C_COMPILER=$INSTALL_DIR/llvm/clang/bin/clang \
+      -DCMAKE_CXX_COMPILER=$INSTALL_DIR/llvm/clang/bin/clang++ \
+      -DBUILD_SAMPLES=OFF \
+      -DBUILD_TUTORIALS=OFF \
+      $SOURCE_DIR/msdk
+    cmake --build . -j`nproc`
+    cmake --install .
+  popd
+
   cp $PROJECT_DIR/VERSION $INSTALL_DIR/VERSION
 fi
 
@@ -153,12 +199,15 @@ pushd $BUILD_DIR/momo
     -DWEBRTC_INCLUDE_DIR=$INSTALL_DIR/webrtc/include \
     -DWEBRTC_LIBRARY_DIR=$INSTALL_DIR/webrtc/lib \
     -DLIBCXX_INCLUDE_DIR=$INSTALL_DIR/llvm/libcxx/include \
+    -DLIBVA_ROOT_DIR=$INSTALL_DIR/libva \
+    -DMSDK_ROOT_DIR=$INSTALL_DIR/msdk \
     -DTARGET_OS="linux" \
     -DTARGET_OS_LINUX="ubuntu-20.04" \
     -DTARGET_ARCH="x86_64" \
     -DUSE_H264=ON \
     -DUSE_SDL2=ON \
     -DUSE_NVCODEC_ENCODER=ON \
+    -DUSE_MSDK_ENCODER=ON \
     -DUSE_SCREEN_CAPTURER=ON \
     -DCMAKE_C_COMPILER=clang-10 \
     -DCMAKE_CXX_COMPILER=clang++-10 \
