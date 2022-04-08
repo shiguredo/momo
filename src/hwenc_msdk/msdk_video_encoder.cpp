@@ -5,6 +5,8 @@
 // libyuv
 #include <libyuv.h>
 
+#include "msdk_utils.h"
+
 const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
 

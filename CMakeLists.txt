@@ -41,6 +41,7 @@ if(MOMO_PACKAGE_NAME STREQUAL "windows_x86_64")
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
   set(USE_NVCODEC_ENCODER ON)
+  set(USE_MSDK_ENCODER ON)
   set(USE_H264 ON)
   set(USE_SDL2 ON)
   set(USE_SCREEN_CAPTURER ON)
@@ -550,6 +551,21 @@ if ("${TARGET_OS}" STREQUAL "windows")
       PRIVATE
         ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cudart_static.lib 
         #${CUDA_LIBRARIES}
+    )
+  endif()
+
+  # Intel Media SDK
+  if (USE_MSDK_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_msdk/msdk_session.cpp
+        src/hwenc_msdk/msdk_video_decoder.cpp
+        src/hwenc_msdk/msdk_video_encoder.cpp
+    )
+    target_include_directories(momo PRIVATE ${_INSTALL_DIR}/msdk/include)
+    target_link_libraries(momo
+      PRIVATE
+        ${_INSTALL_DIR}/msdk/lib/libmfx.lib 
     )
   endif()
 elseif (TARGET_OS STREQUAL "macos")

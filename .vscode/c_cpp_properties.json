@@ -15,6 +15,7 @@
                 "${workspaceFolder}/build/windows_x86_64/_install/CLI11/include",
                 "${workspaceFolder}/build/windows_x86_64/_install/SDL2/include/SDL2",
                 "${workspaceFolder}/build/windows_x86_64/_install/cuda/nvcc/include",
+                "${workspaceFolder}/build/windows_x86_64/_install/msdk/include",
                 "${workspaceFolder}/_build/windows_x86_64"
             ],
             "defines": [

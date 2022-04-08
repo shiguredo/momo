@@ -12,7 +12,6 @@
 #include <mfx/mfxvp8.h>
 
 #include "msdk_session.h"
-#include "vaapi_utils_drm.h"
 
 class MsdkVideoDecoder : public webrtc::VideoDecoder {
  public:

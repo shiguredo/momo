@@ -3,15 +3,14 @@
 #include <iostream>
 #include <thread>
 
-// Linux
-#include <unistd.h>
-
 // WebRTC
 #include <modules/video_coding/include/video_error_codes.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/time_utils.h>
 #include <third_party/libyuv/include/libyuv/convert.h>
+
+#include "msdk_utils.h"
 
 MsdkVideoDecoder::MsdkVideoDecoder(std::shared_ptr<MsdkSession> session,
                                    mfxU32 codec)
