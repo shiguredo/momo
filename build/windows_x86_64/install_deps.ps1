@@ -182,7 +182,7 @@ if (!(Test-Path "$INSTALL_DIR\msdk\lib\libmfx.lib")) {
   mkdir $INSTALL_DIR\msdk\lib
   Copy-Item -Recurse $SOURCE_DIR\msdk\MediaSDK\api\include $INSTALL_DIR\msdk\include\mfx
   $WSDK_VERSION = $(Get-Item "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0").GetValue("ProductVersion")
-  & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" `
+  MSBuild `
     /t:build `
     "/p:Configuration=Release;Platform=x64;PlatformToolset=v142;SpectreMitigation=false;WindowsTargetPlatformVersion=$WSDK_VERSION.0" `
     $SOURCE_DIR\msdk\MediaSDK\api\mfx_dispatch\windows\libmfx_vs2015.vcxproj
