@@ -26,6 +26,10 @@ std::shared_ptr<CudaContext> CudaContext::Create() {
   CUdevice device;
   CUcontext context;
 
+  if (!dyn::DynModule::Instance().IsLoadable(dyn::CUDA_SO)) {
+    throw std::exception();
+  }
+
   ckerror(dyn::cuInit(0));
   ckerror(dyn::cuDeviceGet(&device, 0));
   char device_name[80];
