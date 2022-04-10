@@ -1,5 +1,7 @@
 #include "msdk_session.h"
 
+#include <iostream>
+
 std::shared_ptr<MsdkSession> MsdkSession::Create() {
   std::shared_ptr<MsdkSession> session(new MsdkSession());
 
@@ -32,28 +34,33 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
 
   sts = session->session.Init(impl, &ver);
   if (sts != MFX_ERR_NONE) {
+    std::cerr << "Failed to MFXInit: sts=" << sts << std::endl;
     return nullptr;
   }
 
   Microsoft::WRL::ComPtr<IDXGIFactory1> idxgi_factory;
   if (FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
                                 (void**)idxgi_factory.GetAddressOf()))) {
+    std::cerr << "Failed to CreateDXGIFactory1" << std::endl;
     return nullptr;
   }
   Microsoft::WRL::ComPtr<IDXGIAdapter> idxgi_adapter;
   if (FAILED(idxgi_factory->EnumAdapters(0, idxgi_adapter.GetAddressOf()))) {
+    std::cerr << "Failed to EnumAdapters" << std::endl;
     return nullptr;
   }
   if (FAILED(D3D11CreateDevice(idxgi_adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN,
                                NULL, 0, NULL, 0, D3D11_SDK_VERSION,
                                session->d3d11_device.GetAddressOf(), NULL,
                                session->d3d11_context.GetAddressOf()))) {
+    std::cerr << "Failed to D3D11CreateDevice" << std::endl;
     return nullptr;
   }
 
   sts = session->session.SetHandle(MFX_HANDLE_D3D11_DEVICE,
                                    session->d3d11_device.Get());
   if (sts != MFX_ERR_NONE) {
+    std::cerr << "Failed to MFXSetHandle: sts=" << sts << std::endl;
     return nullptr;
   }
 #endif
@@ -61,11 +68,13 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
   // Query selected implementation and version
   sts = session->session.QueryIMPL(&impl);
   if (sts != MFX_ERR_NONE) {
+    std::cerr << "Failed to MFXQueryIMPL: sts=" << sts << std::endl;
     return nullptr;
   }
 
   sts = session->session.QueryVersion(&ver);
   if (sts != MFX_ERR_NONE) {
+    std::cerr << "Failed to MFXQueryVersion: sts=" << sts << std::endl;
     return nullptr;
   }
 

@@ -65,6 +65,12 @@ std::unique_ptr<MFXVideoDECODE> MsdkVideoDecoder::CreateDecoder(
 
   sts = decoder->Query(&param, &param);
   if (sts == MFX_ERR_UNSUPPORTED) {
+    const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
+                            : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
+                            : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
+                            : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
+                                                     : "MFX_CODEC_UNKNOWN";
+    std::cerr << "Unsupported decoder codec: codec=" << codec_str;
     return nullptr;
   }
 
