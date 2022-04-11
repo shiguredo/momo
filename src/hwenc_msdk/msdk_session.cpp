@@ -87,6 +87,7 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
     return nullptr;
   }
 
+  /*
   static D3D_FEATURE_LEVEL FeatureLevels[] = {
       D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
       D3D_FEATURE_LEVEL_10_0};
@@ -103,12 +104,19 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
     return nullptr;
   }
 
+  Microsoft::WRL::ComPtr<ID3D10Multithread> mt;
+  if (FAILED(session->d3d11_context->QueryInterface(mt.GetAddressOf()))) {
+    std::cerr << "Failed to QueryInterface" << std::endl;
+  }
+  mt->SetMultithreadProtected(true);
+
   sts = session->session.SetHandle(MFX_HANDLE_D3D11_DEVICE,
                                    session->d3d11_device.Get());
   if (sts != MFX_ERR_NONE) {
     std::cerr << "Failed to MFXSetHandle: sts=" << sts << std::endl;
     return nullptr;
   }
+  */
 #endif
 
   // Query selected implementation and version
