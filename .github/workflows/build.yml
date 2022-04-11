@@ -213,11 +213,11 @@ jobs:
           - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.name }}.env
           path: ${{ matrix.name }}.env
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: create-release.env
           path: create-release.env
@@ -230,7 +230,7 @@ jobs:
           echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ steps.env.outputs.package_name }}
           path: ${{ steps.env.outputs.package_name }}
