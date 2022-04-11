@@ -118,7 +118,7 @@ std::unique_ptr<MFXVideoENCODE> MsdkVideoEncoder::CreateEncoder(
   mfxVideoParam bk_param;
   memcpy(&bk_param, &param, sizeof(bk_param));
   sts = encoder->Query(&param, &param);
-  if (sts == MFX_ERR_UNSUPPORTED) {
+  if (sts < 0) {
     memcpy(&param, &bk_param, sizeof(bk_param));
 
     // 失敗したら LowPower ON にした状態でもう一度確認する
