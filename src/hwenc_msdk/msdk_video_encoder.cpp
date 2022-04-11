@@ -132,13 +132,14 @@ std::unique_ptr<MFXVideoENCODE> MsdkVideoEncoder::CreateEncoder(
     }
     memcpy(&bk_param, &param, sizeof(bk_param));
     sts = encoder->Query(&param, &param);
-    if (sts == MFX_ERR_UNSUPPORTED) {
+    if (sts < 0) {
       const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
                               : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
                               : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
                               : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
                                                        : "MFX_CODEC_UNKNOWN";
-      std::cerr << "Unsupported encoder codec: codec=" << codec_str;
+      //std::cerr << "Unsupported encoder codec: codec=" << codec_str
+      //          << std::endl;
       return nullptr;
     }
   }
@@ -187,15 +188,15 @@ std::unique_ptr<MFXVideoENCODE> MsdkVideoEncoder::CreateEncoder(
   //  F(IOPattern);
   //#undef F
 
-  if (sts != MFX_ERR_NONE) {
-    const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
-                            : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
-                            : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
-                            : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
-                                                     : "MFX_CODEC_UNKNOWN";
-    std::cerr << "Supported specified codec but has warning: codec="
-              << codec_str << " sts=" << sts << std::endl;
-  }
+  //if (sts != MFX_ERR_NONE) {
+  //  const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
+  //                          : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
+  //                          : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
+  //                          : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
+  //                                                   : "MFX_CODEC_UNKNOWN";
+  //  std::cerr << "Supported specified codec but has warning: codec="
+  //            << codec_str << " sts=" << sts << std::endl;
+  //}
 
   if (init) {
     sts = encoder->Init(&param);

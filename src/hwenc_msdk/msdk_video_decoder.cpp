@@ -64,20 +64,20 @@ std::unique_ptr<MFXVideoDECODE> MsdkVideoDecoder::CreateDecoder(
   //qparam.NumExtParam = sizeof(ext_buffers) / sizeof(ext_buffers[0]);
 
   sts = decoder->Query(&param, &param);
-  if (sts == MFX_ERR_UNSUPPORTED) {
+  if (sts < 0) {
     const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
                             : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
                             : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
                             : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
                                                      : "MFX_CODEC_UNKNOWN";
-    std::cerr << "Unsupported decoder codec: codec=" << codec_str;
+    //std::cerr << "Unsupported decoder codec: codec=" << codec_str << std::endl;
     return nullptr;
   }
 
-  if (sts != MFX_ERR_NONE) {
-    std::cerr << "Supported specified codec but has warning: sts=" << sts
-              << std::endl;
-  }
+  //if (sts != MFX_ERR_NONE) {
+  //  std::cout << "Supported specified codec but has warning: sts=" << sts
+  //            << std::endl;
+  //}
 
   if (init) {
     // Initialize the Media SDK encoder
