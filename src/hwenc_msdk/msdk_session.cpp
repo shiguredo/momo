@@ -2,6 +2,55 @@
 
 #include <iostream>
 
+MsdkSession::~MsdkSession() {
+  session.Close();
+}
+
+#ifdef _WIN32
+
+#include <dxgi1_2.h>
+
+const struct {
+  mfxIMPL impl;      // actual implementation
+  mfxU32 adapterID;  // device adapter number
+} implTypes[] = {{MFX_IMPL_HARDWARE, 0},
+                 {MFX_IMPL_HARDWARE2, 1},
+                 {MFX_IMPL_HARDWARE3, 2},
+                 {MFX_IMPL_HARDWARE4, 3}};
+
+static IDXGIAdapter* GetIntelDeviceAdapterHandle(mfxSession session) {
+  mfxU32 adapterNum = 0;
+  mfxIMPL impl;
+
+  MFXQueryIMPL(session, &impl);
+
+  mfxIMPL baseImpl =
+      MFX_IMPL_BASETYPE(impl);  // Extract Media SDK base implementation type
+
+  // get corresponding adapter number
+  for (mfxU8 i = 0; i < sizeof(implTypes) / sizeof(implTypes[0]); i++) {
+    if (implTypes[i].impl == baseImpl) {
+      adapterNum = implTypes[i].adapterID;
+      break;
+    }
+  }
+
+  Microsoft::WRL::ComPtr<IDXGIFactory2> factory;
+  HRESULT hres = CreateDXGIFactory(__uuidof(IDXGIFactory2),
+                                   (void**)factory.GetAddressOf());
+  if (FAILED(hres))
+    return NULL;
+
+  IDXGIAdapter* adapter;
+  hres = factory->EnumAdapters(adapterNum, &adapter);
+  if (FAILED(hres))
+    return NULL;
+
+  return adapter;
+}
+
+#endif
+
 std::shared_ptr<MsdkSession> MsdkSession::Create() {
   std::shared_ptr<MsdkSession> session(new MsdkSession());
 
@@ -38,21 +87,18 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
     return nullptr;
   }
 
-  Microsoft::WRL::ComPtr<IDXGIFactory1> idxgi_factory;
-  if (FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
-                                (void**)idxgi_factory.GetAddressOf()))) {
-    std::cerr << "Failed to CreateDXGIFactory1" << std::endl;
-    return nullptr;
-  }
-  Microsoft::WRL::ComPtr<IDXGIAdapter> idxgi_adapter;
-  if (FAILED(idxgi_factory->EnumAdapters(0, idxgi_adapter.GetAddressOf()))) {
-    std::cerr << "Failed to EnumAdapters" << std::endl;
-    return nullptr;
-  }
-  if (FAILED(D3D11CreateDevice(idxgi_adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN,
-                               NULL, 0, NULL, 0, D3D11_SDK_VERSION,
-                               session->d3d11_device.GetAddressOf(), NULL,
-                               session->d3d11_context.GetAddressOf()))) {
+  static D3D_FEATURE_LEVEL FeatureLevels[] = {
+      D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
+      D3D_FEATURE_LEVEL_10_0};
+  D3D_FEATURE_LEVEL pFeatureLevelsOut;
+
+  Microsoft::WRL::ComPtr<IDXGIAdapter> idxgi_adapter =
+      GetIntelDeviceAdapterHandle(session->session);
+  if (FAILED(D3D11CreateDevice(
+          idxgi_adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, FeatureLevels,
+          (sizeof(FeatureLevels) / sizeof(FeatureLevels[0])), D3D11_SDK_VERSION,
+          session->d3d11_device.GetAddressOf(), &pFeatureLevelsOut,
+          session->d3d11_context.GetAddressOf()))) {
     std::cerr << "Failed to D3D11CreateDevice" << std::endl;
     return nullptr;
   }

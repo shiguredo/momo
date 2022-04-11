@@ -18,6 +18,8 @@
 struct MsdkSession {
   MFXVideoSession session;
 
+  ~MsdkSession();
+
 #ifdef __linux__
   std::unique_ptr<DRMLibVA> libva;
 #endif
