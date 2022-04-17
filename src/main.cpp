@@ -102,6 +102,14 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
+#if USE_NVCODEC_ENCODER
+  // NvCodec が有効な環境で HW MJPEG デコーダを使う場合、CUDA が有効である必要がある
+  if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
+    std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
+              << std::endl;
+  }
+#endif
+
   auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
