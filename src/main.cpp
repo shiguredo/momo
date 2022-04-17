@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
   if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
               << std::endl;
+    return 2;
   }
 #endif
 
