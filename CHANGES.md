@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Boost 1.79.0 に上げる
+    - @voluntas
 - [UPDATE] `libwebrtc` を `M100.4896@{#1}` に上げる
     - @tnoho
 - [FIX] libwebrtc m100 で make_ref_counted を使って scoped_refptr を作るようになったので修正
