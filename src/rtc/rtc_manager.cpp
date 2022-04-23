@@ -159,8 +159,6 @@ RTCManager::RTCManager(
       ao.noise_suppression = false;
     if (config_.disable_highpass_filter)
       ao.highpass_filter = false;
-    if (config_.disable_typing_detection)
-      ao.typing_detection = false;
     if (config_.disable_residual_echo_detector)
       ao.residual_echo_detector = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
