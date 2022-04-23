@@ -29,9 +29,6 @@ struct MomoVideoEncoderFactoryConfig {
 #if defined(__linux__) && USE_NVCODEC_ENCODER
   std::shared_ptr<CudaContext> cuda_context;
 #endif
-#if USE_MSDK_ENCODER
-  std::shared_ptr<MsdkSession> msdk_session;
-#endif
 };
 
 class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {

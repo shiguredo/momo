@@ -129,7 +129,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_MSDK_ENCODER
     if (config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
                                               MFX_CODEC_VP8));
     }
 #endif
@@ -156,7 +156,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_MSDK_ENCODER
     if (config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
                                               MFX_CODEC_VP9));
     }
 #endif
@@ -176,7 +176,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_MSDK_ENCODER
     if (config_.av1_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
                                               MFX_CODEC_AV1));
     }
 #endif
@@ -204,7 +204,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_MSDK_ENCODER
     if (config_.h264_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(config_.msdk_session,
+          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
                                               MFX_CODEC_AVC));
     }
 #endif
