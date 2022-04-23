@@ -78,7 +78,6 @@ struct MomoArgs {
   bool disable_auto_gain_control = false;
   bool disable_noise_suppression = false;
   bool disable_highpass_filter = false;
-  bool disable_typing_detection = false;
   bool disable_residual_echo_detector = false;
 
   VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;

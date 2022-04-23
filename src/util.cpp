@@ -189,8 +189,6 @@ void Util::ParseArgs(int argc,
                "Disable noise suppression for audio");
   app.add_flag("--disable-highpass-filter", args.disable_highpass_filter,
                "Disable highpass filter for audio");
-  app.add_flag("--disable-typing-detection", args.disable_typing_detection,
-               "Disable typing detection for audio");
   app.add_flag("--disable-residual-echo-detector",
                args.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
