@@ -13,8 +13,8 @@
 
 - [UPDATE] Boost 1.79.0 に上げる
     - @voluntas
-- [UPDATE] `libwebrtc` を `M100.4896@{#1}` に上げる
-    - @tnoho
+- [UPDATE] `libwebrtc` を `M102.5005@{#1}` に上げる
+    - @tnoho @voluntas
 - [FIX] libwebrtc m100 で make_ref_counted を使って scoped_refptr を作るようになったので修正
     - @tnoho
 - [FIX] SDL のビルドが mac では declaration-after-statement に触れてビルドが通らないのでパッチで回避
