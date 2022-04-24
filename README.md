@@ -189,16 +189,14 @@ limitations under the License.
 - 統計機能
     - Ayame のシグナリング 経由での出力
 - NVIDIA VIDEO CODEC SDK
-    - VP8 / VP9 / H.264 ハードウェアデコーダ対応
+    - H.265 ハードウェアエンコーダ対応
         - Ubuntu 20.04
-        - Ubuntu 18.04
         - Windows 10
-    - MotionJPEG ハードウェアデコーダ対応
+    - H.265 ハードウェアデコーダ対応
         - Ubuntu 20.04
-        - Ubuntu 18.04
         - Windows 10
 - Intel Media SDK 対応
-    - VP8 / VP9 / H.264 / H.265 ハードウェアエンコーダ対応
+    - H.265 ハードウェアエンコーダ対応
 - 録画対応
     - MP4 形式での出力
     - WebM 形式での出力
