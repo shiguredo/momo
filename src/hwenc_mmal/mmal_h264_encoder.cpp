@@ -458,17 +458,17 @@ int32_t MMALH264Encoder::Encode(
         offset += stride_width_;
       }
       offset = 0;
-      size_t offset_y = stride_width_ * stride_height_;
-      size_t width_uv = stride_width_ / 2;
-      size_t offset_v = (stride_height_ / 2) * width_uv;
+      size_t stride_uv = stride_width_ / 2;
+      size_t offset_u = stride_width_ * stride_height_;
+      size_t offset_v = offset_u + stride_uv * (stride_height_ / 2);
       for (size_t i = 0; i < ((i420_buffer->height() + 1) / 2); i++) {
-        memcpy(buffer->data + offset_y + offset,
+        memcpy(buffer->data + offset_u + offset,
                (uint8_t*)i420_buffer->DataU() + (i420_buffer->StrideU() * i),
-               width_uv);
-        memcpy(buffer->data + offset_y + offset_v + offset,
+               stride_uv);
+        memcpy(buffer->data + offset_v + offset,
                (uint8_t*)i420_buffer->DataV() + (i420_buffer->StrideV() * i),
-               width_uv);
-        offset += width_uv;
+               stride_uv);
+        offset += stride_uv;
       }
       buffer->length = buffer->alloc_size = webrtc::CalcBufferSize(
           webrtc::VideoType::kI420, stride_width_, stride_height_);

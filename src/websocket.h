@@ -44,7 +44,11 @@ class Websocket {
   // 非SSL+クライアント
   Websocket(boost::asio::io_context& ioc);
   // SSL+クライアント
-  Websocket(ssl_tag, boost::asio::io_context& ioc, bool insecure);
+  Websocket(ssl_tag,
+            boost::asio::io_context& ioc,
+            bool insecure,
+            const std::string& client_cert,
+            const std::string& client_key);
 
  private:
   // SSL+クライアントの内部用コンストラクタ

@@ -39,6 +39,8 @@ struct MomoArgs {
   bool screen_capture = false;
   int metrics_port = -1;
   bool metrics_allow_external_ip = false;
+  std::string client_cert;
+  std::string client_key;
 
   std::vector<std::string> sora_signaling_urls;
   std::string sora_channel_id;
@@ -76,7 +78,6 @@ struct MomoArgs {
   bool disable_auto_gain_control = false;
   bool disable_noise_suppression = false;
   bool disable_highpass_filter = false;
-  bool disable_typing_detection = false;
   bool disable_residual_echo_detector = false;
 
   VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;

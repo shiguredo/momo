@@ -134,3 +134,64 @@ if (!(Test-Path "$INSTALL_DIR\CLI11\include\CLI\CLI.hpp")) {
     Move-Item CLI11-${CLI11_VERSION} CLI11
   Pop-Location
 }
+
+if (!(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
+  if ("$WINCUDA_VERSION" -eq "10.2") {
+    $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
+    $_FILE = "$SOURCE_DIR\cuda_10.2.89_441.22_win10.exe"
+  } elseif ("$WINCUDA_VERSION" -eq "11.0.2") {
+    $_URL = "https://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_451.48_win10.exe"
+    $_FILE = "$SOURCE_DIR\cuda_11.0.2_451.48_win10.exe"
+  } else {
+    # バージョンが増えたらこの分岐を増やしていく
+    throw "CUDA-$WINCUDA_VERSION URL not specified"
+  }
+
+  Push-Location $SOURCE_DIR
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
+  Pop-Location
+  if (Test-Path "$BUILD_DIR\cuda") {
+    Remove-Item "$BUILD_DIR\cuda" -Recurse -Force
+  }
+  mkdir $BUILD_DIR\cuda -Force
+  Push-Location $BUILD_DIR\cuda
+    # サイレントインストールとかせずに、単に展開だけして nvcc を利用する
+    7z x $_FILE
+    if (Test-Path "$INSTALL_DIR\cuda") {
+      Remove-Item $INSTALL_DIR\cuda -Recurse -Force
+    }
+    mkdir $INSTALL_DIR\cuda
+    Move-Item nvcc $INSTALL_DIR\cuda\nvcc
+  Pop-Location
+}
+
+# Intel Media SDK
+if (!(Test-Path "$INSTALL_DIR\msdk\lib\libmfx.lib")) {
+  if (Test-Path "$SOURCE_DIR\msdk") {
+      Remove-Item $SOURCE_DIR\msdk -Recurse -Force
+  }
+  if (Test-Path "$INSTALL_DIR\msdk") {
+      Remove-Item $INSTALL_DIR\msdk -Recurse -Force
+  }
+  mkdir $SOURCE_DIR\msdk
+  git clone --depth 1 --branch intel-mediasdk-$MSDK_VERSION https://github.com/Intel-Media-SDK/MediaSDK.git $SOURCE_DIR\msdk\MediaSDK
+  mkdir $INSTALL_DIR\msdk
+  mkdir $INSTALL_DIR\msdk\include
+  mkdir $INSTALL_DIR\msdk\lib
+  Copy-Item -Recurse $SOURCE_DIR\msdk\MediaSDK\api\include $INSTALL_DIR\msdk\include\mfx
+  $WSDK_VERSION = $(Get-Item "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0").GetValue("ProductVersion")
+  if (Test-Path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe") {
+    & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" `
+      /t:build `
+      "/p:Configuration=Release;Platform=x64;PlatformToolset=v142;SpectreMitigation=false;WindowsTargetPlatformVersion=$WSDK_VERSION.0" `
+      $SOURCE_DIR\msdk\MediaSDK\api\mfx_dispatch\windows\libmfx_vs2015.vcxproj
+  } else {
+    MSBuild `
+      /t:build `
+      "/p:Configuration=Release;Platform=x64;PlatformToolset=v142;SpectreMitigation=false;WindowsTargetPlatformVersion=$WSDK_VERSION.0" `
+      $SOURCE_DIR\msdk\MediaSDK\api\mfx_dispatch\windows\libmfx_vs2015.vcxproj
+  }
+  Copy-Item $SOURCE_DIR\msdk\build\win_x64\Release\lib\libmfx_vs2015.lib $INSTALL_DIR\msdk\lib\libmfx.lib
+}

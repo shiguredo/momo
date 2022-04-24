@@ -1,6 +1,7 @@
 #include "nvcodec_h264_encoder.h"
 
 // WebRTC
+#include <api/video/nv12_buffer.h>
 #include <libyuv.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <rtc_base/logging.h>
@@ -24,8 +25,15 @@ struct nal_entry {
 using Microsoft::WRL::ComPtr;
 #endif
 
+#ifdef __linux__
+NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec,
+                                       std::shared_ptr<CudaContext> cc)
+    : cuda_context_(cc),
+#else
 NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
-    : bitrate_adjuster_(0.5, 0.95) {
+    :
+#endif
+      bitrate_adjuster_(0.5, 0.95) {
 #ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
@@ -44,10 +52,10 @@ NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
   char szDesc[80];
   size_t result = 0;
   wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
-  RTC_LOG(INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
 #endif
 #ifdef __linux__
-  cuda_.reset(new NvCodecH264EncoderCuda());
+  cuda_.reset(new NvCodecH264EncoderCuda(cuda_context_));
 #endif
 }
 
@@ -122,6 +130,22 @@ int32_t NvCodecH264Encoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
+#if defined(__linux__)
+  if (frame.video_frame_buffer()->type() ==
+      webrtc::VideoFrameBuffer::Type::kNV12) {
+    if (!use_native_) {
+      ReleaseNvEnc();
+      use_native_ = true;
+      InitNvEnc();
+    }
+  } else {
+    if (use_native_) {
+      ReleaseNvEnc();
+      use_native_ = false;
+      InitNvEnc();
+    }
+  }
+#else
   if (frame.video_frame_buffer()->type() ==
       webrtc::VideoFrameBuffer::Type::kNative) {
     if (!use_native_) {
@@ -136,6 +160,7 @@ int32_t NvCodecH264Encoder::Encode(
       InitNvEnc();
     }
   }
+#endif
 
   bool send_key_frame = false;
 
@@ -218,13 +243,24 @@ int32_t NvCodecH264Encoder::Encode(
   id3d11_context_->CopyResource(nv11_texture, id3d11_texture_.Get());
 #endif
 #ifdef __linux__
+
+  //RTC_LOG(LS_INFO) << "type="
+  //                 << VideoFrameBufferTypeToString(
+  //                        frame.video_frame_buffer()->type())
+  //                 << " width_=" << width_ << " height_=" << height_
+  //                 << " frame_width=" << frame.video_frame_buffer()->width()
+  //                 << " frame_height=" << frame.video_frame_buffer()->height();
+
   if (frame.video_frame_buffer()->type() ==
-      webrtc::VideoFrameBuffer::Type::kNative) {
-    NativeBuffer* native_buffer =
-        dynamic_cast<NativeBuffer*>(frame.video_frame_buffer().get());
-    cuda_->CopyNative(nv_encoder_.get(), native_buffer->Data(),
-                      native_buffer->Length(), native_buffer->width(),
-                      native_buffer->height());
+      webrtc::VideoFrameBuffer::Type::kNV12) {
+    webrtc::NV12Buffer* buffer =
+        static_cast<webrtc::NV12Buffer*>(frame.video_frame_buffer().get());
+    try {
+      cuda_->Copy(nv_encoder_.get(), buffer->DataY(), width_, height_);
+    } catch (const NVENCException& e) {
+      RTC_LOG(LS_ERROR) << e.what();
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
   } else {
     rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         frame.video_frame_buffer()->ToI420();
@@ -312,11 +348,11 @@ void NvCodecH264Encoder::SetRates(
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  RTC_LOG(INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                << " new_framerate: " << new_framerate
-                << " target_bitrate_bps_:" << target_bitrate_bps_
-                << " new_bitrate:" << new_bitrate
-                << " max_bitrate_bps_:" << max_bitrate_bps_;
+  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+                   << " new_framerate: " << new_framerate
+                   << " target_bitrate_bps_:" << target_bitrate_bps_
+                   << " new_bitrate:" << new_bitrate
+                   << " max_bitrate_bps_:" << max_bitrate_bps_;
   framerate_ = new_framerate;
   target_bitrate_bps_ = new_bitrate;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);

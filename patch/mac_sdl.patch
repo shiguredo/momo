@@ -1,0 +1,15 @@
+--- configure   2022-03-17 22:42:21.470152564 +0900
++++ configure   2022-03-17 22:44:00.181213036 +0900
+@@ -20459,9 +20459,9 @@
+ $as_echo "$have_gcc_declaration_after_statement" >&6; }
+     CFLAGS="$save_CFLAGS"
+ 
+-    if test x$have_gcc_declaration_after_statement = xyes; then
+-        EXTRA_CFLAGS="$EXTRA_CFLAGS -Wdeclaration-after-statement -Werror=declaration-after-statement"
+-    fi
++    #if test x$have_gcc_declaration_after_statement = xyes; then
++    #    EXTRA_CFLAGS="$EXTRA_CFLAGS -Wdeclaration-after-statement -Werror=declaration-after-statement"
++    #fi
+ }
+ 
+ CheckWarnAll()

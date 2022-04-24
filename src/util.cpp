@@ -189,8 +189,6 @@ void Util::ParseArgs(int argc,
                "Disable noise suppression for audio");
   app.add_flag("--disable-highpass-filter", args.disable_highpass_filter,
                "Disable highpass filter for audio");
-  app.add_flag("--disable-typing-detection", args.disable_typing_detection,
-               "Disable typing detection for audio");
   app.add_flag("--disable-residual-echo-detector",
                args.disable_residual_echo_detector,
                "Disable residual echo detector for audio");
@@ -250,6 +248,13 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(-1, 65535));
   app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
                "Allow access to Metrics server from external IP");
+
+  app.add_option("--client-cert", args.client_cert,
+                 "Cert file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
+  app.add_option("--client-key", args.client_key,
+                 "Private key file path for client certification (PEM format)")
+      ->check(CLI::ExistingFile);
 
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");

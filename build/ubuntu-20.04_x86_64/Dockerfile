@@ -11,7 +11,8 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloa
 
 COPY script/apt_install_x86_64.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/apt_install_x86_64.sh
+  /root/apt_install_x86_64.sh \
+  && apt-get -y install libdrm-dev
 
 # WebRTC の取得
 
@@ -135,3 +136,44 @@ RUN set -ex \
   && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /" \
   && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda=$CUDA_VERSION clang-10
+
+# libva
+ARG LIBVA_VERSION
+RUN set -ex \
+  && git clone --depth 1 --branch $LIBVA_VERSION https://github.com/intel/libva.git /root/libva-source \
+  && mkdir -p /root/libva-build \
+  && cd /root/libva-build \
+  && CC=/root/llvm/clang/bin/clang \
+    CXX=/root/llvm/clang/bin/clang++ \
+    CFLAGS="-fPIC" \
+    /root/libva-source/autogen.sh \
+      --enable-static \
+      --disable-shared \
+      --with-drivers-path=/usr/lib/x86_64-linux-gnu/dri \
+      --prefix /root/libva \
+  && make -j`nproc` \
+  && make install \
+  && rm -rf /root/libva-build \
+  && rm -rf /root/libva-source
+
+# Intel Media SDK
+ARG MSDK_VERSION
+RUN set -ex \
+  && git clone --depth 1 --branch intel-mediasdk-$MSDK_VERSION https://github.com/Intel-Media-SDK/MediaSDK.git /root/msdk-source \
+  && cd /root/msdk-source \
+  && find . -name "CMakeLists.txt" | while read line; do sed -i 's/SHARED/STATIC/g' $line; done \
+  && mkdir -p /root/msdk-build \
+  && cd /root/msdk-build \
+  && cmake \
+      -DCMAKE_INSTALL_PREFIX=/root/msdk \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH=/root/libva \
+      -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+      -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+      -DBUILD_SAMPLES=OFF \
+      -DBUILD_TUTORIALS=OFF \
+      /root/msdk-source \
+  && cmake --build . -j`nproc` \
+  && cmake --install . \
+  && rm -rf /root/msdk-build \
+  && rm -rf /root/msdk-source

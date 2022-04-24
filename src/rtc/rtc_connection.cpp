@@ -41,7 +41,7 @@ class CreateSessionDescriptionThunk
   static rtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return new rtc::RefCountedObject<CreateSessionDescriptionThunk>(
+    return rtc::make_ref_counted<CreateSessionDescriptionThunk>(
         std::move(on_success), std::move(on_failure));
   }
 
@@ -81,7 +81,7 @@ class SetSessionDescriptionThunk
   static rtc::scoped_refptr<SetSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return new rtc::RefCountedObject<SetSessionDescriptionThunk>(
+    return rtc::make_ref_counted<SetSessionDescriptionThunk>(
         std::move(on_success), std::move(on_failure));
   }
 
@@ -123,7 +123,8 @@ void RTCConnection::CreateOffer(OnCreateSuccessFunc on_success,
     webrtc::DataChannelInit config;
     auto result = connection_->CreateDataChannelOrError("serial", &config);
     if (!result.ok()) {
-      RTC_LOG(LS_ERROR) << "CreateDataChannel() failed: " << result.error().message();
+      RTC_LOG(LS_ERROR) << "CreateDataChannel() failed: "
+                        << result.error().message();
     }
     data_manager->OnDataChannel(result.MoveValue());
   }
@@ -249,7 +250,8 @@ bool RTCConnection::IsVideoEnabled() {
 
 rtc::scoped_refptr<webrtc::MediaStreamInterface>
 RTCConnection::GetLocalStream() {
-  return connection_->local_streams()->at(0);
+  return rtc::scoped_refptr<webrtc::MediaStreamInterface>(
+      connection_->local_streams()->at(0));
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface>

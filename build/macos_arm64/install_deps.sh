@@ -117,6 +117,7 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
   mkdir -p $SOURCE_DIR/SDL2
   mkdir -p $BUILD_DIR/SDL2
   ../../script/setup_sdl2.sh $SDL2_VERSION $SOURCE_DIR/SDL2
+  patch $SOURCE_DIR/SDL2/source/configure < ../../patch/mac_sdl.patch
   pushd $BUILD_DIR/SDL2
     # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
     # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617

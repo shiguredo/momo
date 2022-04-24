@@ -21,6 +21,7 @@ jobs:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v3
+      - uses: microsoft/setup-msbuild@v1.1
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -29,13 +30,24 @@ jobs:
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
           echo "::set-output name=boost_version::${BOOST_VERSION}"
+          echo "::set-output name=wincuda_version::${WINCUDA_VERSION}"
         id: versions
+      # Boost はよくダウンロード先に繋がらずエラーになるのでキャッシュする
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache\boost
           key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
+      # CUDA のインストールバイナリのダウンロードは 3GB ぐらいあって、
+      # ビルドの度に取得するのはつらいのでキャッシュする
+      # （インストールする nvcc は解凍後で 100MB 程度なのでキャッシュ可能）
+      - name: Cache NVCC ${{ steps.versions.outputs.wincuda_version }}
+        id: cache-cuda
+        uses: actions/cache@v3
+        with:
+          path: build\windows_x86_64\_install\cuda\nvcc
+          key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v1
       - run: "& .\\build.ps1 -package"
         working-directory: build
         timeout-minutes: 120
@@ -53,12 +65,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: windows_${{ matrix.arch }}.env
           path: windows_${{ matrix.arch }}.env
@@ -80,7 +92,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
@@ -97,12 +109,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: macos_${{ matrix.arch }}.env
           path: macos_${{ matrix.arch }}.env
@@ -129,7 +141,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: _cache/boost
           key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
@@ -145,12 +157,12 @@ jobs:
           echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}.env
           path: ${{ matrix.name }}.env
@@ -177,7 +189,7 @@ jobs:
         shell: bash
         run: echo "UPLOAD_URL='${{ steps.create_release.outputs.upload_url }}'" > create-release.env
       - name: Upload create-release Environment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: create-release.env
           path: create-release.env
@@ -201,11 +213,11 @@ jobs:
           - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.name }}.env
           path: ${{ matrix.name }}.env
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: create-release.env
           path: create-release.env
@@ -218,7 +230,7 @@ jobs:
           echo "::set-output name=content_type::$CONTENT_TYPE"
           echo "::set-output name=upload_url::$UPLOAD_URL"
         id: env
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ steps.env.outputs.package_name }}
           path: ${{ steps.env.outputs.package_name }}
