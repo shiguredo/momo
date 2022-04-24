@@ -108,7 +108,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   } else if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
 #if USE_MSDK_ENCODER
     // Intel Media SDK の場合は対応してる場合のみ追加
-    if (MsdkVideoEncoder::IsSupported(config_.msdk_session, MFX_CODEC_AVC)) {
+    if (MsdkVideoEncoder::IsSupported(MsdkSession::Create(), MFX_CODEC_AVC)) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
@@ -178,10 +178,10 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #endif
 #if USE_MSDK_ENCODER
     if (config_.vp8_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [msdk_session = config_.msdk_session](
-                                       const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<MsdkVideoEncoder>(msdk_session, MFX_CODEC_VP8));
+            absl::make_unique<MsdkVideoEncoder>(MsdkSession::Create(),
+                                                MFX_CODEC_VP8));
       });
     }
 #endif
@@ -203,10 +203,10 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #endif
 #if USE_MSDK_ENCODER
     if (config_.vp9_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [msdk_session = config_.msdk_session](
-                                       const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<MsdkVideoEncoder>(msdk_session, MFX_CODEC_VP9));
+            absl::make_unique<MsdkVideoEncoder>(MsdkSession::Create(),
+                                                MFX_CODEC_VP9));
       });
     }
 #endif
@@ -222,10 +222,10 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #endif
 #if USE_MSDK_ENCODER
     if (config_.av1_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [msdk_session = config_.msdk_session](
-                                       const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<MsdkVideoEncoder>(msdk_session, MFX_CODEC_AV1));
+            absl::make_unique<MsdkVideoEncoder>(MsdkSession::Create(),
+                                                MFX_CODEC_AV1));
       });
     }
 #endif
@@ -284,10 +284,10 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 #endif
 #if USE_MSDK_ENCODER
     if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [msdk_session = config_.msdk_session](
-                                       const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<MsdkVideoEncoder>(msdk_session, MFX_CODEC_AVC));
+            absl::make_unique<MsdkVideoEncoder>(MsdkSession::Create(),
+                                                MFX_CODEC_AVC));
       });
     }
 #endif

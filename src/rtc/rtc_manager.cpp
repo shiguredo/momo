@@ -106,9 +106,6 @@ RTCManager::RTCManager(
 #if defined(__linux__) && USE_NVCODEC_ENCODER
     ec.cuda_context = cf.cuda_context;
 #endif
-#if USE_MSDK_ENCODER
-    ec.msdk_session = cf.msdk_session;
-#endif
     media_dependencies.video_encoder_factory =
         std::unique_ptr<webrtc::VideoEncoderFactory>(
             absl::make_unique<MomoVideoEncoderFactory>(ec));
@@ -119,9 +116,6 @@ RTCManager::RTCManager(
     dc.h264_decoder = resolve(cf.h264_decoder, info.h264_decoders);
 #if USE_NVCODEC_ENCODER
     dc.cuda_context = cf.cuda_context;
-#endif
-#if USE_MSDK_ENCODER
-    dc.msdk_session = cf.msdk_session;
 #endif
     media_dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
