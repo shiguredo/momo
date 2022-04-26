@@ -22,6 +22,35 @@ PowerShell での実行例：
 .\momo.exe --video-codec-engines
 ```
 
+実行結果例：
+```
+.\momo.exe --video-codec-engines
+VP8:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Software [software] (default)
+
+VP9:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Intel Media SDK [intel] (default)
+    - Software [software]
+
+AV1:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Software [software] (default)
+
+H264:
+  Encoder:
+    - Intel Media SDK [intel] (default)
+  Decoder:
+    - Intel Media SDK [intel] (default)
+```
+
 ## Ubuntu20.04 での利用方法
 
 ### ドライバーのインストール
@@ -34,15 +63,47 @@ PowerShell での実行例：
 - INTEL MEDIA ドライバー ( `intel-media-va-driver` または `intel-media-va-driver-non-free` ) をインストールします。
     - `sudo apt-get install intel-media-va-driver-non-free`
     または `sudo apt-get install intel-media-va-driver`
-- 関連ライブラリのインストール
+- 関連ライブラリをインストールします
     - `sudo apt install libmfx1`
+
+以上でインストールが完了します。
 
 ## Momo での動作確認
 
 `--video-codec-engines ` を指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。
 
+実行コマンド例：
 ```
 ./momo --video-codec-engines
+```
+
+実行結果例：
+```
+$ ./momo --video-codec-engines
+VP8:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Software [software] (default)
+
+VP9:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Intel Media SDK [intel] (default)
+    - Software [software]
+
+AV1:
+  Encoder:
+    - Software [software] (default)
+  Decoder:
+    - Software [software] (default)
+
+H264:
+  Encoder:
+    - Intel Media SDK [intel] (default)
+  Decoder:
+    - Intel Media SDK [intel] (default)
 ```
 
 ### エンコーダーが複数ある場合
@@ -52,5 +113,5 @@ Momo では NVIDIA を優先して使用するようになっていますが `--
 
 ### うまく INTEL MEDIA SDK をインストールできない場合
 
-NVIDIA を利用している環境で INTEL MEDIA SDK をうまくインストールできない場合、
-一度 NVIDIA のドライバーを削除してからインストールするとインストール可能な場合があります。
+NVIDIA を利用している環境で INTEL MEDIA SDK をうまくインストールできないことがあります。
+その時は一度 NVIDIA のドライバーを削除してからインストールするとインストール可能になる場合があります。
