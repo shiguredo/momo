@@ -1,23 +1,24 @@
-# INTEL MEDIA SDK を使用する
+# Intel Media SDK を使用する
+
+Intel Media SDK を使用することで H.264 HWA エンコーダーとデコーダーが利用可能になります。
+このドキュメントでは Intel Media SDK を使用するためのセットアップを記載します。
 
 ## 対応プラットフォーム
 
 - Windows 10 x86_64
 - Ubuntu 20.04 x86_64
 
-## Windows10 での利用方法
+## Windows 10 での利用方法
 
 ### ドライバーのインストール
 
-[インテル® グラフィックス - Windows* DCH Driver](https://www.intel.co.jp/content/www/jp/ja/download/19344/intel-graphics-windows-dch-drivers.html) をダウンロードしてインストールします。
+Windows 10 ではインストール作業は必要ありません。
 
-インストールが完了すると INTEL MEDIA SDK を利用する準備が完了します。
+## Intel Media SDK が認識できているか確認
 
-## INTEL MEDIA SDK の動作確認
+`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 H264 に `Intel Media SDK [intel]` が表示されていれば利用可能です。
 
-`--video-codec-engines ` を指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。
-
-PowerShell での実行例：
+PowerShell での実行コマンド例：
 ```
 .\momo.exe --video-codec-engines
 ```
@@ -60,17 +61,18 @@ H264:
     - `sudo apt-get upgrade`
 - ドライバー確認ツールをインストールします
     - `sudo apt-get install vainfo`
-- INTEL MEDIA ドライバー ( `intel-media-va-driver` または `intel-media-va-driver-non-free` ) をインストールします。
-    - `sudo apt-get install intel-media-va-driver-non-free`
-    または `sudo apt-get install intel-media-va-driver`
+- ドライバーをインストールします。
+    - 以下のいずれでも問題ありません。フル機能版は `intel-media-va-driver-non-free` でコア機能版は `intel-media-va-driver` になります。
+        - `sudo apt-get install intel-media-va-driver-non-free`
+        - `sudo apt-get install intel-media-va-driver`
 - 関連ライブラリをインストールします
     - `sudo apt install libmfx1`
 
 以上でインストールが完了します。
 
-## Momo での動作確認
+## Intel Media SDK が認識できているか確認
 
-`--video-codec-engines ` を指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。
+`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 H264 に `Intel Media SDK [intel]` が表示されていれば利用可能です。
 
 実行コマンド例：
 ```
@@ -106,12 +108,19 @@ H264:
     - Intel Media SDK [intel] (default)
 ```
 
-### エンコーダーが複数ある場合
+## 動作確認ができたチップセット
+
+現在動作確認ができているチップセットは以下になります。
+
+- Intel(R) Core(TM) i9-9980HK
+- Intel(R) Core(TM) i7-1195G7
+- Intel(R) Core(TM) i5-10210U
+
+## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して INTEL を指定することで INTEL MEDIA SDK を使用することができます。
+Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `intel` を指定することで Intel Media SDK を使用することができます。
 
-### うまく INTEL MEDIA SDK をインストールできない場合
+## Intel Media SDK を認識できない場合
 
-NVIDIA を利用している環境で INTEL MEDIA SDK をうまくインストールできないことがあります。
-その時は一度 NVIDIA のドライバーを削除してからインストールするとインストール可能になる場合があります。
+NVIDIA を利用している環境で Intel Media SDK をうまくインストールできないことがあります。その時は一度 NVIDIA のドライバーを削除してからインストールするとインストール可能になる場合があります。
