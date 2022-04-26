@@ -1,6 +1,6 @@
-# Intel Media SDK を使用する
+# Momo で Intel Media SDK を利用したハードウェアエンコーダー/デコーダーを利用する
 
-Intel Media SDK を使用することで H.264 HWA エンコーダーとデコーダーが利用可能になります。
+Intel Media SDK を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
 このドキュメントでは Intel Media SDK を使用するためのセットアップを記載します。
 
 ## 対応プラットフォーム
@@ -16,7 +16,7 @@ Windows 10 ではインストール作業は必要ありません。
 
 ## Intel Media SDK が認識できているか確認
 
-`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 H264 に `Intel Media SDK [intel]` が表示されていれば利用可能です。
+`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 VP9 の Decoder と H264 の Encoder と Decoder に `Intel Media SDK [intel]` が表示されていれば利用可能です。
 
 PowerShell での実行コマンド例：
 ```
@@ -25,7 +25,7 @@ PowerShell での実行コマンド例：
 
 実行結果例：
 ```
-.\momo.exe --video-codec-engines
+> .\momo.exe --video-codec-engines
 VP8:
   Encoder:
     - Software [software] (default)
@@ -72,7 +72,7 @@ H264:
 
 ## Intel Media SDK が認識できているか確認
 
-`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 H264 に `Intel Media SDK [intel]` が表示されていれば利用可能です。
+`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 VP9 の Decoder と H264 の Encoder と Decoder に `Intel Media SDK [intel]` が表示されていれば利用可能です。
 
 実行コマンド例：
 ```
@@ -123,4 +123,4 @@ Momo では NVIDIA を優先して使用するようになっていますが `--
 
 ## Intel Media SDK を認識できない場合
 
-NVIDIA を利用している環境で Intel Media SDK をうまくインストールできないことがあります。その時は一度 NVIDIA のドライバーを削除してからインストールするとインストール可能になる場合があります。
+NVIDIA を利用している環境では Intel Media SDK を認識できないことがあります。その場合は NVIDIA のドライバーを削除し Intel のグラフィックドライバーに切り替えると認識する場合があります。
