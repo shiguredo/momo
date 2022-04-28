@@ -8,12 +8,6 @@ Intel Media SDK を利用して Intel Quick Sync Video の HWA 機能を使っ�
 - Windows 10 x86_64
 - Ubuntu 20.04 x86_64
 
-## HWA 利用可能なコーデック
-
- - VP8
- - VP9
- - H.264
-
 ## Windows 10 での利用方法
 
 ### ドライバーのインストール
@@ -22,7 +16,7 @@ Windows 10 ではインストール作業は必要ありません。
 
 ## Intel Media SDK が認識できているか確認
 
-`--video-codec-engines` オプションを指定して Momo を実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel Media SDK [intel]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel Media SDK [intel]` が表示されているコーデックで利用可能です。
 
 PowerShell での実行コマンド例：
 ```
@@ -113,6 +107,17 @@ H264:
   Decoder:
     - Intel Media SDK [intel] (default)
 ```
+
+## Intel Media SDK について
+
+Intel Media SDK の対応コーデックや利用環境については以下のリンクをご確認ください。
+
+- デコーダーとエンコーダーの対応しているコーデックとチップセットの組み合わせ表
+    - https://github.com/intel/media-driver#decodingencoding-features
+- Intel Media SDK の Github
+    - https://github.com/Intel-Media-SDK/MediaSDK#intel-media-sdk
+- Intel 公式ドキュメント
+    - https://www.intel.com/content/www/us/en/developer/tools/media-sdk/documentation.html
 
 ## 動作確認ができたチップセット
 
