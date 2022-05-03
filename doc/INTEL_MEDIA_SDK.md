@@ -1,4 +1,4 @@
-# Momo で Intel Media SDK を利用したハードウェアエンコーダー/デコーダーを利用する
+# Momo で Intel Media SDK を利用したハードウェアエンコーダー / デコーダーを利用する
 
 Intel Media SDK を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
 
