@@ -96,6 +96,10 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 18.04 x86_64
     - 2023 年 4 月末にて終了
 - Ubuntu 20.04 x86_64
+- Ubuntu 18.04 ARMv8 Firefly
+    - 2023 年 4 月末にて終了
+    - [Firefly EC A3399C](https://wiki.t-firefly.com/zh_CN/EC-A3399C/started.html)
+    - [Firefly EC A3399ProC](https://wiki.t-firefly.com/zh_CN/EC-A3399ProC/started.html)
 - Ubuntu 18.04 ARMv8 Jetson
     - 2023 年 4 月末にて終了
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)

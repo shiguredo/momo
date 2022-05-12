@@ -150,6 +150,25 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_firefly")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-18.04")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_SCREEN_CAPTURER ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
 
   set(TARGET_OS "linux")

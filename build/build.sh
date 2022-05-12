@@ -13,6 +13,7 @@ _PACKAGES=" \
   raspberry-pi-os_armv6 \
   raspberry-pi-os_armv7 \
   raspberry-pi-os_armv8 \
+  ubuntu-18.04_armv8_firefly \
   ubuntu-18.04_armv8_jetson_nano \
   ubuntu-18.04_armv8_jetson_xavier \
   ubuntu-18.04_x86_64 \
