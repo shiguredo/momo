@@ -206,6 +206,13 @@ int main(int argc, char* argv[]) {
   rtcm_config.cuda_context = cuda_context;
 #endif
 
+  rtcm_config.proxy_type = args.proxy_type;
+  rtcm_config.proxy_agent = args.proxy_agent;
+  rtcm_config.proxy_hostname = args.proxy_hostname;
+  rtcm_config.proxy_port = args.proxy_port;
+  rtcm_config.proxy_username = args.proxy_username;
+  rtcm_config.proxy_password = args.proxy_password;
+
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {

@@ -5,6 +5,7 @@
 
 // WebRTC
 #include <api/peer_connection_interface.h>
+#include <pc/peer_connection_factory.h>
 #include <pc/video_track_source.h>
 
 #include "cuda/cuda_context.h"
@@ -14,6 +15,35 @@
 #include "scalable_track_source.h"
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
+
+// webrtc::PeerConnectionFactory から ConnectionContext を取り出す方法が無いので、
+// 継承して無理やり使えるようにする
+class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
+ public:
+  CustomPeerConnectionFactory(
+      webrtc::PeerConnectionFactoryDependencies dependencies)
+      : CustomPeerConnectionFactory(
+            webrtc::ConnectionContext::Create(&dependencies),
+            &dependencies) {}
+  CustomPeerConnectionFactory(
+      rtc::scoped_refptr<webrtc::ConnectionContext> context,
+      webrtc::PeerConnectionFactoryDependencies* dependencies)
+      : conn_context_(context),
+        webrtc::PeerConnectionFactory(context, dependencies) {}
+
+  static rtc::scoped_refptr<CustomPeerConnectionFactory> Create(
+      webrtc::PeerConnectionFactoryDependencies dependencies) {
+    return rtc::make_ref_counted<CustomPeerConnectionFactory>(
+        std::move(dependencies));
+  }
+
+  rtc::scoped_refptr<webrtc::ConnectionContext> GetContext() const {
+    return conn_context_;
+  }
+
+ private:
+  rtc::scoped_refptr<webrtc::ConnectionContext> conn_context_;
+};
 
 struct RTCManagerConfig {
   bool insecure = false;
@@ -55,6 +85,16 @@ struct RTCManagerConfig {
 #if USE_NVCODEC_ENCODER
   std::shared_ptr<CudaContext> cuda_context;
 #endif
+
+  rtc::ProxyType proxy_type = rtc::PROXY_NONE;
+  std::string proxy_agent;
+  std::string proxy_hostname;
+  int proxy_port = -1;
+  // std::string proxy_autoconfig_url;
+  // bool proxy_autodetect;
+  // std::string proxy_bypass_list;
+  std::string proxy_username;
+  std::string proxy_password;
 };
 
 class RTCManager {
@@ -71,7 +111,7 @@ class RTCManager {
   void SetParameters();
 
  private:
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  rtc::scoped_refptr<CustomPeerConnectionFactory> factory_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;

@@ -256,6 +256,20 @@ void Util::ParseArgs(int argc,
                  "Private key file path for client certification (PEM format)")
       ->check(CLI::ExistingFile);
 
+  // proxy サーバーの設定
+  auto proxy_map = std::vector<std::pair<std::string, rtc::ProxyType>>(
+      {{"none", rtc::PROXY_NONE},
+       {"https", rtc::PROXY_HTTPS},
+       {"socks5", rtc::PROXY_SOCKS5},
+       {"unknown", rtc::PROXY_UNKNOWN}});
+  app.add_option("--proxy-type", args.proxy_type, "Proxy type")
+      ->transform(CLI::CheckedTransformer(proxy_map, CLI::ignore_case));
+  app.add_option("--proxy-agent", args.proxy_agent, "Proxy agent name");
+  app.add_option("--proxy-hostname", args.proxy_hostname, "Proxy host name");
+  app.add_option("--proxy-port", args.proxy_port, "Proxy port");
+  app.add_option("--proxy-username", args.proxy_username, "Proxy username");
+  app.add_option("--proxy-password", args.proxy_password, "Proxy password");
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
