@@ -146,8 +146,15 @@ void SoraClient::Connect() {
 
     std::shared_ptr<Websocket> ws;
     if (ssl) {
-      ws.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure,
-                             config_.client_cert, config_.client_key));
+      if (config_.proxy_url.empty()) {
+        ws.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure,
+                               config_.client_cert, config_.client_key));
+      } else {
+        ws.reset(new Websocket(Websocket::https_proxy_tag(), ioc_,
+                               config_.insecure, config_.client_cert,
+                               config_.client_key, config_.proxy_url,
+                               config_.proxy_username, config_.proxy_password));
+      }
     } else {
       ws.reset(new Websocket(ioc_));
     }

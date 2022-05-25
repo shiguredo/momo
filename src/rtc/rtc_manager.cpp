@@ -26,6 +26,7 @@
 #include "peer_connection_observer.h"
 #include "rtc_ssl_verifier.h"
 #include "scalable_track_source.h"
+#include "url_parts.h"
 #include "util.h"
 
 RTCManager::RTCManager(
@@ -251,18 +252,19 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       rtc_config.port_allocator_config.min_port,
       rtc_config.port_allocator_config.max_port);
   dependencies.allocator->set_flags(rtc_config.port_allocator_config.flags);
-  if (config_.proxy_type != rtc::PROXY_NONE) {
+  if (!config_.proxy_url.empty()) {
     RTC_LOG(LS_INFO) << "Set Proxy: type="
-                     << rtc::ProxyToString(config_.proxy_type)
-                     << " url=" << config_.proxy_hostname << ":"
-                     << config_.proxy_port
+                     << rtc::ProxyToString(rtc::PROXY_HTTPS)
+                     << " url=" << config_.proxy_url
                      << " username=" << config_.proxy_username;
     rtc::ProxyInfo pi;
-    pi.type = config_.proxy_type;
-    if (!config_.proxy_hostname.empty() && config_.proxy_port >= 0) {
-      pi.address =
-          rtc::SocketAddress(config_.proxy_hostname, config_.proxy_port);
+    pi.type = rtc::PROXY_HTTPS;
+    URLParts parts;
+    if (!URLParts::Parse(config_.proxy_url, parts)) {
+      RTC_LOG(LS_ERROR) << "Failed to parse: proxy_url=" << config_.proxy_url;
+      return nullptr;
     }
+    pi.address = rtc::SocketAddress(parts.host, std::stoi(parts.GetPort()));
     if (!config_.proxy_username.empty()) {
       pi.username = config_.proxy_username;
     }

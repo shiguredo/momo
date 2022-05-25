@@ -2,6 +2,9 @@
 
 #include <utility>
 
+// WebRTC
+#include <rtc_base/third_party/base64/base64.h>
+
 // Boost
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/connect.hpp>
@@ -12,27 +15,27 @@
 #include "ssl_verifier.h"
 #include "util.h"
 
-static boost::asio::ssl::context CreateSSLContext(
+static std::shared_ptr<boost::asio::ssl::context> CreateSSLContext(
     const std::string& client_cert,
     const std::string& client_key) {
   // TLS 1.2 と 1.3 のみ対応
   SSL_CTX* handle = ::SSL_CTX_new(::TLS_method());
   SSL_CTX_set_min_proto_version(handle, TLS1_2_VERSION);
   SSL_CTX_set_max_proto_version(handle, TLS1_3_VERSION);
-  boost::asio::ssl::context ctx(handle);
+  auto ctx = std::make_shared<boost::asio::ssl::context>(handle);
   //ctx.set_default_verify_paths();
-  ctx.set_options(boost::asio::ssl::context::default_workarounds |
-                  boost::asio::ssl::context::no_sslv2 |
-                  boost::asio::ssl::context::no_sslv3 |
-                  boost::asio::ssl::context::single_dh_use);
+  ctx->set_options(boost::asio::ssl::context::default_workarounds |
+                   boost::asio::ssl::context::no_sslv2 |
+                   boost::asio::ssl::context::no_sslv3 |
+                   boost::asio::ssl::context::single_dh_use);
   if (!client_cert.empty()) {
-    ctx.use_certificate_file(client_cert,
-                             boost::asio::ssl::context_base::file_format::pem);
+    ctx->use_certificate_file(client_cert,
+                              boost::asio::ssl::context_base::file_format::pem);
     RTC_LOG(LS_INFO) << "client_cert=" << client_cert;
   }
   if (!client_key.empty()) {
-    ctx.use_private_key_file(client_key,
-                             boost::asio::ssl::context_base::file_format::pem);
+    ctx->use_private_key_file(client_key,
+                              boost::asio::ssl::context_base::file_format::pem);
     RTC_LOG(LS_INFO) << "client_key=" << client_key;
   }
   return ctx;
@@ -49,21 +52,48 @@ Websocket::Websocket(Websocket::ssl_tag,
                      bool insecure,
                      const std::string& client_cert,
                      const std::string& client_key)
-    : Websocket(Websocket::ssl_tag(),
-                ioc,
-                insecure,
-                CreateSSLContext(client_cert, client_key)) {}
-Websocket::Websocket(Websocket::ssl_tag,
+    : resolver_(new boost::asio::ip::tcp::resolver(ioc)),
+      strand_(ioc.get_executor()),
+      insecure_(insecure) {
+  ssl_ctx_ = CreateSSLContext(client_cert, client_key);
+  wss_.reset(new ssl_websocket_t(ioc, *ssl_ctx_));
+  InitWss(wss_.get(), insecure);
+}
+Websocket::Websocket(boost::asio::ip::tcp::socket socket)
+    : ws_(new websocket_t(std::move(socket))), strand_(ws_->get_executor()) {
+  ws_->write_buffer_bytes(8192);
+}
+Websocket::Websocket(https_proxy_tag,
                      boost::asio::io_context& ioc,
                      bool insecure,
-                     boost::asio::ssl::context ssl_ctx)
-    : wss_(new ssl_websocket_t(ioc, ssl_ctx)),
-      resolver_(new boost::asio::ip::tcp::resolver(ioc)),
-      strand_(wss_->get_executor()) {
-  wss_->write_buffer_bytes(8192);
+                     const std::string& client_cert,
+                     const std::string& client_key,
+                     std::string proxy_url,
+                     std::string proxy_username,
+                     std::string proxy_password)
+    : resolver_(new boost::asio::ip::tcp::resolver(ioc)),
+      strand_(ioc.get_executor()),
+      https_proxy_(true),
+      proxy_socket_(new boost::asio::ip::tcp::socket(ioc)),
+      proxy_url_(std::move(proxy_url)),
+      proxy_username_(std::move(proxy_username)),
+      proxy_password_(std::move(proxy_password)) {
+  ssl_ctx_ = CreateSSLContext(client_cert, client_key);
+}
 
-  wss_->next_layer().set_verify_mode(boost::asio::ssl::verify_peer);
-  wss_->next_layer().set_verify_callback(
+Websocket::~Websocket() {
+  RTC_LOG(LS_INFO) << "Websocket::~Websocket this=" << (void*)this;
+}
+
+bool Websocket::IsSSL() const {
+  return https_proxy_ || wss_ != nullptr;
+}
+
+void Websocket::InitWss(ssl_websocket_t* wss, bool insecure) {
+  wss->write_buffer_bytes(8192);
+
+  wss->next_layer().set_verify_mode(boost::asio::ssl::verify_peer);
+  wss->next_layer().set_verify_callback(
       [insecure](bool preverified, boost::asio::ssl::verify_context& ctx) {
         if (preverified) {
           return true;
@@ -77,18 +107,6 @@ Websocket::Websocket(Websocket::ssl_tag,
         return SSLVerifier::VerifyX509(cert, chain);
       });
 }
-Websocket::Websocket(boost::asio::ip::tcp::socket socket)
-    : ws_(new websocket_t(std::move(socket))), strand_(ws_->get_executor()) {
-  ws_->write_buffer_bytes(8192);
-}
-
-Websocket::~Websocket() {
-  RTC_LOG(LS_INFO) << "Websocket::~Websocket this=" << (void*)this;
-}
-
-bool Websocket::IsSSL() const {
-  return wss_ != nullptr;
-}
 
 Websocket::websocket_t& Websocket::NativeSocket() {
   return *ws_;
@@ -98,6 +116,12 @@ Websocket::ssl_websocket_t& Websocket::NativeSecureSocket() {
 }
 
 void Websocket::Connect(const std::string& url, connect_callback_t on_connect) {
+  // proxy 時は wss のみサポート
+  if (https_proxy_) {
+    ConnectProxy(url, std::move(on_connect));
+    return;
+  }
+
   if (!URLParts::Parse(url, parts_)) {
     on_connect(boost::system::errc::make_error_code(
         boost::system::errc::invalid_argument));
@@ -131,16 +155,9 @@ void Websocket::Connect(const std::string& url, connect_callback_t on_connect) {
 
   on_connect_ = std::move(on_connect);
 
-  std::string port;
-  if (parts_.port.empty()) {
-    port = IsSSL() ? "443" : "80";
-  } else {
-    port = parts_.port;
-  }
-
   // DNS ルックアップ
   resolver_->async_resolve(
-      parts_.host, port,
+      parts_.host, parts_.GetPort(),
       std::bind(&Websocket::OnResolve, this, std::placeholders::_1,
                 std::placeholders::_2));
 }
@@ -181,6 +198,7 @@ void Websocket::OnSSLConnect(boost::system::error_code ec) {
 
 void Websocket::OnSSLHandshake(boost::system::error_code ec) {
   if (ec) {
+    RTC_LOG(LS_ERROR) << "Failed to OnSSLHandshake";
     auto on_connect = std::move(on_connect_);
     on_connect(ec);
     return;
@@ -238,6 +256,120 @@ void Websocket::DoRead(read_callback_t on_read) {
                     std::bind(&Websocket::OnRead, this, std::move(on_read),
                               std::placeholders::_1, std::placeholders::_2));
   }
+}
+
+void Websocket::ConnectProxy(const std::string& url,
+                             connect_callback_t on_connect) {
+  if (!URLParts::Parse(url, parts_)) {
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::invalid_argument));
+    return;
+  }
+
+  if (parts_.scheme != "wss") {
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::invalid_argument));
+    return;
+  }
+
+  if (!URLParts::Parse(proxy_url_, proxy_parts_)) {
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::invalid_argument));
+    return;
+  }
+
+  if (!URLParts::Parse(url, parts_)) {
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::invalid_argument));
+    return;
+  }
+
+  // 今は http + wss の組み合わせしか許可しない
+  if (proxy_parts_.scheme != "http" || parts_.scheme != "wss") {
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::invalid_argument));
+    return;
+  }
+
+  on_connect_ = std::move(on_connect);
+
+  // proxy サーバーの DNS 解決を行う
+  resolver_->async_resolve(
+      proxy_parts_.host, proxy_parts_.GetPort(),
+      std::bind(&Websocket::OnResolveProxy, this, std::placeholders::_1,
+                std::placeholders::_2));
+}
+
+void Websocket::OnResolveProxy(
+    boost::system::error_code ec,
+    boost::asio::ip::tcp::resolver::results_type results) {
+  if (ec) {
+    auto on_connect = std::move(on_connect_);
+    on_connect(ec);
+    return;
+  }
+
+  boost::asio::async_connect(
+      *proxy_socket_, results.begin(), results.end(),
+      std::bind(&Websocket::OnConnectProxy, this, std::placeholders::_1));
+}
+
+void Websocket::OnConnectProxy(boost::system::error_code ec) {
+  if (ec) {
+    auto on_connect = std::move(on_connect_);
+    on_connect(ec);
+    return;
+  }
+
+  // CONNECT 送信
+  auto target = parts_.host + ":" + parts_.GetPort();
+  proxy_req_.method(boost::beast::http::verb::connect);
+  proxy_req_.target(target);
+  proxy_req_.version(11);
+  proxy_req_.set(boost::beast::http::field::host, target);
+  proxy_req_.set(
+      boost::beast::http::field::proxy_authorization,
+      "Basic " + rtc::Base64::Encode(proxy_username_ + ":" + proxy_password_));
+  boost::beast::http::async_write(
+      *proxy_socket_, proxy_req_,
+      std::bind(&Websocket::OnWriteProxy, this, std::placeholders::_1,
+                std::placeholders::_2));
+}
+
+void Websocket::OnWriteProxy(boost::system::error_code ec,
+                             std::size_t bytes_transferred) {
+  if (ec) {
+    auto on_connect = std::move(on_connect_);
+    on_connect(ec);
+    return;
+  }
+
+  // CONNECT のレスポンス読み込み
+  proxy_resp_parser_.reset(
+      new boost::beast::http::response_parser<boost::beast::http::empty_body>(
+          proxy_resp_));
+  // see https://stackoverflow.com/a/49837467/10904212
+  proxy_resp_parser_->skip(true);
+  boost::beast::http::async_read(
+      *proxy_socket_, proxy_buffer_, *proxy_resp_parser_,
+      std::bind(&Websocket::OnReadProxy, this, std::placeholders::_1,
+                std::placeholders::_2));
+}
+
+void Websocket::OnReadProxy(boost::system::error_code ec,
+                            std::size_t bytes_transferred) {
+  if (ec) {
+    auto on_connect = std::move(on_connect_);
+    on_connect(ec);
+    return;
+  }
+
+  // wss を作って、あとは普通の SSL ハンドシェイクを行う
+  wss_.reset(new ssl_websocket_t(std::move(*proxy_socket_), *ssl_ctx_));
+  InitWss(wss_.get(), insecure_);
+  wss_->next_layer().async_handshake(
+      boost::asio::ssl::stream_base::client,
+      std::bind(&Websocket::OnSSLHandshake, this, std::placeholders::_1));
 }
 
 void Websocket::OnRead(read_callback_t on_read,

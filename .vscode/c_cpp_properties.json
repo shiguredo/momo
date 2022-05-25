@@ -19,6 +19,8 @@
                 "${workspaceFolder}/_build/windows_x86_64"
             ],
             "defines": [
+                "WIN32_LEAN_AND_MEAN",
+                "NOMINMAX",
                 "WEBRTC_WINDOWS",
                 "USE_NVCODEC_ENCODER=1",
                 "USE_MMAL_ENCODER=0",

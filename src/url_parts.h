@@ -12,7 +12,7 @@ struct URLParts {
   std::string path_query_fragment;
 
   // 適当 URL パース
-  // scheme://[user_pass@]host[:port][/path_query_fragment]
+  // scheme://[user_pass@]host[:port][path_query_fragment]
   static bool Parse(std::string url, URLParts& parts) {
     auto n = url.find("://");
     if (n == std::string::npos) {
@@ -53,6 +53,17 @@ struct URLParts {
     }
 
     return true;
+  }
+
+  std::string GetPort() const {
+    if (!port.empty()) {
+      return port;
+    }
+    if (scheme == "wss" || scheme == "https") {
+      return "443";
+    } else {
+      return "80";
+    }
   }
 };
 

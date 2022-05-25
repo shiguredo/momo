@@ -86,13 +86,8 @@ struct RTCManagerConfig {
   std::shared_ptr<CudaContext> cuda_context;
 #endif
 
-  rtc::ProxyType proxy_type = rtc::PROXY_NONE;
   std::string proxy_agent;
-  std::string proxy_hostname;
-  int proxy_port = -1;
-  // std::string proxy_autoconfig_url;
-  // bool proxy_autodetect;
-  // std::string proxy_bypass_list;
+  std::string proxy_url;
   std::string proxy_username;
   std::string proxy_password;
 };

@@ -206,10 +206,8 @@ int main(int argc, char* argv[]) {
   rtcm_config.cuda_context = cuda_context;
 #endif
 
-  rtcm_config.proxy_type = args.proxy_type;
   rtcm_config.proxy_agent = args.proxy_agent;
-  rtcm_config.proxy_hostname = args.proxy_hostname;
-  rtcm_config.proxy_port = args.proxy_port;
+  rtcm_config.proxy_url = args.proxy_url;
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
 
@@ -280,6 +278,9 @@ int main(int argc, char* argv[]) {
       config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
       config.client_cert = args.client_cert;
       config.client_key = args.client_key;
+      config.proxy_url = args.proxy_url;
+      config.proxy_username = args.proxy_username;
+      config.proxy_password = args.proxy_password;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));
