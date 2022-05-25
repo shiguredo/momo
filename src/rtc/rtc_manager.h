@@ -86,7 +86,6 @@ struct RTCManagerConfig {
   std::shared_ptr<CudaContext> cuda_context;
 #endif
 
-  std::string proxy_agent;
   std::string proxy_url;
   std::string proxy_username;
   std::string proxy_password;

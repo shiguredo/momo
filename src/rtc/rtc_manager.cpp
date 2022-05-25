@@ -271,7 +271,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     if (!config_.proxy_password.empty()) {
       pi.password = rtc::CryptString(RawCryptString(config_.proxy_password));
     }
-    dependencies.allocator->set_proxy(config_.proxy_agent, pi);
+    dependencies.allocator->set_proxy("WebRTC Native Client Momo", pi);
   }
 
   webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>

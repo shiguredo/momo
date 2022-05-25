@@ -257,7 +257,6 @@ void Util::ParseArgs(int argc,
       ->check(CLI::ExistingFile);
 
   // proxy サーバーの設定
-  app.add_option("--proxy-agent", args.proxy_agent, "Proxy agent name");
   app.add_option("--proxy-url", args.proxy_url, "Proxy URL");
   app.add_option("--proxy-username", args.proxy_username, "Proxy username");
   app.add_option("--proxy-password", args.proxy_password, "Proxy password");

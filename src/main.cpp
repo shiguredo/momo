@@ -206,7 +206,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.cuda_context = cuda_context;
 #endif
 
-  rtcm_config.proxy_agent = args.proxy_agent;
   rtcm_config.proxy_url = args.proxy_url;
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
