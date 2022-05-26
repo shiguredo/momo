@@ -367,6 +367,17 @@ void Websocket::OnReadProxy(boost::system::error_code ec,
   // wss を作って、あとは普通の SSL ハンドシェイクを行う
   wss_.reset(new ssl_websocket_t(std::move(*proxy_socket_), *ssl_ctx_));
   InitWss(wss_.get(), insecure_);
+
+  // SNI の設定を行う
+  if (!SSL_set_tlsext_host_name(wss_->next_layer().native_handle(),
+                                parts_.host.c_str())) {
+    boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
+                                 boost::asio::error::get_ssl_category()};
+    auto on_connect = std::move(on_connect_);
+    on_connect(ec);
+    return;
+  }
+
   wss_->next_layer().async_handshake(
       boost::asio::ssl::stream_base::client,
       std::bind(&Websocket::OnSSLHandshake, this, std::placeholders::_1));
