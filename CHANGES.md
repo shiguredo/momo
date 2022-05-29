@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] `libwebrtc` を `M102.5005@{#4}` に上げる
+    - @voluntas
+
 ## 2022.2.0
 
 - [UPDATE] CLI11 を 2.2.0 に上げる
