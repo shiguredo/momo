@@ -5,6 +5,7 @@
 
 // WebRTC
 #include <api/peer_connection_interface.h>
+#include <pc/connection_context.h>
 #include <pc/peer_connection_factory.h>
 #include <pc/video_track_source.h>
 
@@ -105,7 +106,8 @@ class RTCManager {
   void SetParameters();
 
  private:
-  rtc::scoped_refptr<CustomPeerConnectionFactory> factory_;
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  rtc::scoped_refptr<webrtc::ConnectionContext> context_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;

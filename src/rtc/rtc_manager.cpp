@@ -16,7 +16,7 @@
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <p2p/client/basic_port_allocator.h>
-#include <pc/connection_context.h>
+#include <pc/peer_connection_factory_proxy.h>
 #include <pc/video_track_source_proxy.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
@@ -134,12 +134,23 @@ RTCManager::RTCManager(
 
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
-  factory_ = dependencies.signaling_thread
-                 ->Invoke<rtc::scoped_refptr<CustomPeerConnectionFactory>>(
-                     RTC_FROM_HERE, [&dependencies]() {
-                       return CustomPeerConnectionFactory::Create(
-                           std::move(dependencies));
-                     });
+  using result_type =
+      std::pair<rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>,
+                rtc::scoped_refptr<webrtc::ConnectionContext>>;
+  auto p = dependencies.signaling_thread->Invoke<result_type>(
+      RTC_FROM_HERE, [&dependencies]() {
+        auto factory =
+            CustomPeerConnectionFactory::Create(std::move(dependencies));
+        if (factory == nullptr) {
+          return result_type(nullptr, nullptr);
+        }
+        auto context = factory->GetContext();
+        auto proxy = webrtc::PeerConnectionFactoryProxy::Create(
+            factory->signaling_thread(), factory->worker_thread(), factory);
+        return result_type(proxy, context);
+      });
+  factory_ = p.first;
+  context_ = p.second;
   if (!factory_.get()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << ": Failed to initialize PeerConnectionFactory";
@@ -244,9 +255,8 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
       new RTCSSLVerifier(config_.insecure));
 
-  auto context = factory_->GetContext();
   dependencies.allocator.reset(new cricket::BasicPortAllocator(
-      context->default_network_manager(), context->default_socket_factory(),
+      context_->default_network_manager(), context_->default_socket_factory(),
       rtc_config.turn_customizer));
   dependencies.allocator->SetPortRange(
       rtc_config.port_allocator_config.min_port,
