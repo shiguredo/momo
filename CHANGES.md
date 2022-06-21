@@ -14,10 +14,7 @@
 - [UPDATE] `libwebrtc` を `M102.5005@{#4}` に上げる
     - @voluntas
 - [ADD] TURN-TLS 向けの HTTP Proxy サーバの設定を追加する
-    - `--proxy-type`
-        - none | https | socke5 | unnknown
-    - `--proxy-hostname`
-    - `--proxy-prot`
+    - `--proxy-url`
     - `--proxy-username`
     - `--proxy-password`
     - @melpon
