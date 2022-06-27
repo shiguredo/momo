@@ -81,7 +81,6 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-
 - Raspberry Pi OS (64bit) ARMv8
     - Raspberry Pi 4
     - Raspberry Pi 3
@@ -90,11 +89,10 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
+    - Raspberry Pi Zero 2
 - Raspberry Pi OS (32bit) ARMv6
     - Raspberry Pi Zero
     - Raspberry Pi 1
-- Ubuntu 18.04 x86_64
-    - 2023 年 4 月末にて終了
 - Ubuntu 20.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
     - 2023 年 4 月末にて終了
@@ -102,13 +100,10 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - Ubuntu 20.04 ARMv8 Jetson
-    - JetPack 5 がリリースされ次第対応予定
     - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-- macOS 11 x86_64 以降
-    - 2021 年末にて終了
 - macOS 11 arm64 以降
 - Windows 10.1809 x86_64 以降
 
