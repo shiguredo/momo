@@ -139,6 +139,14 @@ Options:
                               H.264 Decoder
   --serial TEXT:serial setting format
                               Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]
+  --metrics-port INT:INT in [-1 - 65535]
+                              Metrics server port number (default: -1)
+  --metrics-allow-external-ip Allow access to Metrics server from external IP
+  --client-cert TEXT:FILE     Cert file path for client certification (PEM format)
+  --client-key TEXT:FILE      Private key file path for client certification (PEM format)
+  --proxy-url TEXT            Proxy URL
+  --proxy-username TEXT       Proxy username
+  --proxy-password TEXT       Proxy password
 
 Subcommands:
   test                        Mode for momo development with simple HTTP server
