@@ -166,8 +166,6 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Jetson AGX Orin 対応
-    - AV1 ハードウェアエンコーダー対応
-    - AV1 ハードウェアデコーダー対応
     - H.265 ハードウェアエンコーダー対応
     - H.265 ハードウェアデコーダー対応
 - Jetson AGX Xavier 対応
