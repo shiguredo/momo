@@ -119,12 +119,9 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     key_frame_interval_ = codec_settings->VP8().keyFrameInterval;
   } else if (codec_settings->codecType == webrtc::kVideoCodecVP9) {
     key_frame_interval_ = codec_settings->VP9().keyFrameInterval;
-    RTC_LOG(LS_INFO) << "complexity: " << (int)codec_settings->VP9().complexity;
     RTC_LOG(LS_INFO) << "numberOfTemporalLayers: "
                      << codec_settings->VP9().numberOfTemporalLayers;
     RTC_LOG(LS_INFO) << "denoisingOn: " << codec_settings->VP9().denoisingOn;
-    RTC_LOG(LS_INFO) << "frameDroppingOn: "
-                     << codec_settings->VP9().frameDroppingOn;
     RTC_LOG(LS_INFO) << "keyFrameInterval: "
                      << codec_settings->VP9().keyFrameInterval;
     RTC_LOG(LS_INFO) << "adaptiveQpMode: "
