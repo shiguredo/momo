@@ -55,8 +55,8 @@ struct MomoArgs {
   int sora_audio_bit_rate = 0;
   bool sora_auto_connect = false;
   boost::json::value sora_metadata;
-  // upstream or downstream
-  std::string sora_role = "upstream";
+  // sendonly, recvonly, sendrecv
+  std::string sora_role = "sendonly";
   bool sora_multistream = true;
   bool sora_spotlight = false;
   int sora_spotlight_number = 0;

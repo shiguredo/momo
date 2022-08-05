@@ -31,8 +31,8 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 
 - --multistream
     - Sora でマルチストリーム機能を利用する場合に指定します
-- --role upstream または --sora downstream
-    - Sora でロールを切り替える場合に指定します。デフォルトは upstream で、受信専用にする場合は downstream を指定します。
+- --role sendonly, --sora recvonly または --sora sendrecv
+    - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用可能です。デフォルトは sendonly です。
 - --spotlight
     - Sora でスポットライト機能を利用する場合に指定します
 
