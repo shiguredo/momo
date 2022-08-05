@@ -19,7 +19,7 @@ Windows の場合は以下のコマンドになります。
 ### 作成可能なパッケージ一覧
 
 - windows
-- macos
+- macos_arm64
 - raspberry-pi-os_armv6
 - raspberry-pi-os_armv7
 - raspberry-pi-os_armv8
@@ -27,7 +27,6 @@ Windows の場合は以下のコマンドになります。
 - ubuntu-18.04_armv8_jetson_xavier
 - ubuntu-18.04_x86_64
 - ubuntu-20.04_x86_64
-- ubuntu-16.04_x86_64_ros
 
 ## パッケージ解凍後の構成
 

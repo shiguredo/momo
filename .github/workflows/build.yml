@@ -80,7 +80,6 @@ jobs:
       matrix:
         arch:
           - arm64
-          - x86_64
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
@@ -204,7 +203,6 @@ jobs:
         name:
           - windows_x86_64
           - macos_arm64
-          - macos_x86_64
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
