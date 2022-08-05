@@ -489,6 +489,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       msdmo.lib
       Secur32.lib
       wmcodecdspuuid.lib
+      Dwmapi.lib
   )
 
   target_compile_definitions(momo

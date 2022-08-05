@@ -188,8 +188,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.disable_auto_gain_control = args.disable_auto_gain_control;
   rtcm_config.disable_noise_suppression = args.disable_noise_suppression;
   rtcm_config.disable_highpass_filter = args.disable_highpass_filter;
-  rtcm_config.disable_residual_echo_detector =
-      args.disable_residual_echo_detector;
 
   rtcm_config.vp8_encoder = args.vp8_encoder;
   rtcm_config.vp8_decoder = args.vp8_decoder;
