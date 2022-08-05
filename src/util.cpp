@@ -321,7 +321,7 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(0, 510));
   sora_app
       ->add_option("--multistream", args.sora_multistream,
-                   "Use multistream (default: false)")
+                   "Use multistream (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app->add_option("--role", args.sora_role, "Role (default: upstream)")
       ->check(CLI::IsMember(

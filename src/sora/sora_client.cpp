@@ -283,9 +283,7 @@ void SoraClient::DoSendConnect(bool redirect) {
     json_message["redirect"] = true;
   }
 
-  if (config_.multistream) {
-    json_message["multistream"] = true;
-  }
+  json_message["multistream"] = config_.multistream;
 
   if (config_.simulcast) {
     json_message["simulcast"] = true;

@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] `--multistream` のデフォルトを true にする
+    - @melpon
 - [UPDATE] `libwebrtc` を `M102.5005@{#4}` に上げる
     - @voluntas
 - [ADD] TURN-TLS 向けの HTTP Proxy サーバの設定を追加する
@@ -21,6 +23,8 @@
 - [ADD] Sora シグナリング用の WebSocket の HTTP Proxy 対応を追加する
     - @melpon
 - [ADD] HTTP Proxy サーバの SNI 対応を追加する
+    - @melpon
+- [FIX] Sora の設定によっては `--multistream` オプションに関わらず常に multistream: true になっていたのを修正
     - @melpon
 
 ## 2022.2.0
