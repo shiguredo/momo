@@ -15,8 +15,8 @@
     - @melpon
 - [CHANGE] `--role upstream` と `--role downstream` を削除
     - @melpon
-- [UPDATE] `libwebrtc` を `M104.5112@{#8}` に上げる
-    - @voluntas, @miosakuma
+- [UPDATE] `libwebrtc` を `M102.5005@{#4}` に上げる
+    - @voluntas
 - [ADD] TURN-TLS 向けの HTTP Proxy サーバの設定を追加する
     - `--proxy-url`
     - `--proxy-username`
