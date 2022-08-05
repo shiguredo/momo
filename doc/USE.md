@@ -118,8 +118,6 @@ Options:
   --disable-noise-suppression Disable noise suppression for audio
   --disable-highpass-filter   Disable highpass filter for audio
   --disable-typing-detection  Disable typing detection for audio
-  --disable-residual-echo-detector
-                              Disable residual echo detector for audio
   --video-codec-engines       List available video encoders/decoders
   --vp8-encoder :value in {default->0,software->6} OR {0,6}
                               VP8 Encoder
