@@ -66,13 +66,16 @@ if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`"
   BOOST_CHANGED=1
 fi
 
+CLANG="`xcodebuild -find clang`"
+CLANGPP="`xcodebuild -find clang++`"
+
 if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]; then
   rm -rf $SOURCE_DIR/boost
   rm -rf $BUILD_DIR/boost
   rm -rf $INSTALL_DIR/boost
   ../../script/setup_boost.sh $BOOST_VERSION $SOURCE_DIR/boost $CACHE_DIR/boost
   pushd $SOURCE_DIR/boost/source
-    echo "using clang : : $INSTALL_DIR/llvm/clang/bin/clang++ : ;" > project-config.jam
+    echo "using clang : : $CLANGPP : ;" > project-config.jam
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
     ./b2 \
       cxxstd=17 \
@@ -84,8 +87,6 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
       cxxflags=" \
         -target $ARCH_NAME \
         -mmacosx-version-min=11.0 \
-        -isystem $INSTALL_DIR/llvm/libcxx/include \
-        -nostdinc++ \
         --sysroot=$SYSROOT \
       " \
       toolset=clang \
@@ -122,8 +123,8 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
     # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
     # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
-    CC="$INSTALL_DIR/llvm/clang/bin/clang -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
-      CXX="$INSTALL_DIR/llvm/clang/bin/clang++ -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT -nostdinc++" \
+    CC="$CLANG -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
+      CXX="$CLANGPP -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
       $SOURCE_DIR/SDL2/source/configure --host=$ARCH_NAME --disable-shared --prefix=$INSTALL_DIR/SDL2
     make -j$JOBS
     make install

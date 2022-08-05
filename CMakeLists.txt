@@ -68,10 +68,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos_arm64")
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
   set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
-  set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
 
 elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv6")
 
@@ -595,7 +591,7 @@ elseif (TARGET_OS STREQUAL "linux")
       WEBRTC_POSIX
   )
   # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
-  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE _LIBCPP_DISABLE_AVAILABILITY)
+  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_NAMESPACE=Cr _LIBCPP_ABI_VERSION=2 _LIBCPP_DISABLE_AVAILABILITY)
 
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo
