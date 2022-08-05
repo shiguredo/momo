@@ -229,8 +229,8 @@ class RawCryptString : public rtc::CryptStringImpl {
     }
   }
   std::string UrlEncode() const override { throw std::exception(); }
-  CryptStringImpl* Copy() const { return new RawCryptString(str_); }
-  void CopyRawTo(std::vector<unsigned char>* dest) const {
+  CryptStringImpl* Copy() const override { return new RawCryptString(str_); }
+  void CopyRawTo(std::vector<unsigned char>* dest) const override {
     dest->assign(str_.begin(), str_.end());
   }
 
