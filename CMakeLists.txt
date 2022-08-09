@@ -68,29 +68,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "macos_arm64")
   set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
   set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
   set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
-  set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "macos_x86_64")
-
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos_x86_64/_install)
-
-  set(TARGET_OS "macos")
-  set(TARGET_ARCH "x86_64")
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
-  set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
-  set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
-  set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
-  set(CLANG_ROOT ${_INSTALL_DIR}/llvm/clang)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR ${_INSTALL_DIR}/llvm/libcxx/include)
 
 elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv6")
 
@@ -287,12 +264,8 @@ if (TARGET_OS STREQUAL "linux")
 endif()
 
 if (TARGET_OS STREQUAL "macos")
-  if (TARGET_ARCH STREQUAL "x86_64")
-    set(ARCH_NAME x86_64-apple-darwin)
-  else()
-    set(ARCH_NAME aarch64-apple-darwin)
-    set(CMAKE_SYSTEM_PROCESSOR arm64)
-  endif()
+  set(ARCH_NAME aarch64-apple-darwin)
+  set(CMAKE_SYSTEM_PROCESSOR arm64)
 
   set(CMAKE_C_COMPILER_TARGET ${ARCH_NAME})
   set(CMAKE_CXX_COMPILER_TARGET ${ARCH_NAME})
@@ -489,6 +462,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       msdmo.lib
       Secur32.lib
       wmcodecdspuuid.lib
+      Dwmapi.lib
   )
 
   target_compile_definitions(momo
@@ -617,7 +591,7 @@ elseif (TARGET_OS STREQUAL "linux")
       WEBRTC_POSIX
   )
   # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
-  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_UNSTABLE _LIBCPP_DISABLE_AVAILABILITY)
+  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_NAMESPACE=Cr _LIBCPP_ABI_VERSION=2 _LIBCPP_DISABLE_AVAILABILITY)
 
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo

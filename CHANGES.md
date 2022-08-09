@@ -11,6 +11,30 @@
 
 ## develop
 
+## 2022.3.0
+
+- [CHANGE] `--multistream` のデフォルトを true にする
+    - @melpon
+- [CHANGE] `--role upstream` と `--role downstream` を削除
+    - @melpon
+- [CHANGE] macos_x86_64 のビルドを削除
+    - @melpon
+- [CHANGE] 音声系オプションの --disable-residual-echo-detector を削除する
+    - @melpon
+- [UPDATE] `libwebrtc` を `M104.5112@{#8}` に上げる
+    - @voluntas, @melpon
+- [ADD] TURN-TLS 向けの HTTP Proxy サーバの設定を追加する
+    - `--proxy-url`
+    - `--proxy-username`
+    - `--proxy-password`
+    - @melpon
+- [ADD] Sora シグナリング用の WebSocket の HTTP Proxy 対応を追加する
+    - @melpon
+- [ADD] HTTP Proxy サーバの SNI 対応を追加する
+    - @melpon
+- [FIX] Sora の設定によっては `--multistream` オプションに関わらず常に multistream: true になっていたのを修正
+    - @melpon
+
 ## 2022.2.0
 
 - [UPDATE] CLI11 を 2.2.0 に上げる

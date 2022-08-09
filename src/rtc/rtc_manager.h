@@ -5,6 +5,8 @@
 
 // WebRTC
 #include <api/peer_connection_interface.h>
+#include <pc/connection_context.h>
+#include <pc/peer_connection_factory.h>
 #include <pc/video_track_source.h>
 
 #include "cuda/cuda_context.h"
@@ -14,6 +16,35 @@
 #include "scalable_track_source.h"
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
+
+// webrtc::PeerConnectionFactory から ConnectionContext を取り出す方法が無いので、
+// 継承して無理やり使えるようにする
+class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
+ public:
+  CustomPeerConnectionFactory(
+      webrtc::PeerConnectionFactoryDependencies dependencies)
+      : CustomPeerConnectionFactory(
+            webrtc::ConnectionContext::Create(&dependencies),
+            &dependencies) {}
+  CustomPeerConnectionFactory(
+      rtc::scoped_refptr<webrtc::ConnectionContext> context,
+      webrtc::PeerConnectionFactoryDependencies* dependencies)
+      : conn_context_(context),
+        webrtc::PeerConnectionFactory(context, dependencies) {}
+
+  static rtc::scoped_refptr<CustomPeerConnectionFactory> Create(
+      webrtc::PeerConnectionFactoryDependencies dependencies) {
+    return rtc::make_ref_counted<CustomPeerConnectionFactory>(
+        std::move(dependencies));
+  }
+
+  rtc::scoped_refptr<webrtc::ConnectionContext> GetContext() const {
+    return conn_context_;
+  }
+
+ private:
+  rtc::scoped_refptr<webrtc::ConnectionContext> conn_context_;
+};
 
 struct RTCManagerConfig {
   bool insecure = false;
@@ -30,7 +61,6 @@ struct RTCManagerConfig {
   bool disable_auto_gain_control = false;
   bool disable_noise_suppression = false;
   bool disable_highpass_filter = false;
-  bool disable_residual_echo_detector = false;
 
   VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Default;
@@ -55,6 +85,10 @@ struct RTCManagerConfig {
 #if USE_NVCODEC_ENCODER
   std::shared_ptr<CudaContext> cuda_context;
 #endif
+
+  std::string proxy_url;
+  std::string proxy_username;
+  std::string proxy_password;
 };
 
 class RTCManager {
@@ -72,6 +106,7 @@ class RTCManager {
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  rtc::scoped_refptr<webrtc::ConnectionContext> context_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;

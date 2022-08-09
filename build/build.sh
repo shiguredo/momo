@@ -9,7 +9,6 @@ PROGRAM="$0"
 _PACKAGES=" \
   windows \
   macos_arm64 \
-  macos_x86_64 \
   raspberry-pi-os_armv6 \
   raspberry-pi-os_armv7 \
   raspberry-pi-os_armv8 \
@@ -94,7 +93,7 @@ case "$PACKAGE" in
     echo "Windows では build.bat を利用してください。"
     exit 1
     ;;
-  macos_* )
+  macos_arm64 )
     if [ $FLAG_CLEAN -eq 1 ]; then
       rm -rf ../_build/$PACKAGE
       rm -rf $PACKAGE/_source

@@ -9,6 +9,7 @@
 
 // WebRTC
 #include <api/rtp_parameters.h>
+#include <rtc_base/proxy_info.h>
 
 #include "video_codec_info.h"
 
@@ -54,9 +55,9 @@ struct MomoArgs {
   int sora_audio_bit_rate = 0;
   bool sora_auto_connect = false;
   boost::json::value sora_metadata;
-  // upstream or downstream
-  std::string sora_role = "upstream";
-  bool sora_multistream = false;
+  // sendonly, recvonly, sendrecv
+  std::string sora_role = "sendonly";
+  bool sora_multistream = true;
   bool sora_spotlight = false;
   int sora_spotlight_number = 0;
   int sora_port = -1;
@@ -78,7 +79,6 @@ struct MomoArgs {
   bool disable_auto_gain_control = false;
   bool disable_noise_suppression = false;
   bool disable_highpass_filter = false;
-  bool disable_residual_echo_detector = false;
 
   VideoCodecInfo::Type vp8_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type vp8_decoder = VideoCodecInfo::Type::Default;
@@ -88,6 +88,10 @@ struct MomoArgs {
   VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
+
+  std::string proxy_url;
+  std::string proxy_username;
+  std::string proxy_password;
 
   struct Size {
     int width;

@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: _cache\boost
-          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
+          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v6
       # CUDA のインストールバイナリのダウンロードは 3GB ぐらいあって、
       # ビルドの度に取得するのはつらいのでキャッシュする
       # （インストールする nvcc は解凍後で 100MB 程度なのでキャッシュ可能）
@@ -47,7 +47,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: build\windows_x86_64\_install\cuda\nvcc
-          key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v1
+          key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v2
       - run: "& .\\build.ps1 -package"
         working-directory: build
         timeout-minutes: 120
@@ -80,7 +80,6 @@ jobs:
       matrix:
         arch:
           - arm64
-          - x86_64
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
@@ -95,7 +94,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: _cache/boost
-          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
+          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v3
       - run: ./build.sh --package macos_${{ matrix.arch }}
         working-directory: build
         timeout-minutes: 120
@@ -144,7 +143,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: _cache/boost
-          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
+          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v3
       - run: ./build.sh --no-tty --no-mount --package ${{ matrix.name }}
         working-directory: build
         timeout-minutes: 120
@@ -204,7 +203,6 @@ jobs:
         name:
           - windows_x86_64
           - macos_arm64
-          - macos_x86_64
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8

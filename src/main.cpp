@@ -188,8 +188,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.disable_auto_gain_control = args.disable_auto_gain_control;
   rtcm_config.disable_noise_suppression = args.disable_noise_suppression;
   rtcm_config.disable_highpass_filter = args.disable_highpass_filter;
-  rtcm_config.disable_residual_echo_detector =
-      args.disable_residual_echo_detector;
 
   rtcm_config.vp8_encoder = args.vp8_encoder;
   rtcm_config.vp8_decoder = args.vp8_decoder;
@@ -205,6 +203,10 @@ int main(int argc, char* argv[]) {
 #if USE_NVCODEC_ENCODER
   rtcm_config.cuda_context = cuda_context;
 #endif
+
+  rtcm_config.proxy_url = args.proxy_url;
+  rtcm_config.proxy_username = args.proxy_username;
+  rtcm_config.proxy_password = args.proxy_password;
 
 #if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
@@ -273,6 +275,9 @@ int main(int argc, char* argv[]) {
       config.disconnect_wait_timeout = args.sora_disconnect_wait_timeout;
       config.client_cert = args.client_cert;
       config.client_key = args.client_key;
+      config.proxy_url = args.proxy_url;
+      config.proxy_username = args.proxy_username;
+      config.proxy_password = args.proxy_password;
 
       sora_client =
           SoraClient::Create(ioc, rtc_manager.get(), std::move(config));

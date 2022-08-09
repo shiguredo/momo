@@ -47,6 +47,10 @@ struct SoraClientConfig {
   int disconnect_wait_timeout = 5;
   std::string client_cert;
   std::string client_key;
+
+  std::string proxy_url;
+  std::string proxy_username;
+  std::string proxy_password;
 };
 
 class SoraClient : public std::enable_shared_from_this<SoraClient>,

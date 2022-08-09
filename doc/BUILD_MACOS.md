@@ -6,7 +6,7 @@
 $ git clone git@github.com:shiguredo/momo.git
 ```
 
-## macOS 11
+## macOS 12
 
 ### 事前確認
 
@@ -48,16 +48,16 @@ Homebrew が入っている場合は `brew install cmake` するか、あるい�
 
 ### ビルド方法
 
-build ディレクトリ以下で ./build.sh macos と打つことで Momo の macOS 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh macos_arm64 と打つことで Momo の macOS 向けバイナリが生成されます。
 
 ```shell
-$ ./build.sh macos
+$ ./build.sh macos_arm64
 ```
 
 ## 中間ファイルのクリーンアップ
 
-ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して ./build.sh --clean macos を実行することでクリーンアップできます。
+ビルド中にできた中間ファイルを削除するには、次のようにターゲットを指定して ./build.sh --clean macos_arm64 を実行することでクリーンアップできます。
 
 ```shell
-$ ./build.sh --clean macos
+$ ./build.sh --clean macos_arm64
 ```

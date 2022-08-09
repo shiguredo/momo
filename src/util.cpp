@@ -189,9 +189,6 @@ void Util::ParseArgs(int argc,
                "Disable noise suppression for audio");
   app.add_flag("--disable-highpass-filter", args.disable_highpass_filter,
                "Disable highpass filter for audio");
-  app.add_flag("--disable-residual-echo-detector",
-               args.disable_residual_echo_detector,
-               "Disable residual echo detector for audio");
 
   // ビデオエンコーダ
   app.add_flag("--video-codec-engines", video_codecs,
@@ -256,6 +253,11 @@ void Util::ParseArgs(int argc,
                  "Private key file path for client certification (PEM format)")
       ->check(CLI::ExistingFile);
 
+  // proxy サーバーの設定
+  app.add_option("--proxy-url", args.proxy_url, "Proxy URL");
+  app.add_option("--proxy-username", args.proxy_username, "Proxy username");
+  app.add_option("--proxy-password", args.proxy_password, "Proxy password");
+
   auto test_app = app.add_subcommand(
       "test", "Mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
@@ -316,11 +318,10 @@ void Util::ParseArgs(int argc,
       ->check(CLI::Range(0, 510));
   sora_app
       ->add_option("--multistream", args.sora_multistream,
-                   "Use multistream (default: false)")
+                   "Use multistream (default: true)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
-  sora_app->add_option("--role", args.sora_role, "Role (default: upstream)")
-      ->check(CLI::IsMember(
-          {"upstream", "downstream", "sendonly", "recvonly", "sendrecv"}));
+  sora_app->add_option("--role", args.sora_role, "Role (default: sendonly)")
+      ->check(CLI::IsMember({"sendonly", "recvonly", "sendrecv"}));
   sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app

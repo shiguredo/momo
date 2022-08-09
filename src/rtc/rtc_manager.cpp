@@ -15,6 +15,8 @@
 #include <modules/audio_processing/include/audio_processing.h>
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
+#include <p2p/client/basic_port_allocator.h>
+#include <pc/peer_connection_factory_proxy.h>
 #include <pc/video_track_source_proxy.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
@@ -24,6 +26,7 @@
 #include "peer_connection_observer.h"
 #include "rtc_ssl_verifier.h"
 #include "scalable_track_source.h"
+#include "url_parts.h"
 #include "util.h"
 
 RTCManager::RTCManager(
@@ -129,8 +132,25 @@ RTCManager::RTCManager(
   dependencies.media_engine =
       cricket::CreateMediaEngine(std::move(media_dependencies));
 
-  factory_ =
-      webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
+  //factory_ =
+  //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
+  using result_type =
+      std::pair<rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>,
+                rtc::scoped_refptr<webrtc::ConnectionContext>>;
+  auto p = dependencies.signaling_thread->Invoke<result_type>(
+      RTC_FROM_HERE, [&dependencies]() {
+        auto factory =
+            CustomPeerConnectionFactory::Create(std::move(dependencies));
+        if (factory == nullptr) {
+          return result_type(nullptr, nullptr);
+        }
+        auto context = factory->GetContext();
+        auto proxy = webrtc::PeerConnectionFactoryProxy::Create(
+            factory->signaling_thread(), factory->worker_thread(), factory);
+        return result_type(proxy, context);
+      });
+  factory_ = p.first;
+  context_ = p.second;
   if (!factory_.get()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << ": Failed to initialize PeerConnectionFactory";
@@ -153,11 +173,9 @@ RTCManager::RTCManager(
       ao.noise_suppression = false;
     if (config_.disable_highpass_filter)
       ao.highpass_filter = false;
-    if (config_.disable_residual_echo_detector)
-      ao.residual_echo_detector = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
-    audio_track_ = factory_->CreateAudioTrack(Util::GenerateRandomChars(),
-                                              factory_->CreateAudioSource(ao));
+    audio_track_ = factory_->CreateAudioTrack(
+        Util::GenerateRandomChars(), factory_->CreateAudioSource(ao).get());
     if (!audio_track_) {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
     }
@@ -167,15 +185,15 @@ RTCManager::RTCManager(
     rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
         webrtc::VideoTrackSourceProxy::Create(
             signaling_thread_.get(), worker_thread_.get(), video_track_source);
-    video_track_ =
-        factory_->CreateVideoTrack(Util::GenerateRandomChars(), video_source);
+    video_track_ = factory_->CreateVideoTrack(Util::GenerateRandomChars(),
+                                              video_source.get());
     if (video_track_) {
       if (config_.fixed_resolution) {
         video_track_->set_content_hint(
             webrtc::VideoTrackInterface::ContentHint::kText);
       }
       if (receiver_ != nullptr && config_.show_me) {
-        receiver_->AddTrack(video_track_);
+        receiver_->AddTrack(video_track_.get());
       }
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
@@ -198,6 +216,28 @@ void RTCManager::AddDataManager(std::shared_ptr<RTCDataManager> data_manager) {
   data_manager_dispatcher_.Add(data_manager);
 }
 
+class RawCryptString : public rtc::CryptStringImpl {
+ public:
+  RawCryptString(const std::string& str) : str_(str) {}
+  size_t GetLength() const override { return str_.size(); }
+  void CopyTo(char* dest, bool nullterminate) const override {
+    for (int i = 0; i < str_.size(); i++) {
+      *dest++ = str_[i];
+    }
+    if (nullterminate) {
+      *dest = '\0';
+    }
+  }
+  std::string UrlEncode() const override { throw std::exception(); }
+  CryptStringImpl* Copy() const override { return new RawCryptString(str_); }
+  void CopyRawTo(std::vector<unsigned char>* dest) const override {
+    dest->assign(str_.begin(), str_.end());
+  }
+
+ private:
+  std::string str_;
+};
+
 std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
@@ -212,6 +252,35 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
   dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
       new RTCSSLVerifier(config_.insecure));
+
+  dependencies.allocator.reset(new cricket::BasicPortAllocator(
+      context_->default_network_manager(), context_->default_socket_factory(),
+      rtc_config.turn_customizer));
+  dependencies.allocator->SetPortRange(
+      rtc_config.port_allocator_config.min_port,
+      rtc_config.port_allocator_config.max_port);
+  dependencies.allocator->set_flags(rtc_config.port_allocator_config.flags);
+  if (!config_.proxy_url.empty()) {
+    RTC_LOG(LS_INFO) << "Set Proxy: type="
+                     << rtc::ProxyToString(rtc::PROXY_HTTPS)
+                     << " url=" << config_.proxy_url
+                     << " username=" << config_.proxy_username;
+    rtc::ProxyInfo pi;
+    pi.type = rtc::PROXY_HTTPS;
+    URLParts parts;
+    if (!URLParts::Parse(config_.proxy_url, parts)) {
+      RTC_LOG(LS_ERROR) << "Failed to parse: proxy_url=" << config_.proxy_url;
+      return nullptr;
+    }
+    pi.address = rtc::SocketAddress(parts.host, std::stoi(parts.GetPort()));
+    if (!config_.proxy_username.empty()) {
+      pi.username = config_.proxy_username;
+    }
+    if (!config_.proxy_password.empty()) {
+      pi.password = rtc::CryptString(RawCryptString(config_.proxy_password));
+    }
+    dependencies.allocator->set_proxy("WebRTC Native Client Momo", pi);
+  }
 
   webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>
       connection = factory_->CreatePeerConnectionOrError(

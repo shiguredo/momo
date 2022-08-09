@@ -27,7 +27,7 @@ https://momo.shiguredo.jp/
 - [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
 - Apple macOS に搭載されている H.264 ハードウェアアクセラレーター機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することが可能です
 - NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することが可能です
-- [Intel Quick Sync Video](https://www.intel.co.jp/content/www/jp/ja/architecture-and-technology/quick-sync-video/quick-sync-video-general.html) を [Intel Media SDK](https://www.intel.com/content/www/us/en/developer/tools/media-sdk/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にて VP8 / VP9 / H.264 ハードウェアアクセラレーター機能を利用することが可能です
+- [Intel Quick Sync Video](https://www.intel.co.jp/content/www/jp/ja/architecture-and-technology/quick-sync-video/quick-sync-video-general.html) を [Intel Media SDK](https://www.intel.com/content/www/us/en/developer/tools/media-sdk/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にて VP9 / H.264 ハードウェアアクセラレーター機能を利用することが可能です
 
 ### 4K 30fps での配信
 
@@ -81,7 +81,6 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-
 - Raspberry Pi OS (64bit) ARMv8
     - Raspberry Pi 4
     - Raspberry Pi 3
@@ -90,11 +89,10 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
+    - Raspberry Pi Zero 2
 - Raspberry Pi OS (32bit) ARMv6
     - Raspberry Pi Zero
     - Raspberry Pi 1
-- Ubuntu 18.04 x86_64
-    - 2023 年 4 月末にて終了
 - Ubuntu 20.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
     - 2023 年 4 月末にて終了
@@ -102,12 +100,11 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - Ubuntu 20.04 ARMv8 Jetson
-    - JetPack 5 がリリースされ次第対応予定
+    - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+    - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-- macOS 11 x86_64 以降
-    - 2021 年末にて終了
-- macOS 11 arm64 以降
+- macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
 ## 使ってみる
@@ -169,8 +166,6 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - Jetson AGX Orin 対応
-    - AV1 ハードウェアエンコーダー対応
-    - AV1 ハードウェアデコーダー対応
     - H.265 ハードウェアエンコーダー対応
     - H.265 ハードウェアデコーダー対応
 - Jetson AGX Xavier 対応

@@ -68,10 +68,10 @@ FAQ に関しては [FAQ.md](FAQ.md) をお読みください。
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 2020.8 (2505b05e)
+WebRTC Native Client Momo 2022.2.0 (8b57be45)
 
-WebRTC: Shiguredo-Build M85.4183@{#1} (85.4183.1.1 d01b162f)
-Environment: [x86_64] macOS Version 10.15.6 (Build 19G73)
+WebRTC: Shiguredo-Build M102.5005@{#7} (102.5005.7.4 6ff73180)
+Environment: [arm64] macOS Version 12.3 (Build 21E230)
 
 USE_MMAL_ENCODER=0
 USE_JETSON_ENCODER=0
@@ -118,8 +118,6 @@ Options:
   --disable-noise-suppression Disable noise suppression for audio
   --disable-highpass-filter   Disable highpass filter for audio
   --disable-typing-detection  Disable typing detection for audio
-  --disable-residual-echo-detector
-                              Disable residual echo detector for audio
   --video-codec-engines       List available video encoders/decoders
   --vp8-encoder :value in {default->0,software->6} OR {0,6}
                               VP8 Encoder
@@ -139,6 +137,14 @@ Options:
                               H.264 Decoder
   --serial TEXT:serial setting format
                               Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]
+  --metrics-port INT:INT in [-1 - 65535]
+                              Metrics server port number (default: -1)
+  --metrics-allow-external-ip Allow access to Metrics server from external IP
+  --client-cert TEXT:FILE     Cert file path for client certification (PEM format)
+  --client-key TEXT:FILE      Private key file path for client certification (PEM format)
+  --proxy-url TEXT            Proxy URL
+  --proxy-username TEXT       Proxy username
+  --proxy-password TEXT       Proxy password
 
 Subcommands:
   test                        Mode for momo development with simple HTTP server
@@ -236,9 +242,9 @@ Options:
   --audio-bit-rate INT:INT in [0 - 510]
                               Audio bit rate
   --multistream BOOLEAN:value in {false->0,true->1} OR {0,1}
-                              Use multistream (default: false)
-  --role TEXT:{downstream,recvonly,sendonly,sendrecv,upstream}
-                              Role (default: upstream)
+                              Use multistream (default: true)
+  --role TEXT:{sendonly,recvonly,sendrecv}
+                              Role (default: sendonly)
   --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use spotlight
   --spotlight-number INT:INT in [0 - 8]
