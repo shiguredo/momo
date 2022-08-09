@@ -6,7 +6,7 @@
 $ git clone git@github.com:shiguredo/momo.git
 ```
 
-## macOS 11
+## macOS 12
 
 ### 事前確認
 

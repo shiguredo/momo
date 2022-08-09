@@ -104,7 +104,7 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-- macOS 11 arm64 以降
+- macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
 ## 使ってみる
