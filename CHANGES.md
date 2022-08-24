@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Boost 1.80.0 に上げる
+    - @voluntas
+
 ## 2022.3.0
 
 - [CHANGE] `--multistream` のデフォルトを true にする
