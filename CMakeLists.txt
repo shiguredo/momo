@@ -352,6 +352,8 @@ target_compile_definitions(momo
     USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
     USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
+    # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
+    BOOST_NO_CXX98_FUNCTION_BASE
 )
 
 if (USE_SDL2)
