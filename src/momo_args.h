@@ -57,7 +57,6 @@ struct MomoArgs {
   boost::json::value sora_metadata;
   // sendonly, recvonly, sendrecv
   std::string sora_role = "sendonly";
-  bool sora_multistream = true;
   bool sora_spotlight = false;
   int sora_spotlight_number = 0;
   int sora_port = -1;

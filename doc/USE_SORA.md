@@ -32,7 +32,6 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
         --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
-        --multistream true \
         --role sendonly --metadata '{"access_token": "xyz"}'
 ```
 
@@ -52,7 +51,6 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
         --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
-        --multistream true \
         --role sendrecv --metadata '{"access_token": "xyz"}'
 ```
 
@@ -70,7 +68,6 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
         --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
-        --multistream true \
         --simulcast true \
         --role sendonly --metadata '{"access_token": "xyz"}'
 ```
