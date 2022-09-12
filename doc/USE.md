@@ -241,8 +241,6 @@ Options:
                               Video bit rate
   --audio-bit-rate INT:INT in [0 - 510]
                               Audio bit rate
-  --multistream BOOLEAN:value in {false->0,true->1} OR {0,1}
-                              Use multistream (default: true)
   --role TEXT:{sendonly,recvonly,sendrecv}
                               Role (default: sendonly)
   --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}

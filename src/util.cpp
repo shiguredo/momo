@@ -316,10 +316,6 @@ void Util::ParseArgs(int argc,
       ->add_option("--audio-bit-rate", args.sora_audio_bit_rate,
                    "Audio bit rate")
       ->check(CLI::Range(0, 510));
-  sora_app
-      ->add_option("--multistream", args.sora_multistream,
-                   "Use multistream (default: true)")
-      ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   sora_app->add_option("--role", args.sora_role, "Role (default: sendonly)")
       ->check(CLI::IsMember({"sendonly", "recvonly", "sendrecv"}));
   sora_app->add_option("--spotlight", args.sora_spotlight, "Use spotlight")

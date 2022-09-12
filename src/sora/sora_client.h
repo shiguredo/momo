@@ -36,7 +36,6 @@ struct SoraClientConfig {
   int audio_bit_rate = 0;
   boost::json::value metadata;
   std::string role = "sendonly";
-  bool multistream = false;
   bool spotlight = false;
   int spotlight_number = 0;
   int port = -1;

@@ -114,7 +114,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     --channel-id shiguredo@sora-labo \
     --video true --audio true \
     --video-codec-type VP8 --video-bit-rate 15000 \
-    --auto --role sendonly --multistream true \
+    --auto --role sendonly \
     --metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'
 ```
 
@@ -135,7 +135,6 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
     - `--auto` は Sora との自動接続を有効に設定しています
     - `--role sendonly` は送信時の役割を送信のみで設定しています
-    - `--multistream true` はマルチストリームを有効に設定しています
     - `--metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'` は Sora Labo のシグナリングキーをメタデータに設定しています
 
 ### 実行結果

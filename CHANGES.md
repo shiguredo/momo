@@ -13,6 +13,8 @@
 
 - [CHANGE] `ubuntu-18.04_x86_64` のビルドを削除
     - @miosakuma
+- [CHANGE] `--multistream` オプションを削除して値を true 固定にする
+    - @miosakuma
 - [UPDATE] `libwebrtc` を `M105.5195@{#0}` に上げる
     - @miosakuma
 
