@@ -174,9 +174,6 @@ limitations under the License.
 - Jetson Xavier NX 対応
     - H.265 ハードウェアエンコーダー対応
     - H.265 ハードウェアデコーダー対応
-- Jetson Nano
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
 - Raspberry Pi 4
     - H.265 ハードウェアデコーダー対応
 - AV1 対応
@@ -190,7 +187,7 @@ limitations under the License.
     - H.265 ハードウェアデコーダー対応
         - Ubuntu 20.04
         - Windows 10
-- Intel Media SDK 対応
+- oneVPL 対応
     - H.265 ハードウェアエンコーダー対応
 - 録画対応
     - MP4 形式での出力
