@@ -107,6 +107,13 @@ https://github.com/shiguredo/momo/releases
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
+### 非対応
+
+
+- macOS x86_64
+- Ubuntu 20.04 ARMv8 Jetson
+    - NVIDIA Jetson Orin Nano
+
 ## 使ってみる
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
