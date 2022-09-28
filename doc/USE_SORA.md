@@ -14,12 +14,13 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 
 ### 片方向配信をしてみる
 
-- チャネル ID に `<GitHub ユーザ名>@<好きな文字列(最大255 バイトまで)>` を指定してください
-    - GitHub ユーザ名が shiguredo とした場合は `shiguredo@sora-labo` のように指定してください
-    - ここではチャネル ID を `shiguredo@sora-labo` とします
-- sora モードのオプションである --metadata を利用し取得したシグナリングキーを `signaling_key` を指定します
+- チャネル名に `<好きな文字列>@<github-username>#<github-id>` を指定してください
+    - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザ名が shiguredo とした場合は `sora@shiguredo#0` のように指定してください
+    - ここではチャネル ID を `sora@shiguredo#0` とします
+- sora モードのオプションである --metadata を利用し生成したアクセストークンを `access_token` で指定します
+    - SoraLabo Home のアクセストークン生成にて先程チャネル名で指定した `<好きな文字列>` を入力してアクセストークンを生成してください
     - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
-    - ここではシグナリングキーを `xyz` とします。
+    - ここではアクセストークンを `xyz` とします。
 
 ```shell
 ./momo --no-audio-device \
@@ -28,11 +29,10 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-        --channel-id shiguredo@sora-labo \
+        --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
-        --multistream true \
-        --role sendonly --metadata '{"signaling_key": "xyz"}'
+        --role sendonly --metadata '{"access_token": "xyz"}'
 ```
 
 ブラウザでの送受信は Sora Labo にあるサンプルのマルチストリーム受信を利用して確認してください。
@@ -48,11 +48,10 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-        --channel-id shiguredo@open-momo \
+        --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
-        --multistream true \
-        --role sendrecv --metadata '{"signaling_key": "xyz"}'
+        --role sendrecv --metadata '{"access_token": "xyz"}'
 ```
 
 ブラウザでの送受信は Sora Labo にあるサンプルのマルチストリーム送受信を利用して確認してください。
@@ -66,12 +65,11 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-        --channel-id shiguredo@sora-labo \
+        --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
-        --multistream true \
         --simulcast true \
-        --role sendonly --metadata '{"signaling_key": "xyz"}'
+        --role sendonly --metadata '{"access_token": "xyz"}'
 ```
 
 ブラウザでの送受信は Sora Labo にあるサンプルのマルチストリームサイマルキャスト受信を利用して確認してください。

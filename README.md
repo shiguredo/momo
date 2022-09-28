@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m99.4844-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4844)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m105.5195-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5195)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -107,6 +107,13 @@ https://github.com/shiguredo/momo/releases
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
+### 非対応
+
+
+- macOS x86_64
+- Ubuntu 20.04 ARMv8 Jetson
+    - NVIDIA Jetson Orin Nano
+
 ## 使ってみる
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
@@ -174,9 +181,6 @@ limitations under the License.
 - Jetson Xavier NX 対応
     - H.265 ハードウェアエンコーダー対応
     - H.265 ハードウェアデコーダー対応
-- Jetson Nano
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
 - Raspberry Pi 4
     - H.265 ハードウェアデコーダー対応
 - AV1 対応
@@ -190,7 +194,7 @@ limitations under the License.
     - H.265 ハードウェアデコーダー対応
         - Ubuntu 20.04
         - Windows 10
-- Intel Media SDK 対応
+- oneVPL 対応
     - H.265 ハードウェアエンコーダー対応
 - 録画対応
     - MP4 形式での出力
