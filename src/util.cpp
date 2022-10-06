@@ -10,13 +10,33 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/json.hpp>
-#include <boost/optional/optional_io.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
 // WebRTC
 #include <rtc_base/helpers.h>
 
 #include "momo_version.h"
+
+static void add_optional_bool(CLI::App* app,
+                              const std::string& option_name,
+                              boost::optional<bool>& v,
+                              const std::string& help_text) {
+  auto f = [&v](const std::string& input) {
+    if (input == "true") {
+      v = true;
+    } else if (input == "false") {
+      v = false;
+    } else if (input == "none") {
+      v = boost::none;
+    } else {
+      throw CLI::ConversionError(input, "optional<bool>");
+    }
+  };
+  app->add_option_function<std::string>(option_name, f, help_text)
+      ->type_name("TEXT")
+      ->check(CLI::IsMember({"true", "false", "none"}));
+}
 
 void Util::ParseArgs(int argc,
                      char* argv[],
@@ -110,9 +130,6 @@ void Util::ParseArgs(int argc,
 
   auto bool_map = std::vector<std::pair<std::string, bool>>(
       {{"false", false}, {"true", true}});
-  auto optional_bool_map =
-      std::vector<std::pair<std::string, boost::optional<bool>>>(
-          {{"false", false}, {"true", true}, {"none", boost::none}});
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
@@ -330,23 +347,18 @@ void Util::ParseArgs(int argc,
       ->add_option("--simulcast", args.sora_simulcast,
                    "Use simulcast (default: false)")
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
-  sora_app
-      ->add_option("--data-channel-signaling", args.sora_data_channel_signaling,
-                   "Use DataChannel for Sora signaling (default: none)")
-      ->type_name("TEXT")
-      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
+  add_optional_bool(sora_app, "--data-channel-signaling",
+                    args.sora_data_channel_signaling,
+                    "Use DataChannel for Sora signaling (default: none)");
   sora_app
       ->add_option("--data-channel-signaling-timeout",
                    args.sora_data_channel_signaling_timeout,
                    "Timeout for Data Channel in seconds (default: 180)")
       ->check(CLI::PositiveNumber);
-  sora_app
-      ->add_option("--ignore-disconnect-websocket",
-                   args.sora_ignore_disconnect_websocket,
-                   "Ignore WebSocket disconnection if using Data Channel "
-                   "(default: none)")
-      ->type_name("TEXT")
-      ->transform(CLI::CheckedTransformer(optional_bool_map, CLI::ignore_case));
+  add_optional_bool(sora_app, "--ignore-disconnect-websocket",
+                    args.sora_ignore_disconnect_websocket,
+                    "Ignore WebSocket disconnection if using Data Channel "
+                    "(default: none)");
   sora_app
       ->add_option(
           "--disconnect-wait-timeout", args.sora_disconnect_wait_timeout,
