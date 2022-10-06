@@ -210,7 +210,7 @@ Options:
   --help-all                  Print help message for all modes and exit
   --signaling-url TEXT REQUIRED
                               Signaling URL
-  --channel-id TEXT REQUIRED  Channel ID
+  --room-id TEXT REQUIRED     Room ID
   --client-id TEXT            Client ID
   --signaling-key TEXT        Signaling key
 ```

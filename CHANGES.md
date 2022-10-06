@@ -19,6 +19,8 @@
     - @miosakuma
 - [FIX] `--data-channel-signaling`, `--ignore-disconnect-websocket` に 'none' を指定するとエラーになる問題を修正
     - @miosakuma
+- [FIX] ayame モードのオプションが `--channel-id` を `--room-id` に修正
+    - @miosakuma
 
 ## 2022.3.0
 
