@@ -19,13 +19,13 @@ Ayame Labo はサインアップせずにシグナリングサーバを利用可
 ここではルーム ID は `open-momo` としておりますが、必ず推測されにくい値に変更してください。
 
 ```shell
-./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --channel-id open-momo
+./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
 ```
 
 Windows の場合:
 
 ```
-.\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --channel-id open-momo
+.\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
 ```
 
 
@@ -44,13 +44,13 @@ Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ
     - ここではシグナリングキーを `xyz` としています
 
 ```shell
-./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --channel-id shiguredo@open-momo --signaling-key xyz
+./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id shiguredo@open-momo --signaling-key xyz
 ```
 
 Windows の場合:
 
 ```
-.\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --channel-id shiguredo@open-momo --signaling-key xyz
+.\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id shiguredo@open-momo --signaling-key xyz
 ```
 
 Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。

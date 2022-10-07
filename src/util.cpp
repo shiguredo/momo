@@ -292,8 +292,7 @@ void Util::ParseArgs(int argc,
   ayame_app
       ->add_option("--signaling-url", args.ayame_signaling_url, "Signaling URL")
       ->required();
-  ayame_app->add_option("--channel-id", args.ayame_room_id, "Channel ID")
-      ->required();
+  ayame_app->add_option("--room-id", args.ayame_room_id, "Room ID")->required();
   ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", args.ayame_signaling_key,
                         "Signaling key");
