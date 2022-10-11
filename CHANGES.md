@@ -17,6 +17,8 @@
     - @miosakuma
 - [UPDATE] Boost を 1.80.0 に上げる
     - @melpon
+- [UPDATE] SDL を 2.24.1 に上げる
+    - @melpon
 - [UPDATE] libwebrtc を `M105.5195@{#0}` に上げる
     - @miosakuma
 - [FIX] `--data-channel-signaling`, `--ignore-disconnect-websocket` に 'none' を指定するとエラーになる問題を修正
