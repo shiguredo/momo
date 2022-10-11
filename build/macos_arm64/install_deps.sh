@@ -94,6 +94,7 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
       link=static \
       variant=release \
       install \
+      -d+0 \
       -j$JOBS \
       --build-dir=$BUILD_DIR/boost \
       --prefix=$INSTALL_DIR/boost \

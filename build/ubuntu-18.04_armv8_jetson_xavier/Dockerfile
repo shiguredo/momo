@@ -72,6 +72,7 @@ RUN \
     link=static \
     variant=release \
     install \
+    -d+0 \
     -j`nproc` \
     --ignore-site-config \
     --prefix=/root/boost \

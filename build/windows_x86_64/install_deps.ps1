@@ -67,6 +67,7 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
     Remove-Item $BUILD_DIR\boost -Force -Recurse -ErrorAction Ignore
     .\bootstrap.bat
     .\b2.exe install `
+      -d+0 `
       -j8 `
       --prefix=$INSTALL_DIR\boost `
       --build-dir=$BUILD_DIR\boost `
