@@ -24,19 +24,15 @@ $ tree
 
 ### パッケージのインストール
 
-
-Ubuntu 20.04 で OneVPL を利用したい場合は以下を実行してください
-
-**※ OneVPL は Ubuntu 20.04 のみ利用可能です**
+Ubuntu 20.04 で Momo を利用する場合は以下を実行してください
 
 ```
 $ sudo apt-get update
 $ sudo apt-get upgrade
-$ sudo apt install libdrm-dev
-$ sudo apt install libva-dev
-$ sudo apt install pkg-config
+$ sudo apt-get install libdrm2
 ```
 
+Ubuntu 20.04 で Intel Media SDK を利用したい場合は [INTEL_MEDIA_SDK.md](INTEL_MEDIA_SDK.md) を御覧ください。
 
 ## 動かしてみる
 
@@ -45,4 +41,3 @@ $ sudo apt install pkg-config
 ## ビデオデバイスの指定
 
 ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
-
