@@ -63,3 +63,11 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 以下が購入の参考になると思います。
 
 [4K webcam について \- Qiita](https://qiita.com/tetsu_koba/items/8b4921f257a46a15d2a7)
+
+## Jetson ライフサイクル
+
+[Jetson Product Lifecycle \| NVIDIA Developer](https://developer.nvidia.com/embedded/lifecycle)
+
+## Jetson ロードマップ
+
+[Jetson Roadmap \| NVIDIA Developer](https://developer.nvidia.com/embedded/develop/roadmap)
