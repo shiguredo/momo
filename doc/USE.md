@@ -20,7 +20,7 @@
 
 ### Ubuntu で Momo を準備する
 
-[SETUP_LINUX.md](SETUP_LINUX.md) をお読みください。
+[SETUP_UBUNTU.md](SETUP_UBUNTU.md) をお読みください。
 
 ## 動かす
 
