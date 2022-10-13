@@ -7,18 +7,18 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 2022 年 10 月時点での状況。
 
 - Jetson シリーズは Jetson AGX Orin を除いて入手困難または異常に高価な販売となっている
-- Jetpack 5 系は Jetson nano には対応しない
+- Jetpack 5 系は Jetson Nano には対応しない
 - Jetson Orin nano はハードウェアエンコードに対応しない
 - Jetson Xavier NX は Jetson Nano と比較すると JPEG のハードウェア処理が劣る
-- Jetson nano で利用されている Ubuntu 18.04 は 2023 年 4 月でサポートが終了する
-    - ただし Jetson nano 自体サポートは 2025 年 1 月までサポート
+- Jetson Nano で利用されている Ubuntu 18.04 は 2023 年 4 月でサポートが終了する
+- Jetson Nano ハードウェアサポートは 2025 年 1 月までサポートされる
 
 以上を踏まえて Momo では今後以下のような方針をとることにしました。
 
 - 2023 年 4 月をもって Jetpack 4 系への対応を終了する
     - Jetpack 5 系のみの対応とする
     - それに伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了する
-- Jetson Orin nano への対応は行わない
+- Jetson Orin Nano への対応は行わない
 - Jetson Orin NX への対応は優先実装とする
     - Xavier と同じパターンだと Jetson Orin Nano より JPEG のハードウェア処理が劣る可能性があるため
 - Jetson Nano は support/jetpack-4.6 として 2023 年 4 月まで維持する
