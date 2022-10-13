@@ -18,6 +18,10 @@
 
 [SETUP_WINDOWS.md](SETUP_WINDOWS.md) をお読みください。
 
+### Ubuntu で Momo を準備する
+
+[SETUP_LINUX.md](SETUP_LINUX.md) をお読みください。
+
 ## 動かす
 
 ### テストモードを利用して Momo を動かしてみる

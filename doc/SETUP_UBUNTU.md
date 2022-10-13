@@ -1,6 +1,6 @@
-# Linux で Momo を使ってみる
+# Ubuntu 20.04 x86_64 で Momo を使ってみる
 
-## Linux 向けのバイナリは以下にて提供しています
+## Ubuntu 20.04 x86_64 向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
