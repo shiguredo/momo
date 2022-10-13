@@ -4,8 +4,7 @@
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- Ubuntu 18.04 を利用する場合は、 `momo-<VERSION>_ubuntu-18.04_armv8_jetson_xavier.tar.gz` を利用してください
-- Ubuntu 18.04 を利用する場合は、 `momo-<VERSION>_ubuntu-20.04_armv8_jetson_xavier.tar.gz` を利用してください
+- バイナリは、 `momo-<VERSION>_ubuntu-20.04_x86_64.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
@@ -24,7 +23,7 @@ $ tree
 
 ### パッケージのインストール
 
-Ubuntu 20.04 で Momo を利用する場合は以下を実行してください
+下記を実行してください
 
 ```
 $ sudo apt-get update
@@ -32,7 +31,7 @@ $ sudo apt-get upgrade
 $ sudo apt-get install libdrm2
 ```
 
-Ubuntu 20.04 で Intel Media SDK を利用したい場合は [INTEL_MEDIA_SDK.md](INTEL_MEDIA_SDK.md) を御覧ください。
+Intel Media SDK を利用したい場合は [INTEL_MEDIA_SDK.md](INTEL_MEDIA_SDK.md) を御覧ください。
 
 ## 動かしてみる
 
