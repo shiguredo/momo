@@ -19,8 +19,9 @@
     - @melpon
 - [UPDATE] SDL を 2.24.1 に上げる
     - @melpon
-- [UPDATE] libwebrtc を `M105.5195@{#0}` に上げる
+- [UPDATE] libwebrtc を `M107.5304@{#4}` に上げる
     - @miosakuma
+    - @melpon
 - [FIX] `--data-channel-signaling`, `--ignore-disconnect-websocket` に 'none' を指定するとエラーになる問題を修正
     - @miosakuma
 - [FIX] ayame モードの `--channel-id` オプションを `--room-id` に修正
