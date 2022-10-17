@@ -25,8 +25,8 @@ jobs:
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
-          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
-          echo "wincuda_version=${WINCUDA_VERSION}" >> $GITHUB_OUTPUT
+          echo "boost_version=${BOOST_VERSION}" >> ${Env:GITHUB_OUTPUT}
+          echo "wincuda_version=${WINCUDA_VERSION}" >> ${Env:GITHUB_OUTPUT}
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost

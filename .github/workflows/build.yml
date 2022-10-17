@@ -62,7 +62,7 @@ jobs:
           $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
           echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> windows_${{ matrix.arch }}.env
           echo "CONTENT_TYPE=application/zip" >> windows_${{ matrix.arch }}.env
-          echo "name=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> $GITHUB_OUTPUT
+          echo "name=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> ${Env:GITHUB_OUTPUT}
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
