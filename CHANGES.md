@@ -19,6 +19,8 @@
     - @melpon
 - [UPDATE] SDL を 2.24.1 に上げる
     - @melpon
+- [UPDATE] cmake を 3.24.2 に上げる
+    - @voluntas
 - [UPDATE] libwebrtc を `M107.5304@{#4}` に上げる
     - @miosakuma
     - @melpon
