@@ -45,9 +45,9 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 ./momo --resolution VGA --no-audio-device --use-sdl --show-me \
     sora \
         --signaling-url \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
+            wss://0001.canary.sora-labo.shiguredo.app/signaling \
+            wss://0002.canary.sora-labo.shiguredo.app/signaling \
+            wss://0003.canary.sora-labo.shiguredo.app/signaling \
         --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
@@ -62,9 +62,9 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 ./momo --no-audio-device \
     sora \
         --signaling-url \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-            wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
+            wss://0001.canary.sora-labo.shiguredo.app/signaling \
+            wss://0002.canary.sora-labo.shiguredo.app/signaling \
+            wss://0003.canary.sora-labo.shiguredo.app/signaling \
         --channel-id sora@shiguredo#0 \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
