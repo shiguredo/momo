@@ -11,6 +11,26 @@
 
 ## develop
 
+## 2022.4.0
+
+- [CHANGE] `ubuntu-18.04_x86_64` のビルドを削除
+    - @miosakuma
+- [CHANGE] `--multistream` オプションを削除して値を true 固定にする
+    - @miosakuma
+- [UPDATE] Boost を 1.80.0 に上げる
+    - @melpon
+- [UPDATE] SDL を 2.24.1 に上げる
+    - @melpon
+- [UPDATE] cmake を 3.24.2 に上げる
+    - @voluntas
+- [UPDATE] libwebrtc を `M107.5304@{#4}` に上げる
+    - @miosakuma
+    - @melpon
+- [FIX] `--data-channel-signaling`, `--ignore-disconnect-websocket` に 'none' を指定するとエラーになる問題を修正
+    - @miosakuma
+- [FIX] ayame モードの `--channel-id` オプションを `--room-id` に修正
+    - @miosakuma
+
 ## 2022.3.0
 
 - [CHANGE] `--multistream` のデフォルトを true にする

@@ -29,8 +29,8 @@ jobs:
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
-          echo "::set-output name=boost_version::${BOOST_VERSION}"
-          echo "::set-output name=wincuda_version::${WINCUDA_VERSION}"
+          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
+          echo "wincuda_version=${WINCUDA_VERSION}" >> $GITHUB_OUTPUT
         id: versions
       # Boost はよくダウンロード先に繋がらずエラーになるのでキャッシュする
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
@@ -62,7 +62,7 @@ jobs:
           $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
           echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> windows_${{ matrix.arch }}.env
           echo "CONTENT_TYPE=application/zip" >> windows_${{ matrix.arch }}.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip"
+          echo "name=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> ${Env:GITHUB_OUTPUT}
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
@@ -87,7 +87,7 @@ jobs:
       - name: Get Versions
         run: |
           source VERSION
-          echo "::set-output name=boost_version::${BOOST_VERSION}"
+          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
@@ -105,7 +105,7 @@ jobs:
           MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
           echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz" >> macos_${{ matrix.arch }}.env
           echo "CONTENT_TYPE=application/gzip" >> macos_${{ matrix.arch }}.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz"
+          echo "name=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
@@ -127,7 +127,6 @@ jobs:
           - raspberry-pi-os_armv8
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_armv8_jetson_xavier
-          - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-18.04
@@ -136,7 +135,7 @@ jobs:
       - name: Get Versions
         run: |
           source VERSION
-          echo "::set-output name=boost_version::${BOOST_VERSION}"
+          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
@@ -153,7 +152,7 @@ jobs:
           source VERSION
           echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> ${{ matrix.name }}.env
           echo "CONTENT_TYPE=application/gzip" >> ${{ matrix.name }}.env
-          echo "::set-output name=name::momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz"
+          echo "name=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
@@ -208,7 +207,6 @@ jobs:
           - raspberry-pi-os_armv8
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_armv8_jetson_xavier
-          - ubuntu-18.04_x86_64
           - ubuntu-20.04_x86_64
     steps:
       - uses: actions/download-artifact@v3
@@ -224,9 +222,9 @@ jobs:
         run: |
           source ${{ matrix.name }}.env/${{ matrix.name }}.env
           source create-release.env/create-release.env
-          echo "::set-output name=package_name::$PACKAGE_NAME"
-          echo "::set-output name=content_type::$CONTENT_TYPE"
-          echo "::set-output name=upload_url::$UPLOAD_URL"
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "content_type=$CONTENT_TYPE" >> $GITHUB_OUTPUT
+          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
         id: env
       - uses: actions/download-artifact@v3
         with:

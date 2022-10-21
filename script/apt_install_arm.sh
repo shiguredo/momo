@@ -14,6 +14,7 @@ apt-get -y install \
   binutils-arm-linux-gnueabihf \
   build-essential \
   curl \
+  g++-multilib \
   git \
   gtk+-3.0 \
   lbzip2 \

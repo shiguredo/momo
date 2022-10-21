@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m99.4844-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4844)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m107.5304-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5304)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -99,13 +99,18 @@ https://github.com/shiguredo/momo/releases
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- macOS 12 arm64 以降
+- Windows 10.1809 x86_64 以降
+
+### 非対応
+
+- macOS x86_64
 - Ubuntu 20.04 ARMv8 Jetson
     - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-- macOS 12 arm64 以降
-- Windows 10.1809 x86_64 以降
+    - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
 
 ## 使ってみる
 
@@ -174,9 +179,6 @@ limitations under the License.
 - Jetson Xavier NX 対応
     - H.265 ハードウェアエンコーダー対応
     - H.265 ハードウェアデコーダー対応
-- Jetson Nano
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
 - Raspberry Pi 4
     - H.265 ハードウェアデコーダー対応
 - AV1 対応
@@ -190,7 +192,7 @@ limitations under the License.
     - H.265 ハードウェアデコーダー対応
         - Ubuntu 20.04
         - Windows 10
-- Intel Media SDK 対応
+- oneVPL 対応
     - H.265 ハードウェアエンコーダー対応
 - 録画対応
     - MP4 形式での出力

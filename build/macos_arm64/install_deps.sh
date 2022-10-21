@@ -94,6 +94,7 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]
       link=static \
       variant=release \
       install \
+      -d+0 \
       -j$JOBS \
       --build-dir=$BUILD_DIR/boost \
       --prefix=$INSTALL_DIR/boost \
@@ -118,16 +119,48 @@ if [ $SDL2_CHANGED -eq 1 -o ! -e $INSTALL_DIR/SDL2/lib/libSDL2.a ]; then
   mkdir -p $SOURCE_DIR/SDL2
   mkdir -p $BUILD_DIR/SDL2
   ../../script/setup_sdl2.sh $SDL2_VERSION $SOURCE_DIR/SDL2
-  patch $SOURCE_DIR/SDL2/source/configure < ../../patch/mac_sdl.patch
   pushd $BUILD_DIR/SDL2
-    # SDL2 の CMakeLists.txt は Metal をサポートしてくれてないので、configure でビルドする
-    # ref: https://bugzilla.libsdl.org/show_bug.cgi?id=4617
     SYSROOT="`xcrun --sdk macosx --show-sdk-path`"
-    CC="$CLANG -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
-      CXX="$CLANGPP -target $ARCH_NAME -mmacosx-version-min=11.0 --sysroot=$SYSROOT" \
-      $SOURCE_DIR/SDL2/source/configure --host=$ARCH_NAME --disable-shared --prefix=$INSTALL_DIR/SDL2
-    make -j$JOBS
-    make install
+    # システムでインストール済みかによって ON/OFF が切り替わってしまうため、
+    # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+    cmake $SOURCE_DIR/SDL2/source \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/SDL2 \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DCMAKE_SYSTEM_PROCESSOR=arm64 \
+      -DCMAKE_OSX_ARCHITECTURES=arm64 \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_C_COMPILER_TARGET=aarch64-apple-darwin \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DCMAKE_CXX_COMPILER_TARGET=aarch64-apple-darwin \
+      -DCMAKE_SYSROOT=$SYSROOT \
+      -DSDL_ATOMIC=OFF \
+      -DSDL_AUDIO=OFF \
+      -DSDL_VIDEO=ON \
+      -DSDL_RENDER=ON \
+      -DSDL_EVENTS=ON \
+      -DSDL_JOYSTICK=ON \
+      -DSDL_HAPTIC=ON \
+      -DSDL_POWER=ON \
+      -DSDL_THREADS=ON \
+      -DSDL_TIMERS=OFF \
+      -DSDL_FILE=OFF \
+      -DSDL_LOADSO=ON \
+      -DSDL_CPUINFO=OFF \
+      -DSDL_FILESYSTEM=OFF \
+      -DSDL_SENSOR=ON \
+      -DSDL_OPENGL=ON \
+      -DSDL_OPENGLES=ON \
+      -DSDL_RPI=OFF \
+      -DSDL_WAYLAND=OFF \
+      -DSDL_X11=OFF \
+      -DSDL_VULKAN=OFF \
+      -DSDL_VIVANTE=OFF \
+      -DSDL_COCOA=ON \
+      -DSDL_METAL=ON \
+      -DSDL_KMSDRM=OFF
+    cmake --build . --config Release -j$JOBS
+    cmake --install . --config Release
   popd
 fi
 echo $SDL2_VERSION > $SDL2_VERSION_FILE

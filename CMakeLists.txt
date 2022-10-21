@@ -169,28 +169,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_xavier")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_x86_64")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-18.04")
-  set(TARGET_ARCH "x86_64")
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_NVCODEC_ENCODER ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
-  set(CMAKE_C_COMPILER clang-10)
-  set(CMAKE_CXX_COMPILER clang++-10)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
 
   set(TARGET_OS "linux")
@@ -352,6 +330,8 @@ target_compile_definitions(momo
     USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
     USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
+    # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
+    BOOST_NO_CXX98_FUNCTION_BASE
 )
 
 if (USE_SDL2)

@@ -64,7 +64,7 @@ H264:
     - Intel Media SDK [intel] (default)
 ```
 
-## Ubuntu20.04 での利用方法
+## Ubuntu　20.04 での利用方法
 
 ### ドライバーのインストール
 

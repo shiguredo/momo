@@ -18,6 +18,10 @@
 
 [SETUP_WINDOWS.md](SETUP_WINDOWS.md) をお読みください。
 
+### Ubuntu で Momo を準備する
+
+[SETUP_UBUNTU.md](SETUP_UBUNTU.md) をお読みください。
+
 ## 動かす
 
 ### テストモードを利用して Momo を動かしてみる
@@ -210,7 +214,7 @@ Options:
   --help-all                  Print help message for all modes and exit
   --signaling-url TEXT REQUIRED
                               Signaling URL
-  --channel-id TEXT REQUIRED  Channel ID
+  --room-id TEXT REQUIRED     Room ID
   --client-id TEXT            Client ID
   --signaling-key TEXT        Signaling key
 ```
@@ -241,8 +245,6 @@ Options:
                               Video bit rate
   --audio-bit-rate INT:INT in [0 - 510]
                               Audio bit rate
-  --multistream BOOLEAN:value in {false->0,true->1} OR {0,1}
-                              Use multistream (default: true)
   --role TEXT:{sendonly,recvonly,sendrecv}
                               Role (default: sendonly)
   --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}

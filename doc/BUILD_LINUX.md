@@ -67,12 +67,12 @@ $ ./build.sh ubuntu-18.04_armv8_jetson_xavier
 
 うまくいかない場合は `./build.sh --clean ubuntu-18.04_armv8_jetson_xavier && ./build.sh ubuntu-18.04_armv8_jetson_xavier` を試してみてください。
 
-## Ubuntu 18.04 (x86_64) 向けバイナリを作成する
+## Ubuntu 20.04 (x86_64) 向けバイナリを作成する
 
-build ディレクトリ以下で ./build.sh ubuntu-18.04_x86_64 と打つことで Momo の Ubuntu 18.04 x86_64 向けバイナリが生成されます。
+build ディレクトリ以下で ./build.sh ubuntu-20.04_x86_64 と打つことで Momo の Ubuntu 20.04 (x86_64) 向けバイナリが生成されます。
 
 ```shell
-$ ./build.sh ubuntu-18.04_x86_64
+$ ./build.sh ubuntu-20.04_x86_64
 ```
 
-うまくいかない場合は `./build.sh --clean ubuntu-18.04_x86_64 && ./build.sh ubuntu-18.04_x86_64` を試してみてください。
+うまくいかない場合は `./build.sh --clean ubuntu-20.04_x86_64 && ./build.sh ubuntu-20.04_x86_64` を試してみてください。

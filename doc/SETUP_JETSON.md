@@ -108,14 +108,14 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 ```shell
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
     --signaling-url \
-        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-        wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling \
-    --channel-id shiguredo@sora-labo \
+        wss://0001.canary.sora-labo.shiguredo.app/signaling \
+        wss://0002.canary.sora-labo.shiguredo.app/signaling \
+        wss://0003.canary.sora-labo.shiguredo.app/signaling \
+    --channel-id sora@shiguredo#0 \
     --video true --audio true \
     --video-codec-type VP8 --video-bit-rate 15000 \
-    --auto --role sendonly --multistream true \
-    --metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'
+    --auto --role sendonly \
+    --metadata '{"access_token": "xyz"}'
 ```
 
 コマンド例の構成は以下のようになっています。
@@ -127,16 +127,15 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     - `--log-level 2` は error と warning のログを出力するように設定しています
     - `sora` は Sora モードを利用するように設定しています
 - `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
-    - `wss://sora-labo.shiguredo.jp/signaling` はシグナリング URL の設定をしています
-    - `shiguredo@sora-labo` はチャネル ID を設定しています
+    - `wss://0001.canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
+    - `sora@shiguredo#0` はチャネル ID を設定しています
     - `--video true` は Sora への映像送信を有効に設定しています
     - `--audio true` は Sora への音声送信を有効に設定しています
     - `--video-codec-type VP8` はコーデックを VP8 に設定しています
     - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
     - `--auto` は Sora との自動接続を有効に設定しています
     - `--role sendonly` は送信時の役割を送信のみで設定しています
-    - `--multistream true` はマルチストリームを有効に設定しています
-    - `--metadata '{"signaling_key": "ER3Xs0ip8ps1VDAt_a0xvGcSp2Dx3sz0xkHiwhPGlCRMB6ZG"}'` は Sora Labo のシグナリングキーをメタデータに設定しています
+    - `--metadata '{"access_token": "xyz"}'` は Sora Labo のアクセストークンをメタデータに設定しています
 
 ### 実行結果
 

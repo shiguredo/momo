@@ -11,11 +11,11 @@ $ git clone git@github.com:shiguredo/momo.git
 ビルドには以下のアプリケーションが必要になります。
 
 - [Visual Studio 2019](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも化）
-  - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
+    - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
 - [CMake](https://cmake.org/download/)
-  - バージョン 3.16 以上をインストールして下さい。
+    - バージョン 3.24.1 以上をインストールして下さい。
 - [7zip](https://www.7-zip.org/)
-  - 最新バージョンをインストールしてパスを通しておいて下さい。
+    - 最新バージョンをインストールしてパスを通しておいて下さい。
 
 ### ビルド方法
 

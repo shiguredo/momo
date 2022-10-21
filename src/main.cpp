@@ -262,7 +262,6 @@ int main(int argc, char* argv[]) {
       config.audio_bit_rate = args.sora_audio_bit_rate;
       config.metadata = args.sora_metadata;
       config.role = args.sora_role;
-      config.multistream = args.sora_multistream;
       config.spotlight = args.sora_spotlight;
       config.spotlight_number = args.sora_spotlight_number;
       config.port = args.sora_port;

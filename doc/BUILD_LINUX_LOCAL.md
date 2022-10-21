@@ -9,13 +9,13 @@ Docker を使って簡単にビルドする方法については [Linux 版 Momo
 WebRTC 本体をカスタマイズ（パッチを当てたりなど）をしない場合、[shiguredo-webrtc-build/webrtc-build](https://github.com/shiguredo-webrtc-build/webrtc-build) にある事前にビルドされた WebRTC を利用できるので、環境構築にそこまで時間が掛かりません
 
 この場合は Dockerfile でやっていた内容をローカルに構築するだけになります。
-例えば Ubuntu 18.04 で x86_64 向けのビルドを行う場合は [build/ubuntu-18.04_x86_64/Dockerfile](/build/ubuntu-18.04_x86_64/Dockerfile) を参照して構築スクリプトを記述していきます。
+例えば Ubuntu 20.04 で x86_64 向けのビルドを行う場合は [build/ubuntu-20.04_x86_64/Dockerfile](/build/ubuntu-20.04_x86_64/Dockerfile) を参照して構築スクリプトを記述していきます。
 
 また、CMake での構築は `MOMO_PACKAGE_NAME` が利用できないので、それぞれの設定を自分の手で設定する必要があります。
 
 以下は参考用の構築スクリプトになります。
 
-このスクリプトは Ubuntu 18.04 で x86_64 向けの Momo バイナリを生成します。
+このスクリプトは Ubuntu 20.04 で x86_64 向けの Momo バイナリを生成します。
 
 `build/local/install_deps_local.sh`:
 
@@ -62,7 +62,7 @@ fi
 # WebRTC
 if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
   rm -rf $INSTALL_DIR/webrtc
-  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION ubuntu-18.04_x86_64 $INSTALL_DIR $SOURCE_DIR
+  ../../script/get_webrtc.sh $WEBRTC_BUILD_VERSION ubuntu-20.04_x86_64 $INSTALL_DIR $SOURCE_DIR
 fi
 
 # LLVM
@@ -155,7 +155,7 @@ pushd ../_build/local
     -DWEBRTC_READABLE_VERSION="$WEBRTC_READABLE_VERSION" \
     -DWEBRTC_COMMIT="$WEBRTC_COMMIT" \
     -DTARGET_OS="linux" \
-    -DTARGET_OS_LINUX="ubuntu-18.04" \
+    -DTARGET_OS_LINUX="ubuntu-20.04" \
     -DTARGET_ARCH="x86_64" \
     -DUSE_SDL2=ON \
     -DBOOST_ROOT_DIR=$INSTALL_DIR/boost \
@@ -190,7 +190,7 @@ WebRTC をカスタマイズする場合、自前で WebRTC をビルドし、�
 - shiguredo/momo の [build ディレクトリ](/build) 以下にある Dockerfile
 - WebRTC をカスタマイズしない場合の参考用スクリプト
 
-参考用に、Ubuntu 18.04 の x86_64 環境で WebRTC をローカルでビルドして Momo をビルドするスクリプトを以下に載せています。
+参考用に、Ubuntu 20.04 の x86_64 環境で WebRTC をローカルでビルドして Momo をビルドするスクリプトを以下に載せています。
 ビルド環境やターゲットに合わせて変更してみて下さい。
 
 `build/local_webrtc/install_deps_local_webrtc.sh`:
@@ -370,7 +370,7 @@ pushd ../_build/local_webrtc
     -DWEBRTC_READABLE_VERSION="$WEBRTC_READABLE_VERSION" \
     -DWEBRTC_COMMIT="$WEBRTC_COMMIT" \
     -DTARGET_OS="linux" \
-    -DTARGET_OS_LINUX="ubuntu-18.04" \
+    -DTARGET_OS_LINUX="ubuntu-20.04" \
     -DTARGET_ARCH="x86_64" \
     -DUSE_SDL2=ON \
     -DBOOST_ROOT_DIR=$INSTALL_DIR/boost \
