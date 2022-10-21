@@ -220,6 +220,8 @@ jobs:
       - name: Env to output
         shell: bash
         run: |
+          sed -i 's/\r//g' ${{ matrix.name }}.env/${{ matrix.name }}.env
+          sed -i 's/\r//g' create-release.env/create-release.env
           source ${{ matrix.name }}.env/${{ matrix.name }}.env
           source create-release.env/create-release.env
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT

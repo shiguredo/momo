@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2022.4.1
+
+- [FIX] CI で Windows の場合 $GITHUB_OUTPUT に "\r" が混入するのを除去する
+    - @miosakuma
+
 ## 2022.4.0
 
 - [CHANGE] `ubuntu-18.04_x86_64` のビルドを削除
