@@ -29,7 +29,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 - [NVIDIA Jetson AGX Orin 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin)
 
-## 4K@30 出るカメラの購入する
+## 4K@30 出るカメラを購入する
 
 実際に Jetson Nano で検証して 4K で 30fps の出力動作確認が取れているカメラです。
 

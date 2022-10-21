@@ -18,12 +18,11 @@ PowerShell での実行例：
 .\momo.exe --no-audio-device `
     sora `
         --signaling-url `
-             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling `
-             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling `
-             wss://<IPv4Address>.<ClusterName>.sora.sora-labo.shiguredo.app/signaling `
-        --channel-id shiguredo@sora-labo `
+             wss://0001.canary.sora-labo.shiguredo.app/signaling `
+             wss://0002.canary.sora-labo.shiguredo.app/signaling `
+             wss://0003.canary.sora-labo.shiguredo.app/signaling `
+        --channel-id sora@shiguredo#0 `
         --video-codec-type VP8 --video-bit-rate 500 `
         --audio false `
-        --role sendonly --metadata '{\"signaling_key\": \"xyz\"}'
+        --role sendonly --metadata '{\"access_token\": \"xyz\"}'
 ```
-
