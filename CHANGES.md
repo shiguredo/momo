@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2022.4.0
+
 - [CHANGE] `ubuntu-18.04_x86_64` のビルドを削除
     - @miosakuma
 - [CHANGE] `--multistream` オプションを削除して値を true 固定にする
