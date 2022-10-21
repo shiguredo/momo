@@ -39,7 +39,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - ルーム ID を推測されにくい値に変更して下さい
 
 ```
-./momo --resolution VGA --no-audio-device --use-sdl --show-me ayame wss://ayame-labo.shiguredo.jp/signaling --room-id momo-sdl-ayame
+./momo --resolution VGA --no-audio-device --use-sdl --show-me ayame --signaling-url wss://ayame-labo.shiguredo.jp/signaling --room-id momo-sdl-ayame
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07.png)](https://gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07)
