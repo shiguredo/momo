@@ -35,6 +35,15 @@ $ sudo apt-get update
 $ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3
 ```
+#### Raspberry Pi OS Lite を利用する場合
+
+Raspberry Pi Lite では映像に関するパッケージが入っていないため、`ldd ./momo | grep not` を実行し、不足しているパッケージを確認してください。
+
+下記に実行する一例を示します。
+```
+$ sudo apt-get install libSDL2-2.0
+$ sudo apt-get install libxtst6
+```
 
 ### Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
 
