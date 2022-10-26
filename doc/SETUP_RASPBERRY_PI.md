@@ -43,6 +43,8 @@ Raspberry Pi Lite では映像に関するパッケージが入っていない�
 ```
 $ sudo apt-get install libSDL2-2.0
 $ sudo apt-get install libxtst6
+$ sudo apt-get install libegl1-mesa-dev
+$ sudo apt-get install libgles2-mesa
 ```
 
 ### Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
