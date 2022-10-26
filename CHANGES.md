@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
+    - @miosakuma
+
 ## 2022.4.1
 
 - [FIX] CI で Windows の場合 $GITHUB_OUTPUT に "\r" が混入するのを除去する
