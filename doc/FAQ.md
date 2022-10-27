@@ -137,3 +137,7 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
     - 例) http://proxy.example.com:3128
 - `--proxy-username` : プロキシ認証に使用するユーザー名
 - `--proxy-password` : プロキシ認証に使用するパスワード
+
+## Raspberry Pi (Raspberry-Pi-OS) 64 bit で H.264 を利用できますか？
+
+利用できません。 Raspberry Pi (Raspberry-Pi-OS) の H.264 は MMAL のハードウェア支援を受けており MMAL が 64 bit に対応していないためです。
