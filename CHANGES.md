@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] CLI11 を 2.3.1 に上げる
+    - @voluntas
 - [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
     - @miosakuma
 
