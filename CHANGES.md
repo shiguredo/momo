@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Boost を 1.81.0 に上げる
+    - @voluntas
 - [UPDATE] CMake を 3.25.1 に上げる
     - @voluntas
 - [UPDATE] SDL を 2.26.1 に上げる
