@@ -11,10 +11,16 @@
 
 ## develop
 
+- [UPDATE] CMake を 3.25.1 に上げる
+    - @voluntas
+- [UPDATE] SDL を 2.26.1 に上げる
+    - @voluntas
 - [UPDATE] CLI11 を 2.3.1 に上げる
     - @voluntas
 - [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
     - @miosakuma
+- [FIX] ayame モードで momo が offer 時に stats が取得できない問題の修正する
+    - @kabosy620
 
 ## 2022.4.1
 
