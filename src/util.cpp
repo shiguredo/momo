@@ -615,7 +615,7 @@ http::response<http::string_body> Util::BadRequest(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = why.to_string();
+  res.body() = why;
   res.prepare_payload();
   return res;
 }
@@ -627,7 +627,7 @@ http::response<http::string_body> Util::NotFound(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = "The resource '" + target.to_string() + "' was not found.";
+  res.body() = "The resource '" + std::string(target) + "' was not found.";
   res.prepare_payload();
   return res;
 }
@@ -640,7 +640,7 @@ http::response<http::string_body> Util::ServerError(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = "An error occurred: '" + what.to_string() + "'";
+  res.body() = "An error occurred: '" + std::string(what) + "'";
   res.prepare_payload();
   return res;
 }
