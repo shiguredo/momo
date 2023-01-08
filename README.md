@@ -170,30 +170,11 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
-- Jetson AGX Orin 対応
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
-- Jetson AGX Xavier 対応
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
-- Jetson Xavier NX 対応
-    - H.265 ハードウェアエンコーダー対応
-    - H.265 ハードウェアデコーダー対応
-- Raspberry Pi 4
-    - H.265 ハードウェアデコーダー対応
 - AV1 対応
     - Windows
 - 統計機能
     - Ayame のシグナリング 経由での出力
-- NVIDIA VIDEO CODEC SDK
-    - H.265 ハードウェアエンコーダー対応
-        - Ubuntu 20.04
-        - Windows 10
-    - H.265 ハードウェアデコーダー対応
-        - Ubuntu 20.04
-        - Windows 10
 - oneVPL 対応
-    - H.265 ハードウェアエンコーダー対応
 - 録画対応
     - MP4 形式での出力
     - WebM 形式での出力
