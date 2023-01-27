@@ -19,6 +19,8 @@
     - @voluntas
 - [UPDATE] Boost を 1.81.0 に上げる
     - @melpon
+- [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
+    - @melpon
 - [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
     - @miosakuma
 - [FIX] ayame モードで momo が offer 時に stats が取得できない問題の修正する
