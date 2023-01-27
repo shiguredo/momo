@@ -217,7 +217,6 @@ jobs:
       - build-macos
       - build-linux
       - create-release
-      - upload-assets
     if: always()
     steps:
       - uses: actions/checkout@v3
