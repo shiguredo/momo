@@ -79,7 +79,7 @@ jobs:
           - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
     name: Build momo for ${{ matrix.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - name: Get Versions
