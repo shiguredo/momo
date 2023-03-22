@@ -106,11 +106,8 @@ https://github.com/shiguredo/momo/releases
 
 - macOS x86_64
 - Ubuntu 20.04 ARMv8 Jetson
-    - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-    - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
     - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+        - Jetson Orin Nano は HWA を詰んでいないので対応はしません
 
 ## 使ってみる
 
@@ -170,11 +167,16 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
+- oneVPL 対応
+- Ubuntu 20.04 ARMv8 Jetson
+    - Jetson Orin 対応
+    - Jetson Orin NX 対応
+    - Jetson Xavier NX 対応
+    - jetson AGX Xavier 対応
 - AV1 対応
     - Windows
 - 統計機能
     - Ayame のシグナリング 経由での出力
-- oneVPL 対応
 - 録画対応
     - MP4 形式での出力
     - WebM 形式での出力
@@ -233,3 +235,4 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
     - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
     - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
+
