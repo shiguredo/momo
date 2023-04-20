@@ -111,7 +111,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
         wss://0001.canary.sora-labo.shiguredo.app/signaling \
         wss://0002.canary.sora-labo.shiguredo.app/signaling \
         wss://0003.canary.sora-labo.shiguredo.app/signaling \
-    --channel-id sora@shiguredo#0 \
+    --channel-id shiguredo_0_sora \
     --video true --audio true \
     --video-codec-type VP8 --video-bit-rate 15000 \
     --auto --role sendonly \
@@ -128,7 +128,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     - `sora` は Sora モードを利用するように設定しています
 - `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
     - `wss://0001.canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
-    - `sora@shiguredo#0` はチャネル ID を設定しています
+    - `shiguredo_0_sora` はチャネル ID を設定しています
     - `--video true` は Sora への映像送信を有効に設定しています
     - `--audio true` は Sora への音声送信を有効に設定しています
     - `--video-codec-type VP8` はコーデックを VP8 に設定しています
