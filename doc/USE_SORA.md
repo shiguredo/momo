@@ -14,11 +14,11 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 
 ### 片方向配信をしてみる
 
-- チャネル名に `<好きな文字列>@<github-username>#<github-id>` を指定してください
+- チャネル名に `<github-username>_<github-id>_<好きな文字列>` を指定してください
     - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザ名が shiguredo とした場合は `shiguredo_0_sora` のように指定してください
     - ここではチャネル ID を `shiguredo_0_sora` とします
 - sora モードのオプションである --metadata を利用し生成したアクセストークンを `access_token` で指定します
-    - SoraLabo Home のアクセストークン生成にて先程チャネル名で指定した `<好きな文字列>` を入力してアクセストークンを生成してください
+    - SoraLabo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
     - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
     - ここではアクセストークンを `xyz` とします。
 
