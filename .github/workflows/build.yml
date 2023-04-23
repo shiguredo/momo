@@ -128,6 +128,7 @@ jobs:
           - ubuntu-18.04_armv8_jetson_nano
           - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
+          - ubuntu-22.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-20.04
     steps:
@@ -198,6 +199,9 @@ jobs:
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-20.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-22.04_x86_64
       - name: Env to output
         run: |
           echo "package_paths<<EOF" >> $GITHUB_OUTPUT
