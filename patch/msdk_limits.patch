@@ -1,0 +1,15 @@
+# https://github.com/Intel-Media-SDK/MediaSDK/commit/aa4dfc524e1dd4cb33a88fa453de1eef50a39ed7
+# Ubuntu 22.04 上でのビルドでエラーになったのでこのコミットを適用する
+
+diff --git a/_studio/mfx_lib/mctf_package/mctf/src/mctf_common.cpp b/_studio/mfx_lib/mctf_package/mctf/src/mctf_common.cpp
+index 49f114c792..b2fb722872 100644
+--- a/_studio/mfx_lib/mctf_package/mctf/src/mctf_common.cpp
++++ b/_studio/mfx_lib/mctf_package/mctf/src/mctf_common.cpp
+@@ -44,6 +44,7 @@
+ #include <algorithm>
+ #include <climits>
+ #include <cmath>
++#include <limits>
+ #include "cmrt_cross_platform.h"
+ 
+ using std::min;

@@ -15,6 +15,7 @@ _PACKAGES=" \
   ubuntu-18.04_armv8_jetson_nano \
   ubuntu-18.04_armv8_jetson_xavier \
   ubuntu-20.04_x86_64 \
+  ubuntu-22.04_x86_64 \
 "
 
 function show_help() {
@@ -169,6 +170,8 @@ case "$PACKAGE" in
 
     rm -rf $PACKAGE/script
     cp -r ../script $PACKAGE/script
+    rm -rf $PACKAGE/patch
+    cp -r ../patch $PACKAGE/patch
 
     # 可能な限りキャッシュを利用する
     mkdir -p $PACKAGE/_cache/boost/
@@ -203,6 +206,7 @@ case "$PACKAGE" in
     set -e
 
     rm -r $PACKAGE/script
+    rm -r $PACKAGE/patch
 
     ../script/docker_run.sh `pwd` `pwd`/.. $DOCKER_MOUNT_TYPE $PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION $MOMO_COMMIT
 
