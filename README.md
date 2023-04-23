@@ -94,6 +94,7 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi Zero
     - Raspberry Pi 1
 - Ubuntu 20.04 x86_64
+- Ubuntu 22.04 x86_64
 - Ubuntu 18.04 ARMv8 Jetson
     - 2023 年 4 月末にて終了
     - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
