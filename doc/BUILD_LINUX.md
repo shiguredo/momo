@@ -76,3 +76,13 @@ $ ./build.sh ubuntu-20.04_x86_64
 ```
 
 うまくいかない場合は `./build.sh --clean ubuntu-20.04_x86_64 && ./build.sh ubuntu-20.04_x86_64` を試してみてください。
+
+## Ubuntu 22.04 (x86_64) 向けバイナリを作成する
+
+build ディレクトリ以下で ./build.sh ubuntu-22.04_x86_64 と打つことで Momo の Ubuntu 22.04 (x86_64) 向けバイナリが生成されます。
+
+```shell
+$ ./build.sh ubuntu-22.04_x86_64
+```
+
+うまくいかない場合は `./build.sh --clean ubuntu-22.04_x86_64 && ./build.sh ubuntu-22.04_x86_64` を試してみてください。
