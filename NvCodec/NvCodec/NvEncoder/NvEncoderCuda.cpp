@@ -10,7 +10,7 @@
 */
 
 #include "NvEncoder/NvEncoderCuda.h"
-#include "sora/dyn/cuda.h"
+#include "dyn/cuda.h"
 
 NvEncoderCuda::NvEncoderCuda(CUcontext cuContext,
                              uint32_t nWidth,
@@ -112,7 +112,8 @@ void NvEncoderCuda::ReleaseCudaResources() {
 
   for (uint32_t i = 0; i < m_vReferenceFrames.size(); ++i) {
     if (m_vReferenceFrames[i].inputPtr) {
-      dyn::cuMemFree(reinterpret_cast<CUdeviceptr>(m_vReferenceFrames[i].inputPtr));
+      dyn::cuMemFree(
+          reinterpret_cast<CUdeviceptr>(m_vReferenceFrames[i].inputPtr));
     }
   }
   m_vReferenceFrames.clear();
