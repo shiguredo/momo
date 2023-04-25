@@ -21,6 +21,8 @@
     - @melpon
 - [UPDATE] WebRTC を m112.5615.1.0 に上げる
     - @melpon
+- [UPDATE] NVIDIA VIDEO CODEC SDK を 12.0 に上げる
+    - @melpon
 - [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
     - @melpon
 - [ADD] Ubuntu 22.04 x86_64 を追加
