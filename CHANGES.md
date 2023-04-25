@@ -13,11 +13,13 @@
 
 - [UPDATE] CMake を 3.25.1 に上げる
     - @voluntas
-- [UPDATE] SDL を 2.26.1 に上げる
-    - @voluntas
-- [UPDATE] CLI11 を 2.3.1 に上げる
-    - @voluntas
-- [UPDATE] Boost を 1.81.0 に上げる
+- [UPDATE] SDL を 2.26.5 に上げる
+    - @voluntas, @melpon
+- [UPDATE] CLI11 を 2.3.2 に上げる
+    - @voluntas, @melpon
+- [UPDATE] Boost を 1.82.0 に上げる
+    - @melpon
+- [UPDATE] WebRTC を m112.5615.1.0 に上げる
     - @melpon
 - [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
     - @melpon

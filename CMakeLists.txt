@@ -466,6 +466,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       iphlpapi.lib
       msdmo.lib
       Secur32.lib
+      Shcore.lib
       wmcodecdspuuid.lib
       Dwmapi.lib
   )

@@ -75,19 +75,17 @@ RTCManager::RTCManager(
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #if defined(_WIN32)
-  media_dependencies.adm =
-      worker_thread_->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-          RTC_FROM_HERE, [&] {
-            return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-                dependencies.task_queue_factory.get());
-          });
+  media_dependencies.adm = worker_thread_->BlockingCall(
+      [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
+        return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+            dependencies.task_queue_factory.get());
+      });
 #else
-  media_dependencies.adm =
-      worker_thread_->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-          RTC_FROM_HERE, [&] {
-            return webrtc::AudioDeviceModule::Create(
-                audio_layer, dependencies.task_queue_factory.get());
-          });
+  media_dependencies.adm = worker_thread_->BlockingCall(
+      [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
+        return webrtc::AudioDeviceModule::Create(
+            audio_layer, dependencies.task_queue_factory.get());
+      });
 #endif
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
@@ -137,8 +135,8 @@ RTCManager::RTCManager(
   using result_type =
       std::pair<rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>,
                 rtc::scoped_refptr<webrtc::ConnectionContext>>;
-  auto p = dependencies.signaling_thread->Invoke<result_type>(
-      RTC_FROM_HERE, [&dependencies]() {
+  auto p = dependencies.signaling_thread->BlockingCall(
+      [&dependencies]() -> result_type {
         auto factory =
             CustomPeerConnectionFactory::Create(std::move(dependencies));
         if (factory == nullptr) {

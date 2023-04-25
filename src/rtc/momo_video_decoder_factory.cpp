@@ -12,7 +12,7 @@
 #include <rtc_base/logging.h>
 
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
-#include <modules/video_coding/codecs/av1/libaom_av1_decoder.h>
+#include <modules/video_coding/codecs/av1/dav1d_decoder.h>
 #endif
 
 #if defined(__APPLE__)
@@ -182,7 +182,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #endif
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
     if (config_.av1_decoder == VideoCodecInfo::Type::Software) {
-      return webrtc::CreateLibaomAv1Decoder();
+      return webrtc::CreateDav1dDecoder();
     }
 #endif
   }
