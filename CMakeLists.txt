@@ -310,6 +310,7 @@ target_sources(momo
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
+    src/rtc/aligned_encoder_adapter.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
@@ -595,6 +596,7 @@ elseif (TARGET_OS STREQUAL "linux")
   target_compile_definitions(momo
     PRIVATE
       WEBRTC_POSIX
+      WEBRTC_LINUX
   )
   # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
   target_compile_definitions(momo PRIVATE _LIBCPP_ABI_NAMESPACE=Cr _LIBCPP_ABI_VERSION=2 _LIBCPP_DISABLE_AVAILABILITY)
@@ -605,7 +607,7 @@ elseif (TARGET_OS STREQUAL "linux")
       X11
       # Xau
       # Xdmcp
-      Xtst
+      # Xtst
       # xcb
       # plds4
       Xext
@@ -687,6 +689,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_jetson/jetson_v4l2_capturer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBufSurface.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElementProfiler.cpp
@@ -695,7 +698,6 @@ elseif (TARGET_OS STREQUAL "linux")
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvLogging.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2Element.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoConverter.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
         )
@@ -714,13 +716,15 @@ elseif (TARGET_OS STREQUAL "linux")
             nvv4l2
             nvv4lconvert
             nvbuf_utils
-            nvbuf_fdmap
-            nvddk_vic
-            nvddk_2d_v2
+            #nvbuf_fdmap
+            #nvddk_vic
+            #nvddk_2d_v2
             nvjpeg
-            nvrm
-            nvrm_graphics
-            nvos
+            nvbufsurface
+            nvbufsurftransform
+            #nvrm
+            #nvrm_graphics
+            #nvos
         )
       endif(USE_JETSON_ENCODER)
     else()

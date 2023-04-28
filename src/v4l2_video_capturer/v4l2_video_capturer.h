@@ -23,7 +23,7 @@
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
 
-struct V4L2VideoCapturerConfig {
+struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
   std::string video_device;
   int width = 640;
   int height = 480;
@@ -38,13 +38,13 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
       V4L2VideoCapturerConfig config);
   static void LogDeviceList(
       webrtc::VideoCaptureModule::DeviceInfo* device_info);
-  V4L2VideoCapturer();
+  V4L2VideoCapturer(V4L2VideoCapturerConfig config);
   ~V4L2VideoCapturer();
 
   int32_t Init(const char* deviceUniqueId,
                const std::string& specifiedVideoDevice);
   virtual int32_t StartCapture(V4L2VideoCapturerConfig config);
-  virtual bool UseNativeBuffer() override;
+  virtual bool UseNativeBuffer();
 
  protected:
   virtual int32_t StopCapture();

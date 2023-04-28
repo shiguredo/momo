@@ -134,9 +134,10 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
     }
 #endif
 #if USE_JETSON_ENCODER
-    if (config_.vp8_decoder == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp8_decoder == VideoCodecInfo::Type::Jetson &&
+        JetsonVideoDecoder::IsSupportedVP8()) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_VP8));
+          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecVP8));
     }
 #endif
 
@@ -163,7 +164,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_JETSON_ENCODER
     if (config_.vp9_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_VP9));
+          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecVP9));
     }
 #endif
 
@@ -178,6 +179,13 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
                                               MFX_CODEC_AV1));
+    }
+#endif
+#if USE_JETSON_ENCODER
+    if (config_.av1_decoder == VideoCodecInfo::Type::Jetson &&
+        JetsonVideoDecoder::IsSupportedAV1()) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecAV1));
     }
 #endif
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
@@ -211,7 +219,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #if USE_JETSON_ENCODER
     if (config_.h264_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(V4L2_PIX_FMT_H264));
+          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecH264));
     }
 #endif
 

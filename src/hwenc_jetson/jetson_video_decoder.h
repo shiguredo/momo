@@ -9,21 +9,25 @@
  *
  */
 
-#ifndef JETSON_VIDEO_DECODER_H_
-#define JETSON_VIDEO_DECODER_H_
+#ifndef HWENC_JETSON_JETSON_VIDEO_DECODER_H_
+#define HWENC_JETSON_JETSON_VIDEO_DECODER_H_
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
 #include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/platform_thread.h>
 
-// Jetson Linux Multimedia API
-#include <NvVideoDecoder.h>
+struct v4l2_crop;
+class NvV4l2Element;
+class NvVideoDecoder;
 
 class JetsonVideoDecoder : public webrtc::VideoDecoder {
  public:
-  JetsonVideoDecoder(uint32_t input_format);
+  JetsonVideoDecoder(webrtc::VideoCodecType codec);
   ~JetsonVideoDecoder() override;
+
+  static bool IsSupportedVP8();
+  static bool IsSupportedAV1();
 
   bool Configure(const Settings& settings) override;
 
@@ -54,7 +58,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;
-  std::unique_ptr<v4l2_crop> capture_crop_;
+  std::shared_ptr<v4l2_crop> capture_crop_;
 };
 
-#endif  // JETSON_VIDEO_DECODER_H_
+#endif

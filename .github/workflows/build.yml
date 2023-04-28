@@ -125,9 +125,8 @@ jobs:
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
-          - ubuntu-18.04_armv8_jetson_nano
-          - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
+          - ubuntu-20.04_armv8_jetson_xavier
           - ubuntu-22.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-20.04
@@ -192,13 +191,10 @@ jobs:
           platform: raspberry-pi-os_armv8
       - uses: ./.github/actions/download
         with:
-          platform: ubuntu-18.04_armv8_jetson_nano
-      - uses: ./.github/actions/download
-        with:
-          platform: ubuntu-18.04_armv8_jetson_xavier
-      - uses: ./.github/actions/download
-        with:
           platform: ubuntu-20.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-20.04_armv8_jetson_xavier
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-22.04_x86_64

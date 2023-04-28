@@ -19,7 +19,9 @@
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
 
-DeviceVideoCapturer::DeviceVideoCapturer() : vcm_(nullptr) {}
+DeviceVideoCapturer::DeviceVideoCapturer()
+    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+      vcm_(nullptr) {}
 
 DeviceVideoCapturer::~DeviceVideoCapturer() {
   Destroy();

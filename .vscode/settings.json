@@ -4,7 +4,21 @@
     },
     "files.associations": {
         "*.cs": "csharp",
+        "CMakeLists.txt": "cmake",
         "*.txt": "plaintext",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "span": "cpp",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "memory": "cpp",
+        "future": "cpp",
+        "istream": "cpp",
+        "ranges": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "__functional_base": "cpp",
+        "locale": "cpp"
     }
 }
