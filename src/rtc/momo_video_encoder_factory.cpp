@@ -6,6 +6,7 @@
 #include <absl/memory/memory.h>
 #include <absl/strings/match.h>
 #include <api/video_codecs/sdp_video_format.h>
+#include <api/video_codecs/video_codec.h>
 #include <api/video_codecs/vp9_profile.h>
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
@@ -318,8 +319,8 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::WithSimulcast(
         const webrtc::SdpVideoFormat&)> create) {
   std::shared_ptr<webrtc::VideoEncoder> encoder;
   if (internal_encoder_factory_) {
-    encoder.reset(new webrtc::SimulcastEncoderAdapter(
-        internal_encoder_factory_.get(), format));
+    encoder = std::make_shared<webrtc::SimulcastEncoderAdapter>(
+        internal_encoder_factory_.get(), format);
   } else {
     encoder.reset(create(format).release());
   }

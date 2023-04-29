@@ -117,6 +117,9 @@ class DynModule {
     auto f =                                                                   \
         (func_type)DynModule::Instance().GetFunc(soname, DYN_STRINGIZE(func)); \
     if (f == nullptr) {                                                        \
+      std::cerr << "Failed to load function " DYN_STRINGIZE(                   \
+                       func) " in " soname                                     \
+                << std::endl;                                                  \
       exit(1);                                                                 \
     }                                                                          \
     return f(args...);                                                         \
