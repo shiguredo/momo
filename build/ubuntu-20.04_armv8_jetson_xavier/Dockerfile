@@ -147,7 +147,7 @@ RUN \
     -DSDL_VIVANTE=OFF \
     -DSDL_COCOA=OFF \
     -DSDL_METAL=OFF \
-    -DSDL_KMSDRM=OFF
+    -DSDL_KMSDRM=OFF \
   && make -j`nproc` \
   && make install
 

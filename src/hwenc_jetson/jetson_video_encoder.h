@@ -122,7 +122,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t height_;
   bool use_native_;
   bool use_dmabuff_;
-  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
@@ -131,9 +130,6 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
-  std::mutex enc0_buffer_mtx_;
-  std::condition_variable enc0_buffer_cond_;
-  std::queue<NvBuffer*>* enc0_buffer_queue_;
   int output_plane_fd_[32];
   webrtc::EncodedImage encoded_image_;
 };
