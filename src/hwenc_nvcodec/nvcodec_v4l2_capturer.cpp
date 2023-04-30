@@ -54,7 +54,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   }
 
   rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer =
-      std::make_ref_counted<NvCodecV4L2Capturer>(config);
+      rtc::make_ref_counted<NvCodecV4L2Capturer>(config);
 
   v4l2_capturer->decoder_.reset(
       new NvCodecDecoderCuda(config.cuda_context, CudaVideoCodec::JPEG));
