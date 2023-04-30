@@ -172,9 +172,6 @@ void Util::ParseArgs(int argc,
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
       ->check(is_sdl_available);
-  app.add_flag("--show-me", args.show_me,
-               "Show self video (if SDL is available)")
-      ->check(is_sdl_available);
   app.add_option("--window-width", args.window_width,
                  "Window width for videos (if SDL is available)")
       ->check(is_sdl_available)

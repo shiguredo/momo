@@ -30,7 +30,6 @@ struct MomoArgs {
   bool fixed_resolution = false;
   std::string priority = "FRAMERATE";
   bool use_sdl = false;
-  bool show_me = false;
   int window_width = 640;
   int window_height = 480;
   bool fullscreen = false;

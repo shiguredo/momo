@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] --show-me オプションの削除
+    - @melpon
+- [CHANGE] ubuntu-18.04_armv8_jetson_nano と ubuntu-18.04_armv8_jetson_xavier パッケージの削除
+    - @melpon
 - [UPDATE] CMake を 3.25.1 に上げる
     - @voluntas
 - [UPDATE] SDL を 2.26.5 に上げる
@@ -19,13 +23,15 @@
     - @voluntas, @melpon
 - [UPDATE] Boost を 1.82.0 に上げる
     - @melpon
-- [UPDATE] WebRTC を m112.5615.1.0 に上げる
+- [UPDATE] WebRTC を m114.5735.0.1 に上げる
     - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 12.0 に上げる
     - @melpon
 - [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
     - @melpon
 - [ADD] Ubuntu 22.04 x86_64 を追加
+    - @melpon
+- [ADD] ubuntu-20.04_armv8_jetson_xavier（JetPack 5.1.1 対応版のパッケージ）を追加
     - @melpon
 - [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
     - @miosakuma

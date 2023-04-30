@@ -190,9 +190,6 @@ RTCManager::RTCManager(
         video_track_->set_content_hint(
             webrtc::VideoTrackInterface::ContentHint::kText);
       }
-      if (receiver_ != nullptr && config_.show_me) {
-        receiver_->AddTrack(video_track_.get());
-      }
     } else {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
     }
