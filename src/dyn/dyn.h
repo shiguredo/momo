@@ -1,6 +1,7 @@
 #ifndef DYN_DYN_H_
 #define DYN_DYN_H_
 
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>

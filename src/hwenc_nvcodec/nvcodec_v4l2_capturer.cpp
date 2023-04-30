@@ -31,6 +31,10 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   return nullptr;
 }
 
+NvCodecV4L2Capturer::NvCodecV4L2Capturer(
+    const NvCodecV4L2CapturerConfig& config)
+    : V4L2VideoCapturer(config) {}
+
 bool NvCodecV4L2Capturer::UseNativeBuffer() {
   return true;
 }
@@ -49,8 +53,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     return nullptr;
   }
 
-  rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer(
-      new rtc::RefCountedObject<NvCodecV4L2Capturer>());
+  rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer =
+      std::make_ref_counted<NvCodecV4L2Capturer>(config);
 
   v4l2_capturer->decoder_.reset(
       new NvCodecDecoderCuda(config.cuda_context, CudaVideoCodec::JPEG));

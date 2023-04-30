@@ -20,6 +20,8 @@ class NvCodecV4L2Capturer : public V4L2VideoCapturer {
   bool UseNativeBuffer() override;
 
  private:
+  NvCodecV4L2Capturer(const NvCodecV4L2CapturerConfig& config);
+
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       NvCodecV4L2CapturerConfig config,
