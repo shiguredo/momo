@@ -55,7 +55,8 @@ ScreenVideoCapturer::ScreenVideoCapturer(
     size_t max_width,
     size_t max_height,
     size_t target_fps)
-    : max_width_(max_width),
+    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+      max_width_(max_width),
       max_height_(max_height),
       requested_frame_duration_((int)(1000.0f / target_fps)),
       max_cpu_consumption_percentage_(50),
@@ -95,7 +96,6 @@ ScreenVideoCapturer::CreateDesktopCaptureOptions() {
 
 #if defined(_WIN32)
   options.set_allow_directx_capturer(true);
-  options.set_allow_use_magnification_api(false);
 #elif defined(__APPLE__)
   options.set_allow_iosurface(true);
 #endif

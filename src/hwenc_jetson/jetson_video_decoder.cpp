@@ -24,6 +24,9 @@
 // L4T Multimedia API
 #include <nvbuf_utils.h>
 
+// Jetson Linux Multimedia API
+#include <NvVideoDecoder.h>
+
 #define INIT_ERROR(cond, desc)                 \
   if (cond) {                                  \
     RTC_LOG(LS_ERROR) << __FUNCTION__ << desc; \
@@ -32,8 +35,12 @@
   }
 #define CHUNK_SIZE 4000000
 
-JetsonVideoDecoder::JetsonVideoDecoder(uint32_t input_format)
-    : input_format_(input_format),
+JetsonVideoDecoder::JetsonVideoDecoder(webrtc::VideoCodecType codec)
+    : input_format_(codec == webrtc::kVideoCodecVP8    ? V4L2_PIX_FMT_VP8
+                    : codec == webrtc::kVideoCodecVP9  ? V4L2_PIX_FMT_VP9
+                    : codec == webrtc::kVideoCodecH264 ? V4L2_PIX_FMT_H264
+                    : codec == webrtc::kVideoCodecAV1  ? V4L2_PIX_FMT_AV1
+                                                       : 0),
       decoder_(nullptr),
       decode_complete_callback_(nullptr),
       buffer_pool_(false, 300 /* max_number_of_buffers*/),
@@ -43,6 +50,24 @@ JetsonVideoDecoder::JetsonVideoDecoder(uint32_t input_format)
 
 JetsonVideoDecoder::~JetsonVideoDecoder() {
   Release();
+}
+
+bool JetsonVideoDecoder::IsSupportedVP8() {
+  //SuppressErrors sup;
+
+  auto decoder = NvVideoDecoder::createVideoDecoder("dec0");
+  auto ret = decoder->setOutputPlaneFormat(V4L2_PIX_FMT_VP8, CHUNK_SIZE);
+  delete decoder;
+  return ret >= 0;
+}
+
+bool JetsonVideoDecoder::IsSupportedAV1() {
+  //SuppressErrors sup;
+
+  auto decoder = NvVideoDecoder::createVideoDecoder("dec0");
+  auto ret = decoder->setOutputPlaneFormat(V4L2_PIX_FMT_AV1, CHUNK_SIZE);
+  delete decoder;
+  return ret >= 0;
 }
 
 bool JetsonVideoDecoder::Configure(const Settings& settings) {
@@ -74,10 +99,10 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
   memset(planes, 0, sizeof(planes));
   v4l2_buf.m.planes = planes;
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " output_plane.getNumBuffers: "
-                   << decoder_->output_plane.getNumBuffers()
-                   << " output_plane.getNumQueuedBuffers: "
-                   << decoder_->output_plane.getNumQueuedBuffers();
+  // RTC_LOG(LS_INFO) << __FUNCTION__ << " output_plane.getNumBuffers: "
+  //                  << decoder_->output_plane.getNumBuffers()
+  //                  << " output_plane.getNumQueuedBuffers: "
+  //                  << decoder_->output_plane.getNumQueuedBuffers();
 
   if (decoder_->output_plane.getNumQueuedBuffers() ==
       decoder_->output_plane.getNumBuffers()) {
@@ -107,8 +132,8 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.Timestamp()
-                   << " bytesused:" << buffer->planes[0].bytesused;
+  // RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.Timestamp()
+  //                  << " bytesused:" << buffer->planes[0].bytesused;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

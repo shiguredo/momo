@@ -19,22 +19,24 @@
 #include <media/base/video_adapter.h>
 #include <rtc_base/timestamp_aligner.h>
 
+struct ScalableVideoTrackSourceConfig {
+  std::function<void(const webrtc::VideoFrame&)> on_frame;
+};
+
 class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
  public:
-  ScalableVideoTrackSource();
+  ScalableVideoTrackSource(ScalableVideoTrackSourceConfig config);
   virtual ~ScalableVideoTrackSource();
 
   bool is_screencast() const override;
   absl::optional<bool> needs_denoising() const override;
   webrtc::MediaSourceInterface::SourceState state() const override;
   bool remote() const override;
-  void OnCapturedFrame(const webrtc::VideoFrame& frame);
-
- protected:
-  virtual bool UseNativeBuffer() { return false; }
+  bool OnCapturedFrame(const webrtc::VideoFrame& frame);
 
  private:
+  ScalableVideoTrackSourceConfig config_;
   rtc::TimestampAligner timestamp_aligner_;
 };
 
-#endif  // SCALABLE_VIDEO_TRACK_SOURCE_H_
+#endif

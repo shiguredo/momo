@@ -22,6 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: microsoft/setup-msbuild@v1.3
+      # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
+      #   with:
+      #     sdk-version: 20348
+      - name: test
+        run: |
+          ls "C:\Program Files (x86)\Windows Kits\10\Include\"
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -125,9 +131,8 @@ jobs:
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
-          - ubuntu-18.04_armv8_jetson_nano
-          - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
+          - ubuntu-20.04_armv8_jetson_xavier
           - ubuntu-22.04_x86_64
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-20.04
@@ -192,13 +197,10 @@ jobs:
           platform: raspberry-pi-os_armv8
       - uses: ./.github/actions/download
         with:
-          platform: ubuntu-18.04_armv8_jetson_nano
-      - uses: ./.github/actions/download
-        with:
-          platform: ubuntu-18.04_armv8_jetson_xavier
-      - uses: ./.github/actions/download
-        with:
           platform: ubuntu-20.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-20.04_armv8_jetson_xavier
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-22.04_x86_64

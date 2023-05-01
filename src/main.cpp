@@ -180,7 +180,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.no_audio_device = args.no_audio_device;
 
   rtcm_config.fixed_resolution = args.fixed_resolution;
-  rtcm_config.show_me = args.show_me;
   rtcm_config.simulcast = args.sora_simulcast;
   rtcm_config.hardware_encoder_only = args.hw_mjpeg_decoder;
 

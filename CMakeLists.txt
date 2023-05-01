@@ -127,48 +127,6 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
 
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_nano")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-18.04")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv8")
-  set(USE_JETSON_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_LINUX_PULSE_AUDIO ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-18.04_armv8_jetson_xavier")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-18.04")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv8")
-  set(USE_JETSON_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_LINUX_PULSE_AUDIO ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
 elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
 
   set(TARGET_OS "linux")
@@ -190,6 +148,27 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
   # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
   set(CMAKE_C_COMPILER clang-10)
   set(CMAKE_CXX_COMPILER clang++-10)
+
+  set(USE_LIBCXX ON)
+  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
+
+elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_armv8_jetson_xavier")
+
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-20.04")
+  set(TARGET_ARCH "arm")
+  set(TARGET_ARCH_ARM "armv8")
+  set(USE_JETSON_ENCODER ON)
+  set(USE_H264 ON)
+  set(USE_SDL2 ON)
+  set(USE_LINUX_PULSE_AUDIO ON)
+  set(BOOST_ROOT_DIR /root/boost)
+  set(CLI11_ROOT_DIR /root/CLI11)
+  set(SDL2_ROOT_DIR /root/SDL2)
+  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
+  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
+  set(CLANG_ROOT /root/llvm/clang)
+  set(SYSROOT /root/rootfs)
 
   set(USE_LIBCXX ON)
   set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
@@ -310,6 +289,7 @@ target_sources(momo
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
+    src/rtc/aligned_encoder_adapter.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
@@ -331,7 +311,7 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 
 target_link_libraries(momo
   PRIVATE
@@ -466,6 +446,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       iphlpapi.lib
       msdmo.lib
       Secur32.lib
+      Shcore.lib
       wmcodecdspuuid.lib
       Dwmapi.lib
   )
@@ -594,6 +575,7 @@ elseif (TARGET_OS STREQUAL "linux")
   target_compile_definitions(momo
     PRIVATE
       WEBRTC_POSIX
+      WEBRTC_LINUX
   )
   # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
   target_compile_definitions(momo PRIVATE _LIBCPP_ABI_NAMESPACE=Cr _LIBCPP_ABI_VERSION=2 _LIBCPP_DISABLE_AVAILABILITY)
@@ -645,7 +627,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++14"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
@@ -686,6 +668,7 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_jetson/jetson_v4l2_capturer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
+            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBufSurface.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElementProfiler.cpp
@@ -694,7 +677,6 @@ elseif (TARGET_OS STREQUAL "linux")
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvLogging.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2Element.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoConverter.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
             ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
         )
@@ -713,13 +695,15 @@ elseif (TARGET_OS STREQUAL "linux")
             nvv4l2
             nvv4lconvert
             nvbuf_utils
-            nvbuf_fdmap
-            nvddk_vic
-            nvddk_2d_v2
+            #nvbuf_fdmap
+            #nvddk_vic
+            #nvddk_2d_v2
             nvjpeg
-            nvrm
-            nvrm_graphics
-            nvos
+            nvbufsurface
+            nvbufsurftransform
+            #nvrm
+            #nvrm_graphics
+            #nvos
         )
       endif(USE_JETSON_ENCODER)
     else()

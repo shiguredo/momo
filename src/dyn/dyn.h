@@ -1,6 +1,7 @@
 #ifndef DYN_DYN_H_
 #define DYN_DYN_H_
 
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -117,6 +118,8 @@ class DynModule {
     auto f =                                                                   \
         (func_type)DynModule::Instance().GetFunc(soname, DYN_STRINGIZE(func)); \
     if (f == nullptr) {                                                        \
+      std::cerr << "Failed to load function " DYN_STRINGIZE(func) " in "       \
+                << soname << std::endl;                                        \
       exit(1);                                                                 \
     }                                                                          \
     return f(args...);                                                         \

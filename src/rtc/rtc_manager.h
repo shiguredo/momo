@@ -53,7 +53,6 @@ struct RTCManagerConfig {
   bool no_audio_device = false;
 
   bool fixed_resolution = false;
-  bool show_me = false;
   bool simulcast = false;
   bool hardware_encoder_only = false;
 
