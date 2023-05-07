@@ -77,6 +77,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
           webrtc::VP9ProfileToString(webrtc::VP9Profile::kProfile0)}}));
   }
 
+#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
   // AV1
   if (config_.av1_encoder == VideoCodecInfo::Type::Software ||
       config_.av1_encoder == VideoCodecInfo::Type::Jetson ||
@@ -85,6 +86,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
         cricket::kAv1CodecName, webrtc::SdpVideoFormat::Parameters(),
         webrtc::LibaomAv1EncoderSupportedScalabilityModes()));
   }
+#endif
 
   // H264
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
