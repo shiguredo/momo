@@ -383,15 +383,6 @@ void Util::ParseArgs(int argc,
     exit(app.exit(e));
   }
 
-  // サイマルキャストは VP8, H264 のみで動作する
-  if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
-      args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec-type=VP8 or "
-                 "--video-codec-type=H264."
-              << std::endl;
-    exit(1);
-  }
-
   if (!serial_setting.empty()) {
     auto separater_pos = serial_setting.find(',');
     std::string baudrate_str = serial_setting.substr(separater_pos + 1);

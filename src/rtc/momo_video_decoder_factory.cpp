@@ -12,6 +12,7 @@
 #include <rtc_base/logging.h>
 
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
+#include <modules/video_coding/codecs/av1/av1_svc_config.h>
 #include <modules/video_coding/codecs/av1/dav1d_decoder.h>
 #endif
 
@@ -71,7 +72,8 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
       config_.vp9_decoder == VideoCodecInfo::Type::Jetson ||
       config_.vp9_decoder == VideoCodecInfo::Type::NVIDIA ||
       config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
-    for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
+    for (const webrtc::SdpVideoFormat& format :
+         webrtc::SupportedVP9Codecs(true)) {
       supported_codecs.push_back(format);
     }
   }
@@ -79,7 +81,9 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   // AV1
   if (config_.av1_decoder == VideoCodecInfo::Type::Software ||
       config_.av1_decoder == VideoCodecInfo::Type::Intel) {
-    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
+    supported_codecs.push_back(webrtc::SdpVideoFormat(
+        cricket::kAv1CodecName, webrtc::SdpVideoFormat::Parameters(),
+        webrtc::LibaomAv1EncoderSupportedScalabilityModes()));
   }
 
   // H264
