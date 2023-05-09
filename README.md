@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m107.5304-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5304)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m114.5735-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5735)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -52,6 +52,7 @@ AV1 の送受信に対応済みです。
 ### クライアント証明書への対応
 
 Momo は Sora モード利用時にクライアント証明書に対応しています。
+
 ## 動画
 
 [WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
@@ -95,11 +96,10 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 1
 - Ubuntu 20.04 x86_64
 - Ubuntu 22.04 x86_64
-- Ubuntu 18.04 ARMv8 Jetson
-    - 2023 年 4 月末にて終了
-    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+- Ubuntu 20.04 ARMv8 Jetson
+    - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -109,6 +109,10 @@ https://github.com/shiguredo/momo/releases
 - Ubuntu 20.04 ARMv8 Jetson
     - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
         - Jetson Orin Nano は HWA を詰んでいないので対応はしません
+- Ubuntu 18.04 ARMv8 Jetson
+    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 
 ## 使ってみる
 
@@ -169,11 +173,6 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - oneVPL 対応
-- Ubuntu 20.04 ARMv8 Jetson
-    - Jetson Orin 対応
-    - Jetson Orin NX 対応
-    - Jetson Xavier NX 対応
-    - jetson AGX Xavier 対応
 - AV1 対応
     - Windows
 - 統計機能
