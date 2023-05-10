@@ -2,18 +2,16 @@
 
 もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
-## Jetson シリーズでは JetPack 4.4 以上の利用を前提としています
+## Jetson シリーズでは JetPack 5.1.1 以上の利用を前提としています
 
-[JetPack 4\.4 \- L4T R32\.4\.3 production release \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-4-4-l4t-r32-4-3-production-release/140870)
+[JetPack 5.1.1 is now live \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-5-1-1-is-now-live/247862/1)
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- `momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz`
-    - Jetson Nano
-- `momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz`
-    - Jetson Xavier NX または Jetson AGX Xavier
+- `momo-<version>_ubuntu-20.04_armv8_jetson_xavier.tar.gz`
+    - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
@@ -36,7 +34,7 @@ $ tree
 
 ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
 
-## Jetson Nano 向けの追加のオプション
+## Jetson 向けの追加のオプション
 
 ### --hw-mjpeg-decoder
 
@@ -87,13 +85,13 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 ## 4K@30fps の実行例
 
-ここでは Jetson Nano を使って 4K@30fps を実行する方法を記載します。
+ここでは Jetson AGX Orin を使って 4K@30fps を実行する方法を記載します。
 
 ### 事前確認
 
 4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
 
-- Jetson Nano で momo を使うためのセットアップが全て完了している
+- Jetson AGX Orin で momo を使うためのセットアップが全て完了している
 - 4K@30fps が可能なカメラがセットされている
 - Sora/Sora Labo のアカウントの用意がある
 
