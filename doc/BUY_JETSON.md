@@ -4,24 +4,12 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 ## Momo の Jetson シリーズへの対応について
 
-2022 年 10 月時点での状況。
-
-- Jetson シリーズは Jetson AGX Orin を除いて入手困難または異常に高価な販売となっている
-- Jetpack 5 系は Jetson Nano には対応しない
-- Jetson Orin nano はハードウェアエンコードに対応しない
-- Jetson Xavier NX は Jetson Nano と比較すると JPEG のハードウェア処理が劣る
-- Jetson Nano で利用されている Ubuntu 18.04 は 2023 年 4 月でサポートが終了する
-- Jetson Nano ハードウェアサポートは 2025 年 1 月までサポートされる
-
-以上を踏まえて Momo では今後以下のような方針をとることにしました。
-
-- 2023 年 4 月をもって Jetpack 4 系への対応を終了する
-    - Jetpack 5 系のみの対応とする
-    - それに伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了する
-- Jetson Orin Nano への対応は行わない
-- Jetson Orin NX への対応は優先実装とする
+- Jetpack 5 系のみの対応とします。
+- Jetpack 4 系への対応を終了しました。
+    - 上記に伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了しました。
+- ハードウェアエンコードに対応しない Jetson Orin Nano への対応は行いません
+- Jetson Orin NX への対応は優先実装とします。
     - Xavier と同じパターンだと Jetson Orin Nano より JPEG のハードウェア処理が劣る可能性があるため
-- Jetson Nano は support/jetpack-4.6 として 2023 年 4 月まで維持する
 
 ## Jetson AGX Orin
 
@@ -31,7 +19,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 ## 4K@30 出るカメラを購入する
 
-実際に Jetson Nano で検証して 4K で 30fps の出力動作確認が取れているカメラです。
+実際に Jetson で検証して 4K で 30fps の出力動作確認が取れているカメラです。
 
 - [高解像度 4 18K カメラモジュール 3840 × 2160 ソニー IMX317 Mjpeg 30fps ミニ Usb ウェブカメラ Web カメラ](https://ja.aliexpress.com/item/32999909513.html)
 
@@ -54,4 +42,3 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
     - [Jetson Roadmap \| NVIDIA Developer](https://developer.nvidia.com/embedded/develop/roadmap)
 - Jetson ライフサイクル
     - [Jetson Product Lifecycle \| NVIDIA Developer](https://developer.nvidia.com/embedded/lifecycle)
-
