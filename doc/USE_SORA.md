@@ -40,7 +40,7 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
 
 ```shell
-./momo --resolution VGA --no-audio-device --use-sdl --show-me \
+./momo --resolution VGA --no-audio-device --use-sdl \
     sora \
         --signaling-url \
             wss://canary.sora-labo.shiguredo.app/signaling \
