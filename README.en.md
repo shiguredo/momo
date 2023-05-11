@@ -13,16 +13,7 @@ Please read https://github.com/shiguredo/oss before use.
 ## About WebRTC Native Client Momo
 
 Momo is a WebRTC Native Client that uses "libwebrtc" and runs on various browser-less devices.
-When Momo runs on Jetson Nano, it is possible to deliver 4K video compressed with H.264 to the browser within 1 second.
-
-## Binary for Jetson Nano
-
-Download the latest version of the binary for Jetson Nano from below.
-https://github.com/shiguredo/momo/releases
-
-```
-momo-<VERSION>_ubuntu-18.04_armv8_jetson_nano.tar.gz
-```
+When Momo runs on Jetson Xavier NX / AGX, it is possible to deliver 4K video compressed with H.264 to the browser within 1 second.
 
 ## Binary for Jetson Xavier NX / AGX
 
@@ -30,7 +21,7 @@ Download the latest version of the binary for Jetson Xavier NX / AGX from below.
 https://github.com/shiguredo/momo/releases
 
 ```
-momo-<VERSION>_ubuntu-18.04_armv8_jetson_xavier.tar.gz
+momo-<VERSION>_ubuntu-20.04_armv8_jetson_xavier.tar.gz
 ```
 
 ## Use "test mode"

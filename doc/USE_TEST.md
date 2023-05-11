@@ -27,13 +27,13 @@ SDL についての詳細は [USE_SDL.md](USE_SDL.md) をお読みください�
 Momo 1:
 
 ```shell
-./momo --use-sdl --show-me test
+./momo --use-sdl test
 ```
 
 Momo 2:
 
 ```shell
-./momo --use-sdl --show-me ayame  --signaling-url ws://[Momo 1のIPアドレス]:8080/ws --room-id test
+./momo --use-sdl ayame  --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id test
 ```
 
 Google STUN を利用したくない場合は`--no-google-stun`をオプションを追加することで可能になります。
@@ -41,13 +41,13 @@ Google STUN を利用したくない場合は`--no-google-stun`をオプショ�
 Momo 1:
 
 ```shell
-./momo --no-google-stun　--use-sdl --show-me test
+./momo --no-google-stun　--use-sdl test
 ```
 
 Momo 2:
 
 ```shell
-./momo  --no-google-stun --use-sdl --show-me ayame --signaling-url ws://[Momo 1のIPアドレス]:8080/ws --room-id test
+./momo  --no-google-stun --use-sdl ayame --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id test
 ```
 
 配信がうまくいくとそれぞれのマシンにお互いの映像と音声が出力されます。  

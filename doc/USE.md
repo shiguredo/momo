@@ -97,16 +97,16 @@ Options:
   --no-video-device           Do not use video device
   --no-audio-device           Do not use audio device
   --force-i420                Prefer I420 format for video capture (only on supported devices)
-  --hw-mjpeg-decoder          Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
+  --hw-mjpeg-decoder BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
   --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
   --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
   --framerate INT:INT in [1 - 60]
                               Video framerate
   --fixed-resolution          Maintain video resolution in degradation
   --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
-                              Preference in video degradation (experimental)
-  --use-sdl                   Show video using SDL (if SDL is available)
-  --show-me                   Show self video (if SDL is available)
+                              Specifies the quality that is maintained against video degradation
+  --use-sdl                   Showx video using SDL (if SDL is available)
   --window-width INT:INT in [180 - 16384]
                               Window width for videos (if SDL is available)
   --window-height INT:INT in [180 - 16384]
@@ -121,23 +121,22 @@ Options:
   --disable-auto-gain-control Disable auto gain control for audio
   --disable-noise-suppression Disable noise suppression for audio
   --disable-highpass-filter   Disable highpass filter for audio
-  --disable-typing-detection  Disable typing detection for audio
   --video-codec-engines       List available video encoders/decoders
-  --vp8-encoder :value in {default->0,software->6} OR {0,6}
+  --vp8-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP8 Encoder
-  --vp8-decoder :value in {default->0,software->6} OR {0,6}
+  --vp8-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP8 Decoder
-  --vp9-encoder :value in {default->0,software->6} OR {0,6}
+  --vp9-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP9 Encoder
-  --vp9-decoder :value in {default->0,software->6} OR {0,6}
+  --vp9-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP9 Decoder
-  --av1-encoder :value in {default->0,software->6} OR {0,6}
+  --av1-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               AV1 Encoder
-  --av1-decoder :value in {default->0,software->6} OR {0,6}
+  --av1-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               AV1 Decoder
-  --h264-encoder :value in {default->0,videotoolbox->5} OR {0,5}
+  --h264-encoder ENUM:value in {default->0,videotoolbox->5} OR {0,5}
                               H.264 Encoder
-  --h264-decoder :value in {default->0,videotoolbox->5} OR {0,5}
+  --h264-decoder ENUM:value in {default->0,videotoolbox->5} OR {0,5}
                               H.264 Decoder
   --serial TEXT:serial setting format
                               Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]
@@ -224,23 +223,23 @@ Options:
 ```
 $ ./momo sora --help
 Mode for working with WebRTC SFU Sora
-Usage: ./momo sora [OPTIONS] SIGNALING-URL CHANNEL-ID
-
-Positionals:
-  SIGNALING-URL TEXT REQUIRED Signaling URL
-  CHANNEL-ID TEXT REQUIRED    Channel ID
+Usage: ./momo sora [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
+  --signaling-url TEXT ... REQUIRED
+                              Signaling URLs
+  --channel-id TEXT REQUIRED  Channel ID
   --auto                      Connect to Sora automatically
   --video BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send video to sora (default: true)
   --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send audio to sora (default: true)
-  --video-codec-type TEXT:{,AV1,H264,VP8,VP9}
+  --video-codec-type TEXT:{VP8,VP9,AV1,H264}
                               Video codec for send
-  --audio-codec-type TEXT:{,OPUS}
+  --audio-codec-type TEXT:{OPUS}
+                              Audio codec for send
   --video-bit-rate INT:INT in [0 - 30000]
                               Video bit rate
   --audio-bit-rate INT:INT in [0 - 510]
@@ -255,11 +254,11 @@ Options:
                               Port number (default: -1)
   --simulcast BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use simulcast (default: false)
-  --data-channel-signaling TEXT:value in {false-> 0,true-> 1,none->--} OR { 0, 1,--}
+  --data-channel-signaling TEXT:{true,false,none}
                               Use DataChannel for Sora signaling (default: none)
   --data-channel-signaling-timeout INT:POSITIVE
                               Timeout for Data Channel in seconds (default: 180)
-  --ignore-disconnect-websocket TEXT:value in {false-> 0,true-> 1,none->--} OR { 0, 1,--}
+  --ignore-disconnect-websocket TEXT:{true,false,none}
                               Ignore WebSocket disconnection if using Data Channel (default: none)
   --disconnect-wait-timeout INT:POSITIVE
                               Disconnecting timeout for Data Channel in seconds (default: 5)
