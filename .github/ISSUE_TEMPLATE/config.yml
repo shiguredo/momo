@@ -1,5 +1,5 @@
 blank_issues_enabled: false
-contact_links: o
+contact_links:
   - name: 時雨堂コミュニティ Discord
     url: https://discord.gg/shiguredo
     about: Issue を作成するには Discord での相談が必要です
