@@ -81,6 +81,7 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
   // AV1
   if (config_.av1_decoder == VideoCodecInfo::Type::Software ||
+      config_.av1_decoder == VideoCodecInfo::Type::Jetson ||
       config_.av1_decoder == VideoCodecInfo::Type::Intel) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(
         cricket::kAv1CodecName, webrtc::SdpVideoFormat::Parameters(),
