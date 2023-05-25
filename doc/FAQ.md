@@ -152,14 +152,16 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 
 [WebRTC momoでカメラのサポートしていない解像度、フレームレートで送信する](https://zenn.dev/tetsu_koba/articles/c3b12bb5e52a57)
 
-## Jetson で実行すると `NvV4l2ElementPlane` でエラーが出ていますがこれはなんですか？
+## Jetson で Momo を実行するとエラーが出ていますがこれはなんですか？
 
-HWA 対応確認のために非対応の可能性のあるエンコーダーとデコーダーを作成する処理を行っているためです。
+Jetson で Momo を実行すると `Capture Plane:Error in VIDIOC_S_FMT: Invalid argument` というエラーが出ます。
+
+これは HWA 対応確認のために非対応の可能性のあるエンコーダーとデコーダーを作成する処理を行っているためです。
 
 動作には影響ありません。
 
-## Jetson で SDL を使用して AV1 の映像を受信はできますか？
+## Jetson で SDL を使用して AV1 の映像が受信できません
 
-可能です。ただし、AV1 のハードウェア Decode に対応しているのは Jetson Orin のみです。
+Momo はハードウェアデコードを優先して使用するようになっており、AV1 のハードウェアデコードに対応しているのは Jetson Orin のみです。
 
-Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプションで software を指定してください。
+Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプションで `software` を指定してください。
