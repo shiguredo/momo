@@ -23,6 +23,8 @@
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
+#elif USE_V4L2_ENCODER
+#include "hwenc_v4l2/libcamera_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -159,6 +161,8 @@ int main(int argc, char* argv[]) {
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
+#elif USE_V4L2_ENCODER
+    return LibcameraCapturer::Create(v4l2_config);
 #else
     return V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif

@@ -117,6 +117,7 @@ elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
   set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv8")
+  set(USE_V4L2_ENCODER ON)
   set(BOOST_ROOT_DIR /root/boost)
   set(CLI11_ROOT_DIR /root/CLI11)
   set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
@@ -329,6 +330,7 @@ target_compile_definitions(momo
     OPENSSL_IS_BORINGSSL
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
+    USE_V4L2_ENCODER=$<BOOL:${USE_V4L2_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_MSDK_ENCODER=$<BOOL:${USE_MSDK_ENCODER}>
     USE_H264=$<BOOL:${USE_H264}>
@@ -706,6 +708,28 @@ elseif (TARGET_OS STREQUAL "linux")
             #nvos
         )
       endif(USE_JETSON_ENCODER)
+
+      if (USE_V4L2_ENCODER)
+        add_library(camerac SHARED)
+        target_include_directories(camerac PRIVATE ${SYSROOT}/usr/include/libcamera)
+        set_target_properties(camerac PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+        target_sources(camerac
+          PRIVATE
+            src/libcamerac/libcamerac.cpp
+        )
+        target_link_libraries(camerac
+          PRIVATE
+            camera
+            camera-base
+        )
+
+        target_sources(momo
+          PRIVATE
+            src/hwenc_v4l2/libcamera_capturer.cpp
+        )
+        target_link_libraries(momo PRIVATE camerac)
+        set_target_properties(momo PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
+      endif(USE_V4L2_ENCODER)
     else()
       # armv6, armv7 用
       if (TARGET_ARCH_ARM STREQUAL "armv6")
