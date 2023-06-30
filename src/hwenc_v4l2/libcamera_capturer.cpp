@@ -127,6 +127,7 @@ int32_t LibcameraCapturer::Init(int camera_id) {
     return -1;
   }
 
+  camera_manager_ = camera_manager;
   auto camera = libcamerac_vector_Camera_at(cameras.get(), camera_id);
   std::string cam_id = libcamerac_Camera_id(camera);
   camera_ =
