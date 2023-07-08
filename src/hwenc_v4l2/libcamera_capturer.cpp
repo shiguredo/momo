@@ -40,7 +40,7 @@
 #include "v4l2_native_buffer.h"
 
 rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
-    V4L2VideoCapturerConfig config) {
+    LibcameraCapturerConfig config) {
   rtc::scoped_refptr<LibcameraCapturer> capturer;
 
   LogDeviceList();
@@ -81,7 +81,7 @@ void LibcameraCapturer::LogDeviceList() {
 }
 
 rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
-    V4L2VideoCapturerConfig config,
+    LibcameraCapturerConfig config,
     size_t capture_device_index) {
   rtc::scoped_refptr<LibcameraCapturer> capturer(
       new rtc::RefCountedObject<LibcameraCapturer>());
@@ -157,7 +157,7 @@ void LibcameraCapturer::Release() {
   camera_manager_.reset();
 }
 
-int32_t LibcameraCapturer::StartCapture(V4L2VideoCapturerConfig config) {
+int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
   auto stream_roles = libcameracpp_vector_StreamRole_new();
   libcamerac_vector_StreamRole_push_back(stream_roles.get(),
                                          libcamerac_StreamRole_VideoRecording);
@@ -214,7 +214,7 @@ int32_t LibcameraCapturer::StartCapture(V4L2VideoCapturerConfig config) {
       if (i == planes_size - 1 ||
           fd != libcamerac_FrameBuffer_Plane_fd(
                     libcamerac_FrameBuffer_planes_at(buffer, i + 1))) {
-        if (config.use_native) {
+        if (config.native_frame_output) {
           mapped_buffers_[buffer].push_back(Span{nullptr, (int)size, fd});
         } else {
           void* memory =
@@ -330,7 +330,6 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
   if (buffers[0].buffer != nullptr) {
     // メモリ出力なので I420Buffer に格納する
-    // TODO(melpon): adapted_width, adapted_height に縮小する
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
         webrtc::I420Buffer::Create(width, height));
     i420_buffer->InitializeData();

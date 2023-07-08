@@ -817,4 +817,14 @@ class V4L2Scaler {
   std::shared_ptr<V4L2Runner> runner_;
 };
 
+//class V4L2Decoder {
+// private:
+//  int fd_ = 0;
+//
+//  V4L2Buffers src_buffers_;
+//  V4L2Buffers dst_buffers_;
+//
+//  std::shared_ptr<V4L2Runner> runner_;
+//};
+
 #endif

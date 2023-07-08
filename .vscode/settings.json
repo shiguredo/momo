@@ -69,6 +69,7 @@
         "__tree": "cpp",
         "concepts": "cpp",
         "list": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "__threading_support": "cpp"
     }
 }

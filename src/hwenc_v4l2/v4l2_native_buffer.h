@@ -23,10 +23,29 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
         scaled_height_(scaled_height),
         fd_(fd),
         size_(size),
-        stride_(stride),
-        on_destruction_(on_destruction) {}
+        stride_(stride) {
+    shared_on_destruction_.reset(new int(),
+                                 [on_destruction](int*) { on_destruction(); });
+  }
 
-  ~V4L2NativeBuffer() { on_destruction_(); }
+  V4L2NativeBuffer(webrtc::VideoType video_type,
+                   int raw_width,
+                   int raw_height,
+                   int scaled_width,
+                   int scaled_height,
+                   int fd,
+                   int size,
+                   int stride,
+                   std::shared_ptr<void> shared_on_destruction)
+      : video_type_(video_type),
+        raw_width_(raw_width),
+        raw_height_(raw_height),
+        scaled_width_(scaled_width),
+        scaled_height_(scaled_height),
+        fd_(fd),
+        size_(size),
+        stride_(stride),
+        shared_on_destruction_(shared_on_destruction) {}
 
   webrtc::VideoFrameBuffer::Type type() const override {
     return webrtc::VideoFrameBuffer::Type::kNative;
@@ -38,19 +57,18 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
     return nullptr;
   }
 
-  // rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(
-  //     int offset_x,
-  //     int offset_y,
-  //     int crop_width,
-  //     int crop_height,
-  //     int scaled_width,
-  //     int scaled_height) override {
-  //   RTC_LOG(LS_INFO) << "V4L2NativeBuffer::CropAndScale() called";
-  //   on_destruction_ = nullptr;
-  //   return rtc::make_ref_counted<V4L2NativeBuffer>(
-  //       video_type_, raw_width_, raw_height_, scaled_width, scaled_height, fd_,
-  //       size_, stride_, on_destruction_);
-  // }
+  // crop は無視してサイズだけ変更する
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(
+      int offset_x,
+      int offset_y,
+      int crop_width,
+      int crop_height,
+      int scaled_width,
+      int scaled_height) override {
+    return rtc::make_ref_counted<V4L2NativeBuffer>(
+        video_type_, raw_width_, raw_height_, scaled_width, scaled_height, fd_,
+        size_, stride_, shared_on_destruction_);
+  }
 
   int fd() const { return fd_; }
   int size() const { return size_; }
@@ -67,7 +85,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
   int fd_;
   int size_;
   int stride_;
-  std::function<void()> on_destruction_;
+  std::shared_ptr<void> shared_on_destruction_;
 };
 
 #endif

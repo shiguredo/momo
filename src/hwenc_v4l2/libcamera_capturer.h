@@ -10,6 +10,21 @@
 #include "libcamerac/libcameracpp.h"
 #include "rtc/scalable_track_source.h"
 
+struct LibcameraCapturerConfig : V4L2VideoCapturerConfig {
+  LibcameraCapturerConfig() {}
+  LibcameraCapturerConfig(const V4L2VideoCapturerConfig& config) {
+    *static_cast<V4L2VideoCapturerConfig*>(this) = config;
+  }
+  LibcameraCapturerConfig(const LibcameraCapturerConfig& config) {
+    *this = config;
+  }
+  // native_frame_output == true の場合、キャプチャしたデータを kNative なフレームとして渡す。
+  // native_frame_output == false の場合、データをコピーして I420Buffer なフレームを作って渡す。
+  // 前者の方が効率が良いけれども、kNative なフレームはサイマルキャスト時に自動で
+  // リサイズしてくれないので、状況に応じて使い分けるのが良い。
+  bool native_frame_output = false;
+};
+
 // Raspberry Pi 専用のカメラからの映像を取得するクラス
 // 出力の形式として、fd そのままで取得する形式と、メモリ上にコピーして取得する形式がある
 // 渡されるフレームバッファは、fd そのままで取得する場合は V4L2NativeBuffer クラスになり、
@@ -17,18 +32,18 @@
 class LibcameraCapturer : public ScalableVideoTrackSource {
  public:
   static rtc::scoped_refptr<LibcameraCapturer> Create(
-      V4L2VideoCapturerConfig config);
+      LibcameraCapturerConfig config);
   static void LogDeviceList();
   LibcameraCapturer();
   ~LibcameraCapturer();
 
   int32_t Init(int camera_id);
   void Release();
-  int32_t StartCapture(V4L2VideoCapturerConfig config);
+  int32_t StartCapture(LibcameraCapturerConfig config);
 
  private:
   static rtc::scoped_refptr<LibcameraCapturer> Create(
-      V4L2VideoCapturerConfig config,
+      LibcameraCapturerConfig config,
       size_t capture_device_index);
   int32_t StopCapture();
   static void requestCompleteStatic(libcamerac_Request* request,

@@ -147,6 +147,11 @@ void Util::ParseArgs(int argc,
          "(only on supported devices)")
       ->check(is_valid_hw_mjpeg_decoder)
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  app.add_flag("--use-libcamera", args.use_libcamera,
+               "Use libcamera for video capture (only on supported devices)");
+  app.add_flag("--use-libcamera-native", args.use_libcamera_native,
+               "Use native buffer for H.264 encoding");
+
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,
                  "Use the video device specified by an index or a name "
