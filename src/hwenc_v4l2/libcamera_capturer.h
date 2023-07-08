@@ -10,6 +10,10 @@
 #include "libcamerac/libcameracpp.h"
 #include "rtc/scalable_track_source.h"
 
+// Raspberry Pi 専用のカメラからの映像を取得するクラス
+// 出力の形式として、fd そのままで取得する形式と、メモリ上にコピーして取得する形式がある
+// 渡されるフレームバッファは、fd そのままで取得する場合は V4L2NativeBuffer クラスになり、
+// メモリ上にコピーする場合は webrtc::I420Buffer クラスになる。
 class LibcameraCapturer : public ScalableVideoTrackSource {
  public:
   static rtc::scoped_refptr<LibcameraCapturer> Create(
@@ -41,6 +45,7 @@ class LibcameraCapturer : public ScalableVideoTrackSource {
   struct Span {
     uint8_t* buffer;
     int length;
+    int fd;
   };
   std::map<const libcamerac_FrameBuffer*, std::vector<Span>> mapped_buffers_;
   std::queue<libcamerac_FrameBuffer*> frame_buffer_;

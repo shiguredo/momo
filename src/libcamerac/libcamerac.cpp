@@ -161,6 +161,10 @@ int libcamerac_StreamConfiguration_get_size_height(
     libcamerac_StreamConfiguration* p) {
   return ((libcamera::StreamConfiguration*)p)->size.height;
 }
+int libcamerac_StreamConfiguration_get_stride(
+    libcamerac_StreamConfiguration* p) {
+  return ((libcamera::StreamConfiguration*)p)->stride;
+}
 void libcamerac_StreamConfiguration_set_pixelFormat(
     libcamerac_StreamConfiguration* p,
     libcamerac_PixelFormat* pixelFormat) {

@@ -37,6 +37,8 @@
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
+#include "v4l2_native_buffer.h"
+
 rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
     V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<LibcameraCapturer> capturer;
@@ -203,20 +205,23 @@ int32_t LibcameraCapturer::StartCapture(V4L2VideoCapturerConfig config) {
   for (int i = 0; i < buffers_size; i++) {
     auto buffer = libcamerac_FrameBufferAllocator_buffers_at(allocator_.get(),
                                                              stream_, i);
-    size_t size = 0;
-    auto planes_size = libcamerac_FrameBuffer_planes_size(buffer);
-    for (unsigned i = 0; i < planes_size; i++) {
+    int size = 0;
+    int planes_size = libcamerac_FrameBuffer_planes_size(buffer);
+    for (int i = 0; i < planes_size; i++) {
       auto plane = libcamerac_FrameBuffer_planes_at(buffer, i);
       auto fd = libcamerac_FrameBuffer_Plane_fd(plane);
       size += libcamerac_FrameBuffer_Plane_length(plane);
       if (i == planes_size - 1 ||
           fd != libcamerac_FrameBuffer_Plane_fd(
                     libcamerac_FrameBuffer_planes_at(buffer, i + 1))) {
-        void* memory =
-            mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        mapped_buffers_[buffer].push_back(
-            Span{static_cast<uint8_t*>(memory), (int)size});
-        size = 0;
+        if (config.use_native) {
+          mapped_buffers_[buffer].push_back(Span{nullptr, (int)size, fd});
+        } else {
+          void* memory =
+              mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+          mapped_buffers_[buffer].push_back(
+              Span{static_cast<uint8_t*>(memory), (int)size, 0});
+        }
       }
     }
     frame_buffer_.push(buffer);
@@ -298,6 +303,22 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
 
   auto cfg = libcamerac_CameraConfiguration_at(configuration_.get(), 0);
 
+  int width = libcamerac_StreamConfiguration_get_size_width(cfg);
+  int height = libcamerac_StreamConfiguration_get_size_height(cfg);
+  int stride = libcamerac_StreamConfiguration_get_stride(cfg);
+
+  const int64_t timestamp_us = rtc::TimeMicros();
+  int adapted_width, adapted_height, crop_width, crop_height, crop_x, crop_y;
+  if (!AdaptFrame(width, height, timestamp_us, &adapted_width, &adapted_height,
+                  &crop_width, &crop_height, &crop_x, &crop_y)) {
+    RTC_LOG(LS_INFO) << "Drop frame";
+    queueRequest(request);
+    return;
+  }
+
+  //int adapted_width = width;
+  //int adapted_height = height;
+
   libcamerac_FrameBuffer* buffer =
       libcamerac_Request_findBuffer(request, stream_);
   auto item = mapped_buffers_.find(buffer);
@@ -306,31 +327,55 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   }
   const std::vector<Span>& buffers = item->second;
 
-  int width = libcamerac_StreamConfiguration_get_size_width(cfg);
-  int height = libcamerac_StreamConfiguration_get_size_height(cfg);
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
-      webrtc::I420Buffer::Create(width, height));
-  i420_buffer->InitializeData();
-  if (libyuv::ConvertToI420(
-          buffers[0].buffer, buffers[0].length,
-          i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
-          i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
-          i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), 0, 0,
-          width, height, width, height, libyuv::kRotate0,
-          libyuv::FOURCC_I420) < 0) {
-    RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
+  if (buffers[0].buffer != nullptr) {
+    // メモリ出力なので I420Buffer に格納する
+    // TODO(melpon): adapted_width, adapted_height に縮小する
+    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+        webrtc::I420Buffer::Create(width, height));
+    i420_buffer->InitializeData();
+    if (libyuv::ConvertToI420(
+            buffers[0].buffer, buffers[0].length,
+            i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
+            i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
+            i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), 0,
+            0, width, height, width, height, libyuv::kRotate0,
+            libyuv::FOURCC_I420) < 0) {
+      RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+    }
+    frame_buffer = i420_buffer;
+
+    webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
+                                         .set_video_frame_buffer(frame_buffer)
+                                         .set_timestamp_rtp(0)
+                                         .set_timestamp_ms(rtc::TimeMillis())
+                                         .set_timestamp_us(rtc::TimeMicros())
+                                         .set_rotation(webrtc::kVideoRotation_0)
+                                         .build();
+    OnCapturedFrame(video_frame);
+    queueRequest(request);
+  } else {
+    // DMA なので V4L2NativeBuffer に格納する
+    frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
+        webrtc::VideoType::kI420, width, height, adapted_width, adapted_height,
+        buffers[0].fd, buffers[0].length, stride,
+        [this, request]() { queueRequest(request); });
+    RTC_LOG(LS_INFO) << "V4L2NativeBuffer created: with=" << width
+                     << " height=" << height << " stride=" << stride
+                     << " adapted_width=" << adapted_width
+                     << " adapted_height=" << adapted_height
+                     << " fd=" << buffers[0].fd
+                     << " buffers_size=" << buffers.size();
+
+    webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
+                                         .set_video_frame_buffer(frame_buffer)
+                                         .set_timestamp_rtp(0)
+                                         .set_timestamp_ms(rtc::TimeMillis())
+                                         .set_timestamp_us(rtc::TimeMicros())
+                                         .set_rotation(webrtc::kVideoRotation_0)
+                                         .build();
+    OnFrame(video_frame);
   }
-
-  webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
-                                       .set_video_frame_buffer(i420_buffer)
-                                       .set_timestamp_rtp(0)
-                                       .set_timestamp_ms(rtc::TimeMillis())
-                                       .set_timestamp_us(rtc::TimeMicros())
-                                       .set_rotation(webrtc::kVideoRotation_0)
-                                       .build();
-  OnCapturedFrame(video_frame);
-
-  queueRequest(request);
 }
 
 void LibcameraCapturer::queueRequest(libcamerac_Request* request) {

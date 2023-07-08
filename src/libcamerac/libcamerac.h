@@ -146,6 +146,8 @@ extern int libcamerac_StreamConfiguration_get_size_width(
     libcamerac_StreamConfiguration* p);
 extern int libcamerac_StreamConfiguration_get_size_height(
     libcamerac_StreamConfiguration* p);
+int libcamerac_StreamConfiguration_get_stride(
+    libcamerac_StreamConfiguration* p);
 extern void libcamerac_StreamConfiguration_set_pixelFormat(
     libcamerac_StreamConfiguration* p,
     libcamerac_PixelFormat* pixelFormat);

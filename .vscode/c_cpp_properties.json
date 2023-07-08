@@ -100,6 +100,40 @@
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "raspberry-pi-os_armv8 on Ubuntu 20.04 x86_64",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/NvCodec/include",
+                "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/webrtc/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/boost/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/CLI11/include",
+                // "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/SDL2/include/SDL2",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/rootfs/usr/include",
+                "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/rootfs/usr/include/libcamera",
+                "${workspaceFolder}/_build/raspberry-pi-os_armv8"
+            ],
+            "defines": [
+                "WEBRTC_LINUX",
+                "USE_NVCODEC_ENCODER=0",
+                "USE_MMAL_ENCODER=0",
+                "USE_JETSON_ENCODER=0",
+                "USE_V4L2_ENCODER=1",
+                "USE_H264=1",
+                "USE_SDL2=0",
+                "USE_LINUX_PULSE_AUDIO=0",
+                "USE_SCREEN_CAPTURER=0"
+            ],
+            "compilerPath": "${workspaceFolder}/_install/raspberry-pi-os_armv8/Release/llvm/clang/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64"
         }
     ],
     "version": 4

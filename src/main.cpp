@@ -162,6 +162,7 @@ int main(int argc, char* argv[]) {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #elif USE_V4L2_ENCODER
+    v4l2_config.use_native = true;
     return LibcameraCapturer::Create(v4l2_config);
 #else
     return V4L2VideoCapturer::Create(std::move(v4l2_config));
