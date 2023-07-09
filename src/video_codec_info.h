@@ -260,6 +260,7 @@ struct VideoCodecInfo {
 
 #if USE_V4L2_ENCODER
     info.h264_encoders.push_back(Type::V4L2);
+    info.h264_decoders.push_back(Type::V4L2);
 #endif
 
     info.vp8_encoders.push_back(Type::Software);

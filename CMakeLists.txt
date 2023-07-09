@@ -726,6 +726,7 @@ elseif (TARGET_OS STREQUAL "linux")
         target_sources(momo
           PRIVATE
             src/hwenc_v4l2/libcamera_capturer.cpp
+            src/hwenc_v4l2/v4l2_h264_decoder.cpp
             src/hwenc_v4l2/v4l2_h264_encoder.cpp
         )
         target_link_libraries(momo PRIVATE camerac)
