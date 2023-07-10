@@ -13,6 +13,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
                    int scaled_width,
                    int scaled_height,
                    int fd,
+                   const uint8_t* data,
                    int size,
                    int stride,
                    std::function<void()> on_destruction)
@@ -24,8 +25,14 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
         fd_(fd),
         size_(size),
         stride_(stride) {
-    shared_on_destruction_.reset(new int(),
-                                 [on_destruction](int*) { on_destruction(); });
+    if (data != nullptr) {
+      data_.reset(new uint8_t[size_]);
+      memcpy(data_.get(), data, size_);
+    }
+    if (on_destruction != nullptr) {
+      shared_on_destruction_.reset(
+          new int(), [on_destruction](int*) { on_destruction(); });
+    }
   }
 
   V4L2NativeBuffer(webrtc::VideoType video_type,
@@ -34,6 +41,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
                    int scaled_width,
                    int scaled_height,
                    int fd,
+                   const std::shared_ptr<uint8_t> data,
                    int size,
                    int stride,
                    std::shared_ptr<void> shared_on_destruction)
@@ -43,6 +51,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
         scaled_width_(scaled_width),
         scaled_height_(scaled_height),
         fd_(fd),
+        data_(data),
         size_(size),
         stride_(stride),
         shared_on_destruction_(shared_on_destruction) {}
@@ -67,10 +76,12 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
       int scaled_height) override {
     return rtc::make_ref_counted<V4L2NativeBuffer>(
         video_type_, raw_width_, raw_height_, scaled_width, scaled_height, fd_,
-        size_, stride_, shared_on_destruction_);
+        data_, size_, stride_, shared_on_destruction_);
   }
 
+  webrtc::VideoType video_type() const { return video_type_; }
   int fd() const { return fd_; }
+  std::shared_ptr<uint8_t> data() const { return data_; }
   int size() const { return size_; }
   int stride() const { return stride_; }
   int raw_width() const { return raw_width_; }
@@ -83,6 +94,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
   int scaled_width_;
   int scaled_height_;
   int fd_;
+  std::shared_ptr<uint8_t> data_;
   int size_;
   int stride_;
   std::shared_ptr<void> shared_on_destruction_;

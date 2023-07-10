@@ -316,9 +316,6 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     return;
   }
 
-  //int adapted_width = width;
-  //int adapted_height = height;
-
   libcamerac_FrameBuffer* buffer =
       libcamerac_Request_findBuffer(request, stream_);
   auto item = mapped_buffers_.find(buffer);
@@ -357,7 +354,7 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     // DMA なので V4L2NativeBuffer に格納する
     frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
         webrtc::VideoType::kI420, width, height, adapted_width, adapted_height,
-        buffers[0].fd, buffers[0].length, stride,
+        buffers[0].fd, nullptr, buffers[0].length, stride,
         [this, request]() { queueRequest(request); });
     RTC_LOG(LS_INFO) << "V4L2NativeBuffer created: with=" << width
                      << " height=" << height << " stride=" << stride

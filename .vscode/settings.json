@@ -70,6 +70,9 @@
         "concepts": "cpp",
         "list": "cpp",
         "ios": "cpp",
-        "__threading_support": "cpp"
+        "__threading_support": "cpp",
+        "any": "cpp",
+        "__atomic": "cpp",
+        "filesystem": "cpp"
     }
 }

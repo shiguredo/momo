@@ -67,12 +67,14 @@ int32_t V4L2H264Encoder::InitEncode(
           ? webrtc::VideoContentType::SCREENSHARE
           : webrtc::VideoContentType::UNSPECIFIED;
 
-  return Configure(webrtc::VideoFrameBuffer::Type::kI420, codec_settings->width,
+  return Configure(webrtc::VideoFrameBuffer::Type::kI420,
+                   webrtc::VideoType::kI420, codec_settings->width,
                    codec_settings->height, codec_settings->width,
                    codec_settings->width, codec_settings->height);
 }
 
 int32_t V4L2H264Encoder::Configure(webrtc::VideoFrameBuffer::Type type,
+                                   webrtc::VideoType video_type,
                                    int32_t raw_width,
                                    int32_t raw_height,
                                    int32_t raw_stride,
@@ -81,10 +83,17 @@ int32_t V4L2H264Encoder::Configure(webrtc::VideoFrameBuffer::Type type,
   int memory = type == webrtc::VideoFrameBuffer::Type::kNative
                    ? V4L2_MEMORY_DMABUF
                    : V4L2_MEMORY_MMAP;
+  if (video_type == webrtc::VideoType::kMJPEG) {
+    jpeg_decoder_ = V4L2Decoder::Create(V4L2_PIX_FMT_MJPEG, true, raw_width,
+                                        raw_height, raw_stride);
+    if (jpeg_decoder_ == nullptr) {
+      RTC_LOG(LS_ERROR) << "Failed to MJPEG decoder";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  }
   if (memory == V4L2_MEMORY_DMABUF) {
-    scaler_ =
-        V4L2Scaler::Create(memory, raw_width, raw_height, raw_stride,
-                           memory == V4L2_MEMORY_DMABUF, width, height, width);
+    scaler_ = V4L2Scaler::Create(V4L2_MEMORY_DMABUF, raw_width, raw_height,
+                                 raw_stride, true, width, height, width);
     if (scaler_ == nullptr) {
       RTC_LOG(LS_ERROR) << "Failed to create scaler";
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -208,17 +217,19 @@ int32_t V4L2H264Encoder::Encode(
                      << "x" << configured_height_ << " to "
                      << frame_buffer->width() << "x" << frame_buffer->height();
     Release();
+    webrtc::VideoType video_type = webrtc::VideoType::kI420;
     int stride = frame_buffer->width();
     int raw_width = frame_buffer->width();
     int raw_height = frame_buffer->height();
     if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
       auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
+      video_type = native_buffer->video_type();
       stride = native_buffer->stride();
       raw_width = native_buffer->raw_width();
       raw_height = native_buffer->raw_height();
     }
-    if (Configure(frame_buffer->type(), raw_width, raw_height, stride,
-                  frame_buffer->width(),
+    if (Configure(frame_buffer->type(), video_type, raw_width, raw_height,
+                  stride, frame_buffer->width(),
                   frame_buffer->height()) != WEBRTC_VIDEO_CODEC_OK) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to Configure";
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -236,19 +247,47 @@ int32_t V4L2H264Encoder::Encode(
           SendFrame(input_frame, buffer, size, timestamp_us, is_key_frame);
         });
   } else {
-    scaler_->Scale(
-        frame_buffer, input_frame.timestamp_us(),
-        [this, force_key_frame, input_frame](
-            rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
-            int64_t timestamp_us) {
-          h264_converter_->Encode(
-              buffer, timestamp_us, force_key_frame,
-              [this, input_frame](uint8_t* buffer, int size,
-                                  int64_t timestamp_us, bool is_key_frame) {
-                SendFrame(input_frame, buffer, size, timestamp_us,
-                          is_key_frame);
-              });
-        });
+    if (jpeg_decoder_ == nullptr) {
+      scaler_->Scale(
+          frame_buffer, input_frame.timestamp_us(),
+          [this, force_key_frame, input_frame](
+              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              int64_t timestamp_us) {
+            h264_converter_->Encode(
+                buffer, timestamp_us, force_key_frame,
+                [this, input_frame](uint8_t* buffer, int size,
+                                    int64_t timestamp_us, bool is_key_frame) {
+                  SendFrame(input_frame, buffer, size, timestamp_us,
+                            is_key_frame);
+                });
+          });
+    } else {
+      auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
+      jpeg_decoder_->Decode(
+          native_buffer->data().get(), native_buffer->size(),
+          input_frame.timestamp(),
+          [this, force_key_frame, input_frame](
+              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              int64_t timestamp_rtp) {
+            RTC_LOG(LS_INFO) << "Decoded JPEG frame: type=" << buffer->type()
+                             << " width=" << buffer->width()
+                             << " height=" << buffer->height();
+            scaler_->Scale(
+                buffer, input_frame.timestamp_us(),
+                [this, force_key_frame, input_frame](
+                    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+                    int64_t timestamp_us) {
+                  h264_converter_->Encode(
+                      buffer, timestamp_us, force_key_frame,
+                      [this, input_frame](uint8_t* buffer, int size,
+                                          int64_t timestamp_us,
+                                          bool is_key_frame) {
+                        SendFrame(input_frame, buffer, size, timestamp_us,
+                                  is_key_frame);
+                      });
+                });
+          });
+    }
   }
 
   return WEBRTC_VIDEO_CODEC_OK;

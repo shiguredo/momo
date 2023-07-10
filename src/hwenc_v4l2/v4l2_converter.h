@@ -120,7 +120,7 @@ class V4L2Runner {
  private:
   void PollProcess() {
     while (true) {
-      RTC_LOG(LS_VERBOSE) << "[POLL] Start poll";
+      RTC_LOG(LS_INFO) << "[POLL] Start poll";
       pollfd p = {fd_, POLLIN | POLLPRI, 0};
       int ret = poll(&p, 1, 500);
       if (abort_poll_ && output_buffers_available_.size() == src_count_) {
@@ -132,7 +132,7 @@ class V4L2Runner {
         break;
       }
       if (p.revents & POLLPRI) {
-        RTC_LOG(LS_VERBOSE) << "[POLL] Polled POLLPRI";
+        RTC_LOG(LS_INFO) << "[POLL] Polled POLLPRI";
         if (on_change_resolution_) {
           v4l2_event event = {};
           if (ioctl(fd_, VIDIOC_DQEVENT, &event) < 0) {
@@ -148,14 +148,14 @@ class V4L2Runner {
         }
       }
       if (p.revents & POLLIN) {
-        RTC_LOG(LS_VERBOSE) << "[POLL] Polled POLLIN";
+        RTC_LOG(LS_INFO) << "[POLL] Polled POLLIN";
         v4l2_buffer v4l2_buf = {};
         v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
         v4l2_buf.memory = src_memory_;
         v4l2_buf.length = 1;
         v4l2_plane planes[VIDEO_MAX_PLANES] = {};
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_VERBOSE) << "[POLL] DQBUF output";
+        RTC_LOG(LS_INFO) << "[POLL] DQBUF output";
         int ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
           RTC_LOG(LS_ERROR)
@@ -170,7 +170,7 @@ class V4L2Runner {
         v4l2_buf.memory = V4L2_MEMORY_MMAP;
         v4l2_buf.length = 1;
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_VERBOSE) << "[POLL] DQBUF capture";
+        RTC_LOG(LS_INFO) << "[POLL] DQBUF capture";
         ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
           RTC_LOG(LS_ERROR)
@@ -190,7 +190,7 @@ class V4L2Runner {
             });
           }
         }
-        RTC_LOG(LS_VERBOSE) << "[POLL] Completed POLLIN";
+        RTC_LOG(LS_INFO) << "[POLL] Completed POLLIN";
       }
     }
   }
@@ -798,8 +798,8 @@ class V4L2Scaler {
                 << " fd=" << plane.fd << " bytesused=" << plane.bytesperline;
             auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
                 webrtc::VideoType::kI420, dst_width_, dst_height_, dst_width_,
-                dst_height_, plane.fd, plane.sizeimage, plane.bytesperline,
-                [on_next]() { on_next(); });
+                dst_height_, plane.fd, nullptr, plane.sizeimage,
+                plane.bytesperline, [on_next]() { on_next(); });
             on_complete(frame_buffer, timestamp_us);
           } else {
             auto d_buffer = webrtc::I420Buffer::Create(dst_width_, dst_height_);
@@ -859,9 +859,24 @@ class V4L2Decoder {
                              int64_t)>
       OnCompleteCallback;
 
-  static std::shared_ptr<V4L2Decoder> Create(int src_pixelformat) {
+  static std::shared_ptr<V4L2Decoder> Create(int src_pixelformat,
+                                             bool dst_export_dmafds) {
     auto p = std::make_shared<V4L2Decoder>();
-    if (p->Init(src_pixelformat) != WEBRTC_VIDEO_CODEC_OK) {
+    if (p->Init(src_pixelformat, dst_export_dmafds) != WEBRTC_VIDEO_CODEC_OK) {
+      return nullptr;
+    }
+    return p;
+  }
+
+  // デコード後のサイズが分かる（かつ V4L2_EVENT_SRC_CH_RESOLUTION イベントが飛んでこないフォーマットの）場合はこっちを使う
+  static std::shared_ptr<V4L2Decoder> Create(int src_pixelformat,
+                                             bool dst_export_dmafds,
+                                             int dst_width,
+                                             int dst_height,
+                                             int dst_stride) {
+    auto p = std::make_shared<V4L2Decoder>();
+    if (p->Init(src_pixelformat, dst_export_dmafds, dst_width, dst_height,
+                dst_stride) != WEBRTC_VIDEO_CODEC_OK) {
       return nullptr;
     }
     return p;
@@ -871,7 +886,7 @@ class V4L2Decoder {
   static constexpr int NUM_OUTPUT_BUFFERS = 4;
   static constexpr int NUM_CAPTURE_BUFFERS = 4;
 
-  int Init(int src_pixelformat) {
+  int Init(int src_pixelformat, bool dst_export_dmafds) {
     const char device_name[] = "/dev/video10";
     fd_ = open(device_name, O_RDWR, 0);
     if (fd_ < 0) {
@@ -905,7 +920,7 @@ class V4L2Decoder {
     runner_ = V4L2Runner::Create(
         fd_, src_buffers_.count(), V4L2_MEMORY_MMAP, V4L2_MEMORY_MMAP,
         // 画像サイズが変わった場合に呼び出される
-        [this]() {
+        [this, dst_export_dmafds]() {
           // 全てのストリームを止めて、バッファをクリアする
           int type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
           if (ioctl(fd_, VIDIOC_STREAMOFF, &type) < 0) {
@@ -932,7 +947,7 @@ class V4L2Decoder {
           // capture バッファを作り直してキューに詰める
           int r = dst_buffers_.Allocate(fd_, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
                                         V4L2_MEMORY_MMAP, NUM_CAPTURE_BUFFERS,
-                                        &dst_fmt, false);
+                                        &dst_fmt, dst_export_dmafds);
           if (r != WEBRTC_VIDEO_CODEC_OK) {
             RTC_LOG(LS_ERROR) << "Failed to allocate capture buffers";
             return;
@@ -956,6 +971,57 @@ class V4L2Decoder {
 
           RTC_LOG(LS_INFO) << "Ready to decode capture stream";
         });
+
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+
+  int Init(int src_pixelformat,
+           bool dst_export_dmafds,
+           int dst_width,
+           int dst_height,
+           int dst_stride) {
+    int r = Init(src_pixelformat, dst_export_dmafds);
+    if (r != WEBRTC_VIDEO_CODEC_OK) {
+      return r;
+    }
+
+    v4l2_format dst_fmt = {};
+    V4L2Helper::InitFormat(V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, dst_width,
+                           dst_height, V4L2_PIX_FMT_YUV420, dst_stride, 0,
+                           &dst_fmt);
+    if (ioctl(fd_, VIDIOC_S_FMT, &dst_fmt) < 0) {
+      RTC_LOG(LS_ERROR) << "Failed to set format";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    r = dst_buffers_.Allocate(fd_, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+                              V4L2_MEMORY_MMAP, NUM_CAPTURE_BUFFERS, &dst_fmt,
+                              dst_export_dmafds);
+    if (r != WEBRTC_VIDEO_CODEC_OK) {
+      RTC_LOG(LS_ERROR) << "Failed to allocate capture buffers";
+      return r;
+    }
+
+    r = V4L2Helper::QueueBuffers(fd_, dst_buffers_);
+    if (r != WEBRTC_VIDEO_CODEC_OK) {
+      return r;
+    }
+
+    dst_width_ = dst_fmt.fmt.pix_mp.width;
+    dst_height_ = dst_fmt.fmt.pix_mp.height;
+    dst_stride_ = dst_fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
+
+    int type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start capture stream";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+
+    RTC_LOG(LS_INFO) << "Init capture buffer resolution"
+                     << "  width:" << dst_fmt.fmt.pix_mp.width
+                     << "  height:" << dst_fmt.fmt.pix_mp.height
+                     << "  bytesperline:"
+                     << dst_fmt.fmt.pix_mp.plane_fmt[0].bytesperline;
 
     return WEBRTC_VIDEO_CODEC_OK;
   }
@@ -999,22 +1065,34 @@ class V4L2Decoder {
           int64_t timestamp_rtp =
               v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
               v4l2_buf->timestamp.tv_usec;
-          auto d_buffer = webrtc::I420Buffer::Create(dst_width_, dst_height_);
-          int s_chroma_stride = (dst_stride_ + 1) / 2;
-          int s_chroma_height = (dst_height_ + 1) / 2;
-          auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
-          uint8_t* s_y = (uint8_t*)plane.start;
-          uint8_t* s_u = s_y + dst_stride_ * dst_height_;
-          uint8_t* s_v = s_u + s_chroma_stride * s_chroma_height;
-          RTC_LOG(LS_INFO) << "Decoded image: width=" << dst_width_
-                           << " height=" << dst_height_;
-          libyuv::I420Copy(s_y, dst_stride_, s_u, s_chroma_stride, s_v,
-                           s_chroma_stride, d_buffer->MutableDataY(),
-                           d_buffer->StrideY(), d_buffer->MutableDataU(),
-                           d_buffer->StrideU(), d_buffer->MutableDataV(),
-                           d_buffer->StrideV(), dst_width_, dst_height_);
-          on_complete(d_buffer, timestamp_rtp);
-          on_next();
+          if (dst_buffers_.dmafds_exported()) {
+            auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
+            RTC_LOG(LS_INFO)
+                << "Decode completed: fd=" << plane.fd
+                << " width=" << dst_width_ << " height=" << dst_height_;
+            auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
+                webrtc::VideoType::kI420, dst_width_, dst_height_, dst_width_,
+                dst_height_, plane.fd, nullptr, plane.sizeimage,
+                plane.bytesperline, [on_next]() { on_next(); });
+            on_complete(frame_buffer, timestamp_rtp);
+          } else {
+            auto d_buffer = webrtc::I420Buffer::Create(dst_width_, dst_height_);
+            int s_chroma_stride = (dst_stride_ + 1) / 2;
+            int s_chroma_height = (dst_height_ + 1) / 2;
+            auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
+            uint8_t* s_y = (uint8_t*)plane.start;
+            uint8_t* s_u = s_y + dst_stride_ * dst_height_;
+            uint8_t* s_v = s_u + s_chroma_stride * s_chroma_height;
+            RTC_LOG(LS_INFO) << "Decoded image: width=" << dst_width_
+                             << " height=" << dst_height_;
+            libyuv::I420Copy(s_y, dst_stride_, s_u, s_chroma_stride, s_v,
+                             s_chroma_stride, d_buffer->MutableDataY(),
+                             d_buffer->StrideY(), d_buffer->MutableDataU(),
+                             d_buffer->StrideU(), d_buffer->MutableDataV(),
+                             d_buffer->StrideV(), dst_width_, dst_height_);
+            on_complete(d_buffer, timestamp_rtp);
+            on_next();
+          }
         });
 
     return WEBRTC_VIDEO_CODEC_OK;

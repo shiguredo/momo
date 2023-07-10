@@ -48,6 +48,7 @@ class V4L2H264Encoder : public webrtc::VideoEncoder {
 
  private:
   int32_t Configure(webrtc::VideoFrameBuffer::Type type,
+                    webrtc::VideoType video_type,
                     int32_t width,
                     int32_t height,
                     int32_t stride,
@@ -62,6 +63,7 @@ class V4L2H264Encoder : public webrtc::VideoEncoder {
                     bool is_key_frame);
 
  private:
+  std::shared_ptr<V4L2Decoder> jpeg_decoder_;
   std::shared_ptr<V4L2Scaler> scaler_;
   std::shared_ptr<V4L2H264Converter> h264_converter_;
 

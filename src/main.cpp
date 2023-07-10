@@ -25,6 +25,7 @@
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif USE_V4L2_ENCODER
 #include "hwenc_v4l2/libcamera_capturer.h"
+#include "hwenc_v4l2/v4l2_capturer.h"
 #endif
 #include "v4l2_video_capturer/v4l2_video_capturer.h"
 #else
@@ -168,6 +169,8 @@ int main(int argc, char* argv[]) {
       libcamera_config.native_frame_output =
           args.use_libcamera_native && !(use_sora && args.sora_simulcast);
       return LibcameraCapturer::Create(libcamera_config);
+    } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
+      return V4L2Capturer::Create(std::move(v4l2_config));
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
