@@ -344,11 +344,10 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(frame_buffer)
                                          .set_timestamp_rtp(0)
-                                         .set_timestamp_ms(rtc::TimeMillis())
                                          .set_timestamp_us(rtc::TimeMicros())
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
-    OnCapturedFrame(video_frame);
+    OnFrame(video_frame);
     queueRequest(request);
   } else {
     // DMA なので V4L2NativeBuffer に格納する
@@ -366,7 +365,6 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(frame_buffer)
                                          .set_timestamp_rtp(0)
-                                         .set_timestamp_ms(rtc::TimeMillis())
                                          .set_timestamp_us(rtc::TimeMicros())
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
