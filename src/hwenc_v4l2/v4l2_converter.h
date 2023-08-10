@@ -122,46 +122,48 @@ class V4L2Runner {
  private:
   void PollProcess() {
     while (true) {
-      RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Start poll";
+      RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] Start poll";
       pollfd p = {fd_, POLLIN | POLLPRI, 0};
       int ret = poll(&p, 1, 500);
       if (abort_poll_ && output_buffers_available_.size() == src_count_) {
         break;
       }
       if (ret == -1) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "  unexpected error"
-                          << "  ret: " << ret;
+        RTC_LOG(LS_ERROR) << "[POLL][" << name_
+                          << "] unexpected error ret=" << ret;
         break;
       }
       if (p.revents & POLLPRI) {
-        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Polled POLLPRI";
+        RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] Polled POLLPRI";
         if (on_change_resolution_) {
           v4l2_event event = {};
           if (ioctl(fd_, VIDIOC_DQEVENT, &event) < 0) {
-            RTC_LOG(LS_ERROR) << "Failed dequeing an event";
+            RTC_LOG(LS_ERROR)
+                << "[POLL][" << name_ << "] Failed dequeing an event";
             break;
           }
           if (event.type == V4L2_EVENT_SOURCE_CHANGE &&
               (event.u.src_change.changes & V4L2_EVENT_SRC_CH_RESOLUTION) !=
                   0) {
-            RTC_LOG(LS_INFO) << "On change resolution";
+            RTC_LOG(LS_VERBOSE) << "On change resolution";
             on_change_resolution_();
           }
         }
       }
       if (p.revents & POLLIN) {
-        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Polled POLLIN";
+        RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] Polled POLLIN";
         v4l2_buffer v4l2_buf = {};
         v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
         v4l2_buf.memory = src_memory_;
         v4l2_buf.length = 1;
         v4l2_plane planes[VIDEO_MAX_PLANES] = {};
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] DQBUF output";
+        RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] DQBUF output";
         int ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
           RTC_LOG(LS_ERROR)
-              << "Failed to dequeue output buffer: error=" << strerror(errno);
+              << "[POLL][" << name_
+              << "] Failed to dequeue output buffer: error=" << strerror(errno);
         } else {
           output_buffers_available_.push(v4l2_buf.index);
         }
@@ -172,15 +174,17 @@ class V4L2Runner {
         v4l2_buf.memory = V4L2_MEMORY_MMAP;
         v4l2_buf.length = 1;
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] DQBUF capture";
+        RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] DQBUF capture";
         ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
-          RTC_LOG(LS_ERROR)
-              << "Failed to dequeue capture buffer: error=" << strerror(errno);
+          RTC_LOG(LS_ERROR) << "[POLL][" << name_
+                            << "] Failed to dequeue capture buffer: error="
+                            << strerror(errno);
         } else {
           std::optional<OnCompleteCallback> on_complete = on_completes_.pop();
           if (!on_complete) {
-            RTC_LOG(LS_ERROR) << "on_completes_ is empty.";
+            RTC_LOG(LS_ERROR)
+                << "[POLL][" << name_ << "] on_completes_ is empty.";
           } else {
             (*on_complete)(&v4l2_buf, [fd = fd_, v4l2_buf]() mutable {
               v4l2_plane planes[VIDEO_MAX_PLANES] = {};
@@ -192,7 +196,7 @@ class V4L2Runner {
             });
           }
         }
-        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Completed POLLIN";
+        RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] Completed POLLIN";
       }
     }
   }
@@ -743,7 +747,7 @@ class V4L2Scaler {
   int Scale(const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
             int64_t timestamp_us,
             OnCompleteCallback on_complete) {
-    RTC_LOG(LS_INFO) << "V4L2Scaler::Scale";
+    RTC_LOG(LS_VERBOSE) << "V4L2Scaler::Scale";
     std::optional<int> index = runner_->PopAvailableBufferIndex();
     if (!index) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << "  No available output buffers";
@@ -798,7 +802,7 @@ class V4L2Scaler {
               v4l2_buf->timestamp.tv_usec;
           if (dst_buffers_.dmafds_exported()) {
             auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
-            RTC_LOG(LS_INFO)
+            RTC_LOG(LS_VERBOSE)
                 << "Scale completed: length=" << v4l2_buf->length
                 << " fd=" << plane.fd << " bytesused=" << plane.bytesperline;
             auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
@@ -1076,7 +1080,7 @@ class V4L2Decoder {
               v4l2_buf->timestamp.tv_usec;
           if (dst_buffers_.dmafds_exported()) {
             auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
-            RTC_LOG(LS_INFO)
+            RTC_LOG(LS_VERBOSE)
                 << "Decode completed: fd=" << plane.fd
                 << " width=" << dst_width_ << " height=" << dst_height_;
             auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
@@ -1092,8 +1096,8 @@ class V4L2Decoder {
             uint8_t* s_y = (uint8_t*)plane.start;
             uint8_t* s_u = s_y + dst_stride_ * dst_height_;
             uint8_t* s_v = s_u + s_chroma_stride * s_chroma_height;
-            RTC_LOG(LS_INFO) << "Decoded image: width=" << dst_width_
-                             << " height=" << dst_height_;
+            RTC_LOG(LS_VERBOSE) << "Decoded image: width=" << dst_width_
+                                << " height=" << dst_height_;
             libyuv::I420Copy(s_y, dst_stride_, s_u, s_chroma_stride, s_v,
                              s_chroma_stride, d_buffer->MutableDataY(),
                              d_buffer->StrideY(), d_buffer->MutableDataU(),

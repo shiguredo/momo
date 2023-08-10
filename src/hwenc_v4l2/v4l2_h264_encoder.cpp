@@ -210,8 +210,8 @@ int32_t V4L2H264Encoder::Encode(
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
 
-  RTC_LOG(LS_INFO) << "V4L2H264Encoder::Encode: type="
-                   << (int)frame_buffer->type();
+  RTC_LOG(LS_VERBOSE) << "V4L2H264Encoder::Encode: type="
+                      << (int)frame_buffer->type();
   if (frame_buffer->type() != configured_type_ ||
       frame_buffer->width() != configured_width_ ||
       frame_buffer->height() != configured_height_) {
@@ -271,9 +271,9 @@ int32_t V4L2H264Encoder::Encode(
           [this, force_key_frame, input_frame](
               rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_rtp) {
-            RTC_LOG(LS_INFO) << "Decoded JPEG frame: type=" << buffer->type()
-                             << " width=" << buffer->width()
-                             << " height=" << buffer->height();
+            RTC_LOG(LS_VERBOSE) << "Decoded JPEG frame: type=" << buffer->type()
+                                << " width=" << buffer->width()
+                                << " height=" << buffer->height();
             scaler_->Scale(
                 buffer, input_frame.timestamp_us(),
                 [this, force_key_frame, input_frame](
@@ -323,7 +323,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
 
   h264_bitstream_parser_.ParseBitstream(encoded_image_);
   encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
-  RTC_LOG(LS_INFO) << __FUNCTION__ << "  qp:" << encoded_image_.qp_;
+  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << "  qp:" << encoded_image_.qp_;
 
   webrtc::CodecSpecificInfo codec_specific;
   codec_specific.codecType = webrtc::kVideoCodecH264;
