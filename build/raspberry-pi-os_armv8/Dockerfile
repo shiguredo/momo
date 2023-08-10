@@ -99,11 +99,11 @@ RUN \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
     -DCMAKE_SYSTEM_NAME=Linux \
-    -DCMAKE_SYSTEM_PROCESSOR=arm \
+    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
     -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
-    -DCMAKE_C_COMPILER_TARGET=arm-linux-gnueabihf \
+    -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
     -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
-    -DCMAKE_CXX_COMPILER_TARGET=arm-linux-gnueabihf \
+    -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
     -DCMAKE_FIND_ROOT_PATH=/root/rootfs \
     -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
     -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
