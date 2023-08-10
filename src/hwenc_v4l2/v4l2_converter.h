@@ -67,12 +67,14 @@ class V4L2Runner {
   }
 
   static std::shared_ptr<V4L2Runner> Create(
+      std::string name,
       int fd,
       int src_count,
       int src_memory,
       int dst_memory,
       std::function<void()> on_change_resolution = nullptr) {
     auto p = std::make_shared<V4L2Runner>();
+    p->name_ = name;
     p->fd_ = fd;
     p->src_count_ = src_count;
     p->src_memory_ = src_memory;
@@ -120,7 +122,7 @@ class V4L2Runner {
  private:
   void PollProcess() {
     while (true) {
-      RTC_LOG(LS_INFO) << "[POLL] Start poll";
+      RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Start poll";
       pollfd p = {fd_, POLLIN | POLLPRI, 0};
       int ret = poll(&p, 1, 500);
       if (abort_poll_ && output_buffers_available_.size() == src_count_) {
@@ -132,7 +134,7 @@ class V4L2Runner {
         break;
       }
       if (p.revents & POLLPRI) {
-        RTC_LOG(LS_INFO) << "[POLL] Polled POLLPRI";
+        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Polled POLLPRI";
         if (on_change_resolution_) {
           v4l2_event event = {};
           if (ioctl(fd_, VIDIOC_DQEVENT, &event) < 0) {
@@ -148,14 +150,14 @@ class V4L2Runner {
         }
       }
       if (p.revents & POLLIN) {
-        RTC_LOG(LS_INFO) << "[POLL] Polled POLLIN";
+        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Polled POLLIN";
         v4l2_buffer v4l2_buf = {};
         v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
         v4l2_buf.memory = src_memory_;
         v4l2_buf.length = 1;
         v4l2_plane planes[VIDEO_MAX_PLANES] = {};
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_INFO) << "[POLL] DQBUF output";
+        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] DQBUF output";
         int ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
           RTC_LOG(LS_ERROR)
@@ -170,7 +172,7 @@ class V4L2Runner {
         v4l2_buf.memory = V4L2_MEMORY_MMAP;
         v4l2_buf.length = 1;
         v4l2_buf.m.planes = planes;
-        RTC_LOG(LS_INFO) << "[POLL] DQBUF capture";
+        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] DQBUF capture";
         ret = ioctl(fd_, VIDIOC_DQBUF, &v4l2_buf);
         if (ret != 0) {
           RTC_LOG(LS_ERROR)
@@ -190,12 +192,13 @@ class V4L2Runner {
             });
           }
         }
-        RTC_LOG(LS_INFO) << "[POLL] Completed POLLIN";
+        RTC_LOG(LS_INFO) << "[POLL][" << name_ << "] Completed POLLIN";
       }
     }
   }
 
  private:
+  std::string name_;
   int fd_;
   int src_count_;
   int src_memory_;
@@ -525,7 +528,7 @@ class V4L2H264Converter {
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
 
-      runner_ = V4L2Runner::Create(fd_, src_buffers_.count(),
+      runner_ = V4L2Runner::Create("H264Encoder", fd_, src_buffers_.count(),
                                    src_buffers_.memory(), V4L2_MEMORY_MMAP);
     }
 
@@ -730,8 +733,8 @@ class V4L2Scaler {
     dst_height_ = dst_height;
     dst_stride_ = dst_stride;
 
-    runner_ = V4L2Runner::Create(fd_, src_buffers_.count(), src_memory,
-                                 V4L2_MEMORY_MMAP);
+    runner_ = V4L2Runner::Create("Scaler", fd_, src_buffers_.count(),
+                                 src_memory, V4L2_MEMORY_MMAP);
 
     return WEBRTC_VIDEO_CODEC_OK;
   }
@@ -919,8 +922,12 @@ class V4L2Decoder {
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
+    auto runner_name = src_pixelformat == V4L2_PIX_FMT_H264    ? "H264Decoder"
+                       : src_pixelformat == V4L2_PIX_FMT_MJPEG ? "MJPEGDecoder"
+                                                               : "Decoder";
     runner_ = V4L2Runner::Create(
-        fd_, src_buffers_.count(), V4L2_MEMORY_MMAP, V4L2_MEMORY_MMAP,
+        runner_name, fd_, src_buffers_.count(), V4L2_MEMORY_MMAP,
+        V4L2_MEMORY_MMAP,
         // 画像サイズが変わった場合に呼び出される
         [this, dst_export_dmafds]() {
           // 全てのストリームを止めて、バッファをクリアする
