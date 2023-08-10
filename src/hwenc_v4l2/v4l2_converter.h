@@ -494,20 +494,6 @@ class V4L2H264Converter {
       return r;
     }
 
-    v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-    if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start output stream";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-    type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-    if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start capture stream";
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
-
-    runner_ = V4L2Runner::Create(fd_, src_buffers_.count(), src_memory,
-                                 V4L2_MEMORY_MMAP);
-
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
@@ -525,6 +511,22 @@ class V4L2H264Converter {
       if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to request I frame";
       }
+    }
+
+    if (!runner_) {
+      v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+      if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start output stream";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+      if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start capture stream";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+
+      runner_ = V4L2Runner::Create(fd_, src_buffers_.count(),
+                                   src_buffers_.memory(), V4L2_MEMORY_MMAP);
     }
 
     std::optional<int> index = runner_->PopAvailableBufferIndex();
