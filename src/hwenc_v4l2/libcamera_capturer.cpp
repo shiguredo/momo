@@ -328,17 +328,19 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   if (buffers[0].buffer != nullptr) {
     // メモリ出力なので I420Buffer に格納する
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
-        webrtc::I420Buffer::Create(width, height));
-    i420_buffer->InitializeData();
-    if (libyuv::ConvertToI420(
-            buffers[0].buffer, buffers[0].length,
-            i420_buffer.get()->MutableDataY(), i420_buffer.get()->StrideY(),
-            i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
-            i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), 0,
-            0, width, height, width, height, libyuv::kRotate0,
-            libyuv::FOURCC_I420) < 0) {
-      RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+        webrtc::I420Buffer::Create(adapted_width, adapted_height));
+    auto src_y = buffers[0].buffer;
+    auto src_u = src_y + stride * height;
+    auto src_v = src_y + stride * height + stride / 2 * (height + 1) / 2;
+    if (libyuv::I420Scale(src_y, stride, src_u, stride / 2, src_v, stride / 2,
+                          width, height, i420_buffer->MutableDataY(),
+                          i420_buffer->StrideY(), i420_buffer->MutableDataU(),
+                          i420_buffer->StrideU(), i420_buffer->MutableDataV(),
+                          i420_buffer->StrideV(), adapted_width, adapted_height,
+                          libyuv::kFilterBox) < 0) {
+      RTC_LOG(LS_ERROR) << "I420Scale Failed";
     }
+
     frame_buffer = i420_buffer;
 
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
@@ -355,12 +357,12 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
         webrtc::VideoType::kI420, width, height, adapted_width, adapted_height,
         buffers[0].fd, nullptr, buffers[0].length, stride,
         [this, request]() { queueRequest(request); });
-    RTC_LOG(LS_INFO) << "V4L2NativeBuffer created: with=" << width
-                     << " height=" << height << " stride=" << stride
-                     << " adapted_width=" << adapted_width
-                     << " adapted_height=" << adapted_height
-                     << " fd=" << buffers[0].fd
-                     << " buffers_size=" << buffers.size();
+    RTC_LOG(LS_VERBOSE) << "V4L2NativeBuffer created: with=" << width
+                        << " height=" << height << " stride=" << stride
+                        << " adapted_width=" << adapted_width
+                        << " adapted_height=" << adapted_height
+                        << " fd=" << buffers[0].fd
+                        << " buffers_size=" << buffers.size();
 
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(frame_buffer)
