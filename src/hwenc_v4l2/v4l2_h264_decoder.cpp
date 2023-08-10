@@ -18,7 +18,7 @@ V4L2H264Decoder::~V4L2H264Decoder() {
 }
 
 bool V4L2H264Decoder::Configure(const Settings& settings) {
-  decoder_ = V4L2Decoder::Create(V4L2_PIX_FMT_H264, false);
+  decoder_ = V4L2DecodeConverter::Create(V4L2_PIX_FMT_H264, false);
   if (decoder_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Failed to create decoder";
     return false;

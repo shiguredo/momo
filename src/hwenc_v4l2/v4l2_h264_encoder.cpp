@@ -30,6 +30,8 @@
 #include <third_party/libyuv/include/libyuv/convert_from.h>
 #include <third_party/libyuv/include/libyuv/video_common.h>
 
+#include "v4l2_native_buffer.h"
+
 namespace {
 
 const int kLowH264QpThreshold = 34;
@@ -84,23 +86,24 @@ int32_t V4L2H264Encoder::Configure(webrtc::VideoFrameBuffer::Type type,
                    ? V4L2_MEMORY_DMABUF
                    : V4L2_MEMORY_MMAP;
   if (video_type == webrtc::VideoType::kMJPEG) {
-    jpeg_decoder_ = V4L2Decoder::Create(V4L2_PIX_FMT_MJPEG, true, raw_width,
-                                        raw_height, raw_stride);
+    jpeg_decoder_ = V4L2DecodeConverter::Create(
+        V4L2_PIX_FMT_MJPEG, true, raw_width, raw_height, raw_stride);
     if (jpeg_decoder_ == nullptr) {
       RTC_LOG(LS_ERROR) << "Failed to MJPEG decoder";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
   if (memory == V4L2_MEMORY_DMABUF) {
-    scaler_ = V4L2Scaler::Create(V4L2_MEMORY_DMABUF, raw_width, raw_height,
-                                 raw_stride, true, width, height, width);
+    scaler_ =
+        V4L2ScaleConverter::Create(V4L2_MEMORY_DMABUF, raw_width, raw_height,
+                                   raw_stride, true, width, height, width);
     if (scaler_ == nullptr) {
       RTC_LOG(LS_ERROR) << "Failed to create scaler";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
-  h264_converter_ = V4L2H264Converter::Create(memory, width, height, width);
-  if (h264_converter_ == nullptr) {
+  h264_encoder_ = V4L2H264EncodeConverter::Create(memory, width, height, width);
+  if (h264_encoder_ == nullptr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   configured_type_ = type;
@@ -113,7 +116,7 @@ int32_t V4L2H264Encoder::Configure(webrtc::VideoFrameBuffer::Type type,
 int32_t V4L2H264Encoder::Release() {
   jpeg_decoder_.reset();
   scaler_.reset();
-  h264_converter_.reset();
+  h264_encoder_.reset();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -125,7 +128,7 @@ int32_t V4L2H264Encoder::RegisterEncodeCompleteCallback(
 }
 
 void V4L2H264Encoder::SetRates(const RateControlParameters& parameters) {
-  if (h264_converter_ == nullptr)
+  if (h264_encoder_ == nullptr)
     return;
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
@@ -140,7 +143,7 @@ void V4L2H264Encoder::SetRates(const RateControlParameters& parameters) {
 }
 
 void V4L2H264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
-  if (h264_converter_ == nullptr)
+  if (h264_encoder_ == nullptr)
     return;
   if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps) {
     return;
@@ -150,7 +153,7 @@ void V4L2H264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
   v4l2_control ctrl = {};
   ctrl.id = V4L2_CID_MPEG_VIDEO_BITRATE;
   ctrl.value = bitrate_bps;
-  if (ioctl(h264_converter_->fd(), VIDIOC_S_CTRL, &ctrl) < 0) {
+  if (ioctl(h264_encoder_->fd(), VIDIOC_S_CTRL, &ctrl) < 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set bitrate";
     return;
   }
@@ -158,7 +161,7 @@ void V4L2H264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
 }
 
 void V4L2H264Encoder::SetFramerateFps(double framerate_fps) {
-  if (h264_converter_ == nullptr)
+  if (h264_encoder_ == nullptr)
     return;
   if (configured_framerate_fps_ == framerate_fps) {
     return;
@@ -168,7 +171,7 @@ void V4L2H264Encoder::SetFramerateFps(double framerate_fps) {
   stream.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   stream.parm.output.timeperframe.numerator = 1;
   stream.parm.output.timeperframe.denominator = framerate_fps;
-  if (ioctl(h264_converter_->fd(), VIDIOC_S_PARM, &stream) < 0) {
+  if (ioctl(h264_encoder_->fd(), VIDIOC_S_PARM, &stream) < 0) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set framerate";
     return;
   }
@@ -242,7 +245,7 @@ int32_t V4L2H264Encoder::Encode(
   SetFramerateFps(target_framerate_fps_);
 
   if (scaler_ == nullptr) {
-    h264_converter_->Encode(
+    h264_encoder_->Encode(
         frame_buffer, input_frame.timestamp_us(), force_key_frame,
         [this, input_frame](uint8_t* buffer, int size, int64_t timestamp_us,
                             bool is_key_frame) {
@@ -255,7 +258,7 @@ int32_t V4L2H264Encoder::Encode(
           [this, force_key_frame, input_frame](
               rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_us) {
-            h264_converter_->Encode(
+            h264_encoder_->Encode(
                 buffer, timestamp_us, force_key_frame,
                 [this, input_frame](uint8_t* buffer, int size,
                                     int64_t timestamp_us, bool is_key_frame) {
@@ -279,7 +282,7 @@ int32_t V4L2H264Encoder::Encode(
                 [this, force_key_frame, input_frame](
                     rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
                     int64_t timestamp_us) {
-                  h264_converter_->Encode(
+                  h264_encoder_->Encode(
                       buffer, timestamp_us, force_key_frame,
                       [this, input_frame](uint8_t* buffer, int size,
                                           int64_t timestamp_us,

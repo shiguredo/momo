@@ -729,9 +729,13 @@ elseif (TARGET_OS STREQUAL "linux")
         target_sources(momo
           PRIVATE
             src/hwenc_v4l2/libcamera_capturer.cpp
+            src/hwenc_v4l2/v4l2_buffers.cpp
             src/hwenc_v4l2/v4l2_capturer.cpp
+            src/hwenc_v4l2/v4l2_converter.cpp
             src/hwenc_v4l2/v4l2_h264_decoder.cpp
             src/hwenc_v4l2/v4l2_h264_encoder.cpp
+            src/hwenc_v4l2/v4l2_native_buffer.cpp
+            src/hwenc_v4l2/v4l2_runner.cpp
         )
         target_link_libraries(momo PRIVATE camerac)
         set_target_properties(momo PROPERTIES BUILD_RPATH_USE_ORIGIN ON)

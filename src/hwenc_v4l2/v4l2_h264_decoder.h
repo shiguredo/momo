@@ -24,7 +24,7 @@ class V4L2H264Decoder : public webrtc::VideoDecoder {
 
  private:
   webrtc::DecodedImageCallback* decode_complete_callback_;
-  std::shared_ptr<V4L2Decoder> decoder_;
+  std::shared_ptr<V4L2DecodeConverter> decoder_;
 };
 
 #endif
