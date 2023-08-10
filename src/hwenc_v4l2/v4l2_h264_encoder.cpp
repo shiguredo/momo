@@ -111,9 +111,9 @@ int32_t V4L2H264Encoder::Configure(webrtc::VideoFrameBuffer::Type type,
 }
 
 int32_t V4L2H264Encoder::Release() {
-  h264_converter_.reset();
-  scaler_.reset();
   jpeg_decoder_.reset();
+  scaler_.reset();
+  h264_converter_.reset();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

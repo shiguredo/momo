@@ -181,6 +181,9 @@ class V4L2Runner {
                             << "] Failed to dequeue capture buffer: error="
                             << strerror(errno);
         } else {
+          if (abort_poll_) {
+            break;
+          }
           std::optional<OnCompleteCallback> on_complete = on_completes_.pop();
           if (!on_complete) {
             RTC_LOG(LS_ERROR)
