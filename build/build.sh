@@ -218,6 +218,9 @@ case "$PACKAGE" in
         cp    LICENSE                _package/momo-${MOMO_VERSION}_${PACKAGE}/
         cp    NOTICE                 _package/momo-${MOMO_VERSION}_${PACKAGE}/
         cp -r html                   _package/momo-${MOMO_VERSION}_${PACKAGE}/html
+        if [ -e _build/${PACKAGE}/libcamerac.so ]; then
+          cp _build/${PACKAGE}/libcamerac.so _package/momo-${MOMO_VERSION}_${PACKAGE}/
+        fi
         pushd _package
           tar czf momo-${MOMO_VERSION}_${PACKAGE}.tar.gz momo-${MOMO_VERSION}_${PACKAGE}
         popd
