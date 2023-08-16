@@ -303,7 +303,7 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
         webrtc::I420Buffer::Create(adapted_width, adapted_height));
     auto src_y = buffers[0].buffer;
     auto src_u = src_y + stride * height;
-    auto src_v = src_y + stride * height + stride / 2 * (height + 1) / 2;
+    auto src_v = src_y + stride * height + stride / 2 * ((height + 1) / 2);
     if (libyuv::I420Scale(src_y, stride, src_u, stride / 2, src_v, stride / 2,
                           width, height, i420_buffer->MutableDataY(),
                           i420_buffer->StrideY(), i420_buffer->MutableDataU(),
