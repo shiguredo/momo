@@ -183,8 +183,8 @@ RTCManager::RTCManager(
     rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
         webrtc::VideoTrackSourceProxy::Create(
             signaling_thread_.get(), worker_thread_.get(), video_track_source);
-    video_track_ = factory_->CreateVideoTrack(Util::GenerateRandomChars(),
-                                              video_source.get());
+    video_track_ =
+        factory_->CreateVideoTrack(video_source, Util::GenerateRandomChars());
     if (video_track_) {
       if (config_.fixed_resolution) {
         video_track_->set_content_hint(

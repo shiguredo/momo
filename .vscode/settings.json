@@ -62,6 +62,17 @@
         "cwctype": "cpp",
         "typeinfo": "cpp",
         "__nullptr": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "__config": "cpp",
+        "__debug": "cpp",
+        "__node_handle": "cpp",
+        "__tree": "cpp",
+        "concepts": "cpp",
+        "list": "cpp",
+        "ios": "cpp",
+        "__threading_support": "cpp",
+        "any": "cpp",
+        "__atomic": "cpp",
+        "filesystem": "cpp"
     }
 }

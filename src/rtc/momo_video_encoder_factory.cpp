@@ -37,6 +37,9 @@
 #if USE_MSDK_ENCODER
 #include "hwenc_msdk/msdk_video_encoder.h"
 #endif
+#if USE_V4L2_ENCODER
+#include "hwenc_v4l2/v4l2_h264_encoder.h"
+#endif
 
 #include "rtc/aligned_encoder_adapter.h"
 
@@ -122,6 +125,12 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
+    }
+#endif
+  } else if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
+#if USE_V4L2_ENCODER
+    for (const webrtc::SdpVideoFormat& format : h264_codecs) {
+      supported_codecs.push_back(format);
     }
 #endif
   } else if ((config_.h264_encoder == VideoCodecInfo::Type::Software) ||
@@ -309,6 +318,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
         return std::unique_ptr<webrtc::VideoEncoder>(
             absl::make_unique<MsdkVideoEncoder>(MsdkSession::Create(),
                                                 MFX_CODEC_AVC));
+      });
+    }
+#endif
+#if USE_V4L2_ENCODER
+    if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<V4L2H264Encoder>(cricket::VideoCodec(format)));
       });
     }
 #endif

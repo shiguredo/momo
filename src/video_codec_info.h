@@ -29,6 +29,7 @@ struct VideoCodecInfo {
     NVIDIA,
     Intel,
     VideoToolbox,
+    V4L2,
     Software,
     NotSupported,
   };
@@ -84,6 +85,8 @@ struct VideoCodecInfo {
         return {"Intel Media SDK", "intel"};
       case Type::VideoToolbox:
         return {"VideoToolbox", "videotoolbox"};
+      case Type::V4L2:
+        return {"V4L2", "v4l2"};
       case Type::Software:
         return {"Software", "software"};
       default:
@@ -253,6 +256,11 @@ struct VideoCodecInfo {
     if (JetsonVideoDecoder::IsSupportedAV1()) {
       info.av1_decoders.push_back(Type::Jetson);
     }
+#endif
+
+#if USE_V4L2_ENCODER
+    info.h264_encoders.push_back(Type::V4L2);
+    info.h264_decoders.push_back(Type::V4L2);
 #endif
 
     info.vp8_encoders.push_back(Type::Software);

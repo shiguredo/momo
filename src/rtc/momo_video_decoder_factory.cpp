@@ -32,6 +32,10 @@
 #include "hwenc_msdk/msdk_video_decoder.h"
 #endif
 
+#if USE_V4L2_ENCODER
+#include "hwenc_v4l2/v4l2_h264_decoder.h"
+#endif
+
 namespace {
 
 bool IsFormatSupported(
@@ -234,6 +238,13 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
     if (config_.h264_decoder == VideoCodecInfo::Type::MMAL) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<MMALH264Decoder>());
+    }
+#endif
+
+#if USE_V4L2_ENCODER
+    if (config_.h264_decoder == VideoCodecInfo::Type::V4L2) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<V4L2H264Decoder>(webrtc::kVideoCodecH264));
     }
 #endif
   }
