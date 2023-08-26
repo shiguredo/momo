@@ -29,6 +29,8 @@
     - @melpon
 - [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
     - @melpon
+- [UPDATE] m116 で `cricket::Codec` は protected になったため `cricket::CreateVideoCodec` を利用するように修正
+    - @torikizi
 - [ADD] Ubuntu 22.04 x86_64 を追加
     - @melpon
 - [ADD] ubuntu-20.04_armv8_jetson_xavier（JetPack 5.1.1 対応版のパッケージ）を追加
