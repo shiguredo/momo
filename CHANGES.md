@@ -23,8 +23,8 @@
     - @voluntas, @melpon
 - [UPDATE] Boost を 1.82.0 に上げる
     - @melpon
-- [UPDATE] WebRTC を m114.5735.0.1 に上げる
-    - @melpon
+- [UPDATE] WebRTC を m116.5845.6.1 に上げる
+    - @melpon, @torikizi
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 12.0 に上げる
     - @melpon
 - [UPDATE] deprecated になった actions/create-release と actions/upload-release の利用をやめて softprops/action-gh-release を利用する
