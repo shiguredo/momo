@@ -31,6 +31,8 @@
     - @melpon
 - [UPDATE] m116 で `cricket::Codec` は protected になったため `cricket::CreateVideoCodec` を利用するように修正
     - @torikizi
+- [UPDATE] Raspberry Pi 4 で利用する ADM を ALSA から PulseAudio に変更
+    - @melpon
 - [ADD] Ubuntu 22.04 x86_64 を追加
     - @melpon
 - [ADD] ubuntu-20.04_armv8_jetson_xavier（JetPack 5.1.1 対応版のパッケージ）を追加
