@@ -20,7 +20,7 @@ jobs:
     name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v1.3
       # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
       #   with:
@@ -89,7 +89,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -137,7 +137,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -179,7 +179,7 @@ jobs:
       - build-linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/download
         with:
           platform: windows_x86_64
@@ -225,7 +225,7 @@ jobs:
       - create-release
     if: always()
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||
