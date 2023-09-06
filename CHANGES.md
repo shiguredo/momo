@@ -17,7 +17,7 @@
     - @melpon
 - [UPDATE] CMake を 3.27.4 に上げる
     - @voluntas
-- [UPDATE] SDL を 2.26.5 に上げる
+- [UPDATE] SDL を 2.28.3 に上げる
     - @voluntas, @melpon
 - [UPDATE] CLI11 を 2.3.2 に上げる
     - @voluntas, @melpon
