@@ -316,7 +316,11 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+if (WIN32)
+  set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+else()
+  set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+endif()
 
 target_link_libraries(momo
   PRIVATE
@@ -625,6 +629,12 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec
         /usr/local/cuda/include)
 
+    if (WIN32)
+      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20")
+    else()
+      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17")
+    endif()
+
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
         src/cuda/cuda_context_cuda.cpp
@@ -633,7 +643,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20"
+        COMPILE_OPTIONS "${_CUDA_COMPILE_OPTIONS}"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
@@ -716,7 +726,7 @@ elseif (TARGET_OS STREQUAL "linux")
       if (USE_V4L2_ENCODER)
         add_library(camerac SHARED)
         target_include_directories(camerac PRIVATE ${SYSROOT}/usr/include/libcamera)
-        set_target_properties(camerac PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+        set_target_properties(camerac PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
         target_sources(camerac
           PRIVATE
             src/libcamerac/libcamerac.cpp

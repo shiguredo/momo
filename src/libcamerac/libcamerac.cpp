@@ -355,7 +355,9 @@ void libcamerac_Signal_Request_connect(
     libcamerac_Signal_Request* p,
     void (*callback)(libcamerac_Request* request, void* user_data),
     void* user_data) {
-  auto signal = std::make_shared<Signal_Request>(callback, user_data);
+  auto signal = std::make_shared<Signal_Request>();
+  signal->callback = callback;
+  signal->user_data = user_data;
   g_signal_requests.push_back(signal);
   ((libcamera::Signal<libcamera::Request*>*)p)
       ->connect(signal.get(), &Signal_Request::Run);
