@@ -316,7 +316,11 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+if ("${TARGET_OS}" STREQUAL "windows")
+  set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
+else()
+  set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+endif()
 
 target_link_libraries(momo
   PRIVATE
