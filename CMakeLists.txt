@@ -316,7 +316,7 @@ target_sources(momo
 
 target_include_directories(momo PRIVATE src)
 
-if ("${TARGET_OS}" STREQUAL "windows")
+if (WIN32)
   set_target_properties(momo PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 else()
   set_target_properties(momo PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
@@ -629,6 +629,12 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec
         /usr/local/cuda/include)
 
+    if (WIN32)
+      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20")
+    else()
+      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17")
+    endif()
+
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
         src/cuda/cuda_context_cuda.cpp
@@ -637,7 +643,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20"
+        COMPILE_OPTIONS "${_CUDA_COMPILE_OPTIONS}"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
