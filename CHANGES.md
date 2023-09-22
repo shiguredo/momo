@@ -15,7 +15,7 @@
   - @melpon
 - [CHANGE] ubuntu-18.04_armv8_jetson_nano と ubuntu-18.04_armv8_jetson_xavier パッケージの削除
   - @melpon
-- [UPDATE] CMake を 3.27.4 に上げる
+- [UPDATE] CMake を 3.27.6 に上げる
   - @voluntas
 - [UPDATE] SDL を 2.28.3 に上げる
   - @voluntas, @melpon
