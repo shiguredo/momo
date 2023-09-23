@@ -21,8 +21,8 @@
   - @voluntas, @melpon
 - [UPDATE] CLI11 を 2.3.2 に上げる
   - @voluntas, @melpon
-- [UPDATE] Boost を 1.82.0 に上げる
-  - @melpon
+- [UPDATE] Boost を 1.83.0 に上げる
+  - @melpon @voluntas
 - [UPDATE] WebRTC を m117.5938.2.0 に上げる
   - @melpon, @torikizi
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 12.0 に上げる
