@@ -24,6 +24,7 @@
 - [UPDATE] Boost を 1.83.0 に上げる
   - @melpon @voluntas
 - [UPDATE] WebRTC を m117.5938.2.0 に上げる
+  - VP9/AV1 のサイマルキャストが動作するよう対応
   - @melpon, @torikizi
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 12.0 に上げる
   - @melpon
@@ -31,11 +32,21 @@
   - @melpon
 - [UPDATE] m116 で `cricket::Codec` は protected になったため `cricket::CreateVideoCodec` を利用するように修正
   - @torikizi
+- [UPDATE] VPL の Init を毎回呼ぶように修正
+  - Sora C++ SDK で一部の Windows で VP8 の受信時にクラッシュする問題があり、修正内容を momo に展開する
+  - @melpon
 - [UPDATE] Raspberry Pi 4 で利用する ADM を ALSA から PulseAudio に変更
   - @melpon
 - [ADD] Ubuntu 22.04 x86_64 を追加
   - @melpon
 - [ADD] ubuntu-20.04_armv8_jetson_xavier（JetPack 5.1.1 対応版のパッケージ）を追加
+  - @melpon
+- [ADD] ラズパイ専用カメラ(libcamera) に対応
+  - `--use-libcamera` と `--use-libcamera-native` オプションを追加
+  - @melpon
+- [ADD] V4L2 m2m を利用した H.264 のエンコードとデコードに対応
+  - @melpon
+- [ADD] Raspberry Pi armv8 向けビルドで SDL2 を利用可能にする
   - @melpon
 - [FIX] metadata に JSON にパースできない値を指定した時に異常終了する問題を修正する
   - @miosakuma
