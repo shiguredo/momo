@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2023.1.0
+
 - [CHANGE] --show-me オプションの削除
   - @melpon
 - [CHANGE] ubuntu-18.04_armv8_jetson_nano と ubuntu-18.04_armv8_jetson_xavier パッケージの削除
