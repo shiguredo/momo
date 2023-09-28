@@ -144,7 +144,7 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 
 ## Raspberry Pi (Raspberry-Pi-OS) 64 bit で H.264 を利用できますか？
 
-Release 2023.1 以降から利用可能です。
+Release 2023.1.0 以降から利用可能です。
 
 ## Momo のオプションで指定した解像度で映像の送信はできますか？
 
@@ -172,7 +172,7 @@ Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプシ�
 
 ## Raspberry Pi カメラモジュール V3 は利用できますか？
 
-Release 2023.1 以降から利用可能です。
+Release 2023.1.0 以降から利用可能です。
 
 ## 利用できる JetPack のバージョンはいくつですか？
 
