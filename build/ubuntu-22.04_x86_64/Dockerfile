@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.1.1-experimental
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 ARG PACKAGE_NAME
 
@@ -9,28 +9,18 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloa
 
 # パッケージのインストール
 
-COPY script/apt_install_arm.sh /root/
+COPY script/apt_install_x86_64.sh /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/apt_install_arm.sh
-
-# RootFS の構築
-
-COPY script/init_rootfs_arm64.sh /root/
-COPY arm64.conf /root/
-RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
-  /root/init_rootfs_arm64.sh /root/rootfs /root/arm64.conf
-
-# 構築した RootFS を Jetson Nano のファイルで上書きする
-
-COPY jetson.sh /root/
-RUN /root/jetson.sh
+  /root/apt_install_x86_64.sh \
+  && apt-get -y install libdrm-dev libstdc++-12-dev
 
 # WebRTC の取得
 
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8 /root /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-22.04_x86_64 /root /root
+# COPY webrtc/ /root/webrtc/
 
 # コンパイラの取得
 
@@ -56,18 +46,12 @@ RUN \
       -D_LIBCPP_DISABLE_AVAILABILITY \
       -nostdinc++ \
       -isystem/root/llvm/libcxx/include \
-      --target=aarch64-linux-gnu \
-      --sysroot=/root/rootfs \
-      -I/root/rootfs/usr/include/aarch64-linux-gnu \
     ' \
     linkflags=' \
-      -L/root/rootfs/usr/lib/aarch64-linux-gnu \
-      -B/root/rootfs/usr/lib/aarch64-linux-gnu \
     ' \
     toolset=clang \
     visibility=global \
     target-os=linux \
-    architecture=arm \
     address-model=64 \
     link=static \
     variant=release \
@@ -103,18 +87,8 @@ RUN \
   && cmake ../source \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
-    -DCMAKE_SYSTEM_NAME=Linux \
-    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
     -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
-    -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
     -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
-    -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
-    -DCMAKE_FIND_ROOT_PATH=/root/rootfs \
-    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
-    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
-    -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH \
-    -DCMAKE_SYSROOT=/root/rootfs \
     -DBUILD_SHARED_LIBS=OFF \
     -DSDL_ATOMIC=OFF \
     -DSDL_AUDIO=OFF \
@@ -153,3 +127,57 @@ RUN \
   && make -j`nproc` \
   && make install
 
+# CUDA 周りのインストール
+ARG CUDA_VERSION
+RUN set -ex \
+  && apt-get update \
+  && apt-get install -y software-properties-common \
+  && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin \
+  && mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+  && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub \
+  && add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /" \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get -y install cuda=$CUDA_VERSION clang-12
+
+# libva
+ARG LIBVA_VERSION
+RUN set -ex \
+  && git clone --depth 1 --branch $LIBVA_VERSION https://github.com/intel/libva.git /root/libva-source \
+  && mkdir -p /root/libva-build \
+  && cd /root/libva-build \
+  && CC=/root/llvm/clang/bin/clang \
+    CXX=/root/llvm/clang/bin/clang++ \
+    CFLAGS="-fPIC" \
+    /root/libva-source/autogen.sh \
+      --enable-static \
+      --disable-shared \
+      --with-drivers-path=/usr/lib/x86_64-linux-gnu/dri \
+      --prefix /root/libva \
+  && make -j`nproc` \
+  && make install \
+  && rm -rf /root/libva-build \
+  && rm -rf /root/libva-source
+
+# Intel Media SDK
+COPY patch/msdk_limits.patch /root/msdk_limits.patch
+ARG MSDK_VERSION
+RUN set -ex \
+  && git clone --depth 1 --branch intel-mediasdk-$MSDK_VERSION https://github.com/Intel-Media-SDK/MediaSDK.git /root/msdk-source \
+  && cd /root/msdk-source \
+  && find . -name "CMakeLists.txt" | while read line; do sed -i 's/SHARED/STATIC/g' $line; done \
+  && patch -p1 < /root/msdk_limits.patch \
+  && mkdir -p /root/msdk-build \
+  && cd /root/msdk-build \
+  && cmake \
+      -DCMAKE_INSTALL_PREFIX=/root/msdk \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH=/root/libva \
+      -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+      -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+      -DBUILD_SAMPLES=OFF \
+      -DBUILD_TUTORIALS=OFF \
+      /root/msdk-source \
+  && cmake --build . -j`nproc` \
+  && cmake --install . \
+  && rm -rf /root/msdk-build \
+  && rm -rf /root/msdk-source

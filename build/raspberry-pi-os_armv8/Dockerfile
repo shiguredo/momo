@@ -84,3 +84,68 @@ ARG CMAKE_VERSION
 COPY script/get_cmake.sh /root/
 RUN /root/get_cmake.sh "$CMAKE_VERSION" linux /root
 ENV PATH "/root/cmake/bin:$PATH"
+
+# SDL2 のビルド
+
+ARG SDL2_VERSION
+
+COPY script/setup_sdl2.sh /root/
+RUN \
+  set -ex \
+  && /root/setup_sdl2.sh "$SDL2_VERSION" /root/sdl2-source \
+  && mkdir -p /root/sdl2-source/build \
+  && cd /root/sdl2-source/build \
+  && cmake ../source \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/root/SDL2 \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+    -DCMAKE_C_COMPILER=/root/llvm/clang/bin/clang \
+    -DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu \
+    -DCMAKE_CXX_COMPILER=/root/llvm/clang/bin/clang++ \
+    -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu \
+    -DCMAKE_FIND_ROOT_PATH=/root/rootfs \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
+    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH \
+    -DCMAKE_SYSROOT=/root/rootfs \
+    -DSDL_STATIC=ON \
+    -DSDL_SHARED=OFF \
+    -DSDL_ATOMIC=OFF \
+    -DSDL_AUDIO=OFF \
+    -DSDL_VIDEO=ON \
+    -DSDL_RENDER=ON \
+    -DSDL_EVENTS=ON \
+    -DSDL_JOYSTICK=ON \
+    -DSDL_HAPTIC=ON \
+    -DSDL_POWER=ON \
+    -DSDL_THREADS=ON \
+    -DSDL_TIMERS=OFF \
+    -DSDL_FILE=OFF \
+    -DSDL_LOADSO=ON \
+    -DSDL_CPUINFO=OFF \
+    -DSDL_FILESYSTEM=OFF \
+    -DSDL_DLOPEN=ON \
+    -DSDL_SENSOR=ON \
+    -DSDL_COCOA=OFF \
+    -DSDL_KMSDRM=OFF \
+    -DSDL_METAL=OFF \
+    -DSDL_OPENGL=ON \
+    -DSDL_OPENGLES=ON \
+    -DSDL_RPI=OFF \
+    -DSDL_VIVANTE=OFF \
+    -DSDL_VULKAN=OFF \
+    -DSDL_WAYLAND=OFF \
+    -DSDL_X11=ON \
+    -DSDL_X11_SHARED=OFF \
+    -DSDL_X11_XCURSOR=OFF \
+    -DSDL_X11_XFIXES=OFF \
+    -DSDL_X11_XINERAMA=OFF \
+    -DSDL_X11_XINPUT=OFF \
+    -DSDL_X11_XRANDR=OFF \
+    -DSDL_X11_XSCRNSAVER=OFF \
+    -DSDL_X11_XSHAPE=OFF \
+    -DSDL_X11_XVM=OFF \
+  && make -j`nproc` \
+  && make install

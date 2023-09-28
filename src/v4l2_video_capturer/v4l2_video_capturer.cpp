@@ -93,8 +93,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }
-  rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer(
-      new rtc::RefCountedObject<V4L2VideoCapturer>());
+  rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer =
+      rtc::make_ref_counted<V4L2VideoCapturer>(config);
   if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapturer(" << unique_name
                         << ")";
@@ -109,8 +109,9 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
   return v4l2_capturer;
 }
 
-V4L2VideoCapturer::V4L2VideoCapturer()
-    : _deviceFd(-1),
+V4L2VideoCapturer::V4L2VideoCapturer(V4L2VideoCapturerConfig config)
+    : ScalableVideoTrackSource(config),
+      _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
       _currentWidth(-1),
       _currentHeight(-1),

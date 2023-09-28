@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.1.1-experimental
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ARG PACKAGE_NAME
 
@@ -20,8 +20,6 @@ COPY arm64.conf /root/
 RUN --mount=type=cache,id=$PACKAGE_NAME,target=/var/cache/apt --mount=type=cache,id=$PACKAGE_NAME,target=/var/lib/apt \
   /root/init_rootfs_arm64.sh /root/rootfs /root/arm64.conf
 
-# 構築した RootFS を Jetson Nano のファイルで上書きする
-
 COPY jetson.sh /root/
 RUN /root/jetson.sh
 
@@ -30,7 +28,7 @@ RUN /root/jetson.sh
 ARG WEBRTC_BUILD_VERSION
 
 COPY script/get_webrtc.sh /root/
-RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-18.04_armv8 /root /root
+RUN /root/get_webrtc.sh "$WEBRTC_BUILD_VERSION" ubuntu-20.04_armv8 /root /root
 
 # コンパイラの取得
 
@@ -116,6 +114,7 @@ RUN \
     -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH \
     -DCMAKE_SYSROOT=/root/rootfs \
     -DBUILD_SHARED_LIBS=OFF \
+    -DSDL_STATIC_PIC=ON \
     -DSDL_ATOMIC=OFF \
     -DSDL_AUDIO=OFF \
     -DSDL_VIDEO=ON \
@@ -130,26 +129,25 @@ RUN \
     -DSDL_LOADSO=ON \
     -DSDL_CPUINFO=OFF \
     -DSDL_FILESYSTEM=OFF \
-    -DSDL_DLOPEN=ON \
     -DSDL_SENSOR=ON \
-    -DVIDEO_OPENGL=ON \
-    -DVIDEO_OPENGLES=ON \
-    -DVIDEO_RPI=OFF \
-    -DVIDEO_WAYLAND=OFF \
-    -DVIDEO_X11=ON \
-    -DX11_SHARED=OFF \
-    -DVIDEO_X11_XCURSOR=OFF \
-    -DVIDEO_X11_XINERAMA=OFF \
-    -DVIDEO_X11_XINPUT=OFF \
-    -DVIDEO_X11_XRANDR=OFF \
-    -DVIDEO_X11_XSCRNSAVER=OFF \
-    -DVIDEO_X11_XSHAPE=OFF \
-    -DVIDEO_X11_XVM=OFF \
-    -DVIDEO_VULKAN=OFF \
-    -DVIDEO_VIVANTE=OFF \
-    -DVIDEO_COCOA=OFF \
-    -DVIDEO_METAL=OFF \
-    -DVIDEO_KMSDRM=OFF \
+    -DSDL_OPENGL=ON \
+    -DSDL_OPENGLES=ON \
+    -DSDL_RPI=OFF \
+    -DSDL_WAYLAND=OFF \
+    -DSDL_X11=ON \
+    -DSDL_X11_SHARED=OFF \
+    -DSDL_X11_XCURSOR=OFF \
+    -DSDL_X11_XDBE=OFF \
+    -DSDL_X11_XINPUT=OFF \
+    -DSDL_X11_XFIXES=OFF \
+    -DSDL_X11_XRANDR=OFF \
+    -DSDL_X11_XSCRNSAVER=OFF \
+    -DSDL_X11_XSHAPE=OFF \
+    -DSDL_VULKAN=OFF \
+    -DSDL_VIVANTE=OFF \
+    -DSDL_COCOA=OFF \
+    -DSDL_METAL=OFF \
+    -DSDL_KMSDRM=OFF \
   && make -j`nproc` \
   && make install
 

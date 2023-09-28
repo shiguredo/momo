@@ -64,7 +64,7 @@ void Util::ParseArgs(int argc,
   auto is_valid_hw_mjpeg_decoder = CLI::Validator(
       [](std::string input) -> std::string {
         if (input == "1") {
-#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
+#if USE_MMAL_ENCODER || USE_JETSON_ENCODER || USE_NVCODEC_ENCODER || USE_V4L2_ENCODER
           return std::string();
 #else
           return "Not available because your device does not have this "
@@ -147,6 +147,11 @@ void Util::ParseArgs(int argc,
          "(only on supported devices)")
       ->check(is_valid_hw_mjpeg_decoder)
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
+  app.add_flag("--use-libcamera", args.use_libcamera,
+               "Use libcamera for video capture (only on supported devices)");
+  app.add_flag("--use-libcamera-native", args.use_libcamera_native,
+               "Use native buffer for H.264 encoding");
+
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,
                  "Use the video device specified by an index or a name "
@@ -171,9 +176,6 @@ void Util::ParseArgs(int argc,
       ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
                "Show video using SDL (if SDL is available)")
-      ->check(is_sdl_available);
-  app.add_flag("--show-me", args.show_me,
-               "Show self video (if SDL is available)")
       ->check(is_sdl_available);
   app.add_option("--window-width", args.window_width,
                  "Window width for videos (if SDL is available)")
@@ -367,7 +369,7 @@ void Util::ParseArgs(int argc,
   auto is_json = CLI::Validator(
       [](std::string input) -> std::string {
         boost::json::error_code ec;
-        boost::json::parse(input);
+        boost::json::parse(input, ec);
         if (ec) {
           return "Value " + input + " is not JSON Value";
         }
@@ -384,15 +386,6 @@ void Util::ParseArgs(int argc,
     app.parse(argc, argv);
   } catch (const CLI::ParseError& e) {
     exit(app.exit(e));
-  }
-
-  // サイマルキャストは VP8, H264 のみで動作する
-  if (args.sora_simulcast && args.sora_video_codec_type != "VP8" &&
-      args.sora_video_codec_type != "H264") {
-    std::cerr << "Simulcast works only --video-codec-type=VP8 or "
-                 "--video-codec-type=H264."
-              << std::endl;
-    exit(1);
   }
 
   if (!serial_setting.empty()) {
@@ -615,7 +608,7 @@ http::response<http::string_body> Util::BadRequest(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = why.to_string();
+  res.body() = why;
   res.prepare_payload();
   return res;
 }
@@ -627,7 +620,7 @@ http::response<http::string_body> Util::NotFound(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = "The resource '" + target.to_string() + "' was not found.";
+  res.body() = "The resource '" + std::string(target) + "' was not found.";
   res.prepare_payload();
   return res;
 }
@@ -640,7 +633,7 @@ http::response<http::string_body> Util::ServerError(
   res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(http::field::content_type, "text/html");
   res.keep_alive(req.keep_alive());
-  res.body() = "An error occurred: '" + what.to_string() + "'";
+  res.body() = "An error occurred: '" + std::string(what) + "'";
   res.prepare_payload();
   return res;
 }

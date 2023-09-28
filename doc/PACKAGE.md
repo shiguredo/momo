@@ -23,9 +23,9 @@ Windows の場合は以下のコマンドになります。
 - raspberry-pi-os_armv6
 - raspberry-pi-os_armv7
 - raspberry-pi-os_armv8
-- ubuntu-18.04_armv8_jetson_nano
-- ubuntu-18.04_armv8_jetson_xavier
+- ubuntu-20.04_armv8_jetson_xavier
 - ubuntu-20.04_x86_64
+- ubuntu-22.04_x86_64
 
 ## パッケージ解凍後の構成
 

@@ -1,9 +1,14 @@
 # Raspberry Pi (Raspberry-Pi-OS) で Momo を使ってみる
 
+## 注意
+
+Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS を利用してください
+
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
+- Raspberry Pi OS 64 bit を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv8.tar.gz` を利用してください
 - Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv7.tar.gz` を利用してください
 - Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv6.tar.gz` を利用してください
 
@@ -32,6 +37,19 @@ $ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3
 ```
 
+#### Raspberry Pi OS Lite を利用する場合
+
+Raspberry Pi Lite では映像に関するパッケージが入っていないため、`ldd ./momo | grep not` を実行し、不足しているパッケージを確認してください。
+
+下記に実行する一例を示します。
+
+```
+$ sudo apt-get install libSDL2-2.0
+$ sudo apt-get install libxtst6
+$ sudo apt-get install libegl1-mesa-dev
+$ sudo apt-get install libgles2-mesa
+```
+
 ### Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
 
 これは USB カメラを利用する場合は不要なオプションです。
@@ -57,8 +75,7 @@ $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ### --force-i420
 
 `--force-i420` は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。
-USBカメラでは逆にフレームレートが落ちるため使わないでください。
-
+USB カメラでは逆にフレームレートが落ちるため使わないでください。
 
 ```shell
 $ ./momo --force-i420 --no-audio-device test
@@ -80,7 +97,7 @@ $ ./momo --hw-mjpeg-decoder true --no-audio-device test
 
 ### オプションを見直す
 
-Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用するとCPU使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
+Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用すると CPU 使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
 ```shell
 $ ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
@@ -88,12 +105,11 @@ $ ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
 
 がリアルタイムでの最高解像度設定となります。
 
-
 ## USB カメラでパフォーマンスが出ない
 
 ### --hw-mjpeg-decoder
 
-一部の MJPEG に対応した USBカメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
+一部の MJPEG に対応した USB カメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
 
 ```shell
 $ ./momo --hw-mjpeg-decoder true --no-audio-device test
@@ -101,7 +117,7 @@ $ ./momo --hw-mjpeg-decoder true --no-audio-device test
 
 ### Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない
 
-USB カメラ利用時には `--hw-mjpeg-decoder` を使わない方がフレームレートは出ます。しかし `--hw-mjpeg-decoder` を使ってCPU使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
+USB カメラ利用時には `--hw-mjpeg-decoder` を使わない方がフレームレートは出ます。しかし `--hw-mjpeg-decoder` を使って CPU 使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
 
 ```
 gpu_mem=256

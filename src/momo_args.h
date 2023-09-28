@@ -24,13 +24,17 @@ struct MomoArgs {
 #else
   bool hw_mjpeg_decoder = false;
 #endif
+  // Raspberry Pi 4 の場合だけ使える
+  bool use_libcamera = false;
+  // use_libcamera == true の場合だけ使える。
+  // sora_video_codec_type == "H264" かつ sora_simulcast == false の場合だけしか機能しない。
+  bool use_libcamera_native = false;
   std::string video_device = "";
   std::string resolution = "VGA";
   int framerate = 30;
   bool fixed_resolution = false;
   std::string priority = "FRAMERATE";
   bool use_sdl = false;
-  bool show_me = false;
   int window_width = 640;
   int window_height = 480;
   bool fullscreen = false;

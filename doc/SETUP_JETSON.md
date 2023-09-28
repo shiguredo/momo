@@ -2,18 +2,16 @@
 
 もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
-## Jetson シリーズでは JetPack 4.4 以上の利用を前提としています
+## Jetson シリーズでは JetPack 5.1.1 のみの利用を前提としています
 
-[JetPack 4\.4 \- L4T R32\.4\.3 production release \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-4-4-l4t-r32-4-3-production-release/140870)
+[JetPack 5.1.1 is now live \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-5-1-1-is-now-live/247862/1)
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- `momo-<version>_ubuntu-18.04_armv8_jetson_nano.tar.gz`
-    - Jetson Nano
-- `momo-<version>_ubuntu-18.04_armv8_jetson_xavier.tar.gz`
-    - Jetson Xavier NX または Jetson AGX Xavier
+- `momo-<version>_ubuntu-20.04_armv8_jetson_xavier.tar.gz`
+  - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
@@ -36,7 +34,7 @@ $ tree
 
 ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
 
-## Jetson Nano 向けの追加のオプション
+## Jetson 向けの追加のオプション
 
 ### --hw-mjpeg-decoder
 
@@ -51,13 +49,13 @@ $ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 
 ### 実行時のコマンドについて
 
-`--fixed-resolution` を外してみてください。4Kの時には `--fixed-resolution` オプションを使うとレートが安定しない傾向があります。
+`--fixed-resolution` を外してみてください。4K の時には `--fixed-resolution` オプションを使うとレートが安定しない傾向があります。
 
 ### フレームレートが出ない場合
 
 一番多いのは暗い場所で利用しているパターンです。カメラが自動的に露光時間を伸ばすためフレームレートが下がります。部屋を明るくする。もしくはカメラの設定変更が可能な場合はフレームレート優先設定に変更してください。
 
-### [IMX317を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) をご利用の場合
+### [IMX317 を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) をご利用の場合
 
 > v4l2-ctl --set-ctrl=exposure_auto=1
 
@@ -87,13 +85,13 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 ## 4K@30fps の実行例
 
-ここでは Jetson Nano を使って 4K@30fps を実行する方法を記載します。
+ここでは Jetson AGX Orin を使って 4K@30fps を実行する方法を記載します。
 
 ### 事前確認
 
 4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
 
-- Jetson Nano で momo を使うためのセットアップが全て完了している
+- Jetson AGX Orin で momo を使うためのセットアップが全て完了している
 - 4K@30fps が可能なカメラがセットされている
 - Sora/Sora Labo のアカウントの用意がある
 
@@ -108,10 +106,8 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 ```shell
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
     --signaling-url \
-        wss://0001.canary.sora-labo.shiguredo.app/signaling \
-        wss://0002.canary.sora-labo.shiguredo.app/signaling \
-        wss://0003.canary.sora-labo.shiguredo.app/signaling \
-    --channel-id sora@shiguredo#0 \
+        wss://canary.sora-labo.shiguredo.app/signaling \
+    --channel-id shiguredo_0_sora \
     --video true --audio true \
     --video-codec-type VP8 --video-bit-rate 15000 \
     --auto --role sendonly \
@@ -121,25 +117,25 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 コマンド例の構成は以下のようになっています。
 
 - ./momo ~ sora までは momo に対して行うパラメータになっています。
-    - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
-    - `--framerate 30` は フレームレートを 30 に設定しています
-    - `--resolution 4K` は解像度を 4K に設定しています
-    - `--log-level 2` は error と warning のログを出力するように設定しています
-    - `sora` は Sora モードを利用するように設定しています
+  - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
+  - `--framerate 30` は フレームレートを 30 に設定しています
+  - `--resolution 4K` は解像度を 4K に設定しています
+  - `--log-level 2` は error と warning のログを出力するように設定しています
+  - `sora` は Sora モードを利用するように設定しています
 - `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
-    - `wss://0001.canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
-    - `sora@shiguredo#0` はチャネル ID を設定しています
-    - `--video true` は Sora への映像送信を有効に設定しています
-    - `--audio true` は Sora への音声送信を有効に設定しています
-    - `--video-codec-type VP8` はコーデックを VP8 に設定しています
-    - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
-    - `--auto` は Sora との自動接続を有効に設定しています
-    - `--role sendonly` は送信時の役割を送信のみで設定しています
-    - `--metadata '{"access_token": "xyz"}'` は Sora Labo のアクセストークンをメタデータに設定しています
+  - `wss://canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
+  - `shiguredo_0_sora` はチャネル ID を設定しています
+  - `--video true` は Sora への映像送信を有効に設定しています
+  - `--audio true` は Sora への音声送信を有効に設定しています
+  - `--video-codec-type VP8` はコーデックを VP8 に設定しています
+  - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
+  - `--auto` は Sora との自動接続を有効に設定しています
+  - `--role sendonly` は送信時の役割を送信のみで設定しています
+  - `--metadata '{"access_token": "xyz"}'` は Sora Labo のアクセストークンをメタデータに設定しています
 
 ### 実行結果
 
-実行結果の確認はChrome の `chrome://webrtc-internals` を利用します。
+実行結果の確認は Chrome の `chrome://webrtc-internals` を利用します。
 
 `chrome://webrtc-internals` を確認すると以下のように 4K(3840x2160) で 30 fps が出ていることが確認できます。
 

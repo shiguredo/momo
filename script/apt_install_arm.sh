@@ -8,7 +8,7 @@ apt-get -y install tzdata
 echo 'Asia/Tokyo' > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
-apt-get -y install \
+DEBIAN_FRONTEND=noninteractive apt-get -y install \
   binutils-aarch64-linux-gnu \
   binutils-arm-linux-gnueabi \
   binutils-arm-linux-gnueabihf \

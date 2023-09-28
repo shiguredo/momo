@@ -20,8 +20,14 @@ jobs:
     name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
-      - uses: microsoft/setup-msbuild@v1.1
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v1.3
+      # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
+      #   with:
+      #     sdk-version: 20348
+      - name: test
+        run: |
+          ls "C:\Program Files (x86)\Windows Kits\10\Include\"
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -83,7 +89,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -125,13 +131,13 @@ jobs:
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
-          - ubuntu-18.04_armv8_jetson_nano
-          - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
+          - ubuntu-20.04_armv8_jetson_xavier
+          - ubuntu-22.04_x86_64
     name: Build momo for ${{ matrix.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -173,74 +179,42 @@ jobs:
       - build-linux
     runs-on: ubuntu-latest
     steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/download
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Output upload url
-        shell: bash
-        run: echo "UPLOAD_URL='${{ steps.create_release.outputs.upload_url }}'" > create-release.env
-      - name: Upload create-release Environment
-        uses: actions/upload-artifact@v3
+          platform: windows_x86_64
+      - uses: ./.github/actions/download
         with:
-          name: create-release.env
-          path: create-release.env
-  upload-assets:
-    name: Upload Assets to Release
-    needs:
-      - create-release
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        name:
-          - windows_x86_64
-          - macos_arm64
-          - raspberry-pi-os_armv6
-          - raspberry-pi-os_armv7
-          - raspberry-pi-os_armv8
-          - ubuntu-18.04_armv8_jetson_nano
-          - ubuntu-18.04_armv8_jetson_xavier
-          - ubuntu-20.04_x86_64
-    steps:
-      - uses: actions/download-artifact@v3
+          platform: macos_arm64
+      - uses: ./.github/actions/download
         with:
-          name: ${{ matrix.name }}.env
-          path: ${{ matrix.name }}.env
-      - uses: actions/download-artifact@v3
+          platform: raspberry-pi-os_armv6
+      - uses: ./.github/actions/download
         with:
-          name: create-release.env
-          path: create-release.env
+          platform: raspberry-pi-os_armv7
+      - uses: ./.github/actions/download
+        with:
+          platform: raspberry-pi-os_armv8
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-20.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-20.04_armv8_jetson_xavier
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-22.04_x86_64
       - name: Env to output
-        shell: bash
         run: |
-          sed -i 's/\r//g' ${{ matrix.name }}.env/${{ matrix.name }}.env
-          sed -i 's/\r//g' create-release.env/create-release.env
-          source ${{ matrix.name }}.env/${{ matrix.name }}.env
-          source create-release.env/create-release.env
-          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
-          echo "content_type=$CONTENT_TYPE" >> $GITHUB_OUTPUT
-          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
+          echo "package_paths<<EOF" >> $GITHUB_OUTPUT
+          cat package_paths.env >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         id: env
-      - uses: actions/download-artifact@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ steps.env.outputs.package_name }}
-          path: ${{ steps.env.outputs.package_name }}
-      - name: Upload ${{ matrix.name }} Release Asset
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.env.outputs.upload_url }}
-          asset_path: ${{ steps.env.outputs.package_name }}/${{ steps.env.outputs.package_name }}
-          asset_name: ${{ steps.env.outputs.package_name }}
-          asset_content_type: ${{ steps.env.outputs.content_type }}
+          files:
+            ${{ steps.env.outputs.package_paths }}
   notification:
     name: Slack Notification
     runs-on: ubuntu-latest
@@ -249,10 +223,9 @@ jobs:
       - build-macos
       - build-linux
       - create-release
-      - upload-assets
     if: always()
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||

@@ -17,6 +17,7 @@
 #endif
 
 #if USE_JETSON_ENCODER
+#include "hwenc_jetson/jetson_video_decoder.h"
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 
@@ -28,6 +29,7 @@ struct VideoCodecInfo {
     NVIDIA,
     Intel,
     VideoToolbox,
+    V4L2,
     Software,
     NotSupported,
   };
@@ -83,6 +85,8 @@ struct VideoCodecInfo {
         return {"Intel Media SDK", "intel"};
       case Type::VideoToolbox:
         return {"VideoToolbox", "videotoolbox"};
+      case Type::V4L2:
+        return {"V4L2", "v4l2"};
       case Type::Software:
         return {"Software", "software"};
       default:
@@ -239,11 +243,24 @@ struct VideoCodecInfo {
     if (JetsonVideoEncoder::IsSupportedVP8()) {
       info.vp8_encoders.push_back(Type::Jetson);
     }
-    info.vp8_decoders.push_back(Type::Jetson);
-    info.vp9_decoders.push_back(Type::Jetson);
+    if (JetsonVideoDecoder::IsSupportedVP8()) {
+      info.vp8_decoders.push_back(Type::Jetson);
+    }
     if (JetsonVideoEncoder::IsSupportedVP9()) {
       info.vp9_encoders.push_back(Type::Jetson);
     }
+    info.vp9_decoders.push_back(Type::Jetson);
+    if (JetsonVideoEncoder::IsSupportedAV1()) {
+      info.av1_encoders.push_back(Type::Jetson);
+    }
+    if (JetsonVideoDecoder::IsSupportedAV1()) {
+      info.av1_decoders.push_back(Type::Jetson);
+    }
+#endif
+
+#if USE_V4L2_ENCODER
+    info.h264_encoders.push_back(Type::V4L2);
+    info.h264_decoders.push_back(Type::V4L2);
 #endif
 
     info.vp8_encoders.push_back(Type::Software);

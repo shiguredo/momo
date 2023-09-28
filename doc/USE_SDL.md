@@ -11,15 +11,11 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - この機能は ayame と sora モードでのみ利用できます
     - test モードでは test.html が HTTPS ではないため getUserMedia を使用できません
 - この機能は Windows または macOS または Linux で利用できます
-- この機能を以下の組み合わせで利用するとパフォーマンスに影響が出るため避けてください
-    - --hw-mjpeg-decoder=true と --show-me を併用する組み合わせ
 
 ## SDL コマンド引数
 
 - --use-sdl
     - SDL 機能を使う場合は指定します
-- --show-me
-    - Momo が取得した映像を出力します
 - --window-width
     - 映像を表示するウインドウの横幅を指定します
 - --window-height
@@ -39,7 +35,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - ルーム ID を推測されにくい値に変更して下さい
 
 ```
-./momo --resolution VGA --no-audio-device --use-sdl --show-me ayame --signaling-url wss://ayame-labo.shiguredo.jp/signaling --room-id momo-sdl-ayame
+./momo --resolution VGA --no-audio-device --use-sdl ayame --signaling-url wss://ayame-labo.shiguredo.jp/signaling --room-id momo-sdl-ayame
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07.png)](https://gyazo.com/8ca80e9b60c9e848e04afcefd86a2c07)
@@ -50,7 +46,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - Signaling サーバの URL はダミーです
 
 ```
-./momo --resolution VGA --no-audio-device --use-sdl --show-me sora --video-codec-type VP8 --video-bit-rate 1000 --audio false --signaling-url wss://example.com/signaling --channel-id momo-sdl-sora
+./momo --resolution VGA --no-audio-device --use-sdl sora --video-codec-type VP8 --video-bit-rate 1000 --audio false --signaling-url wss://example.com/signaling --channel-id momo-sdl-sora
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/abdb1802bd66440ef32e75da6842f0cf.png)](https://gyazo.com/abdb1802bd66440ef32e75da6842f0cf)

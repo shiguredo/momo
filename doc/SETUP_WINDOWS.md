@@ -18,10 +18,8 @@ PowerShell での実行例：
 .\momo.exe --no-audio-device `
     sora `
         --signaling-url `
-             wss://0001.canary.sora-labo.shiguredo.app/signaling `
-             wss://0002.canary.sora-labo.shiguredo.app/signaling `
-             wss://0003.canary.sora-labo.shiguredo.app/signaling `
-        --channel-id sora@shiguredo#0 `
+             wss://canary.sora-labo.shiguredo.app/signaling `
+        --channel-id shiguredo_0_sora `
         --video-codec-type VP8 --video-bit-rate 500 `
         --audio false `
         --role sendonly --metadata '{\"access_token\": \"xyz\"}'

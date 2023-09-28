@@ -9,7 +9,7 @@ echo 'Asia/Tokyo' > /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
 # libtinfo5 は Ubuntu 20.04 のために入れたが将来的に不要になる可能性がある
-apt-get -y install \
+DEBIAN_FRONTEND=noninteractive apt-get -y install \
   autoconf \
   automake \
   build-essential \
@@ -27,8 +27,8 @@ apt-get -y install \
   libudev-dev \
   libxrandr-dev \
   lsb-release \
-  python \
-  python-dev \
+  python3 \
+  python3-dev \
   rsync \
   sudo \
   vim \

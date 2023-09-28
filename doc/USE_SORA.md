@@ -14,11 +14,11 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 
 ### 片方向配信をしてみる
 
-- チャネル名に `<好きな文字列>@<github-username>#<github-id>` を指定してください
-    - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザ名が shiguredo とした場合は `sora@shiguredo#0` のように指定してください
-    - ここではチャネル ID を `sora@shiguredo#0` とします
+- チャネル名に `<github-username>_<github-id>_<好きな文字列>` を指定してください
+    - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザ名が shiguredo とした場合は `shiguredo_0_sora` のように指定してください
+    - ここではチャネル ID を `shiguredo_0_sora` とします
 - sora モードのオプションである --metadata を利用し生成したアクセストークンを `access_token` で指定します
-    - SoraLabo Home のアクセストークン生成にて先程チャネル名で指定した `<好きな文字列>` を入力してアクセストークンを生成してください
+    - SoraLabo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
     - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
     - ここではアクセストークンを `xyz` とします。
 
@@ -26,10 +26,8 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 ./momo --no-audio-device \
     sora \
         --signaling-url \
-            wss://0001.canary.sora-labo.shiguredo.app/signaling \
-            wss://0002.canary.sora-labo.shiguredo.app/signaling \
-            wss://0003.canary.sora-labo.shiguredo.app/signaling \
-        --channel-id sora@shiguredo#0 \
+            wss://canary.sora-labo.shiguredo.app/signaling \
+        --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
         --role sendonly --metadata '{"access_token": "xyz"}'
@@ -42,13 +40,11 @@ GitHub アカウントを用意して https://sora-labo.shiguredo.app/ にサイ
 GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
 
 ```shell
-./momo --resolution VGA --no-audio-device --use-sdl --show-me \
+./momo --resolution VGA --no-audio-device --use-sdl \
     sora \
         --signaling-url \
-            wss://0001.canary.sora-labo.shiguredo.app/signaling \
-            wss://0002.canary.sora-labo.shiguredo.app/signaling \
-            wss://0003.canary.sora-labo.shiguredo.app/signaling \
-        --channel-id sora@shiguredo#0 \
+            wss://canary.sora-labo.shiguredo.app/signaling \
+        --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
         --role sendrecv --metadata '{"access_token": "xyz"}'
@@ -62,10 +58,8 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 ./momo --no-audio-device \
     sora \
         --signaling-url \
-            wss://0001.canary.sora-labo.shiguredo.app/signaling \
-            wss://0002.canary.sora-labo.shiguredo.app/signaling \
-            wss://0003.canary.sora-labo.shiguredo.app/signaling \
-        --channel-id sora@shiguredo#0 \
+            wss://canary.sora-labo.shiguredo.app/signaling \
+        --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
         --simulcast true \

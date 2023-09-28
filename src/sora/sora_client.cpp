@@ -500,6 +500,10 @@ void SoraClient::OnRead(boost::system::error_code ec,
             if (p.count("adaptivePtime") != 0) {
               params.adaptive_ptime = p["adaptivePtime"].as_bool();
             }
+            if (p.count("scalabilityMode") != 0) {
+              params.scalability_mode =
+                  p["scalabilityMode"].as_string().c_str();
+            }
             encoding_parameters.push_back(params);
           }
 

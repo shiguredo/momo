@@ -64,7 +64,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> MMALV4L2Capturer::Create(
 }
 
 MMALV4L2Capturer::MMALV4L2Capturer(const MMALV4L2CapturerConfig& config)
-    : component_in_(nullptr),
+    : V4L2VideoCapturer(config),
+      component_in_(nullptr),
       decoder_(nullptr),
       resizer_(nullptr),
       connection_(nullptr),

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef JETSON_VIDEO_ENCODER_H_
-#define JETSON_VIDEO_ENCODER_H_
+#ifndef HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
+#define HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
 #include <memory>
@@ -24,17 +24,17 @@
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
-#include "rtc_base/synchronization/mutex.h"
-
-// Jetson Linux Multimedia API
-#include "NvVideoConverter.h"
-#include "NvVideoEncoder.h"
+#include <modules/video_coding/svc/scalable_video_controller.h>
+#include <rtc_base/synchronization/mutex.h>
 
 #include "jetson_jpeg_decoder.h"
 
 #define CONVERTER_CAPTURE_NUM 2
 
-class ProcessThread;
+class NvBuffer;
+class NvV4l2Element;
+class NvVideoEncoder;
+struct v4l2_ctrl_videoenc_outputbuf_metadata_;
 
 class JetsonVideoEncoder : public webrtc::VideoEncoder {
  public:
@@ -43,6 +43,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   static bool IsSupportedVP8();
   static bool IsSupportedVP9();
+  static bool IsSupportedAV1();
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -90,21 +91,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   int32_t JetsonConfigure();
   void JetsonRelease();
-  void SendEOS(NvV4l2Element* element);
-  static bool ConvertFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
-                                              NvBuffer* buffer,
-                                              NvBuffer* shared_buffer,
-                                              void* data);
-  bool ConvertFinishedCallback(struct v4l2_buffer* v4l2_buf,
-                               NvBuffer* buffer,
-                               NvBuffer* shared_buffer);
-  static bool EncodeOutputCallbackFunction(struct v4l2_buffer* v4l2_buf,
-                                           NvBuffer* buffer,
-                                           NvBuffer* shared_buffer,
-                                           void* data);
-  bool EncodeOutputCallback(struct v4l2_buffer* v4l2_buf,
-                            NvBuffer* buffer,
-                            NvBuffer* shared_buffer);
+  void SendEOS();
   static bool EncodeFinishedCallbackFunction(struct v4l2_buffer* v4l2_buf,
                                              NvBuffer* buffer,
                                              NvBuffer* shared_buffer,
@@ -117,11 +104,10 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t SendFrame(unsigned char* buffer,
                     size_t size,
                     std::unique_ptr<FrameParams> params,
-                    v4l2_ctrl_videoenc_outputbuf_metadata enc_metadata);
+                    v4l2_ctrl_videoenc_outputbuf_metadata_* enc_metadata);
 
   webrtc::VideoCodec codec_;
   webrtc::EncodedImageCallback* callback_;
-  NvVideoConverter* converter_;
   NvVideoEncoder* encoder_;
   std::unique_ptr<webrtc::BitrateAdjuster> bitrate_adjuster_;
   uint32_t framerate_;
@@ -135,19 +121,17 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t width_;
   int32_t height_;
   bool use_native_;
-  NvV4l2Element* native_input_elem_;
   bool use_dmabuff_;
-  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
 
+  std::unique_ptr<webrtc::ScalableVideoController> svc_controller_;
+
   webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
-  std::mutex enc0_buffer_mtx_;
-  std::condition_variable enc0_buffer_cond_;
-  std::queue<NvBuffer*>* enc0_buffer_queue_;
+  int output_plane_fd_[32];
   webrtc::EncodedImage encoded_image_;
 };
 
-#endif  // JETSON_VIDEO_ENCODER_H_
+#endif

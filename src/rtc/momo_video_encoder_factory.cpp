@@ -6,6 +6,7 @@
 #include <absl/memory/memory.h>
 #include <absl/strings/match.h>
 #include <api/video_codecs/sdp_video_format.h>
+#include <api/video_codecs/video_codec.h>
 #include <api/video_codecs/vp9_profile.h>
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
@@ -16,6 +17,7 @@
 #include <rtc_base/logging.h>
 
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
+#include <modules/video_coding/codecs/av1/av1_svc_config.h>
 #include <modules/video_coding/codecs/av1/libaom_av1_encoder.h>
 #endif
 
@@ -35,6 +37,11 @@
 #if USE_MSDK_ENCODER
 #include "hwenc_msdk/msdk_video_encoder.h"
 #endif
+#if USE_V4L2_ENCODER
+#include "hwenc_v4l2/v4l2_h264_encoder.h"
+#endif
+
+#include "rtc/aligned_encoder_adapter.h"
 
 MomoVideoEncoderFactory::MomoVideoEncoderFactory(
     const MomoVideoEncoderFactoryConfig& config)
@@ -61,7 +68,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
 
   // VP9
   if (config_.vp9_encoder == VideoCodecInfo::Type::Software) {
-    for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs()) {
+    for (const webrtc::SdpVideoFormat& format :
+         webrtc::SupportedVP9Codecs(true)) {
       supported_codecs.push_back(format);
     }
   } else if (config_.vp9_encoder == VideoCodecInfo::Type::Jetson ||
@@ -72,11 +80,16 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
           webrtc::VP9ProfileToString(webrtc::VP9Profile::kProfile0)}}));
   }
 
+#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
   // AV1
   if (config_.av1_encoder == VideoCodecInfo::Type::Software ||
+      config_.av1_encoder == VideoCodecInfo::Type::Jetson ||
       config_.av1_encoder == VideoCodecInfo::Type::Intel) {
-    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
+    supported_codecs.push_back(webrtc::SdpVideoFormat(
+        cricket::kAv1CodecName, webrtc::SdpVideoFormat::Parameters(),
+        webrtc::LibaomAv1EncoderSupportedScalabilityModes()));
   }
+#endif
 
   // H264
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
@@ -112,6 +125,12 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
+    }
+#endif
+  } else if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
+#if USE_V4L2_ENCODER
+    for (const webrtc::SdpVideoFormat& format : h264_codecs) {
+      supported_codecs.push_back(format);
     }
 #endif
   } else if ((config_.h264_encoder == VideoCodecInfo::Type::Software) ||
@@ -169,10 +188,11 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
       });
     }
 #if USE_JETSON_ENCODER
-    if (config_.vp8_encoder == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp8_encoder == VideoCodecInfo::Type::Jetson &&
+        JetsonVideoEncoder::IsSupportedVP8()) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+            absl::make_unique<JetsonVideoEncoder>(cricket::CreateVideoCodec(format)));
       });
     }
 #endif
@@ -190,14 +210,15 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     if (config_.vp9_encoder == VideoCodecInfo::Type::Software) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+        return webrtc::VP9Encoder::Create(cricket::CreateVideoCodec(format));
       });
     }
 #if USE_JETSON_ENCODER
-    if (config_.vp9_encoder == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp9_encoder == VideoCodecInfo::Type::Jetson &&
+        JetsonVideoEncoder::IsSupportedVP9()) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+            absl::make_unique<JetsonVideoEncoder>(cricket::CreateVideoCodec(format)));
       });
     }
 #endif
@@ -229,6 +250,15 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
       });
     }
 #endif
+#if USE_JETSON_ENCODER
+    if (config_.av1_encoder == VideoCodecInfo::Type::Jetson &&
+        JetsonVideoEncoder::IsSupportedAV1()) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<JetsonVideoEncoder>(cricket::CreateVideoCodec(format)));
+      });
+    }
+#endif
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
@@ -245,7 +275,7 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     if (config_.h264_encoder == VideoCodecInfo::Type::MMAL) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<MMALH264Encoder>(cricket::VideoCodec(format)));
+            absl::make_unique<MMALH264Encoder>(cricket::CreateVideoCodec(format)));
       });
     }
 #endif
@@ -254,7 +284,7 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
     if (config_.h264_encoder == VideoCodecInfo::Type::Jetson) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<JetsonVideoEncoder>(cricket::VideoCodec(format)));
+            absl::make_unique<JetsonVideoEncoder>(cricket::CreateVideoCodec(format)));
       });
     }
 #endif
@@ -269,14 +299,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
                config_.cuda_context](const webrtc::SdpVideoFormat& format) {
             return std::unique_ptr<webrtc::VideoEncoder>(
                 absl::make_unique<NvCodecH264Encoder>(
-                    cricket::VideoCodec(format), cuda_context));
+                    cricket::CreateVideoCodec(format), cuda_context));
           }
 #else
           format,
           [](const webrtc::SdpVideoFormat& format) {
             return std::unique_ptr<webrtc::VideoEncoder>(
                 absl::make_unique<NvCodecH264Encoder>(
-                    cricket::VideoCodec(format)));
+                    cricket::CreateVideoCodec(format)));
           }
 #endif
       );
@@ -291,6 +321,14 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
       });
     }
 #endif
+#if USE_V4L2_ENCODER
+    if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
+      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            absl::make_unique<V4L2H264Encoder>(cricket::CreateVideoCodec(format)));
+      });
+    }
+#endif
   }
 
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
@@ -302,11 +340,12 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::WithSimulcast(
     const webrtc::SdpVideoFormat& format,
     std::function<std::unique_ptr<webrtc::VideoEncoder>(
         const webrtc::SdpVideoFormat&)> create) {
+  std::shared_ptr<webrtc::VideoEncoder> encoder;
   if (internal_encoder_factory_) {
-    return std::unique_ptr<webrtc::VideoEncoder>(
-        new webrtc::SimulcastEncoderAdapter(internal_encoder_factory_.get(),
-                                            format));
+    encoder = std::make_shared<webrtc::SimulcastEncoderAdapter>(
+        internal_encoder_factory_.get(), format);
   } else {
-    return create(format);
+    encoder.reset(create(format).release());
   }
+  return std::make_unique<AlignedEncoderAdapter>(encoder, 16, 16);
 }

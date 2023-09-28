@@ -16,8 +16,8 @@ jobs:
     name: Build momo for Windows_${{ matrix.arch }}
     runs-on: windows-2019
     steps:
-      - uses: actions/checkout@v3
-      - uses: microsoft/setup-msbuild@v1.1
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v1.3
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -52,7 +52,7 @@ jobs:
     name: Build momo for macOS_${{ matrix.arch }}
     runs-on: macos-11.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -75,13 +75,13 @@ jobs:
           - raspberry-pi-os_armv6
           - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
-          - ubuntu-18.04_armv8_jetson_nano
-          - ubuntu-18.04_armv8_jetson_xavier
           - ubuntu-20.04_x86_64
+          - ubuntu-20.04_armv8_jetson_xavier
+          - ubuntu-22.04_x86_64
     name: Build momo for ${{ matrix.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Versions
         run: |
           source VERSION
@@ -105,7 +105,7 @@ jobs:
       - build-linux
     if: always()
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||

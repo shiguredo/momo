@@ -46,6 +46,7 @@ $MOMO_COMMIT = "$(git rev-parse HEAD)"
 mkdir "..\_build\windows_${WINDOWS_ARCH}" -Force -ErrorAction Ignore
 Push-Location "..\_build\windows_${WINDOWS_ARCH}"
   cmake ..\.. -G "Visual Studio 16 2019" `
+    -DCMAKE_SYSTEM_VERSION=10.0.20348.0 `
     -DMOMO_PACKAGE_NAME="windows_${WINDOWS_ARCH}" `
     -DMOMO_VERSION="$MOMO_VERSION" `
     -DMOMO_COMMIT="$MOMO_COMMIT" `

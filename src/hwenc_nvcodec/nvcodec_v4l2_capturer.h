@@ -16,6 +16,7 @@ class NvCodecV4L2Capturer : public V4L2VideoCapturer {
  public:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       NvCodecV4L2CapturerConfig config);
+  NvCodecV4L2Capturer(const NvCodecV4L2CapturerConfig& config);
 
   bool UseNativeBuffer() override;
 

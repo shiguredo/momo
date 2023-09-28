@@ -12,9 +12,9 @@ _PACKAGES=" \
   raspberry-pi-os_armv6 \
   raspberry-pi-os_armv7 \
   raspberry-pi-os_armv8 \
-  ubuntu-18.04_armv8_jetson_nano \
-  ubuntu-18.04_armv8_jetson_xavier \
+  ubuntu-20.04_armv8_jetson_xavier \
   ubuntu-20.04_x86_64 \
+  ubuntu-22.04_x86_64 \
 "
 
 function show_help() {
@@ -169,6 +169,8 @@ case "$PACKAGE" in
 
     rm -rf $PACKAGE/script
     cp -r ../script $PACKAGE/script
+    rm -rf $PACKAGE/patch
+    cp -r ../patch $PACKAGE/patch
 
     # 可能な限りキャッシュを利用する
     mkdir -p $PACKAGE/_cache/boost/
@@ -203,6 +205,7 @@ case "$PACKAGE" in
     set -e
 
     rm -r $PACKAGE/script
+    rm -r $PACKAGE/patch
 
     ../script/docker_run.sh `pwd` `pwd`/.. $DOCKER_MOUNT_TYPE $PACKAGE momo/$PACKAGE:m$WEBRTC_BUILD_VERSION $MOMO_COMMIT
 
@@ -215,6 +218,9 @@ case "$PACKAGE" in
         cp    LICENSE                _package/momo-${MOMO_VERSION}_${PACKAGE}/
         cp    NOTICE                 _package/momo-${MOMO_VERSION}_${PACKAGE}/
         cp -r html                   _package/momo-${MOMO_VERSION}_${PACKAGE}/html
+        if [ -e _build/${PACKAGE}/libcamerac.so ]; then
+          cp _build/${PACKAGE}/libcamerac.so _package/momo-${MOMO_VERSION}_${PACKAGE}/
+        fi
         pushd _package
           tar czf momo-${MOMO_VERSION}_${PACKAGE}.tar.gz momo-${MOMO_VERSION}_${PACKAGE}
         popd
