@@ -86,7 +86,7 @@ USE_SDL2=1
 ### ヘルプ
 
 ```
-$ ./momo --help
+$  ./momo --help
 Momo - WebRTC Native Client
 Usage: ./momo [OPTIONS] [SUBCOMMAND]
 
@@ -99,6 +99,8 @@ Options:
   --force-i420                Prefer I420 format for video capture (only on supported devices)
   --hw-mjpeg-decoder BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
+  --use-libcamera             Use libcamera for video capture (only on supported devices)
+  --use-libcamera-native      Use native buffer for H.264 encoding
   --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
   --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
   --framerate INT:INT in [1 - 60]
@@ -106,7 +108,7 @@ Options:
   --fixed-resolution          Maintain video resolution in degradation
   --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
                               Specifies the quality that is maintained against video degradation
-  --use-sdl                   Showx video using SDL (if SDL is available)
+  --use-sdl                   Show video using SDL (if SDL is available)
   --window-width INT:INT in [180 - 16384]
                               Window width for videos (if SDL is available)
   --window-height INT:INT in [180 - 16384]
@@ -122,17 +124,17 @@ Options:
   --disable-noise-suppression Disable noise suppression for audio
   --disable-highpass-filter   Disable highpass filter for audio
   --video-codec-engines       List available video encoders/decoders
-  --vp8-encoder ENUM:value in {default->0,software->6} OR {0,6}
+  --vp8-encoder ENUM:value in {default->0,software->7} OR {0,7}
                               VP8 Encoder
-  --vp8-decoder ENUM:value in {default->0,software->6} OR {0,6}
+  --vp8-decoder ENUM:value in {default->0,software->7} OR {0,7}
                               VP8 Decoder
-  --vp9-encoder ENUM:value in {default->0,software->6} OR {0,6}
+  --vp9-encoder ENUM:value in {default->0,software->7} OR {0,7}
                               VP9 Encoder
-  --vp9-decoder ENUM:value in {default->0,software->6} OR {0,6}
+  --vp9-decoder ENUM:value in {default->0,software->7} OR {0,7}
                               VP9 Decoder
-  --av1-encoder ENUM:value in {default->0,software->6} OR {0,6}
+  --av1-encoder ENUM:value in {default->0,software->7} OR {0,7}
                               AV1 Encoder
-  --av1-decoder ENUM:value in {default->0,software->6} OR {0,6}
+  --av1-decoder ENUM:value in {default->0,software->7} OR {0,7}
                               AV1 Decoder
   --h264-encoder ENUM:value in {default->0,videotoolbox->5} OR {0,5}
                               H.264 Encoder
@@ -186,7 +188,6 @@ H264:
 
 ### test モードヘルプ
 
-
 ```
 $ ./momo test --help
 Mode for momo development with simple HTTP server
@@ -201,7 +202,6 @@ Options:
 ```
 
 ### ayame モードヘルプ
-
 
 ```
 $ ./momo ayame --help
@@ -268,3 +268,5 @@ Options:
 ## うまく動作しない時
 
 - カメラを uv4l など他のプロセスが利用していないか確認してください
+- 既知の問題ではないか確認してください
+  - [既知の問題](https://github.com/shiguredo/momo/issues/89)
