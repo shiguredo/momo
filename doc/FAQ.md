@@ -54,23 +54,23 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 **是非 Discord の #momo-nvidia-video-codec-sdk チャネルまでご連絡ください**
 
 - GeForce GTX 1080 Ti
-    - @melpon
+  - @melpon
 - GeForce GTX 1650
-    - @melpon
+  - @melpon
 - GeForce GTX 1060 6GB
-    - @massie_g
+  - @massie_g
 - GeForce GTX 1050 Ti 4GB
-    - @cli_nil
+  - @cli_nil
 - GeForce GTX 1070 with Max-Q Design 8GB
-    - @torikizi
+  - @torikizi
 - Quadro P1000 4GB
-    - 株式会社オプティム
+  - 株式会社オプティム
 - Quadro P4000
-    - 株式会社オプティム
+  - 株式会社オプティム
 - GeForce RTX 2070
-    - @msnoigrs
+  - @msnoigrs
 - GeForce RTX 2080
-    - @shirokunet
+  - @shirokunet
 
 ## 4K カメラのオススメはありますか？
 
@@ -82,13 +82,13 @@ NVENC が利用可能なビデオカードは以下で確認してください�
 
 以下の記事を参考にしてみてください。
 
-[カメラ無しのラズパイとmomoでテスト映像をWebRTCで配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
+[カメラ無しのラズパイと momo でテスト映像を WebRTC で配信する \- Qiita](https://qiita.com/tetsu_koba/items/789a19cb575953f41a1a)
 
 ## Momo はマイクからの音声以外を入力できますか？
 
 以下の記事を参考にしてみてください。
 
-[ラズパイ\+momoでWebRTCで送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
+[ラズパイ\+momo で WebRTC で送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 
 ## Mac で 60fps を利用できますか？
 
@@ -110,7 +110,7 @@ MJPEG に対応した CSI カメラや USB カメラをご用意いただくか�
 
 ## Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
 
-Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。 
+Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。
 
 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
 
@@ -138,13 +138,13 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 以下に示すオプションを指定することで利用可能です。
 
 - `--proxy-url` : プロキシの URL
-    - 例) http://proxy.example.com:3128
+  - 例) http://proxy.example.com:3128
 - `--proxy-username` : プロキシ認証に使用するユーザー名
 - `--proxy-password` : プロキシ認証に使用するパスワード
 
 ## Raspberry Pi (Raspberry-Pi-OS) 64 bit で H.264 を利用できますか？
 
-利用できません。 Raspberry Pi (Raspberry-Pi-OS) の H.264 は MMAL のハードウェア支援を受けており MMAL が 64 bit に対応していないためです。
+Release 2023.1 以降から利用可能です。
 
 ## Momo のオプションで指定した解像度で映像の送信はできますか？
 
@@ -154,7 +154,7 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 
 もし、カメラデバイスのサポート外の解像度を試してみたい方は以下の記事を参考にしてみてください。
 
-[WebRTC momoでカメラのサポートしていない解像度、フレームレートで送信する](https://zenn.dev/tetsu_koba/articles/c3b12bb5e52a57)
+[WebRTC momo でカメラのサポートしていない解像度、フレームレートで送信する](https://zenn.dev/tetsu_koba/articles/c3b12bb5e52a57)
 
 ## Jetson で Momo を実行するとエラーが出ていますがこれはなんですか？
 
@@ -169,3 +169,13 @@ Jetson で Momo を実行すると `Capture Plane:Error in VIDIOC_S_FMT: Invalid
 Momo はハードウェアデコードを優先して使用するようになっており、AV1 のハードウェアデコードに対応しているのは Jetson Orin のみです。
 
 Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプションで `software` を指定してください。
+
+## Raspberry Pi カメラモジュール V3 は利用できますか？
+
+Release 2023.1 以降から利用可能です。
+
+## 利用できる JetPack のバージョンはいくつですか？
+
+JetPack 5.1.1 のみで利用可能です。
+
+JetPack 5.1.1 以外のバージョンでは利用できません。
