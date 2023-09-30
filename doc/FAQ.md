@@ -71,6 +71,8 @@ NVENC が利用可能なビデオカードは以下で確認してください�
   - @msnoigrs
 - GeForce RTX 2080
   - @shirokunet
+- GeForce RTX 3080
+  - @torikizi
 
 ## 4K カメラのオススメはありますか？
 
