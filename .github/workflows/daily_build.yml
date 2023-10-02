@@ -85,9 +85,9 @@ jobs:
       - name: Disk Creanup
         run: |
           set -x
-          df -h
+          docker system df
           docker rmi `docker images -q -a`
-          df -h
+          docker system df
       - name: Get Versions
         run: |
           source VERSION
