@@ -3,12 +3,12 @@ name: build-workflow
 on:
   push:
     paths-ignore:
-    - 'doc/**'
-    - 'html/**'
-    - '**.md'
-    - 'THANKS'
-    - 'LICENSE'
-    - 'NOTICE'
+      - "doc/**"
+      - "html/**"
+      - "**.md"
+      - "THANKS"
+      - "LICENSE"
+      - "NOTICE"
 
 jobs:
   build-windows:
@@ -138,6 +138,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
+      - name: Disk Cleanup
+        run: |
+          set -x
+          docker system df
+          docker rmi `docker images -q -a`
+          docker system df
       - name: Get Versions
         run: |
           source VERSION
@@ -213,8 +219,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files:
-            ${{ steps.env.outputs.package_paths }}
+          files: ${{ steps.env.outputs.package_paths }}
   notification:
     name: Slack Notification
     runs-on: ubuntu-latest
