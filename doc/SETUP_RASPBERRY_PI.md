@@ -35,6 +35,7 @@ $ tree
 $ sudo apt-get update
 $ sudo apt-get upgrade
 $ sudo apt-get install libnspr4 libnss3
+$ sudo apt-get install libcamera0
 ```
 
 #### Raspberry Pi OS Lite を利用する場合
