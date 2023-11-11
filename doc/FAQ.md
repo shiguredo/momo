@@ -1,31 +1,31 @@
 # FAQ
 
-## 商用利用は可能ですか？
+## 商用利用はできますｋ？
 
 Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
 ## コーデックの指定やビットレートを利用できますか？
 
-Momo 側からの指定は WebRTC SFU Sora を利用したときだけ可能です。
+Momo 側からの指定は WebRTC SFU Sora を利用したときだけ利用できます。
 
 ## サイマルキャストは利用できますか？
 
-Sora モードでのみ利用可能です。利用可能な映像コーデックは VP8 / VP9 / H.264 / AV1 です。
+Sora モードでのみ利用できます。利用できる映像コーデックは VP8 / VP9 / H.264 / AV1 です。
 利用する場合は `--simulcast` を指定してください。
 
 ## AV1 は利用できますか？
 
-利用可能です。
+利用できます。
 
 ## データチャネルは利用できますか？
 
-シリアル経由でのみデータチャネルが利用可能です。
+シリアル経由でのみデータチャネルが利用できます。
 
 [USE_SERIAL.md](USE_SERIAL.md)
 
 ## 認証局の証明書を追加できますか？
 
-`SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することが可能です。
+`SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することができます。
 
 ```
 $ export SSL_CERT_FILE=/path/to/cert.pem
@@ -34,7 +34,7 @@ $ ./momo sora ...
 
 ## サーバ証明書を無視できますか？
 
-`--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることが可能です。
+`--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることができます。
 
 ```
 $ ./momo --insecure sora ...
@@ -42,10 +42,10 @@ $ ./momo --insecure sora ...
 
 ## NVIDIA ビデオカードに搭載されている NVENC を利用できますか？
 
-Windows と Linux で利用可能です。
+Windows と Linux で利用できます。
 NVIDIA ビデオカードドライバーは最新版にしてください。
 
-NVENC が利用可能なビデオカードは以下で確認してください。
+NVENC が利用できるビデオカードは以下で確認してください。
 
 [Video Encode and Decode GPU Support Matrix \| NVIDIA Developer](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix#Encoder)
 
@@ -124,7 +124,7 @@ Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合
 
 ## Windows で H.264 を利用できますか？
 
-NVIDIA のビデオカードの NVENC を利用することで H.264 が利用可能になります。
+NVIDIA のビデオカードの NVENC を利用することで H.264 が利用できるようになります。
 ご利用の環境で H.264 が利用できるかどうかは `./momo --video-codec-engines` を使用して H264 の項目をご確認ください。
 
 ## Sora モードを利用するときに Sora の TURN 機能を無効にして利用することはできますか？
@@ -137,7 +137,7 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 
 ## Proxy を設定して利用することはできますか？
 
-以下に示すオプションを指定することで利用可能です。
+以下に示すオプションを指定することで利用できます。
 
 - `--proxy-url` : プロキシの URL
   - 例) http://proxy.example.com:3128
@@ -146,11 +146,11 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 
 ## Raspberry Pi (Raspberry-Pi-OS) 64 bit で H.264 を利用できますか？
 
-Release 2023.1.0 以降から利用可能です。
+Release 2023.1.0 以降から利用できます。
 
 ## Momo のオプションで指定した解像度で映像の送信はできますか？
 
-`--resolution` オプションを使用することで解像度の設定が可能です。
+`--resolution` オプションを使用することで解像度の設定ができます。
 
 しかしこれはあくまでも Momo からカメラデバイスに対して送るリクエストであり、最終的な解像度はカメラデバイスの仕様に依存します。
 
@@ -174,10 +174,14 @@ Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプシ�
 
 ## Raspberry Pi カメラモジュール V3 は利用できますか？
 
-Release 2023.1.0 以降から利用可能です。
+Release 2023.1.0 以降から利用できます。
 
 ## 利用できる JetPack のバージョンはいくつですか？
 
-JetPack 5.1.1 のみで利用可能です。
+JetPack 5.1.1 のみで利用できます。
 
 JetPack 5.1.1 以外のバージョンでは利用できません。
+
+## Momo は Sora C++ SDK や Sora C SDK をベースにしないのですか？
+
+現在はその予定はありません。
