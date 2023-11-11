@@ -137,8 +137,8 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 Apache License 2.0
 
 ```
-Copyright 2015-2022, tnoho (Original Author)
-Copyright 2018-2022, Shiguredo Inc.
+Copyright 2015-2023, tnoho (Original Author)
+Copyright 2018-2023, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -172,6 +172,16 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
+- H.265 (HEVC) HWA 対応
+    - macOS Video Toolbox
+    - NVIDIA Jetson 
+        - Ubuntu 20.04
+    - NVIDIA Video Codec SDK
+        - Windows
+        - Ubuntu
+- OpenH264 対応
+    - Windows
+    - Ubuntu
 - oneVPL 対応
 - AV1 対応
     - Windows
@@ -235,4 +245,5 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
     - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
     - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
+
 
