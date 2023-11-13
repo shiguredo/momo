@@ -38,11 +38,11 @@ popd
 # 特定バージョンの libcxx を利用する
 pushd $OUTPUT_DIR/llvm
   if [ ! -e libcxx/.git ]; then
-    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL
+    git clone $WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_URL
   fi
   pushd libcxx
     git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT
+    git reset --hard $WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_COMMIT
   popd
 popd
 

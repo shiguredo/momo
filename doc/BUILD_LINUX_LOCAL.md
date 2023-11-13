@@ -299,7 +299,7 @@ if [ ! -e $INSTALL_DIR/boost/lib/libboost_filesystem.a ]; then
       cxxflags=" \
         -D_LIBCPP_ABI_UNSTABLE \
         -nostdinc++ \
-        -isystem$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/trunk/include \
+        -isystem$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/src/include \
       " \
       toolset=clang \
       visibility=global \
@@ -381,7 +381,7 @@ pushd ../_build/local_webrtc
     -DWEBRTC_LIBRARY_DIR=$INSTALL_DIR/webrtc/lib \
     -DCLANG_ROOT=$SOURCE_DIR/webrtc/src/third_party/llvm-build/Release+Asserts \
     -DUSE_LIBCXX=ON \
-    -DLIBCXX_INCLUDE_DIR=$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/trunk/include \
+    -DLIBCXX_INCLUDE_DIR=$SOURCE_DIR/webrtc/src/buildtools/third_party/libc++/src/include \
     ../..
 
   cmake --build . -j$JOBS

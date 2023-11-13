@@ -11,6 +11,17 @@
 
 ## develop
 
+- [UPDATE] WebRTC を m119.6045.2.1 に上げる
+  - @torikizi
+- [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
+  - CMAKE_VERSION を 3.22.7 に上げる
+  - すべてのプラットフォームで set_target_properties の CXX_STANDARD を 20 にアップデート
+  - Ubuntu で使用する clang のバージョンを 15 にアップデート
+  - @torikizi
+- [UPDATE] パッケージディレクトリ変更に追従する
+  - m118 の際にパッケージディレクトリが変更されたのでそれに追従する
+  - @torikizi
+
 ## 2023.1.0
 
 - [CHANGE] --show-me オプションの削除
