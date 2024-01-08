@@ -15,7 +15,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 **以下で買われることをオススメします**
 
-- [NVIDIA Jetson AGX Orin 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin)
+- [NVIDIA JETSON AGX ORIN 64GB 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin64)
 
 ## 4K@30 出るカメラを購入する
 
