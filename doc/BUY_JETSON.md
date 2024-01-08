@@ -17,7 +17,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 - [NVIDIA JETSON AGX ORIN 64GB 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin64)
 
-## 4K@30 出るカメラを購入する
+## 4K@30 のカメラを購入する
 
 実際に Jetson で検証して 4K で 30fps の出力動作確認が取れているカメラです。
 
