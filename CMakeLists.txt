@@ -706,10 +706,11 @@ elseif (TARGET_OS STREQUAL "linux")
           PRIVATE
             nvv4l2
             nvv4lconvert
-            nvbuf_utils
+            #nvbuf_utils
             #nvbuf_fdmap
             #nvddk_vic
             #nvddk_2d_v2
+            nvbuf_fdmap
             nvjpeg
             nvbufsurface
             nvbufsurftransform
