@@ -355,6 +355,11 @@ void JetsonVideoDecoder::CaptureLoop() {
         }
         NvBufSurface* dst_surf = 0;
 
+        if (NvBufSurfaceFromFd(dst_dma_fd_, (void**)(&dst_surf)) == -1) {
+          RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to NvBufSurfaceFromFd";
+          break;
+        }
+
         ret = NvBufSurfaceMap(dst_surf, 0, i, NVBUF_MAP_READ);
         NvBufSurfaceSyncForCpu(dst_surf, 0, i);
         src_data = dst_surf->surfaceList[0].mappedAddr.addr[i];
