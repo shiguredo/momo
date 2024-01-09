@@ -28,7 +28,7 @@
 // L4T Multimedia API
 #include <NvBufSurface.h>
 #include <NvVideoEncoder.h>
-#include <nvbuf_utils.h>
+#include <nvbufsurface.h>
 
 #include "jetson_buffer.h"
 
@@ -746,9 +746,14 @@ int32_t JetsonVideoEncoder::Encode(
         input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
 
     for (int i = 0; i < MAX_PLANES; i++) {
-      if (NvBufferMemSyncForDevice(buffer->planes[i].fd, i,
-                                   (void**)&buffer->planes[i].data) < 0) {
-        RTC_LOG(LS_ERROR) << "Failed to NvBufferMemSyncForDevice";
+      NvBufSurface* surf = 0;
+      if (NvBufSurfaceFromFd(buffer->planes[i].fd, (void**)(&surf)) == -1) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to NvBufSurfaceFromFd";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+
+      if (NvBufSurfaceSyncForDevice(surf, 0, i) == -1) {
+        RTC_LOG(LS_ERROR) << "Failed to NvBufSurfaceSyncForDevice";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
     }
