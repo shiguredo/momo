@@ -50,7 +50,7 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   # jfrog のリンクが一時的に利用できないため、 archives.boost.io を参照する
   # 参照: https://github.com/boostorg/boost/issues/842
   # $_URL = "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
-  $_URL = "https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+  $_URL = "https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.tar.gz"
 
   $_FILE = "$CACHE_DIR\boost\boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   mkdir "$CACHE_DIR\boost" -ErrorAction Ignore
