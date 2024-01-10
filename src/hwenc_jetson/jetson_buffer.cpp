@@ -57,62 +57,63 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
     int32_t buffer_width = ((scaled_width_ + 15) / 16) * 16;
     int32_t buffer_height = ((scaled_height_ + 15) / 16) * 16;
 
-    NvBufferCreateParams input_params = {0};
-    input_params.payloadType = NvBufferPayload_SurfArray;
-    input_params.width = buffer_width;
-    input_params.height = buffer_height;
-    input_params.layout = NvBufferLayout_Pitch;
-    input_params.colorFormat = NvBufferColorFormat_YUV420;
-    input_params.nvbuf_tag = NvBufferTag_NONE;
+    NvBufSurfaceAllocateParams input_params = {0};
+    input_params.params.width = buffer_width;
+    input_params.params.height = buffer_height;
+    input_params.params.layout = NVBUF_LAYOUT_PITCH;
+    input_params.params.colorFormat = NVBUF_COLOR_FORMAT_YUV420;
+    input_params.params.memType = NVBUF_MEM_SURFACE_ARRAY;
+    input_params.memtag = NvBufSurfaceTag_NONE;
 
-    int dmabuf_fd;
-    if (NvBufferCreateEx(&dmabuf_fd, &input_params) == -1) {
+    NvBufSurface* dst_surf = 0;
+
+    if (NvBufSurfaceAllocate(&dst_surf, 1, &input_params) == -1) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufSurfaceAllocate";
       RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferCreateEx";
       return scaled_buffer;
     }
 
-    NvBufferParams params = {0};
-    if (NvBufferGetParams(fd_, &params) == -1) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferGetParams";
-      return scaled_buffer;
-    }
+    NvBufSurfaceParams params = dst_surf->surfaceList[0];
 
-    NvBufferRect src_rect, dest_rect;
+    NvBufSurfTransformRect src_rect, dest_rect;
     src_rect.top = 0;
     src_rect.left = 0;
-    src_rect.width = params.width[0];
-    src_rect.height = params.height[0];
+    src_rect.width = params.width;
+    src_rect.height = params.height;
     dest_rect.top = 0;
     dest_rect.left = 0;
     dest_rect.width = buffer_width;
     dest_rect.height = buffer_height;
 
-    NvBufferTransformParams trans_params;
-    memset(&trans_params, 0, sizeof(trans_params));
-    trans_params.transform_flag = NVBUFFER_TRANSFORM_FILTER;
-    trans_params.transform_flip = NvBufferTransform_None;
-    trans_params.transform_filter = NvBufferTransform_Filter_Smart;
-    trans_params.src_rect = src_rect;
-    trans_params.dst_rect = dest_rect;
+    NvBufSurfTransformParams trans_params;
+    trans_params.transform_flag = NVBUFSURF_TRANSFORM_FILTER;
+    trans_params.transform_flip = NvBufSurfTransform_None;
+    trans_params.transform_filter = NvBufSurfTransformInter_Algo3;
+    trans_params.src_rect = &src_rect;
+    trans_params.dst_rect = &dest_rect;
 
-    if (NvBufferTransform(fd_, dmabuf_fd, &trans_params) == -1) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferTransform";
+    NvBufSurface* src_surf = 0;
+    if (NvBufSurfaceFromFd(fd_, (void**)(&src_surf)) == -1) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufSurfaceFromFd";
       return scaled_buffer;
     }
 
-    NvBufferParams dmabuf_params = {0};
-    if (NvBufferGetParams(dmabuf_fd, &dmabuf_params) == -1) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferGetParams";
+    if (NvBufSurfTransform(src_surf, dst_surf, &trans_params) !=
+        NvBufSurfTransformError_Success) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufSurfTransform";
       return scaled_buffer;
     }
 
     int ret;
     void* data_addr;
     uint8_t* dest_addr;
-    for (int plane = 0; plane < dmabuf_params.num_planes; plane++) {
-      ret = NvBufferMemMap(dmabuf_fd, plane, NvBufferMem_Read, &data_addr);
+    int num_planes = dst_surf->surfaceList->planeParams.num_planes;
+    int index = 0;
+    for (int plane = 0; plane < num_planes; plane++) {
+      ret = NvBufSurfaceMap(dst_surf, index, plane, NVBUF_MAP_READ);
       if (ret == 0) {
-        NvBufferMemSyncForCpu(dmabuf_fd, plane, &data_addr);
+        NvBufSurfaceSyncForCpu(dst_surf, index, plane);
+        data_addr = dst_surf->surfaceList->mappedAddr.addr[plane];
         int height, width;
         if (plane == 0) {
           dest_addr = scaled_buffer.get()->MutableDataY();
@@ -129,18 +130,20 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
         }
         for (int i = 0; i < height; i++) {
           memcpy(dest_addr + width * i,
-                 (uint8_t*)data_addr + dmabuf_params.pitch[plane] * i, width);
+                  (uint8_t*)data_addr +
+                  dst_surf->surfaceList->planeParams.pitch[plane] * i,
+                  width);
         }
       }
-      NvBufferMemUnMap(dmabuf_fd, plane, &data_addr);
+      NvBufSurfaceUnMap(dst_surf, index, plane);
       if (ret == -1) {
         RTC_LOG(LS_ERROR) << __FUNCTION__
-                          << " Failed to NvBufferMemMap plane=" << plane;
+                          << " Failed to NvBufSurfaceMap plane=" << plane;
         return scaled_buffer;
       }
     }
 
-    NvBufferDestroy(dmabuf_fd);
+    NvBufSurfaceDestroy(dst_surf);
 
     return scaled_buffer;
   } else {

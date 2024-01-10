@@ -11,7 +11,8 @@
 #include <rtc_base/memory/aligned_malloc.h>
 
 // Jetson Linux Multimedia API
-#include "nvbuf_utils.h"
+#include <nvbufsurface.h>
+#include <nvbufsurftransform.h>
 
 #include "jetson_jpeg_decoder.h"
 

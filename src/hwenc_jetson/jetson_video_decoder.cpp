@@ -22,9 +22,11 @@
 #include <third_party/libyuv/include/libyuv/convert.h>
 
 // L4T Multimedia API
-#include <nvbuf_utils.h>
+#include <nvbufsurface.h>
+#include <nvbufsurftransform.h>
 
 // Jetson Linux Multimedia API
+#include <NvBufSurface.h>
 #include <NvVideoDecoder.h>
 
 #define INIT_ERROR(cond, desc)                 \
@@ -216,7 +218,7 @@ bool JetsonVideoDecoder::JetsonRelease() {
     decoder_ = nullptr;
   }
   if (dst_dma_fd_ != -1) {
-    NvBufferDestroy(dst_dma_fd_);
+    NvBufSurf::NvDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
   return true;
@@ -303,26 +305,22 @@ void JetsonVideoDecoder::CaptureLoop() {
       uint64_t pts = v4l2_buf.timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
                      v4l2_buf.timestamp.tv_usec;
 
-      NvBufferRect src_rect, dest_rect;
-      src_rect.top = capture_crop_->c.top;
-      src_rect.left = capture_crop_->c.left;
-      src_rect.width = capture_crop_->c.width;
-      src_rect.height = capture_crop_->c.height;
-      dest_rect.top = 0;
-      dest_rect.left = 0;
-      dest_rect.width = capture_crop_->c.width;
-      dest_rect.height = capture_crop_->c.height;
-
-      NvBufferTransformParams transform_params;
+      NvBufSurf::NvCommonTransformParams transform_params;
       memset(&transform_params, 0, sizeof(transform_params));
-      transform_params.transform_flag = NVBUFFER_TRANSFORM_FILTER;
-      transform_params.transform_flip = NvBufferTransform_None;
-      transform_params.transform_filter = NvBufferTransform_Filter_Smart;
-      transform_params.src_rect = src_rect;
-      transform_params.dst_rect = dest_rect;
+      transform_params.src_top = capture_crop_->c.top;
+      transform_params.src_left = capture_crop_->c.left;
+      transform_params.src_width = capture_crop_->c.width;
+      transform_params.src_height = capture_crop_->c.height;
+      transform_params.dst_top = 0;
+      transform_params.dst_left = 0;
+      transform_params.dst_width = capture_crop_->c.width;
+      transform_params.dst_height = capture_crop_->c.height;
+      transform_params.flag = NVBUFSURF_TRANSFORM_FILTER;
+      transform_params.flip = NvBufSurfTransform_None;
+      transform_params.filter = NvBufSurfTransformInter_Algo3;
       // 何が来ても YUV420 に変換する
-      ret = NvBufferTransform(buffer->planes[0].fd, dst_dma_fd_,
-                              &transform_params);
+      ret = NvBufSurf::NvTransform(&transform_params, buffer->planes[0].fd,
+                                   dst_dma_fd_);
       if (ret == -1) {
         RTC_LOG(LS_ERROR) << __FUNCTION__ << " Transform failed";
         break;
@@ -338,9 +336,6 @@ void JetsonVideoDecoder::CaptureLoop() {
         got_error_ = true;
         break;
       }
-
-      NvBufferParams parm;
-      ret = NvBufferGetParams(dst_dma_fd_, &parm);
 
       void* src_data;
       uint8_t* dst_data;
@@ -358,13 +353,23 @@ void JetsonVideoDecoder::CaptureLoop() {
         } else {
           break;
         }
-        ret = NvBufferMemMap(dst_dma_fd_, i, NvBufferMem_Read, &src_data);
-        NvBufferMemSyncForCpu(dst_dma_fd_, i, &src_data);
-        for (uint32_t j = 0; j < parm.height[i]; j++) {
-          memcpy(dst_data + j * dst_stride, (char*)src_data + j * parm.pitch[i],
-                 parm.width[i]);
+        NvBufSurface* dst_surf = 0;
+
+        if (NvBufSurfaceFromFd(dst_dma_fd_, (void**)(&dst_surf)) == -1) {
+          RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to NvBufSurfaceFromFd";
+          break;
         }
-        NvBufferMemUnMap(dst_dma_fd_, i, &src_data);
+
+        ret = NvBufSurfaceMap(dst_surf, 0, i, NVBUF_MAP_READ);
+        NvBufSurfaceSyncForCpu(dst_surf, 0, i);
+        src_data = dst_surf->surfaceList[0].mappedAddr.addr[i];
+
+        NvBufSurfacePlaneParams params = dst_surf->surfaceList[0].planeParams;
+        for (uint32_t j = 0; j < params.height[i]; j++) {
+          memcpy(dst_data + j * dst_stride,
+                 (char*)src_data + j * params.pitch[i], params.width[i]);
+        }
+        NvBufSurfaceUnMap(dst_surf, 0, i);
       }
 
       webrtc::VideoFrame decoded_image =
@@ -405,20 +410,20 @@ int JetsonVideoDecoder::SetCapture() {
                    << "x" << format.fmt.pix_mp.height;
 
   if (dst_dma_fd_ != -1) {
-    NvBufferDestroy(dst_dma_fd_);
+    NvBufSurf::NvDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
 
-  NvBufferCreateParams input_params = {0};
-  input_params.payloadType = NvBufferPayload_SurfArray;
-  input_params.width = capture_crop_->c.width;
-  input_params.height = capture_crop_->c.height;
-  input_params.layout = NvBufferLayout_Pitch;
-  input_params.colorFormat = NvBufferColorFormat_YUV420;
-  input_params.nvbuf_tag = NvBufferTag_VIDEO_DEC;
+  NvBufSurf::NvCommonAllocateParams cParams;
+  cParams.width = capture_crop_->c.width;
+  cParams.height = capture_crop_->c.height;
+  cParams.layout = NVBUF_LAYOUT_PITCH;
+  cParams.colorFormat = NVBUF_COLOR_FORMAT_YUV420;
+  cParams.memtag = NvBufSurfaceTag_VIDEO_DEC;
+  cParams.memType = NVBUF_MEM_SURFACE_ARRAY;
 
-  ret = NvBufferCreateEx(&dst_dma_fd_, &input_params);
-  INIT_ERROR(ret == -1, "create dmabuf failed");
+  ret = NvBufSurf::NvAllocate(&cParams, 1, &dst_dma_fd_);
+  INIT_ERROR(ret == -1, "failed to NvBufSurfaceAllocate");
 
   decoder_->capture_plane.deinitPlane();
 
