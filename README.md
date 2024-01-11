@@ -137,8 +137,8 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 Apache License 2.0
 
 ```
-Copyright 2015-2023, tnoho (Original Author)
-Copyright 2018-2023, Shiguredo Inc.
+Copyright 2015-2024, tnoho (Original Author)
+Copyright 2018-2024, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -172,10 +172,12 @@ limitations under the License.
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
+- リリース
 - H.265 (HEVC) HWA 対応
     - macOS Video Toolbox
     - NVIDIA Jetson 
         - Ubuntu 20.04
+        - Ubuntu 22.04
     - NVIDIA Video Codec SDK
         - Windows
         - Ubuntu
@@ -185,13 +187,6 @@ limitations under the License.
 - oneVPL 対応
 - AV1 対応
     - Windows
-- 統計機能
-    - Ayame のシグナリング 経由での出力
-- 録画対応
-    - MP4 形式での出力
-    - WebM 形式での出力
-- 録画合成対応
-- Sora モード利用時の E2EE 機能
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍
