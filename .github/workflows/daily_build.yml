@@ -30,13 +30,13 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: _cache\boost
           key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v5
       - name: Cache NVCC ${{ steps.versions.outputs.wincuda_version }}
         id: cache-cuda
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: build\windows_x86_64\_install\cuda\nvcc
           key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v1
@@ -60,7 +60,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: _cache/boost
           key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
@@ -95,7 +95,7 @@ jobs:
         id: versions
       - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: _cache/boost
           key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v2
