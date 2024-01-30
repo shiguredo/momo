@@ -83,24 +83,24 @@ https://github.com/shiguredo/momo/releases
 ## 動作環境
 
 - Raspberry Pi OS (64bit) ARMv8
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
-    - Raspberry Pi Zero 2 W
+  - Raspberry Pi 4
+  - Raspberry Pi 3
+  - Raspberry Pi 2
+  - Raspberry Pi Zero 2 W
 - Raspberry Pi OS (32bit) ARMv7
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
-    - Raspberry Pi Zero 2 W
+  - Raspberry Pi 4
+  - Raspberry Pi 3
+  - Raspberry Pi 2
+  - Raspberry Pi Zero 2 W
 - Raspberry Pi OS (32bit) ARMv6
-    - Raspberry Pi Zero
-    - Raspberry Pi 1
+  - Raspberry Pi Zero
+  - Raspberry Pi 1
 - Ubuntu 20.04 x86_64
 - Ubuntu 22.04 x86_64
 - Ubuntu 20.04 ARMv8 Jetson
-    - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -108,12 +108,12 @@ https://github.com/shiguredo/momo/releases
 
 - macOS x86_64
 - Ubuntu 20.04 ARMv8 Jetson
-    - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-        - Jetson Orin Nano は HWA を詰んでいないので対応はしません
+  - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+    - Jetson Orin Nano は HWA を詰んでいないので対応はしません
 - Ubuntu 18.04 ARMv8 Jetson
-    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+  - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 
 ## 使ってみる
 
@@ -159,42 +159,43 @@ limitations under the License.
 優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
 
 - Windows 版 OSS 化
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
-    - 現時点では企業名非公開
+  - 現時点では企業名非公開
 - Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
-    - [株式会社オプティム](https://www.optim.co.jp/) 様
+  - [株式会社オプティム](https://www.optim.co.jp/) 様
 - Windows / Linux 版 スクリーンキャプチャ対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
 ### 優先実装が可能な機能一覧
 
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - リリース
+- Raspberry Pi カメラの Raspberry Pi OS (32bit) 対応
 - H.265 (HEVC) HWA 対応
-    - macOS Video Toolbox
-    - NVIDIA Jetson 
-        - Ubuntu 20.04
-        - Ubuntu 22.04
-    - NVIDIA Video Codec SDK
-        - Windows
-        - Ubuntu
-- OpenH264 対応
+  - macOS Video Toolbox
+  - NVIDIA Jetson
+    - Ubuntu 20.04
+    - Ubuntu 22.04
+  - NVIDIA Video Codec SDK
     - Windows
     - Ubuntu
+- OpenH264 対応
+  - Windows
+  - Ubuntu
 - oneVPL 対応
 - AV1 対応
-    - Windows
+  - Windows
 - Windows / macOS 署名対応
 
 ## Momo についての電子書籍
 
 Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
 
-[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+[WebRTC をブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
 
 ## サポートについて
 
@@ -230,16 +231,14 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
 詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
 
 - Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
-    - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+  - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
 - Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
-    - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
+  - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
 - AMD ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
+  - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
 - NVIDIA ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
+  - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
 - NVIDIA Jetson Nano のハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
+  - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
-    - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
-
-
+  - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
