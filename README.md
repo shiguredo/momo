@@ -86,11 +86,12 @@ https://github.com/shiguredo/momo/releases
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
+    - Raspberry Pi Zero 2 W
 - Raspberry Pi OS (32bit) ARMv7
     - Raspberry Pi 4
     - Raspberry Pi 3
     - Raspberry Pi 2
-    - Raspberry Pi Zero 2
+    - Raspberry Pi Zero 2 W
 - Raspberry Pi OS (32bit) ARMv6
     - Raspberry Pi Zero
     - Raspberry Pi 1
