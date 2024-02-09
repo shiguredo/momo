@@ -86,6 +86,14 @@ $ ./momo --force-i420 --no-audio-device test
 
 Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラが利用できるようになりました。
 
+### --use-libcamera
+
+`--use-libcamera` は Raspberry Pi 専用カメラを利用するためのオプションです。
+
+```shell
+$ ./momo --use-libcamera --no-audio-device test
+```
+
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない
 
 ### --hw-mjpeg-decoder
