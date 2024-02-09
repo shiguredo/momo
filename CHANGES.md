@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] CLI11 を 2.4.1 に上げる
+  - @voluntas
+- [UPDATE] SDL を 2.30.0 に上げる
+  - @voluntas
 - [CHANGE] JetPack 5.1.2 に対応
   - JetPack 5.1.1, 5.1.2 で動作を確認
   - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
