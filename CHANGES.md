@@ -15,16 +15,17 @@
   - JetPack 5.1.1, 5.1.2 で動作を確認
   - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
   - @enm10k
-- [UPDATE] WebRTC を m119.6045.2.1 に上げる
+- [CHANGE] WEBRTC_BUILD_VERSION を m121.6167.3.0 に上げる
+  - libwebrtc から cricket::MediaEngineDependencies が削除されたため、 rtc_manager.cpp から media_dependencies を削除
   - @torikizi
-- [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
+- [UPDATE] WEBRTC_BUILD_VERSION を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
     - clang や CXX_STANDARD のバージョンアップに合わせ最新のバージョンに上げる
   - すべてのプラットフォームで set_target_properties の CXX_STANDARD を 20 にアップデート
   - Ubuntu で使用する clang のバージョンを 15 にアップデート
   - @torikizi
 - [UPDATE] パッケージディレクトリ変更に追従する
-  - WebRTC を m118 に上げた際にパッケージディレクトリが変更されたのでそれに追従する
+  - WEBRTC_BUILD_VERSION を m118 に上げた際にパッケージディレクトリが変更されたのでそれに追従する
   - @torikizi
 
 ## 2023.1.0
