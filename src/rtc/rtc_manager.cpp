@@ -71,65 +71,6 @@ RTCManager::RTCManager(
       absl::make_unique<webrtc::RtcEventLogFactory>(
           dependencies.task_queue_factory.get());
 
-  // media_dependencies
-  cricket::MediaEngineDependencies media_dependencies;
-  media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-#if defined(_WIN32)
-  media_dependencies.adm = worker_thread_->BlockingCall(
-      [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-            dependencies.task_queue_factory.get());
-      });
-#else
-  media_dependencies.adm = worker_thread_->BlockingCall(
-      [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::AudioDeviceModule::Create(
-            audio_layer, dependencies.task_queue_factory.get());
-      });
-#endif
-  media_dependencies.audio_encoder_factory =
-      webrtc::CreateBuiltinAudioEncoderFactory();
-  media_dependencies.audio_decoder_factory =
-      webrtc::CreateBuiltinAudioDecoderFactory();
-
-  {
-    auto info = VideoCodecInfo::Get();
-    // 名前を短くする
-    auto& cf = config_;
-    auto resolve = &VideoCodecInfo::Resolve;
-    MomoVideoEncoderFactoryConfig ec;
-    ec.vp8_encoder = resolve(cf.vp8_encoder, info.vp8_encoders);
-    ec.vp9_encoder = resolve(cf.vp9_encoder, info.vp9_encoders);
-    ec.av1_encoder = resolve(cf.av1_encoder, info.av1_encoders);
-    ec.h264_encoder = resolve(cf.h264_encoder, info.h264_encoders);
-    ec.simulcast = cf.simulcast;
-    ec.hardware_encoder_only = cf.hardware_encoder_only;
-#if defined(__linux__) && USE_NVCODEC_ENCODER
-    ec.cuda_context = cf.cuda_context;
-#endif
-    media_dependencies.video_encoder_factory =
-        std::unique_ptr<webrtc::VideoEncoderFactory>(
-            absl::make_unique<MomoVideoEncoderFactory>(ec));
-    MomoVideoDecoderFactoryConfig dc;
-    dc.vp8_decoder = resolve(cf.vp8_decoder, info.vp8_decoders);
-    dc.vp9_decoder = resolve(cf.vp9_decoder, info.vp9_decoders);
-    dc.av1_decoder = resolve(cf.av1_decoder, info.av1_decoders);
-    dc.h264_decoder = resolve(cf.h264_decoder, info.h264_decoders);
-#if USE_NVCODEC_ENCODER
-    dc.cuda_context = cf.cuda_context;
-#endif
-    media_dependencies.video_decoder_factory =
-        std::unique_ptr<webrtc::VideoDecoderFactory>(
-            absl::make_unique<MomoVideoDecoderFactory>(dc));
-  }
-
-  media_dependencies.audio_mixer = nullptr;
-  media_dependencies.audio_processing =
-      webrtc::AudioProcessingBuilder().Create();
-
-  dependencies.media_engine =
-      cricket::CreateMediaEngine(std::move(media_dependencies));
-
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   using result_type =
