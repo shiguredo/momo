@@ -186,7 +186,7 @@ limitations under the License.
 - OpenH264 対応
   - Windows
   - Ubuntu
-- oneVPL 対応
+- Intel VPL 対応
 - AV1 対応
   - Windows
 - Windows / macOS 署名対応
