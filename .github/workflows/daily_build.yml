@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v1.3
+      - uses: microsoft/setup-msbuild@v2
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
