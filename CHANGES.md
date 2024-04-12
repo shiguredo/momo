@@ -30,6 +30,10 @@
 - [UPDATE] パッケージディレクトリ変更に追従する
   - WebRTC を m118 に上げた際にパッケージディレクトリが変更されたのでそれに追従する
   - @torikizi
+- [UPDATE] Github Actions の actions/download-artifact をアップデート
+  - Node.js 16 の Deprecated に伴うアップデート
+    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
+  - @torikizi
 
 ## 2023.1.0
 
