@@ -1,0 +1,13 @@
+{
+	"MD004": {
+		"style": "dash"
+	},
+	"MD013": {
+		"line_length": 150,
+		"code_blocks": false
+	},
+	"MD024": {
+		"siblings_only": true
+	},
+	"MD036": false
+}

@@ -4,8 +4,8 @@
 
 `--video-device` は linux 端末でビデオデバイス（つまりカメラ）を指定する機能です。 1 台の Raspberry Pi で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれここに割り当てたい時に利用できます。
 
-```shell
-$ ./momo --video-device /dev/video0 test
+```bash
+./momo --video-device /dev/video0 test
 ```
 
 ### デバイス名の固定
@@ -23,7 +23,7 @@ udev ルールを設定してデバイス名を固定します。
 
 まず、接続した USB カメラの SERIAL を取得します
 
-```
+```console
 $ udevadm info --query=all --name=/dev/video0 | grep ID_SERIAL_SHORT
 E: ID_SERIAL_SHORT=8E40F950
 ```
@@ -34,7 +34,7 @@ ATTRS{serial} には上記で取得した SERIAL を指定します。
 
 SYMLINK には固定するデバイス名を指定します。
 
-```
+```bash
 KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", SYMLINK+="video_101"
 ```
 
@@ -44,14 +44,13 @@ KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", SYMLINK+="video_1
 
 ATTR{index} は下記の方法で取得します。
 
-```
-$ udevadm info --attribute-walk --path $( udevadm info --query=path --name=/dev/video0 ) | grep index
-    ATTR{index}=="0"
+```bash
+udevadm info --attribute-walk --path $( udevadm info --query=path --name=/dev/video0 ) | grep index ATTR{index}=="0"
 ```
 
 ATTR{index}=="0" を含めた場合の設定例は下記の通りです。
 
-```
+```bash
 KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", ATTR{index}=="0", SYMLINK+="video_101"
 ```
 
@@ -60,6 +59,6 @@ KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", ATTR{index}=="0",
 設定したデバイス名を使用するために、USB カメラを Linux 端末から外して、
 すぐに再度接続して、上記で SYMLINK に設定したデバイス名を --video-device に指定して momo を実行します。
 
-```
-$ ./momo --video-device /dev/video_101 test
+```bash
+./momo --video-device /dev/video_101 test
 ```

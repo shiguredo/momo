@@ -9,11 +9,11 @@ Intel Media SDK を利用して Intel Quick Sync Video の HWA 機能を使っ�
 Intel Media SDK の詳細については以下のリンクをご確認ください。
 
 - デコーダーとエンコーダーの対応しているコーデックとチップセットの組み合わせ表
-    - https://github.com/intel/media-driver#decodingencoding-features
+  - <https://github.com/intel/media-driver#decodingencoding-features>
 - Intel Media SDK の Github
-    - https://github.com/Intel-Media-SDK/MediaSDK#intel-media-sdk
+  - <https://github.com/Intel-Media-SDK/MediaSDK#intel-media-sdk>
 - Intel 公式ドキュメント
-    - https://www.intel.com/content/www/us/en/developer/tools/media-sdk/documentation.html
+  - <https://www.intel.com/content/www/us/en/developer/tools/media-sdk/documentation.html>
 
 ## 対応プラットフォーム
 
@@ -27,17 +27,19 @@ Intel Media SDK の詳細については以下のリンクをご確認くださ�
 
 Windows 10 ではインストール作業は必要ありません。
 
-## Intel Media SDK が認識できているか確認
+### Intel Media SDK が認識できているか確認
 
 Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel Media SDK [intel]` が表示されているコーデックで利用可能です。
 
 PowerShell での実行コマンド例：
-```
+
+```powershell
 .\momo.exe --video-codec-engines
 ```
 
 PowerShell での実行結果例：
-```
+
+```powershell
 > .\momo.exe --video-codec-engines
 VP8:
   Encoder:
@@ -70,30 +72,32 @@ H264:
 ### ドライバーのインストール∂
 
 - Ubuntu の最新化を実行します
-    - `sudo apt-get update`
-    - `sudo apt-get upgrade`
+  - `sudo apt-get update`
+  - `sudo apt-get upgrade`
 - ドライバー確認ツールをインストールします
-    - `sudo apt-get install vainfo`
+  - `sudo apt-get install vainfo`
 - ドライバーをインストールします。
-    - 以下のコマンドのいずれでも問題ありません。フル機能版は `intel-media-va-driver-non-free` でコア機能版は `intel-media-va-driver` になります。
-        - `sudo apt-get install intel-media-va-driver-non-free`
-        - `sudo apt-get install intel-media-va-driver`
+  - 以下のコマンドのいずれでも問題ありません。フル機能版は `intel-media-va-driver-non-free` でコア機能版は `intel-media-va-driver` になります。
+    - `sudo apt-get install intel-media-va-driver-non-free`
+    - `sudo apt-get install intel-media-va-driver`
 - 関連ライブラリをインストールします
-    - `sudo apt install libmfx1`
+  - `sudo apt install libmfx1`
 
 以上でインストールが完了します。
 
-## Intel Media SDK が認識できているか確認
+### Intel Media SDK が認識できているか確認
 
 Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel Media SDK [intel]` が表示されているコーデックで利用可能です。
 
 実行コマンド例：
-```
+
+```bash
 ./momo --video-codec-engines
 ```
 
 実行結果例：
-```
+
+```bash
 $ ./momo --video-codec-engines
 VP8:
   Encoder:

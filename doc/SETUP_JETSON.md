@@ -8,7 +8,7 @@
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
-https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+<https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 - `momo-<version>_ubuntu-20.04_armv8_jetson_xavier.tar.gz`
   - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
@@ -41,8 +41,8 @@ $ tree
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
 
-```shell
-$ ./momo --hw-mjpeg-decoder=true --no-audio-device test
+```bash
+./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
 ## 4K@30fps を出すためにやること
@@ -103,7 +103,7 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 
 コマンド例を以下に記載します。
 
-```shell
+```bash
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
     --signaling-url \
         wss://canary.sora-labo.shiguredo.app/signaling \

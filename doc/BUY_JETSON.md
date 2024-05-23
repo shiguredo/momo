@@ -6,10 +6,10 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 - Jetpack 5 系のみの対応とします。
 - Jetpack 4 系への対応を終了しました。
-    - 上記に伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了しました。
+  - 上記に伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了しました。
 - ハードウェアエンコードに対応しない Jetson Orin Nano への対応は行いません
 - Jetson Orin NX への対応は優先実装とします。
-    - Xavier と同じパターンだと Jetson Orin Nano より JPEG のハードウェア処理が劣る可能性があるため
+  - Xavier と同じパターンだと Jetson Orin Nano より JPEG のハードウェア処理が劣る可能性があるため
 
 ## Jetson AGX Orin
 
@@ -25,9 +25,9 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 以下は上のタイプのケースありやレンズが色々選べるタイプです。
 
-- https://ja.aliexpress.com/item/33013268769.html
-- https://ja.aliexpress.com/item/33016603918.html
-- https://ja.aliexpress.com/item/33012473257.html
+- <https://ja.aliexpress.com/item/33013268769.html>
+- <https://ja.aliexpress.com/item/33016603918.html>
+- <https://ja.aliexpress.com/item/33012473257.html>
 
 色々 4K で 30fps が出せるカメラを試してきましたが、このカメラが一番安定しています。
 
@@ -35,10 +35,9 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 [4K webcam について \- Qiita](https://qiita.com/tetsu_koba/items/8b4921f257a46a15d2a7)
 
-
 ## Jetson 関連リンク
 
 - Jetson ロードマップ
-    - [Jetson Roadmap \| NVIDIA Developer](https://developer.nvidia.com/embedded/develop/roadmap)
+  - [Jetson Roadmap \| NVIDIA Developer](https://developer.nvidia.com/embedded/develop/roadmap)
 - Jetson ライフサイクル
-    - [Jetson Product Lifecycle \| NVIDIA Developer](https://developer.nvidia.com/embedded/lifecycle)
+  - [Jetson Product Lifecycle \| NVIDIA Developer](https://developer.nvidia.com/embedded/lifecycle)

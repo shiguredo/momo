@@ -2,8 +2,8 @@
 
 まずは momo のリポジトリをダウンロードします。
 
-```shell
-$ git clone git@github.com:shiguredo/momo.git
+```bash
+git clone git@github.com:shiguredo/momo.git
 ```
 
 ## 環境について
@@ -21,8 +21,8 @@ Docker for Windows や Arm 上でのビルドは未検証です。 **Linux x86_6
 
 build ディレクトリ以下で ./build.sh raspberry-pi-os_armv6 と打つことで Momo の Raspberry Pi OS armv6 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh raspberry-pi-os_armv6
+```bash
+./build.sh raspberry-pi-os_armv6
 ```
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv6 && ./build.sh raspberry-pi-os_armv6` を試してみてください。
@@ -31,8 +31,8 @@ $ ./build.sh raspberry-pi-os_armv6
 
 build ディレクトリ以下で ./build.sh raspberry-pi-os_armv7 と打つことで Momo の Raspberry-Pi-OS armv7 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh raspberry-pi-os_armv7
+```bash
+./build.sh raspberry-pi-os_armv7
 ```
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv7 && ./build.sh raspberry-pi-os_armv7` を試してみてください。
@@ -41,8 +41,8 @@ $ ./build.sh raspberry-pi-os_armv7
 
 build ディレクトリ以下で ./build.sh raspberry-pi-os_armv8 と打つことで Momo の Raspberry Pi OS armv8 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh raspberry-pi-os_armv8
+```bash
+./build.sh raspberry-pi-os_armv8
 ```
 
 うまくいかない場合は `./build.sh --clean raspberry-pi-os_armv8 && ./build.sh raspberry-pi-os_armv8` を試してみてください。
@@ -51,8 +51,8 @@ $ ./build.sh raspberry-pi-os_armv8
 
 build ディレクトリ以下で ./build.sh ubuntu-20.04_armv8_jetson_xavier と打つことで Momo の Ubuntu 20.04 armv8 Jetson Xavier NX / AGX 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh ubuntu-20.04_armv8_jetson_xavier
+```bash
+./build.sh ubuntu-20.04_armv8_jetson_xavier
 ```
 
 うまくいかない場合は `./build.sh --clean ubuntu-20.04_armv8_jetson_xavier && ./build.sh ubuntu-20.04_armv8_jetson_xavier` を試してみてください。
@@ -61,8 +61,8 @@ $ ./build.sh ubuntu-20.04_armv8_jetson_xavier
 
 build ディレクトリ以下で ./build.sh ubuntu-20.04_x86_64 と打つことで Momo の Ubuntu 20.04 (x86_64) 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh ubuntu-20.04_x86_64
+```bash
+./build.sh ubuntu-20.04_x86_64
 ```
 
 うまくいかない場合は `./build.sh --clean ubuntu-20.04_x86_64 && ./build.sh ubuntu-20.04_x86_64` を試してみてください。
@@ -71,8 +71,8 @@ $ ./build.sh ubuntu-20.04_x86_64
 
 build ディレクトリ以下で ./build.sh ubuntu-22.04_x86_64 と打つことで Momo の Ubuntu 22.04 (x86_64) 向けバイナリが生成されます。
 
-```shell
-$ ./build.sh ubuntu-22.04_x86_64
+```bash
+./build.sh ubuntu-22.04_x86_64
 ```
 
 うまくいかない場合は `./build.sh --clean ubuntu-22.04_x86_64 && ./build.sh ubuntu-22.04_x86_64` を試してみてください。

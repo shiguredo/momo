@@ -6,7 +6,7 @@ Raspberry Pi OS のレガシー版には対応しておりません。最新版�
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
-https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+<https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 - Raspberry Pi OS 64 bit を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv8.tar.gz` を利用してください
 - Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv7.tar.gz` を利用してください
@@ -32,10 +32,10 @@ $ tree
 下記を実行してください。
 
 ```
-$ sudo apt-get update
-$ sudo apt-get upgrade
-$ sudo apt-get install libnspr4 libnss3
-$ sudo apt-get install libcamera0
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install libnspr4 libnss3
+sudo apt-get install libcamera0
 ```
 
 #### Raspberry Pi OS Lite を利用する場合
@@ -45,10 +45,10 @@ Raspberry Pi Lite では映像に関するパッケージが入っていない�
 下記に実行する一例を示します。
 
 ```
-$ sudo apt-get install libSDL2-2.0
-$ sudo apt-get install libxtst6
-$ sudo apt-get install libegl1-mesa-dev
-$ sudo apt-get install libgles2-mesa
+sudo apt-get install libSDL2-2.0
+sudo apt-get install libxtst6
+sudo apt-get install libegl1-mesa-dev
+sudo apt-get install libgles2-mesa
 ```
 
 ### Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
@@ -60,7 +60,7 @@ raspi-config で Camera を Enable にしてください。
 加えて、以下のコマンドを実行してください
 
 ```
-$ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
+sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
 
 ## 使ってみる
@@ -78,8 +78,8 @@ $ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 `--force-i420` は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。
 USB カメラでは逆にフレームレートが落ちるため使わないでください。
 
-```shell
-$ ./momo --force-i420 --no-audio-device test
+```bash
+./momo --force-i420 --no-audio-device test
 ```
 
 ## Raspberry Pi 専用カメラでが利用できない
@@ -90,8 +90,8 @@ Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カ�
 
 `--use-libcamera` は Raspberry Pi 専用カメラを利用するためのオプションです。
 
-```shell
-$ ./momo --use-libcamera --no-audio-device test
+```bash
+./momo --use-libcamera --no-audio-device test
 ```
 
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない
@@ -100,8 +100,8 @@ $ ./momo --use-libcamera --no-audio-device test
 
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズをします。
 
-```shell
-$ ./momo --hw-mjpeg-decoder true --no-audio-device test
+```bash
+./momo --hw-mjpeg-decoder true --no-audio-device test
 ```
 
 ### Raspberry Pi の設定を見直す
@@ -112,8 +112,8 @@ $ ./momo --hw-mjpeg-decoder true --no-audio-device test
 
 Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用すると CPU 使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
-```shell
-$ ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
+```bash
+./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
 ```
 
 がリアルタイムでの最高解像度設定となります。
@@ -124,8 +124,8 @@ $ ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
 
 一部の MJPEG に対応した USB カメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
 
-```shell
-$ ./momo --hw-mjpeg-decoder true --no-audio-device test
+```bash
+./momo --hw-mjpeg-decoder true --no-audio-device test
 ```
 
 ### Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない

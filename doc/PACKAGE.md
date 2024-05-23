@@ -4,8 +4,8 @@
 
 raspberry-pi-os_armv6 パッケージを作成する場合は build ディレクトリで ./build.sh --package raspberry-pi-os_armv6 と打つことでパッケージが作成されます。
 
-```shell
-$ ./build.sh --package raspberry-pi-os_armv6
+```bash
+./build.sh --package raspberry-pi-os_armv6
 ```
 
 Windows の場合は以下のコマンドになります。
@@ -29,7 +29,7 @@ Windows の場合は以下のコマンドになります。
 
 ## パッケージ解凍後の構成
 
-```
+```console
 $ tree
 .
 ├── html

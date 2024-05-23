@@ -27,17 +27,17 @@ Sora モードでのみ利用できます。利用できる映像コーデック
 
 `SSL_CERT_DIR` または `SSL_CERT_FILE` 環境変数に CA 証明書のパスを指定することで、サーバ証明書の検証に利用するための CA 証明書を追加することができます。
 
-```
-$ export SSL_CERT_FILE=/path/to/cert.pem
-$ ./momo sora ...
+```bash
+export SSL_CERT_FILE=/path/to/cert.pem
+./momo sora ...
 ```
 
 ## サーバ証明書を無視できますか？
 
 `--insecure` オプションを指定することで、クライアント側でサーバ証明書の検証を行わないようにすることができます。
 
-```
-$ ./momo --insecure sora ...
+```bash
+./momo --insecure sora ...
 ```
 
 ## NVIDIA ビデオカードに搭載されている NVENC を利用できますか？
@@ -140,7 +140,7 @@ Momo の Sora モードではマルチストリーム機能を無効にして利
 以下に示すオプションを指定することで利用できます。
 
 - `--proxy-url` : プロキシの URL
-  - 例) http://proxy.example.com:3128
+  - 例: <http://proxy.example.com:3128>
 - `--proxy-username` : プロキシ認証に使用するユーザー名
 - `--proxy-password` : プロキシ認証に使用するパスワード
 
