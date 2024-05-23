@@ -14,7 +14,7 @@ Raspberry Pi OS のレガシー版には対応しておりません。最新版�
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```
+```console
 $ tree
 .
 ├── html
@@ -31,7 +31,7 @@ $ tree
 
 下記を実行してください。
 
-```
+```bash
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install libnspr4 libnss3
@@ -44,7 +44,7 @@ Raspberry Pi Lite では映像に関するパッケージが入っていない�
 
 下記に実行する一例を示します。
 
-```
+```bash
 sudo apt-get install libSDL2-2.0
 sudo apt-get install libxtst6
 sudo apt-get install libegl1-mesa-dev
@@ -59,7 +59,7 @@ raspi-config で Camera を Enable にしてください。
 
 加えて、以下のコマンドを実行してください
 
-```
+```bash
 sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 ```
 
@@ -98,6 +98,7 @@ Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カ�
 
 ### --hw-mjpeg-decoder
 
+MJPEG のハードウェアデコーダーの利用を検討してみてください。
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズをします。
 
 ```bash
@@ -106,7 +107,8 @@ Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カ�
 
 ### Raspberry Pi の設定を見直す
 
-[Raspbian で Raspberry Pi の Raspberry Pi 用カメラを利用する場合](#raspbian-で-raspberry-pi-の-raspberry-pi-用カメラを利用する場合)通りに設定されているか確認してください。特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
+[Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合](#raspberry-pi-os-で-raspberry-pi-用カメラなどの-csi-カメラを利用する場合) を確認してください。
+特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
 
 ### オプションを見直す
 
@@ -132,7 +134,7 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 
 USB カメラ利用時には `--hw-mjpeg-decoder` を使わない方がフレームレートは出ます。しかし `--hw-mjpeg-decoder` を使って CPU 使用率を下げた状態で利用したい場合は /boot/config.txt の末尾に下記を追記してください
 
-```
+```text
 gpu_mem=256
 force_turbo=1
 avoid_warnings=2

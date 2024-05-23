@@ -15,7 +15,7 @@
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```
+```console
 $ tree
 .
 ├── html
@@ -61,7 +61,7 @@ Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 
 
 を実行してカメラの設定を変更してください。 4K 30fps が出力可能な設定は下記のとおりです
 
-```
+```console
 $ v4l2-ctl --list-ctrls
                      brightness 0x00980900 (int)    : min=-64 max=64 step=1 default=0 value=0
                        contrast 0x00980901 (int)    : min=0 max=95 step=1 default=1 value=1

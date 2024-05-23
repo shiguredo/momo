@@ -2,7 +2,7 @@
 
 ## Windows 向けのバイナリは以下にて提供しています
 
-https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+<https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 ## 動かしてみる
 
@@ -14,7 +14,8 @@ PowerShellやコマンドプロンプトで実行する場合文字列エスケ�
 metadataオプションのキーや値を囲む「"」を「\\\"」にする必要があります。
 
 PowerShell での実行例：
-```
+
+```console
 .\momo.exe --no-audio-device `
     sora `
         --signaling-url `

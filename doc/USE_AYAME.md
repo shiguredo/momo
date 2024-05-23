@@ -22,9 +22,9 @@ Ayame Labo はサインアップせずにシグナリングサーバを利用可
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
 ```
 
-Windows の場合:
+#### Windows の場
 
-```
+```powershell
 .\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
 ```
 
@@ -46,9 +46,9 @@ Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id shiguredo@open-momo --signaling-key xyz
 ```
 
-Windows の場合:
+#### Windows の場合
 
-```
+```powershell
 .\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id shiguredo@open-momo --signaling-key xyz
 ```
 
