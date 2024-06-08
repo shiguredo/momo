@@ -175,15 +175,12 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - リリース
-- Raspberry Pi カメラの Raspberry Pi OS (32bit) 対応
 - H.265 (HEVC) HWA 対応
   - macOS Video Toolbox
   - NVIDIA Jetson
-    - Ubuntu 20.04
-    - Ubuntu 22.04
+    - Ubuntu 22.04 JetPack 6
   - NVIDIA Video Codec SDK
     - Windows
-    - Ubuntu
 - OpenH264 対応
   - Windows
   - Ubuntu
