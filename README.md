@@ -82,17 +82,18 @@ https://github.com/shiguredo/momo/releases
 
 ## 動作環境
 
-- Raspberry Pi OS (64bit) ARMv8
+- Raspberry Pi OS (64bit)
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi 2
   - Raspberry Pi Zero 2 W
-- Raspberry Pi OS (32bit) ARMv7
+- Raspberry Pi OS (32bit)
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi 2
   - Raspberry Pi Zero 2 W
 - Raspberry Pi OS (32bit) ARMv6
+  - **未検証**
   - Raspberry Pi Zero
   - Raspberry Pi 1
 - Ubuntu 20.04 x86_64
