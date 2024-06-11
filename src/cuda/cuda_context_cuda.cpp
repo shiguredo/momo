@@ -1,3 +1,5 @@
+#include "fix_cuda_noinline_macro_error.h"
+
 #include "cuda_context_cuda.h"
 
 #include <NvDecoder/NvDecoder.h>

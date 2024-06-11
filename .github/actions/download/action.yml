@@ -17,8 +17,8 @@ runs:
     - name: Env to output
       shell: bash
       run: |
-        sed -i 's/\r//g' ${{ inputs.platform }}.env/${{ inputs.platform }}.env
-        source ${{ inputs.platform }}.env/${{ inputs.platform }}.env
+        sed -i 's/\r//g' ${{ inputs.platform }}.env/momo.env
+        source ${{ inputs.platform }}.env/momo.env
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
         echo "$PACKAGE_NAME/$PACKAGE_NAME" >> package_paths.env
       id: env

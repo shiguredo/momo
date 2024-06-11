@@ -8,6 +8,7 @@
 * is strictly prohibited.
 *
 */
+#include "fix_cuda_noinline_macro_error.h"
 
 #include "NvEncoder/NvEncoderCuda.h"
 #include "dyn/cuda.h"

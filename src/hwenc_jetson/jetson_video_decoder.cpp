@@ -125,16 +125,16 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
 
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   v4l2_buf.timestamp.tv_sec =
-      input_image.Timestamp() / rtc::kNumMicrosecsPerSec;
+      input_image.RtpTimestamp() / rtc::kNumMicrosecsPerSec;
   v4l2_buf.timestamp.tv_usec =
-      input_image.Timestamp() % rtc::kNumMicrosecsPerSec;
+      input_image.RtpTimestamp() % rtc::kNumMicrosecsPerSec;
 
   if (decoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.Timestamp()
+  // RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.RtpTimestamp()
   //                  << " bytesused:" << buffer->planes[0].bytesused;
   return WEBRTC_VIDEO_CODEC_OK;
 }

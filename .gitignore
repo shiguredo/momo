@@ -38,15 +38,8 @@ webrtc_logs_0
 .DS_Store
 *.swp
 
+/__pycache__
 /_build
 /_source
 /_install
 /_package
-/build/windows_*/_source
-/build/windows_*/_build
-/build/windows_*/_install
-/build/macos_*/_source
-/build/macos_*/_build
-/build/macos_*/_install
-
-/src/hwenc_jetson/Nv*

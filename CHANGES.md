@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] ビルド周りを完全にリニューアルする
+  - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.3 に上げる
@@ -21,8 +23,8 @@
   - JetPack 5.1.1, 5.1.2 で動作を確認
   - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
   - @enm10k
-- [UPDATE] WebRTC を m119.6045.2.1 に上げる
-  - @torikizi
+- [UPDATE] WebRTC を m122.6261.2.1 に上げる
+  - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
     - clang や CXX_STANDARD のバージョンアップに合わせ最新のバージョンに上げる

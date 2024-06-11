@@ -294,7 +294,7 @@ void MMALH264Encoder::EncoderOutputCallback(MMAL_PORT_T* port,
   encoded_image_._encodedHeight = params->height;
   encoded_image_.capture_time_ms_ = params->render_time_ms;
   encoded_image_.ntp_time_ms_ = params->ntp_time_ms;
-  encoded_image_.SetTimestamp(params->timestamp_rtp);
+  encoded_image_.SetRtpTimestamp(params->timestamp_rtp);
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.SetColorSpace(params->color_space);
 
