@@ -22,11 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
-      - name: Env to output
-        run: |
-          echo "userprofile=${Env:USERPROFILE}" >> ${Env:GITHUB_OUTPUT}
-          echo "username=${Env:USERNAME}" >> ${Env:GITHUB_OUTPUT}
-        id: env
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -47,7 +42,7 @@ jobs:
           key: windows-cuda-${{ steps.versions.outputs.cuda_version }}.v1
       - run: echo "${CUDA_VERSION}" > _install\windows_x86_64\release\cuda.version
         if: steps.cache-cuda.outputs.cache-hit == 'true'
-      - run: python3 run.py --test --package ${{ matrix.name }}
+      - run: python3 run.py --package ${{ matrix.name }}
       - name: Get package name
         run: |
           Get-Content "_package\${{ matrix.name }}\release\momo.env" | Foreach-Object {
@@ -77,9 +72,7 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode 14.3.1
-        run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app/Contents/Developer
-      - run: python3 run.py --test --package ${{ matrix.name }}
+      - run: python3 run.py --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env
@@ -153,7 +146,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
-      - run: python3 run.py --test --package ${{ matrix.name }}
+      - run: python3 run.py --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env

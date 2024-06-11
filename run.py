@@ -375,8 +375,6 @@ def main():
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--relwithdebinfo", action="store_true")
     add_webrtc_build_arguments(parser)
-    parser.add_argument("--test", action="store_true")
-    parser.add_argument("--run-e2e-test", action="store_true")
     parser.add_argument("--package", action="store_true")
 
     args = parser.parse_args()
