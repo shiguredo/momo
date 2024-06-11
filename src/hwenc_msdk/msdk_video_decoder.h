@@ -7,9 +7,9 @@
 #include <rtc_base/platform_thread.h>
 
 // msdk
-#include <mfx/mfxdefs.h>
-#include <mfx/mfxvideo++.h>
-#include <mfx/mfxvp8.h>
+#include <vpl/mfxdefs.h>
+#include <vpl/mfxvideo++.h>
+#include <vpl/mfxvp8.h>
 
 #include "msdk_session.h"
 

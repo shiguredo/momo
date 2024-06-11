@@ -306,7 +306,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
   encoded_image_._encodedHeight = frame.height();
   encoded_image_.capture_time_ms_ = frame.render_time_ms();
   encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
-  encoded_image_.SetTimestamp(frame.timestamp());
+  encoded_image_.SetRtpTimestamp(frame.timestamp());
   encoded_image_.rotation_ = frame.rotation();
   encoded_image_.SetColorSpace(frame.color_space());
   encoded_image_._frameType = is_key_frame

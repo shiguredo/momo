@@ -1,11 +1,13 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.27)
 
 # Only interpret if() arguments as variables or keywords when unquoted.
 cmake_policy(SET CMP0054 NEW)
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
+# find_package() uses upper-case <PACKAGENAME>_ROOT variables.
+cmake_policy(SET CMP0144 NEW)
 
-set(MOMO_PACKAGE_NAME "" CACHE STRING "ビルド設定を自動化するパッケージ名")
+set(MOMO_TARGET "" CACHE STRING "ビルド設定を自動化するパッケージ名")
 set(TARGET_OS "" CACHE STRING "ビルド対象の動作する OS。\n有効な値は windows, macos, linux")
 set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な OS の情報。")
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
@@ -14,11 +16,9 @@ set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウ�
 set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_MSDK_ENCODER OFF CACHE BOOL "Intel Media SDK のハードウェアエンコーダを利用するかどうか")
-set(USE_H264 OFF CACHE BOOL "H264 を利用するかどうか")
-set(USE_SDL2 OFF CACHE BOOL "SDL2 による画面出力を利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
-set(BOOST_ROOT_DIR "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
+set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
 set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
@@ -35,246 +35,67 @@ set(WEBRTC_BUILD_VERSION "unspecified" CACHE STRING "webrtc-build のバージ�
 set(WEBRTC_READABLE_VERSION "unspecified" CACHE STRING "WebRTC の読みやすいバージョン")
 set(WEBRTC_COMMIT "<commit>" CACHE STRING "WebRTC のコミットハッシュ")
 
-if(MOMO_PACKAGE_NAME STREQUAL "windows_x86_64")
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/windows_x86_64/_install)
-
+if(MOMO_TARGET STREQUAL "windows_x86_64")
   set(TARGET_OS "windows")
   set(TARGET_ARCH "x86_64")
-  set(USE_NVCODEC_ENCODER ON)
-  set(USE_MSDK_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
-  set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
-  set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
-  set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
-
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${SDL2_ROOT_DIR}/cmake)
-  list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR} ${SDL2_ROOT_DIR})
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "macos_arm64")
-
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/macos_arm64/_install)
-
+elseif(MOMO_TARGET STREQUAL "macos_arm64")
   set(TARGET_OS "macos")
   set(TARGET_ARCH "arm64")
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR ${_INSTALL_DIR}/boost)
-  set(SDL2_ROOT_DIR ${_INSTALL_DIR}/SDL2)
-  set(CLI11_ROOT_DIR ${_INSTALL_DIR}/CLI11)
-  set(WEBRTC_INCLUDE_DIR ${_INSTALL_DIR}/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR ${_INSTALL_DIR}/webrtc/lib)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv6")
-
+elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv6")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv6")
-  set(USE_MMAL_ENCODER ON)
-  set(USE_H264 ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-  set(Boost_ARCHITECTURE 32)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv7")
-
+elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv7")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv7")
-  set(USE_MMAL_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-  set(Boost_ARCHITECTURE 32)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "raspberry-pi-os_armv8")
-
+elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv8")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "raspberry-pi-os")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv8")
-  set(USE_V4L2_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_LINUX_PULSE_AUDIO ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_x86_64")
-
+elseif(MOMO_TARGET STREQUAL "ubuntu-20.04_x86_64")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-20.04")
   set(TARGET_ARCH "x86_64")
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_NVCODEC_ENCODER ON)
-  set(USE_MSDK_ENCODER ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(LIBVA_ROOT_DIR /root/libva)
-  set(MSDK_ROOT_DIR /root/msdk)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-10 を利用する
-  set(CMAKE_C_COMPILER clang-15)
-  set(CMAKE_CXX_COMPILER clang++-15)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-20.04_armv8_jetson_xavier")
-
+elseif(MOMO_TARGET STREQUAL "ubuntu-22.04_x86_64")
+  set(TARGET_OS "linux")
+  set(TARGET_OS_LINUX "ubuntu-22.04")
+  set(TARGET_ARCH "x86_64")
+elseif(MOMO_TARGET STREQUAL "ubuntu-20.04_armv8_jetson_xavier")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-20.04")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv8")
-  set(USE_JETSON_ENCODER ON)
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_LINUX_PULSE_AUDIO ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-  set(CLANG_ROOT /root/llvm/clang)
-  set(SYSROOT /root/rootfs)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-elseif(MOMO_PACKAGE_NAME STREQUAL "ubuntu-22.04_x86_64")
-
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-22.04")
-  set(TARGET_ARCH "x86_64")
-  set(USE_H264 ON)
-  set(USE_SDL2 ON)
-  set(USE_NVCODEC_ENCODER ON)
-  set(USE_MSDK_ENCODER ON)
-  set(USE_SCREEN_CAPTURER ON)
-  set(BOOST_ROOT_DIR /root/boost)
-  set(CLI11_ROOT_DIR /root/CLI11)
-  set(SDL2_ROOT_DIR /root/SDL2)
-  set(LIBVA_ROOT_DIR /root/libva)
-  set(MSDK_ROOT_DIR /root/msdk)
-  set(WEBRTC_INCLUDE_DIR /root/webrtc/include)
-  set(WEBRTC_LIBRARY_DIR /root/webrtc/lib)
-
-  # /root/llvm/clang にあるコンパイラは使わず、apt でインストールした clang-15 を利用する
-  set(CMAKE_C_COMPILER clang-15)
-  set(CMAKE_CXX_COMPILER clang++-15)
-
-  set(USE_LIBCXX ON)
-  set(LIBCXX_INCLUDE_DIR /root/llvm/libcxx/include)
-
-else()
-endif()
-
-if (NOT "${CLANG_ROOT}" STREQUAL "")
-  set(CMAKE_C_COMPILER ${CLANG_ROOT}/bin/clang)
-  set(CMAKE_CXX_COMPILER ${CLANG_ROOT}/bin/clang++)
-endif()
-
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-if (NOT "${BOOST_ROOT_DIR}" STREQUAL "")
-  list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT_DIR})
-endif()
-
-if (USE_SDL2 AND (NOT "${SDL2_ROOT_DIR}" STREQUAL ""))
-  list(APPEND CMAKE_MODULE_PATH ${SDL2_ROOT_DIR}/cmake)
-  list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
-endif()
-
-# SYSROOT とかの設定
-# これらの設定は project の前に行う必要がある
-if (TARGET_OS STREQUAL "linux")
-  if (TARGET_ARCH STREQUAL "arm")
-    if (TARGET_ARCH_ARM STREQUAL "armv8")
-      set(ARCH_NAME aarch64-linux-gnu)
-    else()
-      set(ARCH_NAME arm-linux-gnueabihf)
-    endif()
-
-    set(CMAKE_SYSTEM_NAME Linux)
-    if (TARGET_ARCH_ARM STREQUAL "armv8")
-      set(CMAKE_SYSTEM_PROCESSOR aarch64)
-    else()
-      set(CMAKE_SYSTEM_PROCESSOR arm)
-    endif()
-    set(CMAKE_SYSROOT ${SYSROOT})
-    set(CMAKE_C_COMPILER_TARGET ${ARCH_NAME})
-    set(CMAKE_CXX_COMPILER_TARGET ${ARCH_NAME})
-
-    set(CMAKE_FIND_ROOT_PATH ${SYSROOT})
-    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
-    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
-  endif()
-endif()
-
-if (TARGET_OS STREQUAL "macos")
-  set(ARCH_NAME aarch64-apple-darwin)
-  set(CMAKE_SYSTEM_PROCESSOR arm64)
-
-  set(CMAKE_C_COMPILER_TARGET ${ARCH_NAME})
-  set(CMAKE_CXX_COMPILER_TARGET ${ARCH_NAME})
 endif()
 
 project(momo C CXX)
 
-list(APPEND MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
+if (USE_VPL_ENCODER)
+  list(APPEND CMAKE_PREFIX_PATH ${VPL_ROOT_DIR}/lib/cmake/vpl)
+endif()
 
 set(Boost_USE_STATIC_LIBS ON)
-if ("${TARGET_OS}" STREQUAL "windows")
+if (WIN32)
   set(Boost_USE_STATIC_RUNTIME ON)
-else()
-  set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
+
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem json)
 find_package(CLI11 REQUIRED)
-if (USE_SDL2)
-  find_package(SDL2 REQUIRED)
-endif()
+find_package(SDL2 REQUIRED)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 add_executable(momo)
 
@@ -285,12 +106,11 @@ target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_sources(momo
   PRIVATE
-    src/main.cpp
-    src/momo_version.cpp
-    src/util.cpp
-    src/watchdog.cpp
-    src/ssl_verifier.cpp
     src/ayame/ayame_client.cpp
+    src/main.cpp
+    src/metrics/metrics_server.cpp
+    src/metrics/metrics_session.cpp
+    src/momo_version.cpp
     src/p2p/p2p_server.cpp
     src/p2p/p2p_session.cpp
     src/p2p/p2p_websocket_session.cpp
@@ -306,12 +126,13 @@ target_sources(momo
     src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
+    src/sora/sora_client.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
-    src/sora/sora_client.cpp
+    src/ssl_verifier.cpp
+    src/util.cpp
+    src/watchdog.cpp
     src/websocket.cpp
-    src/metrics/metrics_server.cpp
-    src/metrics/metrics_session.cpp
 )
 
 target_include_directories(momo PRIVATE src)
@@ -337,53 +158,48 @@ target_compile_definitions(momo
     USE_V4L2_ENCODER=$<BOOL:${USE_V4L2_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_MSDK_ENCODER=$<BOOL:${USE_MSDK_ENCODER}>
-    USE_H264=$<BOOL:${USE_H264}>
-    USE_SDL2=$<BOOL:${USE_SDL2}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
     USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
     BOOST_NO_CXX98_FUNCTION_BASE
 )
 
-if (USE_SDL2)
-  target_sources(momo
+# SDL2 のための設定
+target_sources(momo
+  PRIVATE
+    src/sdl_renderer/sdl_renderer.cpp
+)
+target_compile_definitions(momo
+  PRIVATE
+    _THREAD_SAFE
+)
+if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
+  target_link_libraries(momo
     PRIVATE
-      src/sdl_renderer/sdl_renderer.cpp
+      SDL2::SDL2-static
+      SDL2::SDL2main
   )
-  target_compile_definitions(momo
-    PRIVATE
-      _THREAD_SAFE
-  )
-
-
-  if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
+else()
+  if (TARGET SDL2::SDL2Config)
     target_link_libraries(momo
       PRIVATE
-        SDL2::SDL2-static
-        SDL2::SDL2main
+        SDL2::SDL2Config
     )
   else()
-    if (TARGET SDL2::SDL2Config)
-      target_link_libraries(momo
-        PRIVATE
-          SDL2::SDL2Config
-      )
-    else()
-      target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
-      target_link_libraries(momo PRIVATE SDL2)
-      target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
-    endif()
+    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
+    target_link_libraries(momo PRIVATE SDL2)
+    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
   endif()
+endif()
 
-  if ("${TARGET_OS}" STREQUAL "macos")
-    target_link_libraries(momo
-      PRIVATE
-        iconv
-        "-framework Carbon"
-        "-framework IOKit"
-        "-framework ForceFeedback"
-    )
-  endif()
+if ("${TARGET_OS}" STREQUAL "macos")
+  target_link_libraries(momo
+    PRIVATE
+      iconv
+      "-framework Carbon"
+      "-framework IOKit"
+      "-framework ForceFeedback"
+  )
 endif()
 
 if (USE_LIBCXX)
@@ -426,28 +242,27 @@ if ("${TARGET_OS}" STREQUAL "windows")
   set_target_properties(momo
     PROPERTIES
       # CRTライブラリを静的リンクさせる
-      # CMake 3.15 以上なら MSVC_RUNTIME_LIBRARY が使える
-      MSVC_RUNTIME_LIBRARY "MultiThreaded"
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
   target_link_libraries(momo
     PRIVATE
-      dbghelp.lib
-      delayimp.lib
-      dnsapi.lib
-      msimg32.lib
-      oleaut32.lib
-      psapi.lib
-      shell32.lib
-      shlwapi.lib
-      usp10.lib
-      version.lib
-      wininet.lib
+      # dbghelp.lib
+      # delayimp.lib
+      # dnsapi.lib
+      # msimg32.lib
+      # oleaut32.lib
+      # psapi.lib
+      # shell32.lib
+      # shlwapi.lib
+      # usp10.lib
+      # version.lib
+      # wininet.lib
       winmm.lib
       ws2_32.lib
-      amstrmid.lib
+      # amstrmid.lib
       Strmiids.lib
-      crypt32.lib
+      # crypt32.lib
       dmoguids.lib
       iphlpapi.lib
       msdmo.lib
@@ -510,6 +325,9 @@ if ("${TARGET_OS}" STREQUAL "windows")
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
+        -Xcompiler "/MT$<$<CONFIG:Debug>:d>"
+        -Xcompiler /D_HAS_ITERATOR_DEBUGGING=0
+        -Xcompiler /DUSE_NVCODEC_ENCODER=1
     )
     target_sources(momo PRIVATE ${CUDA_FILES})
     target_include_directories(momo PRIVATE ${CUDA_INCLUDE_DIRS})
@@ -546,29 +364,31 @@ elseif (TARGET_OS STREQUAL "macos")
   target_link_options(momo PRIVATE -ObjC)
   set_target_properties(momo PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
+  target_compile_definitions(momo
+    PRIVATE
+      WEBRTC_POSIX
+      WEBRTC_MAC
+  )
+
   target_link_libraries(momo
     PRIVATE
-      "-framework Foundation"
+      #"-framework Foundation"
       "-framework AVFoundation"
-      "-framework CoreServices"
-      "-framework CoreFoundation"
-      "-framework AudioUnit"
+      #"-framework CoreServices"
+      #"-framework CoreFoundation"
+      #"-framework AudioUnit"
       "-framework AudioToolbox"
       "-framework CoreAudio"
-      "-framework CoreGraphics"
+      "-framework QuartzCore"
+      #"-framework CoreGraphics"
       "-framework CoreMedia"
-      "-framework CoreVideo"
+      #"-framework CoreVideo"
       "-framework VideoToolbox"
       "-framework AppKit"
       "-framework Metal"
       "-framework MetalKit"
       "-framework OpenGL"
-  )
-
-  target_compile_definitions(momo
-    PRIVATE
-      WEBRTC_POSIX
-      WEBRTC_MAC
+      "-framework IOSurface"
   )
 
 elseif (TARGET_OS STREQUAL "linux")
@@ -582,9 +402,14 @@ elseif (TARGET_OS STREQUAL "linux")
     PRIVATE
       WEBRTC_POSIX
       WEBRTC_LINUX
+      _LIBCPP_ABI_NAMESPACE=Cr
+      _LIBCPP_ABI_VERSION=2
+      _LIBCPP_DISABLE_AVAILABILITY
+      _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
+      # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
+      BOOST_NO_CXX98_FUNCTION_BASE
+      RTC_ENABLE_H265
   )
-  # Linux 系の場合はカスタムされた libc++ を使っているためオプション追加
-  target_compile_definitions(momo PRIVATE _LIBCPP_ABI_NAMESPACE=Cr _LIBCPP_ABI_VERSION=2 _LIBCPP_DISABLE_AVAILABILITY)
 
   set_target_properties(momo PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(momo
@@ -610,26 +435,20 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        src/cuda/cuda_context_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
-        src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
-        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_video_decoder.cpp
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp)
+        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+        src/cuda/cuda_context_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
+        src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
         NvCodec/include
         NvCodec/NvCodec
         /usr/local/cuda/include)
-
-    if (WIN32)
-      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++20")
-    else()
-      set(_CUDA_COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17")
-    endif()
 
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
@@ -639,7 +458,7 @@ elseif (TARGET_OS STREQUAL "linux")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "${_CUDA_COMPILE_OPTIONS}"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
@@ -648,7 +467,9 @@ elseif (TARGET_OS STREQUAL "linux")
 
   # Intel Media SDK
   if (USE_MSDK_ENCODER)
-    find_package(MSDK REQUIRED)
+    find_package(Libdrm REQUIRED)
+    find_package(Libva REQUIRED)
+    find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
         src/hwenc_msdk/msdk_session.cpp
@@ -659,14 +480,16 @@ elseif (TARGET_OS STREQUAL "linux")
     )
     target_link_libraries(momo
       PRIVATE
-        MSDK::MSDK)
+        VPL::dispatcher
+        Libdrm::drm
+        Libva::va
+        Libva::va_drm
+    )
   endif()
 
   if (TARGET_ARCH STREQUAL "arm")
-    if (USE_LIBCXX)
-      target_include_directories(momo PRIVATE ${SYSROOT}/usr/include/${ARCH_NAME})
-      target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/${ARCH_NAME})
-    endif()
+    target_include_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/include/${ARCH_NAME})
+    target_link_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/lib/${ARCH_NAME})
 
     if (TARGET_ARCH_ARM STREQUAL "armv8")
       # Jetson の設定
@@ -680,27 +503,27 @@ elseif (TARGET_OS STREQUAL "linux")
             src/hwenc_jetson/jetson_v4l2_capturer.cpp
             src/hwenc_jetson/jetson_video_encoder.cpp
             src/hwenc_jetson/jetson_video_decoder.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBufSurface.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElementProfiler.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegDecoder.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegEncoder.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvLogging.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2Element.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
-            ${SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBufSurface.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElementProfiler.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegDecoder.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvJpegEncoder.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvLogging.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2Element.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvV4l2ElementPlane.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoEncoder.cpp
+            ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvVideoDecoder.cpp
         )
 
-        target_include_directories(momo PRIVATE ${SYSROOT}/usr/src/jetson_multimedia_api/include)
-        target_include_directories(momo PRIVATE ${SYSROOT}/usr/src/jetson_multimedia_api/include/libjpeg-8b)
-        target_link_directories(momo PRIVATE ${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
+        target_include_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/include)
+        target_include_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/include/libjpeg-8b)
+        target_link_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
         target_link_options(momo
           PRIVATE
-            "-Wl,-rpath-link=${SYSROOT}/lib/aarch64-linux-gnu"
-            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu"
-            "-Wl,-rpath-link=${SYSROOT}/usr/lib/aarch64-linux-gnu/tegra"
+            "-Wl,-rpath-link=${CMAKE_SYSROOT}/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu"
+            "-Wl,-rpath-link=${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/tegra"
         )
         target_link_libraries(momo
           PRIVATE
@@ -721,7 +544,7 @@ elseif (TARGET_OS STREQUAL "linux")
 
       if (USE_V4L2_ENCODER)
         add_library(camerac SHARED)
-        target_include_directories(camerac PRIVATE ${SYSROOT}/usr/include/libcamera)
+        target_include_directories(camerac PRIVATE ${CMAKE_SYSROOT}/usr/include/libcamera)
         set_target_properties(camerac PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
         target_sources(camerac
           PRIVATE
@@ -746,7 +569,7 @@ elseif (TARGET_OS STREQUAL "linux")
         )
         target_link_libraries(momo PRIVATE camerac)
         set_target_properties(momo PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
-      endif(USE_V4L2_ENCODER)
+      endif()
     else()
       # armv6, armv7 用
       if (TARGET_ARCH_ARM STREQUAL "armv6")

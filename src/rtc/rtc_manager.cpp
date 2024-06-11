@@ -7,6 +7,7 @@
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+#include <api/enable_media.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
 #include <api/task_queue/default_task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
@@ -66,30 +67,26 @@ RTCManager::RTCManager(
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  dependencies.call_factory = webrtc::CreateCallFactory();
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(
           dependencies.task_queue_factory.get());
 
-  // media_dependencies
-  cricket::MediaEngineDependencies media_dependencies;
-  media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #if defined(_WIN32)
-  media_dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
         return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
             dependencies.task_queue_factory.get());
       });
 #else
-  media_dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
         return webrtc::AudioDeviceModule::Create(
             audio_layer, dependencies.task_queue_factory.get());
       });
 #endif
-  media_dependencies.audio_encoder_factory =
+  dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
-  media_dependencies.audio_decoder_factory =
+  dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
 
   {
@@ -107,7 +104,7 @@ RTCManager::RTCManager(
 #if defined(__linux__) && USE_NVCODEC_ENCODER
     ec.cuda_context = cf.cuda_context;
 #endif
-    media_dependencies.video_encoder_factory =
+    dependencies.video_encoder_factory =
         std::unique_ptr<webrtc::VideoEncoderFactory>(
             absl::make_unique<MomoVideoEncoderFactory>(ec));
     MomoVideoDecoderFactoryConfig dc;
@@ -118,17 +115,15 @@ RTCManager::RTCManager(
 #if USE_NVCODEC_ENCODER
     dc.cuda_context = cf.cuda_context;
 #endif
-    media_dependencies.video_decoder_factory =
+    dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
             absl::make_unique<MomoVideoDecoderFactory>(dc));
   }
 
-  media_dependencies.audio_mixer = nullptr;
-  media_dependencies.audio_processing =
-      webrtc::AudioProcessingBuilder().Create();
+  dependencies.audio_mixer = nullptr;
+  dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
 
-  dependencies.media_engine =
-      cricket::CreateMediaEngine(std::move(media_dependencies));
+  webrtc::EnableMedia(dependencies);
 
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));

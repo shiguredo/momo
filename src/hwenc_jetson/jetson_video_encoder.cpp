@@ -779,7 +779,7 @@ int32_t JetsonVideoEncoder::SendFrame(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  encoded_image_.SetTimestamp(params->timestamp_rtp);
+  encoded_image_.SetRtpTimestamp(params->timestamp_rtp);
   encoded_image_.SetColorSpace(params->color_space);
   encoded_image_._encodedWidth = params->width;
   encoded_image_._encodedHeight = params->height;

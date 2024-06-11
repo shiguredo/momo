@@ -1,3 +1,5 @@
+#include "fix_cuda_noinline_macro_error.h"
+
 #include "nvcodec_video_decoder.h"
 
 // WebRTC
@@ -70,7 +72,7 @@ int32_t NvCodecVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
     output_info_ = true;
   }
 
-  uint32_t pts = input_image.Timestamp();
+  uint32_t pts = input_image.RtpTimestamp();
 
   for (int i = 0; i < frame_count; i++) {
     const auto* frame = decoder_->GetFrame();

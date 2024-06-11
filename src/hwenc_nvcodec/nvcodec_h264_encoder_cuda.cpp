@@ -1,3 +1,5 @@
+#include "fix_cuda_noinline_macro_error.h"
+
 #include "nvcodec_h264_encoder_cuda.h"
 
 #include <iostream>
@@ -59,79 +61,68 @@ void ShowEncoderCapability() {
     std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl
               << std::endl;
     std::cout
-        << "\tH264:\t\t"
-        << "  "
+        << "\tH264:\t\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_444:\t"
-        << "  "
+        << "\tH264_444:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_ME:\t"
-        << "  "
+        << "\tH264_ME:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_WxH:\t"
-        << "  "
+        << "\tH264_WxH:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_WIDTH_MAX))
         << "*"
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_HEIGHT_MAX))
         << std::endl
-        << "\tHEVC:\t\t"
-        << "  "
+        << "\tHEVC:\t\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_Main10:\t"
-        << "  "
+        << "\tHEVC_Main10:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_10BIT_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_Lossless:\t"
-        << "  "
+        << "\tHEVC_Lossless:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_SAO:\t"
-        << "  "
+        << "\tHEVC_SAO:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_SAO)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_444:\t"
-        << "  "
+        << "\tHEVC_444:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_ME:\t"
-        << "  "
+        << "\tHEVC_ME:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_WxH:\t"
-        << "  "
+        << "\tHEVC_WxH:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_WIDTH_MAX))
         << "*"

@@ -4,6 +4,7 @@
 #include <memory>
 
 // WebRTC
+#include <api/environment/environment_factory.h>
 #include <api/peer_connection_interface.h>
 #include <pc/connection_context.h>
 #include <pc/peer_connection_factory.h>
@@ -24,7 +25,8 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
   CustomPeerConnectionFactory(
       webrtc::PeerConnectionFactoryDependencies dependencies)
       : CustomPeerConnectionFactory(
-            webrtc::ConnectionContext::Create(&dependencies),
+            webrtc::ConnectionContext::Create(webrtc::CreateEnvironment(),
+                                              &dependencies),
             &dependencies) {}
   CustomPeerConnectionFactory(
       rtc::scoped_refptr<webrtc::ConnectionContext> context,

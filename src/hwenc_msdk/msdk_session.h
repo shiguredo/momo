@@ -4,7 +4,7 @@
 #include <memory>
 
 // Intel Media SDK
-#include <mfx/mfxvideo++.h>
+#include <vpl/mfxvideo++.h>
 
 #ifdef __linux__
 #include "vaapi_utils_drm.h"

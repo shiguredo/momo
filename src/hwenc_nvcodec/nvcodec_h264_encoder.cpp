@@ -1,3 +1,5 @@
+#include "fix_cuda_noinline_macro_error.h"
+
 #include "nvcodec_h264_encoder.h"
 
 // WebRTC
@@ -287,7 +289,7 @@ int32_t NvCodecH264Encoder::Encode(
             ? webrtc::VideoContentType::SCREENSHARE
             : webrtc::VideoContentType::UNSPECIFIED;
     encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
-    encoded_image_.SetTimestamp(frame.timestamp());
+    encoded_image_.SetRtpTimestamp(frame.timestamp());
     encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();

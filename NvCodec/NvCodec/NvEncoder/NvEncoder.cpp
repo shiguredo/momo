@@ -8,6 +8,7 @@
 * is strictly prohibited.
 *
 */
+#include "fix_cuda_noinline_macro_error.h"
 
 #include "NvEncoder/NvEncoder.h"
 
@@ -166,13 +167,16 @@ void NvEncoder::LoadNvEncApi() {
         NV_ENC_ERR_INVALID_VERSION);
   }
 
-  typedef NVENCSTATUS(NVENCAPI *NvEncodeAPICreateInstance_Type)(NV_ENCODE_API_FUNCTION_LIST*);
+  typedef NVENCSTATUS(NVENCAPI * NvEncodeAPICreateInstance_Type)(
+      NV_ENCODE_API_FUNCTION_LIST*);
 #if defined(_WIN32)
   NvEncodeAPICreateInstance_Type NvEncodeAPICreateInstance =
-      (NvEncodeAPICreateInstance_Type)GetProcAddress(hModule, "NvEncodeAPICreateInstance");
+      (NvEncodeAPICreateInstance_Type)GetProcAddress(
+          hModule, "NvEncodeAPICreateInstance");
 #else
   NvEncodeAPICreateInstance_Type NvEncodeAPICreateInstance =
-      (NvEncodeAPICreateInstance_Type)dlsym(hModule, "NvEncodeAPICreateInstance");
+      (NvEncodeAPICreateInstance_Type)dlsym(hModule,
+                                            "NvEncodeAPICreateInstance");
 #endif
 
   if (!NvEncodeAPICreateInstance) {

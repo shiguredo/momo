@@ -63,7 +63,7 @@ int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
 
   MMAL_BUFFER_HEADER_T* buffer;
   if ((buffer = mmal_queue_get(pool_in_->queue)) != nullptr) {
-    buffer->pts = buffer->dts = input_image.Timestamp();
+    buffer->pts = buffer->dts = input_image.RtpTimestamp();
     buffer->offset = 0;
     buffer->length = buffer->alloc_size = input_image.size();
     memcpy(buffer->data, input_image.data(), buffer->length);
@@ -71,7 +71,8 @@ int32_t MMALH264Decoder::Decode(const webrtc::EncodedImage& input_image,
       RTC_LOG(LS_ERROR) << "Failed to send input buffer";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " timestamp:" << input_image.Timestamp()
+    RTC_LOG(LS_INFO) << __FUNCTION__
+                     << " timestamp:" << input_image.RtpTimestamp()
                      << " size:" << input_image.size();
     return WEBRTC_VIDEO_CODEC_OK;
   } else {

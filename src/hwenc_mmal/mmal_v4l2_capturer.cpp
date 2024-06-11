@@ -171,7 +171,7 @@ void MMALV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
 
   {
     webrtc::MutexLock lock(&frame_params_lock_);
-    frame_params_.push(absl::make_unique<FrameParams>(
+    frame_params_.push(std::make_unique<FrameParams>(
         configured_width_, configured_height_, timestamp_us));
   }
 

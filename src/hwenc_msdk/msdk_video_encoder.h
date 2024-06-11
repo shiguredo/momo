@@ -13,8 +13,8 @@
 #include <rtc_base/synchronization/mutex.h>
 
 // msdk
-#include <mfx/mfxvideo++.h>
-#include <mfx/mfxvp8.h>
+#include <vpl/mfxvideo++.h>
+#include <vpl/mfxvp8.h>
 
 #include "msdk_session.h"
 
