@@ -6,6 +6,10 @@ cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0091 NEW)
 # find_package() uses upper-case <PACKAGENAME>_ROOT variables.
 cmake_policy(SET CMP0144 NEW)
+# The FindCUDA module is removed.
+cmake_policy(SET CMP0146 OLD)
+# Visual Studio Generators build custom commands in parallel.
+cmake_policy(SET CMP0147 OLD)
 
 set(MOMO_TARGET "" CACHE STRING "ビルド設定を自動化するパッケージ名")
 set(TARGET_OS "" CACHE STRING "ビルド対象の動作する OS。\n有効な値は windows, macos, linux")
@@ -306,7 +310,6 @@ if ("${TARGET_OS}" STREQUAL "windows")
     # enable_language(CUDA) は利用できない。
     # なので（deprecated だけど）FindCUDA を利用してコンパイルする。
 
-    set(CUDA_TOOLKIT_ROOT_DIR ${_INSTALL_DIR}/cuda/nvcc)
     find_package(CUDA REQUIRED)
 
     set_source_files_properties(
@@ -321,6 +324,23 @@ if ("${TARGET_OS}" STREQUAL "windows")
         NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       OPTIONS
+        # VS 2022 の 17.10.x 以上に上げると、ツールセットのバージョンが 14.40 以上になってしまい、以下のエラーが出るため -allow-unsupported-compiler を指定する
+        #
+        # G:\dev\sora-cpp-sdk\_install\windows_x86_64\release\cuda\include\crt/host_config.h(153): fatal error C1189: #error:  -- unsupported Microsoft Visual Studio version! Only the versions between 20 17 and 2022 (inclusive) are supported! The nvcc flag '-allow-unsupported-compiler' can be used to override this version check; however, using an unsupported host compiler may cause compilation  failure or incorrect run time execution. Use at your own risk. [G:\dev\sora-cpp-sdk\_build\windows_x86_64\release\sora\sora.vcxproj]
+        #
+        # host_config.h では以下のような記述になっている
+        #
+        # ```
+        # #if _MSC_VER < 1910 || _MSC_VER >= 1940
+        #
+        # #error -- unsupported Microsoft Visual Studio version! Only the versions between 2017 and 2022 (inclusive) are supported! (...snip...)
+        # ```
+        #
+        # 17.10 は _MSC_VER が 1940 になるため、このエラーが出る。
+        #
+        # VS のバージョンと _MSC_VER のリストは以下を参照:
+        #   https://devblogs.microsoft.com/cppblog/msvc-toolset-minor-version-number-14-40-in-vs-2022-v17-10/
+        -allow-unsupported-compiler
         -Xcompiler /utf-8
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
@@ -346,10 +366,10 @@ if ("${TARGET_OS}" STREQUAL "windows")
         src/hwenc_msdk/msdk_video_decoder.cpp
         src/hwenc_msdk/msdk_video_encoder.cpp
     )
-    target_include_directories(momo PRIVATE ${_INSTALL_DIR}/msdk/include)
+    target_include_directories(momo PRIVATE ${VPL_ROOT_DIR}/include)
     target_link_libraries(momo
       PRIVATE
-        ${_INSTALL_DIR}/msdk/lib/libmfx.lib 
+        ${VPL_ROOT_DIR}/lib/vpl$<$<CONFIG:Debug>:d>.lib 
     )
   endif()
 elseif (TARGET_OS STREQUAL "macos")
