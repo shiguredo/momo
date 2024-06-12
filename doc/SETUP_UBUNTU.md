@@ -1,10 +1,10 @@
-# Ubuntu 20.04 x86_64、 Ubuntu 22.04 x86_64 で Momo を使ってみる
+# Ubuntu 22.04 x86_64 で Momo を使ってみる
 
-## Ubuntu 20.04 x86_64、 Ubuntu 22.04 x86_64 向けのバイナリは以下にて提供しています
+## Ubuntu 22.04 x86_64 向けのバイナリは以下にて提供しています
 
 https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
 
-- バイナリは、 `momo-<VERSION>_ubuntu-20.04_x86_64.tar.gz` あるいは `momo-<VERSION>_ubuntu-22.04_x86_64.tar.gz` を利用してください
+- バイナリは、 `momo-<VERSION>_ubuntu-22.04_x86_64.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 

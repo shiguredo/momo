@@ -94,7 +94,6 @@ jobs:
       matrix:
         name:
           - raspberry-pi-os_armv8
-          - ubuntu-20.04_x86_64
           - ubuntu-22.04_x86_64
           - ubuntu-20.04_armv8_jetson_xavier
     name: Build momo for ${{ matrix.name }}
@@ -180,9 +179,6 @@ jobs:
       - uses: ./.github/actions/download
         with:
           platform: raspberry-pi-os_armv8
-      - uses: ./.github/actions/download
-        with:
-          platform: ubuntu-20.04_x86_64
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-22.04_x86_64

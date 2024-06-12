@@ -86,7 +86,6 @@ https://github.com/shiguredo/momo/releases
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi Zero 2 W
-- Ubuntu 20.04 x86_64
 - Ubuntu 22.04 x86_64
 - Ubuntu 20.04 ARMv8 Jetson
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
