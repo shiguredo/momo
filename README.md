@@ -88,20 +88,23 @@ https://github.com/shiguredo/momo/releases
   - Raspberry Pi 2 Model B v1.2
   - Raspberry Pi Zero 2 W
 - Ubuntu 22.04 x86_64
-- Ubuntu 20.04 ARMv8 Jetson
+- Ubuntu 20.04 ARMv8 Jetson JetPack 5
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
   - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
-### 非対応
+### 対応終了
+
+**優先実装にて、対応継続することができます**
 
 - macOS x86_64
-- Ubuntu 20.04 ARMv8 Jetson
+- Raspberry Pi OS (32bit)
+- Ubuntu 20.04 ARMv8 Jetson JetPack 5
   - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
     - Jetson Orin Nano は HWA を詰んでいないので対応はしません
-- Ubuntu 18.04 ARMv8 Jetson
+- Ubuntu 18.04 ARMv8 Jetson JetPack 4
   - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
   - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
   - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
@@ -149,7 +152,7 @@ limitations under the License.
   - 現時点では企業名非公開
 - Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
+- Linux 版 Momo NVIDIA Video Codec SDK 対応
   - [株式会社オプティム](https://www.optim.co.jp/) 様
 - Windows / Linux 版 スクリーンキャプチャ対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
@@ -159,6 +162,8 @@ limitations under the License.
 **詳細は Discord やメールなどでお気軽にお問い合わせください**
 
 - リリース
+- Ubuntu 24.04 x86_64
+- Ubuntu 22.04 ARMv8 Jetson JetPack 6
 - H.265 (HEVC) HWA 対応
   - macOS Video Toolbox
   - NVIDIA Jetson
@@ -168,7 +173,6 @@ limitations under the License.
 - OpenH264 対応
   - Windows
   - Ubuntu
-- Intel VPL 対応
 - AV1 対応
   - Windows
 - Windows / macOS 署名対応
