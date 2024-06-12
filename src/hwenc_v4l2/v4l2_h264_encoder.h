@@ -13,6 +13,7 @@
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
 #include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <media/base/codec.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
