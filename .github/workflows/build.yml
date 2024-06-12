@@ -184,7 +184,7 @@ jobs:
           platform: ubuntu-22.04_x86_64
       - uses: ./.github/actions/download
         with:
-          platform: ubuntu-20.04_armv8_jetson_xavier
+          platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
           echo "package_paths<<EOF" >> $GITHUB_OUTPUT
