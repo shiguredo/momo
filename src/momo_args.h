@@ -24,7 +24,7 @@ struct MomoArgs {
 #else
   bool hw_mjpeg_decoder = false;
 #endif
-  // Raspberry Pi 4 の場合だけ使える
+  // Raspberry Pi OS 64bit の場合だけ使える
   bool use_libcamera = false;
   // use_libcamera == true の場合だけ使える。
   // sora_video_codec_type == "H264" かつ sora_simulcast == false の場合だけしか機能しない。

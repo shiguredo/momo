@@ -49,8 +49,6 @@ python3 run.py windows_x86_64
 python3 run.py macos_arm64
 
 # このコマンドは Ubuntu 上でしか動作しません
-python3 run.py raspberry-pi-os_armv6
-python3 run.py raspberry-pi-os_armv7
 python3 run.py raspberry-pi-os_armv8
 python3 run.py ubuntu-20.04_x86_64
 python3 run.py ubuntu-22.04_x86_64

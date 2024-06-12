@@ -77,10 +77,8 @@ WebRTC Native Client Momo 2022.2.0 (8b57be45)
 WebRTC: Shiguredo-Build M102.5005@{#7} (102.5005.7.4 6ff73180)
 Environment: [arm64] macOS Version 12.3 (Build 21E230)
 
-USE_MMAL_ENCODER=0
 USE_JETSON_ENCODER=0
 USE_NVCODEC_ENCODER=0
-USE_SDL2=1
 ```
 
 ### ヘルプ

@@ -17,9 +17,7 @@
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
-#if USE_MMAL_ENCODER
-#include "hwenc_mmal/mmal_v4l2_capturer.h"
-#elif USE_JETSON_ENCODER
+#if USE_JETSON_ENCODER
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif USE_NVCODEC_ENCODER
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
@@ -139,16 +137,7 @@ int main(int argc, char* argv[]) {
     v4l2_config.force_i420 = args.force_i420;
     v4l2_config.use_native = args.hw_mjpeg_decoder;
 
-#if USE_MMAL_ENCODER
-    if (v4l2_config.use_native) {
-      MMALV4L2CapturerConfig mmal_config = v4l2_config;
-      // サイマルキャストの場合はネイティブフレームを出力しない
-      mmal_config.native_frame_output = !(use_sora && args.sora_simulcast);
-      return MMALV4L2Capturer::Create(std::move(mmal_config));
-    } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
-#elif USE_JETSON_ENCODER
+#if USE_JETSON_ENCODER
     if (v4l2_config.use_native) {
       return JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {

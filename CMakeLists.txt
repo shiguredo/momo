@@ -15,9 +15,8 @@ set(MOMO_TARGET "" CACHE STRING "ビルド設定を自動化するパッケー�
 set(TARGET_OS "" CACHE STRING "ビルド対象の動作する OS。\n有効な値は windows, macos, linux")
 set(TARGET_OS_LINUX "" CACHE STRING "TARGET_OS が linux の場合の詳細な OS の情報。")
 set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効な値は x86_64, arm")
-set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv6, armv7, armv8")
+set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv8")
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
-set(USE_MMAL_ENCODER OFF CACHE BOOL "MMAL ハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_MSDK_ENCODER OFF CACHE BOOL "Intel Media SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
@@ -45,16 +44,6 @@ if(MOMO_TARGET STREQUAL "windows_x86_64")
 elseif(MOMO_TARGET STREQUAL "macos_arm64")
   set(TARGET_OS "macos")
   set(TARGET_ARCH "arm64")
-elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv6")
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspberry-pi-os")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv6")
-elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv7")
-  set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "raspberry-pi-os")
-  set(TARGET_ARCH "arm")
-  set(TARGET_ARCH_ARM "armv7")
 elseif(MOMO_TARGET STREQUAL "raspberry-pi-os_armv8")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "raspberry-pi-os")
@@ -158,7 +147,6 @@ target_compile_definitions(momo
     CLI11_HAS_FILESYSTEM=0
     OPENSSL_IS_BORINGSSL
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
-    USE_MMAL_ENCODER=$<BOOL:${USE_MMAL_ENCODER}>
     USE_V4L2_ENCODER=$<BOOL:${USE_V4L2_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
     USE_MSDK_ENCODER=$<BOOL:${USE_MSDK_ENCODER}>
@@ -590,70 +578,6 @@ elseif (TARGET_OS STREQUAL "linux")
         target_link_libraries(momo PRIVATE camerac)
         set_target_properties(momo PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
       endif()
-    else()
-      # armv6, armv7 用
-      if (TARGET_ARCH_ARM STREQUAL "armv6")
-        target_compile_options(momo PRIVATE -mfloat-abi=hard -mcpu=arm1176jzf-s -mfpu=vfp)
-      else()
-        target_compile_options(momo PRIVATE -mfloat-abi=hard -march=armv7-a -mtune=generic-armv7-a -mfpu=neon -mthumb)
-      endif()
-
-      if (USE_MMAL_ENCODER)
-        target_sources(momo
-          PRIVATE
-            src/hwenc_mmal/mmal_h264_decoder.cpp
-            src/hwenc_mmal/mmal_buffer.cpp
-            src/hwenc_mmal/mmal_h264_encoder.cpp
-            src/hwenc_mmal/mmal_v4l2_capturer.cpp
-        )
-
-        if (TARGET_OS_LINUX STREQUAL "raspberry-pi-os")
-          set(_VC_PATH ${SYSROOT}/opt/vc)
-        else()
-          set(_VC_PATH ${SYSROOT}/usr)
-        endif()
-
-        target_include_directories(momo PRIVATE ${_VC_PATH}/include)
-        target_compile_options(momo PRIVATE -ftree-vectorize -pipe)
-        target_compile_definitions(momo
-          PRIVATE
-            STANDALONE
-            __STDC_CONSTANT_MACROS
-            __STDC_LIMIT_MACROS
-            TARGET_POSIX
-            _LINUX
-            PIC
-            _REENTRANT
-            _LARGEFILE64_SOURCE
-            _FILE_OFFSET_BITS=64
-            _FORTIFY_SOURCE
-            HAVE_LIBOPENMAX=2
-            OMX
-            OMX_SKIP64BIT
-            USE_EXTERNAL_OMX
-            HAVE_LIBBCM_HOST
-            USE_EXTERNAL_LIBBCM_HOST
-            USE_VCHIQ_ARM
-        )
-        target_link_directories(momo PRIVATE ${_VC_PATH}/lib)
-        target_link_libraries(momo
-          PRIVATE
-            GLESv2
-            EGL
-            bcm_host
-            containers
-            vcos
-            vcsm
-            vchiq_arm
-            mmal
-            mmal_core
-            mmal_components
-            mmal_util
-            mmal_vc_client
-            m
-        )
-
-      endif(USE_MMAL_ENCODER)
-    endif(TARGET_ARCH_ARM STREQUAL "armv8")
-  endif(TARGET_ARCH STREQUAL "arm")
+    endif()
+  endif()
 endif()

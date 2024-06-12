@@ -93,8 +93,6 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - raspberry-pi-os_armv6
-          - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
           - ubuntu-20.04_x86_64
           - ubuntu-22.04_x86_64
@@ -120,7 +118,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           df -h
       - name: Install deps for Jetson and Raspberry Pi OS series
-        if: matrix.name == 'ubuntu-20.04_armv8_jetson_xavier' || matrix.name == 'raspberry-pi-os_armv6' || matrix.name == 'raspberry-pi-os_armv7' || matrix.name == 'raspberry-pi-os_armv8'
+        if: matrix.name == 'ubuntu-20.04_armv8_jetson_xavier' || matrix.name == 'raspberry-pi-os_armv8'
         run: |
           sudo apt-get update
           sudo apt-get -y install multistrap binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi binutils-arm-linux-gnueabihf
@@ -179,12 +177,6 @@ jobs:
       - uses: ./.github/actions/download
         with:
           platform: macos_arm64
-      - uses: ./.github/actions/download
-        with:
-          platform: raspberry-pi-os_armv6
-      - uses: ./.github/actions/download
-        with:
-          platform: raspberry-pi-os_armv7
       - uses: ./.github/actions/download
         with:
           platform: raspberry-pi-os_armv8

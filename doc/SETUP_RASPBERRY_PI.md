@@ -9,8 +9,6 @@ Raspberry Pi OS のレガシー版には対応しておりません。最新版�
 <https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 - Raspberry Pi OS 64 bit を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv8.tar.gz` を利用してください
-- Raspberry Pi 2 や 3 や 4 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv7.tar.gz` を利用してください
-- Raspberry Pi Zero や 1 を利用する場合は、 `momo-<VERSION>_raspberry-pi-os_armv6.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
@@ -45,7 +43,6 @@ Raspberry Pi Lite では映像に関するパッケージが入っていない�
 下記に実行する一例を示します。
 
 ```bash
-sudo apt-get install libSDL2-2.0
 sudo apt-get install libxtst6
 sudo apt-get install libegl1-mesa-dev
 sudo apt-get install libgles2-mesa
@@ -84,7 +81,7 @@ USB カメラでは逆にフレームレートが落ちるため使わないで�
 
 ## Raspberry Pi 専用カメラでが利用できない
 
-Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラが利用できるようになりました。
+Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラ（CSI 接続のカメラ）が利用できるようになりました。
 
 ### --use-libcamera
 
