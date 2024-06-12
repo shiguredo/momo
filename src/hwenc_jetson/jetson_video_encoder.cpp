@@ -16,6 +16,8 @@
 
 // WebRTC
 #include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <modules/video_coding/include/video_codec_interface.h>
+#include <modules/video_coding/include/video_error_codes.h>
 #include <modules/video_coding/svc/create_scalability_structure.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>

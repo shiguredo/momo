@@ -5,6 +5,7 @@
 #include <vector>
 
 // WebRTC
+#include <api/environment/environment.h>
 #include <api/video_codecs/video_decoder_factory.h>
 
 #include "video_codec_info.h"
@@ -36,7 +37,8 @@ class MomoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
-  std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
+  std::unique_ptr<webrtc::VideoDecoder> Create(
+      const webrtc::Environment& env,
       const webrtc::SdpVideoFormat& format) override;
 };
 

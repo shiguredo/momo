@@ -117,8 +117,8 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   return supported_codecs;
 }
 
-std::unique_ptr<webrtc::VideoDecoder>
-MomoVideoDecoderFactory::CreateVideoDecoder(
+std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
+    const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
   if (!IsFormatSupported(GetSupportedFormats(), format)) {
     RTC_LOG(LS_ERROR) << "Trying to create decoder for unsupported format";
@@ -149,7 +149,7 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
 #endif
 
     if (config_.vp8_decoder == VideoCodecInfo::Type::Software) {
-      return webrtc::VP8Decoder::Create();
+      return webrtc::CreateVp8Decoder(env);
     }
   }
 

@@ -252,11 +252,11 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   dependencies.allocator->set_flags(rtc_config.port_allocator_config.flags);
   if (!config_.proxy_url.empty()) {
     RTC_LOG(LS_INFO) << "Set Proxy: type="
-                     << rtc::ProxyToString(rtc::PROXY_HTTPS)
+                     << rtc::revive::ProxyToString(rtc::revive::PROXY_HTTPS)
                      << " url=" << config_.proxy_url
                      << " username=" << config_.proxy_username;
-    rtc::ProxyInfo pi;
-    pi.type = rtc::PROXY_HTTPS;
+    rtc::revive::ProxyInfo pi;
+    pi.type = rtc::revive::PROXY_HTTPS;
     URLParts parts;
     if (!URLParts::Parse(config_.proxy_url, parts)) {
       RTC_LOG(LS_ERROR) << "Failed to parse: proxy_url=" << config_.proxy_url;

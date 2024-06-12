@@ -5,6 +5,7 @@
 // WebRTC
 #include <absl/memory/memory.h>
 #include <absl/strings/match.h>
+#include <api/environment/environment_factory.h>
 #include <api/video_codecs/sdp_video_format.h>
 #include <api/video_codecs/video_codec.h>
 #include <api/video_codecs/vp9_profile.h>
@@ -141,8 +142,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   return supported_codecs;
 }
 
-std::unique_ptr<webrtc::VideoEncoder>
-MomoVideoEncoderFactory::CreateVideoEncoder(
+std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
+    const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
   // hardware_encoder_only == true の場合、Software なコーデックだったら強制終了する
   if (config_.hardware_encoder_only) {
@@ -180,8 +181,8 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
     if (config_.vp8_encoder == VideoCodecInfo::Type::Software) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return webrtc::VP8Encoder::Create();
+      return WithSimulcast(format, [env](const webrtc::SdpVideoFormat& format) {
+        return webrtc::CreateVp8Encoder(env);
       });
     }
 #if USE_JETSON_ENCODER
@@ -207,8 +208,8 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
     if (config_.vp9_encoder == VideoCodecInfo::Type::Software) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return webrtc::VP9Encoder::Create(cricket::CreateVideoCodec(format));
+      return WithSimulcast(format, [env](const webrtc::SdpVideoFormat& format) {
+        return webrtc::CreateVp9Encoder(env);
       });
     }
 #if USE_JETSON_ENCODER
@@ -235,8 +236,8 @@ MomoVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
     if (config_.av1_encoder == VideoCodecInfo::Type::Software) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return webrtc::CreateLibaomAv1Encoder();
+      return WithSimulcast(format, [env](const webrtc::SdpVideoFormat& format) {
+        return webrtc::CreateLibaomAv1Encoder(env);
       });
     }
 #endif
@@ -336,7 +337,8 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::WithSimulcast(
   std::shared_ptr<webrtc::VideoEncoder> encoder;
   if (internal_encoder_factory_) {
     encoder = std::make_shared<webrtc::SimulcastEncoderAdapter>(
-        internal_encoder_factory_.get(), format);
+        webrtc::CreateEnvironment(), internal_encoder_factory_.get(), nullptr,
+        format);
   } else {
     encoder.reset(create(format).release());
   }
