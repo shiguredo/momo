@@ -2,6 +2,10 @@
 
 #include <iostream>
 
+// WebRTC
+#include <modules/video_coding/include/video_codec_interface.h>
+#include <modules/video_coding/include/video_error_codes.h>
+
 // libyuv
 #include <libyuv.h>
 
@@ -11,7 +15,7 @@ const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
 
 VplVideoEncoder::VplVideoEncoder(std::shared_ptr<VplSession> session,
-                                   mfxU32 codec)
+                                 mfxU32 codec)
     : session_(session), codec_(codec), bitrate_adjuster_(0.5, 0.95) {}
 VplVideoEncoder::~VplVideoEncoder() {}
 
@@ -210,14 +214,14 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
 }
 
 bool VplVideoEncoder::IsSupported(std::shared_ptr<VplSession> session,
-                                   mfxU32 codec) {
+                                  mfxU32 codec) {
   auto encoder = CreateEncoder(session, codec, 1920, 1080, 30, 10, 20, false);
   return encoder != nullptr;
 }
 
 int32_t VplVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
-                                     int32_t number_of_cores,
-                                     size_t max_payload_size) {
+                                    int32_t number_of_cores,
+                                    size_t max_payload_size) {
   RTC_DCHECK(codec_settings);
   RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
 

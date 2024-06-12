@@ -22,6 +22,7 @@
 // WebRTC
 #include <api/video_codecs/video_encoder.h>
 #include <common_video/include/bitrate_adjuster.h>
+#include <media/base/codec.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <modules/video_coding/svc/scalable_video_controller.h>
