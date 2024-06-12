@@ -85,6 +85,7 @@ https://github.com/shiguredo/momo/releases
 - Raspberry Pi OS (64bit)
   - Raspberry Pi 4
   - Raspberry Pi 3
+  - Raspberry Pi 2 ModelB 1.2
   - Raspberry Pi Zero 2 W
 - Ubuntu 20.04 x86_64
 - Ubuntu 22.04 x86_64
