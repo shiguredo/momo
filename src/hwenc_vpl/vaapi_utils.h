@@ -16,7 +16,7 @@ or https://software.intel.com/en-us/media-client-solutions-support.
 #ifndef VAAPI_UTILS_H_
 #define VAAPI_UTILS_H_
 
-// msdk
+// oneVPL
 #include <vpl/mfxdefs.h>
 
 // libva

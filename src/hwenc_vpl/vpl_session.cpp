@@ -1,13 +1,13 @@
-#include "msdk_session.h"
+#include "vpl_session.h"
 
 #include <iostream>
 
-MsdkSession::~MsdkSession() {
+VplSession::~VplSession() {
   session.Close();
 }
 
-std::shared_ptr<MsdkSession> MsdkSession::Create() {
-  std::shared_ptr<MsdkSession> session(new MsdkSession());
+std::shared_ptr<VplSession> VplSession::Create() {
+  std::shared_ptr<VplSession> session(new VplSession());
 
   mfxStatus sts = MFX_ERR_NONE;
 
@@ -57,9 +57,9 @@ std::shared_ptr<MsdkSession> MsdkSession::Create() {
     return nullptr;
   }
 
-  //RTC_LOG(LS_INFO) << "Intel Media SDK Implementation: "
+  //RTC_LOG(LS_INFO) << "oneVPL Implementation: "
   //                 << (impl == MFX_IMPL_SOFTWARE ? "SOFTWARE" : "HARDWARE");
-  //RTC_LOG(LS_INFO) << "Intel Media SDK API Version: " << ver.Major << "."
+  //RTC_LOG(LS_INFO) << "oneVPL Version: " << ver.Major << "."
   //                 << ver.Minor;
   return session;
 }

@@ -18,7 +18,7 @@ set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効�
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv8")
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
-set(USE_MSDK_ENCODER OFF CACHE BOOL "Intel Media SDK のハードウェアエンコーダを利用するかどうか")
+set(USE_VPL_ENCODER OFF CACHE BOOL "oneVPL のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
@@ -145,7 +145,7 @@ target_compile_definitions(momo
     USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
     USE_V4L2_ENCODER=$<BOOL:${USE_V4L2_ENCODER}>
     USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
-    USE_MSDK_ENCODER=$<BOOL:${USE_MSDK_ENCODER}>
+    USE_VPL_ENCODER=$<BOOL:${USE_VPL_ENCODER}>
     USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
     USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
@@ -342,13 +342,13 @@ if ("${TARGET_OS}" STREQUAL "windows")
     )
   endif()
 
-  # Intel Media SDK
-  if (USE_MSDK_ENCODER)
+  # oneVPL
+  if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc_msdk/msdk_session.cpp
-        src/hwenc_msdk/msdk_video_decoder.cpp
-        src/hwenc_msdk/msdk_video_encoder.cpp
+        src/hwenc_vpl/vpl_session.cpp
+        src/hwenc_vpl/vpl_video_decoder.cpp
+        src/hwenc_vpl/vpl_video_encoder.cpp
     )
     target_include_directories(momo PRIVATE ${VPL_ROOT_DIR}/include)
     target_link_libraries(momo
@@ -469,18 +469,18 @@ elseif (TARGET_OS STREQUAL "linux")
     target_link_libraries(momo PRIVATE cudart_static dl rt)
   endif()
 
-  # Intel Media SDK
-  if (USE_MSDK_ENCODER)
+  # oneVPL
+  if (USE_VPL_ENCODER)
     find_package(Libdrm REQUIRED)
     find_package(Libva REQUIRED)
     find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
-        src/hwenc_msdk/msdk_session.cpp
-        src/hwenc_msdk/msdk_video_decoder.cpp
-        src/hwenc_msdk/msdk_video_encoder.cpp
-        src/hwenc_msdk/vaapi_utils_drm.cpp
-        src/hwenc_msdk/vaapi_utils.cpp
+        src/hwenc_vpl/vpl_session.cpp
+        src/hwenc_vpl/vpl_video_decoder.cpp
+        src/hwenc_vpl/vpl_video_encoder.cpp
+        src/hwenc_vpl/vaapi_utils_drm.cpp
+        src/hwenc_vpl/vaapi_utils.cpp
     )
     target_link_libraries(momo
       PRIVATE

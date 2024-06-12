@@ -1,4 +1,4 @@
-#include "msdk_video_decoder.h"
+#include "vpl_video_decoder.h"
 
 #include <iostream>
 #include <thread>
@@ -10,9 +10,9 @@
 #include <rtc_base/time_utils.h>
 #include <third_party/libyuv/include/libyuv/convert.h>
 
-#include "msdk_utils.h"
+#include "vpl_utils.h"
 
-MsdkVideoDecoder::MsdkVideoDecoder(std::shared_ptr<MsdkSession> session,
+VplVideoDecoder::VplVideoDecoder(std::shared_ptr<VplSession> session,
                                    mfxU32 codec)
     : session_(session),
       codec_(codec),
@@ -20,12 +20,12 @@ MsdkVideoDecoder::MsdkVideoDecoder(std::shared_ptr<MsdkSession> session,
       decode_complete_callback_(nullptr),
       buffer_pool_(false, 300 /* max_number_of_buffers*/) {}
 
-MsdkVideoDecoder::~MsdkVideoDecoder() {
+VplVideoDecoder::~VplVideoDecoder() {
   Release();
 }
 
-std::unique_ptr<MFXVideoDECODE> MsdkVideoDecoder::CreateDecoder(
-    std::shared_ptr<MsdkSession> session,
+std::unique_ptr<MFXVideoDECODE> VplVideoDecoder::CreateDecoder(
+    std::shared_ptr<VplSession> session,
     mfxU32 codec,
     int width,
     int height,
@@ -92,7 +92,7 @@ std::unique_ptr<MFXVideoDECODE> MsdkVideoDecoder::CreateDecoder(
   return decoder;
 }
 
-bool MsdkVideoDecoder::IsSupported(std::shared_ptr<MsdkSession> session,
+bool VplVideoDecoder::IsSupported(std::shared_ptr<VplSession> session,
                                    mfxU32 codec) {
   int width = 640;
   int height = 480;
@@ -102,7 +102,7 @@ bool MsdkVideoDecoder::IsSupported(std::shared_ptr<MsdkSession> session,
   return decoder != nullptr;
 }
 
-bool MsdkVideoDecoder::Configure(
+bool VplVideoDecoder::Configure(
     const webrtc::VideoDecoder::Settings& settings) {
   width_ = settings.max_render_resolution().Width();
   height_ = settings.max_render_resolution().Height();
@@ -110,7 +110,7 @@ bool MsdkVideoDecoder::Configure(
   return InitMediaSDK();
 }
 
-int32_t MsdkVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
+int32_t VplVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
                                  bool missing_frames,
                                  int64_t render_time_ms) {
   if (decoder_ == nullptr) {
@@ -181,10 +181,10 @@ int32_t MsdkVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
   if (!syncp) {
     return WEBRTC_VIDEO_CODEC_OK;
   }
-  MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
   sts = session_->session.SyncOperation(syncp, 600000);
-  MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
   // NV12 から I420 に変換
   rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
@@ -206,23 +206,23 @@ int32_t MsdkVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t MsdkVideoDecoder::RegisterDecodeCompleteCallback(
+int32_t VplVideoDecoder::RegisterDecodeCompleteCallback(
     webrtc::DecodedImageCallback* callback) {
   decode_complete_callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t MsdkVideoDecoder::Release() {
+int32_t VplVideoDecoder::Release() {
   ReleaseMediaSDK();
   buffer_pool_.Release();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-const char* MsdkVideoDecoder::ImplementationName() const {
-  return "Intel Media SDK";
+const char* VplVideoDecoder::ImplementationName() const {
+  return "oneVPL";
 }
 
-bool MsdkVideoDecoder::InitMediaSDK() {
+bool VplVideoDecoder::InitMediaSDK() {
   decoder_ = CreateDecoder(session_, codec_, width_, height_, true);
 
   mfxStatus sts = MFX_ERR_NONE;
@@ -237,7 +237,7 @@ bool MsdkVideoDecoder::InitMediaSDK() {
   // Query number of required surfaces for encoder
   memset(&alloc_request_, 0, sizeof(alloc_request_));
   sts = decoder_->QueryIOSurf(&param, &alloc_request_);
-  MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
   RTC_LOG(LS_INFO) << "Decoder NumFrameSuggested="
                    << alloc_request_.NumFrameSuggested;
@@ -274,7 +274,7 @@ bool MsdkVideoDecoder::InitMediaSDK() {
   return true;
 }
 
-void MsdkVideoDecoder::ReleaseMediaSDK() {
+void VplVideoDecoder::ReleaseMediaSDK() {
   if (decoder_ != nullptr) {
     decoder_->Close();
   }

@@ -1,5 +1,5 @@
-#ifndef MSDK_VIDEO_ENCODER_H_
-#define MSDK_VIDEO_ENCODER_H_
+#ifndef VPL_VIDEO_ENCODER_H_
+#define VPL_VIDEO_ENCODER_H_
 
 #include <mutex>
 #include <vector>
@@ -12,22 +12,22 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/synchronization/mutex.h>
 
-// msdk
+// oneVPL
 #include <vpl/mfxvideo++.h>
 #include <vpl/mfxvp8.h>
 
-#include "msdk_session.h"
+#include "vpl_session.h"
 
-class MsdkVideoEncoder : public webrtc::VideoEncoder {
+class VplVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit MsdkVideoEncoder(std::shared_ptr<MsdkSession> session, mfxU32 codec);
-  ~MsdkVideoEncoder() override;
+  explicit VplVideoEncoder(std::shared_ptr<VplSession> session, mfxU32 codec);
+  ~VplVideoEncoder() override;
 
   // MFX_CODEC_VP8
   // MFX_CODEC_VP9
   // MFX_CODEC_AVC
   // MFX_CODEC_AV1
-  static bool IsSupported(std::shared_ptr<MsdkSession> session, mfxU32 codec);
+  static bool IsSupported(std::shared_ptr<VplSession> session, mfxU32 codec);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -43,7 +43,7 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
 
  private:
   static std::unique_ptr<MFXVideoENCODE> CreateEncoder(
-      std::shared_ptr<MsdkSession> session,
+      std::shared_ptr<VplSession> session,
       mfxU32 codec,
       int width,
       int height,
@@ -73,7 +73,7 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
   std::vector<uint8_t> surface_buffer_;
   std::vector<mfxFrameSurface1> surfaces_;
 
-  std::shared_ptr<MsdkSession> session_;
+  std::shared_ptr<VplSession> session_;
   mfxU32 codec_;
   mfxFrameAllocRequest alloc_request_;
   std::unique_ptr<MFXVideoENCODE> encoder_;
@@ -82,4 +82,4 @@ class MsdkVideoEncoder : public webrtc::VideoEncoder {
   mfxFrameInfo frame_info_;
 };
 
-#endif  // MSDK_VIDEO_ENCODER_H_
+#endif

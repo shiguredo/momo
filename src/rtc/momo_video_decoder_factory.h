@@ -12,8 +12,8 @@
 #if USE_NVCODEC_ENCODER
 #include "cuda/cuda_context.h"
 #endif
-#if USE_MSDK_ENCODER
-#include "hwenc_msdk/msdk_session.h"
+#if USE_VPL_ENCODER
+#include "hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoDecoderFactoryConfig {

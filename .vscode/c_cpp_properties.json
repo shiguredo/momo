@@ -22,7 +22,6 @@
                 "NOMINMAX",
                 "WEBRTC_WINDOWS",
                 "USE_NVCODEC_ENCODER=1",
-                "USE_MMAL_ENCODER=0",
                 "USE_JETSON_ENCODER=0",
                 "USE_LINUX_PULSE_AUDIO=0",
                 "USE_SCREEN_CAPTURER=1"
@@ -46,6 +45,7 @@
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/cli11/include",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/sdl2/include/SDL2",
                 "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/vpl/include",
+                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/llvm/libcxx/include",
                 "${workspaceFolder}/_build/ubuntu-20.04_x86_64/release/momo",
                 "/usr/local/cuda/include"
             ],
@@ -53,8 +53,7 @@
                 "WEBRTC_POSIX",
                 "WEBRTC_LINUX",
                 "USE_NVCODEC_ENCODER=1",
-                "USE_MSDK_ENCODER=1",
-                "USE_MMAL_ENCODER=0",
+                "USE_VPL_ENCODER=1",
                 "USE_JETSON_ENCODER=0",
                 "USE_LINUX_PULSE_AUDIO=0",
                 "USE_SCREEN_CAPTURER=1",
