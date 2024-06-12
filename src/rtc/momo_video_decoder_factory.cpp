@@ -205,7 +205,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
 #if defined(__APPLE__)
     if (config_.h264_decoder == VideoCodecInfo::Type::VideoToolbox) {
-      return video_decoder_factory_->CreateVideoDecoder(format);
+      return video_decoder_factory_->Create(env, format);
     }
 #endif
 
