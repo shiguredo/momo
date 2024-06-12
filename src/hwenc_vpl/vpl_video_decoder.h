@@ -1,28 +1,28 @@
-#ifndef MSDK_VIDEO_DECODER_H_
-#define MSDK_VIDEO_DECODER_H_
+#ifndef VPL_VIDEO_DECODER_H_
+#define VPL_VIDEO_DECODER_H_
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
 #include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/platform_thread.h>
 
-// msdk
+// oneVPL
 #include <vpl/mfxdefs.h>
 #include <vpl/mfxvideo++.h>
 #include <vpl/mfxvp8.h>
 
-#include "msdk_session.h"
+#include "vpl_session.h"
 
-class MsdkVideoDecoder : public webrtc::VideoDecoder {
+class VplVideoDecoder : public webrtc::VideoDecoder {
  public:
-  MsdkVideoDecoder(std::shared_ptr<MsdkSession> session, mfxU32 codec);
-  ~MsdkVideoDecoder() override;
+  VplVideoDecoder(std::shared_ptr<VplSession> session, mfxU32 codec);
+  ~VplVideoDecoder() override;
 
   // MFX_CODEC_VP8
   // MFX_CODEC_VP9
   // MFX_CODEC_AVC
   // MFX_CODEC_AV1
-  static bool IsSupported(std::shared_ptr<MsdkSession> session, mfxU32 codec);
+  static bool IsSupported(std::shared_ptr<VplSession> session, mfxU32 codec);
 
   bool Configure(const Settings& settings) override;
 
@@ -39,7 +39,7 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
 
  private:
   static std::unique_ptr<MFXVideoDECODE> CreateDecoder(
-      std::shared_ptr<MsdkSession> session,
+      std::shared_ptr<VplSession> session,
       mfxU32 codec,
       int width,
       int height,
@@ -54,7 +54,7 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   webrtc::VideoFrameBufferPool buffer_pool_;
 
   mfxU32 codec_;
-  std::shared_ptr<MsdkSession> session_;
+  std::shared_ptr<VplSession> session_;
   mfxFrameAllocRequest alloc_request_;
   std::unique_ptr<MFXVideoDECODE> decoder_;
   std::vector<uint8_t> surface_buffer_;
@@ -63,4 +63,4 @@ class MsdkVideoDecoder : public webrtc::VideoDecoder {
   mfxBitstream bitstream_;
 };
 
-#endif  // MSDK_VIDEO_DECODER_H_
+#endif

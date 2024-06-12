@@ -24,8 +24,8 @@
 #include "hwenc_jetson/jetson_video_decoder.h"
 #endif
 
-#if USE_MSDK_ENCODER
-#include "hwenc_msdk/msdk_video_decoder.h"
+#if USE_VPL_ENCODER
+#include "hwenc_vpl/vpl_video_decoder.h"
 #endif
 
 #if USE_V4L2_ENCODER
@@ -133,11 +133,11 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
                                                  CudaVideoCodec::VP8));
     }
 #endif
-#if USE_MSDK_ENCODER
+#if USE_VPL_ENCODER
     if (config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
-                                              MFX_CODEC_VP8));
+          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
+                                             MFX_CODEC_VP8));
     }
 #endif
 #if USE_JETSON_ENCODER
@@ -161,11 +161,11 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
                                                  CudaVideoCodec::VP9));
     }
 #endif
-#if USE_MSDK_ENCODER
+#if USE_VPL_ENCODER
     if (config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
-                                              MFX_CODEC_VP9));
+          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
+                                             MFX_CODEC_VP9));
     }
 #endif
 #if USE_JETSON_ENCODER
@@ -181,11 +181,11 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
-#if USE_MSDK_ENCODER
+#if USE_VPL_ENCODER
     if (config_.av1_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
-                                              MFX_CODEC_AV1));
+          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
+                                             MFX_CODEC_AV1));
     }
 #endif
 #if USE_JETSON_ENCODER
@@ -216,11 +216,11 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
                                                  CudaVideoCodec::H264));
     }
 #endif
-#if USE_MSDK_ENCODER
+#if USE_VPL_ENCODER
     if (config_.h264_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MsdkVideoDecoder>(MsdkSession::Create(),
-                                              MFX_CODEC_AVC));
+          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
+                                             MFX_CODEC_AVC));
     }
 #endif
 #if USE_JETSON_ENCODER

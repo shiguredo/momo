@@ -31,7 +31,7 @@ $ sudo apt-get upgrade
 $ sudo apt-get install libdrm2
 ```
 
-Intel Media SDK を利用したい場合は [INTEL_MEDIA_SDK.md](INTEL_MEDIA_SDK.md) を御覧ください。
+oneVPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
 
 ## 動かしてみる
 

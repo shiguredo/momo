@@ -11,9 +11,9 @@
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
-#if USE_MSDK_ENCODER
-#include "hwenc_msdk/msdk_video_decoder.h"
-#include "hwenc_msdk/msdk_video_encoder.h"
+#if USE_VPL_ENCODER
+#include "hwenc_vpl/vpl_video_decoder.h"
+#include "hwenc_vpl/vpl_video_encoder.h"
 #endif
 
 #if USE_JETSON_ENCODER
@@ -79,7 +79,7 @@ struct VideoCodecInfo {
       case Type::NVIDIA:
         return {"NVIDIA VIDEO CODEC SDK", "nvidia"};
       case Type::Intel:
-        return {"Intel Media SDK", "intel"};
+        return {"oneVPL", "vpl"};
       case Type::VideoToolbox:
         return {"VideoToolbox", "videotoolbox"};
       case Type::V4L2:
@@ -122,31 +122,31 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_MSDK_ENCODER
-    auto session = MsdkSession::Create();
+#if USE_VPL_ENCODER
+    auto session = VplSession::Create();
     if (session != nullptr) {
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
         info.vp8_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
         info.vp9_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
         info.h264_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
         info.vp8_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
         info.vp9_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
         info.h264_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
         info.av1_decoders.push_back(Type::Intel);
       }
     }
@@ -199,31 +199,31 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_MSDK_ENCODER
-    auto session = MsdkSession::Create();
+#if USE_VPL_ENCODER
+    auto session = VplSession::Create();
     if (session != nullptr) {
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
         info.vp8_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
         info.vp9_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
         info.h264_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
         info.vp8_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
         info.vp9_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
         info.h264_decoders.push_back(Type::Intel);
       }
-      if (MsdkVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
         info.av1_decoders.push_back(Type::Intel);
       }
     }

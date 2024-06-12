@@ -27,7 +27,7 @@ https://momo.shiguredo.jp/
 - [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されている VP8 や VP9 や H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
 - Apple macOS に搭載されている H.264 ハードウェアアクセラレーター機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することが可能です
 - NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することが可能です
-- [Intel Quick Sync Video](https://www.intel.co.jp/content/www/jp/ja/architecture-and-technology/quick-sync-video/quick-sync-video-general.html) を [Intel Media SDK](https://www.intel.com/content/www/us/en/developer/tools/media-sdk/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にて VP9 / H.264 ハードウェアアクセラレーター機能を利用することが可能です
+- Intel グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [oneVPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にて VP9 / H.264 ハードウェアアクセラレーター機能を利用することが可能です
 
 ### 4K 30fps での配信
 

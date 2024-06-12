@@ -252,7 +252,7 @@ def install_deps(
             }
             install_cuda_windows(**install_cuda_args)
 
-        # Intel VPL
+        # Intel oneVPL
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             install_vpl_args = {
                 "version": version["VPL_VERSION"],
@@ -510,7 +510,6 @@ def main():
 
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")
-            cmake_args.append("-DUSE_MSDK_ENCODER=ON")
             cmake_args.append(f"-DVPL_ROOT_DIR={cmake_path(os.path.join(install_dir, 'vpl'))}")
 
         cmake_args.append(f"-DSDL2_ROOT_DIR={os.path.join(install_dir, 'sdl2')}")
