@@ -15,6 +15,8 @@
   - @melpon
 - [CHANGE] raspberry-pi-os_armv6 と raspberry-pi-os_armv7 を削除
   - @melpon
+- [CHANGE] ubuntu-20.04_x86_64 を削除
+  - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.3 に上げる
