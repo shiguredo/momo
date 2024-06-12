@@ -27,7 +27,7 @@ Xcode に関しては、最低１回は単体で起動してライセンスに�
 
 ## 事前準備 (Ubuntu)
 
-Ubuntu、Raspberry OS、Jetson Xavier NX / AGX 向けの Momo をビルドするには、以下の OS が必要になります。
+Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下の OS が必要になります。
 
 - Ubuntu 22.04 LTS
 
@@ -51,7 +51,7 @@ python3 run.py macos_arm64
 # このコマンドは Ubuntu 上でしか動作しません
 python3 run.py raspberry-pi-os_armv8
 python3 run.py ubuntu-22.04_x86_64
-python3 run.py ubuntu-20.04_jetson_xavier
+python3 run.py ubuntu-22.04_jetson
 ```
 
 生成された Momo の実行バイナリは `_build/<target>/release/momo` ディレクトリにあります。

@@ -17,6 +17,8 @@
   - @melpon
 - [CHANGE] ubuntu-20.04_x86_64 を削除
   - @melpon
+- [CHANGE] ubuntu-20.04_armv8_jetson_xavier のパッケージを削除
+  - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.3 に上げる
@@ -42,6 +44,8 @@
   - Node.js 16 の Deprecated に伴うアップデート
     - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
   - @torikizi
+- [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
+  - @melpon
 
 ## 2023.1.0
 

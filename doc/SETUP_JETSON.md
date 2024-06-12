@@ -10,8 +10,9 @@
 
 <https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
-- `momo-<version>_ubuntu-20.04_armv8_jetson_xavier.tar.gz`
+- `momo-<version>_ubuntu-22.04_armv8_jetson.tar.gz`
   - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
+  - JetPack 6 の最新版に対応
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
