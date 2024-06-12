@@ -122,13 +122,7 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 ## ビルドする
 
-- Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
-- macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
-- Windows 版 Momo のビルドしたい人は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
-
-## パッケージを作成する
-
-パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
+- Momo をビルドしたい、またはパッケージ作成したい人は [BUILD.md](doc/BUILD.md) をお読みください
 
 ## FAQ
 
