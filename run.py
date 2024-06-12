@@ -64,7 +64,7 @@ def install_deps(
                 "version_file": os.path.join(install_dir, "rootfs.version"),
                 "install_dir": install_dir,
                 "conf": conf,
-                "arch": "arm64" if platform.target.arch == "armv8" else "armhf",
+                "arch": "arm64",
             }
             install_rootfs(**install_rootfs_args)
 
@@ -169,10 +169,7 @@ def install_deps(
                 install_boost_args["cxxflags"].extend(["-target", "aarch64-apple-darwin"])
                 install_boost_args["architecture"] = "arm"
         elif platform.target.os in ("jetson", "raspberry-pi-os"):
-            if platform.target.arch == "armv8":
-                triplet = "aarch64-linux-gnu"
-            else:
-                triplet = "arm-linux-gnueabihf"
+            triplet = "aarch64-linux-gnu"
             sysroot = os.path.join(install_dir, "rootfs")
             install_boost_args["target_os"] = "linux"
             install_boost_args["cxx"] = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
@@ -201,8 +198,6 @@ def install_deps(
             ]
             install_boost_args["toolset"] = "clang"
             install_boost_args["architecture"] = "arm"
-            if platform.target.arch in ("armv6", "armv7"):
-                install_boost_args["address_model"] = "32"
         else:
             install_boost_args["target_os"] = "linux"
             install_boost_args["cxx"] = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
@@ -318,14 +313,8 @@ def install_deps(
             install_sdl2_args["platform"] = "linux"
         elif platform.target.os in ("jetson", "raspberry-pi-os"):
             install_sdl2_args["platform"] = "linux"
-
-            if platform.target.arch == "armv8":
-                triplet = "aarch64-linux-gnu"
-                arch = "aarch64"
-            else:
-                triplet = "arm-linux-gnueabihf"
-                arch = "arm"
-
+            triplet = "aarch64-linux-gnu"
+            arch = "aarch64"
             sysroot = os.path.join(install_dir, "rootfs")
             install_sdl2_args["cmake_args"] = [
                 "-DCMAKE_SYSTEM_NAME=Linux",
@@ -361,8 +350,6 @@ AVAILABLE_TARGETS = [
     "macos_arm64",
     "ubuntu-20.04_x86_64",
     "ubuntu-22.04_x86_64",
-    "raspberry-pi-os_armv6",
-    "raspberry-pi-os_armv7",
     "raspberry-pi-os_armv8",
     "ubuntu-20.04_armv8_jetson_xavier",
 ]
@@ -388,10 +375,6 @@ def main():
         platform = Platform("ubuntu", "20.04", "x86_64")
     elif args.target == "ubuntu-22.04_x86_64":
         platform = Platform("ubuntu", "22.04", "x86_64")
-    elif args.target == "raspberry-pi-os_armv6":
-        platform = Platform("raspberry-pi-os", None, "armv6")
-    elif args.target == "raspberry-pi-os_armv7":
-        platform = Platform("raspberry-pi-os", None, "armv7")
     elif args.target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
     elif args.target == "ubuntu-20.04_armv8_jetson_xavier":
@@ -487,13 +470,8 @@ def main():
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
         if platform.target.os in ("jetson", "raspberry-pi-os"):
-            if platform.target.arch == "armv8":
-                triplet = "aarch64-linux-gnu"
-                arch = "aarch64"
-            else:
-                triplet = "arm-linux-gnueabihf"
-                arch = "arm"
-
+            triplet = "aarch64-linux-gnu"
+            arch = "aarch64"
             sysroot = os.path.join(install_dir, "rootfs")
             cmake_args.append("-DCMAKE_SYSTEM_NAME=Linux")
             cmake_args.append(f"-DCMAKE_SYSTEM_PROCESSOR={arch}")
@@ -514,12 +492,7 @@ def main():
             if platform.target.os == "jetson":
                 cmake_args.append("-DUSE_JETSON_ENCODER=ON")
             if platform.target.os == "raspberry-pi-os":
-                if platform.target.arch in ("armv6", "armv7"):
-                    cmake_args.append("-DUSE_MMAL_ENCODER=ON")
-                else:
-                    cmake_args.append("-DUSE_V4L2_ENCODER=ON")
-            if arch == "arm":
-                cmake_args.append("-DBoost_ARCHITECTURE=32")
+                cmake_args.append("-DUSE_V4L2_ENCODER=ON")
 
         # スクリーンキャプチャ
         if platform.target.package_name in (

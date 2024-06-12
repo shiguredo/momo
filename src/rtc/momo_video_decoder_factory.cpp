@@ -24,10 +24,6 @@
 #include "hwenc_jetson/jetson_video_decoder.h"
 #endif
 
-#if USE_MMAL_ENCODER
-#include "hwenc_mmal/mmal_h264_decoder.h"
-#endif
-
 #if USE_MSDK_ENCODER
 #include "hwenc_msdk/msdk_video_decoder.h"
 #endif
@@ -231,13 +227,6 @@ MomoVideoDecoderFactory::CreateVideoDecoder(
     if (config_.h264_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecH264));
-    }
-#endif
-
-#if USE_MMAL_ENCODER
-    if (config_.h264_decoder == VideoCodecInfo::Type::MMAL) {
-      return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<MMALH264Decoder>());
     }
 #endif
 

@@ -25,7 +25,6 @@ struct VideoCodecInfo {
   enum class Type {
     Default,
     Jetson,
-    MMAL,
     NVIDIA,
     Intel,
     VideoToolbox,
@@ -77,8 +76,6 @@ struct VideoCodecInfo {
     switch (type) {
       case Type::Jetson:
         return {"Jetson", "jetson"};
-      case Type::MMAL:
-        return {"MMAL", "mmal"};
       case Type::NVIDIA:
         return {"NVIDIA VIDEO CODEC SDK", "nvidia"};
       case Type::Intel:
@@ -230,11 +227,6 @@ struct VideoCodecInfo {
         info.av1_decoders.push_back(Type::Intel);
       }
     }
-#endif
-
-#if USE_MMAL_ENCODER
-    info.h264_encoders.push_back(Type::MMAL);
-    info.h264_decoders.push_back(Type::MMAL);
 #endif
 
 #if USE_JETSON_ENCODER
