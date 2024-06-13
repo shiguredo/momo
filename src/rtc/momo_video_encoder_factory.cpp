@@ -33,7 +33,7 @@
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_video_encoder.h"
+#include "sora/hwenc_vpl/vpl_video_encoder.h"
 #endif
 #if defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/v4l2_h264_encoder.h"
@@ -56,6 +56,10 @@ MomoVideoEncoderFactory::MomoVideoEncoderFactory(
 std::vector<webrtc::SdpVideoFormat>
 MomoVideoEncoderFactory::GetSupportedFormats() const {
   std::vector<webrtc::SdpVideoFormat> supported_codecs;
+
+#if defined(USE_VPL_ENCODER)
+  auto vpl_session = sora::VplSession::Create();
+#endif
 
   // VP8
   if (config_.vp8_encoder == VideoCodecInfo::Type::Software ||
@@ -119,7 +123,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   } else if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
 #if defined(USE_VPL_ENCODER)
     // oneVPL の場合は対応してる場合のみ追加
-    if (VplVideoEncoder::IsSupported(VplSession::Create(), MFX_CODEC_AVC)) {
+    if (sora::VplVideoEncoder::IsSupported(vpl_session,
+                                           webrtc::kVideoCodecH264)) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
@@ -145,6 +150,10 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
 std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
     const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
+#if defined(USE_VPL_ENCODER)
+  auto vpl_session = sora::VplSession::Create();
+#endif
+
   // hardware_encoder_only == true の場合、Software なコーデックだったら強制終了する
   if (config_.hardware_encoder_only) {
     bool use_software = false;
@@ -197,10 +206,10 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #endif
 #if defined(USE_VPL_ENCODER)
     if (config_.vp8_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [vpl_session](
+                                       const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<VplVideoEncoder>(VplSession::Create(),
-                                               MFX_CODEC_VP8));
+            sora::VplVideoEncoder::Create(vpl_session, webrtc::kVideoCodecVP8));
       });
     }
 #endif
@@ -224,10 +233,10 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #endif
 #if defined(USE_VPL_ENCODER)
     if (config_.vp9_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [vpl_session](
+                                       const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<VplVideoEncoder>(VplSession::Create(),
-                                               MFX_CODEC_VP9));
+            sora::VplVideoEncoder::Create(vpl_session, webrtc::kVideoCodecVP9));
       });
     }
 #endif
@@ -243,10 +252,10 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #endif
 #if defined(USE_VPL_ENCODER)
     if (config_.av1_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+      return WithSimulcast(format, [vpl_session](
+                                       const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<VplVideoEncoder>(VplSession::Create(),
-                                               MFX_CODEC_AV1));
+            sora::VplVideoEncoder::Create(vpl_session, webrtc::kVideoCodecAV1));
       });
     }
 #endif
@@ -307,11 +316,12 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #endif
 #if defined(USE_VPL_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
-      return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
-        return std::unique_ptr<webrtc::VideoEncoder>(
-            absl::make_unique<VplVideoEncoder>(VplSession::Create(),
-                                               MFX_CODEC_AVC));
-      });
+      return WithSimulcast(format,
+                           [vpl_session](const webrtc::SdpVideoFormat& format) {
+                             return std::unique_ptr<webrtc::VideoEncoder>(
+                                 sora::VplVideoEncoder::Create(
+                                     vpl_session, webrtc::kVideoCodecH264));
+                           });
     }
 #endif
 #if defined(USE_V4L2_ENCODER)

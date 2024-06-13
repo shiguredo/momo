@@ -13,14 +13,16 @@ The original version of this sample may be obtained from https://software.intel.
 or https://software.intel.com/en-us/media-client-solutions-support.
 \**********************************************************************************/
 
-#ifndef VAAPI_UTILS_H_
-#define VAAPI_UTILS_H_
-
-// oneVPL
-#include <vpl/mfxdefs.h>
+#ifndef SORA_HWENC_VPL_VAAPI_UTILS_H_
+#define SORA_HWENC_VPL_VAAPI_UTILS_H_
 
 // libva
 #include <va/va.h>
+
+// Intel VPL
+#include <vpl/mfxdefs.h>
+
+namespace sora {
 
 class CLibVA {
  public:
@@ -41,4 +43,6 @@ class CLibVA {
 
 mfxStatus va_to_mfx_status(VAStatus va_res);
 
-#endif  // VAAPI_UTILS_H_
+}  // namespace sora
+
+#endif

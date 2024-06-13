@@ -29,6 +29,8 @@ or https://software.intel.com/en-us/media-client-solutions-support.
 // libva
 #include <va/va_drm.h>
 
+namespace sora {
+
 constexpr mfxU32 MFX_DRI_MAX_NODES_NUM = 16;
 constexpr mfxU32 MFX_DRI_RENDER_START_INDEX = 128;
 constexpr mfxU32 MFX_DRI_CARD_START_INDEX = 0;
@@ -132,3 +134,5 @@ std::unique_ptr<DRMLibVA> CreateDRMLibVA(const std::string& devicePath) {
     return nullptr;
   }
 }
+
+}  // namespace sora

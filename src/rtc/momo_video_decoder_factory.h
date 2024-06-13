@@ -14,7 +14,7 @@
 #include "cuda/cuda_context.h"
 #endif
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_session.h"
+#include "sora/hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoDecoderFactoryConfig {

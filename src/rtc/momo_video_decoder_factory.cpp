@@ -25,7 +25,7 @@
 #endif
 
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_video_decoder.h"
+#include "sora/hwenc_vpl/vpl_video_decoder.h"
 #endif
 
 #if defined(USE_V4L2_ENCODER)
@@ -125,6 +125,10 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
     return nullptr;
   }
 
+#if defined(USE_VPL_ENCODER)
+  auto vpl_session = sora::VplSession::Create();
+#endif
+
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::NVIDIA) {
@@ -136,8 +140,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_VPL_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
-                                             MFX_CODEC_VP8));
+          sora::VplVideoDecoder::Create(vpl_session, webrtc::kVideoCodecVP8));
     }
 #endif
 #if defined(USE_JETSON_ENCODER)
@@ -164,8 +167,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_VPL_ENCODER)
     if (config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
-                                             MFX_CODEC_VP9));
+          sora::VplVideoDecoder::Create(vpl_session, webrtc::kVideoCodecVP9));
     }
 #endif
 #if defined(USE_JETSON_ENCODER)
@@ -184,8 +186,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_VPL_ENCODER)
     if (config_.av1_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
-                                             MFX_CODEC_AV1));
+          sora::VplVideoDecoder::Create(vpl_session, webrtc::kVideoCodecAV1));
     }
 #endif
 #if defined(USE_JETSON_ENCODER)
@@ -219,8 +220,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_VPL_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<VplVideoDecoder>(VplSession::Create(),
-                                             MFX_CODEC_AVC));
+          sora::VplVideoDecoder::Create(vpl_session, webrtc::kVideoCodecH264));
     }
 #endif
 #if defined(USE_JETSON_ENCODER)

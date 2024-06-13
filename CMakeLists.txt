@@ -96,6 +96,7 @@ string(SUBSTRING "${MOMO_COMMIT}" 0 8 MOMO_COMMIT_SHORT)
 string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(momo PRIVATE src/hwenc/include)
 
 target_sources(momo
   PRIVATE
@@ -350,9 +351,9 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc_vpl/vpl_session.cpp
-        src/hwenc_vpl/vpl_video_decoder.cpp
-        src/hwenc_vpl/vpl_video_encoder.cpp
+        src/hwenc/src/hwenc_vpl/vpl_session_impl.cpp
+        src/hwenc/src/hwenc_vpl/vpl_video_decoder.cpp
+        src/hwenc/src/hwenc_vpl/vpl_video_encoder.cpp
     )
     target_include_directories(momo PRIVATE ${VPL_ROOT_DIR}/include)
     target_link_libraries(momo
@@ -480,11 +481,11 @@ elseif (TARGET_OS STREQUAL "linux")
     find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
-        src/hwenc_vpl/vpl_session.cpp
-        src/hwenc_vpl/vpl_video_decoder.cpp
-        src/hwenc_vpl/vpl_video_encoder.cpp
-        src/hwenc_vpl/vaapi_utils_drm.cpp
-        src/hwenc_vpl/vaapi_utils.cpp
+        src/hwenc/src/hwenc_vpl/vpl_session_impl.cpp
+        src/hwenc/src/hwenc_vpl/vpl_video_decoder.cpp
+        src/hwenc/src/hwenc_vpl/vpl_video_encoder.cpp
+        src/hwenc/src/hwenc_vpl/vaapi_utils_drm.cpp
+        src/hwenc/src/hwenc_vpl/vaapi_utils.cpp
     )
     target_link_libraries(momo
       PRIVATE

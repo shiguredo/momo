@@ -1,4 +1,4 @@
-// https://github.com/Intel-Media-SDK/MediaSDK/blob/master/samples/sample_common/include/vaapi_utils_drm.h より。
+// https://github.com/Intel-Media-SDK/MediaSDK/blob/master/samples/sample_common/src/vaapi_utils.cpp より。
 // オリジナルのライセンスは以下。
 /******************************************************************************\
 Copyright (c) 2005-2019, Intel Corporation
@@ -13,31 +13,45 @@ The original version of this sample may be obtained from https://software.intel.
 or https://software.intel.com/en-us/media-client-solutions-support.
 \**********************************************************************************/
 
-#ifndef VAAPI_UTILS_DRM_H_
-#define VAAPI_UTILS_DRM_H_
-
-#include <memory>
-#include <string>
-
 #include "vaapi_utils.h"
 
-class DRMLibVA : public CLibVA {
- public:
-  DRMLibVA(const std::string& devicePath);
-  virtual ~DRMLibVA(void);
+namespace sora {
 
-  inline int getFD() { return m_fd; }
+mfxStatus va_to_mfx_status(VAStatus va_res) {
+  mfxStatus mfxRes = MFX_ERR_NONE;
 
- protected:
-  int m_fd;
+  switch (va_res) {
+    case VA_STATUS_SUCCESS:
+      mfxRes = MFX_ERR_NONE;
+      break;
+    case VA_STATUS_ERROR_ALLOCATION_FAILED:
+      mfxRes = MFX_ERR_MEMORY_ALLOC;
+      break;
+    case VA_STATUS_ERROR_ATTR_NOT_SUPPORTED:
+    case VA_STATUS_ERROR_UNSUPPORTED_PROFILE:
+    case VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT:
+    case VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT:
+    case VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE:
+    case VA_STATUS_ERROR_FLAG_NOT_SUPPORTED:
+    case VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED:
+      mfxRes = MFX_ERR_UNSUPPORTED;
+      break;
+    case VA_STATUS_ERROR_INVALID_DISPLAY:
+    case VA_STATUS_ERROR_INVALID_CONFIG:
+    case VA_STATUS_ERROR_INVALID_CONTEXT:
+    case VA_STATUS_ERROR_INVALID_SURFACE:
+    case VA_STATUS_ERROR_INVALID_BUFFER:
+    case VA_STATUS_ERROR_INVALID_IMAGE:
+    case VA_STATUS_ERROR_INVALID_SUBPICTURE:
+      mfxRes = MFX_ERR_NOT_INITIALIZED;
+      break;
+    case VA_STATUS_ERROR_INVALID_PARAMETER:
+      mfxRes = MFX_ERR_INVALID_VIDEO_PARAM;
+    default:
+      mfxRes = MFX_ERR_UNKNOWN;
+      break;
+  }
+  return mfxRes;
+}
 
- private:
-  DRMLibVA(DRMLibVA&&) = delete;
-  DRMLibVA(const DRMLibVA&) = delete;
-  DRMLibVA& operator=(DRMLibVA&&) = delete;
-  DRMLibVA& operator=(const DRMLibVA&) = delete;
-};
-
-std::unique_ptr<DRMLibVA> CreateDRMLibVA(const std::string& devicePath = "");
-
-#endif  // VAAPI_UTILS_DRM_H_
+}  // namespace sora

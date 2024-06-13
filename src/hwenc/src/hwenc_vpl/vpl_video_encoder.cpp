@@ -1,25 +1,120 @@
-#include "vpl_video_encoder.h"
+#include "sora/hwenc_vpl/vpl_video_encoder.h"
 
-#include <iostream>
+#include <chrono>
+#include <mutex>
 
 // WebRTC
+#include <common_video/h264/h264_bitstream_parser.h>
+#include <common_video/h265/h265_bitstream_parser.h>
+#include <common_video/include/bitrate_adjuster.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h265/include/h265_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/synchronization/mutex.h>
+
+// Intel VPL
+#include <vpl/mfxvideo++.h>
+#include <vpl/mfxvp8.h>
 
 // libyuv
 #include <libyuv.h>
 
+#include "vpl_session_impl.h"
 #include "vpl_utils.h"
+
+namespace sora {
+
+class VplVideoEncoderImpl : public VplVideoEncoder {
+ public:
+  VplVideoEncoderImpl(std::shared_ptr<VplSession> session, mfxU32 codec);
+  ~VplVideoEncoderImpl() override;
+
+  int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
+                     int32_t number_of_cores,
+                     size_t max_payload_size) override;
+  int32_t RegisterEncodeCompleteCallback(
+      webrtc::EncodedImageCallback* callback) override;
+  int32_t Release() override;
+  int32_t Encode(
+      const webrtc::VideoFrame& frame,
+      const std::vector<webrtc::VideoFrameType>* frame_types) override;
+  void SetRates(const RateControlParameters& parameters) override;
+  webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
+
+  static std::unique_ptr<MFXVideoENCODE> CreateEncoder(
+      std::shared_ptr<VplSession> session,
+      mfxU32 codec,
+      int width,
+      int height,
+      int framerate,
+      int target_kbps,
+      int max_kbps,
+      bool init);
+
+ private:
+  struct ExtBuffer {
+    mfxExtBuffer* ext_buffers[10];
+    mfxExtCodingOption ext_coding_option;
+    mfxExtCodingOption2 ext_coding_option2;
+  };
+  // いろいろなパターンでクエリを投げて、
+  // 成功した時の param を返す
+  static mfxStatus Queries(MFXVideoENCODE* encoder,
+                           mfxU32 codec,
+                           int width,
+                           int height,
+                           int framerate,
+                           int target_kbps,
+                           int max_kbps,
+                           mfxVideoParam& param,
+                           ExtBuffer& ext);
+
+ private:
+  std::mutex mutex_;
+  webrtc::EncodedImageCallback* callback_ = nullptr;
+  webrtc::BitrateAdjuster bitrate_adjuster_;
+  uint32_t target_bitrate_bps_ = 0;
+  uint32_t max_bitrate_bps_ = 0;
+  bool reconfigure_needed_ = false;
+  bool use_native_ = false;
+  uint32_t width_ = 0;
+  uint32_t height_ = 0;
+  uint32_t framerate_ = 0;
+  webrtc::VideoCodecMode mode_ = webrtc::VideoCodecMode::kRealtimeVideo;
+  std::vector<std::vector<uint8_t>> v_packet_;
+  webrtc::EncodedImage encoded_image_;
+  webrtc::H264BitstreamParser h264_bitstream_parser_;
+  webrtc::H265BitstreamParser h265_bitstream_parser_;
+
+  int32_t InitVpl();
+  int32_t ReleaseVpl();
+
+  std::vector<uint8_t> surface_buffer_;
+  std::vector<mfxFrameSurface1> surfaces_;
+
+  std::shared_ptr<VplSession> session_;
+  mfxU32 codec_;
+  mfxFrameAllocRequest alloc_request_;
+  std::unique_ptr<MFXVideoENCODE> encoder_;
+  std::vector<uint8_t> bitstream_buffer_;
+  mfxBitstream bitstream_;
+  mfxFrameInfo frame_info_;
+};
 
 const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
 
-VplVideoEncoder::VplVideoEncoder(std::shared_ptr<VplSession> session,
-                                 mfxU32 codec)
+VplVideoEncoderImpl::VplVideoEncoderImpl(std::shared_ptr<VplSession> session,
+                                         mfxU32 codec)
     : session_(session), codec_(codec), bitrate_adjuster_(0.5, 0.95) {}
-VplVideoEncoder::~VplVideoEncoder() {}
 
-std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
+VplVideoEncoderImpl::~VplVideoEncoderImpl() {
+  Release();
+}
+
+std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
     std::shared_ptr<VplSession> session,
     mfxU32 codec,
     int width,
@@ -28,9 +123,51 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
     int target_kbps,
     int max_kbps,
     bool init) {
-  mfxStatus sts = MFX_ERR_NONE;
+  std::unique_ptr<MFXVideoENCODE> encoder(
+      new MFXVideoENCODE(GetVplSession(session)));
+
+  mfxPlatform platform;
+  memset(&platform, 0, sizeof(platform));
+  MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
+  RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
+                      << " CodeName=" << platform.CodeName
+                      << " DeviceId=" << platform.DeviceId
+                      << " MediaAdapterType=" << platform.MediaAdapterType;
 
   mfxVideoParam param;
+  ExtBuffer ext;
+  mfxStatus sts = Queries(encoder.get(), codec, width, height, framerate,
+                          target_kbps, max_kbps, param, ext);
+  if (sts < MFX_ERR_NONE) {
+    return nullptr;
+  }
+  if (sts > MFX_ERR_NONE) {
+    RTC_LOG(LS_VERBOSE) << "Supported specified codec but has warning: codec="
+                        << CodecToString(codec) << " sts=" << sts;
+  }
+
+  if (init) {
+    sts = encoder->Init(&param);
+    if (sts != MFX_ERR_NONE) {
+      RTC_LOG(LS_ERROR) << "Failed to Init: sts=" << sts;
+      return nullptr;
+    }
+  }
+
+  return encoder;
+}
+
+mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
+                                       mfxU32 codec,
+                                       int width,
+                                       int height,
+                                       int framerate,
+                                       int target_kbps,
+                                       int max_kbps,
+                                       mfxVideoParam& param,
+                                       ExtBuffer& ext) {
+  mfxStatus sts = MFX_ERR_NONE;
+
   memset(&param, 0, sizeof(param));
 
   param.mfx.CodecId = codec;
@@ -43,17 +180,19 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
     //param.mfx.CodecLevel = MFX_LEVEL_AVC_51;
     //param.mfx.CodecProfile = MFX_PROFILE_AVC_MAIN;
     //param.mfx.CodecLevel = MFX_LEVEL_AVC_1;
+  } else if (codec == MFX_CODEC_HEVC) {
+    // param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+    // param.mfx.CodecLevel = MFX_LEVEL_HEVC_1;
+    // param.mfx.LowPower = MFX_CODINGOPTION_OFF;
   } else if (codec == MFX_CODEC_AV1) {
     //param.mfx.CodecProfile = MFX_PROFILE_AV1_MAIN;
   }
+
   param.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
-  //param.mfx.BRCParamMultiplier = 1;
-  //param.mfx.InitialDelayInKB = target_kbps;
+
   param.mfx.TargetKbps = target_kbps;
   param.mfx.MaxKbps = max_kbps;
   param.mfx.RateControlMethod = MFX_RATECONTROL_VBR;
-  //param.mfx.NumSlice = 1;
-  //param.mfx.NumRefFrame = 1;
   param.mfx.FrameInfo.FrameRateExtN = framerate;
   param.mfx.FrameInfo.FrameRateExtD = 1;
   param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
@@ -68,18 +207,14 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
   param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
   param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
 
-  //param.mfx.GopOptFlag = MFX_GOP_STRICT | MFX_GOP_CLOSED;
-  //param.mfx.IdrInterval = codec_settings->H264().keyFrameInterval;
-  //param.mfx.IdrInterval = 0;
   param.mfx.GopRefDist = 1;
-  //param.mfx.EncodedOrder = 0;
   param.AsyncDepth = 1;
   param.IOPattern =
       MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
 
-  mfxExtBuffer* ext_buffers[10];
-  mfxExtCodingOption ext_coding_option;
-  mfxExtCodingOption2 ext_coding_option2;
+  mfxExtBuffer** ext_buffers = ext.ext_buffers;
+  mfxExtCodingOption& ext_coding_option = ext.ext_coding_option;
+  mfxExtCodingOption2& ext_coding_option2 = ext.ext_coding_option2;
   int ext_buffers_size = 0;
   if (codec == MFX_CODEC_AVC) {
     memset(&ext_coding_option, 0, sizeof(ext_coding_option));
@@ -106,6 +241,14 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
     ext_buffers[0] = (mfxExtBuffer*)&ext_coding_option;
     ext_buffers[1] = (mfxExtBuffer*)&ext_coding_option2;
     ext_buffers_size = 2;
+  } else if (codec == MFX_CODEC_HEVC) {
+    memset(&ext_coding_option2, 0, sizeof(ext_coding_option2));
+    ext_coding_option2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
+    ext_coding_option2.Header.BufferSz = sizeof(ext_coding_option2);
+    ext_coding_option2.RepeatPPS = MFX_CODINGOPTION_ON;
+
+    ext_buffers[0] = (mfxExtBuffer*)&ext_coding_option2;
+    ext_buffers_size = 1;
   }
 
   if (ext_buffers_size != 0) {
@@ -113,117 +256,112 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoder::CreateEncoder(
     param.NumExtParam = ext_buffers_size;
   }
 
-  std::unique_ptr<MFXVideoENCODE> encoder(new MFXVideoENCODE(session->session));
+  // Query 関数を呼び出す。
+  // 失敗した場合 param は一切書き換わらない
+  // 成功した場合 param は書き換わる可能性がある
+  auto query = [](MFXVideoENCODE* encoder, mfxVideoParam& param) {
+    mfxVideoParam query_param;
+    memcpy(&query_param, &param, sizeof(param));
+    // ドキュメントによると、Query は以下のエラーを返す可能性がある。
+    // MFX_ERR_NONE	The function completed successfully.
+    // MFX_ERR_UNSUPPORTED	The function failed to identify a specific implementation for the required features.
+    // MFX_WRN_PARTIAL_ACCELERATION	The underlying hardware does not fully support the specified video parameters; The encoding may be partially accelerated. Only SDK HW implementations may return this status code.
+    // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
+    mfxStatus sts = encoder->Query(&query_param, &query_param);
+    if (sts >= 0) {
+      // デバッグ用。
+      // Query によってどのパラメータが変更されたかを表示する
+      // #define F(NAME)                                           \
+      //   if (param.NAME != query_param.NAME)                     \
+      //   std::cout << "param " << #NAME << " old=" << param.NAME \
+      //             << " new=" << query_param.NAME << std::endl
+      //       F(mfx.LowPower);
+      //       F(mfx.BRCParamMultiplier);
+      //       F(mfx.FrameInfo.FrameRateExtN);
+      //       F(mfx.FrameInfo.FrameRateExtD);
+      //       F(mfx.FrameInfo.FourCC);
+      //       F(mfx.FrameInfo.ChromaFormat);
+      //       F(mfx.FrameInfo.PicStruct);
+      //       F(mfx.FrameInfo.CropX);
+      //       F(mfx.FrameInfo.CropY);
+      //       F(mfx.FrameInfo.CropW);
+      //       F(mfx.FrameInfo.CropH);
+      //       F(mfx.FrameInfo.Width);
+      //       F(mfx.FrameInfo.Height);
+      //       F(mfx.CodecId);
+      //       F(mfx.CodecProfile);
+      //       F(mfx.CodecLevel);
+      //       F(mfx.GopPicSize);
+      //       F(mfx.GopRefDist);
+      //       F(mfx.GopOptFlag);
+      //       F(mfx.IdrInterval);
+      //       F(mfx.TargetUsage);
+      //       F(mfx.RateControlMethod);
+      //       F(mfx.InitialDelayInKB);
+      //       F(mfx.TargetKbps);
+      //       F(mfx.MaxKbps);
+      //       F(mfx.BufferSizeInKB);
+      //       F(mfx.NumSlice);
+      //       F(mfx.NumRefFrame);
+      //       F(mfx.EncodedOrder);
+      //       F(mfx.DecodedOrder);
+      //       F(mfx.ExtendedPicStruct);
+      //       F(mfx.TimeStampCalc);
+      //       F(mfx.SliceGroupsPresent);
+      //       F(mfx.MaxDecFrameBuffering);
+      //       F(mfx.EnableReallocRequest);
+      //       F(AsyncDepth);
+      //       F(IOPattern);
+      // #undef F
 
-  // MFX_ERR_NONE	The function completed successfully.
-  // MFX_ERR_UNSUPPORTED	The function failed to identify a specific implementation for the required features.
-  // MFX_WRN_PARTIAL_ACCELERATION	The underlying hardware does not fully support the specified video parameters; The encoding may be partially accelerated. Only SDK HW implementations may return this status code.
-  // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
-  mfxVideoParam bk_param;
-  memcpy(&bk_param, &param, sizeof(bk_param));
-  sts = encoder->Query(&param, &param);
-  if (sts < 0) {
-    memcpy(&param, &bk_param, sizeof(bk_param));
+      memcpy(&param, &query_param, sizeof(param));
+    }
+    return sts;
+  };
 
-    // 失敗したら LowPower ON にした状態でもう一度確認する
-    param.mfx.LowPower = MFX_CODINGOPTION_ON;
-    if (codec == MFX_CODEC_AVC) {
-      param.mfx.RateControlMethod = MFX_RATECONTROL_CQP;
-      param.mfx.QPI = 25;
-      param.mfx.QPP = 33;
-      param.mfx.QPB = 40;
-      //param.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
-    }
-    memcpy(&bk_param, &param, sizeof(bk_param));
-    sts = encoder->Query(&param, &param);
-    if (sts < 0) {
-      const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
-                              : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
-                              : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
-                              : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
-                                                       : "MFX_CODEC_UNKNOWN";
-      //std::cerr << "Unsupported encoder codec: codec=" << codec_str
-      //          << std::endl;
-      return nullptr;
-    }
+  // ここからは、ひたすらパラメータを変えて query を呼び出していく
+  sts = query(encoder, param);
+  if (sts >= 0) {
+    return sts;
   }
 
-  //#define F(NAME)                                              \
-  //  if (bk_param.NAME != param.NAME)                           \
-  //  std::cout << "param " << #NAME << " old=" << bk_param.NAME \
-  //            << " new=" << param.NAME << std::endl
-  //
-  //  F(mfx.LowPower);
-  //  F(mfx.BRCParamMultiplier);
-  //  F(mfx.FrameInfo.FrameRateExtN);
-  //  F(mfx.FrameInfo.FrameRateExtD);
-  //  F(mfx.FrameInfo.FourCC);
-  //  F(mfx.FrameInfo.ChromaFormat);
-  //  F(mfx.FrameInfo.PicStruct);
-  //  F(mfx.FrameInfo.CropX);
-  //  F(mfx.FrameInfo.CropY);
-  //  F(mfx.FrameInfo.CropW);
-  //  F(mfx.FrameInfo.CropH);
-  //  F(mfx.FrameInfo.Width);
-  //  F(mfx.FrameInfo.Height);
-  //  F(mfx.CodecId);
-  //  F(mfx.CodecProfile);
-  //  F(mfx.CodecLevel);
-  //  F(mfx.GopPicSize);
-  //  F(mfx.GopRefDist);
-  //  F(mfx.GopOptFlag);
-  //  F(mfx.IdrInterval);
-  //  F(mfx.TargetUsage);
-  //  F(mfx.RateControlMethod);
-  //  F(mfx.InitialDelayInKB);
-  //  F(mfx.TargetKbps);
-  //  F(mfx.MaxKbps);
-  //  F(mfx.BufferSizeInKB);
-  //  F(mfx.NumSlice);
-  //  F(mfx.NumRefFrame);
-  //  F(mfx.EncodedOrder);
-  //  F(mfx.DecodedOrder);
-  //  F(mfx.ExtendedPicStruct);
-  //  F(mfx.TimeStampCalc);
-  //  F(mfx.SliceGroupsPresent);
-  //  F(mfx.MaxDecFrameBuffering);
-  //  F(mfx.EnableReallocRequest);
-  //  F(AsyncDepth);
-  //  F(IOPattern);
-  //#undef F
-
-  //if (sts != MFX_ERR_NONE) {
-  //  const char* codec_str = codec == MFX_CODEC_VP8   ? "MFX_CODEC_VP8"
-  //                          : codec == MFX_CODEC_VP9 ? "MFX_CODEC_VP9"
-  //                          : codec == MFX_CODEC_AV1 ? "MFX_CODEC_AV1"
-  //                          : codec == MFX_CODEC_AVC ? "MFX_CODEC_AVC"
-  //                                                   : "MFX_CODEC_UNKNOWN";
-  //  std::cerr << "Supported specified codec but has warning: codec="
-  //            << codec_str << " sts=" << sts << std::endl;
-  //}
-
-  if (init) {
-    sts = encoder->Init(&param);
-    if (sts != MFX_ERR_NONE) {
-      RTC_LOG(LS_ERROR) << "Failed to Init: sts=" << sts;
-      return nullptr;
-    }
+  // IOPattern を MFX_IOPATTERN_IN_SYSTEM_MEMORY のみにしてみる
+  // Coffee Lake の H265 はこのパターンでないと通らない
+  RTC_LOG(LS_VERBOSE) << "Unsupported encoder codec: codec="
+                      << CodecToString(codec) << " sts=" << sts
+                      << " ... Retry with IOPattern IN_SYSTEM_MEMORY only";
+  param.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
+  sts = query(encoder, param);
+  if (sts >= 0) {
+    return sts;
   }
 
-  return encoder;
+  // LowPower ON にして、更に H264/H265 は固定 QP モードにしてみる
+  RTC_LOG(LS_VERBOSE) << "Unsupported encoder codec: codec="
+                      << CodecToString(codec) << " sts=" << sts
+                      << " ... Retry with low power mode";
+  param.mfx.LowPower = MFX_CODINGOPTION_ON;
+  if (codec == MFX_CODEC_AVC || codec == MFX_CODEC_HEVC) {
+    param.mfx.RateControlMethod = MFX_RATECONTROL_CQP;
+    param.mfx.QPI = 25;
+    param.mfx.QPP = 33;
+    param.mfx.QPB = 40;
+  }
+  sts = query(encoder, param);
+  if (sts >= 0) {
+    return sts;
+  }
+  RTC_LOG(LS_VERBOSE) << "Unsupported encoder codec: codec="
+                      << CodecToString(codec) << " sts=" << sts;
+
+  return sts;
 }
 
-bool VplVideoEncoder::IsSupported(std::shared_ptr<VplSession> session,
-                                  mfxU32 codec) {
-  auto encoder = CreateEncoder(session, codec, 1920, 1080, 30, 10, 20, false);
-  return encoder != nullptr;
-}
-
-int32_t VplVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
-                                    int32_t number_of_cores,
-                                    size_t max_payload_size) {
+int32_t VplVideoEncoderImpl::InitEncode(
+    const webrtc::VideoCodec* codec_settings,
+    int32_t number_of_cores,
+    size_t max_payload_size) {
   RTC_DCHECK(codec_settings);
-  RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
 
   int32_t release_ret = Release();
   if (release_ret != WEBRTC_VIDEO_CODEC_OK) {
@@ -251,18 +389,18 @@ int32_t VplVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
           ? webrtc::VideoContentType::SCREENSHARE
           : webrtc::VideoContentType::UNSPECIFIED;
 
-  return InitMediaSDK();
+  return InitVpl();
 }
-int32_t VplVideoEncoder::RegisterEncodeCompleteCallback(
+int32_t VplVideoEncoderImpl::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
   std::lock_guard<std::mutex> lock(mutex_);
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
-int32_t VplVideoEncoder::Release() {
-  return ReleaseMediaSDK();
+int32_t VplVideoEncoderImpl::Release() {
+  return ReleaseVpl();
 }
-int32_t VplVideoEncoder::Encode(
+int32_t VplVideoEncoderImpl::Encode(
     const webrtc::VideoFrame& frame,
     const std::vector<webrtc::VideoFrameType>* frame_types) {
   bool send_key_frame = false;
@@ -359,7 +497,7 @@ int32_t VplVideoEncoder::Encode(
   }
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
-  sts = session_->session.SyncOperation(syncp, 600000);
+  sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 600000);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
   //RTC_LOG(LS_ERROR) << "SurfaceSize=" << (surface->Data.U - surface->Data.Y);
@@ -399,10 +537,17 @@ int32_t VplVideoEncoder::Encode(
       codec_specific.codecType = webrtc::kVideoCodecH264;
       codec_specific.codecSpecific.H264.packetization_mode =
           webrtc::H264PacketizationMode::NonInterleaved;
-    }
 
-    h264_bitstream_parser_.ParseBitstream(encoded_image_);
-    encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
+      h264_bitstream_parser_.ParseBitstream(encoded_image_);
+      encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    } else if (codec_ == MFX_CODEC_HEVC) {
+      codec_specific.codecType = webrtc::kVideoCodecH265;
+      codec_specific.codecSpecific.H265.packetization_mode =
+          webrtc::H265PacketizationMode::NonInterleaved;
+
+      h265_bitstream_parser_.ParseBitstream(encoded_image_);
+      encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    }
 
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
@@ -416,7 +561,7 @@ int32_t VplVideoEncoder::Encode(
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
-void VplVideoEncoder::SetRates(const RateControlParameters& parameters) {
+void VplVideoEncoderImpl::SetRates(const RateControlParameters& parameters) {
   if (parameters.framerate_fps < 1.0) {
     RTC_LOG(LS_WARNING) << "Invalid frame rate: " << parameters.framerate_fps;
     return;
@@ -434,17 +579,17 @@ void VplVideoEncoder::SetRates(const RateControlParameters& parameters) {
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   reconfigure_needed_ = true;
 }
-webrtc::VideoEncoder::EncoderInfo VplVideoEncoder::GetEncoderInfo() const {
+webrtc::VideoEncoder::EncoderInfo VplVideoEncoderImpl::GetEncoderInfo() const {
   webrtc::VideoEncoder::EncoderInfo info;
   info.supports_native_handle = true;
-  info.implementation_name = "NvCodec H264";
+  info.implementation_name = "libvpl";
   info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
       kLowH264QpThreshold, kHighH264QpThreshold);
   info.is_hardware_accelerated = true;
   return info;
 }
 
-int32_t VplVideoEncoder::InitMediaSDK() {
+int32_t VplVideoEncoderImpl::InitVpl() {
   encoder_ = CreateEncoder(session_, codec_, width_, height_, framerate_,
                            bitrate_adjuster_.GetAdjustedBitrateBps() / 1000,
                            max_bitrate_bps_ / 1000, true);
@@ -506,10 +651,38 @@ int32_t VplVideoEncoder::InitMediaSDK() {
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
-int32_t VplVideoEncoder::ReleaseMediaSDK() {
+int32_t VplVideoEncoderImpl::ReleaseVpl() {
   if (encoder_ != nullptr) {
     encoder_->Close();
   }
   encoder_.reset();
   return WEBRTC_VIDEO_CODEC_OK;
 }
+
+////////////////////////
+// VplVideoEncoder
+////////////////////////
+
+bool VplVideoEncoder::IsSupported(std::shared_ptr<VplSession> session,
+                                  webrtc::VideoCodecType codec) {
+  if (session == nullptr) {
+    return false;
+  }
+
+  auto encoder = VplVideoEncoderImpl::CreateEncoder(
+      session, ToMfxCodec(codec), 1920, 1080, 30, 10, 20, false);
+  bool result = encoder != nullptr;
+  RTC_LOG(LS_VERBOSE) << "IsSupported: codec="
+                      << CodecToString(ToMfxCodec(codec))
+                      << " result=" << result;
+  return result;
+}
+
+std::unique_ptr<VplVideoEncoder> VplVideoEncoder::Create(
+    std::shared_ptr<VplSession> session,
+    webrtc::VideoCodecType codec) {
+  return std::unique_ptr<VplVideoEncoder>(
+      new VplVideoEncoderImpl(session, ToMfxCodec(codec)));
+}
+
+}  // namespace sora

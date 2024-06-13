@@ -4,6 +4,7 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/src/hwenc/include",
                 "${workspaceFolder}/third_party/NvCodec/include",
                 "${workspaceFolder}/third_party/NvCodec/NvCodec",
                 "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include",
@@ -33,6 +34,7 @@
             "name": "Ubuntu 22.04 x86_64",
             "includePath": [
                 "${workspaceFolder}/src",
+                "${workspaceFolder}/src/hwenc/include",
                 "${workspaceFolder}/third_party/NvCodec/include",
                 "${workspaceFolder}/third_party/NvCodec/NvCodec",
                 "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include",
@@ -61,7 +63,8 @@
                 "BOOST_NO_CXX98_FUNCTION_BASE",
                 "RTC_ENABLE_H265"
             ],
-            "compilerPath": "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/llvm/clang/bin/clang++",
+            // "compilerPath": "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/llvm/clang/bin/clang++",
+            "compilerPath": "/usr/bin/clang++-18",
             "compilerArgs": ["-nostdinc++"],
             "cStandard": "c11",
             "cppStandard": "c++17",
