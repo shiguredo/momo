@@ -45,6 +45,9 @@ struct VideoCodecInfo {
   std::vector<Type> h264_encoders;
   std::vector<Type> h264_decoders;
 
+  std::vector<Type> h265_encoders;
+  std::vector<Type> h265_decoders;
+
   // Default を解決して、ちゃんとしたエンコーダ名か NotSupported になるようにする
   static Type Resolve(Type specified, const std::vector<Type>& codecs) {
     if (codecs.empty()) {
@@ -135,6 +138,10 @@ struct VideoCodecInfo {
                                              webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::Intel);
       }
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::Intel);
+      }
       if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
@@ -147,6 +154,10 @@ struct VideoCodecInfo {
       if (sora::VplVideoDecoder::IsSupported(session,
                                              webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::Intel);
       }
       if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::Intel);
@@ -214,6 +225,10 @@ struct VideoCodecInfo {
                                              webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::Intel);
       }
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::Intel);
+      }
       if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
@@ -226,6 +241,10 @@ struct VideoCodecInfo {
       if (sora::VplVideoDecoder::IsSupported(session,
                                              webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::Intel);
       }
       if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::Intel);

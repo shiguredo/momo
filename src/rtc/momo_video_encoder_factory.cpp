@@ -335,6 +335,19 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #endif
   }
 
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(USE_VPL_ENCODER)
+    if (config_.h265_encoder == VideoCodecInfo::Type::Intel) {
+      return WithSimulcast(format,
+                           [vpl_session](const webrtc::SdpVideoFormat& format) {
+                             return std::unique_ptr<webrtc::VideoEncoder>(
+                                 sora::VplVideoEncoder::Create(
+                                     vpl_session, webrtc::kVideoCodecH265));
+                           });
+    }
+#endif
+  }
+
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;
   return nullptr;

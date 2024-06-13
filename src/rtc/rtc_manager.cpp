@@ -99,6 +99,7 @@ RTCManager::RTCManager(
     ec.vp9_encoder = resolve(cf.vp9_encoder, info.vp9_encoders);
     ec.av1_encoder = resolve(cf.av1_encoder, info.av1_encoders);
     ec.h264_encoder = resolve(cf.h264_encoder, info.h264_encoders);
+    ec.h265_encoder = resolve(cf.h265_encoder, info.h265_encoders);
     ec.simulcast = cf.simulcast;
     ec.hardware_encoder_only = cf.hardware_encoder_only;
 #if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
@@ -112,6 +113,7 @@ RTCManager::RTCManager(
     dc.vp9_decoder = resolve(cf.vp9_decoder, info.vp9_decoders);
     dc.av1_decoder = resolve(cf.av1_decoder, info.av1_decoders);
     dc.h264_decoder = resolve(cf.h264_decoder, info.h264_decoders);
+    dc.h265_decoder = resolve(cf.h265_decoder, info.h265_decoders);
 #if defined(USE_NVCODEC_ENCODER)
     dc.cuda_context = cf.cuda_context;
 #endif

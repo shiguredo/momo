@@ -22,6 +22,7 @@ struct MomoVideoDecoderFactoryConfig {
   VideoCodecInfo::Type vp9_decoder;
   VideoCodecInfo::Type av1_decoder;
   VideoCodecInfo::Type h264_decoder;
+  VideoCodecInfo::Type h265_decoder;
 #if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<CudaContext> cuda_context;
 #endif

@@ -21,7 +21,7 @@
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif defined(USE_NVCODEC_ENCODER)
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
-#elif define(USE_V4L2_ENCODER)
+#elif defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif define(USE_V4L2_ENCODER)
+#elif defined(USE_V4L2_ENCODER)
     if (args.use_libcamera) {
       LibcameraCapturerConfig libcamera_config = v4l2_config;
       // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
@@ -200,6 +200,8 @@ int main(int argc, char* argv[]) {
   rtcm_config.av1_decoder = args.av1_decoder;
   rtcm_config.h264_encoder = args.h264_encoder;
   rtcm_config.h264_decoder = args.h264_decoder;
+  rtcm_config.h265_encoder = args.h265_encoder;
+  rtcm_config.h265_decoder = args.h265_decoder;
 
   rtcm_config.priority = args.priority;
 

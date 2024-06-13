@@ -114,6 +114,10 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
     }
   }
 
+  if (config_.h265_decoder == VideoCodecInfo::Type::Intel) {
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
+  }
+
   return supported_codecs;
 }
 
@@ -234,6 +238,15 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
     if (config_.h264_decoder == VideoCodecInfo::Type::V4L2) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<V4L2H264Decoder>(webrtc::kVideoCodecH264));
+    }
+#endif
+  }
+
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(USE_VPL_ENCODER)
+    if (config_.h265_decoder == VideoCodecInfo::Type::Intel) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          sora::VplVideoDecoder::Create(vpl_session, webrtc::kVideoCodecH265));
     }
 #endif
   }

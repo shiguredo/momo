@@ -52,55 +52,6 @@ void Util::ParseArgs(int argc,
   bool version = false;
   bool video_codecs = false;
 
-  auto is_valid_force_i420 = CLI::Validator(
-      [](std::string input) -> std::string {
-#if defined(USE_JETSON_ENCODER) || defined(USE_NVCODEC_ENCODER)
-        return std::string();
-#else
-        return "Not available because your device does not have this feature.";
-#endif
-      },
-      "");
-  auto is_valid_hw_mjpeg_decoder = CLI::Validator(
-      [](std::string input) -> std::string {
-        if (input == "1") {
-#if defined(USE_JETSON_ENCODER) || defined(USE_NVCODEC_ENCODER) || \
-    defined(USE_V4L2_ENCODER)
-          return std::string();
-#else
-          return "Not available because your device does not have this "
-                 "feature.";
-#endif
-        }
-        return std::string();
-      },
-      "");
-
-  auto is_valid_h264 = CLI::Validator(
-      [](std::string input) -> std::string {
-#if USE_H264
-        return std::string();
-#else
-        if (input == "H264") {
-          return "Not available because your device does not have this "
-                 "feature.";
-        }
-        return std::string();
-#endif
-      },
-      "");
-
-  auto is_sdl_available = CLI::Validator(
-      [](std::string input) -> std::string {
-#if USE_SDL2
-        return std::string();
-#else
-        return "Not available because your device does not have this "
-               "feature.";
-#endif
-      },
-      "");
-
   auto is_valid_resolution = CLI::Validator(
       [](std::string input) -> std::string {
         if (input == "QVGA" || input == "VGA" || input == "HD" ||
@@ -139,14 +90,12 @@ void Util::ParseArgs(int argc,
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag(
-         "--force-i420", args.force_i420,
-         "Prefer I420 format for video capture (only on supported devices)")
-      ->check(is_valid_force_i420);
+      "--force-i420", args.force_i420,
+      "Prefer I420 format for video capture (only on supported devices)");
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
          "Perform MJPEG deoode and video resize by hardware acceleration "
          "(only on supported devices)")
-      ->check(is_valid_hw_mjpeg_decoder)
       ->transform(CLI::CheckedTransformer(bool_map, CLI::ignore_case));
   app.add_flag("--use-libcamera", args.use_libcamera,
                "Use libcamera for video capture (only on supported devices)");
@@ -176,19 +125,15 @@ void Util::ParseArgs(int argc,
          "Specifies the quality that is maintained against video degradation")
       ->check(CLI::IsMember({"BALANCE", "FRAMERATE", "RESOLUTION"}));
   app.add_flag("--use-sdl", args.use_sdl,
-               "Show video using SDL (if SDL is available)")
-      ->check(is_sdl_available);
+               "Show video using SDL (if SDL is available)");
   app.add_option("--window-width", args.window_width,
                  "Window width for videos (if SDL is available)")
-      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_option("--window-height", args.window_height,
                  "Window height for videos (if SDL is available)")
-      ->check(is_sdl_available)
       ->check(CLI::Range(180, 16384));
   app.add_flag("--fullscreen", args.fullscreen,
-               "Use fullscreen window for videos (if SDL is available)")
-      ->check(is_sdl_available);
+               "Use fullscreen window for videos (if SDL is available)");
   app.add_flag("--version", version, "Show version information");
   app.add_flag("--insecure", args.insecure,
                "Allow insecure server connections when using SSL");
@@ -236,6 +181,10 @@ void Util::ParseArgs(int argc,
         ->transform(f(info.h264_encoders));
     app.add_option("--h264-decoder", args.h264_decoder, "H.264 Decoder")
         ->transform(f(info.h264_decoders));
+    app.add_option("--h265-encoder", args.h265_encoder, "H.265 Encoder")
+        ->transform(f(info.h265_encoders));
+    app.add_option("--h265-decoder", args.h265_decoder, "H.265 Decoder")
+        ->transform(f(info.h265_decoders));
   }
 
   auto is_serial_setting_format = CLI::Validator(
@@ -321,8 +270,7 @@ void Util::ParseArgs(int argc,
   sora_app
       ->add_option("--video-codec-type", args.sora_video_codec_type,
                    "Video codec for send")
-      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264"}))
-      ->check(is_valid_h264);
+      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264", "H265"}));
   sora_app
       ->add_option("--audio-codec-type", args.sora_audio_codec_type,
                    "Audio codec for send")
@@ -503,6 +451,12 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
   list_codecs(info.h264_encoders);
   std::cout << "  Decoder:" << std::endl;
   list_codecs(info.h264_decoders);
+  std::cout << "" << std::endl;
+  std::cout << "H265:" << std::endl;
+  std::cout << "  Encoder:" << std::endl;
+  list_codecs(info.h265_encoders);
+  std::cout << "  Decoder:" << std::endl;
+  list_codecs(info.h265_decoders);
 }
 
 std::string Util::GenerateRandomChars() {
