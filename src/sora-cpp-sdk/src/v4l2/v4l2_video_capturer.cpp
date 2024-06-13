@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "v4l2_video_capturer.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 
 // C
 #include <stdio.h>
@@ -34,15 +34,16 @@
 #include <media/base/video_common.h>
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
-#include <rtc/native_buffer.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ref_counted_object.h>
 #include <third_party/libyuv/include/libyuv.h>
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
+namespace sora {
+
 rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
-    V4L2VideoCapturerConfig config) {
+    const V4L2VideoCapturerConfig& config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -83,7 +84,7 @@ void V4L2VideoCapturer::LogDeviceList(
 
 rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    V4L2VideoCapturerConfig config,
+    const V4L2VideoCapturerConfig& config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -93,9 +94,15 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }
+  // config.video_device が指定されている場合は、デバイス名かユニーク名と一致する必要がある
+  if (!(config.video_device.empty() || config.video_device == device_name ||
+        config.video_device == unique_name)) {
+    return nullptr;
+  }
+
   rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer =
       rtc::make_ref_counted<V4L2VideoCapturer>(config);
-  if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
+  if (v4l2_capturer->Init(unique_name) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapturer(" << unique_name
                         << ")";
     return nullptr;
@@ -109,7 +116,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
   return v4l2_capturer;
 }
 
-V4L2VideoCapturer::V4L2VideoCapturer(V4L2VideoCapturerConfig config)
+V4L2VideoCapturer::V4L2VideoCapturer(const V4L2VideoCapturerConfig& config)
     : ScalableVideoTrackSource(config),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
@@ -143,29 +150,19 @@ bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
   return false;
 }
 
-int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8,
-                                const std::string& specifiedVideoDevice) {
+int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8) {
   int fd;
   bool found = false;
 
-  if (!specifiedVideoDevice.empty()) {
-    // specifiedVideoDevice が指定されてる場合はそれだけ調べる
-    if (FindDevice(deviceUniqueIdUTF8, specifiedVideoDevice)) {
+  /* detect /dev/video [0-63] entries */
+  char device[32];
+  int n;
+  for (n = 0; n < 64; n++) {
+    sprintf(device, "/dev/video%d", n);
+    if (FindDevice(deviceUniqueIdUTF8, device)) {
       found = true;
-      _videoDevice = specifiedVideoDevice;
-    }
-  } else {
-    // specifiedVideoDevice が指定されてない場合は頑張って探す
-    /* detect /dev/video [0-63] entries */
-    char device[32];
-    int n;
-    for (n = 0; n < 64; n++) {
-      sprintf(device, "/dev/video%d", n);
-      if (FindDevice(deviceUniqueIdUTF8, device)) {
-        found = true;
-        _videoDevice = device;  // store the video device
-        break;
-      }
+      _videoDevice = device;  // store the video device
+      break;
     }
   }
 
@@ -182,7 +179,7 @@ V4L2VideoCapturer::~V4L2VideoCapturer() {
     close(_deviceFd);
 }
 
-int32_t V4L2VideoCapturer::StartCapture(V4L2VideoCapturerConfig config) {
+int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   if (_captureStarted) {
     if (config.width == _currentWidth && config.height == _currentHeight) {
       return 0;
@@ -365,11 +362,6 @@ int32_t V4L2VideoCapturer::StopCapture() {
   return 0;
 }
 
-bool V4L2VideoCapturer::UseNativeBuffer() {
-  return _useNative && (_captureVideoType == webrtc::VideoType::kMJPEG ||
-                        _captureVideoType == webrtc::VideoType::kI420);
-}
-
 // critical section protected by the caller
 
 bool V4L2VideoCapturer::AllocateVideoBuffers() {
@@ -528,27 +520,19 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  if (UseNativeBuffer()) {
-    rtc::scoped_refptr<NativeBuffer> native_buffer(
-        NativeBuffer::Create(_captureVideoType, _currentWidth, _currentHeight));
-    memcpy(native_buffer->MutableData(), data, bytesused);
-    native_buffer->SetLength(bytesused);
-    dst_buffer = native_buffer;
+  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+      webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
+  i420_buffer->InitializeData();
+  if (libyuv::ConvertToI420(
+          data, bytesused, i420_buffer.get()->MutableDataY(),
+          i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+          i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+          i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
+          _currentWidth, _currentHeight, libyuv::kRotate0,
+          ConvertVideoType(_captureVideoType)) < 0) {
+    RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
   } else {
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
-        webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
-    i420_buffer->InitializeData();
-    if (libyuv::ConvertToI420(
-            data, bytesused, i420_buffer.get()->MutableDataY(),
-            i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
-            i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
-            i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
-            _currentWidth, _currentHeight, libyuv::kRotate0,
-            ConvertVideoType(_captureVideoType)) < 0) {
-      RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
-    } else {
-      dst_buffer = i420_buffer;
-    }
+    dst_buffer = i420_buffer;
   }
 
   if (dst_buffer) {
@@ -562,3 +546,5 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
     OnCapturedFrame(video_frame);
   }
 }
+
+}  // namespace sora

@@ -24,6 +24,10 @@
 #include "hwenc_jetson/jetson_video_decoder.h"
 #endif
 
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/hwenc_nvcodec/nvcodec_video_decoder.h"
+#endif
+
 #if defined(USE_VPL_ENCODER)
 #include "sora/hwenc_vpl/vpl_video_decoder.h"
 #endif
@@ -137,8 +141,8 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
-                                                 CudaVideoCodec::VP8));
+          absl::make_unique<sora::NvCodecVideoDecoder>(
+              config_.cuda_context, sora::CudaVideoCodec::VP8));
     }
 #endif
 #if defined(USE_VPL_ENCODER)
@@ -164,8 +168,8 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.vp9_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
-                                                 CudaVideoCodec::VP9));
+          absl::make_unique<sora::NvCodecVideoDecoder>(
+              config_.cuda_context, sora::CudaVideoCodec::VP9));
     }
 #endif
 #if defined(USE_VPL_ENCODER)
@@ -217,8 +221,8 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
-                                                 CudaVideoCodec::H264));
+          absl::make_unique<sora::NvCodecVideoDecoder>(
+              config_.cuda_context, sora::CudaVideoCodec::H264));
     }
 #endif
 #if defined(USE_VPL_ENCODER)

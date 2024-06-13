@@ -7,8 +7,8 @@
 #include <vector>
 
 #if defined(USE_NVCODEC_ENCODER)
-#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
-#include "hwenc_nvcodec/nvcodec_video_decoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_video_decoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_video_encoder.h"
 #endif
 
 #if defined(USE_VPL_ENCODER)
@@ -111,16 +111,25 @@ struct VideoCodecInfo {
     VideoCodecInfo info;
 
 #if defined(USE_NVCODEC_ENCODER)
-    if (NvCodecH264Encoder::IsSupported()) {
+    auto cuda_context = sora::CudaContext::Create();
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP8)) {
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP8)) {
       info.vp8_decoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP9)) {
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP9)) {
       info.vp9_decoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::H264)) {
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_decoders.push_back(Type::NVIDIA);
     }
 #endif
@@ -198,16 +207,25 @@ struct VideoCodecInfo {
     VideoCodecInfo info;
 
 #if defined(USE_NVCODEC_ENCODER)
-    if (NvCodecH264Encoder::IsSupported()) {
+    auto cuda_context = sora::CudaContext::Create();
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP8)) {
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP8)) {
       info.vp8_decoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::VP9)) {
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP9)) {
       info.vp9_decoders.push_back(Type::NVIDIA);
     }
-    if (NvCodecVideoDecoder::IsSupported(CudaVideoCodec::H264)) {
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_decoders.push_back(Type::NVIDIA);
     }
 #endif

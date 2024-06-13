@@ -1,6 +1,4 @@
-#include "fix_cuda_noinline_macro_error.h"
-
-#include "nvcodec_v4l2_capturer.h"
+#include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 
 // Linux
 #include <sys/ioctl.h>
@@ -10,8 +8,14 @@
 #include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
 
+namespace sora {
+
+NvCodecV4L2Capturer::NvCodecV4L2Capturer(
+    const NvCodecV4L2CapturerConfig& config)
+    : V4L2VideoCapturer(config) {}
+
 rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
-    NvCodecV4L2CapturerConfig config) {
+    const NvCodecV4L2CapturerConfig& config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -33,17 +37,9 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   return nullptr;
 }
 
-NvCodecV4L2Capturer::NvCodecV4L2Capturer(
-    const NvCodecV4L2CapturerConfig& config)
-    : V4L2VideoCapturer(config) {}
-
-bool NvCodecV4L2Capturer::UseNativeBuffer() {
-  return true;
-}
-
 rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    NvCodecV4L2CapturerConfig config,
+    const NvCodecV4L2CapturerConfig& config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -54,6 +50,11 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }
+  // config.video_device が指定されている場合は、デバイス名かユニーク名と一致する必要がある
+  if (!(config.video_device.empty() || config.video_device == device_name ||
+        config.video_device == unique_name)) {
+    return nullptr;
+  }
 
   rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer =
       rtc::make_ref_counted<NvCodecV4L2Capturer>(config);
@@ -61,7 +62,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   v4l2_capturer->decoder_.reset(
       new NvCodecDecoderCuda(config.cuda_context, CudaVideoCodec::JPEG));
 
-  if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
+  if (v4l2_capturer->Init((const char*)&unique_name) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create NvCodecV4L2Capturer("
                         << unique_name << ")";
     return nullptr;
@@ -118,3 +119,5 @@ void NvCodecV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
                 .build());
   }
 }
+
+}  // namespace sora

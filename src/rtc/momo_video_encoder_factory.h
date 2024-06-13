@@ -12,8 +12,8 @@
 
 #include "video_codec_info.h"
 
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
 
 #if defined(USE_VPL_ENCODER)
@@ -28,8 +28,8 @@ struct MomoVideoEncoderFactoryConfig {
   VideoCodecInfo::Type h265_encoder;
   bool simulcast;
   bool hardware_encoder_only;
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
-  std::shared_ptr<CudaContext> cuda_context;
+#if defined(USE_NVCODEC_ENCODER)
+  std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 };
 

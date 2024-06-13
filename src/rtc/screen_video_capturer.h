@@ -10,9 +10,9 @@
 #include <modules/video_capture/video_capture.h>
 #include <rtc_base/platform_thread.h>
 
-#include "scalable_track_source.h"
+#include "sora/scalable_track_source.h"
 
-class ScreenVideoCapturer : public ScalableVideoTrackSource,
+class ScreenVideoCapturer : public sora::ScalableVideoTrackSource,
                             public webrtc::DesktopCapturer::Callback {
  public:
   static bool GetSourceList(webrtc::DesktopCapturer::SourceList* sources);

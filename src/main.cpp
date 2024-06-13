@@ -20,12 +20,12 @@
 #if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif defined(USE_NVCODEC_ENCODER)
-#include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
+#include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
 #endif
@@ -46,8 +46,8 @@
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
 
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
@@ -86,14 +86,8 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
 #if defined(USE_NVCODEC_ENCODER)
-  std::shared_ptr<CudaContext> cuda_context;
-  try {
-    cuda_context = CudaContext::Create();
-  } catch (...) {
-  }
-#endif
+  auto cuda_context = sora::CudaContext::Create();
 
-#if defined(USE_NVCODEC_ENCODER)
   // NvCodec が有効な環境で HW MJPEG デコーダを使う場合、CUDA が有効である必要がある
   if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
@@ -102,7 +96,7 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
+  auto capturer = ([&]() -> rtc::scoped_refptr<sora::ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
     }
@@ -127,7 +121,7 @@ int main(int argc, char* argv[]) {
     return MacCapturer::Create(size.width, size.height, args.framerate,
                                args.video_device);
 #elif defined(__linux__)
-    V4L2VideoCapturerConfig v4l2_config;
+    sora::V4L2VideoCapturerConfig v4l2_config;
     v4l2_config.video_device = args.video_device;
     v4l2_config.width = size.width;
     v4l2_config.height = size.height;
@@ -139,15 +133,15 @@ int main(int argc, char* argv[]) {
     if (v4l2_config.use_native) {
       return JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #elif defined(USE_NVCODEC_ENCODER)
     if (v4l2_config.use_native) {
-      NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
+      sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
       nvcodec_config.cuda_context = cuda_context;
-      return NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
+      return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #elif defined(USE_V4L2_ENCODER)
     if (args.use_libcamera) {
@@ -159,10 +153,10 @@ int main(int argc, char* argv[]) {
     } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
       return V4L2Capturer::Create(std::move(v4l2_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #else
-    return V4L2VideoCapturer::Create(std::move(v4l2_config));
+    return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif
 #else
     return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,

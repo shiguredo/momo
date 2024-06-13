@@ -36,7 +36,7 @@
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
 rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
-    const V4L2VideoCapturerConfig& config) {
+    const sora::V4L2VideoCapturerConfig& config) {
   rtc::scoped_refptr<JetsonV4L2Capturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -77,7 +77,7 @@ void JetsonV4L2Capturer::LogDeviceList(
 
 rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    const V4L2VideoCapturerConfig& config,
+    const sora::V4L2VideoCapturerConfig& config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -103,7 +103,7 @@ rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
   return v4l2_capturer;
 }
 
-JetsonV4L2Capturer::JetsonV4L2Capturer(const V4L2VideoCapturerConfig& config)
+JetsonV4L2Capturer::JetsonV4L2Capturer(const sora::V4L2VideoCapturerConfig& config)
     : ScalableVideoTrackSource(config),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
@@ -176,7 +176,7 @@ JetsonV4L2Capturer::~JetsonV4L2Capturer() {
 }
 
 int32_t JetsonV4L2Capturer::StartCapture(
-    const V4L2VideoCapturerConfig& config) {
+    const sora::V4L2VideoCapturerConfig& config) {
   if (_captureStarted) {
     if (config.width == _currentWidth && config.height == _currentHeight) {
       return 0;

@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef V4L2_VIDEO_CAPTURER_H_
-#define V4L2_VIDEO_CAPTURER_H_
+#ifndef SORA_V4L2_VIDEO_CAPTURER_H_
+#define SORA_V4L2_VIDEO_CAPTURER_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -19,9 +19,12 @@
 // WebRTC
 #include <modules/video_capture/video_capture_defines.h>
 #include <modules/video_capture/video_capture_impl.h>
-#include <rtc/scalable_track_source.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
+
+#include "sora/scalable_track_source.h"
+
+namespace sora {
 
 struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
   std::string video_device;
@@ -35,16 +38,14 @@ struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
 class V4L2VideoCapturer : public ScalableVideoTrackSource {
  public:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
-      V4L2VideoCapturerConfig config);
+      const V4L2VideoCapturerConfig& config);
   static void LogDeviceList(
       webrtc::VideoCaptureModule::DeviceInfo* device_info);
-  V4L2VideoCapturer(V4L2VideoCapturerConfig config);
+  V4L2VideoCapturer(const V4L2VideoCapturerConfig& config);
   ~V4L2VideoCapturer();
 
-  int32_t Init(const char* deviceUniqueId,
-               const std::string& specifiedVideoDevice);
-  virtual int32_t StartCapture(V4L2VideoCapturerConfig config);
-  virtual bool UseNativeBuffer();
+  int32_t Init(const char* deviceUniqueId);
+  virtual int32_t StartCapture(const V4L2VideoCapturerConfig& config);
 
  protected:
   virtual int32_t StopCapture();
@@ -66,7 +67,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
  private:
   static rtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      V4L2VideoCapturerConfig config,
+      const V4L2VideoCapturerConfig& config,
       size_t capture_device_index);
   bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
 
@@ -85,4 +86,6 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   bool _captureStarted;
 };
 
-#endif  // V4L2_VIDEO_CAPTURER_H_
+}  // namespace sora
+
+#endif

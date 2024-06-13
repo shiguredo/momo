@@ -68,7 +68,7 @@ MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
                          AVCaptureDevice* device)
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()) {
+    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()) {
   RTC_LOG(LS_INFO) << "MacCapturer width=" << width << ", height=" << height
                    << ", target_fps=" << target_fps;
 

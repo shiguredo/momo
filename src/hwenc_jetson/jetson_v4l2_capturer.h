@@ -16,14 +16,14 @@
 #include <rtc_base/synchronization/mutex.h>
 
 #include "jetson_jpeg_decoder_pool.h"
-#include "rtc/scalable_track_source.h"
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
+#include "sora/scalable_track_source.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 
-class JetsonV4L2Capturer : public ScalableVideoTrackSource {
+class JetsonV4L2Capturer : public sora::ScalableVideoTrackSource {
  public:
   static rtc::scoped_refptr<JetsonV4L2Capturer> Create(
-      const V4L2VideoCapturerConfig& config);
-  JetsonV4L2Capturer(const V4L2VideoCapturerConfig& config);
+      const sora::V4L2VideoCapturerConfig& config);
+  JetsonV4L2Capturer(const sora::V4L2VideoCapturerConfig& config);
   ~JetsonV4L2Capturer();
 
  private:
@@ -32,7 +32,7 @@ class JetsonV4L2Capturer : public ScalableVideoTrackSource {
 
   int32_t Init(const char* deviceUniqueId,
                const std::string& specifiedVideoDevice);
-  int32_t StartCapture(const V4L2VideoCapturerConfig& config);
+  int32_t StartCapture(const sora::V4L2VideoCapturerConfig& config);
 
   int32_t StopCapture();
   bool AllocateVideoBuffers();
@@ -55,7 +55,7 @@ class JetsonV4L2Capturer : public ScalableVideoTrackSource {
  private:
   static rtc::scoped_refptr<JetsonV4L2Capturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      const V4L2VideoCapturerConfig& config,
+      const sora::V4L2VideoCapturerConfig& config,
       size_t capture_device_index);
   bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
 

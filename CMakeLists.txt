@@ -96,7 +96,7 @@ string(SUBSTRING "${MOMO_COMMIT}" 0 8 MOMO_COMMIT_SHORT)
 string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(momo PRIVATE src/hwenc/include)
+target_include_directories(momo PRIVATE src/sora-cpp-sdk/include)
 
 target_sources(momo
   PRIVATE
@@ -117,9 +117,9 @@ target_sources(momo
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
     src/rtc/rtc_ssl_verifier.cpp
-    src/rtc/scalable_track_source.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
+    src/sora-cpp-sdk/src/scalable_track_source.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
@@ -281,10 +281,10 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
-        src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
         third_party/NvCodec/include
@@ -303,16 +303,16 @@ if ("${TARGET_OS}" STREQUAL "windows")
     find_package(CUDA REQUIRED)
 
     set_source_files_properties(
-        src/cuda/cuda_context_cuda.cpp
+        src/sora-cpp-sdk/src/cuda_context_cuda.cpp
         third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       PROPERTIES
         CUDA_SOURCE_PROPERTY_FORMAT OBJ
     )
     cuda_compile(CUDA_FILES
-        src/cuda/cuda_context_cuda.cpp
+        src/sora-cpp-sdk/src/cuda_context_cuda.cpp
         third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       OPTIONS
         # VS 2022 の 17.10.x 以上に上げると、ツールセットのバージョンが 14.40 以上になってしまい、以下のエラーが出るため -allow-unsupported-compiler を指定する
         #
@@ -335,6 +335,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/include
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/NvCodec
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src/sora-cpp-sdk/include
         -Xcompiler "/MT$<$<CONFIG:Debug>:d>"
         -Xcompiler /D_HAS_ITERATOR_DEBUGGING=0
         -Xcompiler /DUSE_NVCODEC_ENCODER
@@ -352,9 +353,9 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc/src/hwenc_vpl/vpl_session_impl.cpp
-        src/hwenc/src/hwenc_vpl/vpl_video_decoder.cpp
-        src/hwenc/src/hwenc_vpl/vpl_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
     )
     target_include_directories(momo PRIVATE ${VPL_ROOT_DIR}/include)
     target_link_libraries(momo
@@ -407,7 +408,7 @@ elseif (TARGET_OS STREQUAL "linux")
 
   target_sources(momo
     PRIVATE
-      src/v4l2_video_capturer/v4l2_video_capturer.cpp
+      src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp
   )
   target_compile_definitions(momo
     PRIVATE
@@ -449,12 +450,12 @@ elseif (TARGET_OS STREQUAL "linux")
         third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
-        src/cuda/cuda_context_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
-        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
-        src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
+        src/sora-cpp-sdk/src/cuda_context_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
         third_party/NvCodec/include
@@ -463,9 +464,9 @@ elseif (TARGET_OS STREQUAL "linux")
 
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
-        src/cuda/cuda_context_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
-        src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
+        src/sora-cpp-sdk/src/cuda_context_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
@@ -483,11 +484,11 @@ elseif (TARGET_OS STREQUAL "linux")
     find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
-        src/hwenc/src/hwenc_vpl/vpl_session_impl.cpp
-        src/hwenc/src/hwenc_vpl/vpl_video_decoder.cpp
-        src/hwenc/src/hwenc_vpl/vpl_video_encoder.cpp
-        src/hwenc/src/hwenc_vpl/vaapi_utils_drm.cpp
-        src/hwenc/src/hwenc_vpl/vaapi_utils.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils_drm.cpp
+        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils.cpp
     )
     target_link_libraries(momo
       PRIVATE

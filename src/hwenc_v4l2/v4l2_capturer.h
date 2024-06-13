@@ -1,20 +1,18 @@
 #ifndef V4L2_CAPTURER_H_
 #define V4L2_CAPTURER_H_
 
-#include "../v4l2_video_capturer/v4l2_video_capturer.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 
-class V4L2Capturer : public V4L2VideoCapturer {
+class V4L2Capturer : public sora::V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
-      V4L2VideoCapturerConfig config);
-  V4L2Capturer(const V4L2VideoCapturerConfig& config);
-
-  bool UseNativeBuffer() override;
+  static rtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
+      sora::V4L2VideoCapturerConfig config);
+  V4L2Capturer(const sora::V4L2VideoCapturerConfig& config);
 
  private:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static rtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      V4L2VideoCapturerConfig config,
+      sora::V4L2VideoCapturerConfig config,
       size_t capture_device_index);
 
   void OnCaptured(uint8_t* data, uint32_t bytesused) override;

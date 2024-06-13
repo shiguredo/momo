@@ -1,6 +1,6 @@
-#include "fix_cuda_noinline_macro_error.h"
+#include "sora/fix_cuda_noinline_macro_error.h"
 
-#include "nvcodec_h264_encoder_cuda.h"
+#include "nvcodec_video_encoder_cuda.h"
 
 #include <iostream>
 
@@ -8,37 +8,40 @@
 #include <NvDecoder/NvDecoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
 
-#include "cuda/cuda_context_cuda.h"
-#include "dyn/cuda.h"
+#include "../cuda_context_cuda.h"
+#include "sora/dyn/cuda.h"
 
-class NvCodecH264EncoderCudaImpl {
+namespace sora {
+
+class NvCodecVideoEncoderCudaImpl {
  public:
-  NvCodecH264EncoderCudaImpl(std::shared_ptr<CudaContext> ctx);
-  ~NvCodecH264EncoderCudaImpl();
+  NvCodecVideoEncoderCudaImpl(std::shared_ptr<CudaContext> ctx);
+  ~NvCodecVideoEncoderCudaImpl();
 
   void Copy(NvEncoder* nv_encoder, const void* ptr, int width, int height);
-  NvEncoder* CreateNvEncoder(int width, int height, bool use_native);
+  NvEncoder* CreateNvEncoder(int width, int height, bool is_nv12);
 
  private:
   std::shared_ptr<CudaContext> cuda_context_;
 };
 
-NvCodecH264EncoderCuda::NvCodecH264EncoderCuda(std::shared_ptr<CudaContext> ctx)
-    : impl_(new NvCodecH264EncoderCudaImpl(ctx)) {}
-NvCodecH264EncoderCuda::~NvCodecH264EncoderCuda() {
+NvCodecVideoEncoderCuda::NvCodecVideoEncoderCuda(
+    std::shared_ptr<CudaContext> ctx)
+    : impl_(new NvCodecVideoEncoderCudaImpl(ctx)) {}
+NvCodecVideoEncoderCuda::~NvCodecVideoEncoderCuda() {
   delete impl_;
 }
 
-void NvCodecH264EncoderCuda::Copy(NvEncoder* nv_encoder,
-                                  const void* ptr,
-                                  int width,
-                                  int height) {
+void NvCodecVideoEncoderCuda::Copy(NvEncoder* nv_encoder,
+                                   const void* ptr,
+                                   int width,
+                                   int height) {
   impl_->Copy(nv_encoder, ptr, width, height);
 }
-NvEncoder* NvCodecH264EncoderCuda::CreateNvEncoder(int width,
-                                                   int height,
-                                                   bool use_native) {
-  return impl_->CreateNvEncoder(width, height, use_native);
+NvEncoder* NvCodecVideoEncoderCuda::CreateNvEncoder(int width,
+                                                    int height,
+                                                    bool is_nv12) {
+  return impl_->CreateNvEncoder(width, height, is_nv12);
 }
 
 void ShowEncoderCapability() {
@@ -137,16 +140,16 @@ void ShowEncoderCapability() {
   }
 }
 
-NvCodecH264EncoderCudaImpl::NvCodecH264EncoderCudaImpl(
+NvCodecVideoEncoderCudaImpl::NvCodecVideoEncoderCudaImpl(
     std::shared_ptr<CudaContext> ctx) {
   ShowEncoderCapability();
   cuda_context_ = ctx;
 }
-NvCodecH264EncoderCudaImpl::~NvCodecH264EncoderCudaImpl() {}
-void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
-                                      const void* ptr,
-                                      int width,
-                                      int height) {
+NvCodecVideoEncoderCudaImpl::~NvCodecVideoEncoderCudaImpl() {}
+void NvCodecVideoEncoderCudaImpl::Copy(NvEncoder* nv_encoder,
+                                       const void* ptr,
+                                       int width,
+                                       int height) {
   const NvEncInputFrame* input_frame = nv_encoder->GetNextInputFrame();
   CUcontext context = GetCudaContext(cuda_context_);
   NvEncoderCuda::CopyToDeviceFrame(
@@ -155,11 +158,13 @@ void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
       input_frame->bufferFormat, input_frame->chromaOffsets,
       input_frame->numChromaPlanes);
 }
-NvEncoder* NvCodecH264EncoderCudaImpl::CreateNvEncoder(int width,
-                                                       int height,
-                                                       bool use_native) {
+NvEncoder* NvCodecVideoEncoderCudaImpl::CreateNvEncoder(int width,
+                                                        int height,
+                                                        bool is_nv12) {
   NV_ENC_BUFFER_FORMAT nvenc_format =
-      use_native ? NV_ENC_BUFFER_FORMAT_NV12 : NV_ENC_BUFFER_FORMAT_IYUV;
+      is_nv12 ? NV_ENC_BUFFER_FORMAT_NV12 : NV_ENC_BUFFER_FORMAT_IYUV;
   CUcontext context = GetCudaContext(cuda_context_);
   return new NvEncoderCuda(context, width, height, nvenc_format);
 }
+
+}  // namespace sora

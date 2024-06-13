@@ -18,9 +18,9 @@
 #include <modules/video_capture/video_capture.h>
 #include <rtc_base/ref_counted_object.h>
 
-#include "rtc/scalable_track_source.h"
+#include "sora/scalable_track_source.h"
 
-class DeviceVideoCapturer : public ScalableVideoTrackSource,
+class DeviceVideoCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   static rtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,

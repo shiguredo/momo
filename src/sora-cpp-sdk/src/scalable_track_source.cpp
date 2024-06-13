@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "scalable_track_source.h"
+#include "sora/scalable_track_source.h"
 
 #include <algorithm>
 
@@ -21,6 +21,8 @@
 
 // libyuv
 #include <libyuv.h>
+
+namespace sora {
 
 ScalableVideoTrackSource::ScalableVideoTrackSource(
     ScalableVideoTrackSourceConfig config)
@@ -132,3 +134,5 @@ bool ScalableVideoTrackSource::OnCapturedFrame(
 
   return true;
 }
+
+}  // namespace sora

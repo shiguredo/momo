@@ -4,7 +4,7 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/src/hwenc/include",
+                "${workspaceFolder}/src/sora-cpp-sdk/include",
                 "${workspaceFolder}/third_party/NvCodec/include",
                 "${workspaceFolder}/third_party/NvCodec/NvCodec",
                 "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include",
@@ -16,15 +16,17 @@
                 "${workspaceFolder}/_install/windows_x86_64/release/cli11/include",
                 "${workspaceFolder}/_install/windows_x86_64/release/sdl2/include/SDL2",
                 "${workspaceFolder}/_install/windows_x86_64/release/vpl/include",
+                "${workspaceFolder}/_install/windows_x86_64/release/cuda/include",
                 "${workspaceFolder}/_build/windows_x86_64/release/momo"
             ],
             "defines": [
                 "WIN32_LEAN_AND_MEAN",
                 "NOMINMAX",
-                "WEBRTC_WINDOWS",
+                "WEBRTC_WIN",
                 "USE_NVCODEC_ENCODER",
                 "USE_VPL_ENCODER",
-                "USE_SCREEN_CAPTURER"
+                "USE_SCREEN_CAPTURER",
+                "RTC_ENABLE_H265"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17",
@@ -34,7 +36,7 @@
             "name": "Ubuntu 22.04 x86_64",
             "includePath": [
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/src/hwenc/include",
+                "${workspaceFolder}/src/sora-cpp-sdk/include",
                 "${workspaceFolder}/third_party/NvCodec/include",
                 "${workspaceFolder}/third_party/NvCodec/NvCodec",
                 "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include",

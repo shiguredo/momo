@@ -26,13 +26,13 @@
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
 #include "rtc_ssl_verifier.h"
-#include "scalable_track_source.h"
+#include "sora/scalable_track_source.h"
 #include "url_parts.h"
 #include "util.h"
 
 RTCManager::RTCManager(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
     : config_(std::move(config)), receiver_(receiver) {
   rtc::InitializeSSL();
@@ -102,7 +102,7 @@ RTCManager::RTCManager(
     ec.h265_encoder = resolve(cf.h265_encoder, info.h265_encoders);
     ec.simulcast = cf.simulcast;
     ec.hardware_encoder_only = cf.hardware_encoder_only;
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
+#if defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
     dependencies.video_encoder_factory =

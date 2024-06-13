@@ -16,8 +16,8 @@
 #include <iostream>
 
 #include "NvDecoder/NvDecoder.h"
-#include "dyn/cuda.h"
-#include "dyn/nvcuvid.h"
+#include "sora/dyn/cuda.h"
+#include "sora/dyn/nvcuvid.h"
 
 #define START_TIMER auto start = std::chrono::high_resolution_clock::now();
 

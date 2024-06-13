@@ -10,8 +10,8 @@
 
 #include "v4l2_native_buffer.h"
 
-rtc::scoped_refptr<V4L2VideoCapturer> V4L2Capturer::Create(
-    V4L2VideoCapturerConfig config) {
+rtc::scoped_refptr<sora::V4L2VideoCapturer> V4L2Capturer::Create(
+    sora::V4L2VideoCapturerConfig config) {
   rtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -33,16 +33,12 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2Capturer::Create(
   return nullptr;
 }
 
-V4L2Capturer::V4L2Capturer(const V4L2VideoCapturerConfig& config)
-    : V4L2VideoCapturer(config) {}
+V4L2Capturer::V4L2Capturer(const sora::V4L2VideoCapturerConfig& config)
+    : sora::V4L2VideoCapturer(config) {}
 
-bool V4L2Capturer::UseNativeBuffer() {
-  return true;
-}
-
-rtc::scoped_refptr<V4L2VideoCapturer> V4L2Capturer::Create(
+rtc::scoped_refptr<sora::V4L2VideoCapturer> V4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    V4L2VideoCapturerConfig config,
+    sora::V4L2VideoCapturerConfig config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -57,7 +53,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2Capturer::Create(
   rtc::scoped_refptr<V4L2Capturer> v4l2_capturer =
       rtc::make_ref_counted<V4L2Capturer>(config);
 
-  if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
+  if (v4l2_capturer->Init((const char*)&unique_name) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create V4L2Capturer(" << unique_name
                         << ")";
     return nullptr;

@@ -1,17 +1,18 @@
-#include "fix_cuda_noinline_macro_error.h"
+#include "sora/hwenc_nvcodec/nvcodec_decoder_cuda.h"
 
-#include "nvcodec_decoder_cuda.h"
-
-// NvCodec
 #include <NvDecoder/NvDecoder.h>
 
-#include "cuda/cuda_context_cuda.h"
+#include "../cuda_context_cuda.h"
+#include "sora/dyn/cuda.h"
+
+namespace sora {
 
 static cudaVideoCodec ToCudaVideoCodec(CudaVideoCodec codec) {
-  return codec == CudaVideoCodec::H264  ? cudaVideoCodec_H264
-         : codec == CudaVideoCodec::VP8 ? cudaVideoCodec_VP8
-         : codec == CudaVideoCodec::VP9 ? cudaVideoCodec_VP9
-                                        : cudaVideoCodec_JPEG;
+  return codec == CudaVideoCodec::H264   ? cudaVideoCodec_H264
+         : codec == CudaVideoCodec::H265 ? cudaVideoCodec_HEVC
+         : codec == CudaVideoCodec::VP8  ? cudaVideoCodec_VP8
+         : codec == CudaVideoCodec::VP9  ? cudaVideoCodec_VP9
+                                         : cudaVideoCodec_JPEG;
 }
 
 #define CUDA_DRVAPI_CALL(call)                                      \
@@ -36,8 +37,11 @@ NvCodecDecoderCuda::NvCodecDecoderCuda(std::shared_ptr<CudaContext> ctx,
                           true,
                           nullptr,
                           nullptr,
+                          false,
                           3840,
-                          3840)) {
+                          3840,
+                          1000,
+                          true)) {
   // このコーデックでデコード可能かどうかを調べる
   CUVIDDECODECAPS decodecaps;
   memset(&decodecaps, 0, sizeof(decodecaps));
@@ -93,3 +97,5 @@ int NvCodecDecoderCuda::GetDeviceFramePitch() const {
 int NvCodecDecoderCuda::setReconfigParams() {
   return GetDecoder(impl_)->setReconfigParams(nullptr, nullptr);
 }
+
+}  // namespace sora
