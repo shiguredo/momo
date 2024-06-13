@@ -144,6 +144,10 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
     }
   }
 
+  if (config_.h265_encoder == VideoCodecInfo::Type::Intel) {
+    supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
+  }
+
   return supported_codecs;
 }
 
