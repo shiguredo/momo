@@ -350,7 +350,7 @@ AVAILABLE_TARGETS = [
     "macos_arm64",
     "ubuntu-22.04_x86_64",
     "raspberry-pi-os_armv8",
-    "ubuntu-20.04_armv8_jetson_xavier",
+    "ubuntu-22.04_armv8_jetson",
 ]
 WINDOWS_SDK_VERSION = "10.0.20348.0"
 
@@ -374,8 +374,8 @@ def main():
         platform = Platform("ubuntu", "22.04", "x86_64")
     elif args.target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
-    elif args.target == "ubuntu-20.04_armv8_jetson_xavier":
-        platform = Platform("jetson", "xavier", "armv8")
+    elif args.target == "ubuntu-22.04_armv8_jetson":
+        platform = Platform("jetson", None, "armv8", extra="ubuntu-22.04")
     else:
         raise Exception(f"Unknown target {args.target}")
 

@@ -53,12 +53,16 @@ elseif(MOMO_TARGET STREQUAL "ubuntu-22.04_x86_64")
   set(TARGET_OS "linux")
   set(TARGET_OS_LINUX "ubuntu-22.04")
   set(TARGET_ARCH "x86_64")
-elseif(MOMO_TARGET STREQUAL "ubuntu-20.04_armv8_jetson_xavier")
+elseif(MOMO_TARGET STREQUAL "ubuntu-22.04_armv8_jetson")
   set(TARGET_OS "linux")
-  set(TARGET_OS_LINUX "ubuntu-20.04")
+  set(TARGET_OS_LINUX "ubuntu-22.04")
   set(TARGET_ARCH "arm")
   set(TARGET_ARCH_ARM "armv8")
 endif()
+
+# ubuntu-22.04_armv8_jetson 対応時に追加
+# rootfs 上のプログラムが利用されることを防ぐ
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
 project(momo C CXX)
 
@@ -522,12 +526,12 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_include_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/include)
         target_include_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/include/libjpeg-8b)
-        target_link_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/tegra)
+        target_link_directories(momo PRIVATE ${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/nvidia)
         target_link_options(momo
           PRIVATE
             "-Wl,-rpath-link=${CMAKE_SYSROOT}/lib/aarch64-linux-gnu"
             "-Wl,-rpath-link=${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu"
-            "-Wl,-rpath-link=${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/tegra"
+            "-Wl,-rpath-link=${CMAKE_SYSROOT}/usr/lib/aarch64-linux-gnu/nvidia"
         )
         target_link_libraries(momo
           PRIVATE
@@ -544,7 +548,7 @@ elseif (TARGET_OS STREQUAL "linux")
             #nvrm_graphics
             #nvos
         )
-      endif(USE_JETSON_ENCODER)
+      endif()
 
       if (USE_V4L2_ENCODER)
         add_library(camerac SHARED)

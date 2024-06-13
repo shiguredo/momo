@@ -88,10 +88,8 @@ https://github.com/shiguredo/momo/releases
   - Raspberry Pi 2 Model B v1.2
   - Raspberry Pi Zero 2 W
 - Ubuntu 22.04 x86_64
-- Ubuntu 20.04 ARMv8 Jetson JetPack 5
+- Ubuntu 20.04 ARMv8 Jetson JetPack 6
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
 - macOS 12 arm64 以降
 - Windows 10.1809 x86_64 以降
 
@@ -102,8 +100,10 @@ https://github.com/shiguredo/momo/releases
 - macOS x86_64
 - Raspberry Pi OS (32bit)
 - Ubuntu 20.04 ARMv8 Jetson JetPack 5
-  - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-    - Jetson Orin Nano は HWA を詰んでいないので対応はしません
+  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+  - Jetson Orin Nano は HWA を詰んでいないので対応はしません
 - Ubuntu 18.04 ARMv8 Jetson JetPack 4
   - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
   - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)

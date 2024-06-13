@@ -95,9 +95,9 @@ jobs:
         name:
           - raspberry-pi-os_armv8
           - ubuntu-22.04_x86_64
-          - ubuntu-20.04_armv8_jetson_xavier
+          - ubuntu-22.04_armv8_jetson
     name: Build momo for ${{ matrix.name }}
-    runs-on: ${{ matrix.name == 'ubuntu-22.04_x86_64' && 'ubuntu-22.04' || 'ubuntu-20.04' }}
+    runs-on: 'ubuntu-22.04'
     steps:
       - uses: actions/checkout@v4
       - name: Disk cleanup
@@ -117,10 +117,10 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           df -h
       - name: Install deps for Jetson and Raspberry Pi OS series
-        if: matrix.name == 'ubuntu-20.04_armv8_jetson_xavier' || matrix.name == 'raspberry-pi-os_armv8'
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
         run: |
           sudo apt-get update
-          sudo apt-get -y install multistrap binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi binutils-arm-linux-gnueabihf
+          sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
           # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
           sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
       - name: Install deps for ${{ matrix.name }}
@@ -184,7 +184,7 @@ jobs:
           platform: ubuntu-22.04_x86_64
       - uses: ./.github/actions/download
         with:
-          platform: ubuntu-20.04_armv8_jetson_xavier
+          platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
           echo "package_paths<<EOF" >> $GITHUB_OUTPUT
