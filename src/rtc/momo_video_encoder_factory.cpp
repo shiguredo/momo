@@ -352,7 +352,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 #if defined(__APPLE__)
     if (config_.h265_encoder == VideoCodecInfo::Type::VideoToolbox) {
       return WithSimulcast(format,
-                           [this5 env](const webrtc::SdpVideoFormat& format) {
+                           [this, env](const webrtc::SdpVideoFormat& format) {
                              return video_encoder_factory_->Create(env, format);
                            });
     }
