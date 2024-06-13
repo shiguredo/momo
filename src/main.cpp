@@ -46,8 +46,8 @@
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
 
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
@@ -86,14 +86,8 @@ int main(int argc, char* argv[]) {
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
 #if defined(USE_NVCODEC_ENCODER)
-  std::shared_ptr<CudaContext> cuda_context;
-  try {
-    cuda_context = CudaContext::Create();
-  } catch (...) {
-  }
-#endif
+  auto cuda_context = sora::CudaContext::Create();
 
-#if defined(USE_NVCODEC_ENCODER)
   // NvCodec が有効な環境で HW MJPEG デコーダを使う場合、CUDA が有効である必要がある
   if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."

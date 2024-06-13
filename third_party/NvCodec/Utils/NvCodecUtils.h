@@ -30,7 +30,7 @@
 #include <thread>
 #include <vector>
 #include "Logger.h"
-#include "dyn/cuda.h"
+#include "sora/dyn/cuda.h"
 
 extern simplelogger::Logger* logger;
 

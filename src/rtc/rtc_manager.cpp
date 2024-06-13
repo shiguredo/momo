@@ -102,7 +102,7 @@ RTCManager::RTCManager(
     ec.h265_encoder = resolve(cf.h265_encoder, info.h265_encoders);
     ec.simulcast = cf.simulcast;
     ec.hardware_encoder_only = cf.hardware_encoder_only;
-#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
+#if defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
     dependencies.video_encoder_factory =

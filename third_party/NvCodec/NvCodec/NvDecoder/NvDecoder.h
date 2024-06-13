@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 #include "../Utils/NvCodecUtils.h"
-#include "dyn/nvcuvid.h"
+#include "sora/dyn/nvcuvid.h"
 
 #define MAX_FRM_CNT 32
 

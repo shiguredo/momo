@@ -1,13 +1,15 @@
-#ifndef NVCODEC_VIDEO_DECODER_H_
-#define NVCODEC_VIDEO_DECODER_H_
+#ifndef SORA_HWENC_NVCODEC_NVCODEC_VIDEO_DECODER_H_
+#define SORA_HWENC_NVCODEC_NVCODEC_VIDEO_DECODER_H_
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
 #include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/platform_thread.h>
 
-#include "cuda/cuda_context.h"
 #include "nvcodec_decoder_cuda.h"
+#include "sora/cuda_context.h"
+
+namespace sora {
 
 class NvCodecVideoDecoder : public webrtc::VideoDecoder {
  public:
@@ -15,7 +17,8 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
                       CudaVideoCodec codec);
   ~NvCodecVideoDecoder() override;
 
-  static bool IsSupported(CudaVideoCodec codec);
+  static bool IsSupported(std::shared_ptr<CudaContext> context,
+                          CudaVideoCodec codec);
 
   bool Configure(const Settings& settings) override;
 
@@ -43,4 +46,6 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
   bool output_info_ = false;
 };
 
-#endif  // NVCODEC_VIDEO_DECODER_H_
+}  // namespace sora
+
+#endif

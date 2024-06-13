@@ -30,7 +30,7 @@
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 #if defined(USE_NVCODEC_ENCODER)
-#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
 #if defined(USE_VPL_ENCODER)
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
@@ -114,7 +114,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   } else if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA) {
 #if defined(USE_NVCODEC_ENCODER)
     // NVIDIA の場合は対応してる場合のみ追加
-    if (NvCodecH264Encoder::IsSupported()) {
+    if (sora::NvCodecH264Encoder::IsSupported(config_.cuda_context)) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
@@ -297,25 +297,13 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA &&
-        NvCodecH264Encoder::IsSupported()) {
-      return WithSimulcast(
-#if defined(__linux__)
-          format,
-          [cuda_context =
-               config_.cuda_context](const webrtc::SdpVideoFormat& format) {
-            return std::unique_ptr<webrtc::VideoEncoder>(
-                absl::make_unique<NvCodecH264Encoder>(
-                    cricket::CreateVideoCodec(format), cuda_context));
-          }
-#else
-          format,
-          [](const webrtc::SdpVideoFormat& format) {
-            return std::unique_ptr<webrtc::VideoEncoder>(
-                absl::make_unique<NvCodecH264Encoder>(
-                    cricket::CreateVideoCodec(format)));
-          }
-#endif
-      );
+        sora::NvCodecH264Encoder::IsSupported(config_.cuda_context)) {
+      return WithSimulcast(format, [cuda_context = config_.cuda_context](
+                                       const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            sora::NvCodecH264Encoder::Create(cricket::CreateVideoCodec(format),
+                                             cuda_context));
+      });
     }
 #endif
 #if defined(USE_VPL_ENCODER)

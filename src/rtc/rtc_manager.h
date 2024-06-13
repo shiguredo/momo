@@ -10,11 +10,11 @@
 #include <pc/peer_connection_factory.h>
 #include <pc/video_track_source.h>
 
-#include "cuda/cuda_context.h"
 #include "rtc_connection.h"
 #include "rtc_data_manager_dispatcher.h"
 #include "rtc_message_sender.h"
 #include "scalable_track_source.h"
+#include "sora/cuda_context.h"
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
 
@@ -86,7 +86,7 @@ struct RTCManagerConfig {
   }
 
 #if defined(USE_NVCODEC_ENCODER)
-  std::shared_ptr<CudaContext> cuda_context;
+  std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 
   std::string proxy_url;
