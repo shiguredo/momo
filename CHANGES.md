@@ -46,6 +46,10 @@
   - @torikizi
 - [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
   - @melpon
+- [ADD] Intel VPL の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
+- [ADD] NVIDIA Video Codec SDK の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
 
 ## 2023.1.0
 
