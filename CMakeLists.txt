@@ -280,13 +280,13 @@ if ("${TARGET_OS}" STREQUAL "windows")
     target_sources(momo
       PRIVATE
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
+        third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
         src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
-        NvCodec/include
-        NvCodec/NvCodec)
+        third_party/NvCodec/include
+        third_party/NvCodec/NvCodec)
     target_link_libraries(momo
       PRIVATE
         DXGI.lib
@@ -302,14 +302,14 @@ if ("${TARGET_OS}" STREQUAL "windows")
 
     set_source_files_properties(
         src/cuda/cuda_context_cuda.cpp
-        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       PROPERTIES
         CUDA_SOURCE_PROPERTY_FORMAT OBJ
     )
     cuda_compile(CUDA_FILES
         src/cuda/cuda_context_cuda.cpp
-        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       OPTIONS
         # VS 2022 の 17.10.x 以上に上げると、ツールセットのバージョンが 14.40 以上になってしまい、以下のエラーが出るため -allow-unsupported-compiler を指定する
@@ -330,8 +330,8 @@ if ("${TARGET_OS}" STREQUAL "windows")
         #   https://devblogs.microsoft.com/cppblog/msvc-toolset-minor-version-number-14-40-in-vs-2022-v17-10/
         -allow-unsupported-compiler
         -Xcompiler /utf-8
-        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
-        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/include
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/NvCodec
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
         -Xcompiler "/MT$<$<CONFIG:Debug>:d>"
         -Xcompiler /D_HAS_ITERATOR_DEBUGGING=0
@@ -443,9 +443,9 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
         src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
@@ -454,8 +454,8 @@ elseif (TARGET_OS STREQUAL "linux")
         src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
-        NvCodec/include
-        NvCodec/NvCodec
+        third_party/NvCodec/include
+        third_party/NvCodec/NvCodec
         /usr/local/cuda/include)
 
     # これらのソースは CUDA としてコンパイルする
@@ -463,8 +463,8 @@ elseif (TARGET_OS STREQUAL "linux")
         src/cuda/cuda_context_cuda.cpp
         src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
         src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
-        NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
         COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17"
     )
