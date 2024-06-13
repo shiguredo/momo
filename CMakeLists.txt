@@ -146,12 +146,12 @@ target_compile_definitions(momo
     # しかし、 libwebrtc の libc++ では std::filesystem が提供されていないため下記のオプションを追加して利用しないようにする。
     CLI11_HAS_FILESYSTEM=0
     OPENSSL_IS_BORINGSSL
-    USE_NVCODEC_ENCODER=$<BOOL:${USE_NVCODEC_ENCODER}>
-    USE_V4L2_ENCODER=$<BOOL:${USE_V4L2_ENCODER}>
-    USE_JETSON_ENCODER=$<BOOL:${USE_JETSON_ENCODER}>
-    USE_VPL_ENCODER=$<BOOL:${USE_VPL_ENCODER}>
-    USE_LINUX_PULSE_AUDIO=$<BOOL:${USE_LINUX_PULSE_AUDIO}>
-    USE_SCREEN_CAPTURER=$<BOOL:${USE_SCREEN_CAPTURER}>
+    $<$<BOOL:${USE_NVCODEC_ENCODER}>:USE_NVCODEC_ENCODER>
+    $<$<BOOL:${USE_V4L2_ENCODER}>:USE_V4L2_ENCODER>
+    $<$<BOOL:${USE_JETSON_ENCODER}>:USE_JETSON_ENCODER>
+    $<$<BOOL:${USE_VPL_ENCODER}>:USE_VPL_ENCODER>
+    $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
+    $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
     BOOST_NO_CXX98_FUNCTION_BASE
 )
@@ -335,7 +335,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
         -Xcompiler "/MT$<$<CONFIG:Debug>:d>"
         -Xcompiler /D_HAS_ITERATOR_DEBUGGING=0
-        -Xcompiler /DUSE_NVCODEC_ENCODER=1
+        -Xcompiler /DUSE_NVCODEC_ENCODER
     )
     target_sources(momo PRIVATE ${CUDA_FILES})
     target_include_directories(momo PRIVATE ${CUDA_INCLUDE_DIRS})

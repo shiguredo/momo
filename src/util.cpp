@@ -54,7 +54,7 @@ void Util::ParseArgs(int argc,
 
   auto is_valid_force_i420 = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_JETSON_ENCODER || USE_NVCODEC_ENCODER
+#if defined(USE_JETSON_ENCODER) || defined(USE_NVCODEC_ENCODER)
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
@@ -64,7 +64,8 @@ void Util::ParseArgs(int argc,
   auto is_valid_hw_mjpeg_decoder = CLI::Validator(
       [](std::string input) -> std::string {
         if (input == "1") {
-#if USE_JETSON_ENCODER || USE_NVCODEC_ENCODER || USE_V4L2_ENCODER
+#if defined(USE_JETSON_ENCODER) || defined(USE_NVCODEC_ENCODER) || \
+    defined(USE_V4L2_ENCODER)
           return std::string();
 #else
           return "Not available because your device does not have this "
@@ -120,7 +121,7 @@ void Util::ParseArgs(int argc,
 
   auto is_valid_screen_capture = CLI::Validator(
       [](std::string input) -> std::string {
-#if USE_SCREEN_CAPTURER
+#if defined(USE_SCREEN_CAPTURER)
         return std::string();
 #else
         return "Not available because your device does not have this feature.";
@@ -411,10 +412,18 @@ void Util::ParseArgs(int argc,
     std::cout << "Environment: " << MomoVersion::GetEnvironmentName()
               << std::endl;
     std::cout << std::endl;
-    std::cout << "USE_JETSON_ENCODER=" BOOST_PP_STRINGIZE(USE_JETSON_ENCODER)
-                                                          << std::endl;
-    std::cout << "USE_NVCODEC_ENCODER=" BOOST_PP_STRINGIZE(USE_NVCODEC_ENCODER)
-                                                           << std::endl;
+#if defined(USE_JETSON_ENCODER)
+    std::cout << "- USE_JETSON_ENCODER";
+#endif
+#if defined(USE_NVCODEC_ENCODER)
+    std::cout << "- USE_NVCODEC_ENCODER";
+#endif
+#if defined(USE_V4L2_ENCODER)
+    std::cout << "- USE_V4L2_ENCODER";
+#endif
+#if defined(USE_VPL_ENCODER)
+    std::cout << "- USE_VPL_ENCODER";
+#endif
     exit(0);
   }
 

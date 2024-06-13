@@ -46,7 +46,7 @@ RTCManager::RTCManager(
 
 #if defined(__linux__)
 
-#if USE_LINUX_PULSE_AUDIO
+#if defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
 #else
@@ -101,7 +101,7 @@ RTCManager::RTCManager(
     ec.h264_encoder = resolve(cf.h264_encoder, info.h264_encoders);
     ec.simulcast = cf.simulcast;
     ec.hardware_encoder_only = cf.hardware_encoder_only;
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
     dependencies.video_encoder_factory =
@@ -112,7 +112,7 @@ RTCManager::RTCManager(
     dc.vp9_decoder = resolve(cf.vp9_decoder, info.vp9_decoders);
     dc.av1_decoder = resolve(cf.av1_decoder, info.av1_decoders);
     dc.h264_decoder = resolve(cf.h264_decoder, info.h264_decoders);
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     dc.cuda_context = cf.cuda_context;
 #endif
     dependencies.video_decoder_factory =

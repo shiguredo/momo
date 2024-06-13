@@ -20,15 +20,15 @@
 #include "mac_helper/objc_codec_factory_helper.h"
 #endif
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_video_decoder.h"
 #endif
 
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
 #include "hwenc_vpl/vpl_video_decoder.h"
 #endif
 
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/v4l2_h264_decoder.h"
 #endif
 
@@ -126,21 +126,21 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::VP8));
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<VplVideoDecoder>(VplSession::Create(),
                                              MFX_CODEC_VP8));
     }
 #endif
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::Jetson &&
         JetsonVideoDecoder::IsSupportedVP8()) {
       return std::unique_ptr<webrtc::VideoDecoder>(
@@ -154,21 +154,21 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (config_.vp9_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::VP9));
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.vp9_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<VplVideoDecoder>(VplSession::Create(),
                                              MFX_CODEC_VP9));
     }
 #endif
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.vp9_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecVP9));
@@ -181,14 +181,14 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.av1_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<VplVideoDecoder>(VplSession::Create(),
                                              MFX_CODEC_AV1));
     }
 #endif
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.av1_decoder == VideoCodecInfo::Type::Jetson &&
         JetsonVideoDecoder::IsSupportedAV1()) {
       return std::unique_ptr<webrtc::VideoDecoder>(
@@ -209,28 +209,28 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
     }
 #endif
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<NvCodecVideoDecoder>(config_.cuda_context,
                                                  CudaVideoCodec::H264));
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<VplVideoDecoder>(VplSession::Create(),
                                              MFX_CODEC_AVC));
     }
 #endif
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::Jetson) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecH264));
     }
 #endif
 
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
     if (config_.h264_decoder == VideoCodecInfo::Type::V4L2) {
       return std::unique_ptr<webrtc::VideoDecoder>(
           absl::make_unique<V4L2H264Decoder>(webrtc::kVideoCodecH264));

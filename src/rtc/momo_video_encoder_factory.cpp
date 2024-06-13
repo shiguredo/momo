@@ -26,16 +26,16 @@
 #include "mac_helper/objc_codec_factory_helper.h"
 #endif
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
 #include "hwenc_vpl/vpl_video_encoder.h"
 #endif
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/v4l2_h264_encoder.h"
 #endif
 
@@ -108,7 +108,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       }
     }
   } else if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA) {
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     // NVIDIA の場合は対応してる場合のみ追加
     if (NvCodecH264Encoder::IsSupported()) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
@@ -117,7 +117,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
     }
 #endif
   } else if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     // oneVPL の場合は対応してる場合のみ追加
     if (VplVideoEncoder::IsSupported(VplSession::Create(), MFX_CODEC_AVC)) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
@@ -126,7 +126,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
     }
 #endif
   } else if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
     for (const webrtc::SdpVideoFormat& format : h264_codecs) {
       supported_codecs.push_back(format);
     }
@@ -185,7 +185,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
         return webrtc::CreateVp8Encoder(env);
       });
     }
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.vp8_encoder == VideoCodecInfo::Type::Jetson &&
         JetsonVideoEncoder::IsSupportedVP8()) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
@@ -195,7 +195,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       });
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.vp8_encoder == VideoCodecInfo::Type::Intel) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
@@ -212,7 +212,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
         return webrtc::CreateVp9Encoder(env);
       });
     }
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.vp9_encoder == VideoCodecInfo::Type::Jetson &&
         JetsonVideoEncoder::IsSupportedVP9()) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
@@ -222,7 +222,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       });
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.vp9_encoder == VideoCodecInfo::Type::Intel) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
@@ -241,7 +241,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       });
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.av1_encoder == VideoCodecInfo::Type::Intel) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
@@ -250,7 +250,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       });
     }
 #endif
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.av1_encoder == VideoCodecInfo::Type::Jetson &&
         JetsonVideoEncoder::IsSupportedAV1()) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
@@ -272,7 +272,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
     }
 #endif
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::Jetson) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
@@ -282,7 +282,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
     }
 #endif
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA &&
         NvCodecH264Encoder::IsSupported()) {
       return WithSimulcast(
@@ -305,7 +305,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       );
     }
 #endif
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::Intel) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
@@ -314,7 +314,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
       });
     }
 #endif
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
       return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(

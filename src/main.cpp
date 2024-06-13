@@ -10,18 +10,18 @@
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/string_utils.h>
 
-#if USE_SCREEN_CAPTURER
+#if defined(USE_SCREEN_CAPTURER)
 #include "rtc/screen_video_capturer.h"
 #endif
 
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
-#elif USE_NVCODEC_ENCODER
+#elif defined(USE_NVCODEC_ENCODER)
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
-#elif USE_V4L2_ENCODER
+#elif define(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
@@ -48,7 +48,7 @@
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if defined(__linux__) && defined(USE_NVCODEC_ENCODER)
 #include "cuda/cuda_context.h"
 #endif
 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<CudaContext> cuda_context;
   try {
     cuda_context = CudaContext::Create();
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
   // NvCodec が有効な環境で HW MJPEG デコーダを使う場合、CUDA が有効である必要がある
   if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
       return nullptr;
     }
 
-#if USE_SCREEN_CAPTURER
+#if defined(USE_SCREEN_CAPTURER)
     if (args.screen_capture) {
       RTC_LOG(LS_INFO) << "Screen capturer source list: "
                        << ScreenVideoCapturer::GetSourceListString();
@@ -137,13 +137,13 @@ int main(int argc, char* argv[]) {
     v4l2_config.force_i420 = args.force_i420;
     v4l2_config.use_native = args.hw_mjpeg_decoder;
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (v4l2_config.use_native) {
       return JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif USE_NVCODEC_ENCODER
+#elif defined(USE_NVCODEC_ENCODER)
     if (v4l2_config.use_native) {
       NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
       nvcodec_config.cuda_context = cuda_context;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif USE_V4L2_ENCODER
+#elif define(USE_V4L2_ENCODER)
     if (args.use_libcamera) {
       LibcameraCapturerConfig libcamera_config = v4l2_config;
       // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.priority = args.priority;
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
   rtcm_config.cuda_context = cuda_context;
 #endif
 

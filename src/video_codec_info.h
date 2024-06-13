@@ -6,17 +6,17 @@
 #include <utility>
 #include <vector>
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
 #include "hwenc_vpl/vpl_video_decoder.h"
 #include "hwenc_vpl/vpl_video_encoder.h"
 #endif
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_video_decoder.h"
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
@@ -107,7 +107,7 @@ struct VideoCodecInfo {
   static VideoCodecInfo GetWindows() {
     VideoCodecInfo info;
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (NvCodecH264Encoder::IsSupported()) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
@@ -122,7 +122,7 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     auto session = VplSession::Create();
     if (session != nullptr) {
       if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
@@ -184,7 +184,7 @@ struct VideoCodecInfo {
   static VideoCodecInfo GetLinux() {
     VideoCodecInfo info;
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     if (NvCodecH264Encoder::IsSupported()) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
@@ -199,7 +199,7 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_VPL_ENCODER
+#if defined(USE_VPL_ENCODER)
     auto session = VplSession::Create();
     if (session != nullptr) {
       if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
@@ -229,7 +229,7 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
     info.h264_encoders.push_back(Type::Jetson);
     info.h264_decoders.push_back(Type::Jetson);
     if (JetsonVideoEncoder::IsSupportedVP8()) {
@@ -250,7 +250,7 @@ struct VideoCodecInfo {
     }
 #endif
 
-#if USE_V4L2_ENCODER
+#if defined(USE_V4L2_ENCODER)
     info.h264_encoders.push_back(Type::V4L2);
     info.h264_decoders.push_back(Type::V4L2);
 #endif
