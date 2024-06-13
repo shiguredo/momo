@@ -123,6 +123,15 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
   }
 
+  if (config_.h265_decoder == VideoCodecInfo::Type::VideoToolbox) {
+    // VideoToolbox の場合は video_decoder_factory_ から H265 を拾ってくる
+    for (auto format : video_decoder_factory_->GetSupportedFormats()) {
+      if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+        supported_codecs.push_back(format);
+      }
+    }
+  }
+
   return supported_codecs;
 }
 
@@ -248,6 +257,11 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(__APPLE__)
+    if (config_.h265_decoder == VideoCodecInfo::Type::VideoToolbox) {
+      return video_decoder_factory_->Create(env, format);
+    }
+#endif
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.h265_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(

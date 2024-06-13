@@ -195,6 +195,8 @@ struct VideoCodecInfo {
 
     info.h264_encoders.push_back(Type::VideoToolbox);
     info.h264_decoders.push_back(Type::VideoToolbox);
+    info.h265_encoders.push_back(Type::VideoToolbox);
+    info.h265_decoders.push_back(Type::VideoToolbox);
     info.vp8_encoders.push_back(Type::Software);
     info.vp9_encoders.push_back(Type::Software);
     info.vp8_decoders.push_back(Type::Software);
