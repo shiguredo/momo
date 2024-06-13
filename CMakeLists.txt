@@ -274,6 +274,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       WIN32_LEAN_AND_MEAN
       UNICODE
       _UNICODE
+      RTC_ENABLE_H265
   )
 
   # NVIDIA Video Codec SDK
@@ -377,6 +378,7 @@ elseif (TARGET_OS STREQUAL "macos")
     PRIVATE
       WEBRTC_POSIX
       WEBRTC_MAC
+      RTC_ENABLE_H265
   )
 
   target_link_libraries(momo
