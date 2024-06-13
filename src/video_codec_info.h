@@ -132,6 +132,10 @@ struct VideoCodecInfo {
                                                sora::CudaVideoCodec::H264)) {
       info.h264_decoders.push_back(Type::NVIDIA);
     }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_decoders.push_back(Type::NVIDIA);
+    }
 #endif
 
 #if defined(USE_VPL_ENCODER)

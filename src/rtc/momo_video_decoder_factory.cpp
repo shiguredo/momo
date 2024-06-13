@@ -118,7 +118,8 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
     }
   }
 
-  if (config_.h265_decoder == VideoCodecInfo::Type::Intel) {
+  if (config_.h265_decoder == VideoCodecInfo::Type::Intel ||
+      config_.h265_decoder == VideoCodecInfo::Type::NVIDIA) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
   }
 
@@ -247,6 +248,13 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(USE_NVCODEC_ENCODER)
+    if (config_.h265_decoder == VideoCodecInfo::Type::NVIDIA) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<sora::NvCodecVideoDecoder>(
+              config_.cuda_context, sora::CudaVideoCodec::H265));
+    }
+#endif
 #if defined(USE_VPL_ENCODER)
     if (config_.h265_decoder == VideoCodecInfo::Type::Intel) {
       return std::unique_ptr<webrtc::VideoDecoder>(
