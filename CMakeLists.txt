@@ -281,7 +281,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
@@ -452,8 +452,8 @@ elseif (TARGET_OS STREQUAL "linux")
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
-        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
-        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_v4l2_capturer.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
@@ -465,7 +465,7 @@ elseif (TARGET_OS STREQUAL "linux")
     # これらのソースは CUDA としてコンパイルする
     set_source_files_properties(
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
-        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_h264_encoder_cuda.cpp
+        src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp

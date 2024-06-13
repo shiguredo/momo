@@ -1,6 +1,6 @@
 #include "sora/fix_cuda_noinline_macro_error.h"
 
-#include "sora/hwenc_nvcodec/nvcodec_h264_encoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_video_encoder.h"
 
 #ifdef _WIN32
 #include <d3d11.h>
@@ -15,6 +15,7 @@
 // WebRTC
 #include <api/video/nv12_buffer.h>
 #include <common_video/h264/h264_bitstream_parser.h>
+#include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/include/video_codec_interface.h>
@@ -29,7 +30,7 @@
 #include <NvEncoder/NvEncoderD3D11.h>
 #endif
 #ifdef __linux__
-#include "nvcodec_h264_encoder_cuda.h"
+#include "nvcodec_video_encoder_cuda.h"
 #endif
 
 #ifdef __linux__
@@ -51,13 +52,14 @@ struct nal_entry {
 using Microsoft::WRL::ComPtr;
 #endif
 
-class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
+class NvCodecVideoEncoderImpl : public NvCodecVideoEncoder {
  public:
-  NvCodecH264EncoderImpl(const cricket::VideoCodec& codec,
-                         std::shared_ptr<CudaContext> cuda_context);
-  ~NvCodecH264EncoderImpl() override;
+  NvCodecVideoEncoderImpl(std::shared_ptr<CudaContext> cuda_context,
+                          CudaVideoCodec codec);
+  ~NvCodecVideoEncoderImpl() override;
 
-  static bool IsSupported(std::shared_ptr<CudaContext> cuda_context);
+  static bool IsSupported(std::shared_ptr<CudaContext> cuda_context,
+                          CudaVideoCodec codec);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -73,6 +75,7 @@ class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
   static std::unique_ptr<NvEncoder> CreateEncoder(
+      CudaVideoCodec codec,
       int width,
       int height,
       int framerate,
@@ -85,7 +88,7 @@ class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
 #endif
 #ifdef __linux__
       ,
-      NvCodecH264EncoderCuda* cuda,
+      NvCodecVideoEncoderCuda* cuda,
       bool is_nv12
 #endif
   );
@@ -100,8 +103,10 @@ class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
   int32_t InitNvEnc();
   int32_t ReleaseNvEnc();
   webrtc::H264BitstreamParser h264_bitstream_parser_;
+  webrtc::H265BitstreamParser h265_bitstream_parser_;
 
   std::shared_ptr<CudaContext> cuda_context_;
+  CudaVideoCodec codec_;
   std::unique_ptr<NvEncoder> nv_encoder_;
 #ifdef _WIN32
   Microsoft::WRL::ComPtr<ID3D11Device> id3d11_device_;
@@ -109,7 +114,7 @@ class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
   Microsoft::WRL::ComPtr<ID3D11Texture2D> id3d11_texture_;
 #endif
 #ifdef __linux__
-  std::unique_ptr<NvCodecH264EncoderCuda> cuda_;
+  std::unique_ptr<NvCodecVideoEncoderCuda> cuda_;
   bool is_nv12_ = false;
 #endif
   bool reconfigure_needed_ = false;
@@ -122,10 +127,10 @@ class NvCodecH264EncoderImpl : public NvCodecH264Encoder {
   webrtc::EncodedImage encoded_image_;
 };
 
-NvCodecH264EncoderImpl::NvCodecH264EncoderImpl(
-    const cricket::VideoCodec& codec,
-    std::shared_ptr<CudaContext> cuda_context)
-    : cuda_context_(cuda_context), bitrate_adjuster_(0.5, 0.95) {
+NvCodecVideoEncoderImpl::NvCodecVideoEncoderImpl(
+    std::shared_ptr<CudaContext> cuda_context,
+    CudaVideoCodec codec)
+    : cuda_context_(cuda_context), codec_(codec), bitrate_adjuster_(0.5, 0.95) {
 #ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
@@ -147,18 +152,17 @@ NvCodecH264EncoderImpl::NvCodecH264EncoderImpl(
   RTC_LOG(LS_INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
 #endif
 #ifdef __linux__
-  cuda_.reset(new NvCodecH264EncoderCuda(cuda_context_));
+  cuda_.reset(new NvCodecVideoEncoderCuda(cuda_context_));
 #endif
 }
 
-NvCodecH264EncoderImpl::~NvCodecH264EncoderImpl() {}
+NvCodecVideoEncoderImpl::~NvCodecVideoEncoderImpl() {}
 
-int32_t NvCodecH264EncoderImpl::InitEncode(
+int32_t NvCodecVideoEncoderImpl::InitEncode(
     const webrtc::VideoCodec* codec_settings,
     int32_t number_of_cores,
     size_t max_payload_size) {
   RTC_DCHECK(codec_settings);
-  RTC_DCHECK_EQ(codec_settings->codecType, webrtc::kVideoCodecH264);
 
   int32_t release_ret = Release();
   if (release_ret != WEBRTC_VIDEO_CODEC_OK) {
@@ -178,18 +182,18 @@ int32_t NvCodecH264EncoderImpl::InitEncode(
   return InitNvEnc();
 }
 
-int32_t NvCodecH264EncoderImpl::RegisterEncodeCompleteCallback(
+int32_t NvCodecVideoEncoderImpl::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
   std::lock_guard<std::mutex> lock(mutex_);
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t NvCodecH264EncoderImpl::Release() {
+int32_t NvCodecVideoEncoderImpl::Release() {
   return ReleaseNvEnc();
 }
 
-int32_t NvCodecH264EncoderImpl::Encode(
+int32_t NvCodecVideoEncoderImpl::Encode(
     const webrtc::VideoFrame& frame,
     const std::vector<webrtc::VideoFrameType>* frame_types) {
   //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
@@ -374,12 +378,21 @@ int32_t NvCodecH264EncoderImpl::Encode(
     }
 
     webrtc::CodecSpecificInfo codec_specific;
-    codec_specific.codecType = webrtc::kVideoCodecH264;
-    codec_specific.codecSpecific.H264.packetization_mode =
-        webrtc::H264PacketizationMode::NonInterleaved;
+    if (codec_ == CudaVideoCodec::H264) {
+      codec_specific.codecType = webrtc::kVideoCodecH264;
+      codec_specific.codecSpecific.H264.packetization_mode =
+          webrtc::H264PacketizationMode::NonInterleaved;
 
-    h264_bitstream_parser_.ParseBitstream(encoded_image_);
-    encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
+      h264_bitstream_parser_.ParseBitstream(encoded_image_);
+      encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    } else if (codec_ == CudaVideoCodec::H265) {
+      codec_specific.codecType = webrtc::kVideoCodecH265;
+      codec_specific.codecSpecific.H265.packetization_mode =
+          webrtc::H265PacketizationMode::NonInterleaved;
+
+      h265_bitstream_parser_.ParseBitstream(encoded_image_);
+      encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    }
 
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
@@ -394,7 +407,7 @@ int32_t NvCodecH264EncoderImpl::Encode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-void NvCodecH264EncoderImpl::SetRates(
+void NvCodecVideoEncoderImpl::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& parameters) {
   if (!nv_encoder_) {
     RTC_LOG(LS_WARNING) << "SetRates() while uninitialized.";
@@ -419,25 +432,26 @@ void NvCodecH264EncoderImpl::SetRates(
   reconfigure_needed_ = true;
 }
 
-webrtc::VideoEncoder::EncoderInfo NvCodecH264EncoderImpl::GetEncoderInfo()
+webrtc::VideoEncoder::EncoderInfo NvCodecVideoEncoderImpl::GetEncoderInfo()
     const {
   webrtc::VideoEncoder::EncoderInfo info;
   info.supports_native_handle = true;
-  info.implementation_name = "NvCodec H264";
+  info.implementation_name = "NvCodec";
   info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
       kLowH264QpThreshold, kHighH264QpThreshold);
   return info;
 }
 
-int32_t NvCodecH264EncoderImpl::InitNvEnc() {
+int32_t NvCodecVideoEncoderImpl::InitNvEnc() {
 #ifdef _WIN32
-  nv_encoder_ = CreateEncoder(width_, height_, framerate_, target_bitrate_bps_,
-                              max_bitrate_bps_, id3d11_device_.Get(),
-                              id3d11_texture_.GetAddressOf());
+  nv_encoder_ = CreateEncoder(
+      codec_, width_, height_, framerate_, target_bitrate_bps_,
+      max_bitrate_bps_, id3d11_device_.Get(), id3d11_texture_.GetAddressOf());
 #endif
 #ifdef __linux__
-  nv_encoder_ = CreateEncoder(width_, height_, framerate_, target_bitrate_bps_,
-                              max_bitrate_bps_, cuda_.get(), is_nv12_);
+  nv_encoder_ =
+      CreateEncoder(codec_, width_, height_, framerate_, target_bitrate_bps_,
+                    max_bitrate_bps_, cuda_.get(), is_nv12_);
 #endif
 
   if (nv_encoder_ == nullptr) {
@@ -449,7 +463,7 @@ int32_t NvCodecH264EncoderImpl::InitNvEnc() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t NvCodecH264EncoderImpl::ReleaseNvEnc() {
+int32_t NvCodecVideoEncoderImpl::ReleaseNvEnc() {
   if (nv_encoder_) {
     try {
       nv_encoder_->EndEncode(v_packet_);
@@ -465,7 +479,8 @@ int32_t NvCodecH264EncoderImpl::ReleaseNvEnc() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-std::unique_ptr<NvEncoder> NvCodecH264EncoderImpl::CreateEncoder(
+std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
+    CudaVideoCodec codec,
     int width,
     int height,
     int framerate,
@@ -478,7 +493,7 @@ std::unique_ptr<NvEncoder> NvCodecH264EncoderImpl::CreateEncoder(
 #endif
 #ifdef __linux__
     ,
-    NvCodecH264EncoderCuda* cuda,
+    NvCodecVideoEncoderCuda* cuda,
     bool is_nv12
 #endif
 ) {
@@ -523,9 +538,15 @@ std::unique_ptr<NvEncoder> NvCodecH264EncoderImpl::CreateEncoder(
   NV_ENC_CONFIG encode_config = {NV_ENC_CONFIG_VER};
   initialize_params.encodeConfig = &encode_config;
   try {
-    encoder->CreateDefaultEncoderParams(
-        &initialize_params, NV_ENC_CODEC_H264_GUID, NV_ENC_PRESET_P3_GUID,
-        NV_ENC_TUNING_INFO_LOW_LATENCY);
+    if (codec == CudaVideoCodec::H264) {
+      encoder->CreateDefaultEncoderParams(
+          &initialize_params, NV_ENC_CODEC_H264_GUID, NV_ENC_PRESET_P3_GUID,
+          NV_ENC_TUNING_INFO_LOW_LATENCY);
+    } else if (codec == CudaVideoCodec::H265) {
+      encoder->CreateDefaultEncoderParams(
+          &initialize_params, NV_ENC_CODEC_HEVC_GUID, NV_ENC_PRESET_P2_GUID,
+          NV_ENC_TUNING_INFO_LOW_LATENCY);
+    }
 
     //initialize_params.enablePTD = 1;
     initialize_params.frameRateDen = 1;
@@ -548,14 +569,22 @@ std::unique_ptr<NvEncoder> NvCodecH264EncoderImpl::CreateEncoder(
     encode_config.frameIntervalP = 1;
     encode_config.rcParams.enableAQ = 1;
 
-    //encode_config.encodeCodecConfig.h264Config.outputAUD = 1;
-    //encode_config.encodeCodecConfig.h264Config.level = NV_ENC_LEVEL_H264_31;
-    //encode_config.encodeCodecConfig.h264Config.entropyCodingMode = NV_ENC_H264_ENTROPY_CODING_MODE_CAVLC;
-    encode_config.encodeCodecConfig.h264Config.idrPeriod =
-        NVENC_INFINITE_GOPLENGTH;
-    encode_config.encodeCodecConfig.h264Config.repeatSPSPPS = 1;
-    encode_config.encodeCodecConfig.h264Config.sliceMode = 0;
-    encode_config.encodeCodecConfig.h264Config.sliceModeData = 0;
+    if (codec == CudaVideoCodec::H264) {
+      //encode_config.encodeCodecConfig.h264Config.outputAUD = 1;
+      //encode_config.encodeCodecConfig.h264Config.level = NV_ENC_LEVEL_H264_31;
+      //encode_config.encodeCodecConfig.h264Config.entropyCodingMode = NV_ENC_H264_ENTROPY_CODING_MODE_CAVLC;
+      encode_config.encodeCodecConfig.h264Config.idrPeriod =
+          NVENC_INFINITE_GOPLENGTH;
+      encode_config.encodeCodecConfig.h264Config.repeatSPSPPS = 1;
+      encode_config.encodeCodecConfig.h264Config.sliceMode = 0;
+      encode_config.encodeCodecConfig.h264Config.sliceModeData = 0;
+    } else if (codec == CudaVideoCodec::H265) {
+      encode_config.encodeCodecConfig.hevcConfig.idrPeriod =
+          NVENC_INFINITE_GOPLENGTH;
+      encode_config.encodeCodecConfig.hevcConfig.repeatSPSPPS = 1;
+      encode_config.encodeCodecConfig.hevcConfig.sliceMode = 0;
+      encode_config.encodeCodecConfig.hevcConfig.sliceModeData = 0;
+    }
 
     encoder->CreateEncoder(&initialize_params);
 
@@ -570,8 +599,8 @@ std::unique_ptr<NvEncoder> NvCodecH264EncoderImpl::CreateEncoder(
   return encoder;
 }
 
-bool NvCodecH264Encoder::IsSupported(
-    std::shared_ptr<CudaContext> cuda_context) {
+bool NvCodecVideoEncoder::IsSupported(std::shared_ptr<CudaContext> cuda_context,
+                                      CudaVideoCodec codec) {
   try {
     NvEncoder::TryLoadNvEncApi();
 
@@ -614,15 +643,15 @@ bool NvCodecH264Encoder::IsSupported(
         D3D11_SDK_VERSION, id3d11_device.GetAddressOf(), NULL,
         id3d11_context.GetAddressOf())));
 
-    auto encoder = NvCodecH264EncoderImpl::CreateEncoder(
-        640, 480, 30, 100 * 1000, 500 * 1000, id3d11_device.Get(),
+    auto encoder = NvCodecVideoEncoderImpl::CreateEncoder(
+        codec, 640, 480, 30, 100 * 1000, 500 * 1000, id3d11_device.Get(),
         id3d11_texture.GetAddressOf());
 #endif
 #ifdef __linux__
-    auto cuda = std::unique_ptr<NvCodecH264EncoderCuda>(
-        new NvCodecH264EncoderCuda(cuda_context));
-    auto encoder = NvCodecH264EncoderImpl::CreateEncoder(
-        640, 480, 30, 100 * 1000, 500 * 1000, cuda.get(), true);
+    auto cuda = std::unique_ptr<NvCodecVideoEncoderCuda>(
+        new NvCodecVideoEncoderCuda(cuda_context));
+    auto encoder = NvCodecVideoEncoderImpl::CreateEncoder(
+        codec, 640, 480, 30, 100 * 1000, 500 * 1000, cuda.get(), true);
 #endif
     if (encoder == nullptr) {
       return false;
@@ -635,11 +664,11 @@ bool NvCodecH264Encoder::IsSupported(
   }
 }
 
-std::unique_ptr<NvCodecH264Encoder> NvCodecH264Encoder::Create(
-    const cricket::VideoCodec& codec,
-    std::shared_ptr<CudaContext> cuda_context) {
-  return std::unique_ptr<NvCodecH264Encoder>(
-      new NvCodecH264EncoderImpl(codec, cuda_context));
+std::unique_ptr<NvCodecVideoEncoder> NvCodecVideoEncoder::Create(
+    std::shared_ptr<CudaContext> cuda_context,
+    CudaVideoCodec codec) {
+  return std::unique_ptr<NvCodecVideoEncoder>(
+      new NvCodecVideoEncoderImpl(cuda_context, codec));
 }
 
 }  // namespace sora

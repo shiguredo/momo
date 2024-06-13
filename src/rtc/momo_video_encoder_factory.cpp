@@ -30,7 +30,7 @@
 #include "hwenc_jetson/jetson_video_encoder.h"
 #endif
 #if defined(USE_NVCODEC_ENCODER)
-#include "sora/hwenc_nvcodec/nvcodec_h264_encoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_video_encoder.h"
 #endif
 #if defined(USE_VPL_ENCODER)
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
@@ -114,7 +114,8 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   } else if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA) {
 #if defined(USE_NVCODEC_ENCODER)
     // NVIDIA の場合は対応してる場合のみ追加
-    if (sora::NvCodecH264Encoder::IsSupported(config_.cuda_context)) {
+    if (sora::NvCodecVideoEncoder::IsSupported(config_.cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       for (const webrtc::SdpVideoFormat& format : h264_codecs) {
         supported_codecs.push_back(format);
       }
@@ -146,6 +147,16 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
 
   if (config_.h265_encoder == VideoCodecInfo::Type::Intel) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
+  }
+  if (config_.h265_encoder == VideoCodecInfo::Type::NVIDIA) {
+#if defined(USE_NVCODEC_ENCODER)
+    // NVIDIA の場合は対応してる場合のみ追加
+    if (sora::NvCodecVideoEncoder::IsSupported(config_.cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      supported_codecs.push_back(
+          webrtc::SdpVideoFormat(cricket::kH265CodecName));
+    }
+#endif
   }
 
   return supported_codecs;
@@ -297,12 +308,13 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
 
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.h264_encoder == VideoCodecInfo::Type::NVIDIA &&
-        sora::NvCodecH264Encoder::IsSupported(config_.cuda_context)) {
+        sora::NvCodecVideoEncoder::IsSupported(config_.cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       return WithSimulcast(format, [cuda_context = config_.cuda_context](
                                        const webrtc::SdpVideoFormat& format) {
         return std::unique_ptr<webrtc::VideoEncoder>(
-            sora::NvCodecH264Encoder::Create(cricket::CreateVideoCodec(format),
-                                             cuda_context));
+            sora::NvCodecVideoEncoder::Create(cuda_context,
+                                              sora::CudaVideoCodec::H264));
       });
     }
 #endif
@@ -328,6 +340,18 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::Create(
   }
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kH265CodecName)) {
+#if defined(USE_NVCODEC_ENCODER)
+    if (config_.h265_encoder == VideoCodecInfo::Type::NVIDIA &&
+        sora::NvCodecVideoEncoder::IsSupported(config_.cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      return WithSimulcast(format, [cuda_context = config_.cuda_context](
+                                       const webrtc::SdpVideoFormat& format) {
+        return std::unique_ptr<webrtc::VideoEncoder>(
+            sora::NvCodecVideoEncoder::Create(cuda_context,
+                                              sora::CudaVideoCodec::H265));
+      });
+    }
+#endif
 #if defined(USE_VPL_ENCODER)
     if (config_.h265_encoder == VideoCodecInfo::Type::Intel) {
       return WithSimulcast(format,

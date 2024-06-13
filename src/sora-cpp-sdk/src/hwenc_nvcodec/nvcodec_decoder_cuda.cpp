@@ -8,10 +8,11 @@
 namespace sora {
 
 static cudaVideoCodec ToCudaVideoCodec(CudaVideoCodec codec) {
-  return codec == CudaVideoCodec::H264  ? cudaVideoCodec_H264
-         : codec == CudaVideoCodec::VP8 ? cudaVideoCodec_VP8
-         : codec == CudaVideoCodec::VP9 ? cudaVideoCodec_VP9
-                                        : cudaVideoCodec_JPEG;
+  return codec == CudaVideoCodec::H264   ? cudaVideoCodec_H264
+         : codec == CudaVideoCodec::H265 ? cudaVideoCodec_HEVC
+         : codec == CudaVideoCodec::VP8  ? cudaVideoCodec_VP8
+         : codec == CudaVideoCodec::VP9  ? cudaVideoCodec_VP9
+                                         : cudaVideoCodec_JPEG;
 }
 
 #define CUDA_DRVAPI_CALL(call)                                      \

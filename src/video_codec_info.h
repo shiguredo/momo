@@ -7,8 +7,8 @@
 #include <vector>
 
 #if defined(USE_NVCODEC_ENCODER)
-#include "sora/hwenc_nvcodec/nvcodec_h264_encoder.h"
 #include "sora/hwenc_nvcodec/nvcodec_video_decoder.h"
+#include "sora/hwenc_nvcodec/nvcodec_video_encoder.h"
 #endif
 
 #if defined(USE_VPL_ENCODER)
@@ -112,8 +112,13 @@ struct VideoCodecInfo {
 
 #if defined(USE_NVCODEC_ENCODER)
     auto cuda_context = sora::CudaContext::Create();
-    if (sora::NvCodecH264Encoder::IsSupported(cuda_context)) {
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_encoders.push_back(Type::NVIDIA);
     }
     if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::VP8)) {
@@ -203,8 +208,13 @@ struct VideoCodecInfo {
 
 #if defined(USE_NVCODEC_ENCODER)
     auto cuda_context = sora::CudaContext::Create();
-    if (sora::NvCodecH264Encoder::IsSupported(cuda_context)) {
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_encoders.push_back(Type::NVIDIA);
     }
     if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::VP8)) {

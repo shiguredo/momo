@@ -1,6 +1,6 @@
 #include "sora/fix_cuda_noinline_macro_error.h"
 
-#include "nvcodec_h264_encoder_cuda.h"
+#include "nvcodec_video_encoder_cuda.h"
 
 #include <iostream>
 
@@ -13,10 +13,10 @@
 
 namespace sora {
 
-class NvCodecH264EncoderCudaImpl {
+class NvCodecVideoEncoderCudaImpl {
  public:
-  NvCodecH264EncoderCudaImpl(std::shared_ptr<CudaContext> ctx);
-  ~NvCodecH264EncoderCudaImpl();
+  NvCodecVideoEncoderCudaImpl(std::shared_ptr<CudaContext> ctx);
+  ~NvCodecVideoEncoderCudaImpl();
 
   void Copy(NvEncoder* nv_encoder, const void* ptr, int width, int height);
   NvEncoder* CreateNvEncoder(int width, int height, bool is_nv12);
@@ -25,21 +25,22 @@ class NvCodecH264EncoderCudaImpl {
   std::shared_ptr<CudaContext> cuda_context_;
 };
 
-NvCodecH264EncoderCuda::NvCodecH264EncoderCuda(std::shared_ptr<CudaContext> ctx)
-    : impl_(new NvCodecH264EncoderCudaImpl(ctx)) {}
-NvCodecH264EncoderCuda::~NvCodecH264EncoderCuda() {
+NvCodecVideoEncoderCuda::NvCodecVideoEncoderCuda(
+    std::shared_ptr<CudaContext> ctx)
+    : impl_(new NvCodecVideoEncoderCudaImpl(ctx)) {}
+NvCodecVideoEncoderCuda::~NvCodecVideoEncoderCuda() {
   delete impl_;
 }
 
-void NvCodecH264EncoderCuda::Copy(NvEncoder* nv_encoder,
-                                  const void* ptr,
-                                  int width,
-                                  int height) {
+void NvCodecVideoEncoderCuda::Copy(NvEncoder* nv_encoder,
+                                   const void* ptr,
+                                   int width,
+                                   int height) {
   impl_->Copy(nv_encoder, ptr, width, height);
 }
-NvEncoder* NvCodecH264EncoderCuda::CreateNvEncoder(int width,
-                                                   int height,
-                                                   bool is_nv12) {
+NvEncoder* NvCodecVideoEncoderCuda::CreateNvEncoder(int width,
+                                                    int height,
+                                                    bool is_nv12) {
   return impl_->CreateNvEncoder(width, height, is_nv12);
 }
 
@@ -63,79 +64,68 @@ void ShowEncoderCapability() {
     std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl
               << std::endl;
     std::cout
-        << "\tH264:\t\t"
-        << "  "
+        << "\tH264:\t\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_444:\t"
-        << "  "
+        << "\tH264_444:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_ME:\t"
-        << "  "
+        << "\tH264_ME:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tH264_WxH:\t"
-        << "  "
+        << "\tH264_WxH:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_WIDTH_MAX))
         << "*"
         << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
                                    NV_ENC_CAPS_HEIGHT_MAX))
         << std::endl
-        << "\tHEVC:\t\t"
-        << "  "
+        << "\tHEVC:\t\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_Main10:\t"
-        << "  "
+        << "\tHEVC_Main10:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_10BIT_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_Lossless:\t"
-        << "  "
+        << "\tHEVC_Lossless:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_SAO:\t"
-        << "  "
+        << "\tHEVC_SAO:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_SAO)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_444:\t"
-        << "  "
+        << "\tHEVC_444:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_ME:\t"
-        << "  "
+        << "\tHEVC_ME:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
                 ? "yes"
                 : "no")
         << std::endl
-        << "\tHEVC_WxH:\t"
-        << "  "
+        << "\tHEVC_WxH:\t" << "  "
         << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
                                    NV_ENC_CAPS_WIDTH_MAX))
         << "*"
@@ -150,16 +140,16 @@ void ShowEncoderCapability() {
   }
 }
 
-NvCodecH264EncoderCudaImpl::NvCodecH264EncoderCudaImpl(
+NvCodecVideoEncoderCudaImpl::NvCodecVideoEncoderCudaImpl(
     std::shared_ptr<CudaContext> ctx) {
   ShowEncoderCapability();
   cuda_context_ = ctx;
 }
-NvCodecH264EncoderCudaImpl::~NvCodecH264EncoderCudaImpl() {}
-void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
-                                      const void* ptr,
-                                      int width,
-                                      int height) {
+NvCodecVideoEncoderCudaImpl::~NvCodecVideoEncoderCudaImpl() {}
+void NvCodecVideoEncoderCudaImpl::Copy(NvEncoder* nv_encoder,
+                                       const void* ptr,
+                                       int width,
+                                       int height) {
   const NvEncInputFrame* input_frame = nv_encoder->GetNextInputFrame();
   CUcontext context = GetCudaContext(cuda_context_);
   NvEncoderCuda::CopyToDeviceFrame(
@@ -168,9 +158,9 @@ void NvCodecH264EncoderCudaImpl::Copy(NvEncoder* nv_encoder,
       input_frame->bufferFormat, input_frame->chromaOffsets,
       input_frame->numChromaPlanes);
 }
-NvEncoder* NvCodecH264EncoderCudaImpl::CreateNvEncoder(int width,
-                                                       int height,
-                                                       bool is_nv12) {
+NvEncoder* NvCodecVideoEncoderCudaImpl::CreateNvEncoder(int width,
+                                                        int height,
+                                                        bool is_nv12) {
   NV_ENC_BUFFER_FORMAT nvenc_format =
       is_nv12 ? NV_ENC_BUFFER_FORMAT_NV12 : NV_ENC_BUFFER_FORMAT_IYUV;
   CUcontext context = GetCudaContext(cuda_context_);
