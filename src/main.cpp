@@ -20,7 +20,7 @@
 #if defined(USE_JETSON_ENCODER)
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif defined(USE_NVCODEC_ENCODER)
-#include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
+#include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
