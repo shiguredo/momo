@@ -12,8 +12,8 @@
 #endif
 
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_video_decoder.h"
-#include "hwenc_vpl/vpl_video_encoder.h"
+#include "sora/hwenc_vpl/vpl_video_decoder.h"
+#include "sora/hwenc_vpl/vpl_video_encoder.h"
 #endif
 
 #if defined(USE_JETSON_ENCODER)
@@ -44,6 +44,9 @@ struct VideoCodecInfo {
 
   std::vector<Type> h264_encoders;
   std::vector<Type> h264_decoders;
+
+  std::vector<Type> h265_encoders;
+  std::vector<Type> h265_decoders;
 
   // Default を解決して、ちゃんとしたエンコーダ名か NotSupported になるようにする
   static Type Resolve(Type specified, const std::vector<Type>& codecs) {
@@ -123,30 +126,40 @@ struct VideoCodecInfo {
 #endif
 
 #if defined(USE_VPL_ENCODER)
-    auto session = VplSession::Create();
+    auto session = sora::VplSession::Create();
     if (session != nullptr) {
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP8)) {
         info.vp8_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecVP8)) {
         info.vp8_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::Intel);
       }
     }
@@ -200,30 +213,40 @@ struct VideoCodecInfo {
 #endif
 
 #if defined(USE_VPL_ENCODER)
-    auto session = VplSession::Create();
+    auto session = sora::VplSession::Create();
     if (session != nullptr) {
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP8)) {
         info.vp8_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::Intel);
       }
-      if (VplVideoEncoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (sora::VplVideoEncoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP8)) {
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecVP8)) {
         info.vp8_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_VP9)) {
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AVC)) {
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::Intel);
       }
-      if (VplVideoDecoder::IsSupported(session, MFX_CODEC_AV1)) {
+      if (sora::VplVideoDecoder::IsSupported(session,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::Intel);
       }
     }

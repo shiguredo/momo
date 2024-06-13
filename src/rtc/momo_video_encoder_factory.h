@@ -17,7 +17,7 @@
 #endif
 
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_session.h"
+#include "sora/hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoEncoderFactoryConfig {
@@ -25,6 +25,7 @@ struct MomoVideoEncoderFactoryConfig {
   VideoCodecInfo::Type vp9_encoder;
   VideoCodecInfo::Type av1_encoder;
   VideoCodecInfo::Type h264_encoder;
+  VideoCodecInfo::Type h265_encoder;
   bool simulcast;
   bool hardware_encoder_only;
 #if defined(__linux__) && defined(USE_NVCODEC_ENCODER)

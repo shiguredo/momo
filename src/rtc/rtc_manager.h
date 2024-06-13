@@ -71,6 +71,8 @@ struct RTCManagerConfig {
   VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_decoder = VideoCodecInfo::Type::Default;
 
   std::string priority = "FRAMERATE";
 

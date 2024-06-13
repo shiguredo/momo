@@ -14,7 +14,7 @@
 #include "cuda/cuda_context.h"
 #endif
 #if defined(USE_VPL_ENCODER)
-#include "hwenc_vpl/vpl_session.h"
+#include "sora/hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoDecoderFactoryConfig {
@@ -22,6 +22,7 @@ struct MomoVideoDecoderFactoryConfig {
   VideoCodecInfo::Type vp9_decoder;
   VideoCodecInfo::Type av1_decoder;
   VideoCodecInfo::Type h264_decoder;
+  VideoCodecInfo::Type h265_decoder;
 #if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<CudaContext> cuda_context;
 #endif

@@ -21,7 +21,7 @@
 #include "hwenc_jetson/jetson_v4l2_capturer.h"
 #elif defined(USE_NVCODEC_ENCODER)
 #include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
-#elif define(USE_V4L2_ENCODER)
+#elif defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
@@ -32,9 +32,7 @@
 
 #include "serial_data_channel/serial_data_manager.h"
 
-#if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"
-#endif
 
 #include "ayame/ayame_client.h"
 #include "metrics/metrics_server.h"
@@ -151,7 +149,7 @@ int main(int argc, char* argv[]) {
     } else {
       return V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif define(USE_V4L2_ENCODER)
+#elif defined(USE_V4L2_ENCODER)
     if (args.use_libcamera) {
       LibcameraCapturerConfig libcamera_config = v4l2_config;
       // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
@@ -200,6 +198,8 @@ int main(int argc, char* argv[]) {
   rtcm_config.av1_decoder = args.av1_decoder;
   rtcm_config.h264_encoder = args.h264_encoder;
   rtcm_config.h264_decoder = args.h264_decoder;
+  rtcm_config.h265_encoder = args.h265_encoder;
+  rtcm_config.h265_decoder = args.h265_decoder;
 
   rtcm_config.priority = args.priority;
 
@@ -211,7 +211,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
 
-#if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {
     sdl_renderer.reset(new SDLRenderer(args.window_width, args.window_height,
@@ -220,10 +219,6 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
       std::move(rtcm_config), std::move(capturer), sdl_renderer.get()));
-#else
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(std::move(rtcm_config), std::move(capturer), nullptr));
-#endif
 
   {
     boost::asio::io_context ioc{1};
@@ -346,7 +341,6 @@ int main(int argc, char* argv[]) {
           ->Run();
     }
 
-#if USE_SDL2
     if (sdl_renderer) {
       sdl_renderer->SetDispatchFunction([&ioc](std::function<void()> f) {
         if (ioc.stopped())
@@ -360,16 +354,10 @@ int main(int argc, char* argv[]) {
     } else {
       ioc.run();
     }
-#else
-    ioc.run();
-#endif
   }
 
   //この順番は綺麗に落ちるけど、あまり安全ではない
-#if USE_SDL2
   sdl_renderer = nullptr;
-#endif
-  rtc_manager = nullptr;
 
   return 0;
 }
