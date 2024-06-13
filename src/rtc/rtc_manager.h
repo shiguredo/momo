@@ -13,8 +13,8 @@
 #include "rtc_connection.h"
 #include "rtc_data_manager_dispatcher.h"
 #include "rtc_message_sender.h"
-#include "scalable_track_source.h"
 #include "sora/cuda_context.h"
+#include "sora/scalable_track_source.h"
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
 
@@ -96,9 +96,10 @@ struct RTCManagerConfig {
 
 class RTCManager {
  public:
-  RTCManager(RTCManagerConfig config,
-             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-             VideoTrackReceiver* receiver);
+  RTCManager(
+      RTCManagerConfig config,
+      rtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
+      VideoTrackReceiver* receiver);
   ~RTCManager();
   void AddDataManager(std::shared_ptr<RTCDataManager> data_manager);
   std::shared_ptr<RTCConnection> CreateConnection(

@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef SCALABLE_VIDEO_TRACK_SOURCE_H_
-#define SCALABLE_VIDEO_TRACK_SOURCE_H_
+#ifndef SORA_SCALABLE_VIDEO_TRACK_SOURCE_H_
+#define SORA_SCALABLE_VIDEO_TRACK_SOURCE_H_
 
 #include <stddef.h>
 
@@ -18,6 +18,8 @@
 #include <media/base/adapted_video_track_source.h>
 #include <media/base/video_adapter.h>
 #include <rtc_base/timestamp_aligner.h>
+
+namespace sora {
 
 struct ScalableVideoTrackSourceConfig {
   std::function<void(const webrtc::VideoFrame&)> on_frame;
@@ -38,5 +40,7 @@ class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
   ScalableVideoTrackSourceConfig config_;
   rtc::TimestampAligner timestamp_aligner_;
 };
+
+}  // namespace sora
 
 #endif

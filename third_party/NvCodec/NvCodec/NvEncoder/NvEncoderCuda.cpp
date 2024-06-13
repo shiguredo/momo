@@ -11,7 +11,7 @@
 #include "fix_cuda_noinline_macro_error.h"
 
 #include "NvEncoder/NvEncoderCuda.h"
-#include "dyn/cuda.h"
+#include "sora/dyn/cuda.h"
 
 NvEncoderCuda::NvEncoderCuda(CUcontext cuContext,
                              uint32_t nWidth,
