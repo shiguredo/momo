@@ -1,4 +1,4 @@
-#include "jetson_buffer.h"
+#include "sora/hwenc_jetson/jetson_buffer.h"
 
 // Linux
 #include <sys/ioctl.h>
@@ -7,6 +7,12 @@
 #include <api/video/i420_buffer.h>
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
+
+// Jetson Linux Multimedia API
+#include <nvbufsurface.h>
+#include <nvbufsurftransform.h>
+
+namespace sora {
 
 static const int kBufferAlignment = 64;
 
@@ -67,12 +73,13 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
 
     NvBufSurface* dst_surf = 0;
 
-    if (NvBufSurfaceAllocate(&dst_surf, 1, &input_params) == -1) {
+    if (NvBufSurfaceAllocate(
+            &dst_surf,
+            1, /* NvUtils では複数のバッファーを同時に初期化できるため、バッファーの数を指定する */
+            &input_params) == -1) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufSurfaceAllocate";
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to NvBufferCreateEx";
       return scaled_buffer;
     }
-
     NvBufSurfaceParams params = dst_surf->surfaceList[0];
 
     NvBufSurfTransformRect src_rect, dest_rect;
@@ -86,6 +93,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
     dest_rect.height = buffer_height;
 
     NvBufSurfTransformParams trans_params;
+    memset(&trans_params, 0, sizeof(trans_params));
     trans_params.transform_flag = NVBUFSURF_TRANSFORM_FILTER;
     trans_params.transform_flip = NvBufSurfTransform_None;
     trans_params.transform_filter = NvBufSurfTransformInter_Algo3;
@@ -130,9 +138,9 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
         }
         for (int i = 0; i < height; i++) {
           memcpy(dest_addr + width * i,
-                  (uint8_t*)data_addr +
-                  dst_surf->surfaceList->planeParams.pitch[plane] * i,
-                  width);
+                 (uint8_t*)data_addr +
+                     dst_surf->surfaceList->planeParams.pitch[plane] * i,
+                 width);
         }
       }
       NvBufSurfaceUnMap(dst_surf, index, plane);
@@ -231,3 +239,5 @@ JetsonBuffer::JetsonBuffer(webrtc::VideoType video_type,
       data_(static_cast<uint8_t*>(webrtc::AlignedMalloc(
           webrtc::CalcBufferSize(video_type, raw_width, raw_height),
           kBufferAlignment))) {}
+
+}  // namespace sora

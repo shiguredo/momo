@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
-#define HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
+#ifndef SORA_HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
+#define SORA_HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
 #include <memory>
@@ -37,14 +37,14 @@ class NvV4l2Element;
 class NvVideoEncoder;
 struct v4l2_ctrl_videoenc_outputbuf_metadata_;
 
+namespace sora {
+
 class JetsonVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit JetsonVideoEncoder(const cricket::VideoCodec& codec);
+  explicit JetsonVideoEncoder(const cricket::Codec& codec);
   ~JetsonVideoEncoder() override;
 
-  static bool IsSupportedVP8();
-  static bool IsSupportedVP9();
-  static bool IsSupportedAV1();
+  static bool IsSupported(webrtc::VideoCodecType codec);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores,
@@ -123,6 +123,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t height_;
   bool use_native_;
   bool use_dmabuff_;
+  int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
@@ -131,8 +132,15 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
 
   webrtc::Mutex frame_params_lock_;
   std::queue<std::unique_ptr<FrameParams>> frame_params_;
+  std::mutex enc0_buffer_mtx_;
+  std::condition_variable enc0_buffer_cond_;
+  std::queue<NvBuffer*>* enc0_buffer_queue_;
   int output_plane_fd_[32];
   webrtc::EncodedImage encoded_image_;
+  webrtc::ScalabilityMode scalability_mode_;
+  std::vector<uint8_t> obu_seq_header_;
 };
+
+}  // namespace sora
 
 #endif

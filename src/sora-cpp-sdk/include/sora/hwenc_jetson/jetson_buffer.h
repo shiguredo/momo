@@ -1,5 +1,5 @@
-#ifndef JETSON_BUFFER_H_
-#define JETSON_BUFFER_H_
+#ifndef SORA_HWENC_JETSON_JETSON_BUFFER_H_
+#define SORA_HWENC_JETSON_JETSON_BUFFER_H_
 
 #include <linux/videodev2.h>
 #include <memory>
@@ -10,11 +10,9 @@
 #include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <rtc_base/memory/aligned_malloc.h>
 
-// Jetson Linux Multimedia API
-#include <nvbufsurface.h>
-#include <nvbufsurftransform.h>
-
 #include "jetson_jpeg_decoder.h"
+
+namespace sora {
 
 class JetsonBuffer : public webrtc::VideoFrameBuffer {
  public:
@@ -77,4 +75,7 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
   const std::unique_ptr<uint8_t, webrtc::AlignedFreeDeleter> data_;
   size_t length_;
 };
-#endif  // JETSON_BUFFER_H_
+
+}  // namespace sora
+
+#endif

@@ -52,6 +52,8 @@
   - @melpon
 - [ADD] videoToolbox の H.265 ハードウェアエンコーダ/デコーダに対応する
   - @melpon
+- [ADD] Jetson の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
 
 ## 2023.1.0
 

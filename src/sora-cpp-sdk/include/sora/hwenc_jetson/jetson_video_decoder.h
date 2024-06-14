@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef HWENC_JETSON_JETSON_VIDEO_DECODER_H_
-#define HWENC_JETSON_JETSON_VIDEO_DECODER_H_
+#ifndef SORA_HWENC_JETSON_JETSON_VIDEO_DECODER_H_
+#define SORA_HWENC_JETSON_JETSON_VIDEO_DECODER_H_
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
@@ -21,13 +21,14 @@ struct v4l2_crop;
 class NvV4l2Element;
 class NvVideoDecoder;
 
+namespace sora {
+
 class JetsonVideoDecoder : public webrtc::VideoDecoder {
  public:
   JetsonVideoDecoder(webrtc::VideoCodecType codec);
   ~JetsonVideoDecoder() override;
 
-  static bool IsSupportedVP8();
-  static bool IsSupportedAV1();
+  static bool IsSupported(webrtc::VideoCodecType codec);
 
   bool Configure(const Settings& settings) override;
 
@@ -60,5 +61,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   int dst_dma_fd_;
   std::shared_ptr<v4l2_crop> capture_crop_;
 };
+
+}  // namespace sora
 
 #endif

@@ -71,6 +71,45 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "Jetson",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/sora-cpp-sdk/include",
+                "${workspaceFolder}/third_party/NvCodec/include",
+                "${workspaceFolder}/third_party/NvCodec/NvCodec",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/webrtc/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/boost/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/cli11/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/sdl2/include/SDL2",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/llvm/libcxx/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/rootfs/usr/src/jetson_multimedia_api/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_armv8_jetson/release/rootfs/usr/src/jetson_multimedia_api/include/libjpeg-8b",
+                "${workspaceFolder}/_build/ubuntu-22.04_armv8_jetson/release/momo"
+            ],
+            "defines": [
+                "WEBRTC_POSIX",
+                "WEBRTC_LINUX",
+                "USE_JETSON_ENCODER",
+                "USE_SCREEN_CAPTURER",
+                "_LIBCPP_ABI_NAMESPACE=Cr",
+                "_LIBCPP_ABI_VERSION=2",
+                "_LIBCPP_DISABLE_AVAILABILITY",
+                "_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
+                "BOOST_NO_CXX98_FUNCTION_BASE",
+                "RTC_ENABLE_H265"
+            ],
+            // "compilerPath": "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/llvm/clang/bin/clang++",
+            "compilerPath": "/usr/bin/clang++-18",
+            "compilerArgs": ["-nostdinc++"],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64"
         }
     ],
     "version": 4

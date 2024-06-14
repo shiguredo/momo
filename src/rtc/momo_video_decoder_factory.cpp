@@ -21,7 +21,7 @@
 #endif
 
 #if defined(USE_JETSON_ENCODER)
-#include "hwenc_jetson/jetson_video_decoder.h"
+#include "sora/hwenc_jetson/jetson_video_decoder.h"
 #endif
 
 #if defined(USE_NVCODEC_ENCODER)
@@ -119,7 +119,8 @@ MomoVideoDecoderFactory::GetSupportedFormats() const {
   }
 
   if (config_.h265_decoder == VideoCodecInfo::Type::Intel ||
-      config_.h265_decoder == VideoCodecInfo::Type::NVIDIA) {
+      config_.h265_decoder == VideoCodecInfo::Type::NVIDIA ||
+      config_.h265_decoder == VideoCodecInfo::Type::Jetson) {
     supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kH265CodecName));
   }
 
@@ -163,9 +164,9 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #endif
 #if defined(USE_JETSON_ENCODER)
     if (config_.vp8_decoder == VideoCodecInfo::Type::Jetson &&
-        JetsonVideoDecoder::IsSupportedVP8()) {
+        sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP8)) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecVP8));
+          absl::make_unique<sora::JetsonVideoDecoder>(webrtc::kVideoCodecVP8));
     }
 #endif
 
@@ -189,9 +190,10 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
     }
 #endif
 #if defined(USE_JETSON_ENCODER)
-    if (config_.vp9_decoder == VideoCodecInfo::Type::Jetson) {
+    if (config_.vp9_decoder == VideoCodecInfo::Type::Jetson &&
+        sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP9)) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecVP9));
+          absl::make_unique<sora::JetsonVideoDecoder>(webrtc::kVideoCodecVP9));
     }
 #endif
 
@@ -209,9 +211,9 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #endif
 #if defined(USE_JETSON_ENCODER)
     if (config_.av1_decoder == VideoCodecInfo::Type::Jetson &&
-        JetsonVideoDecoder::IsSupportedAV1()) {
+        sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecAV1)) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecAV1));
+          absl::make_unique<sora::JetsonVideoDecoder>(webrtc::kVideoCodecAV1));
     }
 #endif
 #if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
@@ -242,9 +244,10 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
     }
 #endif
 #if defined(USE_JETSON_ENCODER)
-    if (config_.h264_decoder == VideoCodecInfo::Type::Jetson) {
+    if (config_.h264_decoder == VideoCodecInfo::Type::Jetson &&
+        sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH264)) {
       return std::unique_ptr<webrtc::VideoDecoder>(
-          absl::make_unique<JetsonVideoDecoder>(webrtc::kVideoCodecH264));
+          absl::make_unique<sora::JetsonVideoDecoder>(webrtc::kVideoCodecH264));
     }
 #endif
 
@@ -262,6 +265,15 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
       return video_decoder_factory_->Create(env, format);
     }
 #endif
+
+#if defined(USE_JETSON_ENCODER)
+    if (config_.h265_decoder == VideoCodecInfo::Type::Jetson &&
+        sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH265)) {
+      return std::unique_ptr<webrtc::VideoDecoder>(
+          absl::make_unique<sora::JetsonVideoDecoder>(webrtc::kVideoCodecH265));
+    }
+#endif
+
 #if defined(USE_NVCODEC_ENCODER)
     if (config_.h265_decoder == VideoCodecInfo::Type::NVIDIA) {
       return std::unique_ptr<webrtc::VideoDecoder>(

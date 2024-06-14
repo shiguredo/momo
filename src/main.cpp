@@ -18,7 +18,7 @@
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
 #if defined(USE_JETSON_ENCODER)
-#include "hwenc_jetson/jetson_v4l2_capturer.h"
+#include "sora/hwenc_jetson/jetson_v4l2_capturer.h"
 #elif defined(USE_NVCODEC_ENCODER)
 #include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif defined(USE_V4L2_ENCODER)
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 
 #if defined(USE_JETSON_ENCODER)
     if (v4l2_config.use_native) {
-      return JetsonV4L2Capturer::Create(std::move(v4l2_config));
+      return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {
       return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
