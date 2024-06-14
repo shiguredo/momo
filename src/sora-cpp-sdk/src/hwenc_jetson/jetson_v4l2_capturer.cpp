@@ -1,4 +1,4 @@
-#include "jetson_v4l2_capturer.h"
+#include "sora/hwenc_jetson/jetson_v4l2_capturer.h"
 
 // C
 #include <stdio.h>
@@ -31,12 +31,14 @@
 // L4T Multimedia API
 #include <NvBufSurface.h>
 
-#include "jetson_buffer.h"
+#include "sora/hwenc_jetson/jetson_buffer.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
+namespace sora {
+
 rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
-    const sora::V4L2VideoCapturerConfig& config) {
+    const V4L2VideoCapturerConfig& config) {
   rtc::scoped_refptr<JetsonV4L2Capturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -77,7 +79,7 @@ void JetsonV4L2Capturer::LogDeviceList(
 
 rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    const sora::V4L2VideoCapturerConfig& config,
+    const V4L2VideoCapturerConfig& config,
     size_t capture_device_index) {
   char device_name[256];
   char unique_name[256];
@@ -103,7 +105,7 @@ rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
   return v4l2_capturer;
 }
 
-JetsonV4L2Capturer::JetsonV4L2Capturer(const sora::V4L2VideoCapturerConfig& config)
+JetsonV4L2Capturer::JetsonV4L2Capturer(const V4L2VideoCapturerConfig& config)
     : ScalableVideoTrackSource(config),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
@@ -176,7 +178,7 @@ JetsonV4L2Capturer::~JetsonV4L2Capturer() {
 }
 
 int32_t JetsonV4L2Capturer::StartCapture(
-    const sora::V4L2VideoCapturerConfig& config) {
+    const V4L2VideoCapturerConfig& config) {
   if (_captureStarted) {
     if (config.width == _currentWidth && config.height == _currentHeight) {
       return 0;
@@ -570,26 +572,17 @@ void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
               Search for EOF to get exact size */
     if (eosSearchSize > bytesused)
       eosSearchSize = bytesused;
-    bool found = false;
     for (unsigned int i = 0; i < eosSearchSize; i++) {
       p = data + bytesused;
       if ((*(p - 2) == 0xff) && (*(p - 1) == 0xd9)) {
-        found = true;
         break;
       }
       bytesused--;
-    }
-    if (!found) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
-                          << " Invalid JPEG buffer frame skipped";
-      return;
     }
 
     std::shared_ptr<JetsonJpegDecoder> decoder = jpeg_decoder_pool_->Pop();
     int fd = 0;
     uint32_t width, height, pixfmt;
-    RTC_LOG(LS_INFO) << "data: " << (void*)data << " (" << (int)data[0] << ","
-                     << (int)data[1] << ") bytesused: " << bytesused;
     if (decoder->DecodeToFd(fd, data, bytesused, pixfmt, width, height) < 0) {
       RTC_LOG(LS_ERROR) << "decodeToFd Failed";
       return;
@@ -617,3 +610,5 @@ void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
                 .build());
   }
 }
+
+}  // namespace sora

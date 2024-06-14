@@ -509,12 +509,12 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
-            src/hwenc_jetson/jetson_buffer.cpp
-            src/hwenc_jetson/jetson_jpeg_decoder.cpp
-            src/hwenc_jetson/jetson_jpeg_decoder_pool.cpp
-            src/hwenc_jetson/jetson_v4l2_capturer.cpp
-            src/hwenc_jetson/jetson_video_encoder.cpp
-            src/hwenc_jetson/jetson_video_decoder.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_buffer.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_jpeg_decoder.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_jpeg_decoder_pool.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_v4l2_capturer.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_video_encoder.cpp
+            src/sora-cpp-sdk/src/hwenc_jetson/jetson_video_decoder.cpp
             ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBufSurface.cpp
             ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvBuffer.cpp
             ${CMAKE_SYSROOT}/usr/src/jetson_multimedia_api/samples/common/classes/NvElement.cpp

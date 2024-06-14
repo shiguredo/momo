@@ -9,13 +9,15 @@
  *
  */
 
-#include "jetson_video_encoder.h"
+#include "sora/hwenc_jetson/jetson_video_encoder.h"
 
 #include <limits>
 #include <string>
 
 // WebRTC
 #include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h265/include/h265_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
 #include <modules/video_coding/svc/create_scalability_structure.h>
@@ -23,16 +25,19 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/time_utils.h>
 #include <system_wrappers/include/metrics.h>
-#include <third_party/libyuv/include/libyuv/convert.h>
-#include <third_party/libyuv/include/libyuv/convert_from.h>
-#include <third_party/libyuv/include/libyuv/video_common.h>
+
+// libyuv
+#include <libyuv/convert.h>
+#include <libyuv/convert_from.h>
+#include <libyuv/video_common.h>
 
 // L4T Multimedia API
 #include <NvBufSurface.h>
 #include <NvVideoEncoder.h>
 #include <nvbufsurface.h>
 
-#include "jetson_buffer.h"
+#include "jetson_util.h"
+#include "sora/hwenc_jetson/jetson_buffer.h"
 
 #define H264HWENC_HEADER_DEBUG 0
 #define INIT_ERROR(cond, desc)                 \
@@ -41,6 +46,36 @@
     Release();                                 \
     return WEBRTC_VIDEO_CODEC_ERROR;           \
   }
+
+static std::string hex_dump(const uint8_t* buf, size_t len) {
+  std::stringstream ss;
+
+  for (size_t i = 0; i < len; ++i) {
+    // 行の先頭にオフセットを表示
+    if (i % 16 == 0) {
+      ss << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
+    }
+
+    // 値を16進数で表示
+    ss << std::setw(2) << std::setfill('0') << std::hex << (int)buf[i] << " ";
+
+    // 16バイトごとに改行
+    if ((i + 1) % 16 == 0 || i == len - 1) {
+      ss << "\n";
+    }
+  }
+
+  return ss.str();
+}
+
+static void save_to_file(const std::string& filename,
+                         const uint8_t* buf,
+                         size_t size) {
+  std::ofstream file(filename, std::ios::binary);
+  file.write((const char*)buf, size);
+}
+
+namespace sora {
 
 JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
     : callback_(nullptr),
@@ -75,34 +110,12 @@ JetsonVideoEncoder::~JetsonVideoEncoder() {
 //  int old_log_level;
 //};
 
-bool JetsonVideoEncoder::IsSupportedVP8() {
+bool JetsonVideoEncoder::IsSupported(webrtc::VideoCodecType codec) {
   //SuppressErrors sup;
 
   auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
-  auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_VP8, 1024, 768,
-                                            2 * 1024 * 1024);
-  delete encoder;
-
-  return ret >= 0;
-}
-
-bool JetsonVideoEncoder::IsSupportedVP9() {
-  //SuppressErrors sup;
-
-  auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
-  auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_VP9, 1024, 768,
-                                            2 * 1024 * 1024);
-  delete encoder;
-
-  return ret >= 0;
-}
-
-bool JetsonVideoEncoder::IsSupportedAV1() {
-  //SuppressErrors sup;
-
-  auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
-  auto ret = encoder->setCapturePlaneFormat(V4L2_PIX_FMT_AV1, 1024, 768,
-                                            2 * 1024 * 1024);
+  auto ret = encoder->setCapturePlaneFormat(VideoCodecToV4L2Format(codec), 1024,
+                                            768, 2 * 1024 * 1024);
   delete encoder;
 
   return ret >= 0;
@@ -126,6 +139,9 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
   if (codec_settings->codecType == webrtc::kVideoCodecH264) {
     key_frame_interval_ = codec_settings->H264().keyFrameInterval;
+  } else if (codec_settings->codecType == webrtc::kVideoCodecH265) {
+    // key_frame_interval_ = codec_settings->H265().keyFrameInterval;
+    key_frame_interval_ = 3000;
   } else if (codec_settings->codecType == webrtc::kVideoCodecVP8) {
     key_frame_interval_ = codec_settings->VP8().keyFrameInterval;
   } else if (codec_settings->codecType == webrtc::kVideoCodecVP9) {
@@ -152,6 +168,12 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
     RTC_LOG(LS_INFO) << "InitEncode scalability_mode:"
                      << (int)*scalability_mode;
     svc_controller_ = webrtc::CreateScalabilityStructure(*scalability_mode);
+    scalability_mode_ = *scalability_mode;
+
+    // codec_settings->AV1() にはキーフレームの設定が無いけれども、
+    // key_frame_interval_ 自体は何らかの値で初期化しておかないと
+    // 不定値になってしまうので、適当な値を入れておく
+    key_frame_interval_ = 3000;
   }
   framerate_ = codec_settings->maxFramerate;
 
@@ -187,19 +209,9 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
   encoder_ = NvVideoEncoder::createVideoEncoder("enc0");
   INIT_ERROR(!encoder_, "Failed to createVideoEncoder");
 
-  if (codec_.codecType == webrtc::kVideoCodecH264) {
-    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_H264, width_, height_,
-                                          2 * 1024 * 1024);
-  } else if (codec_.codecType == webrtc::kVideoCodecVP8) {
-    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_VP8, width_, height_,
-                                          2 * 1024 * 1024);
-  } else if (codec_.codecType == webrtc::kVideoCodecVP9) {
-    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_VP9, width_, height_,
-                                          2 * 1024 * 1024);
-  } else if (codec_.codecType == webrtc::kVideoCodecAV1) {
-    ret = encoder_->setCapturePlaneFormat(V4L2_PIX_FMT_AV1, width_, height_,
-                                          2 * 1024 * 1024);
-  }
+  ret =
+      encoder_->setCapturePlaneFormat(VideoCodecToV4L2Format(codec_.codecType),
+                                      width_, height_, 2 * 1024 * 1024);
   INIT_ERROR(ret < 0, "Failed to encoder setCapturePlaneFormat");
 
   ret = encoder_->setOutputPlaneFormat(V4L2_PIX_FMT_YUV420M, width_, height_);
@@ -224,6 +236,25 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
 
     // V4L2_ENC_HW_PRESET_ULTRAFAST が推奨値だけど MEDIUM でも Nano, AGX では OK
     // NX は V4L2_ENC_HW_PRESET_FAST でないとフレームレートがでない
+    ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_FAST);
+    INIT_ERROR(ret < 0, "Failed to setHWPresetType");
+  } else if (codec_.codecType == webrtc::kVideoCodecH265) {
+    // H264 の設定を真似する
+    ret = encoder_->setProfile(V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN);
+    INIT_ERROR(ret < 0, "Failed to setProfile");
+
+    ret = encoder_->setLevel(V4L2_MPEG_VIDEO_HEVC_LEVEL_5_1);
+    INIT_ERROR(ret < 0, "Failed to setLevel");
+
+    ret = encoder_->setNumBFrames(0);
+    INIT_ERROR(ret < 0, "Failed to setNumBFrames");
+
+    ret = encoder_->setInsertSpsPpsAtIdrEnabled(true);
+    INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
+
+    ret = encoder_->setInsertVuiEnabled(true);
+    INIT_ERROR(ret < 0, "Failed to setInsertSpsPpsAtIdrEnabled");
+
     ret = encoder_->setHWPresetType(V4L2_ENC_HW_PRESET_FAST);
     INIT_ERROR(ret < 0, "Failed to setHWPresetType");
   } else if (codec_.codecType == webrtc::kVideoCodecVP8) {
@@ -515,6 +546,11 @@ webrtc::VideoEncoder::EncoderInfo JetsonVideoEncoder::GetEncoderInfo() const {
     static const int kHighH264QpThreshold = 40;
     info.scaling_settings = VideoEncoder::ScalingSettings(kLowH264QpThreshold,
                                                           kHighH264QpThreshold);
+  } else if (codec_.codecType == webrtc::kVideoCodecH265) {
+    static const int kLowH265QpThreshold = 34;
+    static const int kHighH265QpThreshold = 40;
+    info.scaling_settings = VideoEncoder::ScalingSettings(kLowH265QpThreshold,
+                                                          kHighH265QpThreshold);
   } else if (codec_.codecType == webrtc::kVideoCodecVP8) {
     static const int kLowVp8QpThreshold = 29;
     static const int kHighVp8QpThreshold = 95;
@@ -758,6 +794,10 @@ int32_t JetsonVideoEncoder::Encode(
         RTC_LOG(LS_ERROR) << "Failed to NvBufSurfaceSyncForDevice";
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
+
+      // ここで NvBufSurfaceDestroy が必要かなと思ったが、以下のサンプル・コードを確認したところ不要そうだった
+      // 参照: jetson_multimedia_api/samples/01_video_encode/video_encode_main.cpp
+      // NvBufSurfaceDestroy(surf);
     }
 
     if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
@@ -790,9 +830,9 @@ int32_t JetsonVideoEncoder::SendFrame(
   encoded_image_.rotation_ = params->rotation;
   encoded_image_.qp_ = enc_metadata->AvgQP;
   if (enc_metadata->KeyFrame) {
-    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+    encoded_image_.SetFrameType(webrtc::VideoFrameType::kVideoFrameKey);
   } else {
-    encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
+    encoded_image_.SetFrameType(webrtc::VideoFrameType::kVideoFrameDelta);
   }
 
   webrtc::CodecSpecificInfo codec_specific;
@@ -804,6 +844,13 @@ int32_t JetsonVideoEncoder::SendFrame(
 
     codec_specific.codecSpecific.H264.packetization_mode =
         webrtc::H264PacketizationMode::NonInterleaved;
+  } else if (codec_.codecType == webrtc::kVideoCodecH265) {
+    auto encoded_image_buffer =
+        webrtc::EncodedImageBuffer::Create(buffer, size);
+    encoded_image_.SetEncodedData(encoded_image_buffer);
+
+    codec_specific.codecSpecific.H265.packetization_mode =
+        webrtc::H265PacketizationMode::NonInterleaved;
   } else if (codec_.codecType == webrtc::kVideoCodecAV1 ||
              codec_.codecType == webrtc::kVideoCodecVP9 ||
              codec_.codecType == webrtc::kVideoCodecVP8) {
@@ -816,8 +863,47 @@ int32_t JetsonVideoEncoder::SendFrame(
     buffer += 12;
     size -= 12;
 
-    auto encoded_image_buffer =
-        webrtc::EncodedImageBuffer::Create(buffer, size);
+    rtc::scoped_refptr<webrtc::EncodedImageBuffer> encoded_image_buffer;
+
+    if (codec_.codecType == webrtc::kVideoCodecAV1) {
+      // JetPack 5.1.1 以降、AV1 のエンコードフレームにシーケンスヘッダー（OBU_SEQUENCE_HEADER）が含まれなくなってしまった。
+      // キーフレームには必ずシーケンスヘッダーを設定しておかないと、途中から受信したデコーダーでデコードができなくなってしまう。
+      // そのため、初回のシーケンスヘッダーを保存しておき、キーフレームの前に挿入することで対応する。
+
+      // buffer の最初の 2 バイトは 0x12 0x00 で、これは OBU_TEMPORAL_DELIMITER なのでこれは無視して、その次の OBU を見る
+      if (buffer[2] == 0x0a) {
+        // 0x0a は OBU_SEQUENCE_HEADER なので、この OBU を保存しておく
+        // obu_size は本当は LEB128 だけど、128 バイト以上になることはなさそうなので、そのまま 1 バイトで取得する
+        int obu_size = buffer[3];
+        obu_seq_header_.resize(obu_size + 2);
+        memcpy(obu_seq_header_.data(), buffer + 2, obu_size + 2);
+      }
+
+      // キーフレームとしてマークされているのにシーケンスヘッダーが入っていない場合、
+      // フレームの前にシーケンスヘッダーを入れる
+      if (enc_metadata->KeyFrame && buffer[2] != 0x0a) {
+        std::vector<uint8_t> new_buffer;
+        new_buffer.resize(obu_seq_header_.size() + size);
+        uint8_t* p = new_buffer.data();
+        // OBU_TEMPORAL_DELIMITER
+        memcpy(p, buffer, 2);
+        p += 2;
+        // OBU_SEQUENCE_HEADER
+        memcpy(p, obu_seq_header_.data(), obu_seq_header_.size());
+        p += obu_seq_header_.size();
+        // OBU_FRAME
+        memcpy(p, buffer + 2, size - 2);
+
+        // RTC_LOG(LS_ERROR) << "\n" << hex_dump(new_buffer.data(), 64);
+        // save_to_file("keyframe2.obu", new_buffer.data(), new_buffer.size());
+        encoded_image_buffer = webrtc::EncodedImageBuffer::Create(
+            new_buffer.data(), new_buffer.size());
+      } else {
+        encoded_image_buffer = webrtc::EncodedImageBuffer::Create(buffer, size);
+      }
+    } else {
+      encoded_image_buffer = webrtc::EncodedImageBuffer::Create(buffer, size);
+    }
     encoded_image_.SetEncodedData(encoded_image_buffer);
 
     if (codec_.codecType == webrtc::kVideoCodecVP8) {
@@ -851,17 +937,12 @@ int32_t JetsonVideoEncoder::SendFrame(
         codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
       }
     } else if (codec_.codecType == webrtc::kVideoCodecAV1) {
-      bool is_key = buffer[2] == 0x0a;
-      // v4l2_ctrl_videoenc_outputbuf_metadata.KeyFrame が効いていない
-      // キーフレームの時には OBU_SEQUENCE_HEADER が入っているために 0x0a になるためこれを使う
-      // キーフレームではない時には OBU_FRAME が入っていて 0x32 になっている
-      if (is_key) {
-        encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
-      }
-
+      bool is_key =
+          encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
       std::vector<webrtc::ScalableVideoController::LayerFrameConfig>
           layer_frames = svc_controller_->NextFrameConfig(is_key);
       codec_specific.end_of_picture = true;
+      codec_specific.scalability_mode = scalability_mode_;
       codec_specific.generic_frame_info =
           svc_controller_->OnEncodeDone(layer_frames[0]);
       if (is_key && codec_specific.generic_frame_info) {
@@ -887,3 +968,5 @@ int32_t JetsonVideoEncoder::SendFrame(
   bitrate_adjuster_->Update(size);
   return WEBRTC_VIDEO_CODEC_OK;
 }
+
+}  // namespace sora

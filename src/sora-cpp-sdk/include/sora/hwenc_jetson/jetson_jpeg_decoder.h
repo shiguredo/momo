@@ -1,19 +1,20 @@
-#ifndef JETSON_JPEG_DECODER_H_
-#define JETSON_JPEG_DECODER_H_
+#ifndef SORA_HWENC_JETSON_JETSON_JPEG_DECODER_H_
+#define SORA_HWENC_JETSON_JETSON_JPEG_DECODER_H_
 
 #include <memory>
 
-// Jetson Linux Multimedia API
-#include <NvJpegDecoder.h>
-
 #include "jetson_jpeg_decoder_pool.h"
+
+class NvJPEGDecoder;
+
+namespace sora {
 
 class JetsonJpegDecoderPool;
 
 class JetsonJpegDecoder {
  public:
   JetsonJpegDecoder(std::shared_ptr<JetsonJpegDecoderPool> pool,
-                    std::unique_ptr<NvJPEGDecoder> decoder);
+                    std::shared_ptr<NvJPEGDecoder> decoder);
   ~JetsonJpegDecoder();
 
   int DecodeToFd(int& fd,
@@ -25,6 +26,9 @@ class JetsonJpegDecoder {
 
  private:
   std::shared_ptr<JetsonJpegDecoderPool> pool_;
-  std::unique_ptr<NvJPEGDecoder> decoder_;
+  std::shared_ptr<NvJPEGDecoder> decoder_;
 };
-#endif  // JETSON_JPEG_DECODER_H_
+
+}  // namespace sora
+
+#endif
