@@ -105,6 +105,7 @@ RTCManager::RTCManager(
 #if defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
+    ec.openh264 = cf.openh264;
     dependencies.video_encoder_factory =
         std::unique_ptr<webrtc::VideoEncoderFactory>(
             absl::make_unique<MomoVideoEncoderFactory>(ec));

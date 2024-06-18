@@ -195,6 +195,12 @@ int main(int argc, char* argv[]) {
   rtcm_config.h265_encoder = args.h265_encoder;
   rtcm_config.h265_decoder = args.h265_decoder;
 
+  rtcm_config.openh264 = args.openh264;
+  if (!rtcm_config.openh264.empty()) {
+    // openh264 が指定されている場合は自動的に H264 ソフトウェアエンコーダを利用する
+    rtcm_config.h264_encoder = VideoCodecInfo::Type::Software;
+  }
+
   rtcm_config.priority = args.priority;
 
 #if defined(USE_NVCODEC_ENCODER)

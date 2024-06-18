@@ -39,6 +39,8 @@
 #include "hwenc_v4l2/v4l2_h264_encoder.h"
 #endif
 
+#include "sora/open_h264_video_encoder.h"
+
 #include "rtc/aligned_encoder_adapter.h"
 
 MomoVideoEncoderFactory::MomoVideoEncoderFactory(
@@ -377,9 +379,9 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::CreateInternal(
   if (is_av1 && config_.av1_encoder == VideoCodecInfo::Type::Software) {
     return webrtc::CreateLibaomAv1Encoder(env);
   }
-  // if (is_h264 && config_.h264_encoder == VideoCodecInfo::Type::Software) {
-  //   return nullptr;
-  // }
+  if (is_h264 && config_.h264_encoder == VideoCodecInfo::Type::Software) {
+    return sora::CreateOpenH264VideoEncoder(format, config_.openh264);
+  }
   // if (is_h265 && config_.h265_encoder == VideoCodecInfo::Type::Software) {
   //   return nullptr;
   // }

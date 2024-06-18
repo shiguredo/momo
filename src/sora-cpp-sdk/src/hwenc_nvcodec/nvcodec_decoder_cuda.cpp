@@ -12,6 +12,7 @@ static cudaVideoCodec ToCudaVideoCodec(CudaVideoCodec codec) {
          : codec == CudaVideoCodec::H265 ? cudaVideoCodec_HEVC
          : codec == CudaVideoCodec::VP8  ? cudaVideoCodec_VP8
          : codec == CudaVideoCodec::VP9  ? cudaVideoCodec_VP9
+         : codec == CudaVideoCodec::AV1  ? cudaVideoCodec_AV1
                                          : cudaVideoCodec_JPEG;
 }
 
