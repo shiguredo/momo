@@ -74,6 +74,8 @@ struct RTCManagerConfig {
   VideoCodecInfo::Type h265_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h265_decoder = VideoCodecInfo::Type::Default;
 
+  std::string openh264;
+
   std::string priority = "FRAMERATE";
 
   webrtc::DegradationPreference GetPriority() {

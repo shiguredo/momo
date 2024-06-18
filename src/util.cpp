@@ -187,6 +187,9 @@ void Util::ParseArgs(int argc,
         ->transform(f(info.h265_decoders));
   }
 
+  app.add_option("--openh264", args.openh264, "OpenH264 dynamic library path")
+      ->check(CLI::ExistingFile);
+
   auto is_serial_setting_format = CLI::Validator(
       [](std::string input) -> std::string {
         try {

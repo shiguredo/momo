@@ -27,6 +27,7 @@ from buildbase import (
     install_cmake,
     install_cuda_windows,
     install_llvm,
+    install_openh264,
     install_rootfs,
     install_sdl2,
     install_vpl,
@@ -294,7 +295,6 @@ def install_deps(
             install_vpl(**install_vpl_args)
 
         # SDL2
-        # SDL2
         install_sdl2_args = {
             "version": version["SDL2_VERSION"],
             "version_file": os.path.join(install_dir, "sdl2.version"),
@@ -342,6 +342,16 @@ def install_deps(
             "install_dir": install_dir,
         }
         install_cli11(**install_cli11_args)
+
+        # OpenH264
+        install_openh264_args = {
+            "version": version["OPENH264_VERSION"],
+            "version_file": os.path.join(install_dir, "openh264.version"),
+            "source_dir": source_dir,
+            "install_dir": install_dir,
+            "is_windows": platform.target.os == 'windows',
+        }
+        install_openh264(**install_openh264_args)
 
 
 AVAILABLE_TARGETS = [
@@ -514,6 +524,7 @@ def main():
 
         cmake_args.append(f"-DSDL2_ROOT_DIR={os.path.join(install_dir, 'sdl2')}")
         cmake_args.append(f"-DCLI11_ROOT_DIR={os.path.join(install_dir, 'cli11')}")
+        cmake_args.append(f"-DOPENH264_ROOT_DIR={os.path.join(install_dir, 'openh264')}")
 
         cmd(["cmake", BASE_DIR] + cmake_args)
         cmd(

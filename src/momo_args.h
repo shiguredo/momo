@@ -94,6 +94,8 @@ struct MomoArgs {
   VideoCodecInfo::Type h265_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h265_decoder = VideoCodecInfo::Type::Default;
 
+  std::string openh264;
+
   std::string proxy_url;
   std::string proxy_username;
   std::string proxy_password;

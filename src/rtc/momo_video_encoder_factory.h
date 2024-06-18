@@ -31,6 +31,7 @@ struct MomoVideoEncoderFactoryConfig {
 #if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
+  std::string openh264;
 };
 
 class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {

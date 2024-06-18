@@ -24,6 +24,7 @@ set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利�
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
+set(OPENH264_ROOT_DIR "" CACHE PATH "OpenH264 のインストール先ディレクトリ")
 set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
 set(WEBRTC_INCLUDE_DIR "" CACHE PATH "WebRTC のインクルードディレクトリ")
 set(WEBRTC_LIBRARY_DIR "" CACHE PATH "WebRTC のライブラリディレクトリ")
@@ -97,6 +98,7 @@ string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(momo PRIVATE src/sora-cpp-sdk/include)
+target_include_directories(momo PRIVATE ${OPENH264_ROOT_DIR}/include)
 
 target_sources(momo
   PRIVATE
@@ -119,6 +121,7 @@ target_sources(momo
     src/rtc/rtc_ssl_verifier.cpp
     src/serial_data_channel/serial_data_channel.cpp
     src/serial_data_channel/serial_data_manager.cpp
+    src/sora-cpp-sdk/src/open_h264_video_encoder.cpp
     src/sora-cpp-sdk/src/scalable_track_source.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
