@@ -203,6 +203,7 @@ struct VideoCodecInfo {
     info.vp9_decoders.push_back(Type::Software);
     info.av1_encoders.push_back(Type::Software);
     info.av1_decoders.push_back(Type::Software);
+    info.h264_encoders.push_back(Type::Software);
 
     return info;
   }
@@ -222,6 +223,7 @@ struct VideoCodecInfo {
     info.vp9_decoders.push_back(Type::Software);
     info.av1_encoders.push_back(Type::Software);
     info.av1_decoders.push_back(Type::Software);
+    info.h264_encoders.push_back(Type::Software);
 
     return info;
   }
@@ -357,11 +359,9 @@ struct VideoCodecInfo {
     info.vp8_decoders.push_back(Type::Software);
     info.vp9_encoders.push_back(Type::Software);
     info.vp9_decoders.push_back(Type::Software);
-
-#if !defined(__arm__) || defined(__aarch64__) || defined(__ARM_NEON__)
     info.av1_encoders.push_back(Type::Software);
     info.av1_decoders.push_back(Type::Software);
-#endif
+    info.h264_encoders.push_back(Type::Software);
 
     return info;
   }
