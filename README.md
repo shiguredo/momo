@@ -142,6 +142,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## OpenH264
+
+<https://www.openh264.org/BINARY_LICENSE.txt>
+
+```
+"OpenH264 Video Codec provided by Cisco Systems, Inc."
+```
+
 ## 優先実装
 
 優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
