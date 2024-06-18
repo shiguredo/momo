@@ -22,6 +22,7 @@ enum class CudaVideoCodec {
   H265,
   VP8,
   VP9,
+  AV1,
   JPEG,
 };
 

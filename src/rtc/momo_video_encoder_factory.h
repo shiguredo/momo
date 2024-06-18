@@ -49,6 +49,9 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
       const webrtc::SdpVideoFormat& format) override;
 
  private:
+  std::unique_ptr<webrtc::VideoEncoder> CreateInternal(
+      const webrtc::Environment& env,
+      const webrtc::SdpVideoFormat& format);
   std::unique_ptr<webrtc::VideoEncoder> WithSimulcast(
       const webrtc::SdpVideoFormat& format,
       std::function<std::unique_ptr<webrtc::VideoEncoder>(

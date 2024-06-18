@@ -113,6 +113,18 @@ struct VideoCodecInfo {
 #if defined(USE_NVCODEC_ENCODER)
     auto cuda_context = sora::CudaContext::Create();
     if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP8)) {
+      info.vp8_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP9)) {
+      info.vp9_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::AV1)) {
+      info.av1_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
@@ -127,6 +139,10 @@ struct VideoCodecInfo {
     if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::VP9)) {
       info.vp9_decoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::AV1)) {
+      info.av1_decoders.push_back(Type::NVIDIA);
     }
     if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::H264)) {
@@ -146,6 +162,9 @@ struct VideoCodecInfo {
       }
       if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_encoders.push_back(Type::Intel);
+      }
+      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
+        info.av1_encoders.push_back(Type::Intel);
       }
       if (sora::VplVideoEncoder::IsSupported(session,
                                              webrtc::kVideoCodecH264)) {
@@ -215,6 +234,18 @@ struct VideoCodecInfo {
 #if defined(USE_NVCODEC_ENCODER)
     auto cuda_context = sora::CudaContext::Create();
     if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP8)) {
+      info.vp8_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::VP9)) {
+      info.vp9_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::AV1)) {
+      info.av1_encoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoEncoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::H264)) {
       info.h264_encoders.push_back(Type::NVIDIA);
     }
@@ -231,8 +262,16 @@ struct VideoCodecInfo {
       info.vp9_decoders.push_back(Type::NVIDIA);
     }
     if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::AV1)) {
+      info.av1_decoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
                                                sora::CudaVideoCodec::H264)) {
       info.h264_decoders.push_back(Type::NVIDIA);
+    }
+    if (sora::NvCodecVideoDecoder::IsSupported(cuda_context,
+                                               sora::CudaVideoCodec::H265)) {
+      info.h265_decoders.push_back(Type::NVIDIA);
     }
 #endif
 
@@ -280,29 +319,29 @@ struct VideoCodecInfo {
     if (sora::JetsonVideoEncoder::IsSupported(webrtc::kVideoCodecH264)) {
       info.h264_encoders.push_back(Type::Jetson);
     }
-    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH264)) {
-      info.h264_decoders.push_back(Type::Jetson);
-    }
     if (sora::JetsonVideoEncoder::IsSupported(webrtc::kVideoCodecH265)) {
       info.h265_encoders.push_back(Type::Jetson);
-    }
-    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH265)) {
-      info.h265_decoders.push_back(Type::Jetson);
     }
     if (sora::JetsonVideoEncoder::IsSupported(webrtc::kVideoCodecVP8)) {
       info.vp8_encoders.push_back(Type::Jetson);
     }
-    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP8)) {
-      info.vp8_decoders.push_back(Type::Jetson);
-    }
     if (sora::JetsonVideoEncoder::IsSupported(webrtc::kVideoCodecVP9)) {
       info.vp9_encoders.push_back(Type::Jetson);
     }
-    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP9)) {
-      info.vp9_decoders.push_back(Type::Jetson);
-    }
     if (sora::JetsonVideoEncoder::IsSupported(webrtc::kVideoCodecAV1)) {
       info.av1_encoders.push_back(Type::Jetson);
+    }
+    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH264)) {
+      info.h264_decoders.push_back(Type::Jetson);
+    }
+    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecH265)) {
+      info.h265_decoders.push_back(Type::Jetson);
+    }
+    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP8)) {
+      info.vp8_decoders.push_back(Type::Jetson);
+    }
+    if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecVP9)) {
+      info.vp9_decoders.push_back(Type::Jetson);
     }
     if (sora::JetsonVideoDecoder::IsSupported(webrtc::kVideoCodecAV1)) {
       info.av1_decoders.push_back(Type::Jetson);
