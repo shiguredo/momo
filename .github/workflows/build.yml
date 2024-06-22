@@ -109,7 +109,10 @@ jobs:
           sudo du -h -d1 /usr/local/share
           sudo du -h -d1 /usr/local/lib
           sudo du -h -d1 /usr/share
-          docker rmi `docker images -q -a`
+          RMI=`docker images -q -a`
+          if [ -n "$RMI" ]; then
+            docker rmi $RMI
+          fi
           # 4.6G
           sudo rm -rf /usr/local/.ghcup
           # 1.7G
