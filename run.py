@@ -359,6 +359,7 @@ AVAILABLE_TARGETS = [
     "macos_x86_64",
     "macos_arm64",
     "ubuntu-22.04_x86_64",
+    "ubuntu-24.04_x86_64",
     "raspberry-pi-os_armv8",
     "ubuntu-22.04_armv8_jetson",
 ]
@@ -382,6 +383,8 @@ def main():
         platform = Platform("macos", get_macos_osver(), "arm64")
     elif args.target == "ubuntu-22.04_x86_64":
         platform = Platform("ubuntu", "22.04", "x86_64")
+    elif args.target == "ubuntu-24.04_x86_64":
+        platform = Platform("ubuntu", "24.04", "x86_64")
     elif args.target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
     elif args.target == "ubuntu-22.04_armv8_jetson":
@@ -446,7 +449,7 @@ def main():
         if platform.target.os == "windows":
             cmake_args.append(f"-DCMAKE_SYSTEM_VERSION={WINDOWS_SDK_VERSION}")
         if platform.target.os == "ubuntu":
-            if platform.target.package_name in ("ubuntu-22.04_x86_64",):
+            if platform.target.package_name in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
                 cmake_args.append("-DCMAKE_C_COMPILER=clang-18")
                 cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-18")
             else:
@@ -507,6 +510,7 @@ def main():
             "macos_x86_64",
             "macos_arm64",
             "ubuntu-22.04_x86_64",
+            "ubuntu-24.04_x86_64",
         ):
             cmake_args.append("-DUSE_SCREEN_CAPTURER=ON")
 

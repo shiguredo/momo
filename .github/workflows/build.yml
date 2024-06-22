@@ -95,9 +95,10 @@ jobs:
         name:
           - raspberry-pi-os_armv8
           - ubuntu-22.04_x86_64
+          - ubuntu-24.04_x86_64
           - ubuntu-22.04_armv8_jetson
     name: Build momo for ${{ matrix.name }}
-    runs-on: 'ubuntu-22.04'
+    runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Disk cleanup
@@ -182,6 +183,9 @@ jobs:
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-22.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-24.04_x86_64
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-22.04_armv8_jetson

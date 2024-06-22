@@ -56,6 +56,8 @@
   - @melpon
 - [ADD] OpenH264 を使った H.264 ソフトウェアエンコーダに対応する
   - @melpon
+- [ADD] Ubuntu 24.04 対応
+  - @melpon
 
 ## 2023.1.0
 
