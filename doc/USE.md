@@ -226,7 +226,7 @@ Usage: ./momo sora [OPTIONS]
 Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
-  --signaling-url TEXT ... REQUIRED
+  --signaling-urls TEXT ... REQUIRED
                               Signaling URLs
   --channel-id TEXT REQUIRED  Channel ID
   --auto                      Connect to Sora automatically

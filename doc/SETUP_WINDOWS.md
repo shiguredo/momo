@@ -18,7 +18,7 @@ PowerShell での実行例：
 ```console
 .\momo.exe --no-audio-device `
     sora `
-        --signaling-url `
+        --signaling-urls `
              wss://canary.sora-labo.shiguredo.app/signaling `
         --channel-id shiguredo_0_sora `
         --video-codec-type VP8 --video-bit-rate 500 `
