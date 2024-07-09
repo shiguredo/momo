@@ -106,7 +106,7 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 
 ```bash
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
-    --signaling-url \
+    --signaling-urls \
         wss://canary.sora-labo.shiguredo.app/signaling \
     --channel-id shiguredo_0_sora \
     --video true --audio true \

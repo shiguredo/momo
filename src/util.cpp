@@ -253,7 +253,7 @@ void Util::ParseArgs(int argc,
                         "Signaling key");
 
   sora_app
-      ->add_option("--signaling-url", args.sora_signaling_urls,
+      ->add_option("--signaling-urls", args.sora_signaling_urls,
                    "Signaling URLs")
       ->take_all()
       ->required();
