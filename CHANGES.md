@@ -11,10 +11,6 @@
 
 ## develop
 
-- [CHANGE] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
-  - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
-  - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
-  - @torikizi
 - [CHANGE] ビルド周りを完全にリニューアルする
   - @melpon
 - [CHANGE] raspberry-pi-os_armv6 と raspberry-pi-os_armv7 を削除
@@ -62,6 +58,10 @@
   - @melpon
 - [ADD] Ubuntu 24.04 対応
   - @melpon
+- [FIX] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
+  - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
+  - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
+  - @torikizi
 
 ## 2023.1.0
 
