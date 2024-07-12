@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
+  - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
+  - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
+  - @torikizi
 - [CHANGE] ビルド周りを完全にリニューアルする
   - @melpon
 - [CHANGE] raspberry-pi-os_armv6 と raspberry-pi-os_armv7 を削除
@@ -556,14 +560,14 @@
 - [ADD] Raspberry Pi で SDL 利用時に H264 ハードウェアデコーダを利用するようにする
   - @tnoho
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
-  - https://github.com/shiguredo/momo/issues/124
+  - <https://github.com/shiguredo/momo/issues/124>
   - @tetsu-koba @tnoho
 - [FIX] Jetson Nano で H264 デコーダを止める際にハングしてしまう問題を修正
   - @soudegesu @tnoho
 - [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
   - @melpon
 - [FIX] Jetson Nano で RTP タイムスタンプが 90kHz になっていなかったのを修正
-  - https://github.com/shiguredo/momo/pull/137
+  - <https://github.com/shiguredo/momo/pull/137>
   - @tetsu-koba @tnoho
 
 ## 2020.2.1
@@ -571,7 +575,7 @@
 **hotfix**
 
 - [FIX] macOS で --use-sdl オプションを利用すると落ちていたのを修正する
-  - https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+  - <https://bugzilla.libsdl.org/show_bug.cgi?id=4617>
   - @melpon
 
 ## 2020.2
@@ -657,7 +661,7 @@
 ## 19.12.1
 
 - [UPDATE] libwebrtc を時前ビルドしないようにする
-  - https://github.com/shiguredo-webrtc-build/webrtc-build を利用する
+  - <https://github.com/shiguredo-webrtc-build/webrtc-build> を利用する
   - @melpon
 - [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
   - @kdxu
@@ -887,7 +891,7 @@
 - [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
   - @kdxu
 - [ADD] WebRTC Signaling Server Ayame に対応しました
-  - https://github.com/OpenAyame/ayame
+  - <https://github.com/OpenAyame/ayame>
   - @kdxu
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
   - @voluntas
@@ -960,7 +964,7 @@
 
 - [CHANGE] libwebrtc が 4K に対応していないため解像度指定から 4K を削除する
   - 将来的に対応していく予定
-  - https://github.com/shiguredo/momo/issues/21
+  - <https://github.com/shiguredo/momo/issues/21>
 - [FIX] P2P モードのサンプルで映像を有効にした場合、音声が正常に流れない問題を修正
 
 ## 18.10.0-rc1
