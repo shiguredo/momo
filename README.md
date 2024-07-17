@@ -9,17 +9,17 @@
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
+Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
 ## WebRTC Native Client Momo について
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
-https://momo.shiguredo.jp/
+<https://momo.shiguredo.jp/>
 
 ### ハードウェアエンコーダーへの対応
 
@@ -68,7 +68,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 また Momo についてのつぶやきは以下にまとめてあります。
 
-https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter
+<https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter>
 
 ## 既知の問題について
 
@@ -78,7 +78,7 @@ https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter
 
 以下からダウンロードが可能です。
 
-https://github.com/shiguredo/momo/releases
+<https://github.com/shiguredo/momo/releases>
 
 ## 動作環境
 
@@ -125,7 +125,7 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 Apache License 2.0
 
-```
+```text
 Copyright 2015-2024, tnoho (Original Author)
 Copyright 2018-2024, Shiguredo Inc.
 
@@ -201,7 +201,7 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
-https://discord.gg/shiguredo
+<https://discord.gg/shiguredo>
 
 ### バグ報告
 
@@ -222,17 +222,36 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
 ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、
 配布時にライセンス費用を支払う必要はありません。
 
-詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
+詳細については [Via LA Licensing](https://www.via-la.com/) まで問い合わせる事をおすすめします。
+
+Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-LA) に連絡を取り、ロイヤリティの対象にならないことを確認しています。
+
+> 時雨堂がエンドユーザーの PC /デバイスに既に存在する AVC / H.264 エンコーダー/デコーダーに依存する製品を提供する場合は、
+> ソフトウェア製品は AVC ライセンスの対象外となり、ロイヤリティの対象にもなりません。
 
 - Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
-  - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+  - <https://www.raspberrypi.org/forums/viewtopic.php?t=200855>
 - Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
-  - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
+  - <https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html>
 - AMD ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-  - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
+  - <https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf>
 - NVIDIA ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-  - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
+  - <https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf>
 - NVIDIA Jetson Nano のハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
   - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
   - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
+
+## H.265 のライセンス費用について
+
+H.265 ハードウェアエンコーダー **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
+ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+
+Momo の H.265 対応は以下の二つの団体に連絡を取り、H.265 ハードウェアアクセラレーターのみを利用し、
+H.265 が利用可能なバイナリを配布する事は、ライセンスが不要であることを確認しています。
+
+また、H.265 のハードウェアアクセラレーターのみを利用した H.265 対応の SDK を OSS で公開し、
+ビルド済みバイナリを配布する事は、ライセンスが不要であることも確認しています。
+
+- [Access Advance](https://accessadvance.com/ja/)
+- [Via LA Licensing](https://www.via-la.com/)
