@@ -172,10 +172,12 @@ limitations under the License.
 - リリース
 - Ubuntu 24.04 x86_64
 - Ubuntu 22.04 ARMv8 Jetson JetPack 6
+- Ubuntu 22.04 ARMv8 Jetson JetPack 5
 - H.265 (HEVC) HWA 対応
   - macOS Video Toolbox
   - NVIDIA Jetson
     - Ubuntu 22.04 JetPack 6
+    - Ubuntu 22.04 JetPack 5
   - NVIDIA Video Codec SDK
     - Windows
 - OpenH264 対応
