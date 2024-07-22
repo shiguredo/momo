@@ -163,9 +163,6 @@ struct VideoCodecInfo {
       if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecVP9)) {
         info.vp9_encoders.push_back(Type::Intel);
       }
-      if (sora::VplVideoEncoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
-        info.av1_encoders.push_back(Type::Intel);
-      }
       if (sora::VplVideoEncoder::IsSupported(session,
                                              webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::Intel);
