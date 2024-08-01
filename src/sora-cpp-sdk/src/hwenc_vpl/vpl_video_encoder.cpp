@@ -525,8 +525,8 @@ int32_t VplVideoEncoderImpl::Encode(
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();
     encoded_image_.SetColorSpace(frame.color_space());
-    if (bitstream_.FrameType == MFX_FRAMETYPE_I ||
-        bitstream_.FrameType == MFX_FRAMETYPE_IDR) {
+    if (bitstream_.FrameType & MFX_FRAMETYPE_I ||
+        bitstream_.FrameType & MFX_FRAMETYPE_IDR) {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
     } else {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
