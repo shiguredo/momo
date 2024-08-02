@@ -1,6 +1,6 @@
 # FAQ
 
-## 商用利用はできますｋ？
+## 商用利用はできますか？
 
 Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
 
@@ -10,7 +10,7 @@ Momo 側からの指定は WebRTC SFU Sora を利用したときだけ利用で�
 
 ## サイマルキャストは利用できますか？
 
-Sora モードでのみ利用できます。利用できる映像コーデックは VP8 / VP9 / H.264 / AV1 です。
+Sora モードでのみ利用できます。利用できる映像コーデックは VP8 / VP9 / AV1 / H.264 / H.265 です。
 利用する場合は `--simulcast` を指定してください。
 
 ## AV1 は利用できますか？
@@ -42,7 +42,7 @@ export SSL_CERT_FILE=/path/to/cert.pem
 
 ## NVIDIA ビデオカードに搭載されている NVENC を利用できますか？
 
-Windows と Linux で利用できます。
+Windows と Ubuntu で利用できます。
 NVIDIA ビデオカードドライバーは最新版にしてください。
 
 NVENC が利用できるビデオカードは以下で確認してください。

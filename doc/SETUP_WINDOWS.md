@@ -15,7 +15,7 @@ metadataオプションのキーや値を囲む「"」を「\\\"」にする必�
 
 PowerShell での実行例：
 
-```console
+```bash
 .\momo.exe --no-audio-device `
     sora `
         --signaling-urls `

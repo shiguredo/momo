@@ -2,20 +2,18 @@
 
 NVIDIA Jetson を購入する場合のオススメリンクです。
 
-## Momo の Jetson シリーズへの対応について
+## Momo の NVIDIA Jetson シリーズへの対応について
 
-- Jetpack 5 系のみの対応とします。
-- Jetpack 4 系への対応を終了しました。
-  - 上記に伴い Jetpack 4 系のみに対応している Jetson Nano の対応を終了しました。
+- Jetpack 6 系のみの対応とします
+- Jetpack 5 と 4 系への対応を終了しました
+  - 優先実装にて対応できます
 - ハードウェアエンコードに対応しない Jetson Orin Nano への対応は行いません
-- Jetson Orin NX への対応は優先実装とします。
-  - Xavier と同じパターンだと Jetson Orin Nano より JPEG のハードウェア処理が劣る可能性があるため
 
 ## Jetson AGX Orin
 
 **以下で買われることをオススメします**
 
-- [NVIDIA JETSON AGX ORIN 64GB 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin64)
+[NVIDIA JETSON AGX ORIN 64GB 開発者キット 商品・個数選択](https://ryoyo-direct.jp/shopping/jetson-orin/jetson-orin64)
 
 ## 4K@30 のカメラを購入する
 
