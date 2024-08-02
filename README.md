@@ -23,13 +23,10 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアアクセラレーターへの対応
 
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
-  - ハードウェアエンコーダー: H.264
-  - ハードウェアデコーダー: H.264
-- Intel グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
+- Intel グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- Apple macOS に搭載されている H.264 ハードウェアアクセラレーター機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
+- Apple macOS に搭載されている H.264 ハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
   - ハードウェアエンコーダー: H.264 / H.265
   - ハードウェアデコーダー: H.264 / H.265
 - NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
@@ -38,8 +35,11 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 - [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を利用することができます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
+  - ハードウェアエンコーダー: H.264
+  - ハードウェアデコーダー: H.264
 
-### 4K 30fps での配信
+### 4K 60fps での配信
 
 Momo はハードウェアエンコーダーを利用することで WebRTC で 4K 60fps の配信を実現可能です
 
@@ -92,25 +92,24 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 ## 動作環境
 
-- Raspberry Pi OS (64bit)
-  - Raspberry Pi 4
-  - Raspberry Pi 3
-  - Raspberry Pi 2 Model B v1.2
-  - Raspberry Pi Zero 2 W
+- Windows 11 x86_64
+- macOS 14 arm64
 - Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
 - Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-- macOS 14 arm64
-- Windows 11 x86_64
+- Raspberry Pi OS (64bit)
+  - Raspberry Pi 4
+  - Raspberry Pi 3
+  - Raspberry Pi 2 Model B v1.2
+  - Raspberry Pi Zero 2 W
 
 ### 対応終了
 
 **優先実装にて、対応継続することができます**
 
 - macOS x86_64
-- Raspberry Pi OS (32bit)
 - Ubuntu 20.04 ARMv8 (NVIDIA Jetson JetPack 5)
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
@@ -119,6 +118,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
   - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
   - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- Raspberry Pi OS (32bit)
 
 ## 使ってみる
 
@@ -157,7 +157,7 @@ limitations under the License.
 
 <https://www.openh264.org/BINARY_LICENSE.txt>
 
-```
+```text
 "OpenH264 Video Codec provided by Cisco Systems, Inc."
 ```
 
@@ -178,25 +178,13 @@ limitations under the License.
 
 ### 優先実装が可能な機能一覧
 
-**詳細は Discord やメールなどでお気軽にお問い合わせください**
+**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
-- リリース
-- Ubuntu 24.04 x86_64
-- Ubuntu 22.04 ARMv8 Jetson JetPack 6
-- Ubuntu 22.04 ARMv8 Jetson JetPack 5
-- H.265 (HEVC) HWA 対応
-  - macOS Video Toolbox
-  - NVIDIA Jetson
-    - Ubuntu 22.04 JetPack 6
-    - Ubuntu 22.04 JetPack 5
-  - NVIDIA Video Codec SDK
-    - Windows
+- Ubuntu 22.04 arm64 (NVIDIA Jetson JetPack 6)
+- Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
 - OpenH264 対応
   - Windows
   - Ubuntu
-- AV1 対応
-  - Windows
-- Windows / macOS 署名対応
 
 ## Momo についての電子書籍
 
