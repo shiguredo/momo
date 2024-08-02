@@ -9,8 +9,10 @@
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/h265/include/h265_globals.h>
+#include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
+#include <modules/video_coding/utility/vp9_uncompressed_header_parser.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/synchronization/mutex.h>
 
@@ -87,6 +89,8 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   webrtc::EncodedImage encoded_image_;
   webrtc::H264BitstreamParser h264_bitstream_parser_;
   webrtc::H265BitstreamParser h265_bitstream_parser_;
+  webrtc::GofInfoVP9 gof_;
+  size_t gof_idx_;
 
   int32_t InitVpl();
   int32_t ReleaseVpl();
@@ -389,6 +393,11 @@ int32_t VplVideoEncoderImpl::InitEncode(
           ? webrtc::VideoContentType::SCREENSHARE
           : webrtc::VideoContentType::UNSPECIFIED;
 
+  if (codec_ == MFX_CODEC_VP9) {
+    gof_.SetGofInfoVP9(webrtc::TemporalStructureMode::kTemporalStructureMode1);
+    gof_idx_ = 0;
+  }
+
   return InitVpl();
 }
 int32_t VplVideoEncoderImpl::RegisterEncodeCompleteCallback(
@@ -510,7 +519,15 @@ int32_t VplVideoEncoderImpl::Encode(
     //FILE* fp = fopen("test.mp4", "a+");
     //fwrite(p, 1, size, fp);
     //fclose(fp);
-
+    if (codec_ == MFX_CODEC_VP9) {
+      // VP9 はIVFヘッダーがエンコードフレームについているので取り除く
+      if ((p[0] == 'D') && (p[1] == 'K') && (p[2] == 'I') && (p[3] == 'F')) {
+        p += 32;
+        size -= 32;
+      }
+      p += 12;
+      size -= 12;
+    }
     auto buf = webrtc::EncodedImageBuffer::Create(p, size);
     encoded_image_.SetEncodedData(buf);
     encoded_image_._encodedWidth = width_;
@@ -533,7 +550,35 @@ int32_t VplVideoEncoderImpl::Encode(
     }
 
     webrtc::CodecSpecificInfo codec_specific;
-    if (codec_ == MFX_CODEC_AVC) {
+    if (codec_ == MFX_CODEC_VP9) {
+      codec_specific.codecType = webrtc::kVideoCodecVP9;
+      bool is_key =
+          encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+      if (is_key) {
+        gof_idx_ = 0;
+      }
+      codec_specific.codecSpecific.VP9.inter_pic_predicted = !is_key;
+      codec_specific.codecSpecific.VP9.flexible_mode = false;
+      codec_specific.codecSpecific.VP9.ss_data_available = is_key;
+      codec_specific.codecSpecific.VP9.temporal_idx = webrtc::kNoTemporalIdx;
+      codec_specific.codecSpecific.VP9.temporal_up_switch = true;
+      codec_specific.codecSpecific.VP9.inter_layer_predicted = false;
+      codec_specific.codecSpecific.VP9.gof_idx =
+          static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
+      codec_specific.codecSpecific.VP9.num_spatial_layers = 1;
+      codec_specific.codecSpecific.VP9.first_frame_in_picture = true;
+      codec_specific.codecSpecific.VP9.spatial_layer_resolution_present = false;
+      if (codec_specific.codecSpecific.VP9.ss_data_available) {
+        codec_specific.codecSpecific.VP9.spatial_layer_resolution_present =
+            true;
+        codec_specific.codecSpecific.VP9.width[0] =
+            encoded_image_._encodedWidth;
+        codec_specific.codecSpecific.VP9.height[0] =
+            encoded_image_._encodedHeight;
+        codec_specific.codecSpecific.VP9.gof.CopyGofInfoVP9(gof_);
+      }
+      webrtc::vp9::GetQp(p, size, &encoded_image_.qp_);
+    } else if (codec_ == MFX_CODEC_AVC) {
       codec_specific.codecType = webrtc::kVideoCodecH264;
       codec_specific.codecSpecific.H264.packetization_mode =
           webrtc::H264PacketizationMode::NonInterleaved;

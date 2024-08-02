@@ -64,6 +64,8 @@
   - @torikizi
 - [ADD] Intel VPL の AV1 ハードウェアエンコーダに対応する
   - @tnoho
+- [ADD] Intel VPL の VP9 ハードウェアエンコーダに対応する
+  - @tnoho
 
 ## 2023.1.0
 
