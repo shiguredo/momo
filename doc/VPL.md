@@ -1,32 +1,33 @@
-# Momo で oneVPL を利用したハードウェアエンコーダー / デコーダーを利用する
+# Momo で VPL を利用したハードウェアエンコーダー / デコーダーを利用する
 
-oneVPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
+VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
 
-このドキュメントでは oneVPL を使用するためのセットアップ方法を記載します。
+このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
 ## Intel Media SDK について
 
-oneVPL の詳細については以下のリンクをご確認ください。
+VPL の詳細については以下のリンクをご確認ください。
 
 - デコーダーとエンコーダーの対応しているコーデックとチップセットの組み合わせ表
   - <https://github.com/intel/media-driver#decodingencoding-features>
-- oneVPL の Github
+- VPL の Github
   - <https://github.com/intel/libvpl>
 - Intel 公式ドキュメント
   - <https://intel.github.io/libvpl/latest/index.html>
 
 ## 対応プラットフォーム
 
-- Windows 10 x86_64
+- Windows 11 x86_64
+- Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
 
 ## Windows 10 での利用方法
 
 ### ドライバーのインストール
 
-Windows 10 ではインストール作業は必要ありません。
+Windows 11 ではインストール作業は必要ありません。
 
-### oneVPL が認識できているか確認
+### VPL が認識できているか確認
 
 Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
 
@@ -84,7 +85,7 @@ H264:
 
 以上でインストールが完了します。
 
-### oneVPL が認識できているか確認
+### VPL が認識できているか確認
 
 Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
 
@@ -128,15 +129,19 @@ H264:
 
 現在動作確認ができているチップセットは以下になります。
 
+- Intel(R) Core(TM) Ultra 5 Processor 125H
 - Intel(R) Core(TM) i9-9980HK
 - Intel(R) Core(TM) i7-1195G7
 - Intel(R) Core(TM) i5-10210U
+- Intel(R) Processor N97
+- Intel(R) Processor N100
+- Intel(R) Processor N95
 
 ## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
 Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで oneVPL を使用することができます。
 
-## oneVPL を認識できない場合
+## VPL を認識できない場合
 
-NVIDIA を利用している環境では oneVPL を認識できないことがあります。その場合は NVIDIA のドライバーを削除し Intel のグラフィックドライバーに切り替えると認識する場合があります。
+NVIDIA を利用している環境では VPL を認識できないことがあります。その場合は NVIDIA のドライバーを削除し Intel のグラフィックドライバーに切り替えると認識する場合があります。
