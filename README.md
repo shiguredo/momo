@@ -23,7 +23,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアアクセラレーターへの対応
 
-- Intel グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
+- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
@@ -111,7 +111,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 ### 対応終了
 
-**優先実装にて、対応継続することができます**
+**優先実装にて対応することができます**
 
 - macOS x86_64
 - Ubuntu 20.04 ARMv8 (NVIDIA Jetson JetPack 5)
@@ -173,7 +173,7 @@ limitations under the License.
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
   - 現時点では企業名非公開
-- Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
+- Windows 版 Momo NVIDIA Video Codec SDK 対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Linux 版 Momo NVIDIA Video Codec SDK 対応
   - [株式会社オプティム](https://www.optim.co.jp/) 様
@@ -184,11 +184,8 @@ limitations under the License.
 
 **こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
-- Ubuntu 22.04 arm64 (NVIDIA Jetson JetPack 6)
+- Windows 11 arm64
 - Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
-- OpenH264 対応
-  - Windows
-  - Ubuntu
 
 ## Momo についての電子書籍
 
