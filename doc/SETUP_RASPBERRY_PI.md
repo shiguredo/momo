@@ -129,7 +129,9 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 
 ### Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない
 
-USB カメラ利用時には `--hw-mjpeg-decoder` を使わない方がフレームレートは出ます。しかし `--hw-mjpeg-decoder` を使って CPU 使用率を下げた状態で利用したい場合は `/boot/firmware/config.txt` の末尾に下記を追記してください.
+USB カメラ利用時にフレームレートを出したい場合は `--hw-mjpeg-decoder` を使わないことをおすすめします。ただし CPU 使用率はあがってしまいます。
+
+CPU 使用率を抑えつつフレームレートを出したい場合は、`/boot/firmware/config.txt` の末尾に下記を追記して `--hw-mjpeg-decoder` を指定することで改善することがあります。
 
 bookworm より前のバージョンをご利用の場合は `/boot/config.txt` に追記してください。
 
