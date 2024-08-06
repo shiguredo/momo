@@ -28,7 +28,8 @@ VPL の詳細については以下のリンクをご確認ください。
 Windows 11 では Intel の公式サイトからドライバーをインストールすることで VPL を利用することができます。
 
 - Intel の公式サイトからドライバーをダウンロードします。
-  - [Intel ドライバー & サポート・アシスタント](https://www.intel.co.jp/content/www/jp/ja/download-center/home.html)
+  - Intel ドライバーおよびソフトウェアのダウンロード
+    - <https://www.intel.co.jp/content/www/jp/ja/download-center/home.html>
 - インストーラーに従ってインストールを行います。
 - インストール後に再起動を行います。
 
