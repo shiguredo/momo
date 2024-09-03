@@ -40,7 +40,6 @@ class Momo:
         args = [
             str(self.executable),
             "--no-audio-device",
-            "--no-video-device",
             self.mode,
             "--port",
             str(self.port),
