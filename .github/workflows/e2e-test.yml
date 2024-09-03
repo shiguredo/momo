@@ -21,6 +21,11 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y v4l2loopback-dkms
+          sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
       - run: python3 run.py ${{ matrix.name }}
       - uses: eifinger/setup-rye@v3
         with:
