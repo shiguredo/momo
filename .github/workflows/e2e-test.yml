@@ -11,14 +11,14 @@ on:
       - "NOTICE"
 
 jobs:
-  e2e-test-macos:
+  e2e-test-ubuntu:
     strategy:
       fail-fast: false
       matrix:
         name:
           - macos_arm64
     name: Build momo for ${{ matrix.name }}
-    runs-on: macos-14
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -26,7 +26,7 @@ jobs:
           sudo apt update
           sudo apt install -y v4l2loopback-dkms
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
-      - run: python3 run.py ${{ matrix.name }}
+      - run: python3 run.py ubuntu-24.04_x86_64
       - uses: eifinger/setup-rye@v3
         with:
           version: 'latest'
