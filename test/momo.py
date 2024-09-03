@@ -8,6 +8,7 @@ from pathlib import Path
 
 # プラットフォームに応じたリリースディレクトリの設定
 RELEASE_DIR = Path(__file__).resolve().parent.parent / Path("_build/")
+
 if platform.system() == "Darwin":
     if platform.machine() == "arm64":
         RELEASE_DIR = RELEASE_DIR / "macos_arm64/release/momo"
@@ -52,6 +53,7 @@ class Momo:
             self.is_running = False
 
     def start(self):
+        print(Path(__file__).resolve().parent.parent / Path("_build/"))
         if not self.executable.exists():
             raise FileNotFoundError(f"Momo executable not found: {self.executable}")
 

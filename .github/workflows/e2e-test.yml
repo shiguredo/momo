@@ -23,7 +23,7 @@ jobs:
           tar -xzf momo-2023.1.0_ubuntu-22.04_x86_64.tar.gz
           mkdir -p _build/ubuntu-22.04_x86_64/release
           chmod 755 momo-2023.1.0_ubuntu-22.04_x86_64/momo
-          mv momo-2023.1.0_ubuntu-22.04_x86_64/momo _build/ubuntu-22.04_x86_64/release/
+          mv momo-2023.1.0_ubuntu-22.04_x86_64/momo ${{ github.workspace }}/_build/ubuntu-22.04_x86_64/release/
       - uses: eifinger/setup-rye@v3
         with:
           version: 'latest'
@@ -31,5 +31,5 @@ jobs:
         working-directory: ./test
       - run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
-          rye run pytest test_momo.py
+          rye run pytest test_momo.py -s
         working-directory: ./test
