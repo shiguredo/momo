@@ -24,13 +24,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y v4l2loopback-dkms
-          sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
+          sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
       - run: python3 run.py ubuntu-24.04_x86_64
       - uses: eifinger/setup-rye@v3
         with:
           version: 'latest'
       - run: rye sync
         working-directory: ./test
-      - run: rye run pytest test_momo.py
+      - run: |
+          sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
+          rye run pytest test_momo.py
         working-directory: ./test
