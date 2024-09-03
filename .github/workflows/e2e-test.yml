@@ -27,5 +27,5 @@ jobs:
           version: 'latest'
       - run: rye sync
         working-directory: ./test
-      - run: rye run pytest test/test_momo.py
+      - run: rye run pytest test_momo.py
         working-directory: ./test
