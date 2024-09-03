@@ -12,12 +12,6 @@ on:
 
 jobs:
   e2e-test-ubuntu:
-    strategy:
-      fail-fast: false
-      matrix:
-        name:
-          - macos_arm64
-    name: Build momo for ${{ matrix.name }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
