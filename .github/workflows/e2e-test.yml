@@ -41,5 +41,6 @@ jobs:
       - run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
           ls -l /dev/video0
+      - run: |
           rye run pytest test_momo.py -s
         working-directory: ./test
