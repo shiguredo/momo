@@ -12,18 +12,27 @@ on:
 
 jobs:
   e2e-test-ubuntu:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          # - ubuntu-24.04
+    env:
+      MOMO_VERSION: "2023.1.0"
+      MOMO_ARCH: "x86_64"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - run: |
           sudo apt update
           sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
       - run: |
-          curl -LO https://github.com/shiguredo/momo/releases/download/2023.1.0/momo-2023.1.0_ubuntu-22.04_x86_64.tar.gz
-          tar -xzf momo-2023.1.0_ubuntu-22.04_x86_64.tar.gz
-          mkdir -p _build/ubuntu-22.04_x86_64/release/momo
-          chmod 755 momo-2023.1.0_ubuntu-22.04_x86_64/momo
-          mv momo-2023.1.0_ubuntu-22.04_x86_64/momo ${{ github.workspace }}/_build/ubuntu-22.04_x86_64/release/momo/
+          curl -LO https://github.com/shiguredo/momo/releases/download/${{ env.MOMO_VERSION}}/momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}.tar.gz
+          tar -xzf momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}.tar.gz
+          mkdir -p _build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo
+          chmod 755 momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo
+          mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
       - uses: eifinger/setup-rye@v3
         with:
           version: 'latest'
