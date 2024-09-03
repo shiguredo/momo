@@ -53,7 +53,6 @@ class Momo:
             self.is_running = False
 
     def start(self):
-        print(Path(__file__).resolve().parent.parent / Path("_build/"))
         if not self.executable.exists():
             raise FileNotFoundError(f"Momo executable not found: {self.executable}")
 
