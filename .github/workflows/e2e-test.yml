@@ -15,66 +15,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
+      - run: |
           sudo apt update
           sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
-      - name: Disk cleanup
-        run: |
-          set -x
-          df -h
-          sudo du -h -d1 /usr/local
-          sudo du -h -d1 /usr/local/share
-          sudo du -h -d1 /usr/local/lib
-          sudo du -h -d1 /usr/share
-          RMI=`docker images -q -a`
-          if [ -n "$RMI" ]; then
-            docker rmi $RMI
-          fi
-          # 4.6G
-          sudo rm -rf /usr/local/.ghcup
-          # 1.7G
-          sudo rm -rf /usr/share/swift
-          # 1.4G
-          sudo rm -rf /usr/share/dotnet
-          df -h
-      # Ubuntu 24.04 だと libtinfo5 が見つからない問題があるので、その修正
-      # ref: https://qiita.com/gengen16k/items/88cf3c18a40a94205fab
-      - name: Fix CUDA issues for Ubuntu 24.04
-        run: |
-          sudo tee /etc/apt/sources.list.d/jammy.list << EOF
-          deb http://archive.ubuntu.com/ubuntu/ jammy universe
-          EOF
-
-          sudo tee /etc/apt/preferences.d/pin-jammy <<EOF
-          Package: *
-          Pin: release n=jammy
-          Pin-Priority: -10
-
-          Package: libtinfo5
-          Pin: release n=jammy
-          Pin-Priority: 990
-          EOF
       - run: |
-          source VERSION
-          # clang-18 と CUDA を入れる
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
-          sudo dpkg -i cuda-keyring_*all.deb
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install cuda=$CUDA_VERSION
-
-          wget https://apt.llvm.org/llvm.sh
-          chmod a+x llvm.sh
-          sudo ./llvm.sh 18
-
-          # Intel Media SDK のために libva-dev, libdrm-dev を入れる
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
-          # スクリーンキャプチャあたりのためのパッケージを入れる
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
-      - run: python3 run.py ubuntu-24.04_x86_64
+          curl -LO https://github.com/shiguredo/momo/releases/download/2023.1.0/momo-2023.1.0_ubuntu-22.04_x86_64.tar.gz
+          tar -xzf momo-2023.1.0_ubuntu-22.04_x86_64.tar.gz
+          mkdir -p _build/ubuntu-22.04_x86_64/release
+          chmod 755 momo-2023.1.0_ubuntu-22.04_x86_64/momo
+          mv momo-2023.1.0_ubuntu-22.04_x86_64/momo _build/ubuntu-22.04_x86_64/release/
       - uses: eifinger/setup-rye@v3
         with:
           version: 'latest'

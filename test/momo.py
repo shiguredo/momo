@@ -14,7 +14,7 @@ if platform.system() == "Darwin":
 elif platform.system() == "Linux":
     # ubuntu 24.04 かどうかの確認が必要
     # ubuntu 22.04 と 24.04 がある
-    RELEASE_DIR = RELEASE_DIR / "ubuntu-24.04_x86_64/release/momo"
+    RELEASE_DIR = RELEASE_DIR / "ubuntu-22.04_x86_64/release/momo"
 else:
     raise OSError(f"Unsupported platform: {platform.system()}")
 
@@ -35,7 +35,14 @@ class Momo:
 
     def run_app(self):
         # test モードでポートだけ指定してあげる
-        args = [str(self.executable), "test", "--port", str(self.port)]
+        args = [
+            str(self.executable),
+            "--no-audio-device",
+            "--no-audio-device",
+            "test",
+            "--port",
+            str(self.port),
+        ]
         try:
             self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.process.wait()
