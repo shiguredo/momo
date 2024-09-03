@@ -9,6 +9,7 @@ from pathlib import Path
 # プラットフォームに応じたリリースディレクトリの設定
 RELEASE_DIR = Path(__file__).resolve().parent.parent / Path("_build/")
 
+# TODO: 環境変数で CI か Local で見に行くパスを変えるようにする
 if platform.system() == "Darwin":
     if platform.machine() == "arm64":
         RELEASE_DIR = RELEASE_DIR / "macos_arm64/release/momo"
@@ -21,8 +22,9 @@ else:
 
 
 class Momo:
-    def __init__(self, port=5000):
+    def __init__(self, mode="test", port=5000):
         self.executable = RELEASE_DIR / "momo"
+        self.mode = mode
         self.port = port
         self.process = None
         self.thread = None
@@ -35,11 +37,11 @@ class Momo:
         self.stop()
 
     def run_app(self):
-        # test モードでポートだけ指定してあげる
         args = [
             str(self.executable),
             "--no-audio-device",
-            "test",
+            "--no-video-device",
+            self.mode,
             "--port",
             str(self.port),
         ]
