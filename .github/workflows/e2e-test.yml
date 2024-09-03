@@ -1,0 +1,31 @@
+name: e2e-test
+
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+      - "html/**"
+      - "**.md"
+      - "THANKS"
+      - "LICENSE"
+      - "NOTICE"
+
+jobs:
+  e2e-test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - macos_arm64
+    name: Build momo for ${{ matrix.name }}
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 run.py ${{ matrix.name }}
+      - uses: eifinger/setup-rye@v3
+        with:
+          version: 'latest'
+      - run: rye sync
+        working-directory: ./test
+      - run: rye run pytest test/test_momo.py
+        working-directory: ./test

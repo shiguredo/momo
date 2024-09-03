@@ -46,3 +46,8 @@ webrtc_logs_0
 
 # python
 .venv
+.pytest_cache
+__pycache__
+
+# vscode
+build
