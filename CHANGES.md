@@ -31,8 +31,10 @@
   - @torikizi
 - [UPDATE] WebRTC を m128.6613.2.0 に上げる
   - m128.6613.2.0 での変更点は以下の通り
-    - `rtc::CreateRandomString` のヘッダーを追加
-    - `rtc_base` 以下のファイルが削除されたことに対する追従
+    - libwebrtc から helpers が削除され `crypto_random` に分割されたため、`rtc::CreateRandomString` を利用するために `crypto_random.h` を追加
+      - 参考 : https://source.chromium.org/chromium/_/webrtc/src/+/4158678b468135a017aa582f038731b5f7851c82
+    - libwebrtc から削除されたために webrtc-build で復活させた `proxy_info_revive.h` と `crypt_string_revive.h` を利用するように修正
+    - `init_allocator` の引数変更に追従
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
