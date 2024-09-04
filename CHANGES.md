@@ -35,6 +35,7 @@
       - 参考 : https://source.chromium.org/chromium/_/webrtc/src/+/4158678b468135a017aa582f038731b5f7851c82
     - libwebrtc から削除されたために webrtc-build で復活させた `proxy_info_revive.h` と `crypt_string_revive.h` を利用するように修正
     - `init_allocator` の引数変更に追従
+    - webrtc-build の H.265 パッチの変更に追従し、`packetization_mode` とヘッダーを削除
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる

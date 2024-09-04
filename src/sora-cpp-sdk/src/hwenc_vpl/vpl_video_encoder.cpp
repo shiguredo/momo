@@ -8,7 +8,6 @@
 #include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
-#include <modules/video_coding/codecs/h265/include/h265_globals.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
@@ -587,8 +586,6 @@ int32_t VplVideoEncoderImpl::Encode(
       encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
     } else if (codec_ == MFX_CODEC_HEVC) {
       codec_specific.codecType = webrtc::kVideoCodecH265;
-      codec_specific.codecSpecific.H265.packetization_mode =
-          webrtc::H265PacketizationMode::NonInterleaved;
 
       h265_bitstream_parser_.ParseBitstream(encoded_image_);
       encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
