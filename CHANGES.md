@@ -58,6 +58,8 @@
   - STL が要求する CUDA のバージョンが 12.4 以上であるため、他のプラットフォームに影響が出ないように無視するように修正
   - 参考: https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10
   - @torikizi
+- [UPDATE] Actions で使用する Windows を 2022 にアップデート
+  - @melpon
 - [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
   - @melpon
 - [ADD] Intel VPL の H.265 ハードウェアエンコーダ/デコーダに対応する
