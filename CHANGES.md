@@ -36,6 +36,8 @@
     - libwebrtc から削除されたために webrtc-build で復活させた `proxy_info_revive.h` と `crypt_string_revive.h` を利用するように修正
     - `init_allocator` の引数変更に追従
     - webrtc-build の H.265 パッチの変更に追従し、`packetization_mode` とヘッダーを削除
+    - m128 以降は新規追加された ScreenCaptureKit の framework が必要となったため、`CMakeLists.txt` に追加
+      - 参考 : https://source.chromium.org/chromium/_/webrtc/src/+/d4a6c3f76fc3b187115d1cd65f4d1fffd7bebb7c
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
@@ -78,8 +80,6 @@
   - @tnoho
 - [ADD] Intel VPL の VP9 ハードウェアエンコーダに対応する
   - @tnoho
-- [ADD] ScreenCaptureKit を追加
-  - @torikizi
 - [FIX] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
   - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
   - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
