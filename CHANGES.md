@@ -29,7 +29,7 @@
   - @voluntas @torikizi
 - [UPDATE] Boost を 1.85.0 に上げる
   - @torikizi
-- [UPDATE] WebRTC を m125.6422.2.5 に上げる
+- [UPDATE] WebRTC を m128.6613.2.0 に上げる
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
