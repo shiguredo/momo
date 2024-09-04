@@ -30,6 +30,9 @@
 - [UPDATE] Boost を 1.85.0 に上げる
   - @torikizi
 - [UPDATE] WebRTC を m128.6613.2.0 に上げる
+  - m128.6613.2.0 での変更点は以下の通り
+    - `rtc::CreateRandomString` のヘッダーを追加
+    - `rtc_base` 以下のファイルが削除されたことに対する追従
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
@@ -70,6 +73,8 @@
   - @tnoho
 - [ADD] Intel VPL の VP9 ハードウェアエンコーダに対応する
   - @tnoho
+- [ADD] ScreenCaptureKit を追加
+  - @torikizi
 - [FIX] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
   - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
   - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
