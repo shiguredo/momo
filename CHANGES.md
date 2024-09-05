@@ -23,13 +23,25 @@
   - JetPack 5.1.1, 5.1.2 で動作を確認
   - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
   - @enm10k
+- [CHANGE] libwebrtc に定義されている継承元クラスが変更されたため `CreateVideoEncoder` と `CreateVideoDecoder` を `Create` に変更
+  - @melpon 
+- [CHANGE] hwenc_nvcodec 部分を Sora C++ SDK から移植
+  - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.3 に上げる
   - @voluntas @torikizi
 - [UPDATE] Boost を 1.85.0 に上げる
   - @torikizi
-- [UPDATE] WebRTC を m125.6422.2.5 に上げる
+- [UPDATE] WebRTC を m128.6613.2.0 に上げる
+  - m128.6613.2.0 での変更点は以下の通り
+    - libwebrtc から helpers が削除され `crypto_random` に分割されたため、`rtc::CreateRandomString` を利用するために `crypto_random.h` を追加
+      - 参考 : https://source.chromium.org/chromium/_/webrtc/src/+/4158678b468135a017aa582f038731b5f7851c82
+    - libwebrtc から削除されたために webrtc-build で復活させた `proxy_info_revive.h` と `crypt_string_revive.h` を利用するように修正
+    - `init_allocator` の引数変更に追従
+    - webrtc-build の H.265 パッチの変更に追従し、`packetization_mode` とヘッダーを削除
+    - m128 以降は新規追加された ScreenCaptureKit の framework が必要となったため、`CMakeLists.txt` に追加
+      - 参考 : https://source.chromium.org/chromium/_/webrtc/src/+/d4a6c3f76fc3b187115d1cd65f4d1fffd7bebb7c
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
   - CMAKE_VERSION を 3.27.7 に上げる
@@ -52,6 +64,8 @@
   - STL が要求する CUDA のバージョンが 12.4 以上であるため、他のプラットフォームに影響が出ないように無視するように修正
   - 参考: https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10
   - @torikizi
+- [UPDATE] Github Actions で使用する Windows を 2022 にアップデート
+  - @melpon
 - [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
   - @melpon
 - [ADD] Intel VPL の H.265 ハードウェアエンコーダ/デコーダに対応する

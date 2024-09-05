@@ -411,6 +411,7 @@ elseif (TARGET_OS STREQUAL "macos")
       "-framework MetalKit"
       "-framework OpenGL"
       "-framework IOSurface"
+      "-framework ScreenCaptureKit"
   )
 
 elseif (TARGET_OS STREQUAL "linux")

@@ -17,7 +17,6 @@
 // WebRTC
 #include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
-#include <modules/video_coding/codecs/h265/include/h265_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
 #include <modules/video_coding/svc/create_scalability_structure.h>
@@ -849,8 +848,6 @@ int32_t JetsonVideoEncoder::SendFrame(
         webrtc::EncodedImageBuffer::Create(buffer, size);
     encoded_image_.SetEncodedData(encoded_image_buffer);
 
-    codec_specific.codecSpecific.H265.packetization_mode =
-        webrtc::H265PacketizationMode::NonInterleaved;
   } else if (codec_.codecType == webrtc::kVideoCodecAV1 ||
              codec_.codecType == webrtc::kVideoCodecVP9 ||
              codec_.codecType == webrtc::kVideoCodecVP8) {

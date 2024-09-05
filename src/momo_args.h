@@ -9,7 +9,8 @@
 
 // WebRTC
 #include <api/rtp_parameters.h>
-#include <rtc_base/proxy_info.h>
+#include <rtc_base/crypt_string_revive.h>
+#include <rtc_base/proxy_info_revive.h>
 
 #include "video_codec_info.h"
 

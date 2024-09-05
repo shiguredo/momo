@@ -14,7 +14,7 @@
 #include <boost/preprocessor/stringize.hpp>
 
 // WebRTC
-#include <rtc_base/helpers.h>
+#include <rtc_base/crypto_random.h>
 
 #include "momo_version.h"
 
