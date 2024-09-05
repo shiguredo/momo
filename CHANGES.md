@@ -23,6 +23,10 @@
   - JetPack 5.1.1, 5.1.2 で動作を確認
   - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
   - @enm10k
+- [CHANGE] libwebrtc に定義されている継承元クラスが変更されたため `CreateVideoEncoder` と `CreateVideoDecoder` を `Create` に変更
+  - @melpon 
+- [CHANGE] hwenc_nvcodec 部分を Sora C++ SDK から移植
+  - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.3 に上げる
