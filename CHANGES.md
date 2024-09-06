@@ -52,10 +52,6 @@
 - [UPDATE] パッケージディレクトリ変更に追従する
   - WebRTC を m118 に上げた際にパッケージディレクトリが変更されたのでそれに追従する
   - @torikizi
-- [UPDATE] Github Actions の actions/download-artifact をアップデート
-  - Node.js 16 の Deprecated に伴うアップデート
-    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
-  - @torikizi
 - [UPDATE] Raspberry Pi OS のビルドを bullseye から bookworm にアップデート
   - multistrap の suite を bullseye から bookworm に修正
   - libstdc++-11-dev をインストールするように修正
@@ -64,8 +60,6 @@
   - STL が要求する CUDA のバージョンが 12.4 以上であるため、他のプラットフォームに影響が出ないように無視するように修正
   - 参考: https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10
   - @torikizi
-- [UPDATE] Github Actions で使用する Windows を 2022 にアップデート
-  - @melpon
 - [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
   - @melpon
 - [ADD] Intel VPL の H.265 ハードウェアエンコーダ/デコーダに対応する
@@ -88,6 +82,15 @@
   - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
   - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
   - @torikizi
+
+### misc
+
+- [UPDATE] Github Actions の actions/download-artifact をアップデート
+  - Node.js 16 の Deprecated に伴うアップデート
+    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
+  - @torikizi
+- [UPDATE] Github Actions で使用する Windows を 2022 にアップデート
+  - @melpon
 
 ## 2023.1.0
 
