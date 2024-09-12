@@ -4,6 +4,12 @@
 
 NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提としています。
 
+## 既知の問題
+
+現在 Jetpack 6 で --hw-mjpeg-decoder が有効だと H.264 が送信できない問題があります。
+Jetson 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
+詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
+
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 <https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
