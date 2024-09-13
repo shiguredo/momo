@@ -109,8 +109,7 @@ void Util::ParseArgs(int argc,
 #elif defined(__linux__)
   app.add_option("--video-device", args.video_device,
                  "Use the video input device specified by a name "
-                 "(some device will be used if not specified)")
-      ->check(CLI::ExistingFile);
+                 "(some device will be used if not specified)");
 #endif
   app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
