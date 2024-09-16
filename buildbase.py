@@ -690,6 +690,7 @@ def build_and_install_boost(
 ):
     version_underscore = version.replace(".", "_")
     archive = download(
+        # XXX: ここ GitHub Releases に変更するのはダメなのだろうか？
         f"https://boostorg.jfrog.io/artifactory/main/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
     )
