@@ -338,6 +338,9 @@ if ("${TARGET_OS}" STREQUAL "windows")
         # VS のバージョンと _MSC_VER のリストは以下を参照:
         #   https://devblogs.microsoft.com/cppblog/msvc-toolset-minor-version-number-14-40-in-vs-2022-v17-10/
         -allow-unsupported-compiler
+        # 更に STL が CUDA 12.4 以上のバージョンを要求するため、STL のバージョンも無視する
+        # ref: https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10
+        -Xcompiler /D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
         -Xcompiler /utf-8
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/include
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/NvCodec
@@ -408,6 +411,7 @@ elseif (TARGET_OS STREQUAL "macos")
       "-framework MetalKit"
       "-framework OpenGL"
       "-framework IOSurface"
+      "-framework ScreenCaptureKit"
   )
 
 elseif (TARGET_OS STREQUAL "linux")

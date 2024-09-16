@@ -1,6 +1,7 @@
 name: build-workflow
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - "doc/**"

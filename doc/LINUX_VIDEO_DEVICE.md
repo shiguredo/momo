@@ -1,17 +1,20 @@
 # Linux でビデオデバイスを指定する
 
+Momo ではデバイスを指定する際、デバイスファイルではなくデバイス名を指定します。
+
 ## --video-device
 
-`--video-device` は linux 端末でビデオデバイス（つまりカメラ）を指定する機能です。 1 台の Raspberry Pi で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれここに割り当てたい時に利用できます。
+`--video-device` は linux 端末でビデオデバイス（つまりカメラ）を指定する機能です。
+1 台の Raspberry Pi で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれここに割り当てたい時に利用できます。
 
 ```bash
-./momo --video-device /dev/video0 test
+./momo --video-device "MX Brio" test
 ```
 
 ### デバイス名の固定
 
 Linux 端末で USB カメラを接続した場合に、デバイス名が前回の接続時と異なるデバイス名になることがあります。
-デバイス名が変更された場合は、--video-device に指定するデバイス名も合わせて修正する必要があるため、
+デバイス名が変更された場合は、 `--video-device` に指定するデバイス名も合わせて修正する必要があるため、
 例えば、Linux 端末の起動時に自動で momo を起動させたい場合等に不便です。
 
 ここでは、同じデバイス名を使用できるように、USB カメラのデバイス名を接続するカメラごとに固定して、
@@ -60,5 +63,5 @@ KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", ATTR{index}=="0",
 すぐに再度接続して、上記で SYMLINK に設定したデバイス名を --video-device に指定して momo を実行します。
 
 ```bash
-./momo --video-device /dev/video_101 test
+./momo --video-device "MX Brio" test
 ```

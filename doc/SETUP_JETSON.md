@@ -1,17 +1,21 @@
-# Jetson シリーズで Momo を使ってみる
+# NVIDIA Jetson シリーズで Momo を使ってみる
 
 もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
-## Jetson シリーズでは JetPack 5.1.1 のみの利用を前提としています
+NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提としています。
 
-[JetPack 5.1.1 is now live \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-5-1-1-is-now-live/247862/1)
+## 既知の問題
+
+現在 Jetpack 6 で --hw-mjpeg-decoder が有効だと H.264 が送信できない問題があります。
+Jetson 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
+詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 <https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 - `momo-<version>_ubuntu-22.04_armv8_jetson.tar.gz`
-  - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
+  - Jetson AGX Orin または Jetson NX Orin
   - JetPack 6 の最新版に対応
 
 ## ダウンロードしたパッケージ、解凍後の構成
