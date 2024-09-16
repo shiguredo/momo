@@ -31,7 +31,7 @@
   - @melpon
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
-- [UPDATE] SDL を 2.30.3 に上げる
+- [UPDATE] SDL を 2.30.5 に上げる
   - @voluntas @torikizi
 - [UPDATE] Boost を 1.85.0 に上げる
   - @torikizi
