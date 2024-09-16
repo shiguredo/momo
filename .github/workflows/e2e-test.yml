@@ -34,12 +34,12 @@ jobs:
           chmod 755 momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo
           mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
       - uses: astral-sh/setup-uv@v2
-      - run: uv sync
-        working-directory: ./test
       - name: setup v4l2loopback
         run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
           ls -l /dev/video0
+      - run: uv sync
+        working-directory: ./test
       - run: |
           uv run pytest test_momo.py -s
         working-directory: ./test
