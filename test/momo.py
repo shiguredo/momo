@@ -42,6 +42,9 @@ class Momo:
             self.mode,
             "--port",
             str(self.port),
+            "--video-device",
+            # これは GitHub Actions 用
+            "VCamera",
         ]
         try:
             self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
