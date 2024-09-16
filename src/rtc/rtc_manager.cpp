@@ -209,7 +209,7 @@ void RTCManager::AddDataManager(std::shared_ptr<RTCDataManager> data_manager) {
   data_manager_dispatcher_.Add(data_manager);
 }
 
-class RawCryptString : public rtc::CryptStringImpl {
+class RawCryptString : public rtc::revive::CryptStringImpl {
  public:
   RawCryptString(const std::string& str) : str_(str) {}
   size_t GetLength() const override { return str_.size(); }
@@ -270,7 +270,8 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       pi.username = config_.proxy_username;
     }
     if (!config_.proxy_password.empty()) {
-      pi.password = rtc::CryptString(RawCryptString(config_.proxy_password));
+      pi.password =
+          rtc::revive::CryptString(RawCryptString(config_.proxy_password));
     }
     dependencies.allocator->set_proxy("WebRTC Native Client Momo", pi);
   }

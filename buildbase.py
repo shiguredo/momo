@@ -690,6 +690,7 @@ def build_and_install_boost(
 ):
     version_underscore = version.replace(".", "_")
     archive = download(
+        # XXX: ここ GitHub Releases に変更するのはダメなのだろうか？
         f"https://boostorg.jfrog.io/artifactory/main/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
     )
@@ -1091,7 +1092,9 @@ def install_cmake(version, source_dir, install_dir, platform: str, ext):
 def install_sdl2(
     version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
 ):
-    url = f"http://www.libsdl.org/release/SDL2-{version}.zip"
+    url = (
+        f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL2-{version}.zip"
+    )
     path = download(url, source_dir)
     sdl2_source_dir = os.path.join(source_dir, "sdl2")
     sdl2_build_dir = os.path.join(build_dir, "sdl2")

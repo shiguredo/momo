@@ -387,8 +387,6 @@ int32_t NvCodecVideoEncoderImpl::Encode(
       encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
     } else if (codec_ == CudaVideoCodec::H265) {
       codec_specific.codecType = webrtc::kVideoCodecH265;
-      codec_specific.codecSpecific.H265.packetization_mode =
-          webrtc::H265PacketizationMode::NonInterleaved;
 
       h265_bitstream_parser_.ParseBitstream(encoded_image_);
       encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
