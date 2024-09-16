@@ -33,14 +33,13 @@ jobs:
           mkdir -p _build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo
           chmod 755 momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo
           mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
-      - uses: eifinger/setup-rye@v3
-        with:
-          version: 'latest'
-      - run: rye sync
+      - uses: astral-sh/setup-uv@v2
+      - run: uv sync
         working-directory: ./test
-      - run: |
+      - name: setup v4l2loopback
+        run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
           ls -l /dev/video0
       - run: |
-          rye run pytest test_momo.py -s
+          uv run pytest test_momo.py -s
         working-directory: ./test
