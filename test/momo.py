@@ -37,6 +37,7 @@ class Momo:
         self.stop()
 
     def run_app(self):
+        print(self.executable)
         args = [
             str(self.executable),
             self.mode,
