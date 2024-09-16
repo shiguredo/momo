@@ -33,8 +33,8 @@
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.5 に上げる
   - @voluntas @torikizi
-- [UPDATE] Boost を 1.85.0 に上げる
-  - @torikizi
+- [UPDATE] Boost を 1.86.0 に上げる
+  - @torikizi @voluntas
 - [UPDATE] WebRTC を m128.6613.2.0 に上げる
   - m128.6613.2.0 での変更点は以下の通り
     - libwebrtc から helpers が削除され `crypto_random` に分割されたため、`rtc::CreateRandomString` を利用するために `crypto_random.h` を追加
