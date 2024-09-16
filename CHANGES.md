@@ -29,6 +29,8 @@
   - @melpon
 - [CHANGE] hwenc_nvcodec 部分を Sora C++ SDK から移植
   - @melpon
+- [UPDATE] VPL を 2.13.0 に上げる
+  - @voluntas
 - [UPDATE] CLI11 を 2.4.2 に上げる
   - @voluntas @torikizi
 - [UPDATE] SDL を 2.30.7 に上げる
