@@ -33,7 +33,8 @@ jobs:
           mkdir -p _build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo
           # chmod 755 momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo
           chmod 755 momo/momo
-          mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
+          # mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
+          mv momo/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
       - uses: astral-sh/setup-uv@v2
       - name: setup v4l2loopback
         run: |
