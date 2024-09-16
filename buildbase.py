@@ -1092,7 +1092,7 @@ def install_cmake(version, source_dir, install_dir, platform: str, ext):
 def install_sdl2(
     version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
 ):
-    url = f"http://www.libsdl.org/release/SDL2-{version}.zip"
+    url = f"https://www.libsdl.org/release/SDL2-{version}.zip"
     path = download(url, source_dir)
     sdl2_source_dir = os.path.join(source_dir, "sdl2")
     sdl2_build_dir = os.path.join(build_dir, "sdl2")
