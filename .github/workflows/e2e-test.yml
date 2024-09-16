@@ -1,0 +1,47 @@
+name: e2e-test
+
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+      - "html/**"
+      - "**.md"
+      - "THANKS"
+      - "LICENSE"
+      - "NOTICE"
+
+jobs:
+  e2e-test-ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          # - ubuntu-24.04
+    env:
+      MOMO_VERSION: "2024.1.0-canary.0"
+      MOMO_ARCH: "x86_64"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt update
+          sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
+      - run: |
+          curl -LO https://github.com/shiguredo/momo/releases/download/${{ env.MOMO_VERSION}}/momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}.tar.gz
+          tar -xzf momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}.tar.gz
+          mkdir -p _build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo
+          # chmod 755 momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo
+          chmod 755 momo/momo
+          # mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
+          mv momo/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
+      - uses: astral-sh/setup-uv@v2
+      - name: setup v4l2loopback
+        run: |
+          sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
+          ls -l /dev/video0
+      - run: uv sync
+        working-directory: ./test
+      - run: |
+          uv run pytest test_momo.py -s
+        working-directory: ./test

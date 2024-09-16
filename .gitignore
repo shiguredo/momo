@@ -43,3 +43,11 @@ webrtc_logs_0
 /_source
 /_install
 /_package
+
+# python
+.venv
+.pytest_cache
+__pycache__
+
+# vscode
+build

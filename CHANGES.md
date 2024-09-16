@@ -87,6 +87,9 @@
 
 ### misc
 
+- [ADD] pytest を利用した E2E テストを追加
+
+  - @voluntas
 - [UPDATE] Github Actions の actions/download-artifact をアップデート
   - Node.js 16 の Deprecated に伴うアップデート
     - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
