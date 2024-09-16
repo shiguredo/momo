@@ -4,6 +4,12 @@ VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で H
 
 このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
+## 既知の問題
+
+現在 VPL で VP9 と AV1 を送信するとき、受信に参加したクライアントが受信できない問題があります。
+`-vp9-encoder` と `--av1-encoder` で　`software` を指定することで回避できます。
+詳細については https://github.com/shiguredo/momo/issues/357 をご確認ください。
+
 ## Intel Media SDK について
 
 VPL の詳細については以下のリンクをご確認ください。
