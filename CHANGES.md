@@ -46,7 +46,7 @@
       - 参考 : <https://source.chromium.org/chromium/_/webrtc/src/+/d4a6c3f76fc3b187115d1cd65f4d1fffd7bebb7c>
   - @torikizi @melpon
 - [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
-  - CMAKE_VERSION を 3.27.7 に上げる
+  - CMAKE_VERSION を 3.30.3 に上げる
     - clang や CXX_STANDARD のバージョンアップに合わせ最新のバージョンに上げる
   - すべてのプラットフォームで set_target_properties の CXX_STANDARD を 20 にアップデート
   - Ubuntu で使用する clang のバージョンを 15 にアップデート
