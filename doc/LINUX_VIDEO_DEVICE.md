@@ -11,6 +11,24 @@ Momo ではデバイスを指定する際、デバイスファイルではなく
 ./momo --video-device "MX Brio" test
 ```
 
+### デバイス名を取得する
+
+デバイス名は、`v4l2-ctl` コマンドで取得できます。
+例えば以下のような実行結果の場合、デバイス名は `HD USB CAMERA: HD USB CAMER` と `Integrated_Webcam: Integrate` です。
+
+```bash
+v4l2-ctl --list-devices
+HD USB CAMERA: HD USB CAMERA (usb-0000:00:00.0-1):
+        /dev/video0
+        /dev/video1
+        /dev/media0
+
+Integrated_Webcam: Integrate (usb-0000:00:00.0-12):
+        /dev/video2
+        /dev/video3
+        /dev/media1
+```
+
 ### デバイス名の固定
 
 Linux 端末で USB カメラを接続した場合に、デバイス名が前回の接続時と異なるデバイス名になることがあります。
@@ -57,11 +75,11 @@ ATTR{index}=="0" を含めた場合の設定例は下記の通りです。
 KERNEL=="video[0-9]*", MODE="0666", ATTRS{serial}=="8E40F950", ATTR{index}=="0", SYMLINK+="video_101"
 ```
 
-### momo の実行
+#### momo の実行
 
 設定したデバイス名を使用するために、USB カメラを Linux 端末から外して、
 すぐに再度接続して、上記で SYMLINK に設定したデバイス名を --video-device に指定して momo を実行します。
 
 ```bash
-./momo --video-device "MX Brio" test
+./momo --video-device "video_101" test
 ```
