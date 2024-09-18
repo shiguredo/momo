@@ -5,18 +5,19 @@
 #include <vector>
 
 // WebRTC
+#include <api/environment/environment.h>
 #include <api/video_codecs/sdp_video_format.h>
 #include <api/video_codecs/video_encoder.h>
 #include <api/video_codecs/video_encoder_factory.h>
 
 #include "video_codec_info.h"
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
 
-#if USE_MSDK_ENCODER
-#include "hwenc_msdk/msdk_session.h"
+#if defined(USE_VPL_ENCODER)
+#include "sora/hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoEncoderFactoryConfig {
@@ -24,11 +25,13 @@ struct MomoVideoEncoderFactoryConfig {
   VideoCodecInfo::Type vp9_encoder;
   VideoCodecInfo::Type av1_encoder;
   VideoCodecInfo::Type h264_encoder;
+  VideoCodecInfo::Type h265_encoder;
   bool simulcast;
   bool hardware_encoder_only;
-#if defined(__linux__) && USE_NVCODEC_ENCODER
-  std::shared_ptr<CudaContext> cuda_context;
+#if defined(USE_NVCODEC_ENCODER)
+  std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
+  std::string openh264;
 };
 
 class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
@@ -42,10 +45,14 @@ class MomoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
-  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
+  std::unique_ptr<webrtc::VideoEncoder> Create(
+      const webrtc::Environment& env,
       const webrtc::SdpVideoFormat& format) override;
 
  private:
+  std::unique_ptr<webrtc::VideoEncoder> CreateInternal(
+      const webrtc::Environment& env,
+      const webrtc::SdpVideoFormat& format);
   std::unique_ptr<webrtc::VideoEncoder> WithSimulcast(
       const webrtc::SdpVideoFormat& format,
       std::function<std::unique_ptr<webrtc::VideoEncoder>(

@@ -73,8 +73,7 @@ SoraClient::~SoraClient() {
   if (using_datachannel_ && dc_) {
     webrtc::DataBuffer disconnect =
         ConvertToDataBuffer("signaling", R"({"type":"disconnect"})");
-    dc_->Close(
-        disconnect, [dc = dc_]() {}, config_.disconnect_wait_timeout);
+    dc_->Close(disconnect, [dc = dc_]() {}, config_.disconnect_wait_timeout);
     dc_ = nullptr;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
   }
@@ -671,7 +670,7 @@ void SoraClient::OnMessage(
     return;
   }
 
-  boost::json::error_code ec;
+  boost::system::error_code ec;
   auto json = boost::json::parse(data, ec);
   if (ec) {
     RTC_LOG(LS_ERROR) << "JSON Parse Error ec=" << ec.message();

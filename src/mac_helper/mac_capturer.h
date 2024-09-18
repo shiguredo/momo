@@ -19,14 +19,14 @@
 #include <api/scoped_refptr.h>
 #include <base/RTCMacros.h>
 #include <modules/video_capture/video_capture.h>
-#include <rtc/scalable_track_source.h>
+#include <sora/scalable_track_source.h>
 #include <rtc_base/thread.h>
 
 RTC_FWD_DECL_OBJC_CLASS(AVCaptureDevice);
 RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
 RTC_FWD_DECL_OBJC_CLASS(RTCVideoSourceAdapter);
 
-class MacCapturer : public ScalableVideoTrackSource,
+class MacCapturer : public sora::ScalableVideoTrackSource,
                     public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   static rtc::scoped_refptr<MacCapturer> Create(

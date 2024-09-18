@@ -72,7 +72,7 @@ rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
 }
 
 LibcameraCapturer::LibcameraCapturer()
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()),
       acquired_(false),
       controls_(libcameracpp_ControlList_controls()),
       camera_started_(false) {}

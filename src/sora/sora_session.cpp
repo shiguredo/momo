@@ -72,7 +72,7 @@ void SoraSession::OnRead(boost::system::error_code ec,
       boost::json::value json_message = {{"result", true}};
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute") {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       boost::json::value recv_json = boost::json::parse(req_.body(), ec);
       if (ec) {
         SendResponse(Util::BadRequest(req_, "Invalid JSON"));

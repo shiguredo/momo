@@ -10,33 +10,29 @@
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/string_utils.h>
 
-#if USE_SCREEN_CAPTURER
+#if defined(USE_SCREEN_CAPTURER)
 #include "rtc/screen_video_capturer.h"
 #endif
 
 #if defined(__APPLE__)
 #include "mac_helper/mac_capturer.h"
 #elif defined(__linux__)
-#if USE_MMAL_ENCODER
-#include "hwenc_mmal/mmal_v4l2_capturer.h"
-#elif USE_JETSON_ENCODER
-#include "hwenc_jetson/jetson_v4l2_capturer.h"
-#elif USE_NVCODEC_ENCODER
-#include "hwenc_nvcodec/nvcodec_v4l2_capturer.h"
-#elif USE_V4L2_ENCODER
+#if defined(USE_JETSON_ENCODER)
+#include "sora/hwenc_jetson/jetson_v4l2_capturer.h"
+#elif defined(USE_NVCODEC_ENCODER)
+#include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
+#elif defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/libcamera_capturer.h"
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
-#include "v4l2_video_capturer/v4l2_video_capturer.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
 #endif
 
 #include "serial_data_channel/serial_data_manager.h"
 
-#if USE_SDL2
 #include "sdl_renderer/sdl_renderer.h"
-#endif
 
 #include "ayame/ayame_client.h"
 #include "metrics/metrics_server.h"
@@ -50,8 +46,8 @@
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
 
-#if defined(__linux__) && USE_NVCODEC_ENCODER
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
@@ -89,15 +85,9 @@ int main(int argc, char* argv[]) {
   }
   rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
 
-#if USE_NVCODEC_ENCODER
-  std::shared_ptr<CudaContext> cuda_context;
-  try {
-    cuda_context = CudaContext::Create();
-  } catch (...) {
-  }
-#endif
+#if defined(USE_NVCODEC_ENCODER)
+  auto cuda_context = sora::CudaContext::Create();
 
-#if USE_NVCODEC_ENCODER
   // NvCodec が有効な環境で HW MJPEG デコーダを使う場合、CUDA が有効である必要がある
   if (args.hw_mjpeg_decoder && cuda_context == nullptr) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
@@ -106,12 +96,12 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  auto capturer = ([&]() -> rtc::scoped_refptr<ScalableVideoTrackSource> {
+  auto capturer = ([&]() -> rtc::scoped_refptr<sora::ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
     }
 
-#if USE_SCREEN_CAPTURER
+#if defined(USE_SCREEN_CAPTURER)
     if (args.screen_capture) {
       RTC_LOG(LS_INFO) << "Screen capturer source list: "
                        << ScreenVideoCapturer::GetSourceListString();
@@ -131,7 +121,7 @@ int main(int argc, char* argv[]) {
     return MacCapturer::Create(size.width, size.height, args.framerate,
                                args.video_device);
 #elif defined(__linux__)
-    V4L2VideoCapturerConfig v4l2_config;
+    sora::V4L2VideoCapturerConfig v4l2_config;
     v4l2_config.video_device = args.video_device;
     v4l2_config.width = size.width;
     v4l2_config.height = size.height;
@@ -139,30 +129,21 @@ int main(int argc, char* argv[]) {
     v4l2_config.force_i420 = args.force_i420;
     v4l2_config.use_native = args.hw_mjpeg_decoder;
 
-#if USE_MMAL_ENCODER
+#if defined(USE_JETSON_ENCODER)
     if (v4l2_config.use_native) {
-      MMALV4L2CapturerConfig mmal_config = v4l2_config;
-      // サイマルキャストの場合はネイティブフレームを出力しない
-      mmal_config.native_frame_output = !(use_sora && args.sora_simulcast);
-      return MMALV4L2Capturer::Create(std::move(mmal_config));
+      return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif USE_JETSON_ENCODER
+#elif defined(USE_NVCODEC_ENCODER)
     if (v4l2_config.use_native) {
-      return JetsonV4L2Capturer::Create(std::move(v4l2_config));
-    } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
-#elif USE_NVCODEC_ENCODER
-    if (v4l2_config.use_native) {
-      NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
+      sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
       nvcodec_config.cuda_context = cuda_context;
-      return NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
+      return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
-#elif USE_V4L2_ENCODER
+#elif defined(USE_V4L2_ENCODER)
     if (args.use_libcamera) {
       LibcameraCapturerConfig libcamera_config = v4l2_config;
       // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
@@ -172,10 +153,10 @@ int main(int argc, char* argv[]) {
     } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
       return V4L2Capturer::Create(std::move(v4l2_config));
     } else {
-      return V4L2VideoCapturer::Create(std::move(v4l2_config));
+      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
     }
 #else
-    return V4L2VideoCapturer::Create(std::move(v4l2_config));
+    return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif
 #else
     return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,
@@ -211,10 +192,18 @@ int main(int argc, char* argv[]) {
   rtcm_config.av1_decoder = args.av1_decoder;
   rtcm_config.h264_encoder = args.h264_encoder;
   rtcm_config.h264_decoder = args.h264_decoder;
+  rtcm_config.h265_encoder = args.h265_encoder;
+  rtcm_config.h265_decoder = args.h265_decoder;
+
+  rtcm_config.openh264 = args.openh264;
+  if (!rtcm_config.openh264.empty()) {
+    // openh264 が指定されている場合は自動的に H264 ソフトウェアエンコーダを利用する
+    rtcm_config.h264_encoder = VideoCodecInfo::Type::Software;
+  }
 
   rtcm_config.priority = args.priority;
 
-#if USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
   rtcm_config.cuda_context = cuda_context;
 #endif
 
@@ -222,7 +211,6 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
 
-#if USE_SDL2
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {
     sdl_renderer.reset(new SDLRenderer(args.window_width, args.window_height,
@@ -231,10 +219,6 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<RTCManager> rtc_manager(new RTCManager(
       std::move(rtcm_config), std::move(capturer), sdl_renderer.get()));
-#else
-  std::unique_ptr<RTCManager> rtc_manager(
-      new RTCManager(std::move(rtcm_config), std::move(capturer), nullptr));
-#endif
 
   {
     boost::asio::io_context ioc{1};
@@ -357,7 +341,6 @@ int main(int argc, char* argv[]) {
           ->Run();
     }
 
-#if USE_SDL2
     if (sdl_renderer) {
       sdl_renderer->SetDispatchFunction([&ioc](std::function<void()> f) {
         if (ioc.stopped())
@@ -371,16 +354,10 @@ int main(int argc, char* argv[]) {
     } else {
       ioc.run();
     }
-#else
-    ioc.run();
-#endif
   }
 
   //この順番は綺麗に落ちるけど、あまり安全ではない
-#if USE_SDL2
   sdl_renderer = nullptr;
-#endif
-  rtc_manager = nullptr;
 
   return 0;
 }

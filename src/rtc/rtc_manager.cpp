@@ -7,6 +7,7 @@
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+#include <api/enable_media.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
 #include <api/task_queue/default_task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
@@ -25,13 +26,13 @@
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
 #include "rtc_ssl_verifier.h"
-#include "scalable_track_source.h"
+#include "sora/scalable_track_source.h"
 #include "url_parts.h"
 #include "util.h"
 
 RTCManager::RTCManager(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver)
     : config_(std::move(config)), receiver_(receiver) {
   rtc::InitializeSSL();
@@ -45,7 +46,7 @@ RTCManager::RTCManager(
 
 #if defined(__linux__)
 
-#if USE_LINUX_PULSE_AUDIO
+#if defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
 #else
@@ -66,30 +67,26 @@ RTCManager::RTCManager(
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  dependencies.call_factory = webrtc::CreateCallFactory();
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(
           dependencies.task_queue_factory.get());
 
-  // media_dependencies
-  cricket::MediaEngineDependencies media_dependencies;
-  media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 #if defined(_WIN32)
-  media_dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
         return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
             dependencies.task_queue_factory.get());
       });
 #else
-  media_dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> rtc::scoped_refptr<webrtc::AudioDeviceModule> {
         return webrtc::AudioDeviceModule::Create(
             audio_layer, dependencies.task_queue_factory.get());
       });
 #endif
-  media_dependencies.audio_encoder_factory =
+  dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
-  media_dependencies.audio_decoder_factory =
+  dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
 
   {
@@ -102,12 +99,14 @@ RTCManager::RTCManager(
     ec.vp9_encoder = resolve(cf.vp9_encoder, info.vp9_encoders);
     ec.av1_encoder = resolve(cf.av1_encoder, info.av1_encoders);
     ec.h264_encoder = resolve(cf.h264_encoder, info.h264_encoders);
+    ec.h265_encoder = resolve(cf.h265_encoder, info.h265_encoders);
     ec.simulcast = cf.simulcast;
     ec.hardware_encoder_only = cf.hardware_encoder_only;
-#if defined(__linux__) && USE_NVCODEC_ENCODER
+#if defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
-    media_dependencies.video_encoder_factory =
+    ec.openh264 = cf.openh264;
+    dependencies.video_encoder_factory =
         std::unique_ptr<webrtc::VideoEncoderFactory>(
             absl::make_unique<MomoVideoEncoderFactory>(ec));
     MomoVideoDecoderFactoryConfig dc;
@@ -115,20 +114,19 @@ RTCManager::RTCManager(
     dc.vp9_decoder = resolve(cf.vp9_decoder, info.vp9_decoders);
     dc.av1_decoder = resolve(cf.av1_decoder, info.av1_decoders);
     dc.h264_decoder = resolve(cf.h264_decoder, info.h264_decoders);
-#if USE_NVCODEC_ENCODER
+    dc.h265_decoder = resolve(cf.h265_decoder, info.h265_decoders);
+#if defined(USE_NVCODEC_ENCODER)
     dc.cuda_context = cf.cuda_context;
 #endif
-    media_dependencies.video_decoder_factory =
+    dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(
             absl::make_unique<MomoVideoDecoderFactory>(dc));
   }
 
-  media_dependencies.audio_mixer = nullptr;
-  media_dependencies.audio_processing =
-      webrtc::AudioProcessingBuilder().Create();
+  dependencies.audio_mixer = nullptr;
+  dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
 
-  dependencies.media_engine =
-      cricket::CreateMediaEngine(std::move(media_dependencies));
+  webrtc::EnableMedia(dependencies);
 
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
@@ -211,7 +209,7 @@ void RTCManager::AddDataManager(std::shared_ptr<RTCDataManager> data_manager) {
   data_manager_dispatcher_.Add(data_manager);
 }
 
-class RawCryptString : public rtc::CryptStringImpl {
+class RawCryptString : public rtc::revive::CryptStringImpl {
  public:
   RawCryptString(const std::string& str) : str_(str) {}
   size_t GetLength() const override { return str_.size(); }
@@ -257,11 +255,11 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   dependencies.allocator->set_flags(rtc_config.port_allocator_config.flags);
   if (!config_.proxy_url.empty()) {
     RTC_LOG(LS_INFO) << "Set Proxy: type="
-                     << rtc::ProxyToString(rtc::PROXY_HTTPS)
+                     << rtc::revive::ProxyToString(rtc::revive::PROXY_HTTPS)
                      << " url=" << config_.proxy_url
                      << " username=" << config_.proxy_username;
-    rtc::ProxyInfo pi;
-    pi.type = rtc::PROXY_HTTPS;
+    rtc::revive::ProxyInfo pi;
+    pi.type = rtc::revive::PROXY_HTTPS;
     URLParts parts;
     if (!URLParts::Parse(config_.proxy_url, parts)) {
       RTC_LOG(LS_ERROR) << "Failed to parse: proxy_url=" << config_.proxy_url;
@@ -272,7 +270,8 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       pi.username = config_.proxy_username;
     }
     if (!config_.proxy_password.empty()) {
-      pi.password = rtc::CryptString(RawCryptString(config_.proxy_password));
+      pi.password =
+          rtc::revive::CryptString(RawCryptString(config_.proxy_password));
     }
     dependencies.allocator->set_proxy("WebRTC Native Client Momo", pi);
   }

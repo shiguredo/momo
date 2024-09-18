@@ -5,15 +5,16 @@
 #include <vector>
 
 // WebRTC
+#include <api/environment/environment.h>
 #include <api/video_codecs/video_decoder_factory.h>
 
 #include "video_codec_info.h"
 
-#if USE_NVCODEC_ENCODER
-#include "cuda/cuda_context.h"
+#if defined(USE_NVCODEC_ENCODER)
+#include "sora/cuda_context.h"
 #endif
-#if USE_MSDK_ENCODER
-#include "hwenc_msdk/msdk_session.h"
+#if defined(USE_VPL_ENCODER)
+#include "sora/hwenc_vpl/vpl_session.h"
 #endif
 
 struct MomoVideoDecoderFactoryConfig {
@@ -21,8 +22,9 @@ struct MomoVideoDecoderFactoryConfig {
   VideoCodecInfo::Type vp9_decoder;
   VideoCodecInfo::Type av1_decoder;
   VideoCodecInfo::Type h264_decoder;
-#if USE_NVCODEC_ENCODER
-  std::shared_ptr<CudaContext> cuda_context;
+  VideoCodecInfo::Type h265_decoder;
+#if defined(USE_NVCODEC_ENCODER)
+  std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 };
 
@@ -36,7 +38,8 @@ class MomoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
-  std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
+  std::unique_ptr<webrtc::VideoDecoder> Create(
+      const webrtc::Environment& env,
       const webrtc::SdpVideoFormat& format) override;
 };
 

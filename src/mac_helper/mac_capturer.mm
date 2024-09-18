@@ -62,13 +62,29 @@ AVCaptureDeviceFormat* SelectClosestFormat(AVCaptureDevice* device,
   return selectedFormat;
 }
 
+static NSArray<AVCaptureDevice*>* captureDevices() {
+  if (@available(macOS 14, *)) {
+    // macOS 14 以上では、新しい API を使用して外部カメラも取得する
+    AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
+      discoverySessionWithDeviceTypes:@[
+        AVCaptureDeviceTypeBuiltInWideAngleCamera,
+        AVCaptureDeviceTypeExternal ]
+                            mediaType:AVMediaTypeVideo
+                             position:AVCaptureDevicePositionUnspecified];
+    return session.devices;
+  } else {
+    // macOS 13 以下では、古い API を使用して内蔵カメラのみ取得する
+    return [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+  }
+}
+
 }  // namespace
 
 MacCapturer::MacCapturer(size_t width,
                          size_t height,
                          size_t target_fps,
                          AVCaptureDevice* device)
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()) {
+    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()) {
   RTC_LOG(LS_INFO) << "MacCapturer width=" << width << ", height=" << height
                    << ", target_fps=" << target_fps;
 
@@ -100,7 +116,7 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(
   // https://www.ffmpeg.org/ffmpeg-devices.html#avfoundation
 
   size_t capture_device_index = SIZE_T_MAX;
-  NSArray<AVCaptureDevice*>* devices = [RTCCameraVideoCapturer captureDevices];
+  NSArray<AVCaptureDevice*>* devices = captureDevices();
   [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
                                         BOOL* stop) {
     // 便利なのでデバイスの一覧をログに出力しておく
@@ -136,8 +152,7 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(
   }
 
   if (capture_device_index != SIZE_T_MAX) {
-    AVCaptureDevice* device = [[RTCCameraVideoCapturer captureDevices]
-        objectAtIndex:capture_device_index];
+    AVCaptureDevice* device = [devices objectAtIndex:capture_device_index];
     RTC_LOG(LS_INFO) << "selected video device: [" << capture_device_index
                      << "] device_name=" << [device.localizedName UTF8String];
     return device;

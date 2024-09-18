@@ -4,16 +4,17 @@
 #include <memory>
 
 // WebRTC
+#include <api/environment/environment_factory.h>
 #include <api/peer_connection_interface.h>
 #include <pc/connection_context.h>
 #include <pc/peer_connection_factory.h>
 #include <pc/video_track_source.h>
 
-#include "cuda/cuda_context.h"
 #include "rtc_connection.h"
 #include "rtc_data_manager_dispatcher.h"
 #include "rtc_message_sender.h"
-#include "scalable_track_source.h"
+#include "sora/cuda_context.h"
+#include "sora/scalable_track_source.h"
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
 
@@ -24,7 +25,8 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
   CustomPeerConnectionFactory(
       webrtc::PeerConnectionFactoryDependencies dependencies)
       : CustomPeerConnectionFactory(
-            webrtc::ConnectionContext::Create(&dependencies),
+            webrtc::ConnectionContext::Create(webrtc::CreateEnvironment(),
+                                              &dependencies),
             &dependencies) {}
   CustomPeerConnectionFactory(
       rtc::scoped_refptr<webrtc::ConnectionContext> context,
@@ -69,6 +71,10 @@ struct RTCManagerConfig {
   VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_decoder = VideoCodecInfo::Type::Default;
+
+  std::string openh264;
 
   std::string priority = "FRAMERATE";
 
@@ -81,8 +87,8 @@ struct RTCManagerConfig {
     return webrtc::DegradationPreference::BALANCED;
   }
 
-#if USE_NVCODEC_ENCODER
-  std::shared_ptr<CudaContext> cuda_context;
+#if defined(USE_NVCODEC_ENCODER)
+  std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 
   std::string proxy_url;
@@ -92,9 +98,10 @@ struct RTCManagerConfig {
 
 class RTCManager {
  public:
-  RTCManager(RTCManagerConfig config,
-             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-             VideoTrackReceiver* receiver);
+  RTCManager(
+      RTCManagerConfig config,
+      rtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
+      VideoTrackReceiver* receiver);
   ~RTCManager();
   void AddDataManager(std::shared_ptr<RTCDataManager> data_manager);
   std::shared_ptr<RTCConnection> CreateConnection(

@@ -11,6 +11,98 @@
 
 ## develop
 
+## 2024.1.0
+
+**リリース日**: 2024-09-18
+
+- [CHANGE] `--video-device` の指定を `/dev/video0` のようなファイル名ではなく `MX Brio` のようなデバイス名を指定するようにする
+  - @melpon
+- [CHANGE] ビルド周りを完全にリニューアルする
+  - @melpon
+- [CHANGE] raspberry-pi-os_armv6 と raspberry-pi-os_armv7 を削除
+  - @melpon
+- [CHANGE] ubuntu-20.04_x86_64 を削除
+  - @melpon
+- [CHANGE] ubuntu-20.04_armv8_jetson_xavier のパッケージを削除
+  - NVIDIA JetPack SDK JetPack 5 系を対象外とする
+  - @melpon
+- [CHANGE] JetPack 5.1.2 に対応
+  - JetPack 5.1.1, 5.1.2 で動作を確認
+  - JetPack 5.1 では、互換性の問題で JetsonJpegDecoder がエラーになることを確認
+  - @enm10k
+- [CHANGE] libwebrtc に定義されている継承元クラスが変更されたため `CreateVideoEncoder` と `CreateVideoDecoder` を `Create` に変更
+  - @melpon
+- [CHANGE] hwenc_nvcodec 部分を Sora C++ SDK から移植
+  - @melpon
+- [UPDATE] VPL を 2.13.0 に上げる
+  - @voluntas
+- [UPDATE] CLI11 を 2.4.2 に上げる
+  - @voluntas @torikizi
+- [UPDATE] SDL を 2.30.7 に上げる
+  - @voluntas @torikizi
+- [UPDATE] Boost を 1.86.0 に上げる
+  - @torikizi @voluntas
+- [UPDATE] WebRTC を m128.6613.2.0 に上げる
+  - m128.6613.2.0 での変更点は以下の通り
+    - libwebrtc から helpers が削除され `crypto_random` に分割されたため、`rtc::CreateRandomString` を利用するために `crypto_random.h` を追加
+      - 参考 : <https://source.chromium.org/chromium/_/webrtc/src/+/4158678b468135a017aa582f038731b5f7851c82>
+    - libwebrtc から削除されたために webrtc-build で復活させた `proxy_info_revive.h` と `crypt_string_revive.h` を利用するように修正
+    - `init_allocator` の引数変更に追従
+    - webrtc-build の H.265 パッチの変更に追従し、`packetization_mode` とヘッダーを削除
+    - m128 以降は新規追加された ScreenCaptureKit の framework が必要となったため、`CMakeLists.txt` に追加
+      - 参考 : <https://source.chromium.org/chromium/_/webrtc/src/+/d4a6c3f76fc3b187115d1cd65f4d1fffd7bebb7c>
+  - @torikizi @melpon
+- [UPDATE] WebRTC を m119 に上げたことで必要になった関連するライブラリもバージョンを上げる
+  - CMAKE_VERSION を 3.30.3 に上げる
+    - clang や CXX_STANDARD のバージョンアップに合わせ最新のバージョンに上げる
+  - すべてのプラットフォームで set_target_properties の CXX_STANDARD を 20 にアップデート
+  - Ubuntu で使用する clang のバージョンを 15 にアップデート
+  - @torikizi
+- [UPDATE] パッケージディレクトリ変更に追従する
+  - WebRTC を m118 に上げた際にパッケージディレクトリが変更されたのでそれに追従する
+  - @torikizi
+- [UPDATE] Raspberry Pi OS のビルドを bullseye から bookworm にアップデート
+  - multistrap の suite を bullseye から bookworm に修正
+  - libstdc++-11-dev をインストールするように修正
+  - @torikizi
+- [UPDATE] CMakeList.txt の修正
+  - STL が要求する CUDA のバージョンが 12.4 以上であるため、他のプラットフォームに影響が出ないように無視するように修正
+  - 参考: <https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10>
+  - @torikizi
+- [ADD] ubuntu-22.04_armv8_jetson のパッケージを追加
+  - @melpon
+- [ADD] Intel VPL の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
+- [ADD] NVIDIA Video Codec SDK の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
+- [ADD] videoToolbox の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
+- [ADD] Jetson の H.265 ハードウェアエンコーダ/デコーダに対応する
+  - @melpon
+- [ADD] OpenH264 を使った H.264 ソフトウェアエンコーダに対応する
+  - @melpon
+- [ADD] Ubuntu 24.04 対応
+  - @melpon
+- [ADD] Intel VPL の AV1 ハードウェアエンコーダに対応する
+  - @tnoho
+- [ADD] Intel VPL の VP9 ハードウェアエンコーダに対応する
+  - @tnoho
+- [FIX] macOS で USB 接続されたカメラが取得できなくなっていたのを修正
+  - macOS で USB デバイスが取得できなくなっていたため、取得するように修正
+  - macOS 14 以降では従来の API では取得できなくなっていたため API を新たに用意し、macOS 14 以降で新しい API を利用する
+  - @torikizi
+
+### misc
+
+- [CHANGE] SDL2 のダウンロード先を GitHub に変更する
+  - @voluntas
+- [UPDATE] Github Actions の actions/download-artifact をアップデート
+  - Node.js 16 の Deprecated に伴うアップデート
+    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
+  - @torikizi
+- [UPDATE] Github Actions で使用する Windows を 2022 にアップデート
+  - @melpon
+
 ## 2023.1.0
 
 - [CHANGE] --show-me オプションの削除
@@ -508,14 +600,14 @@
 - [ADD] Raspberry Pi で SDL 利用時に H264 ハードウェアデコーダを利用するようにする
   - @tnoho
 - [FIX] Jetson Nano で --use-native を使った際に FHD 設定で下部に緑の帯が出るのを修正
-  - https://github.com/shiguredo/momo/issues/124
+  - <https://github.com/shiguredo/momo/issues/124>
   - @tetsu-koba @tnoho
 - [FIX] Jetson Nano で H264 デコーダを止める際にハングしてしまう問題を修正
   - @soudegesu @tnoho
 - [FIX] macOS で WebRTC のバージョンが埋め込まれていなかった問題を修正
   - @melpon
 - [FIX] Jetson Nano で RTP タイムスタンプが 90kHz になっていなかったのを修正
-  - https://github.com/shiguredo/momo/pull/137
+  - <https://github.com/shiguredo/momo/pull/137>
   - @tetsu-koba @tnoho
 
 ## 2020.2.1
@@ -523,7 +615,7 @@
 **hotfix**
 
 - [FIX] macOS で --use-sdl オプションを利用すると落ちていたのを修正する
-  - https://bugzilla.libsdl.org/show_bug.cgi?id=4617
+  - <https://bugzilla.libsdl.org/show_bug.cgi?id=4617>
   - @melpon
 
 ## 2020.2
@@ -609,7 +701,7 @@
 ## 19.12.1
 
 - [UPDATE] libwebrtc を時前ビルドしないようにする
-  - https://github.com/shiguredo-webrtc-build/webrtc-build を利用する
+  - <https://github.com/shiguredo-webrtc-build/webrtc-build> を利用する
   - @melpon
 - [FIX] momo + ayame モードで再接続時に delay してしまう問題を解決
   - @kdxu
@@ -839,7 +931,7 @@
 - [UPDATE] WebRTC Signaling Server Ayame 19.07.0 に追従する
   - @kdxu
 - [ADD] WebRTC Signaling Server Ayame に対応しました
-  - https://github.com/OpenAyame/ayame
+  - <https://github.com/OpenAyame/ayame>
   - @kdxu
 - [ADD] Circle CI で Linux 版を毎日 22:00 に自動ビルドする
   - @voluntas
@@ -912,7 +1004,7 @@
 
 - [CHANGE] libwebrtc が 4K に対応していないため解像度指定から 4K を削除する
   - 将来的に対応していく予定
-  - https://github.com/shiguredo/momo/issues/21
+  - <https://github.com/shiguredo/momo/issues/21>
 - [FIX] P2P モードのサンプルで映像を有効にした場合、音声が正常に流れない問題を修正
 
 ## 18.10.0-rc1

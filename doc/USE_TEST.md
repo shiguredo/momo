@@ -4,7 +4,7 @@ Momo 自体がシグナリングサーバの機能を持つ test モードを利
 
 ## Momo で配信をしてみる
 
-```shell
+```bash
 ./momo --no-audio-device test
 ```
 
@@ -15,7 +15,7 @@ Windows の場合:
 ```
 
 Momo の IP アドレスが 192.0.2.100 の場合は、
-http://192.0.2.100:8080/html/test.html に Chrome でアクセスして接続してみてください。
+<http://192.0.2.100:8080/html/test.html> に Chrome でアクセスして接続してみてください。
 
 ## ローカルネットワークの Momo 同士で双方向配信をしてみる
 
@@ -26,13 +26,13 @@ SDL についての詳細は [USE_SDL.md](USE_SDL.md) をお読みください�
 
 Momo 1:
 
-```shell
+```bash
 ./momo --use-sdl test
 ```
 
 Momo 2:
 
-```shell
+```bash
 ./momo --use-sdl ayame  --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id test
 ```
 
@@ -40,13 +40,13 @@ Google STUN を利用したくない場合は`--no-google-stun`をオプショ�
 
 Momo 1:
 
-```shell
+```bash
 ./momo --no-google-stun　--use-sdl test
 ```
 
 Momo 2:
 
-```shell
+```bash
 ./momo  --no-google-stun --use-sdl ayame --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id test
 ```
 

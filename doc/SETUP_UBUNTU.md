@@ -1,14 +1,14 @@
-# Ubuntu 20.04 x86_64、 Ubuntu 22.04 x86_64 で Momo を使ってみる
+# Ubuntu 24.04 x86_64 で Momo を使ってみる
 
-## Ubuntu 20.04 x86_64、 Ubuntu 22.04 x86_64 向けのバイナリは以下にて提供しています
+## Ubuntu 24.04 x86_64 向けのバイナリは以下にて提供しています
 
-https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+<https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
-- バイナリは、 `momo-<VERSION>_ubuntu-20.04_x86_64.tar.gz` あるいは `momo-<VERSION>_ubuntu-22.04_x86_64.tar.gz` を利用してください
+- バイナリは、 `momo-<VERSION>_ubuntu-24.04_x86_64.tar.gz` を利用してください
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```
+```bash
 $ tree
 .
 ├── html
@@ -25,13 +25,13 @@ $ tree
 
 下記を実行してください
 
-```
-$ sudo apt-get update
-$ sudo apt-get upgrade
-$ sudo apt-get install libdrm2
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install libdrm2
 ```
 
-Intel Media SDK を利用したい場合は [INTEL_MEDIA_SDK.md](INTEL_MEDIA_SDK.md) を御覧ください。
+oneVPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
 
 ## 動かしてみる
 

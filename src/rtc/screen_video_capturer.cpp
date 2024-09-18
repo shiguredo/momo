@@ -55,7 +55,7 @@ ScreenVideoCapturer::ScreenVideoCapturer(
     size_t max_width,
     size_t max_height,
     size_t target_fps)
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()),
       max_width_(max_width),
       max_height_(max_height),
       requested_frame_duration_((int)(1000.0f / target_fps)),

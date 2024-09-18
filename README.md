@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m117.5938-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5938)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m128.6613-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6613)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -9,29 +9,44 @@
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
+Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
 ## WebRTC Native Client Momo について
 
 WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
 
-https://momo.shiguredo.jp/
+<https://momo.shiguredo.jp/>
 
-### ハードウェアエンコーダーへの対応
+### ハードウェアアクセラレーターへの対応
 
-- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されている VP8 や VP9 や H.264 ハードウェアエンコーダー機能を利用することで 4K@30 での配信が可能です
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれている H.264 ハードウェアエンコーダー機能を利用することが可能です
-- Apple macOS に搭載されている H.264 ハードウェアアクセラレーター機能を [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することが可能です
-- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することが可能です
-- [Intel Quick Sync Video](https://www.intel.co.jp/content/www/jp/ja/architecture-and-technology/quick-sync-video/quick-sync-video-general.html) を [Intel Media SDK](https://www.intel.com/content/www/us/en/developer/tools/media-sdk/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にて VP9 / H.264 ハードウェアアクセラレーター機能を利用することが可能です
+- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
+  - VP9 /AV1 の送信時、[既知の問題](https://github.com/shiguredo/momo/issues/357) がありますのでご確認ください
+  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
+  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
+  - ハードウェアエンコーダー: H.264 / H.265
+  - ハードウェアデコーダー: H.264 / H.265
+- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
+  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
+  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [Jetson JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
+  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
+  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
+  - ハードウェアエンコーダー: H.264
+  - ハードウェアデコーダー: H.264
 
-### 4K 30fps での配信
+### 4K の配信
 
-Momo はハードウェアエンコーダーを利用することで WebRTC で 4K 60fps の配信を実現可能です
+Momo はハードウェアエンコーダーを利用することで WebRTC で 4K の配信を実現可能です
+
+### 4K の視聴
+
+Momo はハードウェアデコーダーを利用することで WebRTC で 4K の配信を実現可能です
 
 ### サイマルキャストへの対応
 
@@ -53,6 +68,10 @@ AV1 の送受信に対応済みです。
 
 Momo は Sora モード利用時にクライアント証明書に対応しています。
 
+### OpenH264 の利用
+
+Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードを行うことができます。
+
 ## 動画
 
 [WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
@@ -68,7 +87,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 また Momo についてのつぶやきは以下にまとめてあります。
 
-https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter
+<https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter>
 
 ## 既知の問題について
 
@@ -78,41 +97,37 @@ https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter
 
 以下からダウンロードが可能です。
 
-https://github.com/shiguredo/momo/releases
+<https://github.com/shiguredo/momo/releases>
 
 ## 動作環境
 
-- Raspberry Pi OS (64bit) ARMv8
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
-- Raspberry Pi OS (32bit) ARMv7
-    - Raspberry Pi 4
-    - Raspberry Pi 3
-    - Raspberry Pi 2
-    - Raspberry Pi Zero 2
-- Raspberry Pi OS (32bit) ARMv6
-    - Raspberry Pi Zero
-    - Raspberry Pi 1
-- Ubuntu 20.04 x86_64
+- Windows 11 x86_64
+- macOS 14 arm64
+- Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
-- Ubuntu 20.04 ARMv8 Jetson
-    - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-- macOS 12 arm64 以降
-- Windows 10.1809 x86_64 以降
+- Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
+  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+  - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+- Raspberry Pi OS (64bit)
+  - Raspberry Pi 4
+  - Raspberry Pi 3
+  - Raspberry Pi 2 Model B v1.2
+  - Raspberry Pi Zero 2 W
 
-### 非対応
+### 対応終了
+
+**優先実装にて対応することができます**
 
 - macOS x86_64
-- Ubuntu 20.04 ARMv8 Jetson
-    - [NVIDIA Jetson Orin Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-        - Jetson Orin Nano は HWA を詰んでいないので対応はしません
-- Ubuntu 18.04 ARMv8 Jetson
-    - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-    - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-    - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- Ubuntu 20.04 ARMv8 (NVIDIA Jetson JetPack 5)
+  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
+  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+- Ubuntu 18.04 ARMv8 (NVIDIA Jetson JetPack 4)
+  - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
+  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
+  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
+- Raspberry Pi OS (32bit)
 
 ## 使ってみる
 
@@ -120,13 +135,7 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 ## ビルドする
 
-- Linux 版 Momo のビルドしたい人は [BUILD_LINUX.md](doc/BUILD_LINUX.md) をお読みください
-- macOS 版 Momo のビルドしたい人は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
-- Windows 版 Momo のビルドしたい人は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
-
-## パッケージを作成する
-
-パッケージ作成したい人は [PACKAGE.md](doc/PACKAGE.md) をお読みください。
+- Momo をビルドしたい、またはパッケージ作成したい人は [BUILD.md](doc/BUILD.md) をお読みください
 
 ## FAQ
 
@@ -136,9 +145,9 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 
 Apache License 2.0
 
-```
-Copyright 2015-2022, tnoho (Original Author)
-Copyright 2018-2022, Shiguredo Inc.
+```text
+Copyright 2015-2024, tnoho (Original Author)
+Copyright 2018-2024, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -153,42 +162,41 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## OpenH264
+
+<https://www.openh264.org/BINARY_LICENSE.txt>
+
+```text
+"OpenH264 Video Codec provided by Cisco Systems, Inc."
+```
+
 ## 優先実装
 
 優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
 
 - Windows 版 OSS 化
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
-    - 現時点では企業名非公開
-- Windows 版 Momo NVIDIA VIDEO CODEC SDK 対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- Linux 版 Momo NVIDIA VIDEO CODEC SDK 対応
-    - [株式会社オプティム](https://www.optim.co.jp/) 様
+  - 現時点では企業名非公開
+- Windows 版 Momo NVIDIA Video Codec SDK 対応
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+- Linux 版 Momo NVIDIA Video Codec SDK 対応
+  - [株式会社オプティム](https://www.optim.co.jp/) 様
 - Windows / Linux 版 スクリーンキャプチャ対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
 ### 優先実装が可能な機能一覧
 
-**詳細は Discord やメールなどでお気軽にお問い合わせください**
+**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
-- oneVPL 対応
-- AV1 対応
-    - Windows
-- 統計機能
-    - Ayame のシグナリング 経由での出力
-- 録画対応
-    - MP4 形式での出力
-    - WebM 形式での出力
-- 録画合成対応
-- Sora モード利用時の E2EE 機能
-- Windows / macOS 署名対応
+- Windows 11 arm64
+- Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
 
 ## Momo についての電子書籍
 
 Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
 
-[WebRTCをブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
+[WebRTC をブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
 
 ## サポートについて
 
@@ -200,7 +208,7 @@ Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰�
 
 最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
 
-https://discord.gg/shiguredo
+<https://discord.gg/shiguredo>
 
 ### バグ報告
 
@@ -221,18 +229,36 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
 ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、
 配布時にライセンス費用を支払う必要はありません。
 
-詳細については [MPEG LA](https://www.mpegla.com/) まで問い合わせる事をおすすめします。
+詳細については [Via LA Licensing](https://www.via-la.com/) まで問い合わせる事をおすすめします。
+
+Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-LA) に連絡を取り、ロイヤリティの対象にならないことを確認しています。
+
+> 時雨堂がエンドユーザーの PC /デバイスに既に存在する AVC / H.264 エンコーダー/デコーダーに依存する製品を提供する場合は、
+> ソフトウェア製品は AVC ライセンスの対象外となり、ロイヤリティの対象にもなりません。
 
 - Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
-    - https://www.raspberrypi.org/forums/viewtopic.php?t=200855
+  - <https://www.raspberrypi.org/forums/viewtopic.php?t=200855>
 - Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
-    - https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html
+  - <https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html>
 - AMD ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf
+  - <https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf>
 - NVIDIA ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf
+  - <https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf>
 - NVIDIA Jetson Nano のハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-    - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
+  - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
 - Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
-    - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
+  - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
 
+## H.265 のライセンス費用について
+
+H.265 ハードウェアエンコーダー **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
+ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
+
+Momo の H.265 対応は以下の二つの団体に連絡を取り、H.265 ハードウェアアクセラレーターのみを利用し、
+H.265 が利用可能なバイナリを配布する事は、ライセンスが不要であることを確認しています。
+
+また、H.265 のハードウェアアクセラレーターのみを利用した H.265 対応の Momo を OSS で公開し、
+ビルド済みバイナリを配布する事は、ライセンスが不要であることも確認しています。
+
+- [Access Advance](https://accessadvance.com/ja/)
+- [Via LA Licensing](https://www.via-la.com/)

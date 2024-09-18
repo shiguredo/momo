@@ -20,7 +20,7 @@
 #include <rtc_base/logging.h>
 
 DeviceVideoCapturer::DeviceVideoCapturer()
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()),
       vcm_(nullptr) {}
 
 DeviceVideoCapturer::~DeviceVideoCapturer() {

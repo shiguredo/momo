@@ -1,33 +1,28 @@
 name: build-workflow
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
-    - 'doc/**'
-    - 'html/**'
-    - '**.md'
-    - 'THANKS'
-    - 'LICENSE'
-    - 'NOTICE'
+      - "doc/**"
+      - "html/**"
+      - "**.md"
+      - "THANKS"
+      - "LICENSE"
+      - "NOTICE"
 
 jobs:
   build-windows:
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86_64
-    name: Build momo for Windows_${{ matrix.arch }}
-    runs-on: windows-2019
+        name:
+          - windows_x86_64
+    name: Build momo for ${{ matrix.name }}
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v1.3
-      # - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
-      #   with:
-      #     sdk-version: 20348
-      - name: test
-        run: |
-          ls "C:\Program Files (x86)\Windows Kits\10\Include\"
+      - uses: microsoft/setup-msbuild@v2
       - name: Get Versions
         run: |
           Get-Content "VERSION" | Foreach-Object {
@@ -35,148 +30,166 @@ jobs:
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
-          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
-          echo "wincuda_version=${WINCUDA_VERSION}" >> $GITHUB_OUTPUT
+          echo "cuda_version=${CUDA_VERSION}" >> ${Env:GITHUB_OUTPUT}
         id: versions
-      # Boost はよくダウンロード先に繋がらずエラーになるのでキャッシュする
-      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-        id: cache-boost
-        uses: actions/cache@v3
-        with:
-          path: _cache\boost
-          key: windows-boost-${{ steps.versions.outputs.boost_version }}.zip.v6
       # CUDA のインストールバイナリのダウンロードは 3GB ぐらいあって、
       # ビルドの度に取得するのはつらいのでキャッシュする
       # （インストールする nvcc は解凍後で 100MB 程度なのでキャッシュ可能）
-      - name: Cache NVCC ${{ steps.versions.outputs.wincuda_version }}
+      - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
         id: cache-cuda
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: build\windows_x86_64\_install\cuda\nvcc
-          key: windows-cuda-${{ steps.versions.outputs.wincuda_version }}.v2
-      - run: "& .\\build.ps1 -package"
-        working-directory: build
-        timeout-minutes: 120
-      - name: Output package name
+          path: _install\windows_x86_64\release\cuda
+          key: windows-cuda-${{ steps.versions.outputs.cuda_version }}.v1
+      - run: echo "${CUDA_VERSION}" > _install\windows_x86_64\release\cuda.version
+        if: steps.cache-cuda.outputs.cache-hit == 'true'
+      - run: python3 run.py --package ${{ matrix.name }}
+      - name: Get package name
         run: |
-          Get-Content "VERSION" | Foreach-Object {
+          Get-Content "_package\${{ matrix.name }}\release\momo.env" | Foreach-Object {
             if (!$_) { continue }
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
           }
-          $WINVER_MAJOR = [System.Environment]::OSVersion.Version.Major
-          $RELEASE_ID = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseID
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> windows_${{ matrix.arch }}.env
-          echo "CONTENT_TYPE=application/zip" >> windows_${{ matrix.arch }}.env
-          echo "name=momo-${MOMO_VERSION}_windows-${WINVER_MAJOR}.${RELEASE_ID}_${{ matrix.arch }}.zip" >> ${Env:GITHUB_OUTPUT}
+          echo "name=${PACKAGE_NAME}" >> ${Env:GITHUB_OUTPUT}
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package_name.outputs.name }}
-          path: _package/${{ steps.package_name.outputs.name }}
+          path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: windows_${{ matrix.arch }}.env
-          path: windows_${{ matrix.arch }}.env
+          name: ${{ matrix.name }}.env
+          path: _package/${{ matrix.name }}/release/momo.env
   build-macos:
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - arm64
-    name: Build momo for macOS_${{ matrix.arch }}
-    runs-on: macos-11.0
+        name:
+          - macos_arm64
+    name: Build momo for ${{ matrix.name }}
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - name: Get Versions
+      - run: python3 run.py --package ${{ matrix.name }}
+      - name: Get package name
         run: |
-          source VERSION
-          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
-        id: versions
-      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-        id: cache-boost
-        uses: actions/cache@v3
-        with:
-          path: _cache/boost
-          key: macos-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v3
-      - run: ./build.sh --package macos_${{ matrix.arch }}
-        working-directory: build
-        timeout-minutes: 120
-      - name: Output package name
-        shell: bash
-        run: |
-          source VERSION
-          MACOS_VERSION=`sw_vers -productVersion | cut -d '.' -f-2`
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz" >> macos_${{ matrix.arch }}.env
-          echo "CONTENT_TYPE=application/gzip" >> macos_${{ matrix.arch }}.env
-          echo "name=momo-${MOMO_VERSION}_macos-${MACOS_VERSION}_${{ matrix.arch }}.tar.gz" >> $GITHUB_OUTPUT
+          source _package/${{ matrix.name }}/release/momo.env
+          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package_name.outputs.name }}
-          path: _package/${{ steps.package_name.outputs.name }}
+          path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: macos_${{ matrix.arch }}.env
-          path: macos_${{ matrix.arch }}.env
-  build-linux:
+          name: ${{ matrix.name }}.env
+          path: _package/${{ matrix.name }}/release/momo.env
+  build-ubuntu:
     strategy:
       fail-fast: false
       matrix:
         name:
-          - raspberry-pi-os_armv6
-          - raspberry-pi-os_armv7
           - raspberry-pi-os_armv8
-          - ubuntu-20.04_x86_64
-          - ubuntu-20.04_armv8_jetson_xavier
           - ubuntu-22.04_x86_64
+          - ubuntu-24.04_x86_64
+          - ubuntu-22.04_armv8_jetson
     name: Build momo for ${{ matrix.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Get Versions
+      - name: Disk cleanup
+        run: |
+          set -x
+          df -h
+          sudo du -h -d1 /usr/local
+          sudo du -h -d1 /usr/local/share
+          sudo du -h -d1 /usr/local/lib
+          sudo du -h -d1 /usr/share
+          RMI=`docker images -q -a`
+          if [ -n "$RMI" ]; then
+            docker rmi $RMI
+          fi
+          # 4.6G
+          sudo rm -rf /usr/local/.ghcup
+          # 1.7G
+          sudo rm -rf /usr/share/swift
+          # 1.4G
+          sudo rm -rf /usr/share/dotnet
+          df -h
+      - name: Install deps for Jetson and Raspberry Pi OS series
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
+          # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
+          sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
+      # Ubuntu 24.04 だと libtinfo5 が見つからない問題があるので、その修正
+      # ref: https://qiita.com/gengen16k/items/88cf3c18a40a94205fab
+      - name: Fix CUDA issues for Ubuntu 24.04
+        if: matrix.name == 'ubuntu-24.04_x86_64'
+        run: |
+          sudo tee /etc/apt/sources.list.d/jammy.list << EOF
+          deb http://archive.ubuntu.com/ubuntu/ jammy universe
+          EOF
+
+          sudo tee /etc/apt/preferences.d/pin-jammy <<EOF
+          Package: *
+          Pin: release n=jammy
+          Pin-Priority: -10
+
+          Package: libtinfo5
+          Pin: release n=jammy
+          Pin-Priority: 990
+          EOF
+      - name: Install deps for ${{ matrix.name }}
         run: |
           source VERSION
-          echo "boost_version=${BOOST_VERSION}" >> $GITHUB_OUTPUT
-        id: versions
-      - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-        id: cache-boost
-        uses: actions/cache@v3
-        with:
-          path: _cache/boost
-          key: ${{ matrix.name }}-boost-${{ steps.versions.outputs.boost_version }}.tar.gz.v3
-      - run: ./build.sh --no-tty --no-mount --package ${{ matrix.name }}
-        working-directory: build
-        timeout-minutes: 120
-      - name: Output package name
-        shell: bash
+          # clang-18 と CUDA を入れる
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
+          sudo dpkg -i cuda-keyring_*all.deb
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install cuda=$CUDA_VERSION
+
+          wget https://apt.llvm.org/llvm.sh
+          chmod a+x llvm.sh
+          sudo ./llvm.sh 18
+
+          # Intel Media SDK のために libva-dev, libdrm-dev を入れる
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
+          # スクリーンキャプチャあたりのためのパッケージを入れる
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
+      - run: python3 run.py --package ${{ matrix.name }}
+      - name: Get package name
         run: |
-          source VERSION
-          echo "PACKAGE_NAME=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> ${{ matrix.name }}.env
-          echo "CONTENT_TYPE=application/gzip" >> ${{ matrix.name }}.env
-          echo "name=momo-${MOMO_VERSION}_${{ matrix.name }}.tar.gz" >> $GITHUB_OUTPUT
+          source _package/${{ matrix.name }}/release/momo.env
+          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package_name.outputs.name }}
-          path: _package/${{ steps.package_name.outputs.name }}
+          path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}.env
-          path: ${{ matrix.name }}.env
+          path: _package/${{ matrix.name }}/release/momo.env
+
   create-release:
     name: Create Release
     if: contains(github.ref, 'tags/202')
     needs:
       - build-windows
       - build-macos
-      - build-linux
+      - build-ubuntu
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -188,22 +201,16 @@ jobs:
           platform: macos_arm64
       - uses: ./.github/actions/download
         with:
-          platform: raspberry-pi-os_armv6
-      - uses: ./.github/actions/download
-        with:
-          platform: raspberry-pi-os_armv7
-      - uses: ./.github/actions/download
-        with:
           platform: raspberry-pi-os_armv8
       - uses: ./.github/actions/download
         with:
-          platform: ubuntu-20.04_x86_64
-      - uses: ./.github/actions/download
-        with:
-          platform: ubuntu-20.04_armv8_jetson_xavier
-      - uses: ./.github/actions/download
-        with:
           platform: ubuntu-22.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-24.04_x86_64
+      - uses: ./.github/actions/download
+        with:
+          platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
           echo "package_paths<<EOF" >> $GITHUB_OUTPUT
@@ -211,17 +218,17 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
         id: env
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files:
-            ${{ steps.env.outputs.package_paths }}
+          files: ${{ steps.env.outputs.package_paths }}
+          prerelease: ${{ contains(github.ref, 'canary') }}
   notification:
     name: Slack Notification
     runs-on: ubuntu-latest
     needs:
       - build-windows
       - build-macos
-      - build-linux
+      - build-ubuntu
       - create-release
     if: always()
     steps:
@@ -230,9 +237,8 @@ jobs:
         if: |
           needs.build-windows.result == 'failure' ||
           needs.build-macos.result == 'failure' ||
-          needs.build-linux.result == 'failure' ||
-          needs.create-release.result == 'failure' ||
-          needs.upload-assets.result == 'failure'
+          needs.build-ubuntu.result == 'failure' ||
+          needs.create-release.result == 'failure'
         env:
           SLACK_CHANNEL: open-momo
           SLACK_COLOR: danger

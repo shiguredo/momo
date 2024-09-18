@@ -9,7 +9,8 @@
 
 // WebRTC
 #include <api/rtp_parameters.h>
-#include <rtc_base/proxy_info.h>
+#include <rtc_base/crypt_string_revive.h>
+#include <rtc_base/proxy_info_revive.h>
 
 #include "video_codec_info.h"
 
@@ -19,12 +20,12 @@ struct MomoArgs {
   bool no_audio_device = false;
   bool force_i420 = false;
   // Jetson の場合だけデフォルト true
-#if USE_JETSON_ENCODER
+#if defined(USE_JETSON_ENCODER)
   bool hw_mjpeg_decoder = true;
 #else
   bool hw_mjpeg_decoder = false;
 #endif
-  // Raspberry Pi 4 の場合だけ使える
+  // Raspberry Pi OS 64bit の場合だけ使える
   bool use_libcamera = false;
   // use_libcamera == true の場合だけ使える。
   // sora_video_codec_type == "H264" かつ sora_simulcast == false の場合だけしか機能しない。
@@ -91,6 +92,10 @@ struct MomoArgs {
   VideoCodecInfo::Type av1_decoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_encoder = VideoCodecInfo::Type::Default;
   VideoCodecInfo::Type h264_decoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_encoder = VideoCodecInfo::Type::Default;
+  VideoCodecInfo::Type h265_decoder = VideoCodecInfo::Type::Default;
+
+  std::string openh264;
 
   std::string proxy_url;
   std::string proxy_username;

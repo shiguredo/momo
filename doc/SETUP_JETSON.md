@@ -1,21 +1,26 @@
-# Jetson シリーズで Momo を使ってみる
+# NVIDIA Jetson シリーズで Momo を使ってみる
 
 もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
 
-## Jetson シリーズでは JetPack 5.1.1 のみの利用を前提としています
+NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提としています。
 
-[JetPack 5.1.1 is now live \- Jetson & Embedded Systems / Announcements \- NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/jetpack-5-1-1-is-now-live/247862/1)
+## 既知の問題
+
+現在 Jetpack 6 で --hw-mjpeg-decoder が有効だと H.264 が送信できない問題があります。
+Jetson 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
+詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
-https://github.com/shiguredo/momo/releases にて最新版のバイナリをダウンロードしてください。
+<https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
-- `momo-<version>_ubuntu-20.04_armv8_jetson_xavier.tar.gz`
-  - Jetson AGX Orin , Jetson AGX Xavier または Jetson Xavier NX
+- `momo-<version>_ubuntu-22.04_armv8_jetson.tar.gz`
+  - Jetson AGX Orin または Jetson NX Orin
+  - JetPack 6 の最新版に対応
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```
+```console
 $ tree
 .
 ├── html
@@ -41,8 +46,8 @@ $ tree
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
 
-```shell
-$ ./momo --hw-mjpeg-decoder=true --no-audio-device test
+```bash
+./momo --hw-mjpeg-decoder=true --no-audio-device test
 ```
 
 ## 4K@30fps を出すためにやること
@@ -61,7 +66,7 @@ $ ./momo --hw-mjpeg-decoder=true --no-audio-device test
 
 を実行してカメラの設定を変更してください。 4K 30fps が出力可能な設定は下記のとおりです
 
-```
+```console
 $ v4l2-ctl --list-ctrls
                      brightness 0x00980900 (int)    : min=-64 max=64 step=1 default=0 value=0
                        contrast 0x00980901 (int)    : min=0 max=95 step=1 default=1 value=1
@@ -103,9 +108,9 @@ Sora Labo の利用申請や使用方法については [Sora Labo のドキュ�
 
 コマンド例を以下に記載します。
 
-```shell
+```bash
 $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 sora \
-    --signaling-url \
+    --signaling-urls \
         wss://canary.sora-labo.shiguredo.app/signaling \
     --channel-id shiguredo_0_sora \
     --video true --audio true \
