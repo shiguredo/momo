@@ -20,6 +20,7 @@
 - [CHANGE] ubuntu-20.04_x86_64 を削除
   - @melpon
 - [CHANGE] ubuntu-20.04_armv8_jetson_xavier のパッケージを削除
+  - NVIDIA JetPack SDK JetPack 5 系を対象外とする
   - @melpon
 - [CHANGE] JetPack 5.1.2 に対応
   - JetPack 5.1.1, 5.1.2 で動作を確認
