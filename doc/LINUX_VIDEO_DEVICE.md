@@ -5,7 +5,7 @@ Momo ではデバイスを指定する際、デバイスファイルではなく
 ## --video-device
 
 `--video-device` は linux 端末でビデオデバイス（つまりカメラ）を指定する機能です。
-1 台の Raspberry Pi で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれここに割り当てたい時に利用できます。
+1 台の Raspberry Pi で複数のカメラを利用して複数の Momo を起動する時に、カメラデバイスを個別に割り当てることができます。
 
 ```bash
 ./momo --video-device "MX Brio" test
@@ -14,7 +14,7 @@ Momo ではデバイスを指定する際、デバイスファイルではなく
 ### デバイス名を取得する
 
 デバイス名は、`v4l2-ctl` コマンドで取得できます。
-例えば以下のような実行結果の場合、デバイス名は `HD USB CAMERA: HD USB CAMER` と `Integrated_Webcam: Integrate` です。
+例えば以下のような実行結果の場合、デバイス名は `HD USB CAMERA: HD USB CAMERA` と `Integrated_Webcam: Integrate` です。
 
 ```bash
 v4l2-ctl --list-devices
@@ -31,7 +31,7 @@ Integrated_Webcam: Integrate (usb-0000:00:00.0-12):
 
 ### 同一カメラデバイスを複数接続している場合
 
-同一カメラデバイスを複数接続している場合、デバイス名が同じであるため、`--video-device` で指定することができません。
+同一カメラデバイスを複数接続している場合、デバイス名が同じであるため、個別に指定することができません。
 その場合は、デバイス名を指定する代わりに、`Bus info` を指定することができます。
 
 例えば以下のような `v4l2-ctl` コマンド の実行結果の場合、`Bus info` は `usb-0000:00:00.0-1` と `usb-0000:00:00.0-12` です。
