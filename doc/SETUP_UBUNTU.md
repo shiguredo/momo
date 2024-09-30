@@ -28,10 +28,18 @@ $ tree
 ```bash
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libdrm2
+sudo apt-get install libdrm2 libva2 libva-drm2
 ```
 
 oneVPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+
+## 実行権限の付与
+
+ダウンロードした momo の実行ファイルに実行権限を付与してください
+
+```bash
+chmod a+x ./momo
+```
 
 ## 動かしてみる
 
