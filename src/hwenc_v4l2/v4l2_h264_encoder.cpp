@@ -262,7 +262,7 @@ int32_t V4L2H264Encoder::Encode(
       auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
       jpeg_decoder_->Decode(
           native_buffer->data().get(), native_buffer->size(),
-          input_frame.timestamp(),
+          input_frame.rtp_timestamp(),
           [this, force_key_frame, input_frame](
               rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_rtp) {
