@@ -19,7 +19,7 @@ jobs:
           - ubuntu-22.04
           # - ubuntu-24.04
     env:
-      MOMO_VERSION: "2024.1.0-canary.0"
+      MOMO_VERSION: "2024.1.0"
       MOMO_ARCH: "x86_64"
     runs-on: ${{ matrix.os }}
     steps:
