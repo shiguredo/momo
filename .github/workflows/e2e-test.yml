@@ -40,6 +40,7 @@ jobs:
         run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
           ls -l /dev/video0
+      - run: /home/runner/work/momo/momo/_build/ubuntu-22.04_x86_64/release/momo/momo --version
       - run: uv sync
         working-directory: ./test
       - run: |
