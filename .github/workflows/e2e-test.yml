@@ -35,7 +35,7 @@ jobs:
           chmod 755 momo/momo
           # mv momo-${{ env.MOMO_VERSION }}_${{ matrix.os }}_${{ env.MOMO_ARCH }}/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
           mv momo/momo ${{ github.workspace }}/_build/${{ matrix.os }}_${{ env.MOMO_ARCH }}/release/momo/
-      - uses: astral-sh/setup-uv@v2
+      - uses: astral-sh/setup-uv@v3
       - name: setup v4l2loopback
         run: |
           sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
