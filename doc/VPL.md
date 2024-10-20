@@ -24,8 +24,8 @@ VPL の詳細については以下のリンクをご確認ください。
 ## 対応プラットフォーム
 
 - Windows 11 x86_64
-- Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
+- Ubuntu 24.04 x86_64
 
 ## Windows 11 での利用方法
 
@@ -79,21 +79,65 @@ H264:
     - oneVPL [vpl] (default)
 ```
 
-## Ubuntu 20.04、 Ubuntu 22.04 での利用方法
+## Ubuntu での利用方法
 
-### ドライバーのインストール
+Ubuntu の場合は 22.04 と 24.04 で利用方法が異なります。
 
-- Ubuntu の最新化を実行します
-  - `sudo apt-get update`
-  - `sudo apt-get upgrade`
-- ドライバー確認ツールをインストールします
-  - `sudo apt-get install vainfo`
-- ドライバーをインストールします。
-  - 以下のコマンドのいずれでも問題ありません。フル機能版は `intel-media-va-driver-non-free` でコア機能版は `intel-media-va-driver` になります。
-    - `sudo apt-get install intel-media-va-driver-non-free`
-    - `sudo apt-get install intel-media-va-driver`
-- 関連ライブラリをインストールします
-  - `sudo apt install libmfx1`
+### Ubuntu 22.04 での利用方法
+
+#### Intel の apt リポジトリを追加
+
+ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
+
+```bash
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
+  sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+sudo apt update
+```
+
+#### Intel 提供パッケージの最新化
+
+Intel の apt リポジトリを追加することでインストール済みのパッケージも Intel から提供されている最新のものに更新できます。依存問題を起こさないため、ここで最新化を行なってください。
+
+```bash
+sudo apt upgrade
+```
+
+#### ドライバとライブラリのインストール
+
+以下のように、ドライバとライブラリをインストールしてください。
+intel-media-va-driver には無印と `non-free` 版がありますが、 `non-free` 版でしか動作しません。
+
+```bash
+sudo apt install -y intel-media-va-driver-non-free libmfxgen1
+```
+
+以上でインストールが完了します。
+
+### Ubuntu 24.04 での利用方法
+
+#### Intel の apt リポジトリを追加
+
+ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
+
+```bash
+
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | \
+  sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
+sudo apt update
+```
+
+#### ライブラリのインストール
+
+以下の実行例のように、 libmfxgen1 をインストールしてください。
+
+```bash
+sudo apt install -y libmfxgen1
+```
 
 以上でインストールが完了します。
 

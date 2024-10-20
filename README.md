@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m119.6045-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6045)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m128.6613-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6613)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
@@ -24,7 +24,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 ### ハードウェアアクセラレーターへの対応
 
 - Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
-- VP9 /AV1 の送信時、[既知の問題](https://github.com/shiguredo/momo/issues/357) がありますのでご確認ください
+  - VP9 /AV1 の送信時、[既知の問題](https://github.com/shiguredo/momo/issues/357) がありますのでご確認ください
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
