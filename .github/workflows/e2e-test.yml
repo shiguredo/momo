@@ -19,6 +19,9 @@ jobs:
           - ubuntu-22.04
           # - ubuntu-24.04
     env:
+      TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
       MOMO_VERSION: "2024.1.0"
       MOMO_ARCH: "x86_64"
     runs-on: ${{ matrix.os }}
