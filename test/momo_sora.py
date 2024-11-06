@@ -1,3 +1,4 @@
+import json
 import platform
 import signal
 import subprocess
@@ -25,7 +26,7 @@ else:
 class Momo:
     signaling_urls: list[str]
     channel_id_prefix: str
-    secret_key: str
+    metadata: dict[str, str]
     port: int
 
     def __init__(
@@ -65,11 +66,11 @@ class Momo:
             ",".join(self.signaling_urls),
             "--channel-id",
             self.channel_id_prefix,
-            "--secret-key",
-            self.secret_key,
             "--video-device",
             # これは GitHub Actions 用
             "VCamera",
+            "--metadata",
+            json.dumps(self.metadata),
         ]
         try:
             self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
