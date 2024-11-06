@@ -1,10 +1,10 @@
 import time
 
-from momo import Momo
+from momo_sora import Momo
 
 
-def test_start_and_stop():
-    with Momo() as momo:
+def test_start_and_stop(setup):
+    with Momo(**setup) as momo:
         momo.start()
 
         time.sleep(3)

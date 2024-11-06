@@ -2,12 +2,16 @@
 name = "momo-e2e-test"
 version = "2013.3.8"
 requires-python = ">= 3.12"
-dependencies = ["pytest>=8.3", "pytest-timeout>=2.3"]
+dependencies = [
+    "pytest>=8.3",
+    "pytest-timeout>=2.3",
+    "python-dotenv>=1.0",
+]
 
 [tool.uv]
 package = false
 managed = true
-dev-dependencies = ["ruff>=0.6"]
+dev-dependencies = ["ruff"]
 
 [tool.pytest.ini_options]
 timeout = 45

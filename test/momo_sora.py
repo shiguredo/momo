@@ -4,6 +4,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 from pathlib import Path
 
 # プラットフォームに応じたリリースディレクトリの設定
@@ -22,11 +23,27 @@ else:
 
 
 class Momo:
-    def __init__(self, mode="test", port=5000):
+    signaling_urls: list[str]
+    channel_id_prefix: str
+    secret_key: str
+    port: int
+
+    def __init__(
+        self,
+        signaling_urls: list[str],
+        channel_id_prefix: str,
+        metadata: dict[str, str],
+    ):
+        self.signaling_urls = signaling_urls
+        self.channel_id_prefix = channel_id_prefix
+        self.metadata = metadata
+
+        self.channel_id = f"{self.channel_id_prefix}_{uuid.uuid4()}"
+
+        self.port = 5000
+
         self.executable = RELEASE_DIR / "momo"
         assert self.executable.exists()
-        self.mode = mode
-        self.port = port
         self.process = None
         self.thread = None
         self.is_running = False
@@ -38,14 +55,18 @@ class Momo:
         self.stop()
 
     def run_app(self):
-        print(self.executable)
-
         args = [
             "sudo",
             str(self.executable),
-            self.mode,
+            "sora",
             "--port",
             str(self.port),
+            "--signaling-urls",
+            ",".join(self.signaling_urls),
+            "--channel-id",
+            self.channel_id_prefix,
+            "--secret-key",
+            self.secret_key,
             "--video-device",
             # これは GitHub Actions 用
             "VCamera",
