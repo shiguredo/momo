@@ -24,6 +24,7 @@ else:
 class Momo:
     def __init__(self, mode="test", port=5000):
         self.executable = RELEASE_DIR / "momo"
+        assert self.executable.exists()
         self.mode = mode
         self.port = port
         self.process = None
@@ -38,6 +39,7 @@ class Momo:
 
     def run_app(self):
         print(self.executable)
+
         args = [
             str(self.executable),
             self.mode,
@@ -57,7 +59,7 @@ class Momo:
 
     def start(self):
         if not self.executable.exists():
-            raise FileNotFoundError(f"Momo executable not found: {self.executable}")
+            raise FileNotFoundError(f"Executable file not found: {self.executable}")
 
         self.thread = threading.Thread(target=self.run_app)
         self.thread.start()
@@ -85,6 +87,6 @@ class Momo:
                 print("Momo did not terminate gracefully. Forcing termination.", file=sys.stderr)
                 self.process.kill()
 
-            self.thread.join()
+            self.thread.join(timeout=5)
             self.is_running = False
             print("Momo stopped")
