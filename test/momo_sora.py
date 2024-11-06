@@ -56,19 +56,17 @@ class Momo:
         self.stop()
 
     def run_app(self):
+        print(self.executable)
         args = [
-            "sudo",
             str(self.executable),
             "sora",
-            "--port",
-            str(self.port),
             "--signaling-urls",
             ",".join(self.signaling_urls),
             "--channel-id",
             self.channel_id_prefix,
-            "--video-device",
+            # "--video-device",
             # これは GitHub Actions 用
-            "VCamera",
+            # "VCamera",
             "--metadata",
             json.dumps(self.metadata),
         ]
@@ -92,7 +90,7 @@ class Momo:
         start_time = time.time()
         while time.time() - start_time < 10:  # 10秒のタイムアウト
             if self.process and self.process.poll() is None:
-                print(f"Momo started on port {self.port}")
+                print("Momo started")
                 return
             time.sleep(0.1)
 
