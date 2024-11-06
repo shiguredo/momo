@@ -41,6 +41,7 @@ class Momo:
         print(self.executable)
 
         args = [
+            "sudo",
             str(self.executable),
             self.mode,
             "--port",
