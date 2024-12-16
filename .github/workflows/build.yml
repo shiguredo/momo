@@ -190,7 +190,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/download
@@ -224,7 +224,7 @@ jobs:
           prerelease: ${{ contains(github.ref, 'canary') }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-windows
       - build-macos
