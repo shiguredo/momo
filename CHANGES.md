@@ -16,8 +16,13 @@
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
   - @torikizi
 
+### misc
+
 - [UPDATE] SDL を 2.30.8 に上げる
   - @torikizi
+- [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
+  - ubuntu-24.04 には意図的に上げていない
+  - @voluntas
 
 ## 2024.1.0
 
