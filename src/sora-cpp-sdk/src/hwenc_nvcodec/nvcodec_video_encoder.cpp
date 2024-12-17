@@ -14,6 +14,7 @@
 
 // WebRTC
 #include <api/video/nv12_buffer.h>
+#include <api/video/video_frame.h>
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
@@ -351,7 +352,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
             ? webrtc::VideoContentType::SCREENSHARE
             : webrtc::VideoContentType::UNSPECIFIED;
     encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
-    encoded_image_.SetRtpTimestamp(frame.timestamp());
+    encoded_image_.SetRtpTimestamp(frame.rtp_timestamp());
     encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();
