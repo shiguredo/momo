@@ -102,13 +102,14 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 ## 動作環境
 
 - Windows 11 x86_64
+- macOS 15 arm64
 - macOS 14 arm64
 - Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
 - Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-- Raspberry Pi OS (64bit)
+- Raspberry Pi OS bookworm (64bit)
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi 2 Model B v1.2
