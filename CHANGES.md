@@ -15,8 +15,8 @@
 
 **リリース日**: 2025-02-17
 
-- [FIX] libcamera 3.0 が最新の Raspberry 環境で動作しない問題を修正
-  - momo 2024.1.0 のリリースバイナリに含まれる libcamera.so は 0.3 だが最新の Raspberry 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
+- [FIX] libcamera 3.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+  - momo 2024.1.0 のリリースバイナリに含まれる libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
   - 最新の環境で再ビルドすることで事象が解消した
   - @melpon, @torikizi
 
