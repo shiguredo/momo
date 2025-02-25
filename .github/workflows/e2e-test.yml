@@ -48,5 +48,5 @@ jobs:
       - run: uv sync
         working-directory: ./test
       - run: |
-          uv run pytest test_momo.py -s
+          uv run pytest test_momo.py -s -v
         working-directory: ./test

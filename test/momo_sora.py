@@ -31,8 +31,6 @@ class Momo:
 
         self.executable = Path(momo_path)
 
-        print(momo_path)
-
         assert self.executable.exists()
         self.process = None
         self.thread = None
@@ -48,6 +46,8 @@ class Momo:
         print(self.executable)
         args = [
             str(self.executable),
+            # audio device は作れてないので掴まないようにしてみる
+            "--no-audio-device",
             "--log-level",
             "0",
             "sora",
