@@ -31,7 +31,6 @@ jobs:
           sudo apt update
           sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
       - run: |
-                   
           curl -LO https://github.com/shiguredo/momo/releases/download/${{ env.MOMO_VERSION }}/momo-${{ env.MOMO_VERSION }}_${{ matrix.runs-os }}_${{ env.MOMO_ARCH }}.tar.gz
           tar -xzf momo-${{ env.MOMO_VERSION }}_${{ matrix.runs-os }}_${{ env.MOMO_ARCH }}.tar.gz
           chmod 755 momo/momo
