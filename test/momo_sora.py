@@ -55,9 +55,9 @@ class Momo:
             ",".join(self.signaling_urls),
             "--channel-id",
             self.channel_id_prefix,
-            # "--video-device",
+            "--video-device",
             # これは GitHub Actions 用
-            # "VCamera",
+            "VCamera",
             "--metadata",
             json.dumps(self.metadata),
         ]
