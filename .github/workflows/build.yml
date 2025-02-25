@@ -153,6 +153,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y software-properties-common
 
+          source /etc/os-release
+          # 20.04 は自前の libssl1.1 があるので不要
+          if [ "$VERSION_ID" != "20.04" ]; then
+            wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+            sudo dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+          fi
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
           sudo dpkg -i cuda-keyring_*all.deb
           sudo apt-get update
@@ -190,7 +196,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/download
@@ -224,7 +230,7 @@ jobs:
           prerelease: ${{ contains(github.ref, 'canary') }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-windows
       - build-macos

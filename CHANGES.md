@@ -11,7 +11,34 @@
 
 ## develop
 
+- [UPDATE] WebRTC を m129.6668.1.0 に上げる
+  - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
+  - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
+  - @torikizi
+
+### misc
+
 - [UPDATE] SDL を 2.30.8 に上げる
+  - @torikizi
+- [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
+  - ubuntu-24.04 には意図的に上げていない
+  - @voluntas
+
+## 2024.1.1
+
+**リリース日**: 2025-02-17
+
+- [FIX] libcamera 3.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+  - momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
+  - 最新の環境で再ビルドすることで事象が解消した
+  - @melpon, @torikizi
+
+### misc
+
+- [FIX] Boost のダウンロード URL を変更する
+  - @torikizi
+- [FIX] Ubuntu 22.04, 24.04 の場合 libssl1.1 をインストールするように修正
+  - Ubuntu 22.04, 24.04 の場合はデフォルトで libssl1.1 が入っていないためインストールする必要がある
   - @torikizi
 
 ## 2024.1.0

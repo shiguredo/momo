@@ -627,7 +627,7 @@ int32_t JetsonVideoEncoder::Encode(
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
-        input_frame.timestamp_us(), input_frame.timestamp(),
+        input_frame.timestamp_us(), input_frame.rtp_timestamp(),
         input_frame.rotation(), input_frame.color_space(), decoder));
   }
 
