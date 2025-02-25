@@ -1,5 +1,4 @@
 import json
-import platform
 import signal
 import subprocess
 import sys
@@ -7,20 +6,6 @@ import threading
 import time
 import uuid
 from pathlib import Path
-
-# プラットフォームに応じたリリースディレクトリの設定
-RELEASE_DIR = Path(__file__).resolve().parent.parent / Path("_build/")
-
-# TODO: 環境変数で CI か Local で見に行くパスを変えるようにする
-if platform.system() == "Darwin":
-    if platform.machine() == "arm64":
-        RELEASE_DIR = RELEASE_DIR / "macos_arm64/release/momo"
-elif platform.system() == "Linux":
-    # ubuntu 24.04 かどうかの確認が必要
-    # ubuntu 22.04 と 24.04 がある
-    RELEASE_DIR = RELEASE_DIR / "ubuntu-22.04_x86_64/release/momo"
-else:
-    raise OSError(f"Unsupported platform: {platform.system()}")
 
 
 class Momo:
@@ -34,6 +19,7 @@ class Momo:
         signaling_urls: list[str],
         channel_id_prefix: str,
         metadata: dict[str, str],
+        momo_path: str,
     ):
         self.signaling_urls = signaling_urls
         self.channel_id_prefix = channel_id_prefix
@@ -43,7 +29,10 @@ class Momo:
 
         self.port = 5000
 
-        self.executable = RELEASE_DIR / "momo"
+        self.executable = Path(momo_path)
+
+        print(momo_path)
+
         assert self.executable.exists()
         self.process = None
         self.thread = None
@@ -59,6 +48,8 @@ class Momo:
         print(self.executable)
         args = [
             str(self.executable),
+            "--log-level",
+            "0",
             "sora",
             "--signaling-urls",
             ",".join(self.signaling_urls),

@@ -53,5 +53,5 @@ __pycache__
 build
 
 # .env
-.env
+.env*
 !.env.template
