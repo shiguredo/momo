@@ -47,7 +47,6 @@ class Momo:
         args = [
             str(self.executable),
             # audio device は作れてないので掴まないようにしてみる
-            "--no-audio-device",
             "--log-level",
             "0",
             "sora",

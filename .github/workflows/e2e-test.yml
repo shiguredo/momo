@@ -48,5 +48,8 @@ jobs:
       - run: uv sync
         working-directory: ./test
       - run: |
+          nohup sudo ffmpeg -f lavfi -i color=c=black:s=1920x1080:r=30000/1001 -pix_fmt yuv420p -f v4l2 /dev/video0 > /dev/null 2>&1 &
           uv run pytest test_momo.py -s -v
         working-directory: ./test
+      - run: |
+          sudo killall ffmpeg
