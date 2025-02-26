@@ -2,14 +2,14 @@ name: build-workflow
 
 on:
   workflow_dispatch:
-  push:
-    paths-ignore:
-      - "doc/**"
-      - "html/**"
-      - "**.md"
-      - "THANKS"
-      - "LICENSE"
-      - "NOTICE"
+  # push:
+  #   paths-ignore:
+  #     - "doc/**"
+  #     - "html/**"
+  #     - "**.md"
+  #     - "THANKS"
+  #     - "LICENSE"
+  #     - "NOTICE"
 
 jobs:
   build-windows:

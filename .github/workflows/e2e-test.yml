@@ -1,0 +1,55 @@
+name: e2e-test
+
+on:
+  push:
+    paths-ignore:
+      - "doc/**"
+      - "html/**"
+      - "**.md"
+      - "THANKS"
+      - "LICENSE"
+      - "NOTICE"
+
+jobs:
+  e2e-test-ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-os:
+          - ubuntu-24.04
+          # - ubuntu-22.04
+    env:
+      TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+      MOMO_VERSION: "2024.1.0"
+      MOMO_ARCH: "x86_64"
+    runs-on: ${{ matrix.runs-os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt update
+          sudo apt install -y ffmpeg v4l2loopback-dkms v4l2loopback-utils linux-modules-extra-$(uname -r)
+      - run: |
+          curl -LO https://github.com/shiguredo/momo/releases/download/${{ env.MOMO_VERSION }}/momo-${{ env.MOMO_VERSION }}_${{ matrix.runs-os }}_${{ env.MOMO_ARCH }}.tar.gz
+          tar -xzf momo-${{ env.MOMO_VERSION }}_${{ matrix.runs-os }}_${{ env.MOMO_ARCH }}.tar.gz
+          chmod 755 momo/momo
+          # Momo のバイナリのパスを環境変数に設定
+          echo "MOMO_PATH=${{ github.workspace }}/momo/momo" >> $GITHUB_ENV
+      - uses: astral-sh/setup-uv@v3
+      - name: setup v4l2loopback
+        run: |
+          sudo modprobe v4l2loopback devices=1 video_nr=0 exclusive_caps=1 card_label='VCamera'
+          ls -l /dev/video0
+      - run: |
+          sudo v4l2-ctl --device /dev/video0 --all
+          sudo v4l2-ctl --device /dev/video0 --list-formats-ext
+      - run: ${{ env.MOMO_PATH }} --version
+      - run: uv sync
+        working-directory: ./test
+      - run: |
+          nohup ffmpeg -f lavfi -i color=c=black:s=1920x1080:r=30000/1001 -pix_fmt yuv420p -f v4l2 /dev/video0 > /dev/null 2>&1 &
+          uv run pytest test_momo.py -s -v
+        working-directory: ./test
+      - run: |
+          sudo killall ffmpeg
