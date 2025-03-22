@@ -222,6 +222,15 @@ WebRTC Native Client に対する有料でのテクニカルサポート契約�
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加
 
+
+## NVDIA Video Codec SDK
+
+<https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
+
+```text
+“This software contains source code provided by NVIDIA Corporation.”
+```
+
 ## H.264 のライセンス費用について
 
 H.264 ハードウェアエンコーダー **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
@@ -264,10 +273,3 @@ H.265 が利用可能なバイナリを配布する事は、ライセンスが�
 - [Access Advance](https://accessadvance.com/ja/)
 - [Via LA Licensing](https://www.via-la.com/)
 
-## NVDIA Video Codec SDK
-
-<https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
-
-```test
-“This software contains source code provided by NVIDIA Corporation.”
-```
