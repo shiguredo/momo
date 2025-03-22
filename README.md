@@ -263,3 +263,11 @@ H.265 が利用可能なバイナリを配布する事は、ライセンスが�
 
 - [Access Advance](https://accessadvance.com/ja/)
 - [Via LA Licensing](https://www.via-la.com/)
+
+## NVDIA Video Codec SDK
+
+<https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
+
+```test
+“This software contains source code provided by NVIDIA Corporation.”
+```
