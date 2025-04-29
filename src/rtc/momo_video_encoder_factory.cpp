@@ -71,7 +71,7 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
   };
   auto add_av1 = [&supported_codecs]() {
     supported_codecs.push_back(webrtc::SdpVideoFormat(
-        cricket::kAv1CodecName, webrtc::SdpVideoFormat::Parameters(),
+        cricket::kAv1CodecName, webrtc::CodecParameterMap(),
         webrtc::LibaomAv1EncoderSupportedScalabilityModes()));
   };
   auto add_h264 = [&supported_codecs]() {
