@@ -65,16 +65,22 @@ AVCaptureDeviceFormat* SelectClosestFormat(AVCaptureDevice* device,
 static NSArray<AVCaptureDevice*>* captureDevices() {
   if (@available(macOS 14, *)) {
     // macOS 14 以上では、新しい API を使用して外部カメラも取得する
-    AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
-      discoverySessionWithDeviceTypes:@[
-        AVCaptureDeviceTypeBuiltInWideAngleCamera,
-        AVCaptureDeviceTypeExternal ]
-                            mediaType:AVMediaTypeVideo
-                             position:AVCaptureDevicePositionUnspecified];
+    AVCaptureDeviceDiscoverySession* session = [AVCaptureDeviceDiscoverySession
+        discoverySessionWithDeviceTypes:@[
+          AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeExternal
+        ]
+                              mediaType:AVMediaTypeVideo
+                               position:AVCaptureDevicePositionUnspecified];
     return session.devices;
   } else {
-    // macOS 13 以下では、古い API を使用して内蔵カメラのみ取得する
-    return [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    // macOS 13 以下では、AVCaptureDeviceDiscoverySessionを使用して内蔵カメラのみ取得する
+    AVCaptureDeviceDiscoverySession* session = [AVCaptureDeviceDiscoverySession
+        discoverySessionWithDeviceTypes:@[
+          AVCaptureDeviceTypeBuiltInWideAngleCamera
+        ]
+                              mediaType:AVMediaTypeVideo
+                               position:AVCaptureDevicePositionUnspecified];
+    return session.devices;
   }
 }
 
@@ -106,8 +112,7 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
     return nullptr;
   }
-  return rtc::make_ref_counted<MacCapturer>(
-          width, height, target_fps, device);
+  return rtc::make_ref_counted<MacCapturer>(width, height, target_fps, device);
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(
