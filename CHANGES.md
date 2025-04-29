@@ -11,6 +11,14 @@
 
 ## develop
 
+- [UPDATE] SDL を 2.32.4 に上げる
+  - @voluntas
+- [UPDATE] CMake を 4.0.1 に上げる
+  - @voluntas
+- [UPDATE] OpenH264 を 2.6.0 に上げる
+  - @voluntas
+- [UPDATE] CLI11 を 2.5.0 に上げる
+  - @voluntas
 - [UPDATE] WebRTC を m129.6668.1.0 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
