@@ -1090,7 +1090,7 @@ def install_cmake(version, source_dir, install_dir, platform: str, ext):
 
 @versioned
 def install_sdl2(
-    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
+    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str], webrtc_deps=None
 ):
     url = (
         f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL2-{version}.zip"
@@ -1120,6 +1120,10 @@ def install_sdl2(
                 "-DHAVE_LIBC=ON",
             ]
         elif platform == "macos":
+            # macOSデプロイメントターゲットをWebRTCと同じ値に設定
+            cmake_args += [
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+            ]
             # システムでインストール済みかによって ON/OFF が切り替わってしまうため、
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
             cmake_args += [
