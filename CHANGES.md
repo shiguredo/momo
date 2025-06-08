@@ -11,8 +11,8 @@
 
 ## develop
 
-- [UPDATE] SDL を 2.32.4 に上げる
-  - @voluntas
+- [UPDATE] SDL を 2.32.8 に上げる
+  - @voluntas @torikizi
 - [UPDATE] CMake を 4.0.1 に上げる
   - @voluntas
 - [UPDATE] OpenH264 を 2.6.0 に上げる
