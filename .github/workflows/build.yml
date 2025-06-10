@@ -191,7 +191,7 @@ jobs:
 
   create-release:
     name: Create Release
-    if: contains(github.ref, 'tags/202')
+    if: startsWith(github.ref, 'refs/tags/202')
     needs:
       - build-windows
       - build-macos
@@ -223,11 +223,23 @@ jobs:
           cat package_paths.env >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         id: env
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.env.outputs.package_paths }}
-          prerelease: ${{ contains(github.ref, 'canary') }}
+      - name: Release (Prerelease)
+        if: contains(github.ref, 'canary')
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}" \
+            --prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release (Stable)
+        if: ${{ !contains(github.ref, 'canary') }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
     runs-on: ubuntu-22.04
