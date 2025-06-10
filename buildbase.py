@@ -460,7 +460,7 @@ def replace_vcproj_static_runtime(project_file: str):
 @versioned
 def install_webrtc(version, source_dir, install_dir, platform: str):
     win = platform.startswith("windows_")
-    filename = f'webrtc.{platform}.{"zip" if win else "tar.gz"}'
+    filename = f"webrtc.{platform}.{'zip' if win else 'tar.gz'}"
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
         f"https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/{version}/{filename}",
@@ -563,7 +563,7 @@ def get_webrtc_info(
 def install_boost(version, source_dir, install_dir, sora_version, platform: str):
     win = platform.startswith("windows_")
     filename = (
-        f'boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+        f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
     )
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
@@ -690,8 +690,10 @@ def build_and_install_boost(
 ):
     version_underscore = version.replace(".", "_")
     archive = download(
-        # XXX: ここ GitHub Releases に変更するのはダメなのだろうか？
-        f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
+        # 公式サイトに負荷をかけないための時雨堂による R2 ミラー
+        f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",
+        # Boost 公式のミラー
+        # f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
     )
     extract(archive, output_dir=build_dir, output_dirname="boost")
@@ -729,16 +731,16 @@ def build_and_install_boost(
                         b2,
                         "install",
                         "-d+0",
-                        f'--build-dir={os.path.join(build_dir, "boost", f"build-{arch}-{sdk}")}',
-                        f'--prefix={os.path.join(build_dir, "boost", f"install-{arch}-{sdk}")}',
+                        f"--build-dir={os.path.join(build_dir, 'boost', f'build-{arch}-{sdk}')}",
+                        f"--prefix={os.path.join(build_dir, 'boost', f'install-{arch}-{sdk}')}",
                         "--with-json",
                         "--with-filesystem",
                         "--layout=system",
                         "--ignore-site-config",
-                        f'variant={"debug" if debug else "release"}',
-                        f'cflags={" ".join(cflags)}',
-                        f'cxxflags={" ".join(cxxflags)}',
-                        f'linkflags={" ".join(linkflags)}',
+                        f"variant={'debug' if debug else 'release'}",
+                        f"cflags={' '.join(cflags)}",
+                        f"cxxflags={' '.join(cxxflags)}",
+                        f"linkflags={' '.join(linkflags)}",
                         f"toolset={toolset}",
                         f"visibility={visibility}",
                         f"target-os={target_os}",
@@ -800,16 +802,16 @@ def build_and_install_boost(
                     b2,
                     "install",
                     "-d+0",
-                    f'--prefix={os.path.join(install_dir, "boost")}',
+                    f"--prefix={os.path.join(install_dir, 'boost')}",
                     "--with-json",
                     "--with-filesystem",
                     "--layout=system",
                     "--ignore-site-config",
-                    f'variant={"debug" if debug else "release"}',
+                    f"variant={'debug' if debug else 'release'}",
                     f"compileflags=--sysroot={sysroot}",
-                    f'cflags={" ".join(cflags)}',
-                    f'cxxflags={" ".join(cxxflags)}',
-                    f'linkflags={" ".join(linkflags)}',
+                    f"cflags={' '.join(cflags)}",
+                    f"cxxflags={' '.join(cxxflags)}",
+                    f"linkflags={' '.join(linkflags)}",
                     f"toolset={toolset}",
                     f"visibility={visibility}",
                     f"target-os={target_os}",
@@ -829,15 +831,15 @@ def build_and_install_boost(
                     b2,
                     "install",
                     "-d+0",
-                    f'--prefix={os.path.join(install_dir, "boost")}',
+                    f"--prefix={os.path.join(install_dir, 'boost')}",
                     "--with-json",
                     "--with-filesystem",
                     "--layout=system",
                     "--ignore-site-config",
-                    f'variant={"debug" if debug else "release"}',
-                    f'cflags={" ".join(cflags)}',
-                    f'cxxflags={" ".join(cxxflags)}',
-                    f'linkflags={" ".join(linkflags)}',
+                    f"variant={'debug' if debug else 'release'}",
+                    f"cflags={' '.join(cflags)}",
+                    f"cxxflags={' '.join(cxxflags)}",
+                    f"linkflags={' '.join(linkflags)}",
                     f"toolset={toolset}",
                     f"visibility={visibility}",
                     f"target-os={target_os}",
@@ -853,7 +855,7 @@ def build_and_install_boost(
 @versioned
 def install_sora(version, source_dir, install_dir, platform: str):
     win = platform.startswith("windows_")
-    filename = f'sora-cpp-sdk-{version}_{platform}.{"zip" if win else "tar.gz"}'
+    filename = f"sora-cpp-sdk-{version}_{platform}.{'zip' if win else 'tar.gz'}"
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{version}/{filename}",
@@ -950,7 +952,7 @@ def install_rootfs(version, install_dir, conf, arch="arm64"):
                 continue
             # 相対パスに置き換える
             relpath = os.path.relpath(targetpath, dir)
-            logging.debug(f"{linkpath[len(rootfs_dir):]} targets {target} to {relpath}")
+            logging.debug(f"{linkpath[len(rootfs_dir) :]} targets {target} to {relpath}")
             os.remove(linkpath)
             os.symlink(relpath, linkpath)
 
@@ -1090,7 +1092,14 @@ def install_cmake(version, source_dir, install_dir, platform: str, ext):
 
 @versioned
 def install_sdl2(
-    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
+    version,
+    source_dir,
+    build_dir,
+    install_dir,
+    debug: bool,
+    platform: str,
+    cmake_args: List[str],
+    webrtc_deps=None,
 ):
     url = (
         f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL2-{version}.zip"
@@ -1120,6 +1129,10 @@ def install_sdl2(
                 "-DHAVE_LIBC=ON",
             ]
         elif platform == "macos":
+            # macOSデプロイメントターゲットをWebRTCと同じ値に設定
+            cmake_args += [
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+            ]
             # システムでインストール済みかによって ON/OFF が切り替わってしまうため、
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
             cmake_args += [
@@ -1374,7 +1387,7 @@ def install_openh264(version, source_dir, install_dir, is_windows):
                         file, os.path.join(install_dir, "openh264", "include", "wels", file)
                     )
         else:
-            cmd(["make", f'PREFIX={os.path.join(install_dir, "openh264")}', "install-headers"])
+            cmd(["make", f"PREFIX={os.path.join(install_dir, 'openh264')}", "install-headers"])
 
 
 @versioned

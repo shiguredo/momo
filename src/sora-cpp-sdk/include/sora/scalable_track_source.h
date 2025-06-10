@@ -12,7 +12,11 @@
 
 #include <stddef.h>
 
+#include <functional>
 #include <memory>
+
+// Abseil
+#include <absl/types/optional.h>
 
 // WebRTC
 #include <media/base/adapted_video_track_source.h>

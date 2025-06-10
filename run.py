@@ -304,6 +304,7 @@ def install_deps(
             "platform": "",
             "debug": debug,
             "cmake_args": [],
+            "webrtc_deps": webrtc_deps,
         }
         if platform.target.os == "windows":
             install_sdl2_args["platform"] = "windows"
