@@ -135,6 +135,8 @@
 
 ### misc
 
+- [ADD] pytest を利用した E2E テストを追加
+  - @voluntas
 - [CHANGE] SDL2 のダウンロード先を GitHub に変更する
   - @voluntas
 - [UPDATE] Github Actions の actions/download-artifact をアップデート

@@ -1,0 +1,17 @@
+[project]
+name = "momo-e2e-test"
+version = "0.0.0"
+requires-python = ">= 3.12"
+dependencies = ["pytest>=8.3", "pytest-timeout>=2.3", "python-dotenv>=1.0"]
+
+[tool.uv]
+package = false
+managed = true
+dev-dependencies = ["ruff", "mypy"]
+
+[tool.pytest.ini_options]
+timeout = 45
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
