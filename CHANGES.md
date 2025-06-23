@@ -28,6 +28,9 @@
     - `SDL_Rect` を `SDL_FRect` に変更（座標を float 型に）
     - `SDL_CreateRGBSurfaceFrom` を `SDL_CreateSurfaceFrom` に変更
     - `SDL_FreeSurface` を `SDL_DestroySurface` に変更
+  - ビルド設定の修正:
+    - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
+    - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
   - @voluntas
 - [UPDATE] WebRTC を m129.6668.1.0 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
