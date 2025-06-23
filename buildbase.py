@@ -1228,6 +1228,19 @@ def install_sdl3(
         if platform == "windows":
             cmake_args += [
                 "-DSDL_STATIC_VCRT=ON",
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_VULKAN=OFF",
+                "-DSDL_GAMEINPUT=OFF",
+                "-DSDL_DIRECTX=ON",
+                "-DSDL_WASAPI=OFF",
             ]
         elif platform == "macos":
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
