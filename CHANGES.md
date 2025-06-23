@@ -11,6 +11,24 @@
 
 ## develop
 
+- [CHANGE] SDL2 から SDL3 へ移行
+  - SDL を 2.30.8 から 3.2.16 に上げる
+  - SDL3 の API 変更に伴い、以下の修正を実施:
+    - ヘッダーインクルードを `<SDL.h>` から `<SDL3/SDL.h>` に変更
+    - `SDL_main.h` の明示的なインクルードを追加
+    - `SDL_Init` の戻り値チェックを bool 型に変更
+    - `SDL_CreateWindow` の位置引数を削除
+    - `SDL_RENDERER_ACCELERATED` フラグを削除
+    - `SDL_SetWindowFullscreen` の引数を bool 型に変更
+    - `SDL_ShowCursor` / `SDL_HideCursor` を分離された関数に変更
+    - イベント名を SDL3 形式に変更（例: `SDL_WINDOWEVENT` → `SDL_EVENT_WINDOW_RESIZED`）
+    - キーコードを大文字に変更（例: `SDLK_f` → `SDLK_F`）
+    - `SDL_KeyboardEvent` の `keysym.sym` を `key` に変更
+    - `SDL_RenderCopy` を `SDL_RenderTexture` に変更
+    - `SDL_Rect` を `SDL_FRect` に変更（座標を float 型に）
+    - `SDL_CreateRGBSurfaceFrom` を `SDL_CreateSurfaceFrom` に変更
+    - `SDL_FreeSurface` を `SDL_DestroySurface` に変更
+  - @voluntas
 - [UPDATE] WebRTC を m129.6668.1.0 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
@@ -18,8 +36,6 @@
 
 ### misc
 
-- [UPDATE] SDL を 2.30.8 に上げる
-  - @torikizi
 - [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
   - ubuntu-24.04 には意図的に上げていない
   - @voluntas
