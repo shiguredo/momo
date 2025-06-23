@@ -1297,6 +1297,8 @@ def install_sdl3(
                 "-DSDL_DUMMY=ON",
                 "-DSDL_LIBC=ON",
                 "-DSDL_GCC_ATOMICS=ON",
+                "-DSDL_VIDEO_DRIVER_OFFSCREEN=ON",
+                "-DSDL_VIDEO_DRIVER_DUMMY=ON",
             ]
         cmd(["cmake"] + cmake_args)
 
