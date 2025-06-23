@@ -1280,6 +1280,10 @@ def install_sdl3(
                 "-DSDL_VULKAN=OFF",
                 "-DSDL_KMSDRM=OFF",
                 "-DSDL_RPI=OFF",
+                "-DSDL_OFFSCREEN=ON",
+                "-DSDL_DUMMY=ON",
+                "-DSDL_LIBC=ON",
+                "-DSDL_GCC_ATOMICS=ON",
             ]
         cmd(["cmake"] + cmake_args)
 
