@@ -1260,6 +1260,8 @@ def install_sdl3(
                 "-DSDL_X11_SHARED=OFF",
                 "-DSDL_WAYLAND=OFF",
                 "-DSDL_VULKAN=OFF",
+                "-DSDL_KMSDRM=OFF",
+                "-DSDL_RPI=OFF",
             ]
         cmd(["cmake"] + cmake_args)
 
