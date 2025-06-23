@@ -1263,6 +1263,24 @@ def install_sdl3(
                 "-DSDL_KMSDRM=OFF",
                 "-DSDL_RPI=OFF",
             ]
+        elif platform == "linux-cross":
+            # クロスコンパイル環境（Raspberry Pi OS, Jetson）用の設定
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=OFF",
+                "-DSDL_POWER=OFF",
+                "-DSDL_JOYSTICK=OFF",
+                "-DSDL_SENSOR=OFF",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_X11=OFF",
+                "-DSDL_WAYLAND=OFF",
+                "-DSDL_VULKAN=OFF",
+                "-DSDL_KMSDRM=OFF",
+                "-DSDL_RPI=OFF",
+            ]
         cmd(["cmake"] + cmake_args)
 
         cmd(
