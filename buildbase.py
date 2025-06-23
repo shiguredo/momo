@@ -1238,12 +1238,12 @@ def install_sdl3(
                 "-DSDL_OPENGL=ON",
                 "-DSDL_OPENGLES=ON",
                 "-DSDL_VULKAN=OFF",
-                "-DSDL_GAMEINPUT=OFF",
                 "-DSDL_DIRECTX=ON",
                 "-DSDL_WASAPI=OFF",
-                "-DSDL_GDK=OFF",
                 "-DSDL_HIDAPI=ON",
                 "-DSDL_XINPUT=ON",
+                "-DHAVE_GAMEINPUT_H=0",
+                "-DSDL_JOYSTICK_GAMEINPUT=OFF",
             ]
         elif platform == "macos":
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
