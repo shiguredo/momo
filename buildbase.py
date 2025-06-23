@@ -1227,8 +1227,8 @@ def install_sdl3(
         ]
         if platform == "windows":
             cmake_args += [
-                "-DSDL_FORCE_STATIC_VCRT=ON",
-                "-DSDL_LIBC=ON",
+                "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
+                "-DSDL_LIBC=OFF",
                 "-DSDL_AUDIO=OFF",
                 "-DSDL_VIDEO=ON",
                 "-DSDL_RENDER=ON",
