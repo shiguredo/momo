@@ -1227,24 +1227,8 @@ def install_sdl3(
         ]
         if platform == "windows":
             cmake_args += [
-                "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
-                "-DSDL_LIBC=OFF",
+                f"-DCMAKE_MSVC_RUNTIME_LIBRARY={'MultiThreaded' if not debug else 'MultiThreadedDebug'}",
                 "-DSDL_AUDIO=OFF",
-                "-DSDL_VIDEO=ON",
-                "-DSDL_RENDER=ON",
-                "-DSDL_HAPTIC=ON",
-                "-DSDL_POWER=ON",
-                "-DSDL_JOYSTICK=ON",
-                "-DSDL_SENSOR=ON",
-                "-DSDL_OPENGL=ON",
-                "-DSDL_OPENGLES=ON",
-                "-DSDL_VULKAN=OFF",
-                "-DSDL_DIRECTX=ON",
-                "-DSDL_WASAPI=OFF",
-                "-DSDL_HIDAPI=ON",
-                "-DSDL_XINPUT=ON",
-                "-DHAVE_GAMEINPUT_H=0",
-                "-DSDL_JOYSTICK_GAMEINPUT=OFF",
             ]
         elif platform == "macos":
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
@@ -1275,35 +1259,18 @@ def install_sdl3(
                 "-DSDL_OPENGLES=ON",
                 "-DSDL_X11=ON",
                 "-DSDL_X11_SHARED=OFF",
+                "-DSDL_X11_XCURSOR=OFF",
+                "-DSDL_X11_XDBE=OFF",
+                "-DSDL_X11_XFIXES=OFF",
+                "-DSDL_X11_XINPUT=OFF",
+                "-DSDL_X11_XRANDR=OFF",
+                "-DSDL_X11_XSCRNSAVER=OFF",
+                "-DSDL_X11_XSHAPE=OFF",
+                "-DSDL_X11_XSYNC=OFF",
                 "-DSDL_WAYLAND=OFF",
                 "-DSDL_VULKAN=OFF",
                 "-DSDL_KMSDRM=OFF",
                 "-DSDL_RPI=OFF",
-            ]
-        elif platform == "linux-cross":
-            # クロスコンパイル環境（Raspberry Pi OS, Jetson）用の設定
-            cmake_args += [
-                "-DSDL_AUDIO=OFF",
-                "-DSDL_VIDEO=ON",
-                "-DSDL_RENDER=ON",
-                "-DSDL_HAPTIC=OFF",
-                "-DSDL_POWER=OFF",
-                "-DSDL_JOYSTICK=OFF",
-                "-DSDL_SENSOR=OFF",
-                "-DSDL_OPENGL=ON",
-                "-DSDL_OPENGLES=ON",
-                "-DSDL_X11=OFF",
-                "-DSDL_WAYLAND=OFF",
-                "-DSDL_VULKAN=OFF",
-                "-DSDL_KMSDRM=OFF",
-                "-DSDL_RPI=OFF",
-                "-DSDL_OFFSCREEN=ON",
-                "-DSDL_DUMMY=ON",
-                "-DSDL_LIBC=ON",
-                "-DSDL_GCC_ATOMICS=ON",
-                "-DSDL_VIDEO_DRIVER_OFFSCREEN=ON",
-                "-DSDL_VIDEO_DRIVER_DUMMY=ON",
-                "-DSDL_UNIX_CONSOLE_BUILD=ON",
             ]
         cmd(["cmake"] + cmake_args)
 

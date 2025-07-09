@@ -312,7 +312,7 @@ def install_deps(
         elif platform.target.os == "ubuntu":
             install_sdl3_args["platform"] = "linux"
         elif platform.target.os in ("jetson", "raspberry-pi-os"):
-            install_sdl3_args["platform"] = "linux-cross"
+            install_sdl3_args["platform"] = "linux"
             triplet = "aarch64-linux-gnu"
             arch = "aarch64"
             sysroot = os.path.join(install_dir, "rootfs")
