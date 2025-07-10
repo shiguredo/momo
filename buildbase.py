@@ -1229,6 +1229,8 @@ def install_sdl3(
             cmake_args += [
                 f"-DCMAKE_MSVC_RUNTIME_LIBRARY={'MultiThreaded' if not debug else 'MultiThreadedDebug'}",
                 "-DSDL_AUDIO=OFF",
+                "-DSDL_JOYSTICK=OFF",
+                "-DSDL_HAPTIC=OFF",
             ]
         elif platform == "macos":
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
