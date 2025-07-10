@@ -1231,6 +1231,10 @@ def install_sdl3(
                 "-DSDL_AUDIO=OFF",
                 "-DSDL_JOYSTICK=OFF",
                 "-DSDL_HAPTIC=OFF",
+                # GitHub Actions 上で gameinput.h が存在しないのに
+                # なぜか  check_c_source_compiles() が成功してしまうので
+                # HAVE_GAMEINPUT_H=0 で強制的に無効化する
+                "-DHAVE_GAMEINPUT_H=0",
             ]
         elif platform == "macos":
             # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
