@@ -45,7 +45,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 - Signaling サーバの URL はダミーです
 
 ```bash
-./momo --resolution VGA --no-audio-device --use-sdl sora --video-codec-type VP8 --video-bit-rate 1000 --audio false --signaling-urls wss://example.com/signaling --channel-id momo-sdl-sora
+./momo --resolution VGA --no-audio-device --use-sdl sora --role sendrecv --video-codec-type VP8 --video-bit-rate 1000 --audio false --signaling-urls wss://example.com/signaling --channel-id momo-sdl-sora
 ```
 
 [![Image from Gyazo](https://i.gyazo.com/abdb1802bd66440ef32e75da6842f0cf.png)](https://gyazo.com/abdb1802bd66440ef32e75da6842f0cf)
