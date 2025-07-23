@@ -27,7 +27,7 @@ bool AyameClient::ParseURL(URLParts& parts) const {
 }
 
 void AyameClient::GetStats(
-    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+    std::function<void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
         callback) {
   if (connection_ && (rtc_state_ ==
                          webrtc::PeerConnectionInterface::IceConnectionState::

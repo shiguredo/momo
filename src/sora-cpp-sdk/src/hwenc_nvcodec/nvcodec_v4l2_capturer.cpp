@@ -14,9 +14,9 @@ NvCodecV4L2Capturer::NvCodecV4L2Capturer(
     const NvCodecV4L2CapturerConfig& config)
     : V4L2VideoCapturer(config) {}
 
-rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
+webrtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     const NvCodecV4L2CapturerConfig& config) {
-  rtc::scoped_refptr<V4L2VideoCapturer> capturer;
+  webrtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!device_info) {
@@ -37,7 +37,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
   return nullptr;
 }
 
-rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
+webrtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
     const NvCodecV4L2CapturerConfig& config,
     size_t capture_device_index) {
@@ -56,8 +56,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
     return nullptr;
   }
 
-  rtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer =
-      rtc::make_ref_counted<NvCodecV4L2Capturer>(config);
+  webrtc::scoped_refptr<NvCodecV4L2Capturer> v4l2_capturer =
+      webrtc::make_ref_counted<NvCodecV4L2Capturer>(config);
 
   v4l2_capturer->decoder_.reset(
       new NvCodecDecoderCuda(config.cuda_context, CudaVideoCodec::JPEG));
@@ -79,7 +79,7 @@ rtc::scoped_refptr<V4L2VideoCapturer> NvCodecV4L2Capturer::Create(
 }
 
 void NvCodecV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
-  const int64_t timestamp_us = rtc::TimeMicros();
+  const int64_t timestamp_us = webrtc::TimeMicros();
   int adapted_width, adapted_height, crop_width, crop_height, crop_x, crop_y;
   if (!AdaptFrame(_currentWidth, _currentHeight, timestamp_us, &adapted_width,
                   &adapted_height, &crop_width, &crop_height, &crop_x,
@@ -102,7 +102,7 @@ void NvCodecV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
                 buffer->height() * buffer->StrideY() +
                     buffer->ChromaHeight() * buffer->StrideUV());
 
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buf;
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buf;
     if (_currentWidth != adapted_width || _currentHeight != adapted_height) {
       buf = buffer->CropAndScale(crop_x, crop_y, crop_width, crop_height,
                                  adapted_width, adapted_height);
@@ -113,8 +113,8 @@ void NvCodecV4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(buf)
                 .set_timestamp_rtp(0)
-                .set_timestamp_ms(rtc::TimeMillis())
-                .set_timestamp_us(rtc::TimeMicros())
+                .set_timestamp_ms(webrtc::TimeMillis())
+                .set_timestamp_us(webrtc::TimeMicros())
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build());
   }

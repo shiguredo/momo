@@ -61,20 +61,20 @@ int V4L2NativeBuffer::width() const {
 int V4L2NativeBuffer::height() const {
   return scaled_height_;
 }
-rtc::scoped_refptr<webrtc::I420BufferInterface> V4L2NativeBuffer::ToI420() {
+webrtc::scoped_refptr<webrtc::I420BufferInterface> V4L2NativeBuffer::ToI420() {
   RTC_LOG(LS_ERROR) << "V4L2NativeBuffer::ToI420() not implemented";
   return nullptr;
 }
 
 // crop は無視してサイズだけ変更する
-rtc::scoped_refptr<webrtc::VideoFrameBuffer> V4L2NativeBuffer::CropAndScale(
+webrtc::scoped_refptr<webrtc::VideoFrameBuffer> V4L2NativeBuffer::CropAndScale(
     int offset_x,
     int offset_y,
     int crop_width,
     int crop_height,
     int scaled_width,
     int scaled_height) {
-  return rtc::make_ref_counted<V4L2NativeBuffer>(
+  return webrtc::make_ref_counted<V4L2NativeBuffer>(
       video_type_, raw_width_, raw_height_, scaled_width, scaled_height, fd_,
       data_, size_, stride_, shared_on_destruction_);
 }

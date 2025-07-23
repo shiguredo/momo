@@ -37,7 +37,7 @@ struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
 
 class V4L2VideoCapturer : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       const V4L2VideoCapturerConfig& config);
   static void LogDeviceList(
       webrtc::VideoCaptureModule::DeviceInfo* device_info);
@@ -65,7 +65,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   Buffer* _pool;
 
  private:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       const V4L2VideoCapturerConfig& config,
       size_t capture_device_index);
@@ -76,7 +76,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   static void CaptureThread(void*);
   bool CaptureProcess();
 
-  rtc::PlatformThread _captureThread;
+  webrtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   std::string _videoDevice;

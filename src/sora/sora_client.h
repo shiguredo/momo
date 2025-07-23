@@ -78,7 +78,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   std::shared_ptr<RTCConnection> GetRTCConnection() const;
 
   void GetStats(std::function<
-                void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+                void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
                     callback) override;
 
  private:
@@ -91,7 +91,7 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void DoSendConnect(bool redirect);
   void DoSendPong();
   void DoSendPong(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void DoSendUpdate(const std::string& sdp, std::string type);
   std::shared_ptr<RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
@@ -117,8 +117,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
  private:
   // DataChannel 周りのコールバック
   void OnStateChange(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-  void OnMessage(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  void OnMessage(webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
                  const webrtc::DataBuffer& buffer) override;
 
  private:

@@ -36,10 +36,10 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
   webrtc::VideoFrameBuffer::Type type() const override;
   int width() const override;
   int height() const override;
-  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
 
   // crop は無視してサイズだけ変更する
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> CropAndScale(
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> CropAndScale(
       int offset_x,
       int offset_y,
       int crop_width,

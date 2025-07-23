@@ -81,7 +81,7 @@ class V4L2Runner {
   ConcurrentQueue<int> output_buffers_available_;
   ConcurrentQueue<OnCompleteCallback> on_completes_;
   std::atomic<bool> abort_poll_;
-  rtc::PlatformThread thread_;
+  webrtc::PlatformThread thread_;
 };
 
 #endif

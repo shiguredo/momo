@@ -38,7 +38,7 @@ class ScreenVideoCapturer : public sora::ScalableVideoTrackSource,
   int max_cpu_consumption_percentage_;
   webrtc::DesktopSize previous_frame_size_;
   std::unique_ptr<webrtc::DesktopFrame> output_frame_;
-  rtc::PlatformThread capture_thread_;
+  webrtc::PlatformThread capture_thread_;
   std::unique_ptr<webrtc::DesktopCapturer> capturer_;
   std::atomic<bool> quit_;
 };

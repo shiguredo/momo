@@ -32,10 +32,17 @@
     - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
     - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
   - @voluntas
-- [UPDATE] WebRTC を m129.6668.1.0 に上げる
+- [UPDATE] WebRTC を m138.7204.0.3 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
-  - @torikizi
+  - `rtc::` 名前空間と `cricket::` 名前空間を `webrtc::` 名前空間に統一する
+  - `absl::optional` を `std::optional` に変更
+  - main.cpp に `<thread>` のインクルードを追加
+  - `webrtc::SleepMs()` を `webrtc::Thread::SleepMs()` に変更
+  - `<rtc_base/third_party/base64/base64.h>` を `<rtc_base/base64.h>` に変更し、`webrtc::Base64::Encode()` を `webrtc::Base64Encode()` に変更
+  - `<api/audio/builtin_audio_processing_builder.h>` のインクルードを追加し、`dependencies.audio_processing` を `dependencies.audio_processing_builder` に変更し、生成方法も `webrtc::AudioProcessingBuilder().Create()` から `std::make_unique<webrtc::BuiltinAudioProcessingBuilder>()` に変更
+  - `dependencies.task_queue_factory` を削除して `env` を追加する
+  - @torikizi, @melpon
 
 ### misc
 

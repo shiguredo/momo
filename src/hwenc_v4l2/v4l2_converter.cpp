@@ -161,7 +161,7 @@ int V4L2H264EncodeConverter::fd() const {
 }
 
 int V4L2H264EncodeConverter::Encode(
-    const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
+    const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
     int64_t timestamp_us,
     bool force_key_frame,
     OnCompleteCallback on_complete) {
@@ -196,7 +196,7 @@ int V4L2H264EncodeConverter::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> bind_buffer;
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> bind_buffer;
   v4l2_buffer v4l2_buf = {};
   v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   v4l2_buf.index = *index;
@@ -205,8 +205,8 @@ int V4L2H264EncodeConverter::Encode(
   v4l2_plane planes[VIDEO_MAX_PLANES] = {};
   v4l2_buf.m.planes = planes;
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
-  v4l2_buf.timestamp.tv_sec = timestamp_us / rtc::kNumMicrosecsPerSec;
-  v4l2_buf.timestamp.tv_usec = timestamp_us % rtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_sec = timestamp_us / webrtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_usec = timestamp_us % webrtc::kNumMicrosecsPerSec;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     v4l2_buf.memory = V4L2_MEMORY_DMABUF;
     auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
@@ -219,7 +219,7 @@ int V4L2H264EncodeConverter::Encode(
 
     auto& src_buffer = src_buffers_.at(v4l2_buf.index);
 
-    rtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> i420_buffer =
         frame_buffer->ToI420();
     int width = i420_buffer->width();
     int height = i420_buffer->height();
@@ -241,7 +241,7 @@ int V4L2H264EncodeConverter::Encode(
       &v4l2_buf, [this, bind_buffer, on_complete](
                      v4l2_buffer* v4l2_buf, std::function<void()> on_next) {
         int64_t timestamp_us =
-            v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+            v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
             v4l2_buf->timestamp.tv_usec;
         bool is_key_frame = !!(v4l2_buf->flags & V4L2_BUF_FLAG_KEYFRAME);
         V4L2Buffers::PlaneBuffer& plane =
@@ -379,7 +379,7 @@ int V4L2ScaleConverter::Init(int src_memory,
 }
 
 int V4L2ScaleConverter::Scale(
-    const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
+    const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
     int64_t timestamp_us,
     OnCompleteCallback on_complete) {
   RTC_LOG(LS_VERBOSE) << "V4L2ScaleConverter::Scale";
@@ -389,7 +389,7 @@ int V4L2ScaleConverter::Scale(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> bind_buffer;
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> bind_buffer;
   v4l2_buffer v4l2_buf = {};
   v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   v4l2_buf.index = *index;
@@ -398,8 +398,8 @@ int V4L2ScaleConverter::Scale(
   v4l2_plane planes[VIDEO_MAX_PLANES] = {};
   v4l2_buf.m.planes = planes;
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
-  v4l2_buf.timestamp.tv_sec = timestamp_us / rtc::kNumMicrosecsPerSec;
-  v4l2_buf.timestamp.tv_usec = timestamp_us % rtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_sec = timestamp_us / webrtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_usec = timestamp_us % webrtc::kNumMicrosecsPerSec;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     v4l2_buf.memory = V4L2_MEMORY_DMABUF;
     auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
@@ -412,7 +412,7 @@ int V4L2ScaleConverter::Scale(
 
     auto& d_buffer = src_buffers_.at(v4l2_buf.index);
 
-    rtc::scoped_refptr<webrtc::I420BufferInterface> s_buffer =
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> s_buffer =
         frame_buffer->ToI420();
     int width = s_buffer->width();
     int height = s_buffer->height();
@@ -433,14 +433,14 @@ int V4L2ScaleConverter::Scale(
       &v4l2_buf, [this, bind_buffer, on_complete](
                      v4l2_buffer* v4l2_buf, std::function<void()> on_next) {
         int64_t timestamp_us =
-            v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+            v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
             v4l2_buf->timestamp.tv_usec;
         if (dst_buffers_.dmafds_exported()) {
           auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
           RTC_LOG(LS_VERBOSE)
               << "Scale completed: length=" << v4l2_buf->length
               << " fd=" << plane.fd << " bytesused=" << plane.bytesperline;
-          auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
+          auto frame_buffer = webrtc::make_ref_counted<V4L2NativeBuffer>(
               webrtc::VideoType::kI420, dst_width_, dst_height_, dst_width_,
               dst_height_, plane.fd, nullptr, plane.sizeimage,
               plane.bytesperline, [on_next]() { on_next(); });
@@ -678,8 +678,8 @@ int V4L2DecodeConverter::Decode(const uint8_t* data,
   v4l2_buf.m.planes = planes;
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   // RTP なんだけど無理やり us として扱う
-  v4l2_buf.timestamp.tv_sec = timestamp_rtp / rtc::kNumMicrosecsPerSec;
-  v4l2_buf.timestamp.tv_usec = timestamp_rtp % rtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_sec = timestamp_rtp / webrtc::kNumMicrosecsPerSec;
+  v4l2_buf.timestamp.tv_usec = timestamp_rtp % webrtc::kNumMicrosecsPerSec;
 
   auto& buffer = src_buffers_.at(*index);
   memcpy(buffer.planes[0].start, data, size);
@@ -691,14 +691,14 @@ int V4L2DecodeConverter::Decode(const uint8_t* data,
       &v4l2_buf, [this, on_complete](v4l2_buffer* v4l2_buf,
                                      std::function<void()> on_next) {
         int64_t timestamp_rtp =
-            v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+            v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
             v4l2_buf->timestamp.tv_usec;
         if (dst_buffers_.dmafds_exported()) {
           auto& plane = dst_buffers_.at(v4l2_buf->index).planes[0];
           RTC_LOG(LS_VERBOSE)
               << "Decode completed: fd=" << plane.fd << " width=" << dst_width_
               << " height=" << dst_height_;
-          auto frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
+          auto frame_buffer = webrtc::make_ref_counted<V4L2NativeBuffer>(
               webrtc::VideoType::kI420, dst_width_, dst_height_, dst_width_,
               dst_height_, plane.fd, nullptr, plane.sizeimage,
               plane.bytesperline, [on_next]() { on_next(); });

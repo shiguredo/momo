@@ -293,7 +293,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
         ((uint8_t*)map.pData + height_ * map.RowPitch), map.RowPitch,
         frame_buffer->width(), frame_buffer->height());
   } else {
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         frame.video_frame_buffer()->ToI420();
     libyuv::I420ToNV12(
         frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
@@ -327,7 +327,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   } else {
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         frame.video_frame_buffer()->ToI420();
     cuda_->Copy(nv_encoder_.get(), frame_buffer->DataY(), frame_buffer->width(),
                 frame_buffer->height());

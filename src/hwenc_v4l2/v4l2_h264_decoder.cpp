@@ -47,8 +47,8 @@ int32_t V4L2H264Decoder::Decode(const webrtc::EncodedImage& input_image,
                                                .set_video_frame_buffer(buffer)
                                                .set_timestamp_rtp(timestamp_rtp)
                                                .build();
-        decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
-                                           absl::nullopt);
+        decode_complete_callback_->Decoded(decoded_image, std::nullopt,
+                                           std::nullopt);
       });
 
   return WEBRTC_VIDEO_CODEC_OK;

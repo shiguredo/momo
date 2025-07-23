@@ -34,7 +34,7 @@ class SDLRenderer : public VideoTrackReceiver {
   void RemoveTrack(webrtc::VideoTrackInterface* track) override;
 
  protected:
-  class Sink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+  class Sink : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
    public:
     Sink(SDLRenderer* renderer, webrtc::VideoTrackInterface* track);
     ~Sink();
@@ -55,7 +55,7 @@ class SDLRenderer : public VideoTrackReceiver {
 
    private:
     SDLRenderer* renderer_;
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
+    webrtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
     webrtc::Mutex frame_params_lock_;
     int outline_offset_x_;
     int outline_offset_y_;

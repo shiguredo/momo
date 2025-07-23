@@ -29,23 +29,23 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
                                               &dependencies),
             &dependencies) {}
   CustomPeerConnectionFactory(
-      rtc::scoped_refptr<webrtc::ConnectionContext> context,
+      webrtc::scoped_refptr<webrtc::ConnectionContext> context,
       webrtc::PeerConnectionFactoryDependencies* dependencies)
       : conn_context_(context),
         webrtc::PeerConnectionFactory(context, dependencies) {}
 
-  static rtc::scoped_refptr<CustomPeerConnectionFactory> Create(
+  static webrtc::scoped_refptr<CustomPeerConnectionFactory> Create(
       webrtc::PeerConnectionFactoryDependencies dependencies) {
-    return rtc::make_ref_counted<CustomPeerConnectionFactory>(
+    return webrtc::make_ref_counted<CustomPeerConnectionFactory>(
         std::move(dependencies));
   }
 
-  rtc::scoped_refptr<webrtc::ConnectionContext> GetContext() const {
+  webrtc::scoped_refptr<webrtc::ConnectionContext> GetContext() const {
     return conn_context_;
   }
 
  private:
-  rtc::scoped_refptr<webrtc::ConnectionContext> conn_context_;
+  webrtc::scoped_refptr<webrtc::ConnectionContext> conn_context_;
 };
 
 struct RTCManagerConfig {
@@ -100,7 +100,7 @@ class RTCManager {
  public:
   RTCManager(
       RTCManagerConfig config,
-      rtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
+      webrtc::scoped_refptr<sora::ScalableVideoTrackSource> video_track_source,
       VideoTrackReceiver* receiver);
   ~RTCManager();
   void AddDataManager(std::shared_ptr<RTCDataManager> data_manager);
@@ -111,14 +111,14 @@ class RTCManager {
   void SetParameters();
 
  private:
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
-  rtc::scoped_refptr<webrtc::ConnectionContext> context_;
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
-  std::unique_ptr<rtc::Thread> network_thread_;
-  std::unique_ptr<rtc::Thread> worker_thread_;
-  std::unique_ptr<rtc::Thread> signaling_thread_;
+  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  webrtc::scoped_refptr<webrtc::ConnectionContext> context_;
+  webrtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
+  webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
+  std::unique_ptr<webrtc::Thread> network_thread_;
+  std::unique_ptr<webrtc::Thread> worker_thread_;
+  std::unique_ptr<webrtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
   VideoTrackReceiver* receiver_;
   RTCDataManagerDispatcher data_manager_dispatcher_;

@@ -16,7 +16,7 @@ namespace sora {
 
 static const int kBufferAlignment = 64;
 
-rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
+webrtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
@@ -25,18 +25,18 @@ rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     int fd,
     uint32_t pixfmt,
     std::shared_ptr<JetsonJpegDecoder> decoder) {
-  return rtc::make_ref_counted<JetsonBuffer>(video_type, raw_width, raw_height,
+  return webrtc::make_ref_counted<JetsonBuffer>(video_type, raw_width, raw_height,
                                              scaled_width, scaled_height, fd,
                                              pixfmt, decoder);
 }
 
-rtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
+webrtc::scoped_refptr<JetsonBuffer> JetsonBuffer::Create(
     webrtc::VideoType video_type,
     int raw_width,
     int raw_height,
     int scaled_width,
     int scaled_height) {
-  return rtc::make_ref_counted<JetsonBuffer>(video_type, raw_width, raw_height,
+  return webrtc::make_ref_counted<JetsonBuffer>(video_type, raw_width, raw_height,
                                              scaled_width, scaled_height);
 }
 
@@ -56,9 +56,9 @@ int JetsonBuffer::height() const {
   return scaled_height_;
 }
 
-rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
+webrtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
   if (video_type_ == webrtc::VideoType::kMJPEG) {
-    rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
         webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
     int32_t buffer_width = ((scaled_width_ + 15) / 16) * 16;
     int32_t buffer_height = ((scaled_height_ + 15) / 16) * 16;
@@ -155,7 +155,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
 
     return scaled_buffer;
   } else {
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         webrtc::I420Buffer::Create(raw_width_, raw_height_);
     const int conversionResult = libyuv::ConvertToI420(
         data_.get(), length_, i420_buffer.get()->MutableDataY(),
@@ -166,7 +166,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> JetsonBuffer::ToI420() {
     if (raw_width_ == scaled_width_ && raw_height_ == scaled_height_) {
       return i420_buffer;
     }
-    rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
         webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
     scaled_buffer->ScaleFrom(*i420_buffer->ToI420());
     return scaled_buffer;

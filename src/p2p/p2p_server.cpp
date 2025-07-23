@@ -3,7 +3,7 @@
 #include "util.h"
 
 void P2PServer::GetStats(
-    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+    std::function<void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
         callback) {
   if (p2p_session_ && p2p_session_->GetRTCConnection()) {
     p2p_session_->GetRTCConnection()->GetStats(std::move(callback));

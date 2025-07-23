@@ -27,9 +27,9 @@ RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
 RTC_FWD_DECL_OBJC_CLASS(RTCVideoSourceAdapter);
 
 class MacCapturer : public sora::ScalableVideoTrackSource,
-                    public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+                    public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  static rtc::scoped_refptr<MacCapturer> Create(
+  static webrtc::scoped_refptr<MacCapturer> Create(
       size_t width,
       size_t height,
       size_t target_fps,

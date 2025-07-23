@@ -41,7 +41,7 @@ namespace sora {
 
 class JetsonVideoEncoder : public webrtc::VideoEncoder {
  public:
-  explicit JetsonVideoEncoder(const cricket::Codec& codec);
+  explicit JetsonVideoEncoder(const webrtc::Codec& codec);
   ~JetsonVideoEncoder() override;
 
   static bool IsSupported(webrtc::VideoCodecType codec);
@@ -67,7 +67,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
                 int64_t tsus,
                 int64_t rtpts,
                 webrtc::VideoRotation r,
-                absl::optional<webrtc::ColorSpace> c,
+                std::optional<webrtc::ColorSpace> c,
                 std::shared_ptr<JetsonJpegDecoder> d)
         : width(w),
           height(h),
@@ -86,7 +86,7 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
     int64_t timestamp_us;
     int64_t timestamp_rtp;
     webrtc::VideoRotation rotation;
-    absl::optional<webrtc::ColorSpace> color_space;
+    std::optional<webrtc::ColorSpace> color_space;
     std::shared_ptr<JetsonJpegDecoder> decoder_;
   };
 

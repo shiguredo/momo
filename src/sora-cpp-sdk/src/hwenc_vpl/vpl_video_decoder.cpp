@@ -297,7 +297,7 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
 
     uint64_t pts = input_image.RtpTimestamp();
     // NV12 から I420 に変換
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         buffer_pool_.CreateI420Buffer(width_, height_);
     libyuv::NV12ToI420(out_surface->Data.Y, out_surface->Data.Pitch,
                        out_surface->Data.UV, out_surface->Data.Pitch,
@@ -310,8 +310,8 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
                                            .set_video_frame_buffer(i420_buffer)
                                            .set_timestamp_rtp(pts)
                                            .build();
-    decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
-                                       absl::nullopt);
+    decode_complete_callback_->Decoded(decoded_image, std::nullopt,
+                                       std::nullopt);
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
