@@ -467,7 +467,7 @@ std::string Util::GenerateRandomChars() {
 
 std::string Util::GenerateRandomChars(size_t length) {
   std::string result;
-  rtc::CreateRandomString(length, &result);
+  webrtc::CreateRandomString(length, &result);
   return result;
 }
 

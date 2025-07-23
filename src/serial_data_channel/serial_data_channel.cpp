@@ -5,7 +5,7 @@
 
 SerialDataChannel::SerialDataChannel(
     SerialDataManager* serial_data_manager,
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
     : serial_data_manager_(serial_data_manager), data_channel_(data_channel) {
   data_channel_->RegisterObserver(this);
 }
@@ -32,7 +32,7 @@ void SerialDataChannel::Send(uint8_t* data, size_t length) {
   if (data_channel_->state() != webrtc::DataChannelInterface::kOpen) {
     return;
   }
-  rtc::CopyOnWriteBuffer buffer(data, length);
+  webrtc::CopyOnWriteBuffer buffer(data, length);
   webrtc::DataBuffer data_buffer(buffer, true);
   data_channel_->Send(data_buffer);
 }

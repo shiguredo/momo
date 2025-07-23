@@ -55,7 +55,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   NvVideoDecoder* decoder_;
   webrtc::DecodedImageCallback* decode_complete_callback_;
   webrtc::VideoFrameBufferPool buffer_pool_;
-  rtc::PlatformThread capture_loop_;
+  webrtc::PlatformThread capture_loop_;
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;

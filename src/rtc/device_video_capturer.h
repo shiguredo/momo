@@ -21,17 +21,17 @@
 #include "sora/scalable_track_source.h"
 
 class DeviceVideoCapturer : public sora::ScalableVideoTrackSource,
-                            public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+                            public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  static rtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
+  static webrtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
                                                         size_t height,
                                                         size_t target_fps);
-  static rtc::scoped_refptr<DeviceVideoCapturer> Create(
+  static webrtc::scoped_refptr<DeviceVideoCapturer> Create(
       size_t width,
       size_t height,
       size_t target_fps,
       size_t capture_device_index);
-  static rtc::scoped_refptr<DeviceVideoCapturer> Create(
+  static webrtc::scoped_refptr<DeviceVideoCapturer> Create(
       size_t width,
       size_t height,
       size_t target_fps,
@@ -46,13 +46,13 @@ class DeviceVideoCapturer : public sora::ScalableVideoTrackSource,
             size_t capture_device_index);
   void Destroy();
 
-  // rtc::VideoSinkInterface interface.
+  // webrtc::VideoSinkInterface interface.
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
   int LogDeviceInfo();
   int GetDeviceIndex(const std::string& device);
 
-  rtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
+  webrtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
   webrtc::VideoCaptureCapability capability_;
 };
 

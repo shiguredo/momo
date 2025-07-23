@@ -70,23 +70,23 @@ int main(int argc, char* argv[]) {
   bool use_test = false;
   bool use_ayame = false;
   bool use_sora = false;
-  int log_level = rtc::LS_NONE;
+  int log_level = webrtc::LS_NONE;
 
   Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, args);
 
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
+  webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)log_level);
+  webrtc::LogMessage::LogTimestamps();
+  webrtc::LogMessage::LogThreads();
 
-  std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
-      new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
+  std::unique_ptr<webrtc::FileRotatingLogSink> log_sink(
+      new webrtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
                                    10));
   if (!log_sink->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to open log file";
     log_sink.reset();
     return 1;
   }
-  rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
+  webrtc::LogMessage::AddLogToStream(log_sink.get(), webrtc::LS_INFO);
 
 #if defined(USE_NVCODEC_ENCODER)
   auto cuda_context = sora::CudaContext::Create();
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  auto capturer = ([&]() -> rtc::scoped_refptr<sora::ScalableVideoTrackSource> {
+  auto capturer = ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {
     if (args.no_video_device) {
       return nullptr;
     }
@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
         return nullptr;
       }
       auto size = args.GetSize();
-      return rtc::make_ref_counted<ScreenVideoCapturer>(
+      return webrtc::make_ref_counted<ScreenVideoCapturer>(
           sources[0].id, size.width, size.height, args.framerate);
     }
 #endif

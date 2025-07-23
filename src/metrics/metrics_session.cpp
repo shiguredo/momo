@@ -62,7 +62,7 @@ void MetricsSession::OnRead(boost::system::error_code ec,
       std::shared_ptr<MetricsSession> self(shared_from_this());
       stats_collector_->GetStats(
           [self](
-              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
             std::string stats = report ? report->ToJson() : "[]";
             boost::json::value json_message = {
                 {"version", MomoVersion::GetClientName()},

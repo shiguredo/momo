@@ -15,12 +15,12 @@ struct NvCodecV4L2CapturerConfig : V4L2VideoCapturerConfig {
 
 class NvCodecV4L2Capturer : public V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       const NvCodecV4L2CapturerConfig& config);
   NvCodecV4L2Capturer(const NvCodecV4L2CapturerConfig& config);
 
  private:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       const NvCodecV4L2CapturerConfig& config,
       size_t capture_device_index);

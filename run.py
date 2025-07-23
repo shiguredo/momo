@@ -276,8 +276,8 @@ def install_deps(
                 install_vpl_args["cmake_args"].append(f"-DCMAKE_CXX_FLAGS={' '.join(cxxflags)}")
             if platform.target.os == "ubuntu":
                 cmake_args = []
-                cmake_args.append("-DCMAKE_C_COMPILER=clang-18")
-                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-18")
+                cmake_args.append("-DCMAKE_C_COMPILER=clang-20")
+                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-20")
                 path = cmake_path(os.path.join(webrtc_info.libcxx_dir, "include"))
                 cmake_args.append(f"-DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES={path}")
                 flags = [
@@ -349,7 +349,7 @@ def install_deps(
             "version_file": os.path.join(install_dir, "openh264.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
-            "is_windows": platform.target.os == 'windows',
+            "is_windows": platform.target.os == "windows",
         }
         install_openh264(**install_openh264_args)
 
@@ -450,8 +450,8 @@ def main():
             cmake_args.append(f"-DCMAKE_SYSTEM_VERSION={WINDOWS_SDK_VERSION}")
         if platform.target.os == "ubuntu":
             if platform.target.package_name in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
-                cmake_args.append("-DCMAKE_C_COMPILER=clang-18")
-                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-18")
+                cmake_args.append("-DCMAKE_C_COMPILER=clang-20")
+                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-20")
             else:
                 cmake_args.append(
                     f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}"

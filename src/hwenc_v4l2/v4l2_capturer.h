@@ -5,12 +5,12 @@
 
 class V4L2Capturer : public sora::V4L2VideoCapturer {
  public:
-  static rtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
       sora::V4L2VideoCapturerConfig config);
   V4L2Capturer(const sora::V4L2VideoCapturerConfig& config);
 
  private:
-  static rtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<sora::V4L2VideoCapturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       sora::V4L2VideoCapturerConfig config,
       size_t capture_device_index);

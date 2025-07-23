@@ -17,9 +17,9 @@ class SoraDataChannelObserver {
  public:
   ~SoraDataChannelObserver() {}
   virtual void OnStateChange(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) = 0;
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) = 0;
   virtual void OnMessage(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
       const webrtc::DataBuffer& buffer) = 0;
 };
 
@@ -28,7 +28,7 @@ class SoraDataChannel : public RTCDataManager {
   struct Thunk : webrtc::DataChannelObserver,
                  std::enable_shared_from_this<Thunk> {
     SoraDataChannel* p;
-    rtc::scoped_refptr<webrtc::DataChannelInterface> dc;
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> dc;
     void OnStateChange() override { p->OnStateChange(shared_from_this()); }
     void OnMessage(const webrtc::DataBuffer& buffer) override {
       p->OnMessage(shared_from_this(), buffer);
@@ -70,7 +70,7 @@ class SoraDataChannel : public RTCDataManager {
 
  public:
   void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
     std::shared_ptr<Thunk> thunk(new Thunk());
     thunk->p = this;
     thunk->dc = data_channel;
@@ -113,9 +113,9 @@ class SoraDataChannel : public RTCDataManager {
 
  private:
   std::map<std::shared_ptr<Thunk>,
-           rtc::scoped_refptr<webrtc::DataChannelInterface>>
+           webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       thunks_;
-  std::map<std::string, rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  std::map<std::string, webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       labels_;
   SoraDataChannelObserver* observer_;
   std::function<void()> on_close_;

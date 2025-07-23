@@ -149,7 +149,7 @@ jobs:
       - name: Install deps for ${{ matrix.name }}
         run: |
           source VERSION
-          # clang-18 と CUDA を入れる
+          # clang-20 と CUDA を入れる
           sudo apt-get update
           sudo apt-get install -y software-properties-common
 
@@ -166,7 +166,7 @@ jobs:
 
           wget https://apt.llvm.org/llvm.sh
           chmod a+x llvm.sh
-          sudo ./llvm.sh 18
+          sudo ./llvm.sh 20
 
           # Intel Media SDK のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev

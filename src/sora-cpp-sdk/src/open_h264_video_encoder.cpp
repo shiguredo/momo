@@ -125,11 +125,11 @@ class OpenH264VideoEncoder : public VideoEncoder {
 
   std::vector<ISVCEncoder*> encoders_;
   std::vector<SSourcePicture> pictures_;
-  std::vector<rtc::scoped_refptr<I420Buffer>> downscaled_buffers_;
+  std::vector<webrtc::scoped_refptr<I420Buffer>> downscaled_buffers_;
   std::vector<LayerConfig> configurations_;
   std::vector<EncodedImage> encoded_images_;
   std::vector<std::unique_ptr<ScalableVideoController>> svc_controllers_;
-  absl::InlinedVector<absl::optional<ScalabilityMode>, kMaxSimulcastStreams>
+  absl::InlinedVector<std::optional<ScalabilityMode>, kMaxSimulcastStreams>
       scalability_modes_;
 
   const Environment env_;
@@ -137,7 +137,7 @@ class OpenH264VideoEncoder : public VideoEncoder {
   H264PacketizationMode packetization_mode_;
   size_t max_payload_size_;
   int32_t number_of_cores_;
-  absl::optional<int> encoder_thread_limit_;
+  std::optional<int> encoder_thread_limit_;
   EncodedImageCallback* encoded_image_callback_;
 
   bool has_reported_init_;
@@ -180,7 +180,7 @@ enum H264EncoderImplEvent {
   kH264EncoderEventMax = 16,
 };
 
-int NumberOfThreads(absl::optional<int> encoder_thread_limit,
+int NumberOfThreads(std::optional<int> encoder_thread_limit,
                     int width,
                     int height,
                     int number_of_cores) {
@@ -224,7 +224,7 @@ VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
   return VideoFrameType::kEmptyFrame;
 }
 
-absl::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
+std::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
     int num_temporal_layers) {
   switch (num_temporal_layers) {
     case 0:
@@ -238,7 +238,7 @@ absl::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
     default:
       RTC_DCHECK_NOTREACHED();
   }
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 }  // namespace
@@ -605,7 +605,7 @@ int32_t OpenH264VideoEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  rtc::scoped_refptr<I420BufferInterface> frame_buffer =
+  webrtc::scoped_refptr<I420BufferInterface> frame_buffer =
       input_frame.video_frame_buffer()->ToI420();
   if (!frame_buffer) {
     RTC_LOG(LS_ERROR) << "Failed to convert "
@@ -921,7 +921,7 @@ std::unique_ptr<webrtc::VideoEncoder> CreateOpenH264VideoEncoder(
     const webrtc::SdpVideoFormat& format,
     std::string openh264) {
   webrtc::H264EncoderSettings settings;
-  if (auto it = format.parameters.find(cricket::kH264FmtpPacketizationMode);
+  if (auto it = format.parameters.find(webrtc::kH264FmtpPacketizationMode);
       it != format.parameters.end()) {
     if (it->second == "0") {
       settings.packetization_mode =
@@ -932,7 +932,7 @@ std::unique_ptr<webrtc::VideoEncoder> CreateOpenH264VideoEncoder(
     }
   }
 
-  return absl::make_unique<webrtc::OpenH264VideoEncoder>(
+  return std::make_unique<webrtc::OpenH264VideoEncoder>(
       webrtc::CreateEnvironment(), settings, std::move(openh264));
 }
 

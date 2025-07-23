@@ -12,7 +12,7 @@ class SerialDataChannel : public webrtc::DataChannelObserver {
  public:
   SerialDataChannel(
       SerialDataManager* serial_data_manager,
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel);
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel);
   ~SerialDataChannel();
 
   void Send(uint8_t* data, size_t length);
@@ -23,7 +23,7 @@ class SerialDataChannel : public webrtc::DataChannelObserver {
 
  private:
   SerialDataManager* serial_data_manager_;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 };
 
 #endif

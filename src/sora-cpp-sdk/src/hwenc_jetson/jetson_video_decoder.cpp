@@ -115,9 +115,9 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
 
   v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
   v4l2_buf.timestamp.tv_sec =
-      input_image.RtpTimestamp() / rtc::kNumMicrosecsPerSec;
+      input_image.RtpTimestamp() / webrtc::kNumMicrosecsPerSec;
   v4l2_buf.timestamp.tv_usec =
-      input_image.RtpTimestamp() % rtc::kNumMicrosecsPerSec;
+      input_image.RtpTimestamp() % webrtc::kNumMicrosecsPerSec;
 
   if (decoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
@@ -174,9 +174,9 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
 
   if (capture_loop_.empty()) {
     eos_ = false;
-    capture_loop_ = rtc::PlatformThread::SpawnJoinable(
+    capture_loop_ = webrtc::PlatformThread::SpawnJoinable(
         std::bind(JetsonVideoDecoder::CaptureLoopFunction, this), "CaptureLoop",
-        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
+        webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -294,7 +294,7 @@ void JetsonVideoDecoder::CaptureLoop() {
         break;
       }
 
-      uint64_t pts = v4l2_buf.timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
+      uint64_t pts = v4l2_buf.timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
                      v4l2_buf.timestamp.tv_usec;
 
       NvBufSurf::NvCommonTransformParams transform_params;
@@ -319,7 +319,7 @@ void JetsonVideoDecoder::CaptureLoop() {
         break;
       }
 
-      rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+      webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
           buffer_pool_.CreateI420Buffer(capture_crop_->c.width,
                                         capture_crop_->c.height);
       if (!i420_buffer.get()) {
@@ -370,8 +370,8 @@ void JetsonVideoDecoder::CaptureLoop() {
               .set_video_frame_buffer(i420_buffer)
               .set_timestamp_rtp(pts)
               .build();
-      decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
-                                         absl::nullopt);
+      decode_complete_callback_->Decoded(decoded_image, std::nullopt,
+                                         std::nullopt);
 
       if (decoder_->capture_plane.qBuffer(v4l2_buf, NULL) < 0) {
         RTC_LOG(LS_ERROR) << __FUNCTION__

@@ -9,7 +9,7 @@ class RTCDataManager {
   virtual ~RTCDataManager() = default;
   // DataChannel は 必ず kClosed にステートが遷移するので OnRemove は不要
   virtual void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) = 0;
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) = 0;
 };
 
 #endif

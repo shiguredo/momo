@@ -31,7 +31,7 @@ const int kHighH264QpThreshold = 40;
 
 }  // namespace
 
-V4L2H264Encoder::V4L2H264Encoder(const cricket::VideoCodec& codec)
+V4L2H264Encoder::V4L2H264Encoder(const webrtc::Codec& codec)
     : configured_width_(0),
       configured_height_(0),
       callback_(nullptr),
@@ -202,7 +202,7 @@ int32_t V4L2H264Encoder::Encode(
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
 
   RTC_LOG(LS_VERBOSE) << "V4L2H264Encoder::Encode: type="
@@ -248,7 +248,7 @@ int32_t V4L2H264Encoder::Encode(
       scaler_->Scale(
           frame_buffer, input_frame.timestamp_us(),
           [this, force_key_frame, input_frame](
-              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_us) {
             h264_encoder_->Encode(
                 buffer, timestamp_us, force_key_frame,
@@ -264,7 +264,7 @@ int32_t V4L2H264Encoder::Encode(
           native_buffer->data().get(), native_buffer->size(),
           input_frame.rtp_timestamp(),
           [this, force_key_frame, input_frame](
-              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_rtp) {
             RTC_LOG(LS_VERBOSE) << "Decoded JPEG frame: type=" << buffer->type()
                                 << " width=" << buffer->width()
@@ -272,7 +272,7 @@ int32_t V4L2H264Encoder::Encode(
             scaler_->Scale(
                 buffer, input_frame.timestamp_us(),
                 [this, force_key_frame, input_frame](
-                    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+                    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
                     int64_t timestamp_us) {
                   h264_encoder_->Encode(
                       buffer, timestamp_us, force_key_frame,

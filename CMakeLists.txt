@@ -269,6 +269,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       Shcore.lib
       wmcodecdspuuid.lib
       Dwmapi.lib
+      D3D11.lib
   )
 
   target_compile_definitions(momo

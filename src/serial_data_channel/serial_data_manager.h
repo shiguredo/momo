@@ -31,7 +31,7 @@ class SerialDataManager : public RTCDataManager {
   void Send(const uint8_t* data, size_t length);
 
   void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
   void OnClosed(SerialDataChannel* serial_data_channel);
 
  private:
