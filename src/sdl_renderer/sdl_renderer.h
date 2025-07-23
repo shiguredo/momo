@@ -6,7 +6,7 @@
 #include <vector>
 
 // SDL
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 // Boost
 #include <boost/asio.hpp>

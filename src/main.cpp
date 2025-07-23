@@ -6,6 +6,9 @@
 #include <thread>
 #include <vector>
 
+// SDL3
+#include <SDL3/SDL_main.h>
+
 // WebRTC
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/string_utils.h>

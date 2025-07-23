@@ -1198,6 +1198,95 @@ def install_sdl2(
 
 
 @versioned
+def install_sdl3(
+    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
+):
+    url = (
+        f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL3-{version}.tar.gz"
+    )
+    path = download(url, source_dir)
+    sdl3_source_dir = os.path.join(source_dir, "sdl3")
+    sdl3_build_dir = os.path.join(build_dir, "sdl3")
+    sdl3_install_dir = os.path.join(install_dir, "sdl3")
+    rm_rf(sdl3_source_dir)
+    rm_rf(sdl3_build_dir)
+    rm_rf(sdl3_install_dir)
+    extract(path, source_dir, "sdl3")
+
+    mkdir_p(sdl3_build_dir)
+    with cd(sdl3_build_dir):
+        configuration = "Debug" if debug else "Release"
+        cmake_args = cmake_args[:]
+        cmake_args += [
+            sdl3_source_dir,
+            f"-DCMAKE_BUILD_TYPE={configuration}",
+            f"-DCMAKE_INSTALL_PREFIX={cmake_path(sdl3_install_dir)}",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DSDL_STATIC=ON",
+            "-DSDL_SHARED=OFF",
+        ]
+        if platform == "windows":
+            cmake_args += [
+                f"-DCMAKE_MSVC_RUNTIME_LIBRARY={'MultiThreaded' if not debug else 'MultiThreadedDebug'}",
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_JOYSTICK=OFF",
+                "-DSDL_HAPTIC=OFF",
+                # GitHub Actions 上で gameinput.h が存在しないのに
+                # なぜか  check_c_source_compiles() が成功してしまうので
+                # HAVE_GAMEINPUT_H=0 で強制的に無効化する
+                "-DHAVE_GAMEINPUT_H=0",
+            ]
+        elif platform == "macos":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_METAL=ON",
+                "-DSDL_VULKAN=OFF",
+            ]
+        elif platform == "linux":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_X11=ON",
+                "-DSDL_X11_SHARED=OFF",
+                "-DSDL_X11_XCURSOR=OFF",
+                "-DSDL_X11_XDBE=OFF",
+                "-DSDL_X11_XFIXES=OFF",
+                "-DSDL_X11_XINPUT=OFF",
+                "-DSDL_X11_XRANDR=OFF",
+                "-DSDL_X11_XSCRNSAVER=OFF",
+                "-DSDL_X11_XSHAPE=OFF",
+                "-DSDL_X11_XSYNC=OFF",
+                "-DSDL_WAYLAND=OFF",
+                "-DSDL_VULKAN=OFF",
+                "-DSDL_KMSDRM=OFF",
+                "-DSDL_RPI=OFF",
+            ]
+        cmd(["cmake"] + cmake_args)
+
+        cmd(
+            ["cmake", "--build", ".", "--config", configuration, f"-j{multiprocessing.cpu_count()}"]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
 def install_cli11(version, install_dir):
     cli11_install_dir = os.path.join(install_dir, "cli11")
     rm_rf(cli11_install_dir)

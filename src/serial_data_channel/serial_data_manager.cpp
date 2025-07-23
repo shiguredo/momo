@@ -6,6 +6,9 @@
 #include <functional>
 #include <iostream>
 
+// Boost
+#include <boost/asio/post.hpp>
+
 // WebRTC
 #include <rtc_base/log_sinks.h>
 
@@ -17,7 +20,7 @@ SerialDataManager::SerialDataManager(boost::asio::io_context& ioc)
   post_ = [&ioc](std::function<void()> f) {
     if (ioc.stopped())
       return;
-    ioc.post(f);
+    boost::asio::post(ioc, f);
   };
 }
 
