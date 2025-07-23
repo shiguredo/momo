@@ -10,7 +10,7 @@ class RTCConnection {
  public:
   RTCConnection(RTCMessageSender* sender,
                 std::unique_ptr<PeerConnectionObserver> observer,
-                rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
+                webrtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
       : sender_(sender),
         observer_(std::move(observer)),
         connection_(connection) {}
@@ -43,28 +43,28 @@ class RTCConnection {
 
   void GetStats(
       std::function<void(
-          const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
+          const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
 
   void SetEncodingParameters(
       std::string mid,
       std::vector<webrtc::RtpEncodingParameters> encodings);
   void ResetEncodingParameters();
 
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
+  webrtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
  private:
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
+  webrtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
+  webrtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
+  webrtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
   bool SetMediaEnabled(
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+      webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
       bool enabled);
   bool IsMediaEnabled(
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
+      webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
 
   RTCMessageSender* sender_;
   std::unique_ptr<PeerConnectionObserver> observer_;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;
+  webrtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;
   std::vector<webrtc::RtpEncodingParameters> encodings_;
   std::string mid_;
 };

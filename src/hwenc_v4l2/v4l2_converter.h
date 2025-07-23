@@ -44,7 +44,7 @@ class V4L2H264EncodeConverter {
  public:
   int fd() const;
 
-  int Encode(const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
+  int Encode(const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
              int64_t timestamp_us,
              bool force_key_frame,
              OnCompleteCallback on_complete);
@@ -62,7 +62,7 @@ class V4L2H264EncodeConverter {
 
 class V4L2ScaleConverter {
  public:
-  typedef std::function<void(rtc::scoped_refptr<webrtc::VideoFrameBuffer>,
+  typedef std::function<void(webrtc::scoped_refptr<webrtc::VideoFrameBuffer>,
                              int64_t)>
       OnCompleteCallback;
 
@@ -89,7 +89,7 @@ class V4L2ScaleConverter {
            int dst_stride);
 
  public:
-  int Scale(const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
+  int Scale(const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
             int64_t timestamp_us,
             OnCompleteCallback on_complete);
 
@@ -110,7 +110,7 @@ class V4L2ScaleConverter {
 
 class V4L2DecodeConverter {
  public:
-  typedef std::function<void(rtc::scoped_refptr<webrtc::VideoFrameBuffer>,
+  typedef std::function<void(webrtc::scoped_refptr<webrtc::VideoFrameBuffer>,
                              int64_t)>
       OnCompleteCallback;
 

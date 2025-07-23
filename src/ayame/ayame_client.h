@@ -53,7 +53,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void Close();
 
   void GetStats(std::function<
-                void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+                void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
                     callback) override;
 
  private:

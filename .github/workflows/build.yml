@@ -149,7 +149,7 @@ jobs:
       - name: Install deps for ${{ matrix.name }}
         run: |
           source VERSION
-          # clang-18 と CUDA を入れる
+          # clang-20 と CUDA を入れる
           sudo apt-get update
           sudo apt-get install -y software-properties-common
 
@@ -166,7 +166,7 @@ jobs:
 
           wget https://apt.llvm.org/llvm.sh
           chmod a+x llvm.sh
-          sudo ./llvm.sh 18
+          sudo ./llvm.sh 20
 
           # Intel Media SDK のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
@@ -191,7 +191,7 @@ jobs:
 
   create-release:
     name: Create Release
-    if: contains(github.ref, 'tags/202')
+    if: startsWith(github.ref, 'refs/tags/202')
     needs:
       - build-windows
       - build-macos
@@ -219,15 +219,26 @@ jobs:
           platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
-          echo "package_paths<<EOF" >> $GITHUB_OUTPUT
-          cat package_paths.env >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 改行をスペースに変換してpackage_pathsに設定
+          echo "package_paths=$(cat package_paths.env | tr '\n' ' ')" >> $GITHUB_OUTPUT
         id: env
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.env.outputs.package_paths }}
-          prerelease: ${{ contains(github.ref, 'canary') }}
+      - name: Release (Prerelease)
+        if: contains(github.ref, 'canary')
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}" \
+            --prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release (Stable)
+        if: ${{ !contains(github.ref, 'canary') }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
     runs-on: ubuntu-22.04

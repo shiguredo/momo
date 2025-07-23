@@ -7,7 +7,7 @@ class StatsCollector {
  public:
   virtual void GetStats(
       std::function<
-          void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+          void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
           callback) = 0;
 };
 

@@ -22,7 +22,7 @@
 
 class V4L2H264Encoder : public webrtc::VideoEncoder {
  public:
-  explicit V4L2H264Encoder(const cricket::VideoCodec& codec);
+  explicit V4L2H264Encoder(const webrtc::Codec& codec);
   ~V4L2H264Encoder() override;
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,

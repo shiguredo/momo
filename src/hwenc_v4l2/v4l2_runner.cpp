@@ -38,9 +38,9 @@ std::shared_ptr<V4L2Runner> V4L2Runner::Create(
   }
 
   p->abort_poll_ = false;
-  p->thread_ = rtc::PlatformThread::SpawnJoinable(
+  p->thread_ = webrtc::PlatformThread::SpawnJoinable(
       [p = p.get()]() { p->PollProcess(); }, "PollThread",
-      rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
+      webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   for (int i = 0; i < src_count; i++) {
     p->output_buffers_available_.push(i);
   }

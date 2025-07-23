@@ -9,16 +9,17 @@
 class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
  public:
   typedef std::function<void(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report)>
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report)>
       ResultCallback;
 
   static RTCStatsCallback* Create(ResultCallback result_callback) {
-    return new rtc::RefCountedObject<RTCStatsCallback>(
+    return new webrtc::RefCountedObject<RTCStatsCallback>(
         std::move(result_callback));
   }
 
   void OnStatsDelivered(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) override {
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report)
+      override {
     std::move(result_callback_)(report);
   }
 
@@ -38,10 +39,10 @@ class CreateSessionDescriptionThunk
   typedef RTCConnection::OnCreateSuccessFunc OnSuccessFunc;
   typedef RTCConnection::OnCreateFailureFunc OnFailureFunc;
 
-  static rtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
+  static webrtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return rtc::make_ref_counted<CreateSessionDescriptionThunk>(
+    return webrtc::make_ref_counted<CreateSessionDescriptionThunk>(
         std::move(on_success), std::move(on_failure));
   }
 
@@ -78,10 +79,10 @@ class SetSessionDescriptionThunk
   typedef RTCConnection::OnSetSuccessFunc OnSuccessFunc;
   typedef RTCConnection::OnSetFailureFunc OnFailureFunc;
 
-  static rtc::scoped_refptr<SetSessionDescriptionThunk> Create(
+  static webrtc::scoped_refptr<SetSessionDescriptionThunk> Create(
       OnSuccessFunc on_success,
       OnFailureFunc on_failure) {
-    return rtc::make_ref_counted<SetSessionDescriptionThunk>(
+    return webrtc::make_ref_counted<SetSessionDescriptionThunk>(
         std::move(on_success), std::move(on_failure));
   }
 
@@ -252,22 +253,22 @@ bool RTCConnection::IsVideoEnabled() {
   return IsMediaEnabled(GetLocalVideoTrack());
 }
 
-rtc::scoped_refptr<webrtc::MediaStreamInterface>
+webrtc::scoped_refptr<webrtc::MediaStreamInterface>
 RTCConnection::GetLocalStream() {
-  return rtc::scoped_refptr<webrtc::MediaStreamInterface>(
+  return webrtc::scoped_refptr<webrtc::MediaStreamInterface>(
       connection_->local_streams()->at(0));
 }
 
-rtc::scoped_refptr<webrtc::AudioTrackInterface>
+webrtc::scoped_refptr<webrtc::AudioTrackInterface>
 RTCConnection::GetLocalAudioTrack() {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
+  webrtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
       GetLocalStream();
   if (!local_stream) {
     return nullptr;
   }
 
   if (local_stream->GetAudioTracks().size() > 0) {
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+    webrtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
         local_stream->GetAudioTracks()[0]);
     if (audio_track) {
       return audio_track;
@@ -276,16 +277,16 @@ RTCConnection::GetLocalAudioTrack() {
   return nullptr;
 }
 
-rtc::scoped_refptr<webrtc::VideoTrackInterface>
+webrtc::scoped_refptr<webrtc::VideoTrackInterface>
 RTCConnection::GetLocalVideoTrack() {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
+  webrtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
       GetLocalStream();
   if (!local_stream) {
     return nullptr;
   }
 
   if (local_stream->GetVideoTracks().size() > 0) {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
+    webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
         local_stream->GetVideoTracks()[0]);
     if (video_track) {
       return video_track;
@@ -295,7 +296,7 @@ RTCConnection::GetLocalVideoTrack() {
 }
 
 bool RTCConnection::SetMediaEnabled(
-    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
+    webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
     bool enabled) {
   if (track) {
     return track->set_enabled(enabled);
@@ -304,7 +305,7 @@ bool RTCConnection::SetMediaEnabled(
 }
 
 bool RTCConnection::IsMediaEnabled(
-    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
+    webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
   if (track) {
     return track->enabled();
   }
@@ -312,8 +313,8 @@ bool RTCConnection::IsMediaEnabled(
 }
 
 void RTCConnection::GetStats(
-    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
-        callback) {
+    std::function<void(
+        const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback) {
   connection_->GetStats(RTCStatsCallback::Create(std::move(callback)));
 }
 
@@ -349,7 +350,7 @@ void RTCConnection::SetEncodingParameters(
                                    *transceiver->current_direction())
                              : "nullopt")
                      << " media_type="
-                     << cricket::MediaTypeToString(transceiver->media_type())
+                     << webrtc::MediaTypeToString(transceiver->media_type())
                      << " sender_encoding_count="
                      << transceiver->sender()->GetParameters().encodings.size();
   }
@@ -366,7 +367,7 @@ void RTCConnection::SetEncodingParameters(
                              : std::string("nullopt"));
   }
 
-  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
   if (mid.empty()) {
     // TODO(melpon): mid が手に入るようになったので、こっちの実装はそのうち消す
 
@@ -375,7 +376,7 @@ void RTCConnection::SetEncodingParameters(
     // video upstream 持っているときは、ひとつめの video type transceiver を
     // 自分が send すべき transceiver と決め打ちする。
     for (auto transceiver : connection_->GetTransceivers()) {
-      if (transceiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+      if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
         video_transceiver = transceiver;
         break;
       }
@@ -394,7 +395,7 @@ void RTCConnection::SetEncodingParameters(
     return;
   }
 
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+  webrtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
       video_transceiver->sender();
   webrtc::RtpParameters parameters = sender->GetParameters();
   parameters.encodings = encodings;
@@ -421,7 +422,7 @@ void RTCConnection::ResetEncodingParameters() {
                              : std::string("nullopt"));
   }
 
-  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
   for (auto transceiver : connection_->GetTransceivers()) {
     if (transceiver->mid() == mid_) {
       video_transceiver = transceiver;
@@ -434,7 +435,7 @@ void RTCConnection::ResetEncodingParameters() {
     return;
   }
 
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+  webrtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
       video_transceiver->sender();
   webrtc::RtpParameters parameters = sender->GetParameters();
   std::vector<webrtc::RtpEncodingParameters> new_encodings = encodings_;
@@ -459,7 +460,7 @@ void RTCConnection::ResetEncodingParameters() {
   sender->SetParameters(parameters);
 }
 
-rtc::scoped_refptr<webrtc::PeerConnectionInterface>
+webrtc::scoped_refptr<webrtc::PeerConnectionInterface>
 RTCConnection::GetConnection() const {
   return connection_;
 }

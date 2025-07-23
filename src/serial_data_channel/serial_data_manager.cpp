@@ -6,6 +6,9 @@
 #include <functional>
 #include <iostream>
 
+// Boost
+#include <boost/asio/post.hpp>
+
 // WebRTC
 #include <rtc_base/log_sinks.h>
 
@@ -36,7 +39,7 @@ SerialDataManager::~SerialDataManager() {
 }
 
 void SerialDataManager::OnDataChannel(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
   webrtc::MutexLock lock(&channels_lock_);
   serial_data_channels_.push_back(new SerialDataChannel(this, data_channel));
 }

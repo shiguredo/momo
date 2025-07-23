@@ -30,7 +30,7 @@ struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
 // メモリ上にコピーする場合は webrtc::I420Buffer クラスになる。
 class LibcameraCapturer : public sora::ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<LibcameraCapturer> Create(
+  static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config);
   static void LogDeviceList();
   LibcameraCapturer();
@@ -41,7 +41,7 @@ class LibcameraCapturer : public sora::ScalableVideoTrackSource {
   int32_t StartCapture(LibcameraCapturerConfig config);
 
  private:
-  static rtc::scoped_refptr<LibcameraCapturer> Create(
+  static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config,
       size_t capture_device_index);
   int32_t StopCapture();

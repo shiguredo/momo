@@ -23,7 +23,7 @@ namespace sora {
 
 class JetsonV4L2Capturer : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<JetsonV4L2Capturer> Create(
+  static webrtc::scoped_refptr<JetsonV4L2Capturer> Create(
       const V4L2VideoCapturerConfig& config);
   JetsonV4L2Capturer(const V4L2VideoCapturerConfig& config);
   ~JetsonV4L2Capturer();
@@ -55,7 +55,7 @@ class JetsonV4L2Capturer : public ScalableVideoTrackSource {
   Buffer* _pool;
 
  private:
-  static rtc::scoped_refptr<JetsonV4L2Capturer> Create(
+  static webrtc::scoped_refptr<JetsonV4L2Capturer> Create(
       webrtc::VideoCaptureModule::DeviceInfo* device_info,
       const V4L2VideoCapturerConfig& config,
       size_t capture_device_index);
@@ -66,7 +66,7 @@ class JetsonV4L2Capturer : public ScalableVideoTrackSource {
   static void CaptureThread(void*);
   bool CaptureProcess();
 
-  rtc::PlatformThread _captureThread;
+  webrtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   std::string _videoDevice;

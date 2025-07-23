@@ -15,9 +15,9 @@ int ArgbDataSize(int height, int width) {
 
 }  // namespace
 
-rtc::scoped_refptr<NativeBuffer>
+webrtc::scoped_refptr<NativeBuffer>
 NativeBuffer::Create(webrtc::VideoType video_type, int width, int height) {
-  return rtc::make_ref_counted<NativeBuffer>(video_type, width, height);
+  return webrtc::make_ref_counted<NativeBuffer>(video_type, width, height);
 }
 
 webrtc::VideoFrameBuffer::Type NativeBuffer::type() const {
@@ -36,8 +36,8 @@ int NativeBuffer::height() const {
   return scaled_height_;
 }
 
-rtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+webrtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
+  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(raw_width_, raw_height_);
   const int conversionResult = libyuv::ConvertToI420(
       data_.get(), length_, i420_buffer.get()->MutableDataY(),
@@ -45,7 +45,7 @@ rtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
       i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
       i420_buffer.get()->StrideV(), 0, 0, raw_width_, raw_height_, raw_width_,
       raw_height_, libyuv::kRotate0, ConvertVideoType(video_type_));
-  rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
       webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
   scaled_buffer->ScaleFrom(*i420_buffer->ToI420());
   return scaled_buffer;

@@ -42,9 +42,9 @@
 
 namespace sora {
 
-rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
+webrtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     const V4L2VideoCapturerConfig& config) {
-  rtc::scoped_refptr<V4L2VideoCapturer> capturer;
+  webrtc::scoped_refptr<V4L2VideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!device_info) {
@@ -82,7 +82,7 @@ void V4L2VideoCapturer::LogDeviceList(
   }
 }
 
-rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
+webrtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
     const V4L2VideoCapturerConfig& config,
     size_t capture_device_index) {
@@ -100,8 +100,8 @@ rtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     return nullptr;
   }
 
-  rtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer =
-      rtc::make_ref_counted<V4L2VideoCapturer>(config);
+  webrtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer =
+      webrtc::make_ref_counted<V4L2VideoCapturer>(config);
   if (v4l2_capturer->Init(unique_name) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapturer(" << unique_name
                         << ")";
@@ -230,7 +230,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   RTC_LOG(LS_INFO) << "Video Capture enumerats supported image formats:";
   while (ioctl(_deviceFd, VIDIOC_ENUM_FMT, &fmt) == 0) {
     RTC_LOG(LS_INFO) << "  { pixelformat = "
-                     << cricket::GetFourccName(fmt.pixelformat)
+                     << webrtc::GetFourccName(fmt.pixelformat)
                      << ", description = '" << fmt.description << "' }";
     // Match the preferred order.
     for (int i = 0; i < nFormats; i++) {
@@ -246,7 +246,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     return -1;
   } else {
     RTC_LOG(LS_INFO) << "We prefer format "
-                     << cricket::GetFourccName(fmts[fmtsIdx]);
+                     << webrtc::GetFourccName(fmts[fmtsIdx]);
   }
 
   struct v4l2_format video_fmt;
@@ -323,9 +323,9 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   // start capture thread;
   if (_captureThread.empty()) {
     quit_ = false;
-    _captureThread = rtc::PlatformThread::SpawnJoinable(
+    _captureThread = webrtc::PlatformThread::SpawnJoinable(
         std::bind(V4L2VideoCapturer::CaptureThread, this), "CaptureThread",
-        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
+        webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 
   // Needed to start UVC camera - from the uvcview application
@@ -519,8 +519,8 @@ bool V4L2VideoCapturer::CaptureProcess() {
 }
 
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
+  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
       webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
   i420_buffer->InitializeData();
   if (libyuv::ConvertToI420(
@@ -539,8 +539,8 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(dst_buffer)
                                          .set_timestamp_rtp(0)
-                                         .set_timestamp_ms(rtc::TimeMillis())
-                                         .set_timestamp_us(rtc::TimeMicros())
+                                         .set_timestamp_ms(webrtc::TimeMillis())
+                                         .set_timestamp_us(webrtc::TimeMicros())
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
     OnCapturedFrame(video_frame);

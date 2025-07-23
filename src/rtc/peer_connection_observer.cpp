@@ -15,7 +15,7 @@ RTCDataManager* PeerConnectionObserver::DataManager() {
 }
 
 void PeerConnectionObserver::OnDataChannel(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
   if (data_manager_ != nullptr) {
     data_manager_->OnDataChannel(data_channel);
   }
@@ -47,10 +47,10 @@ void PeerConnectionObserver::OnIceCandidate(
 }
 
 void PeerConnectionObserver::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   if (receiver_ == nullptr)
     return;
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
       transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track =
@@ -61,10 +61,10 @@ void PeerConnectionObserver::OnTrack(
 }
 
 void PeerConnectionObserver::OnRemoveTrack(
-    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
+    webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   if (receiver_ == nullptr)
     return;
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
       receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     webrtc::VideoTrackInterface* video_track =

@@ -435,7 +435,7 @@ int32_t VplVideoEncoderImpl::Encode(
   }
 
   // I420 から NV12 に変換
-  rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+  webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
       frame.video_frame_buffer()->ToI420();
   libyuv::I420ToNV12(
       frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
