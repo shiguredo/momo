@@ -41,7 +41,7 @@ int32_t V4L2H264Decoder::Decode(const webrtc::EncodedImage& input_image,
 
   decoder_->Decode(
       input_image.data(), input_image.size(), input_image.RtpTimestamp(),
-      [this](rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+      [this](webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
              int64_t timestamp_rtp) {
         webrtc::VideoFrame decoded_image = webrtc::VideoFrame::Builder()
                                                .set_video_frame_buffer(buffer)
