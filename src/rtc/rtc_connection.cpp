@@ -18,7 +18,8 @@ class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
   }
 
   void OnStatsDelivered(
-      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) override {
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report)
+      override {
     std::move(result_callback_)(report);
   }
 
@@ -312,8 +313,8 @@ bool RTCConnection::IsMediaEnabled(
 }
 
 void RTCConnection::GetStats(
-    std::function<void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
-        callback) {
+    std::function<void(
+        const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback) {
   connection_->GetStats(RTCStatsCallback::Create(std::move(callback)));
 }
 
@@ -375,7 +376,7 @@ void RTCConnection::SetEncodingParameters(
     // video upstream 持っているときは、ひとつめの video type transceiver を
     // 自分が send すべき transceiver と決め打ちする。
     for (auto transceiver : connection_->GetTransceivers()) {
-      if (transceiver->media_type() == webrtc::MediaType::MEDIA_TYPE_VIDEO) {
+      if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
         video_transceiver = transceiver;
         break;
       }

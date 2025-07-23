@@ -31,7 +31,7 @@ const int kHighH264QpThreshold = 40;
 
 }  // namespace
 
-V4L2H264Encoder::V4L2H264Encoder(const webrtc::VideoCodec& codec)
+V4L2H264Encoder::V4L2H264Encoder(const webrtc::Codec& codec)
     : configured_width_(0),
       configured_height_(0),
       callback_(nullptr),

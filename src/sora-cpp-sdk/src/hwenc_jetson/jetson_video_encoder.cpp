@@ -76,7 +76,7 @@ static void save_to_file(const std::string& filename,
 
 namespace sora {
 
-JetsonVideoEncoder::JetsonVideoEncoder(const webrtc::VideoCodec& codec)
+JetsonVideoEncoder::JetsonVideoEncoder(const webrtc::Codec& codec)
     : callback_(nullptr),
       encoder_(nullptr),
       configured_framerate_(30),
