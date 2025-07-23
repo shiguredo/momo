@@ -42,6 +42,8 @@
   - `<rtc_base/third_party/base64/base64.h>` を `<rtc_base/base64.h>` に変更し、`webrtc::Base64::Encode()` を `webrtc::Base64Encode()` に変更
   - `<api/audio/builtin_audio_processing_builder.h>` のインクルードを追加し、`dependencies.audio_processing` を `dependencies.audio_processing_builder` に変更し、生成方法も `webrtc::AudioProcessingBuilder().Create()` から `std::make_unique<webrtc::BuiltinAudioProcessingBuilder>()` に変更
   - `dependencies.task_queue_factory` を削除して `env` を追加する
+  - 利用する clang のバージョンを 18 から 20 に上げる
+  - Windows 版では D3D11.lib をリンクする
   - @torikizi, @melpon
 
 ### misc
