@@ -127,6 +127,7 @@ target_sources(momo
     src/serial_data_channel/serial_data_manager.cpp
     src/sora-cpp-sdk/src/open_h264_video_encoder.cpp
     src/sora-cpp-sdk/src/scalable_track_source.cpp
+    src/sora-cpp-sdk/src/vpl_session_impl.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
@@ -363,7 +364,6 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
-        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
     )
@@ -495,11 +495,8 @@ elseif (TARGET_OS STREQUAL "linux")
     find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
-        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
-        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils_drm.cpp
-        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils.cpp
     )
     target_link_libraries(momo
       PRIVATE

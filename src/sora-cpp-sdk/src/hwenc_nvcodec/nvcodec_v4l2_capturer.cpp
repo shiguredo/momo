@@ -1,12 +1,25 @@
 #include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 
-// Linux
-#include <sys/ioctl.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
 
 // WebRTC
+#include <api/make_ref_counted.h>
+#include <api/scoped_refptr.h>
 #include <api/video/nv12_buffer.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_rotation.h>
+#include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
+#include <rtc_base/time_utils.h>
+
+#include "sora/cuda_context.h"
+#include "sora/hwenc_nvcodec/nvcodec_decoder_cuda.h"
+#include "sora/v4l2/v4l2_video_capturer.h"
 
 namespace sora {
 

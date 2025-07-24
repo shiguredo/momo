@@ -10,13 +10,12 @@
 
 #include "sora/v4l2/v4l2_video_capturer.h"
 
-// C
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-// C++
-#include <new>
+#include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
 
 // Linux
@@ -29,14 +28,27 @@
 #include <unistd.h>
 
 // WebRTC
+#include <api/make_ref_counted.h>
 #include <api/scoped_refptr.h>
 #include <api/video/i420_buffer.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_rotation.h>
+#include <bits/types/struct_timeval.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <media/base/video_common.h>
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/ref_counted_object.h>
-#include <third_party/libyuv/include/libyuv.h>
+#include <rtc_base/platform_thread.h>
+#include <rtc_base/synchronization/mutex.h>
+#include <rtc_base/time_utils.h>
+
+// libyuv
+#include <libyuv/convert.h>
+#include <libyuv/rotate.h>
+
+#include "sora/scalable_track_source.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 

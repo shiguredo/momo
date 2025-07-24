@@ -17,7 +17,7 @@
 #endif
 
 #if defined(USE_VPL_ENCODER)
-#include "sora/hwenc_vpl/vpl_session.h"
+#include "sora/vpl_session.h"
 #endif
 
 struct MomoVideoEncoderFactoryConfig {

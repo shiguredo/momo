@@ -4,6 +4,9 @@
 // CUDA と WebRTC のヘッダを混ぜてコンパイルすると大量のエラーが発生したので、
 // CUDA の処理だけさせる単純な CUDA ファイルを用意する
 
+#include <memory>
+
+// NvCodec
 #include <NvEncoder/NvEncoder.h>
 
 #include "sora/cuda_context.h"

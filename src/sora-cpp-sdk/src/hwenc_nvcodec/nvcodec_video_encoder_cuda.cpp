@@ -2,13 +2,22 @@
 
 #include "nvcodec_video_encoder_cuda.h"
 
+#include <cstddef>
+#include <cstdlib>
 #include <iostream>
+#include <memory>
+
+// CUDA
+#include <cuda.h>
 
 // NvCodec
-#include <NvDecoder/NvDecoder.h>
+#include <NvEncoder/../../Utils/NvCodecUtils.h>
+#include <NvEncoder/NvEncoder.h>
 #include <NvEncoder/NvEncoderCuda.h>
+#include <nvEncodeAPI.h>
 
 #include "../cuda_context_cuda.h"
+#include "sora/cuda_context.h"
 #include "sora/dyn/cuda.h"
 
 namespace sora {
@@ -142,7 +151,7 @@ void ShowEncoderCapability() {
 
 NvCodecVideoEncoderCudaImpl::NvCodecVideoEncoderCudaImpl(
     std::shared_ptr<CudaContext> ctx) {
-  ShowEncoderCapability();
+  //ShowEncoderCapability();
   cuda_context_ = ctx;
 }
 NvCodecVideoEncoderCudaImpl::~NvCodecVideoEncoderCudaImpl() {}
