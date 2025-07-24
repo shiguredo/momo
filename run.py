@@ -389,7 +389,7 @@ def main():
     elif args.target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
     elif args.target == "ubuntu-22.04_armv8_jetson":
-        platform = Platform("jetson", None, "armv8", extra="ubuntu-22.04")
+        platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
     else:
         raise Exception(f"Unknown target {args.target}")
 
