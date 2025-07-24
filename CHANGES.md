@@ -12,7 +12,7 @@
 ## develop
 
 - [CHANGE] SDL2 から SDL3 へ移行
-  - SDL を 2.30.8 から 3.2.16 に上げる
+  - SDL を 2.30.8 から 3.2.18 に上げる
   - SDL3 の API 変更に伴い、以下の修正を実施:
     - ヘッダーインクルードを `<SDL.h>` から `<SDL3/SDL.h>` に変更
     - `SDL_main.h` の明示的なインクルードを追加
@@ -47,6 +47,16 @@
   - `webrtc::SdpVideoFormat::Parameters` は deprecated なので `webrtc::CodecParameterMap` を利用する
   - `webrtc::MediaType::MEDIA_TYPE_VIDEO` は deprecated なので `webrtc::MediaType::VIDEO` を利用する
   - @torikizi, @melpon
+- [UPDATE] CMake を 4.0.3 に上げる
+  - @voluntas
+- [UPDATE] OpenH264 を 2.6.0 に上げる
+  - @voluntas
+- [UPDATE] CLI11 を 2.5.0 に上げる
+  - @voluntas
+- [UPDATE] Boost を 1.88.0 に上げる
+  - @voluntas
+- [ADD] run.py の引数に `--disable-cuda` を追加
+  - @melpon
 
 ### misc
 

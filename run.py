@@ -373,6 +373,7 @@ def main():
     parser.add_argument("--relwithdebinfo", action="store_true")
     add_webrtc_build_arguments(parser)
     parser.add_argument("--package", action="store_true")
+    parser.add_argument("--disable-cuda", action="store_true")
 
     args = parser.parse_args()
     if args.target == "windows_x86_64":
@@ -388,7 +389,7 @@ def main():
     elif args.target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
     elif args.target == "ubuntu-22.04_armv8_jetson":
-        platform = Platform("jetson", None, "armv8", extra="ubuntu-22.04")
+        platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
     else:
         raise Exception(f"Unknown target {args.target}")
 
@@ -515,12 +516,13 @@ def main():
             cmake_args.append("-DUSE_SCREEN_CAPTURER=ON")
 
         # NvCodec
-        if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
-            cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
-            if platform.target.os == "windows":
-                cmake_args.append(
-                    f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
-                )
+        if not args.disable_cuda:
+            if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
+                cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
+                if platform.target.os == "windows":
+                    cmake_args.append(
+                        f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
+                    )
 
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")

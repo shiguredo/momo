@@ -12,6 +12,9 @@
 // WebRTC
 #include <rtc_base/log_sinks.h>
 
+// Boost
+#include <boost/asio/post.hpp>
+
 #define SERIAL_TX_BUFFER_SIZE 16
 #define SERIAL_RX_BUFFER_SIZE 256
 
