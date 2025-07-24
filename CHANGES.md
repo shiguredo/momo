@@ -57,6 +57,7 @@
   - @voluntas
 - [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
   - @melpon
+- [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
 
