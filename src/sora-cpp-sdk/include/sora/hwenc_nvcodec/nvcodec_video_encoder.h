@@ -5,7 +5,6 @@
 
 // WebRTC
 #include <api/video_codecs/video_encoder.h>
-#include <media/base/codec.h>
 
 #include "sora/cuda_context.h"
 

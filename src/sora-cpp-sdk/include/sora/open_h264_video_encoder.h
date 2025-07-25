@@ -5,8 +5,8 @@
 #include <string>
 
 // WebRTC
+#include <api/video_codecs/sdp_video_format.h>
 #include <api/video_codecs/video_encoder.h>
-#include <media/base/codec.h>
 
 namespace sora {
 
@@ -14,6 +14,6 @@ std::unique_ptr<webrtc::VideoEncoder> CreateOpenH264VideoEncoder(
     const webrtc::SdpVideoFormat& format,
     std::string openh264);
 
-}
+}  // namespace sora
 
 #endif

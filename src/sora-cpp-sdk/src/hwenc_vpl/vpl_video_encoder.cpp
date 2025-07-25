@@ -1,28 +1,50 @@
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
 #include <mutex>
+#include <vector>
 
 // WebRTC
+#include <api/scoped_refptr.h>
+#include <api/video/encoded_image.h>
+#include <api/video/video_codec_type.h>
+#include <api/video/video_content_type.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_frame_type.h>
+#include <api/video/video_timing.h>
+#include <api/video_codecs/video_codec.h>
+#include <api/video_codecs/video_encoder.h>
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
-#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h264/include/h264_globals.h>
+#include <modules/video_coding/codecs/interface/common_constants.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
 #include <modules/video_coding/utility/vp9_uncompressed_header_parser.h>
+#include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/synchronization/mutex.h>
-
-// Intel VPL
-#include <vpl/mfxvideo++.h>
-#include <vpl/mfxvp8.h>
 
 // libyuv
-#include <libyuv.h>
+#include <libyuv/convert_from.h>
 
-#include "vpl_session_impl.h"
+// Intel VPL
+#include <vpl/mfxcommon.h>
+#include <vpl/mfxdefs.h>
+#include <vpl/mfxstructures.h>
+#include <vpl/mfxvideo++.h>
+#include <vpl/mfxvideo.h>
+#include <vpl/mfxvp8.h>
+
+#include "../vpl_session_impl.h"
+#include "sora/vpl_session.h"
 #include "vpl_utils.h"
 
 namespace sora {
@@ -104,6 +126,8 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   std::vector<uint8_t> bitstream_buffer_;
   mfxBitstream bitstream_;
   mfxFrameInfo frame_info_;
+
+  int key_frame_interval_ = 0;
 };
 
 const int kLowH264QpThreshold = 34;
@@ -129,13 +153,13 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
   std::unique_ptr<MFXVideoENCODE> encoder(
       new MFXVideoENCODE(GetVplSession(session)));
 
-  mfxPlatform platform;
-  memset(&platform, 0, sizeof(platform));
-  MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
-  RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
-                      << " CodeName=" << platform.CodeName
-                      << " DeviceId=" << platform.DeviceId
-                      << " MediaAdapterType=" << platform.MediaAdapterType;
+  // mfxPlatform platform;
+  // memset(&platform, 0, sizeof(platform));
+  // MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
+  // RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
+  //                     << " CodeName=" << platform.CodeName
+  //                     << " DeviceId=" << platform.DeviceId
+  //                     << " MediaAdapterType=" << platform.MediaAdapterType;
 
   mfxVideoParam param;
   ExtBuffer ext;
@@ -447,7 +471,6 @@ int32_t VplVideoEncoderImpl::Encode(
 
   mfxEncodeCtrl ctrl;
   memset(&ctrl, 0, sizeof(ctrl));
-  //send_key_frame = true;
   if (send_key_frame) {
     ctrl.FrameType = MFX_FRAMETYPE_I | MFX_FRAMETYPE_IDR | MFX_FRAMETYPE_REF;
   } else {
@@ -518,6 +541,7 @@ int32_t VplVideoEncoderImpl::Encode(
     //FILE* fp = fopen("test.mp4", "a+");
     //fwrite(p, 1, size, fp);
     //fclose(fp);
+
     if (codec_ == MFX_CODEC_VP9) {
       // VP9 はIVFヘッダーがエンコードフレームについているので取り除く
       if ((p[0] == 'D') && (p[1] == 'K') && (p[2] == 'I') && (p[3] == 'F')) {
@@ -541,9 +565,13 @@ int32_t VplVideoEncoderImpl::Encode(
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();
     encoded_image_.SetColorSpace(frame.color_space());
+    key_frame_interval_ += 1;
     if (bitstream_.FrameType & MFX_FRAMETYPE_I ||
         bitstream_.FrameType & MFX_FRAMETYPE_IDR) {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+      RTC_LOG(LS_INFO) << "Key Frame Generated: key_frame_interval="
+                       << key_frame_interval_;
+      key_frame_interval_ = 0;
     } else {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
     }

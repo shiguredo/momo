@@ -11,16 +11,13 @@
 #define SORA_SCALABLE_VIDEO_TRACK_SOURCE_H_
 
 #include <stddef.h>
-
 #include <functional>
-#include <memory>
-
-// Abseil
-#include <absl/types/optional.h>
+#include <optional>
 
 // WebRTC
+#include <api/media_stream_interface.h>
+#include <api/video/video_frame.h>
 #include <media/base/adapted_video_track_source.h>
-#include <media/base/video_adapter.h>
 #include <rtc_base/timestamp_aligner.h>
 
 namespace sora {

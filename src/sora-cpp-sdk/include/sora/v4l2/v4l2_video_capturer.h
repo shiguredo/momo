@@ -13,14 +13,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#include <memory>
+#include <string>
 
 // WebRTC
-#include <modules/video_capture/video_capture_defines.h>
-#include <modules/video_capture/video_capture_impl.h>
+#include <api/scoped_refptr.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <modules/video_capture/video_capture.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
+#include <rtc_base/thread_annotations.h>
 
 #include "sora/scalable_track_source.h"
 
