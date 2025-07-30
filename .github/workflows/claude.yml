@@ -1,0 +1,60 @@
+name: Claude Assistant
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
+
+jobs:
+  claude-opus-response-voluntas:
+    if: github.event.comment.user.login == 'voluntas'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: "claude-opus-4-20250514"
+          trigger_phrase: "!opus"
+          timeout_minutes: 15
+          disallowed_tools: "Bash(git:*)"
+
+  check-permission:
+    if: github.event.comment.user.login != 'voluntas'
+    runs-on: ubuntu-24.04
+    outputs:
+      has_permission: ${{ steps.check.outputs.has-permission }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        uses: shiguredo/github-actions/.github/actions/check-write-permission@main
+        with:
+          username: ${{ github.event.comment.user.login }}
+
+  claude-sonnet-response-others:
+    needs: check-permission
+    if: needs.check-permission.outputs.has_permission == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: "claude-sonnet-4-20250514"
+          trigger_phrase: "!sonnet"
+          timeout_minutes: 15
+          disallowed_tools: "Bash(git:*)"
