@@ -152,6 +152,7 @@ int main(int argc, char* argv[]) {
       // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
       libcamera_config.native_frame_output =
           args.use_libcamera_native && !(use_sora && args.sora_simulcast);
+      libcamera_config.controls = args.libcamera_controls;
       return LibcameraCapturer::Create(libcamera_config);
     } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
       return V4L2Capturer::Create(std::move(v4l2_config));

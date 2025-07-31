@@ -22,6 +22,7 @@ H.264 エンコード時のみ、メモリコピーを削減する最適化が�
 ```
 
 **制約事項:**
+
 - `--use-libcamera-native` は H.264 かつサイマルキャストが無効の場合のみ有効
 - ハードウェアエンコーダーとの組み合わせで最大の効果を発揮
 
@@ -45,55 +46,87 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
        sora ...
 ```
 
-### 値の形式
+### 対応している値の形式
 
 #### 基本型
 
-- **bool**: `0` または `1`
+- **bool**: `0` または `1`、`true` または `false` ✅
+
   ```bash
   --libcamera-control AeEnable=1
+  --libcamera-control AeEnable=true
   ```
 
-- **int**: 整数値
+- **int32**: 整数値 ✅
+
   ```bash
   --libcamera-control ExposureTime=10000
   ```
 
-- **float**: 小数値
+- **int64**: 長整数値 ✅
+
+  ```bash
+  --libcamera-control FrameDuration=33333
+  ```
+
+- **float**: 小数値 ✅
+
   ```bash
   --libcamera-control AnalogueGain=2.0
   --libcamera-control Brightness=-0.5
   ```
 
-- **enum**: 文字列または数値
+- **enum**: 文字列または数値 ✅（主要なenumのみ文字列対応）
+
   ```bash
   --libcamera-control AfMode=Continuous
   # または
   --libcamera-control AfMode=2
   ```
 
+  **文字列対応済みのenum:**
+  - `AfMode`, `AfRange`, `AfSpeed`
+  - `AeMeteringMode` 
+  - `AwbMode`
+  - `ExposureTimeMode`, `AnalogueGainMode`
+
 #### 複合型
 
-- **配列**: カンマ区切り
+- **配列**: カンマ区切り ✅
+
   ```bash
   --libcamera-control ColourGains=1.5,2.0
   --libcamera-control FrameDurationLimits=33333,33333
   ```
 
-- **矩形（Rectangle）**: x,y,width,height
+  **対応済み:** `float[]`, `int32[]`, `int64[]`
+
+- **矩形（Rectangle）**: x,y,width,height ✅
+
   ```bash
   --libcamera-control ScalerCrop=100,100,640,480
   ```
 
-- **複数矩形**: セミコロン区切り
+- **複数矩形**: セミコロン区切り ✅
+
   ```bash
   --libcamera-control AfWindows="100,100,200,200;300,300,200,200"
   ```
 
-- **マトリクス**: カンマ区切り（行優先）
+  **注意:** Rectangle配列の場合、セミコロンで複数の矩形を区切ります
+
+- **マトリクス**: カンマ区切り（行優先） ❌（未対応）
+
   ```bash
   --libcamera-control ColourCorrectionMatrix=1.0,0,0,0,1.0,0,0,0,1.0
   ```
+
+### 未対応の型
+
+- **Size** 型
+- **Point** 型  
+- **マトリクス** 型（3x3など）
+- その他の複雑な構造体
 
 ## 主要なコントロール
 
@@ -148,29 +181,35 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 ## enum 値一覧
 
 ### AfMode（オートフォーカスモード）
+
 - `Manual` または `0`: 手動フォーカス
 - `Auto` または `1`: シングルAF（一度フォーカスして停止）
 - `Continuous` または `2`: コンティニュアスAF
 
 ### AfRange（フォーカス範囲）
+
 - `Normal` または `0`: 通常範囲
 - `Macro` または `1`: マクロ（接写）
 - `Full` または `2`: 全範囲
 
 ### AfSpeed（フォーカス速度）
+
 - `Normal` または `0`: 通常速度
 - `Fast` または `1`: 高速
 
 ### ExposureTimeMode / AnalogueGainMode
+
 - `Auto` または `0`: 自動
 - `Manual` または `1`: 手動
 
 ### AeMeteringMode（測光モード）
+
 - `CentreWeighted` または `0`: 中央重点測光
 - `Spot` または `1`: スポット測光
 - `Matrix` または `2`: マトリックス測光
 
 ### AwbMode（ホワイトバランスモード）
+
 - `Auto` または `0`: 自動
 - `Incandescent` または `1`: 白熱灯
 - `Tungsten` または `2`: タングステン
@@ -180,6 +219,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - `Cloudy` または `6`: 曇天
 
 ### HdrMode（HDRモード）
+
 - `Off` または `0`: 無効
 - `MultiExposureUnmerged` または `1`: 複数露出（未合成）
 - `MultiExposure` または `2`: 複数露出（合成）
@@ -245,17 +285,28 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ## トラブルシューティング
 
-### エラー: "Unknown control"
+### 警告: "Unknown control"
 
 指定したコントロール名が正しくない、またはカメラがそのコントロールをサポートしていません。
 利用可能なコントロールはカメラモデルによって異なります。
 
-### エラー: "Invalid control value"
+**動作:** 警告が表示されますが、他の有効な設定は適用されカメラは正常に起動します。
+
+### 警告: "Unsupported control type for"
+
+指定したコントロールの型がサポートされていません（Size、Point、マトリクスなど）。
+
+**動作:** 警告が表示されますが、他の有効な設定は適用されカメラは正常に起動します。
+
+### 警告: "Invalid control value for"
 
 値の形式が正しくないか、範囲外の値を指定しています。
+
 - 数値の範囲を確認してください
 - enum の場合は有効な値を確認してください
 - 配列の場合は要素数が正しいか確認してください
+
+**動作:** 警告が表示されますが、他の有効な設定は適用されカメラは正常に起動します。
 
 ### パフォーマンスの問題
 
@@ -357,5 +408,7 @@ SyncTimer
 
 ## 参考資料
 
+- <https://libcamera.org/api-html/namespacelibcamera_1_1controls.html>
+- <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_core.yaml>
 - [libcamera 公式ドキュメント](https://libcamera.org/)
 - [Raspberry Pi Camera Algorithm and Tuning Guide](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)
