@@ -32,7 +32,7 @@
     - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
     - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
   - @voluntas
-- [UPDATE] WebRTC を m138.7204.0.3 に上げる
+- [UPDATE] WebRTC を m138.7204.0.4 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
   - `rtc::` 名前空間と `cricket::` 名前空間を `webrtc::` 名前空間に統一する
