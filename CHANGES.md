@@ -32,7 +32,7 @@
     - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
     - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
   - @voluntas
-- [UPDATE] WebRTC を m138.7204.0.3 に上げる
+- [UPDATE] WebRTC を m138.7204.0.4 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
   - `rtc::` 名前空間と `cricket::` 名前空間を `webrtc::` 名前空間に統一する
@@ -60,6 +60,15 @@
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
+- [ADD] libcamera のコントロール機能を追加
+  - `--libcamera-control` オプションで key=value 形式でコントロールを指定可能
+  - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
+  - 文字列ベースでコントロールを設定できる API を実装
+  - @voluntas
+- [FIX] Intel VPL の VP9 エンコーダーでキーフレーム要求が機能しない問題を修正
+  - VP9 では `MFX_FRAMETYPE_I` のみを設定するように修正
+  - `MFX_FRAMETYPE_REF` や `MFX_FRAMETYPE_IDR` を同時に設定すると vpl-gpu-rt の CheckAndFixCtrl で `MFX_FRAMETYPE_P` に変更されてしまうため
+  - @voluntas
 
 ### misc
 
