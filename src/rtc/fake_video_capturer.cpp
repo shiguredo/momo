@@ -253,7 +253,7 @@ void FakeVideoCapturer::DrawDigitalClock(
   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
       now - start_time_).count();
   
-  int hours = (ms / (60 * 60 * 1000)) % 100;  // 99まで表示
+  int hours = (ms / (60 * 60 * 1000)) % 10000;  // 9999まで表示
   int minutes = (ms / (60 * 1000)) % 60;
   int seconds = (ms / 1000) % 60;
   int milliseconds = ms % 1000;
@@ -261,18 +261,22 @@ void FakeVideoCapturer::DrawDigitalClock(
   // デジタル時計の配置パラメータ
   double clock_x = config_.width * 0.05;
   double clock_y = config_.height * 0.05;
-  double digit_width = config_.width * 0.04;
+  double digit_width = config_.width * 0.03;  // 4桁表示のため少し縮小
   double digit_height = config_.height * 0.08;
   double spacing = digit_width * 0.3;
   double colon_width = digit_width * 0.3;
   
   ctx.setFillStyle(BLRgba32(0, 255, 255));  // シアン色
   
-  // HH:MM:SS.mmm の表示
+  // HHHH:MM:SS.mmm の表示
   double x = clock_x;
   
-  // 時間（2桁）
-  Draw7Segment(ctx, hours / 10, x, clock_y, digit_width, digit_height);
+  // 時間（4桁）
+  Draw7Segment(ctx, (hours / 1000) % 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  Draw7Segment(ctx, (hours / 100) % 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  Draw7Segment(ctx, (hours / 10) % 10, x, clock_y, digit_width, digit_height);
   x += digit_width + spacing;
   Draw7Segment(ctx, hours % 10, x, clock_y, digit_width, digit_height);
   x += digit_width + spacing;
@@ -298,9 +302,9 @@ void FakeVideoCapturer::DrawDigitalClock(
   
   // ミリ秒（小さめに表示）
   double ms_y = clock_y + digit_height + spacing;
-  double ms_digit_width = digit_width * 0.6;
+  double ms_digit_width = digit_width * 0.7;
   double ms_digit_height = digit_height * 0.6;
-  x = clock_x + digit_width * 0.5;
+  x = clock_x + digit_width;
   
   ctx.setFillStyle(BLRgba32(200, 200, 200));  // グレー色
   Draw7Segment(ctx, (milliseconds / 100) % 10, x, ms_y, ms_digit_width, ms_digit_height);
