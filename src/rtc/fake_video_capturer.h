@@ -45,6 +45,11 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
                       std::chrono::high_resolution_clock::time_point now);
   void DrawBoxes(BLContext& ctx,
                  std::chrono::high_resolution_clock::time_point now);
+  void DrawDigitalClock(BLContext& ctx,
+                        std::chrono::high_resolution_clock::time_point now);
+  void Draw7Segment(BLContext& ctx, int digit, double x, double y, 
+                    double width, double height);
+  void DrawColon(BLContext& ctx, double x, double y, double height);
 
   Config config_;
   std::unique_ptr<std::thread> capture_thread_;

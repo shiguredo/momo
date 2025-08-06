@@ -4,7 +4,6 @@
 
 #include <cstring>
 #include <chrono>
-#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -108,9 +107,16 @@ void FakeVideoCapturer::UpdateImage(
   ctx.setCompOp(BL_COMP_OP_SRC_COPY);
   ctx.fillAll();
   
-  ctx.save();
-  DrawTexts(ctx, now);
-  ctx.restore();
+  // フォントがある場合はテキスト、ない場合はデジタル時計
+  if (has_font_) {
+    ctx.save();
+    DrawTexts(ctx, now);
+    ctx.restore();
+  } else {
+    ctx.save();
+    DrawDigitalClock(ctx, now);
+    ctx.restore();
+  }
   
   ctx.save();
   DrawAnimations(ctx, now);
@@ -239,6 +245,165 @@ void FakeVideoCapturer::DrawBoxes(
     ctx.setFillStyle(BLRgba32(color));
     ctx.fillRect(x, y, box_size, box_size);
   }
+}
+
+void FakeVideoCapturer::DrawDigitalClock(
+    BLContext& ctx,
+    std::chrono::high_resolution_clock::time_point now) {
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+      now - start_time_).count();
+  
+  int hours = (ms / (60 * 60 * 1000)) % 100;  // 99まで表示
+  int minutes = (ms / (60 * 1000)) % 60;
+  int seconds = (ms / 1000) % 60;
+  int milliseconds = ms % 1000;
+  
+  // デジタル時計の配置パラメータ
+  double clock_x = config_.width * 0.05;
+  double clock_y = config_.height * 0.05;
+  double digit_width = config_.width * 0.04;
+  double digit_height = config_.height * 0.08;
+  double spacing = digit_width * 0.3;
+  double colon_width = digit_width * 0.3;
+  
+  ctx.setFillStyle(BLRgba32(0, 255, 255));  // シアン色
+  
+  // HH:MM:SS.mmm の表示
+  double x = clock_x;
+  
+  // 時間（2桁）
+  Draw7Segment(ctx, hours / 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  Draw7Segment(ctx, hours % 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  
+  // コロン
+  DrawColon(ctx, x, clock_y, digit_height);
+  x += colon_width + spacing;
+  
+  // 分（2桁）
+  Draw7Segment(ctx, minutes / 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  Draw7Segment(ctx, minutes % 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  
+  // コロン
+  DrawColon(ctx, x, clock_y, digit_height);
+  x += colon_width + spacing;
+  
+  // 秒（2桁）
+  Draw7Segment(ctx, seconds / 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
+  Draw7Segment(ctx, seconds % 10, x, clock_y, digit_width, digit_height);
+  
+  // ミリ秒（小さめに表示）
+  double ms_y = clock_y + digit_height + spacing;
+  double ms_digit_width = digit_width * 0.6;
+  double ms_digit_height = digit_height * 0.6;
+  x = clock_x + digit_width * 0.5;
+  
+  ctx.setFillStyle(BLRgba32(200, 200, 200));  // グレー色
+  Draw7Segment(ctx, (milliseconds / 100) % 10, x, ms_y, ms_digit_width, ms_digit_height);
+  x += ms_digit_width + spacing * 0.6;
+  Draw7Segment(ctx, (milliseconds / 10) % 10, x, ms_y, ms_digit_width, ms_digit_height);
+  x += ms_digit_width + spacing * 0.6;
+  Draw7Segment(ctx, milliseconds % 10, x, ms_y, ms_digit_width, ms_digit_height);
+}
+
+void FakeVideoCapturer::Draw7Segment(BLContext& ctx, int digit, double x, double y, 
+                                     double width, double height) {
+  // 7セグメントディスプレイのセグメント定義
+  //  aaa
+  // f   b
+  //  ggg
+  // e   c
+  //  ddd
+  
+  double thickness = width * 0.15;
+  double gap = thickness * 0.2;
+  
+  // 各セグメントのON/OFF（0-9の数字に対応）
+  bool segments[10][7] = {
+    {true,  true,  true,  true,  true,  true,  false}, // 0
+    {false, true,  true,  false, false, false, false}, // 1
+    {true,  true,  false, true,  true,  false, true},  // 2
+    {true,  true,  true,  true,  false, false, true},  // 3
+    {false, true,  true,  false, false, true,  true},  // 4
+    {true,  false, true,  true,  false, true,  true},  // 5
+    {true,  false, true,  true,  true,  true,  true},  // 6
+    {true,  true,  true,  false, false, false, false}, // 7
+    {true,  true,  true,  true,  true,  true,  true},  // 8
+    {true,  true,  true,  true,  false, true,  true}   // 9
+  };
+  
+  if (digit < 0 || digit > 9) return;
+  
+  // 横セグメント（a, g, d）
+  auto drawHorizontalSegment = [&](double sx, double sy) {
+    BLPath path;
+    path.moveTo(sx + gap, sy);
+    path.lineTo(sx + width - gap, sy);
+    path.lineTo(sx + width - gap - thickness * 0.5, sy + thickness * 0.5);
+    path.lineTo(sx + width - gap, sy + thickness);
+    path.lineTo(sx + gap, sy + thickness);
+    path.lineTo(sx + gap + thickness * 0.5, sy + thickness * 0.5);
+    path.close();
+    ctx.fillPath(path);
+  };
+  
+  // 縦セグメント（f, b, e, c）
+  auto drawVerticalSegment = [&](double sx, double sy, double sh) {
+    BLPath path;
+    path.moveTo(sx, sy + gap);
+    path.lineTo(sx + thickness * 0.5, sy + gap + thickness * 0.5);
+    path.lineTo(sx + thickness, sy + gap);
+    path.lineTo(sx + thickness, sy + sh - gap);
+    path.lineTo(sx + thickness * 0.5, sy + sh - gap - thickness * 0.5);
+    path.lineTo(sx, sy + sh - gap);
+    path.close();
+    ctx.fillPath(path);
+  };
+  
+  // セグメントa（上）
+  if (segments[digit][0]) {
+    drawHorizontalSegment(x, y);
+  }
+  
+  // セグメントb（右上）
+  if (segments[digit][1]) {
+    drawVerticalSegment(x + width - thickness, y, height * 0.5);
+  }
+  
+  // セグメントc（右下）
+  if (segments[digit][2]) {
+    drawVerticalSegment(x + width - thickness, y + height * 0.5, height * 0.5);
+  }
+  
+  // セグメントd（下）
+  if (segments[digit][3]) {
+    drawHorizontalSegment(x, y + height - thickness);
+  }
+  
+  // セグメントe（左下）
+  if (segments[digit][4]) {
+    drawVerticalSegment(x, y + height * 0.5, height * 0.5);
+  }
+  
+  // セグメントf（左上）
+  if (segments[digit][5]) {
+    drawVerticalSegment(x, y, height * 0.5);
+  }
+  
+  // セグメントg（中央）
+  if (segments[digit][6]) {
+    drawHorizontalSegment(x, y + height * 0.5 - thickness * 0.5);
+  }
+}
+
+void FakeVideoCapturer::DrawColon(BLContext& ctx, double x, double y, double height) {
+  double dot_size = height * 0.1;
+  ctx.fillCircle(x + dot_size, y + height * 0.3, dot_size);
+  ctx.fillCircle(x + dot_size, y + height * 0.7, dot_size);
 }
 
 #endif  // USE_FAKE_CAPTURE_DEVICE
