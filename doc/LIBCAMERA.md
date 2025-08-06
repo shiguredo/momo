@@ -33,16 +33,16 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 ### 基本的な形式
 
 ```bash
---libcamera-control <キー>=<値>
+--libcamera-control <キー> <値>
 ```
 
 複数のコントロールを設定する場合：
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control ExposureTime=10000 \
-       --libcamera-control AnalogueGain=2.0 \
-       --libcamera-control AfMode=Continuous \
+       --libcamera-control ExposureTime 10000 \
+       --libcamera-control AnalogueGain 2.0 \
+       --libcamera-control AfMode Continuous \
        sora ...
 ```
 
@@ -53,35 +53,35 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - **bool**: `0` または `1`、`true` または `false` ✅
 
   ```bash
-  --libcamera-control AeEnable=1
-  --libcamera-control AeEnable=true
+  --libcamera-control AeEnable 1
+  --libcamera-control AeEnable true
   ```
 
 - **int32**: 整数値 ✅
 
   ```bash
-  --libcamera-control ExposureTime=10000
+  --libcamera-control ExposureTime 10000
   ```
 
 - **int64**: 長整数値 ✅
 
   ```bash
-  --libcamera-control FrameDuration=33333
+  --libcamera-control FrameDuration 33333
   ```
 
 - **float**: 小数値 ✅
 
   ```bash
-  --libcamera-control AnalogueGain=2.0
-  --libcamera-control Brightness=-0.5
+  --libcamera-control AnalogueGain 2.0
+  --libcamera-control Brightness -0.5
   ```
 
 - **enum**: 文字列または数値 ✅（主要なenumのみ文字列対応）
 
   ```bash
-  --libcamera-control AfMode=Continuous
+  --libcamera-control AfMode Continuous
   # または
-  --libcamera-control AfMode=2
+  --libcamera-control AfMode 2
   ```
 
   **文字列対応済みのenum:**
@@ -95,8 +95,8 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - **配列**: カンマ区切り ✅
 
   ```bash
-  --libcamera-control ColourGains=1.5,2.0
-  --libcamera-control FrameDurationLimits=33333,33333
+  --libcamera-control ColourGains 1.5,2.0
+  --libcamera-control FrameDurationLimits 33333,33333
   ```
 
   **対応済み:** `float[]`, `int32[]`, `int64[]`
@@ -104,13 +104,13 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - **矩形（Rectangle）**: x,y,width,height ✅
 
   ```bash
-  --libcamera-control ScalerCrop=100,100,640,480
+  --libcamera-control ScalerCrop 100,100,640,480
   ```
 
 - **複数矩形**: セミコロン区切り ✅
 
   ```bash
-  --libcamera-control AfWindows="100,100,200,200;300,300,200,200"
+  --libcamera-control AfWindows "100,100,200,200;300,300,200,200"
   ```
 
   **注意:** Rectangle配列の場合、セミコロンで複数の矩形を区切ります
@@ -118,7 +118,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - **マトリクス**: カンマ区切り（行優先） ❌（未対応）
 
   ```bash
-  --libcamera-control ColourCorrectionMatrix=1.0,0,0,0,1.0,0,0,0,1.0
+  --libcamera-control ColourCorrectionMatrix 1.0,0,0,0,1.0,0,0,0,1.0
   ```
 
 ### 未対応の型
@@ -232,10 +232,10 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control AeEnable=1 \
-       --libcamera-control AeExposureMode=Short \
-       --libcamera-control AwbMode=Daylight \
-       --libcamera-control Contrast=1.2 \
+       --libcamera-control AeEnable 1 \
+       --libcamera-control AeExposureMode Short \
+       --libcamera-control AwbMode Daylight \
+       --libcamera-control Contrast 1.2 \
        sora ...
 ```
 
@@ -243,10 +243,10 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control ExposureTimeMode=Manual \
-       --libcamera-control ExposureTime=50000 \
-       --libcamera-control AnalogueGain=8.0 \
-       --libcamera-control NoiseReductionMode=HighQuality \
+       --libcamera-control ExposureTimeMode Manual \
+       --libcamera-control ExposureTime 50000 \
+       --libcamera-control AnalogueGain 8.0 \
+       --libcamera-control NoiseReductionMode HighQuality \
        sora ...
 ```
 
@@ -254,10 +254,10 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control AfMode=Continuous \
-       --libcamera-control AfRange=Macro \
-       --libcamera-control AfSpeed=Normal \
-       --libcamera-control Sharpness=2.0 \
+       --libcamera-control AfMode Continuous \
+       --libcamera-control AfRange Macro \
+       --libcamera-control AfSpeed Normal \
+       --libcamera-control Sharpness 2.0 \
        sora ...
 ```
 
@@ -265,7 +265,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control FrameDurationLimits=33333,33333 \
+       --libcamera-control FrameDurationLimits 33333,33333 \
        sora ...
 ```
 
@@ -273,13 +273,13 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ```bash
 ./momo --use-libcamera \
-       --libcamera-control AeEnable=0 \
-       --libcamera-control AwbEnable=0 \
-       --libcamera-control ExposureTime=20000 \
-       --libcamera-control AnalogueGain=4.0 \
-       --libcamera-control ColourGains=1.8,1.5 \
-       --libcamera-control AfMode=Manual \
-       --libcamera-control LensPosition=2.0 \
+       --libcamera-control AeEnable 0 \
+       --libcamera-control AwbEnable 0 \
+       --libcamera-control ExposureTime 20000 \
+       --libcamera-control AnalogueGain 4.0 \
+       --libcamera-control ColourGains 1.8,1.5 \
+       --libcamera-control AfMode Manual \
+       --libcamera-control LensPosition 2.0 \
        sora ...
 ```
 
