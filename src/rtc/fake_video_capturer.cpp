@@ -299,19 +299,22 @@ void FakeVideoCapturer::DrawDigitalClock(
   Draw7Segment(ctx, seconds / 10, x, clock_y, digit_width, digit_height);
   x += digit_width + spacing;
   Draw7Segment(ctx, seconds % 10, x, clock_y, digit_width, digit_height);
+  x += digit_width + spacing;
   
-  // ミリ秒（小さめに表示）
-  double ms_y = clock_y + digit_height + spacing;
-  double ms_digit_width = digit_width * 0.7;
-  double ms_digit_height = digit_height * 0.6;
-  x = clock_x + digit_width;
+  // ドット
+  ctx.fillCircle(x + colon_width * 0.3, clock_y + digit_height * 0.8, digit_height * 0.05);
+  x += colon_width + spacing;
+  
+  // ミリ秒（3桁、少し小さめに表示）
+  double ms_digit_width = digit_width * 0.8;
+  double ms_digit_height = digit_height * 0.8;
   
   ctx.setFillStyle(BLRgba32(200, 200, 200));  // グレー色
-  Draw7Segment(ctx, (milliseconds / 100) % 10, x, ms_y, ms_digit_width, ms_digit_height);
-  x += ms_digit_width + spacing * 0.6;
-  Draw7Segment(ctx, (milliseconds / 10) % 10, x, ms_y, ms_digit_width, ms_digit_height);
-  x += ms_digit_width + spacing * 0.6;
-  Draw7Segment(ctx, milliseconds % 10, x, ms_y, ms_digit_width, ms_digit_height);
+  Draw7Segment(ctx, (milliseconds / 100) % 10, x, clock_y + (digit_height - ms_digit_height) / 2, ms_digit_width, ms_digit_height);
+  x += ms_digit_width + spacing * 0.8;
+  Draw7Segment(ctx, (milliseconds / 10) % 10, x, clock_y + (digit_height - ms_digit_height) / 2, ms_digit_width, ms_digit_height);
+  x += ms_digit_width + spacing * 0.8;
+  Draw7Segment(ctx, milliseconds % 10, x, clock_y + (digit_height - ms_digit_height) / 2, ms_digit_width, ms_digit_height);
 }
 
 void FakeVideoCapturer::Draw7Segment(BLContext& ctx, int digit, double x, double y, 
