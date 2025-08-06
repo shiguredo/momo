@@ -18,6 +18,9 @@ struct MomoArgs {
   bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  bool fake_capture_device = false;
+#endif
   bool force_i420 = false;
   // Jetson の場合だけデフォルト true
 #if defined(USE_JETSON_ENCODER)

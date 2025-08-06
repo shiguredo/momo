@@ -40,6 +40,9 @@
 #include "ayame/ayame_client.h"
 #include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_video_capturer.h"
+#endif
 #include "rtc/rtc_manager.h"
 #include "sora/sora_client.h"
 #include "sora/sora_server.h"
@@ -103,6 +106,18 @@ int main(int argc, char* argv[]) {
     if (args.no_video_device) {
       return nullptr;
     }
+    
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+    // fake-capture-device が指定された場合は FakeVideoCapturer を使用
+    if (args.fake_capture_device) {
+      auto size = args.GetSize();
+      FakeVideoCapturer::Config config;
+      config.width = size.width;
+      config.height = size.height;
+      config.fps = args.framerate;
+      return FakeVideoCapturer::Create(config);
+    }
+#endif
 
 #if defined(USE_SCREEN_CAPTURER)
     if (args.screen_capture) {
