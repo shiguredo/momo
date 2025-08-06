@@ -11,6 +11,9 @@
 
 ## develop
 
+- [CHANGE] Sora mode の type: connect から multistream 項目を削除
+  - Sora が multistream 項目を廃止したため削除
+  - @voluntas
 - [CHANGE] SDL2 から SDL3 へ移行
   - SDL を 2.30.8 から 3.2.18 に上げる
   - SDL3 の API 変更に伴い、以下の修正を実施:
