@@ -210,10 +210,10 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
   ctx.rotate(-pi / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.15, 0, 2 * pi);  // 大きめのサイズに
+  ctx.fillPie(0, 0, width * 0.3, 0, 2 * pi);  // 大きくする
   
   ctx.setFillStyle(BLRgba32(160, 160, 160));
-  ctx.fillPie(0, 0, width * 0.15, 0, 
+  ctx.fillPie(0, 0, width * 0.3, 0, 
               (frame_counter_ % fps) / static_cast<float>(fps) * 2 * pi);
 }
 
