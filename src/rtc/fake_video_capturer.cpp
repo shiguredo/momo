@@ -261,8 +261,8 @@ void FakeVideoCapturer::DrawDigitalClock(
   // デジタル時計の配置パラメータ
   double clock_x = config_.width * 0.05;
   double clock_y = config_.height * 0.05;
-  double digit_width = config_.width * 0.03;  // 4桁表示のため少し縮小
-  double digit_height = config_.height * 0.08;
+  double digit_width = config_.width * 0.025;  // さらに小さく
+  double digit_height = config_.height * 0.06;  // 高さも調整
   double spacing = digit_width * 0.3;
   double colon_width = digit_width * 0.3;
   
