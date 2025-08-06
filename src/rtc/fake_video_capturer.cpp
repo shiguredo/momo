@@ -259,10 +259,10 @@ void FakeVideoCapturer::DrawDigitalClock(
   int milliseconds = ms % 1000;
   
   // デジタル時計の配置パラメータ
-  double clock_x = config_.width * 0.05;
-  double clock_y = config_.height * 0.05;
-  double digit_width = config_.width * 0.025;  // さらに小さく
-  double digit_height = config_.height * 0.06;  // 高さも調整
+  double clock_x = config_.width * 0.02;  // 左端に寄せる
+  double clock_y = config_.height * 0.02;  // 上端に寄せる
+  double digit_width = config_.width * 0.018;  // もっと小さく
+  double digit_height = config_.height * 0.04;  // 高さも小さく
   double spacing = digit_width * 0.3;
   double colon_width = digit_width * 0.3;
   
@@ -306,8 +306,8 @@ void FakeVideoCapturer::DrawDigitalClock(
   x += colon_width + spacing;
   
   // ミリ秒（3桁、少し小さめに表示）
-  double ms_digit_width = digit_width * 0.8;
-  double ms_digit_height = digit_height * 0.8;
+  double ms_digit_width = digit_width * 0.7;
+  double ms_digit_height = digit_height * 0.7;
   
   ctx.setFillStyle(BLRgba32(200, 200, 200));  // グレー色
   Draw7Segment(ctx, (milliseconds / 100) % 10, x, clock_y + (digit_height - ms_digit_height) / 2, ms_digit_width, ms_digit_height);
