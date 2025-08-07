@@ -22,8 +22,8 @@
 #endif
 
 #if defined(USE_AMF_ENCODER)
-#include "hwenc_amf/amf_video_decoder.h"
-#include "hwenc_amf/amf_video_encoder.h"
+#include <sora/hwenc_amf/amf_video_decoder.h>
+#include <sora/hwenc_amf/amf_video_encoder.h>
 #endif
 
 struct VideoCodecInfo {
