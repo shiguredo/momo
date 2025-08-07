@@ -31,6 +31,7 @@
 #include "sora/v4l2/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
+#include <modules/video_capture/video_capture_factory.h>
 #endif
 
 #include "serial_data_channel/serial_data_manager.h"
@@ -168,7 +169,62 @@ int main(int argc, char* argv[]) {
   })();
 
   if (!capturer && !args.no_video_device) {
-    std::cerr << "failed to create capturer" << std::endl;
+    std::cerr << "Failed to create video capturer" << std::endl;
+#ifdef __linux__
+    if (!args.video_device.empty()) {
+      std::cerr << "Video device '" << args.video_device << "' could not be opened" << std::endl;
+    }
+    std::cerr << std::endl;
+    std::cerr << "Possible causes:" << std::endl;
+    std::cerr << "  - Device not found or inaccessible" << std::endl;
+    std::cerr << "  - Device doesn't support requested resolution (" << args.GetSize().width << "x" << args.GetSize().height << ")" << std::endl;
+    std::cerr << "  - Device doesn't support requested framerate (" << args.framerate << " fps)" << std::endl;
+    std::cerr << "  - Permission denied (try running as root or check /dev/video* permissions)" << std::endl;
+    std::cerr << "  - Device is already in use by another application" << std::endl;
+    std::cerr << std::endl;
+
+    // デバイスリストを表示
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
+        webrtc::VideoCaptureFactory::CreateDeviceInfo());
+    if (device_info) {
+      int num_devices = device_info->NumberOfDevices();
+      if (num_devices == 0) {
+        std::cerr << "No video capture devices found on this system" << std::endl;
+        std::cerr << "Check if:" << std::endl;
+        std::cerr << "  - Camera is connected" << std::endl;
+        std::cerr << "  - Camera drivers are installed" << std::endl;
+        std::cerr << "  - /dev/video* devices exist" << std::endl;
+      } else {
+        std::cerr << "Available video devices:" << std::endl;
+        for (int i = 0; i < num_devices; ++i) {
+          char device_name[256];
+          char unique_name[256];
+          if (device_info->GetDeviceName(static_cast<uint32_t>(i), device_name,
+                                        sizeof(device_name), unique_name,
+                                        sizeof(unique_name)) == 0) {
+            std::cerr << "  [" << i << "] " << device_name << " (" << unique_name << ")" << std::endl;
+          }
+        }
+        std::cerr << std::endl;
+        std::cerr << "You can specify a device by:" << std::endl;
+        std::cerr << "  - Index number: --video-device 0" << std::endl;
+        std::cerr << "  - Device path: --video-device /dev/video0" << std::endl;
+        std::cerr << "  - Device name: --video-device \"HD Pro Webcam\"" << std::endl;
+      }
+    }
+#elif defined(__APPLE__)
+    std::cerr << "Possible causes:" << std::endl;
+    std::cerr << "  - Camera device '" << args.video_device << "' not found" << std::endl;
+    std::cerr << "  - Camera access permission not granted" << std::endl;
+    std::cerr << "  - Device doesn't support requested resolution or framerate" << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "Check System Preferences > Security & Privacy > Camera" << std::endl;
+#else
+    std::cerr << "Possible causes:" << std::endl;
+    std::cerr << "  - Video device '" << args.video_device << "' not found" << std::endl;
+    std::cerr << "  - Device doesn't support requested settings" << std::endl;
+    std::cerr << "  - Permission denied to access the device" << std::endl;
+#endif
     return 1;
   }
 
