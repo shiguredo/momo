@@ -39,8 +39,6 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
  private:
   void CaptureThread();
   void UpdateImage(std::chrono::high_resolution_clock::time_point now);
-  void DrawTexts(BLContext& ctx,
-                 std::chrono::high_resolution_clock::time_point now);
   void DrawAnimations(BLContext& ctx,
                       std::chrono::high_resolution_clock::time_point now);
   void DrawBoxes(BLContext& ctx,
@@ -58,11 +56,7 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   
   // Blend2D 関連
   BLImage image_;
-  BLFont base_font_;
-  BLFont bipbop_font_;
-  BLFont stats_font_;
   uint32_t frame_counter_ = 0;
-  bool has_font_ = false;
 
   friend class webrtc::RefCountedObject<FakeVideoCapturer>;
 };

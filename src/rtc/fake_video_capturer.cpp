@@ -45,13 +45,9 @@ void FakeVideoCapturer::StopCapture() {
 }
 
 void FakeVideoCapturer::CaptureThread() {
-  // Blend2D イメージとフォントの初期化
+  // Blend2D イメージの初期化
   image_.create(config_.width, config_.height, BL_FORMAT_PRGB32);
   frame_counter_ = 0;
-  
-  // フォントの作成（現時点ではフォントなしで動作）
-  // TODO: フォントファイルを埋め込んで対応
-  has_font_ = false;
   
   while (!stop_capture_) {
     auto now = std::chrono::high_resolution_clock::now();
@@ -107,16 +103,10 @@ void FakeVideoCapturer::UpdateImage(
   ctx.setCompOp(BL_COMP_OP_SRC_COPY);
   ctx.fillAll();
   
-  // フォントがある場合はテキスト、ない場合はデジタル時計
-  if (has_font_) {
-    ctx.save();
-    DrawTexts(ctx, now);
-    ctx.restore();
-  } else {
-    ctx.save();
-    DrawDigitalClock(ctx, now);
-    ctx.restore();
-  }
+  // デジタル時計を描画
+  ctx.save();
+  DrawDigitalClock(ctx, now);
+  ctx.restore();
   
   ctx.save();
   DrawAnimations(ctx, now);
@@ -127,76 +117,6 @@ void FakeVideoCapturer::UpdateImage(
   ctx.restore();
   
   ctx.end();
-}
-
-void FakeVideoCapturer::DrawTexts(
-    BLContext& ctx,
-    std::chrono::high_resolution_clock::time_point now) {
-  // フォントがない場合はテキスト描画をスキップ
-  if (!has_font_) {
-    return;
-  }
-  
-  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-      now - start_time_).count();
-  
-  ctx.setFillStyle(BLRgba32(0xFFFFFFFF));
-  
-  int width = config_.width;
-  int height = config_.height;
-  int fps = config_.fps;
-  
-  // タイマー表示
-  {
-    int hours = ms / (60 * 60 * 1000);
-    int minutes = (ms / (60 * 1000)) % 60;
-    int seconds = (ms / 1000) % 60;
-    int milliseconds = ms % 1000;
-    
-    std::stringstream ss;
-    ss << std::setfill('0') << std::setw(2) << hours << ":"
-       << std::setfill('0') << std::setw(2) << minutes << ":"
-       << std::setfill('0') << std::setw(2) << seconds << "."
-       << std::setfill('0') << std::setw(3) << milliseconds;
-    
-    ctx.fillUtf8Text(BLPoint(width * 0.05, height * 0.15), 
-                     base_font_, ss.str().c_str());
-  }
-  
-  // フレーム番号表示
-  {
-    std::stringstream ss;
-    ss << std::setfill('0') << std::setw(6) << frame_counter_;
-    ctx.fillUtf8Text(BLPoint(width * 0.05, height * 0.15 + base_font_.size()),
-                     base_font_, ss.str().c_str());
-  }
-  
-  // FPS とサイズ情報
-  {
-    std::string text = "Requested frame rate: " + std::to_string(fps) + " fps";
-    ctx.fillUtf8Text(BLPoint(width * 0.45, height * 0.75), 
-                     stats_font_, text.c_str());
-  }
-  {
-    std::string text = "Size: " + std::to_string(width) + " x " + 
-                      std::to_string(height);
-    ctx.fillUtf8Text(BLPoint(width * 0.45, height * 0.75 + stats_font_.size()),
-                     stats_font_, text.c_str());
-  }
-  
-  // Bip/Bop アニメーション
-  {
-    int m = frame_counter_ % 60;
-    if (m < 15) {
-      ctx.setFillStyle(BLRgba32(0, 255, 255));
-      ctx.fillUtf8Text(BLPoint(width * 0.6, height * 0.6), 
-                       bipbop_font_, "Bip");
-    } else if (m >= 30 && m < 45) {
-      ctx.setFillStyle(BLRgba32(255, 255, 0));
-      ctx.fillUtf8Text(BLPoint(width * 0.6, height * 0.6), 
-                       bipbop_font_, "Bop");
-    }
-  }
 }
 
 void FakeVideoCapturer::DrawAnimations(
