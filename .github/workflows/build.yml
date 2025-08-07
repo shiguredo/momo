@@ -171,7 +171,7 @@ jobs:
           # Intel Media SDK のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxfixes-dev libxcomposite-dev libxtst-dev
       - run: python3 run.py --package ${{ matrix.name }}
       - name: Get package name
         run: |

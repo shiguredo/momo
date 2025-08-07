@@ -392,6 +392,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
         ${AMF_ROOT_DIR}/amf/public/common/DataStreamMemory.cpp
         ${AMF_ROOT_DIR}/amf/public/common/Thread.cpp
         ${AMF_ROOT_DIR}/amf/public/common/TraceAdapter.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/Windows/ThreadWindows.cpp
     )
     target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf)
     target_link_libraries(momo
@@ -548,6 +549,7 @@ elseif (TARGET_OS STREQUAL "linux")
         ${AMF_ROOT_DIR}/amf/public/common/DataStreamMemory.cpp
         ${AMF_ROOT_DIR}/amf/public/common/Thread.cpp
         ${AMF_ROOT_DIR}/amf/public/common/TraceAdapter.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/Linux/ThreadLinux.cpp
     )
     target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf)
   endif()
