@@ -140,12 +140,16 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.fillPie(0, 0, width * 0.3, 0, 
               (frame_counter_ % fps) / static_cast<float>(fps) * 2 * pi);
   
-  // 円が一周したときにビープ音を鳴らす
+  // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
   if (audio_capturer_) {
-    uint32_t current_lap = frame_counter_ / fps;
-    if (current_lap > last_beep_frame_) {
+    // 前フレームと現在フレームの角度を計算
+    uint32_t prev_frame = (frame_counter_ > 0) ? frame_counter_ - 1 : fps - 1;
+    float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
+    float curr_angle = (frame_counter_ % fps) / static_cast<float>(fps) * 360.0f;
+    
+    // 0度を通過したかチェック（359度から0度への遷移）
+    if (prev_angle > 270.0f && curr_angle < 90.0f) {
       audio_capturer_->TriggerBeep();
-      last_beep_frame_ = current_lap;
     }
   }
 }

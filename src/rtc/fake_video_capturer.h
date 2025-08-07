@@ -63,7 +63,6 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   // Blend2D 関連
   BLImage image_;
   uint32_t frame_counter_ = 0;
-  uint32_t last_beep_frame_ = 0;
   
   // オーディオキャプチャーへの参照
   webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer_;

@@ -140,6 +140,7 @@ class FakeAudioCapturer : public webrtc::AudioDeviceModule {
   std::mutex beep_mutex_;
   std::atomic<bool> trigger_beep_{false};
   int beep_samples_remaining_ = 0;
+  double beep_phase_ = 0.0;  // sin波の位相
   const int beep_duration_ms_ = 100;  // ビープ音の長さ（ミリ秒）
   const int beep_frequency_ = 1000;   // ビープ音の周波数（Hz）
   
