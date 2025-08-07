@@ -30,7 +30,7 @@ struct MomoArgs {
   // use_libcamera == true の場合だけ使える。
   // sora_video_codec_type == "H264" かつ sora_simulcast == false の場合だけしか機能しない。
   bool use_libcamera_native = false;
-  // libcamera のコントロール設定。key=value の形式で指定する。
+  // libcamera のコントロール設定。key value の形式で指定する。
   std::vector<std::pair<std::string, std::string>> libcamera_controls;
   std::string video_device = "";
   std::string resolution = "VGA";

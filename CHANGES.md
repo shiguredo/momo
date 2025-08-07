@@ -61,7 +61,7 @@
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
 - [ADD] libcamera のコントロール機能を追加
-  - `--libcamera-control` オプションで key=value 形式でコントロールを指定可能
+  - `--libcamera-control` オプションで key value 形式でコントロールを指定可能
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
   - 文字列ベースでコントロールを設定できる API を実装
   - @voluntas
