@@ -249,6 +249,7 @@ if (USE_FAKE_CAPTURE_DEVICE)
   target_sources(momo
     PRIVATE
       src/rtc/fake_video_capturer.cpp
+      src/rtc/fake_audio_capturer.cpp
   )
 endif()
 
