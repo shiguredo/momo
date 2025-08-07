@@ -21,7 +21,7 @@
 #endif
 
 #if defined(USE_AMF_ENCODER)
-#include "../hwenc_amf/amf_context.h"
+#include <sora/amf_context.h>
 #endif
 
 struct MomoVideoEncoderFactoryConfig {
@@ -36,7 +36,7 @@ struct MomoVideoEncoderFactoryConfig {
   std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 #if defined(USE_AMF_ENCODER)
-  std::shared_ptr<momo::AMFContext> amf_context;
+  std::shared_ptr<sora::AMFContext> amf_context;
 #endif
   std::string openh264;
 };

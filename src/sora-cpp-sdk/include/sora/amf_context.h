@@ -1,9 +1,9 @@
-#ifndef MOMO_AMF_CONTEXT_H_
-#define MOMO_AMF_CONTEXT_H_
+#ifndef AMF_CONTEXT_H_
+#define AMF_CONTEXT_H_
 
 #include <memory>
 
-namespace momo {
+namespace sora {
 
 class AMFContext {
  public:
@@ -13,6 +13,6 @@ class AMFContext {
   static bool CanCreate();
 };
 
-}  // namespace momo
+}  // namespace sora
 
-#endif  // MOMO_AMF_CONTEXT_H_
+#endif

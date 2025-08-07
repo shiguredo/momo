@@ -54,7 +54,7 @@
 #endif
 
 #if defined(USE_AMF_ENCODER)
-#include "hwenc_amf/amf_context.h"
+#include <sora/amf_context.h>
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if defined(USE_AMF_ENCODER)
-  auto amf_context = momo::AMFContext::Create();
+  auto amf_context = sora::AMFContext::Create();
 #endif
 
   auto capturer = ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {

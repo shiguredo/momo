@@ -1,5 +1,5 @@
-#ifndef MOMO_HWENC_AMF_AMF_VIDEO_ENCODER_H_
-#define MOMO_HWENC_AMF_AMF_VIDEO_ENCODER_H_
+#ifndef SORA_HWENC_AMF_AMF_VIDEO_ENCODER_H_
+#define SORA_HWENC_AMF_AMF_VIDEO_ENCODER_H_
 
 #include <memory>
 
@@ -7,9 +7,9 @@
 #include <api/video/video_codec_type.h>
 #include <api/video_codecs/video_encoder.h>
 
-#include "amf_context.h"
+#include "sora/amf_context.h"
 
-namespace momo {
+namespace sora {
 
 class AMFVideoEncoder : public webrtc::VideoEncoder {
  public:
@@ -20,6 +20,6 @@ class AMFVideoEncoder : public webrtc::VideoEncoder {
       webrtc::VideoCodecType codec);
 };
 
-}  // namespace momo
+}  // namespace sora
 
-#endif  // MOMO_HWENC_AMF_AMF_VIDEO_ENCODER_H_
+#endif

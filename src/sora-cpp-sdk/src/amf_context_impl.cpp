@@ -1,10 +1,10 @@
 #include <memory>
 
-#include "amf_context.h"
+#include "sora/amf_context.h"
 
 #if !defined(USE_AMF_ENCODER)
 
-namespace momo {
+namespace sora {
 
 std::shared_ptr<AMFContext> AMFContext::Create() {
   return nullptr;
@@ -13,7 +13,7 @@ bool AMFContext::CanCreate() {
   return false;
 }
 
-}  // namespace momo
+}  // namespace sora
 
 #else
 
@@ -23,7 +23,7 @@ bool AMFContext::CanCreate() {
 
 #include "amf_context_impl.h"
 
-namespace momo {
+namespace sora {
 
 struct AMFContextImpl : AMFContext {
   ~AMFContextImpl() { g_AMFFactory.Terminate(); }
@@ -51,6 +51,6 @@ AMFFactoryHelper* GetAMFFactoryHelper(std::shared_ptr<AMFContext> ctx) {
   return &g_AMFFactory;
 }
 
-}  // namespace momo
+}  // namespace sora
 
 #endif

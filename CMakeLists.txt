@@ -382,9 +382,10 @@ if ("${TARGET_OS}" STREQUAL "windows")
   if (USE_AMF_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc_amf/amf_video_encoder.cpp
-        src/hwenc_amf/amf_video_decoder.cpp
-        src/hwenc_amf/amf_context_impl.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_decoder.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_codec.cpp
+        src/sora-cpp-sdk/src/amf_context_impl.cpp
         ${AMF_ROOT_DIR}/amf/public/common/AMFFactory.cpp
         ${AMF_ROOT_DIR}/amf/public/common/AMFSTL.cpp
         ${AMF_ROOT_DIR}/amf/public/common/DataStreamFactory.cpp
@@ -539,9 +540,10 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_AMF_ENCODER)
     target_sources(momo
       PRIVATE
-        src/hwenc_amf/amf_video_encoder.cpp
-        src/hwenc_amf/amf_video_decoder.cpp
-        src/hwenc_amf/amf_context_impl.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_encoder.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_decoder.cpp
+        src/sora-cpp-sdk/src/hwenc_amf/amf_video_codec.cpp
+        src/sora-cpp-sdk/src/amf_context_impl.cpp
         ${AMF_ROOT_DIR}/amf/public/common/AMFFactory.cpp
         ${AMF_ROOT_DIR}/amf/public/common/AMFSTL.cpp
         ${AMF_ROOT_DIR}/amf/public/common/DataStreamFactory.cpp

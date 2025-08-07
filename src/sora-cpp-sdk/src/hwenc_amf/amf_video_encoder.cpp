@@ -1,4 +1,4 @@
-#include "amf_video_encoder.h"
+#include "sora/hwenc_amf/amf_video_encoder.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -52,8 +52,8 @@
 #include <public/include/core/Result.h>
 #include <public/include/core/Surface.h>
 
-#include "amf_context_impl.h"
-#include "amf_context.h"
+#include "../amf_context_impl.h"
+#include "sora/amf_context.h"
 
 #define RETURN_IF_FAILED(res, message)                  \
   if (res != AMF_OK) {                                  \
@@ -70,7 +70,7 @@
 #define FRAME_ROTATION_PROPERTY L"FRAME_ROTATION_PROPERTY"
 #define FRAME_COLOR_SPACE_PROPERTY L"FRAME_COLOR_SPACE_PROPERTY"
 
-namespace momo {
+namespace sora {
 
 const int kLowH264QpThreshold = 34;
 const int kHighH264QpThreshold = 40;
@@ -609,6 +609,12 @@ AMF_RESULT AMFVideoEncoderImpl::CreateEncoder(
                      "Failed to SetProperty(AMF_VIDEO_ENCODER_AV1_USAGE, "
                      "AMF_VIDEO_ENCODER_AV1_USAGE_TRANSCODING)");
 
+    //res = encoder->SetProperty(AMF_VIDEO_ENCODER_AV1_PROFILE, AMF_VIDEO_ENCODER_AV1_PROFILE_HIGH);
+    //RETURN_IF_FAILED(res, L"SetProperty(AMF_VIDEO_ENCODER_AV1_PROFILE, AMF_VIDEO_ENCODER_AV1_PROFILE_HIGH) failed");
+
+    //res = encoder->SetProperty(AMF_VIDEO_ENCODER_AV1_LEVEL, AMF_VIDEO_ENCODER_AV1_LEVEL_5_1);
+    //RETURN_IF_FAILED(res, L"SetProperty(AMF_VIDEO_ENCODER_AV1_LEVEL, AMF_VIDEO_ENCODER_AV1_LEVEL_5_1) failed");
+
     res = encoder->SetProperty(
         AMF_VIDEO_ENCODER_AV1_ENCODING_LATENCY_MODE,
         AMF_VIDEO_ENCODER_AV1_ENCODING_LATENCY_MODE_LOWEST_LATENCY);
@@ -656,6 +662,12 @@ AMF_RESULT AMFVideoEncoderImpl::CreateEncoder(
     RETURN_IF_FAILED(res,
                      "Failed to SetProperty(AMF_VIDEO_ENCODER_HEVC_FRAMERATE)");
 
+    // res = encoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_TIER, AMF_VIDEO_ENCODER_HEVC_TIER_HIGH);
+    // RETURN_IF_FAILED(res, L"SetProperty(AMF_VIDEO_ENCODER_HEVC_TIER, AMF_VIDEO_ENCODER_HEVC_TIER_HIGH) failed");
+
+    // res = encoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_PROFILE_LEVEL, AMF_LEVEL_5_1);
+    // RETURN_IF_FAILED(res, L"SetProperty(AMF_VIDEO_ENCODER_HEVC_PROFILE_LEVEL, AMF_LEVEL_5_1) failed");
+
     res = encoder->SetProperty(AMF_VIDEO_ENCODER_HEVC_LOWLATENCY_MODE, true);
     RETURN_IF_FAILED(
         res,
@@ -674,6 +686,15 @@ AMF_RESULT AMFVideoEncoderImpl::CreateEncoder(
     res = encoder->SetProperty(AMF_VIDEO_ENCODER_FRAMERATE,
                                ::AMFConstructRate(framerate, 1));
     RETURN_IF_FAILED(res, "Failed to SetProperty(AMF_VIDEO_ENCODER_FRAMERATE");
+
+    //res = encoder->SetProperty(AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_HIGH);
+    //RETURN_IF_FAILED(res, "SetProperty(AMF_VIDEO_ENCODER_PROFILE, AMF_VIDEO_ENCODER_PROFILE_HIGH) failed");
+
+    //res = encoder->SetProperty(AMF_VIDEO_ENCODER_PROFILE_LEVEL, 51);
+    //RETURN_IF_FAILED(res, "SetProperty(AMF_VIDEO_ENCODER_PROFILE_LEVEL, 51)");
+
+    //res = encoder->SetProperty(AMF_VIDEO_ENCODER_B_PIC_PATTERN, 0);
+    //RETURN_IF_FAILED(res, "SetProperty(AMF_VIDEO_ENCODER_B_PIC_PATTERN, 0)");
 
     res = encoder->SetProperty(AMF_VIDEO_ENCODER_LOWLATENCY_MODE, true);
     RETURN_IF_FAILED(
@@ -713,4 +734,4 @@ std::unique_ptr<AMFVideoEncoder> AMFVideoEncoder::Create(
       new AMFVideoEncoderImpl(amf_context, codec));
 }
 
-}  // namespace momo
+}  // namespace sora
