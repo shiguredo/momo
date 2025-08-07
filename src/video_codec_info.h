@@ -21,12 +21,18 @@
 #include "sora/hwenc_jetson/jetson_video_encoder.h"
 #endif
 
+#if defined(USE_AMF_ENCODER)
+#include "hwenc_amf/amf_video_decoder.h"
+#include "hwenc_amf/amf_video_encoder.h"
+#endif
+
 struct VideoCodecInfo {
   enum class Type {
     Default,
     Jetson,
     NVIDIA,
     Intel,
+    AMD,
     VideoToolbox,
     V4L2,
     Software,
@@ -83,6 +89,8 @@ struct VideoCodecInfo {
         return {"NVIDIA VIDEO CODEC SDK", "nvidia"};
       case Type::Intel:
         return {"oneVPL", "vpl"};
+      case Type::AMD:
+        return {"AMD AMF", "amf"};
       case Type::VideoToolbox:
         return {"VideoToolbox", "videotoolbox"};
       case Type::V4L2:
@@ -190,6 +198,36 @@ struct VideoCodecInfo {
       }
       if (sora::VplVideoDecoder::IsSupported(session, webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::Intel);
+      }
+    }
+#endif
+
+#if defined(USE_AMF_ENCODER)
+    auto amf_context = momo::AMFContext::Create();
+    if (amf_context != nullptr) {
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH264)) {
+        info.h264_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecAV1)) {
+        info.av1_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH264)) {
+        info.h264_decoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecAV1)) {
+        info.av1_decoders.push_back(Type::AMD);
       }
     }
 #endif
@@ -350,6 +388,36 @@ struct VideoCodecInfo {
 #if defined(USE_V4L2_ENCODER)
     info.h264_encoders.push_back(Type::V4L2);
     info.h264_decoders.push_back(Type::V4L2);
+#endif
+
+#if defined(USE_AMF_ENCODER)
+    auto amf_context = momo::AMFContext::Create();
+    if (amf_context != nullptr) {
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH264)) {
+        info.h264_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecAV1)) {
+        info.av1_encoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH264)) {
+        info.h264_decoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecH265)) {
+        info.h265_decoders.push_back(Type::AMD);
+      }
+      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+                                             webrtc::kVideoCodecAV1)) {
+        info.av1_decoders.push_back(Type::AMD);
+      }
+    }
 #endif
 
     info.vp8_encoders.push_back(Type::Software);

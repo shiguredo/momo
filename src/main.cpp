@@ -53,6 +53,10 @@
 #include "sora/cuda_context.h"
 #endif
 
+#if defined(USE_AMF_ENCODER)
+#include "hwenc_amf/amf_context.h"
+#endif
+
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 int main(int argc, char* argv[]) {
@@ -97,6 +101,10 @@ int main(int argc, char* argv[]) {
               << std::endl;
     return 2;
   }
+#endif
+
+#if defined(USE_AMF_ENCODER)
+  auto amf_context = momo::AMFContext::Create();
 #endif
 
   auto capturer = ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {
@@ -208,6 +216,9 @@ int main(int argc, char* argv[]) {
 
 #if defined(USE_NVCODEC_ENCODER)
   rtcm_config.cuda_context = cuda_context;
+#endif
+#if defined(USE_AMF_ENCODER)
+  rtcm_config.amf_context = amf_context;
 #endif
 
   rtcm_config.proxy_url = args.proxy_url;

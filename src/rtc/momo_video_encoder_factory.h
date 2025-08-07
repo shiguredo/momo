@@ -20,6 +20,10 @@
 #include "sora/vpl_session.h"
 #endif
 
+#if defined(USE_AMF_ENCODER)
+#include "../hwenc_amf/amf_context.h"
+#endif
+
 struct MomoVideoEncoderFactoryConfig {
   VideoCodecInfo::Type vp8_encoder;
   VideoCodecInfo::Type vp9_encoder;
@@ -30,6 +34,9 @@ struct MomoVideoEncoderFactoryConfig {
   bool hardware_encoder_only;
 #if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<sora::CudaContext> cuda_context;
+#endif
+#if defined(USE_AMF_ENCODER)
+  std::shared_ptr<momo::AMFContext> amf_context;
 #endif
   std::string openh264;
 };

@@ -1397,6 +1397,17 @@ def install_vpl(version, configuration, source_dir, build_dir, install_dir, cmak
 
 
 @versioned
+def install_amf(version, install_dir):
+    # AMF はライブラリというよりは便利関数＋サンプルコードという感じなので
+    # ここではソースだけダウンロードをして、必要に応じて利用者側でファイルを参照してインクルード/コンパイルする
+    amf_install_dir = os.path.join(install_dir, "amf")
+    rm_rf(amf_install_dir)
+    git_clone_shallow(
+        "https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git", version, amf_install_dir
+    )
+
+
+@versioned
 def install_blend2d_official(
     version,
     configuration,

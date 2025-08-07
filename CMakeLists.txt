@@ -19,6 +19,7 @@ set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な C
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_VPL_ENCODER OFF CACHE BOOL "oneVPL のハードウェアエンコーダを利用するかどうか")
+set(USE_AMF_ENCODER OFF CACHE BOOL "AMD AMF のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
@@ -26,6 +27,8 @@ set(SDL3_ROOT_DIR "" CACHE PATH "SDL3 のインストール先ディレクトリ
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
 set(OPENH264_ROOT_DIR "" CACHE PATH "OpenH264 のインストール先ディレクトリ")
 set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
+set(AMF_ROOT_DIR "" CACHE PATH "AMD AMF SDK のインストール先ディレクトリ")
+set(VPL_ROOT_DIR "" CACHE PATH "oneVPL のインストール先ディレクトリ")
 set(WEBRTC_INCLUDE_DIR "" CACHE PATH "WebRTC のインクルードディレクトリ")
 set(WEBRTC_LIBRARY_DIR "" CACHE PATH "WebRTC のライブラリディレクトリ")
 set(WEBRTC_LIBRARY_NAME "webrtc" CACHE STRING "WebRTC のライブラリ名")
@@ -159,6 +162,7 @@ target_compile_definitions(momo
     $<$<BOOL:${USE_V4L2_ENCODER}>:USE_V4L2_ENCODER>
     $<$<BOOL:${USE_JETSON_ENCODER}>:USE_JETSON_ENCODER>
     $<$<BOOL:${USE_VPL_ENCODER}>:USE_VPL_ENCODER>
+    $<$<BOOL:${USE_AMF_ENCODER}>:USE_AMF_ENCODER>
     $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
     $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
@@ -373,6 +377,22 @@ if ("${TARGET_OS}" STREQUAL "windows")
         ${VPL_ROOT_DIR}/lib/vpl$<$<CONFIG:Debug>:d>.lib 
     )
   endif()
+
+  # AMD AMF
+  if (USE_AMF_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_amf/amf_video_encoder.cpp
+        src/hwenc_amf/amf_video_decoder.cpp
+        src/hwenc_amf/amf_context_impl.cpp
+    )
+    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf/public)
+    target_link_libraries(momo
+      PRIVATE
+        D3D11.lib
+        DXGI.lib
+    )
+  endif()
 elseif (TARGET_OS STREQUAL "macos")
   target_sources(momo
     PRIVATE
@@ -504,6 +524,23 @@ elseif (TARGET_OS STREQUAL "linux")
         Libdrm::drm
         Libva::va
         Libva::va_drm
+    )
+  endif()
+
+  # AMD AMF
+  if (USE_AMF_ENCODER)
+    target_sources(momo
+      PRIVATE
+        src/hwenc_amf/amf_video_encoder.cpp
+        src/hwenc_amf/amf_video_decoder.cpp
+        src/hwenc_amf/amf_context_impl.cpp
+    )
+    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf/public)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(VULKAN REQUIRED vulkan)
+    target_link_libraries(momo
+      PRIVATE
+        ${VULKAN_LIBRARIES}
     )
   endif()
 

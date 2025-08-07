@@ -108,6 +108,9 @@ RTCManager::RTCManager(
 #if defined(USE_NVCODEC_ENCODER)
     ec.cuda_context = cf.cuda_context;
 #endif
+#if defined(USE_AMF_ENCODER)
+    ec.amf_context = cf.amf_context;
+#endif
     ec.openh264 = cf.openh264;
     dependencies.video_encoder_factory =
         std::unique_ptr<webrtc::VideoEncoderFactory>(
@@ -120,6 +123,9 @@ RTCManager::RTCManager(
     dc.h265_decoder = resolve(cf.h265_decoder, info.h265_decoders);
 #if defined(USE_NVCODEC_ENCODER)
     dc.cuda_context = cf.cuda_context;
+#endif
+#if defined(USE_AMF_ENCODER)
+    dc.amf_context = cf.amf_context;
 #endif
     dependencies.video_decoder_factory =
         std::unique_ptr<webrtc::VideoDecoderFactory>(

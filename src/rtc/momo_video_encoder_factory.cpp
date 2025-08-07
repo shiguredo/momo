@@ -38,6 +38,9 @@
 #if defined(USE_V4L2_ENCODER)
 #include "hwenc_v4l2/v4l2_h264_encoder.h"
 #endif
+#if defined(USE_AMF_ENCODER)
+#include "../hwenc_amf/amf_video_encoder.h"
+#endif
 
 #include "sora/open_h264_video_encoder.h"
 
@@ -118,6 +121,24 @@ MomoVideoEncoderFactory::GetSupportedFormats() const {
       sora::NvCodecVideoEncoder::IsSupported(config_.cuda_context,
                                              sora::CudaVideoCodec::H265)) {
     add_h265();
+  }
+#endif
+
+#if defined(USE_AMF_ENCODER)
+  if (config_.h264_encoder == VideoCodecInfo::Type::AMD &&
+      momo::AMFVideoEncoder::IsSupported(config_.amf_context,
+                                         webrtc::kVideoCodecH264)) {
+    add_h264();
+  }
+  if (config_.h265_encoder == VideoCodecInfo::Type::AMD &&
+      momo::AMFVideoEncoder::IsSupported(config_.amf_context,
+                                         webrtc::kVideoCodecH265)) {
+    add_h265();
+  }
+  if (config_.av1_encoder == VideoCodecInfo::Type::AMD &&
+      momo::AMFVideoEncoder::IsSupported(config_.amf_context,
+                                         webrtc::kVideoCodecAV1)) {
+    add_av1();
   }
 #endif
 
@@ -304,6 +325,21 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::CreateInternal(
   if (is_h265 && config_.h265_encoder == VideoCodecInfo::Type::NVIDIA) {
     return sora::NvCodecVideoEncoder::Create(config_.cuda_context,
                                              sora::CudaVideoCodec::H265);
+  }
+#endif
+
+#if defined(USE_AMF_ENCODER)
+  if (is_h264 && config_.h264_encoder == VideoCodecInfo::Type::AMD) {
+    return momo::AMFVideoEncoder::Create(config_.amf_context,
+                                         webrtc::kVideoCodecH264);
+  }
+  if (is_h265 && config_.h265_encoder == VideoCodecInfo::Type::AMD) {
+    return momo::AMFVideoEncoder::Create(config_.amf_context,
+                                         webrtc::kVideoCodecH265);
+  }
+  if (is_av1 && config_.av1_encoder == VideoCodecInfo::Type::AMD) {
+    return momo::AMFVideoEncoder::Create(config_.amf_context,
+                                         webrtc::kVideoCodecAV1);
   }
 #endif
 

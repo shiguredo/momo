@@ -16,6 +16,9 @@
 #if defined(USE_VPL_ENCODER)
 #include "sora/vpl_session.h"
 #endif
+#if defined(USE_AMF_ENCODER)
+#include "../hwenc_amf/amf_context.h"
+#endif
 
 struct MomoVideoDecoderFactoryConfig {
   VideoCodecInfo::Type vp8_decoder;
@@ -25,6 +28,9 @@ struct MomoVideoDecoderFactoryConfig {
   VideoCodecInfo::Type h265_decoder;
 #if defined(USE_NVCODEC_ENCODER)
   std::shared_ptr<sora::CudaContext> cuda_context;
+#endif
+#if defined(USE_AMF_ENCODER)
+  std::shared_ptr<momo::AMFContext> amf_context;
 #endif
 };
 

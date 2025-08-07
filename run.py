@@ -23,6 +23,7 @@ from buildbase import (
     get_webrtc_info,
     get_webrtc_platform,
     get_windows_osver,
+    install_amf,
     install_cli11,
     install_cmake,
     install_cuda_windows,
@@ -51,6 +52,7 @@ def install_deps(
     debug: bool,
     local_webrtc_build_dir: Optional[str],
     local_webrtc_build_args: List[str],
+    disable_amf: bool = False,
 ):
     with cd(BASE_DIR):
         version = read_version_file("VERSION")
@@ -294,6 +296,16 @@ def install_deps(
                 install_vpl_args["cmake_args"] += cmake_args
             install_vpl(**install_vpl_args)
 
+        # AMD AMF
+        if not disable_amf:
+            if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
+                install_amf_args = {
+                    "version": version["AMF_VERSION"],
+                    "version_file": os.path.join(install_dir, "amf.version"),
+                    "install_dir": install_dir,
+                }
+                install_amf(**install_amf_args)
+
         # SDL3
         install_sdl3_args = {
             "version": version["SDL3_VERSION"],
@@ -374,6 +386,7 @@ def main():
     add_webrtc_build_arguments(parser)
     parser.add_argument("--package", action="store_true")
     parser.add_argument("--disable-cuda", action="store_true")
+    parser.add_argument("--disable-amf", action="store_true")
 
     args = parser.parse_args()
     if args.target == "windows_x86_64":
@@ -414,6 +427,7 @@ def main():
         args.debug,
         local_webrtc_build_dir=args.local_webrtc_build_dir,
         local_webrtc_build_args=args.local_webrtc_build_args,
+        disable_amf=args.disable_amf,
     )
 
     configuration = "Release"
@@ -527,6 +541,9 @@ def main():
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")
             cmake_args.append(f"-DVPL_ROOT_DIR={cmake_path(os.path.join(install_dir, 'vpl'))}")
+            if not args.disable_amf:
+                cmake_args.append("-DUSE_AMF_ENCODER=ON")
+                cmake_args.append(f"-DAMF_ROOT_DIR={cmake_path(os.path.join(install_dir, 'amf'))}")
 
         cmake_args.append(f"-DSDL3_ROOT_DIR={os.path.join(install_dir, 'sdl3')}")
         cmake_args.append(f"-DCLI11_ROOT_DIR={os.path.join(install_dir, 'cli11')}")

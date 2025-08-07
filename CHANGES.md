@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] AMD AMF ハードウェアエンコーダ/デコーダのサポートを追加
+  - H.264/H.265/AV1 の AMD AMF ハードウェアエンコーダ/デコーダを利用可能にする
+  - CMake オプション USE_AMF_ENCODER で有効化可能
+  - Windows では DirectX 11、Linux では Vulkan を利用
+  - @voluntas
 - [CHANGE] Sora mode の type: connect から multistream 項目を削除
   - Sora が multistream 項目を廃止したため削除
   - @voluntas
