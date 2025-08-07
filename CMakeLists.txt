@@ -385,8 +385,15 @@ if ("${TARGET_OS}" STREQUAL "windows")
         src/hwenc_amf/amf_video_encoder.cpp
         src/hwenc_amf/amf_video_decoder.cpp
         src/hwenc_amf/amf_context_impl.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/AMFFactory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/AMFSTL.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamFactory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamFile.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamMemory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/Thread.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/TraceAdapter.cpp
     )
-    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf/public)
+    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf)
     target_link_libraries(momo
       PRIVATE
         D3D11.lib
@@ -534,14 +541,15 @@ elseif (TARGET_OS STREQUAL "linux")
         src/hwenc_amf/amf_video_encoder.cpp
         src/hwenc_amf/amf_video_decoder.cpp
         src/hwenc_amf/amf_context_impl.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/AMFFactory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/AMFSTL.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamFactory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamFile.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/DataStreamMemory.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/Thread.cpp
+        ${AMF_ROOT_DIR}/amf/public/common/TraceAdapter.cpp
     )
-    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf/public)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(VULKAN REQUIRED vulkan)
-    target_link_libraries(momo
-      PRIVATE
-        ${VULKAN_LIBRARIES}
-    )
+    target_include_directories(momo PRIVATE ${AMF_ROOT_DIR}/amf)
   endif()
 
   if (TARGET_ARCH STREQUAL "arm")
