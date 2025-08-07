@@ -41,7 +41,7 @@ Windows 11 では Intel の公式サイトからドライバーをインスト�
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
 
 PowerShell での実行コマンド例：
 
@@ -63,7 +63,7 @@ VP9:
   Encoder:
     - Software [software] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
     - Software [software]
 
 AV1:
@@ -74,9 +74,9 @@ AV1:
 
 H264:
   Encoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
 ```
 
 ## Ubuntu での利用方法
@@ -143,7 +143,7 @@ sudo apt install -y libmfxgen1
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
 
 実行コマンド例：
 
@@ -165,7 +165,7 @@ VP9:
   Encoder:
     - Software [software] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
     - Software [software]
 
 AV1:
@@ -176,9 +176,9 @@ AV1:
 
 H264:
   Encoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
 ```
 
 ## 動作確認ができたチップセット
@@ -196,7 +196,7 @@ H264:
 ## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで oneVPL を使用することができます。
+Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用することができます。
 
 ## VPL を認識できない場合
 

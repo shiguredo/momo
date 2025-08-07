@@ -82,7 +82,7 @@ struct VideoCodecInfo {
       case Type::NVIDIA:
         return {"NVIDIA VIDEO CODEC SDK", "nvidia"};
       case Type::Intel:
-        return {"oneVPL", "vpl"};
+        return {"Intel VPL", "vpl"};
       case Type::VideoToolbox:
         return {"VideoToolbox", "videotoolbox"};
       case Type::V4L2:
