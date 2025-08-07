@@ -29,6 +29,7 @@
 #include "hwenc_v4l2/v4l2_capturer.h"
 #endif
 #include "sora/v4l2/v4l2_video_capturer.h"
+#include <modules/video_capture/video_capture_factory.h>
 #else
 #include "rtc/device_video_capturer.h"
 #include <modules/video_capture/video_capture_factory.h>
@@ -184,8 +185,9 @@ int main(int argc, char* argv[]) {
     std::cerr << std::endl;
 
     // デバイスリストを表示
-    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
-        webrtc::VideoCaptureFactory::CreateDeviceInfo());
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info =
+        std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo>(
+            webrtc::VideoCaptureFactory::CreateDeviceInfo());
     if (device_info) {
       int num_devices = device_info->NumberOfDevices();
       if (num_devices == 0) {
