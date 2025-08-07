@@ -11,14 +11,15 @@
 
 ## develop
 
-- [ADD] AMD AMF ハードウェアエンコーダのサポートを追加
-  - AMD GPU を利用した H.264/H.265/AV1 ハードウェアエンコーディングに対応
+- [ADD] AMD AMF ハードウェアエンコーダ/デコーダのサポートを追加
+  - AMD GPU を利用した H.264/H.265/AV1 ハードウェアエンコーディング/デコーディングに対応
   - Windows および Ubuntu (22.04/24.04) x86_64 でサポート
   - CMake オプション `USE_AMF_ENCODER=ON` で有効化
   - Windows では DirectX 11、Linux では Vulkan を利用
   - ビルドオプション `--disable-amf` で無効化可能
   - AMF SDK v1.4.35 を利用
   - VideoCodecInfo に AMD タイプを追加し、`--video-codec-engines` で確認可能
+  - Sora C++ SDK の AMF 実装を取り込み、namespace を sora:: に統一
   - @voluntas
 - [CHANGE] Sora mode の type: connect から multistream 項目を削除
   - Sora が multistream 項目を廃止したため削除
