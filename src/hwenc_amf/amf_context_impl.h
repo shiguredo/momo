@@ -3,19 +3,12 @@
 
 #include <memory>
 
-namespace amf {
-class AMFFactory;
-}
+// AMF
+#include <public/common/AMFFactory.h>
+
+#include "amf_context.h"
 
 namespace momo {
-
-class AMFContext;
-
-class AMFFactoryHelper {
- public:
-  virtual ~AMFFactoryHelper() = default;
-  virtual amf::AMFFactory* GetFactory() = 0;
-};
 
 AMFFactoryHelper* GetAMFFactoryHelper(std::shared_ptr<AMFContext> ctx);
 

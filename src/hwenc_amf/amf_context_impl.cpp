@@ -47,17 +47,8 @@ bool AMFContext::CanCreate() {
   return true;
 }
 
-class AMFFactoryHelperImpl : public AMFFactoryHelper {
- public:
-  amf::AMFFactory* GetFactory() override {
-    return &g_AMFFactory;
-  }
-};
-
-static AMFFactoryHelperImpl g_AMFFactoryHelper;
-
 AMFFactoryHelper* GetAMFFactoryHelper(std::shared_ptr<AMFContext> ctx) {
-  return &g_AMFFactoryHelper;
+  return &g_AMFFactory;
 }
 
 }  // namespace momo
