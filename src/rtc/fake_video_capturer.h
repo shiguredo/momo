@@ -17,6 +17,9 @@
 // Blend2D
 #include <blend2d.h>
 
+// Forward declaration
+class FakeAudioCapturer;
+
 class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
  public:
   struct Config : sora::ScalableVideoTrackSourceConfig {
@@ -25,8 +28,10 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
     int fps = 30;
   };
 
-  static webrtc::scoped_refptr<FakeVideoCapturer> Create(Config config) {
-    return webrtc::make_ref_counted<FakeVideoCapturer>(std::move(config));
+  static webrtc::scoped_refptr<FakeVideoCapturer> Create(
+      Config config,
+      webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer = nullptr) {
+    return webrtc::make_ref_counted<FakeVideoCapturer>(std::move(config), audio_capturer);
   }
 
   ~FakeVideoCapturer();
@@ -34,7 +39,8 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   void StopCapture();
 
  protected:
-  explicit FakeVideoCapturer(Config config);
+  explicit FakeVideoCapturer(Config config,
+                            webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer = nullptr);
 
  private:
   void CaptureThread();
@@ -57,6 +63,10 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   // Blend2D 関連
   BLImage image_;
   uint32_t frame_counter_ = 0;
+  uint32_t last_beep_frame_ = 0;
+  
+  // オーディオキャプチャーへの参照
+  webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer_;
 
   friend class webrtc::RefCountedObject<FakeVideoCapturer>;
 };

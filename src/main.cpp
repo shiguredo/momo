@@ -42,6 +42,7 @@
 #include "p2p/p2p_server.h"
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 #include "rtc/fake_video_capturer.h"
+#include "rtc/fake_audio_capturer.h"
 #endif
 #include "rtc/rtc_manager.h"
 #include "sora/sora_client.h"
@@ -115,6 +116,8 @@ int main(int argc, char* argv[]) {
       config.width = size.width;
       config.height = size.height;
       config.fps = args.framerate;
+      
+      // FakeVideoCapturer のみ返す（FakeAudioCapturer は後で作成）
       return FakeVideoCapturer::Create(config);
     }
 #endif
@@ -228,6 +231,29 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_url = args.proxy_url;
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  // fake-capture-device が指定された場合は FakeAudioCapturer も作成
+  if (args.fake_capture_device && !args.no_audio_device) {
+    FakeAudioCapturer::Config audio_config;
+    audio_config.sample_rate = 48000;
+    audio_config.channels = 1;
+    audio_config.fps = args.framerate;
+    auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+    rtcm_config.fake_audio_capturer = fake_audio_capturer;
+    
+    // FakeVideoCapturer に FakeAudioCapturer を渡す
+    if (capturer) {
+      // すでに作成された FakeVideoCapturer を再作成
+      auto size = args.GetSize();
+      FakeVideoCapturer::Config video_config;
+      video_config.width = size.width;
+      video_config.height = size.height;
+      video_config.fps = args.framerate;
+      capturer = FakeVideoCapturer::Create(video_config, fake_audio_capturer);
+    }
+  }
+#endif
 
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {

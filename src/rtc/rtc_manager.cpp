@@ -9,6 +9,10 @@
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#endif
 #include <api/enable_media.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
@@ -63,6 +67,13 @@ RTCManager::RTCManager(
   if (config_.no_audio_device) {
     audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
   }
+  
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  // fake_audio_capturer が設定されている場合は、それを使用
+  if (config_.fake_audio_capturer) {
+    audio_layer = webrtc::AudioDeviceModule::kDummyAudio;  // AudioDeviceModule を作成しない
+  }
+#endif
 
   auto env = webrtc::CreateEnvironment();
 
@@ -81,11 +92,19 @@ RTCManager::RTCManager(
             &env.task_queue_factory());
       });
 #else
-  dependencies.adm = worker_thread_->BlockingCall(
-      [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateAudioDeviceModule(
-            webrtc::CreateEnvironment(), audio_layer);
-      });
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  if (config_.fake_audio_capturer) {
+    dependencies.adm = config_.fake_audio_capturer;
+  } else {
+#endif
+    dependencies.adm = worker_thread_->BlockingCall(
+        [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
+          return webrtc::CreateAudioDeviceModule(
+              webrtc::CreateEnvironment(), audio_layer);
+        });
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  }
+#endif
 #endif
   dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();

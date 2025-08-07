@@ -1,4 +1,5 @@
 #include "rtc/fake_video_capturer.h"
+#include "rtc/fake_audio_capturer.h"
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
@@ -11,8 +12,11 @@
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-FakeVideoCapturer::FakeVideoCapturer(Config config)
-    : sora::ScalableVideoTrackSource(config), config_(config) {
+FakeVideoCapturer::FakeVideoCapturer(Config config,
+                                   webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer)
+    : sora::ScalableVideoTrackSource(config), 
+      config_(config),
+      audio_capturer_(audio_capturer) {
   StartCapture();
 }
 
@@ -135,6 +139,15 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.setFillStyle(BLRgba32(160, 160, 160));
   ctx.fillPie(0, 0, width * 0.3, 0, 
               (frame_counter_ % fps) / static_cast<float>(fps) * 2 * pi);
+  
+  // 円が一周したときにビープ音を鳴らす
+  if (audio_capturer_) {
+    uint32_t current_lap = frame_counter_ / fps;
+    if (current_lap > last_beep_frame_) {
+      audio_capturer_->TriggerBeep();
+      last_beep_frame_ = current_lap;
+    }
+  }
 }
 
 void FakeVideoCapturer::DrawBoxes(
