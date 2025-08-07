@@ -203,29 +203,29 @@ struct VideoCodecInfo {
 #endif
 
 #if defined(USE_AMF_ENCODER)
-    auto amf_context = momo::AMFContext::Create();
+    auto amf_context = sora::AMFContext::Create();
     if (amf_context != nullptr) {
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH265)) {
         info.h265_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH265)) {
         info.h265_decoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::AMD);
       }
@@ -391,29 +391,29 @@ struct VideoCodecInfo {
 #endif
 
 #if defined(USE_AMF_ENCODER)
-    auto amf_context = momo::AMFContext::Create();
+    auto amf_context = sora::AMFContext::Create();
     if (amf_context != nullptr) {
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH264)) {
         info.h264_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH265)) {
         info.h265_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoEncoder::IsSupported(amf_context,
+      if (sora::AMFVideoEncoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecAV1)) {
         info.av1_encoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH264)) {
         info.h264_decoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecH265)) {
         info.h265_decoders.push_back(Type::AMD);
       }
-      if (momo::AMFVideoDecoder::IsSupported(amf_context,
+      if (sora::AMFVideoDecoder::IsSupported(amf_context,
                                              webrtc::kVideoCodecAV1)) {
         info.av1_decoders.push_back(Type::AMD);
       }

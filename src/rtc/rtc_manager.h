@@ -17,7 +17,7 @@
 #include "sora/scalable_track_source.h"
 #include "video_codec_info.h"
 #if defined(USE_AMF_ENCODER)
-#include "../hwenc_amf/amf_context.h"
+#include <sora/amf_context.h>
 #endif
 #include "video_track_receiver.h"
 
@@ -94,7 +94,7 @@ struct RTCManagerConfig {
   std::shared_ptr<sora::CudaContext> cuda_context;
 #endif
 #if defined(USE_AMF_ENCODER)
-  std::shared_ptr<momo::AMFContext> amf_context;
+  std::shared_ptr<sora::AMFContext> amf_context;
 #endif
 
   std::string proxy_url;
