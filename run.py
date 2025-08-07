@@ -255,7 +255,7 @@ def install_deps(
             }
             install_cuda_windows(**install_cuda_args)
 
-        # Intel oneVPL
+        # Intel VPL
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             install_vpl_args = {
                 "version": version["VPL_VERSION"],

@@ -31,7 +31,7 @@ sudo apt-get upgrade
 sudo apt-get install libdrm2 libva2 libva-drm2
 ```
 
-oneVPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+Intel VPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
 
 ## 実行権限の付与
 
