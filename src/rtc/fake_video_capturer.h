@@ -61,30 +61,6 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   friend class webrtc::RefCountedObject<FakeVideoCapturer>;
 };
 
-#else  // USE_FAKE_CAPTURE_DEVICE
-
-// Blend2D が無い場合のダミー実装
-class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
- public:
-  struct Config : sora::ScalableVideoTrackSourceConfig {
-    int width = 640;
-    int height = 480;
-    int fps = 30;
-  };
-
-  static webrtc::scoped_refptr<FakeVideoCapturer> Create(Config config) {
-    return webrtc::make_ref_counted<FakeVideoCapturer>(std::move(config));
-  }
-
-  ~FakeVideoCapturer() {}
-
- protected:
-  explicit FakeVideoCapturer(Config config)
-      : sora::ScalableVideoTrackSource(config) {}
-
-  friend class webrtc::RefCountedObject<FakeVideoCapturer>;
-};
-
 #endif  // USE_FAKE_CAPTURE_DEVICE
 
 #endif  // RTC_FAKE_VIDEO_CAPTURER_H_
