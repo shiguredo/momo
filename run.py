@@ -347,7 +347,12 @@ def install_deps(
         install_cli11(**install_cli11_args)
 
         # Blend2D (fake capture device用)
-        if not disable_fake_capture_device:
+        # ARM プラットフォームでは blend2d をインストールしない
+        is_arm_platform = (
+            platform.name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
+            platform.target.arch == "arm"
+        )
+        if not disable_fake_capture_device and not is_arm_platform:
             install_blend2d_args = {
                 "version": version["BLEND2D_VERSION"],
                 "version_file": os.path.join(install_dir, "blend2d.version"),
@@ -552,7 +557,12 @@ def main():
         cmake_args.append(f"-DOPENH264_ROOT_DIR={os.path.join(install_dir, 'openh264')}")
         
         # Fake capture device (Blend2D)
-        if not args.disable_fake_capture_device:
+        # ARM プラットフォームでは fake capture device を無効化
+        is_arm_platform = (
+            platform.name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
+            platform.target.arch == "arm"
+        )
+        if not args.disable_fake_capture_device and not is_arm_platform:
             cmake_args.append("-DUSE_FAKE_CAPTURE_DEVICE=ON")
             cmake_args.append(f"-DBlend2D_ROOT={cmake_path(os.path.join(install_dir, 'blend2d'))}")
 
