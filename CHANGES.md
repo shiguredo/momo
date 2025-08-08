@@ -11,6 +11,9 @@
 
 ## develop
 
+- [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
+  - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更
+  - @voluntas
 - [CHANGE] Sora mode の type: connect から multistream 項目を削除
   - Sora が multistream 項目を廃止したため削除
   - @voluntas
@@ -61,6 +64,9 @@
 - [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
   - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
+- [ADD] run.py に format サブコマンドを追加
+  - `python3 run.py format` で clang-format を実行可能に
+  - @voluntas
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
 - [ADD] libcamera のコントロール機能を追加

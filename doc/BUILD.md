@@ -37,21 +37,21 @@ Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下�
 
 ## ビルドする
 
-`python3 run.py <target>` というコマンドで、各ターゲット向けの Momo を生成できます。
+`python3 run.py build <target>` というコマンドで、各ターゲット向けの Momo を生成できます。
 
 ```bash
 # このコマンドは Windows 上でしか動作しません。
 # また、コマンドプロンプトや PowerShell 上で実行して下さい。
 # Git Bash や Cygwin などのシェル上では動作しません。
-python3 run.py windows_x86_64
+python3 run.py build windows_x86_64
 
 # このコマンドは macOS 上でしか動作しません
-python3 run.py macos_arm64
+python3 run.py build macos_arm64
 
 # このコマンドは Ubuntu 上でしか動作しません
-python3 run.py raspberry-pi-os_armv8
-python3 run.py ubuntu-22.04_x86_64
-python3 run.py ubuntu-22.04_jetson
+python3 run.py build raspberry-pi-os_armv8
+python3 run.py build ubuntu-22.04_x86_64
+python3 run.py build ubuntu-22.04_jetson
 ```
 
 生成された Momo の実行バイナリは `_build/<target>/release/momo` ディレクトリにあります。
@@ -62,7 +62,7 @@ python3 run.py ubuntu-22.04_jetson
 
 ```bash
 # windows_x86_64 の部分はビルドするターゲットに合わせて変更してください。
-python3 run.py windows_x86_64 --package
+python3 run.py build windows_x86_64 --package
 ```
 
 生成されたパッケージは `_package/<target>/release` ディレクトリに `momo-2023.1.0_raspberry-pi-os_armv8.tar.gz` のような名前で保存されています。
