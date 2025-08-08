@@ -56,8 +56,8 @@ class SoraDataChannelOnAsio : public RTCDataManager {
     });
   }
 
-  void OnDataChannel(
-      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     dc_.OnDataChannel(data_channel);
   }
 

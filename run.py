@@ -1,4 +1,5 @@
 import argparse
+import glob
 import hashlib
 import logging
 import multiprocessing
@@ -366,32 +367,53 @@ AVAILABLE_TARGETS = [
 WINDOWS_SDK_VERSION = "10.0.20348.0"
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=AVAILABLE_TARGETS)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--relwithdebinfo", action="store_true")
-    add_webrtc_build_arguments(parser)
-    parser.add_argument("--package", action="store_true")
-    parser.add_argument("--disable-cuda", action="store_true")
+def _find_clang_binary(name: str) -> Optional[str]:
+    if shutil.which(name) is not None:
+        return name
+    else:
+        for n in range(50, 14, -1):
+            if shutil.which(f"{name}-{n}") is not None:
+                return f"{name}-{n}"
+    return None
 
-    args = parser.parse_args()
-    if args.target == "windows_x86_64":
+
+def _format(
+    clang_format_path: Optional[str] = None,
+):
+    if clang_format_path is None:
+        clang_format_path = _find_clang_binary("clang-format")
+    if clang_format_path is None:
+        raise Exception("clang-format not found. Please install it or specify the path.")
+    patterns = [
+        "src/**/*.h",
+        "src/**/*.cpp",
+        "src/**/*.mm",
+    ]
+    target_files = []
+    for pattern in patterns:
+        files = glob.glob(pattern, recursive=True)
+        target_files.extend(files)
+    cmd([clang_format_path, "-i"] + target_files)
+
+
+def _build(args):
+    target = args.target
+    if target == "windows_x86_64":
         platform = Platform("windows", get_windows_osver(), "x86_64")
-    elif args.target == "macos_x86_64":
+    elif target == "macos_x86_64":
         platform = Platform("macos", get_macos_osver(), "x86_64")
-    elif args.target == "macos_arm64":
+    elif target == "macos_arm64":
         platform = Platform("macos", get_macos_osver(), "arm64")
-    elif args.target == "ubuntu-22.04_x86_64":
+    elif target == "ubuntu-22.04_x86_64":
         platform = Platform("ubuntu", "22.04", "x86_64")
-    elif args.target == "ubuntu-24.04_x86_64":
+    elif target == "ubuntu-24.04_x86_64":
         platform = Platform("ubuntu", "24.04", "x86_64")
-    elif args.target == "raspberry-pi-os_armv8":
+    elif target == "raspberry-pi-os_armv8":
         platform = Platform("raspberry-pi-os", None, "armv8")
-    elif args.target == "ubuntu-22.04_armv8_jetson":
+    elif target == "ubuntu-22.04_armv8_jetson":
         platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
     else:
-        raise Exception(f"Unknown target {args.target}")
+        raise Exception(f"Unknown target {target}")
 
     logging.info(f"Build platform: {platform.build.package_name}")
     logging.info(f"Target platform: {platform.target.package_name}")
@@ -600,6 +622,35 @@ def main():
             with open(os.path.join(package_dir, "momo.env"), "w") as f:
                 f.write(f"CONTENT_TYPE={content_type}\n")
                 f.write(f"PACKAGE_NAME={archive_name}\n")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    sp = parser.add_subparsers(dest="command")
+    
+    # build コマンド
+    # 将来的に build サブコマンドに移行することを検討
+    # 現在は互換性のため、build サブコマンドがデフォルトの動作となっている
+    bp = sp.add_parser("build")
+    bp.add_argument("target", choices=AVAILABLE_TARGETS)
+    bp.add_argument("--debug", action="store_true")
+    bp.add_argument("--relwithdebinfo", action="store_true")
+    add_webrtc_build_arguments(bp)
+    bp.add_argument("--package", action="store_true")
+    bp.add_argument("--disable-cuda", action="store_true")
+    
+    # format コマンド
+    fp = sp.add_parser("format")
+    fp.add_argument("--clang-format-path", type=str, default=None)
+    
+    args = parser.parse_args()
+    
+    if args.command == "build":
+        _build(args)
+    elif args.command == "format":
+        _format(clang_format_path=args.clang_format_path)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

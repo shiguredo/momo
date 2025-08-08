@@ -431,8 +431,9 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     return false;
   }
 
-  uint64_t timestamp = v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
-                       v4l2_buf->timestamp.tv_usec;
+  uint64_t timestamp =
+      v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
+      v4l2_buf->timestamp.tv_usec;
 
   std::unique_ptr<FrameParams> params;
   {

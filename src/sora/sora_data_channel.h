@@ -69,8 +69,8 @@ class SoraDataChannel : public RTCDataManager {
   }
 
  public:
-  void OnDataChannel(
-      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     std::shared_ptr<Thunk> thunk(new Thunk());
     thunk->p = this;
     thunk->dc = data_channel;

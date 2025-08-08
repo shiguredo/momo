@@ -71,8 +71,7 @@ RTCManager::RTCManager(
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.event_log_factory =
-      absl::make_unique<webrtc::RtcEventLogFactory>(
-          &env.task_queue_factory());
+      absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
 
 #if defined(_WIN32)
   dependencies.adm = worker_thread_->BlockingCall(
@@ -83,8 +82,8 @@ RTCManager::RTCManager(
 #else
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateAudioDeviceModule(
-            webrtc::CreateEnvironment(), audio_layer);
+        return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
+                                               audio_layer);
       });
 #endif
   dependencies.audio_encoder_factory =
@@ -127,7 +126,8 @@ RTCManager::RTCManager(
   }
 
   dependencies.audio_mixer = nullptr;
-  dependencies.audio_processing_builder = std::make_unique<webrtc::BuiltinAudioProcessingBuilder>();
+  dependencies.audio_processing_builder =
+      std::make_unique<webrtc::BuiltinAudioProcessingBuilder>();
 
   webrtc::EnableMedia(dependencies);
 
@@ -246,19 +246,21 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
   //
   // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
-  dependencies.tls_cert_verifier = std::unique_ptr<webrtc::SSLCertificateVerifier>(
-      new RTCSSLVerifier(config_.insecure));
+  dependencies.tls_cert_verifier =
+      std::unique_ptr<webrtc::SSLCertificateVerifier>(
+          new RTCSSLVerifier(config_.insecure));
 
   dependencies.allocator.reset(new webrtc::BasicPortAllocator(
-      webrtc::CreateEnvironment(), context_->default_network_manager(), context_->default_socket_factory(),
-      rtc_config.turn_customizer));
+      webrtc::CreateEnvironment(), context_->default_network_manager(),
+      context_->default_socket_factory(), rtc_config.turn_customizer));
   dependencies.allocator->SetPortRange(
       rtc_config.port_allocator_config.min_port,
       rtc_config.port_allocator_config.max_port);
   dependencies.allocator->set_flags(rtc_config.port_allocator_config.flags);
   if (!config_.proxy_url.empty()) {
     RTC_LOG(LS_INFO) << "Set Proxy: type="
-                     << webrtc::revive::ProxyToString(webrtc::revive::PROXY_HTTPS)
+                     << webrtc::revive::ProxyToString(
+                            webrtc::revive::PROXY_HTTPS)
                      << " url=" << config_.proxy_url
                      << " username=" << config_.proxy_username;
     webrtc::revive::ProxyInfo pi;
