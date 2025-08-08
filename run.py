@@ -350,7 +350,7 @@ def install_deps(
         # Windows と ARM プラットフォームでは blend2d をインストールしない
         disable_blend2d = (
             platform.target.os == "windows" or
-            platform.name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
+            platform.target.package_name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
             platform.target.arch == "arm"
         )
         if not disable_fake_capture_device and not disable_blend2d:
