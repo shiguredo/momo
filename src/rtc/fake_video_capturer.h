@@ -31,7 +31,8 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   static webrtc::scoped_refptr<FakeVideoCapturer> Create(
       Config config,
       webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer = nullptr) {
-    return webrtc::make_ref_counted<FakeVideoCapturer>(std::move(config), audio_capturer);
+    return webrtc::make_ref_counted<FakeVideoCapturer>(std::move(config),
+                                                       audio_capturer);
   }
 
   ~FakeVideoCapturer();
@@ -39,8 +40,9 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
   void StopCapture();
 
  protected:
-  explicit FakeVideoCapturer(Config config,
-                            webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer = nullptr);
+  explicit FakeVideoCapturer(
+      Config config,
+      webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer = nullptr);
 
  private:
   void CaptureThread();
@@ -51,19 +53,23 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
                  std::chrono::high_resolution_clock::time_point now);
   void DrawDigitalClock(BLContext& ctx,
                         std::chrono::high_resolution_clock::time_point now);
-  void Draw7Segment(BLContext& ctx, int digit, double x, double y, 
-                    double width, double height);
+  void Draw7Segment(BLContext& ctx,
+                    int digit,
+                    double x,
+                    double y,
+                    double width,
+                    double height);
   void DrawColon(BLContext& ctx, double x, double y, double height);
 
   Config config_;
   std::unique_ptr<std::thread> capture_thread_;
   std::atomic<bool> stop_capture_{false};
   std::chrono::high_resolution_clock::time_point start_time_;
-  
+
   // Blend2D 関連
   BLImage image_;
   uint32_t frame_counter_ = 0;
-  
+
   // オーディオキャプチャーへの参照
   webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer_;
 

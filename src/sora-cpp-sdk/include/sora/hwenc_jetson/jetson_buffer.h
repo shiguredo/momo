@@ -26,11 +26,12 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
       uint32_t pixfmt,
       std::shared_ptr<JetsonJpegDecoder> decoder);
 
-  static webrtc::scoped_refptr<JetsonBuffer> Create(webrtc::VideoType video_type,
-                                                 int raw_width,
-                                                 int raw_height,
-                                                 int scaled_width,
-                                                 int scaled_height);
+  static webrtc::scoped_refptr<JetsonBuffer> Create(
+      webrtc::VideoType video_type,
+      int raw_width,
+      int raw_height,
+      int scaled_width,
+      int scaled_height);
 
   Type type() const override;
   webrtc::VideoType VideoType() const;

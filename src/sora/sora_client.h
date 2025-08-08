@@ -77,8 +77,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
       const;
   std::shared_ptr<RTCConnection> GetRTCConnection() const;
 
-  void GetStats(std::function<
-                void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+  void GetStats(std::function<void(
+                    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
                     callback) override;
 
  private:
@@ -116,10 +116,11 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
 
  private:
   // DataChannel 周りのコールバック
-  void OnStateChange(
-      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-  void OnMessage(webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
-                 const webrtc::DataBuffer& buffer) override;
+  void OnStateChange(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override;
+  void OnMessage(
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+      const webrtc::DataBuffer& buffer) override;
 
  private:
   // WebRTC からのコールバック

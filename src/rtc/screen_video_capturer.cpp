@@ -19,8 +19,8 @@
 #include <modules/desktop_capture/desktop_capture_options.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/time_utils.h>
 #include <rtc_base/thread.h>
+#include <rtc_base/time_utils.h>
 #include <third_party/libyuv/include/libyuv.h>
 
 #include "native_buffer.h"

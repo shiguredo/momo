@@ -99,7 +99,7 @@ struct RTCManagerConfig {
   std::string proxy_url;
   std::string proxy_username;
   std::string proxy_password;
-  
+
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   webrtc::scoped_refptr<FakeAudioCapturer> fake_audio_capturer;
 #endif

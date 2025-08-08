@@ -19,8 +19,8 @@
 #include <api/scoped_refptr.h>
 #include <base/RTCMacros.h>
 #include <modules/video_capture/video_capture.h>
-#include <sora/scalable_track_source.h>
 #include <rtc_base/thread.h>
+#include <sora/scalable_track_source.h>
 
 RTC_FWD_DECL_OBJC_CLASS(AVCaptureDevice);
 RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
