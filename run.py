@@ -663,8 +663,6 @@ def main():
     sp = parser.add_subparsers(dest="command")
     
     # build コマンド
-    # 将来的に build サブコマンドに移行することを検討
-    # 現在は互換性のため、build サブコマンドがデフォルトの動作となっている
     bp = sp.add_parser("build")
     bp.add_argument("target", choices=AVAILABLE_TARGETS)
     bp.add_argument("--debug", action="store_true")
