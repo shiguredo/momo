@@ -19,7 +19,7 @@
 
 ## ビルドについて
 
-- `python3 run.py <platform>` でビルドすること
+- `python3 run.py build <target>` でビルドすること
 
 ## コミットについて
 
