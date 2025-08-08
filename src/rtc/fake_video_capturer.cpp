@@ -64,6 +64,7 @@ void FakeVideoCapturer::CaptureThread() {
     BLImageData data;
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
+      RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
       std::this_thread::sleep_for(std::chrono::milliseconds(16));
       continue;
     }

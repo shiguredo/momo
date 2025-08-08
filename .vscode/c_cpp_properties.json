@@ -26,6 +26,7 @@
                 "USE_NVCODEC_ENCODER",
                 "USE_VPL_ENCODER",
                 "USE_SCREEN_CAPTURER",
+                "USE_FAKE_CAPTURE_DEVICE",
                 "RTC_ENABLE_H265"
             ],
             "cStandard": "c11",
@@ -58,6 +59,7 @@
                 "USE_NVCODEC_ENCODER",
                 "USE_VPL_ENCODER",
                 "USE_SCREEN_CAPTURER",
+                "USE_FAKE_CAPTURE_DEVICE",
                 "_LIBCPP_ABI_NAMESPACE=Cr",
                 "_LIBCPP_ABI_VERSION=2",
                 "_LIBCPP_DISABLE_AVAILABILITY",
@@ -97,6 +99,7 @@
                 "WEBRTC_LINUX",
                 "USE_JETSON_ENCODER",
                 "USE_SCREEN_CAPTURER",
+                "USE_FAKE_CAPTURE_DEVICE",
                 "_LIBCPP_ABI_NAMESPACE=Cr",
                 "_LIBCPP_ABI_VERSION=2",
                 "_LIBCPP_DISABLE_AVAILABILITY",
