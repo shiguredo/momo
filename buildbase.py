@@ -1443,8 +1443,6 @@ def install_vpl(version, configuration, source_dir, build_dir, install_dir, cmak
 
 
 @versioned
-
-@versioned
 def install_openh264(version, source_dir, install_dir, is_windows):
     rm_rf(os.path.join(source_dir, "openh264"))
     rm_rf(os.path.join(install_dir, "openh264"))
