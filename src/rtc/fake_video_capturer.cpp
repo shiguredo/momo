@@ -53,6 +53,7 @@ void FakeVideoCapturer::CaptureThread() {
   // Blend2D イメージの初期化
   image_.create(config_.width, config_.height, BL_FORMAT_PRGB32);
   frame_counter_ = 0;
+  consecutive_error_count_ = 0;
 
   while (!stop_capture_) {
     auto now = std::chrono::high_resolution_clock::now();
@@ -65,9 +66,20 @@ void FakeVideoCapturer::CaptureThread() {
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
+      consecutive_error_count_++;
+      
+      if (consecutive_error_count_ >= kMaxConsecutiveErrors) {
+        RTC_LOG(LS_ERROR) << "Too many consecutive errors (" << consecutive_error_count_ 
+                          << "), stopping capture thread";
+        break;
+      }
+      
       std::this_thread::sleep_for(std::chrono::milliseconds(16));
       continue;
     }
+    
+    // エラーカウンタをリセット
+    consecutive_error_count_ = 0;
 
     webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(config_.width, config_.height);
@@ -93,7 +105,7 @@ void FakeVideoCapturer::CaptureThread() {
     if (captured) {
       std::this_thread::sleep_for(
           std::chrono::milliseconds(1000 / config_.fps - 2));
-      frame_counter_++;
+      frame_counter_.fetch_add(1, std::memory_order_release);
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -137,16 +149,18 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.fillPie(0, 0, width * 0.3, 0, 2 * pi);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
+  uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
   ctx.fillPie(0, 0, width * 0.3, 0,
-              (frame_counter_ % fps) / static_cast<float>(fps) * 2 * pi);
+              (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
 
   // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
   if (audio_capturer_) {
     // 前フレームと現在フレームの角度を計算
-    uint32_t prev_frame = (frame_counter_ > 0) ? frame_counter_ - 1 : fps - 1;
+    uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+    uint32_t prev_frame = (current_frame > 0) ? current_frame - 1 : fps - 1;
     float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
     float curr_angle =
-        (frame_counter_ % fps) / static_cast<float>(fps) * 360.0f;
+        (current_frame % fps) / static_cast<float>(fps) * 360.0f;
 
     // 0度を通過したかチェック（359度から0度への遷移）
     if (prev_angle > 270.0f && curr_angle < 90.0f) {
@@ -166,7 +180,8 @@ void FakeVideoCapturer::DrawBoxes(
   const int num_boxes = 5;
 
   for (int i = 0; i < num_boxes; i++) {
-    double phase = (frame_counter_ + i * 20) % 100 / 100.0;
+    uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+    double phase = (current_frame + i * 20) % 100 / 100.0;
     double x = phase * (width - box_size);
     double y = height * 0.5 + sin(phase * 3.14159 * 2) * height * 0.2;
 
