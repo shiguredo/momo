@@ -284,7 +284,8 @@ void libcamerac_ControlList_copy(const libcamerac_ControlList* p,
 }
 
 // 文字列をカンマで分割するヘルパー関数
-static std::vector<std::string> split_string(const std::string& str, char delimiter) {
+static std::vector<std::string> split_string(const std::string& str,
+                                             char delimiter) {
   std::vector<std::string> tokens;
   std::stringstream ss(str);
   std::string token;
@@ -295,40 +296,68 @@ static std::vector<std::string> split_string(const std::string& str, char delimi
 }
 
 // enum コントロールの文字列値を数値に変換
-static bool parse_enum_control(const std::string& name, const std::string& value_str, int32_t& result) {
+static bool parse_enum_control(const std::string& name,
+                               const std::string& value_str,
+                               int32_t& result) {
   // 主要な enum コントロールのマッピング
   if (name == "AfMode") {
-    if (value_str == "Manual" || value_str == "0") result = 0;
-    else if (value_str == "Auto" || value_str == "1") result = 1;
-    else if (value_str == "Continuous" || value_str == "2") result = 2;
-    else return false;
+    if (value_str == "Manual" || value_str == "0")
+      result = 0;
+    else if (value_str == "Auto" || value_str == "1")
+      result = 1;
+    else if (value_str == "Continuous" || value_str == "2")
+      result = 2;
+    else
+      return false;
   } else if (name == "AfRange") {
-    if (value_str == "Normal" || value_str == "0") result = 0;
-    else if (value_str == "Macro" || value_str == "1") result = 1;
-    else if (value_str == "Full" || value_str == "2") result = 2;
-    else return false;
+    if (value_str == "Normal" || value_str == "0")
+      result = 0;
+    else if (value_str == "Macro" || value_str == "1")
+      result = 1;
+    else if (value_str == "Full" || value_str == "2")
+      result = 2;
+    else
+      return false;
   } else if (name == "AfSpeed") {
-    if (value_str == "Normal" || value_str == "0") result = 0;
-    else if (value_str == "Fast" || value_str == "1") result = 1;
-    else return false;
+    if (value_str == "Normal" || value_str == "0")
+      result = 0;
+    else if (value_str == "Fast" || value_str == "1")
+      result = 1;
+    else
+      return false;
   } else if (name == "AeMeteringMode") {
-    if (value_str == "CentreWeighted" || value_str == "0") result = 0;
-    else if (value_str == "Spot" || value_str == "1") result = 1;
-    else if (value_str == "Matrix" || value_str == "2") result = 2;
-    else return false;
+    if (value_str == "CentreWeighted" || value_str == "0")
+      result = 0;
+    else if (value_str == "Spot" || value_str == "1")
+      result = 1;
+    else if (value_str == "Matrix" || value_str == "2")
+      result = 2;
+    else
+      return false;
   } else if (name == "AwbMode") {
-    if (value_str == "Auto" || value_str == "0") result = 0;
-    else if (value_str == "Incandescent" || value_str == "1") result = 1;
-    else if (value_str == "Tungsten" || value_str == "2") result = 2;
-    else if (value_str == "Fluorescent" || value_str == "3") result = 3;
-    else if (value_str == "Indoor" || value_str == "4") result = 4;
-    else if (value_str == "Daylight" || value_str == "5") result = 5;
-    else if (value_str == "Cloudy" || value_str == "6") result = 6;
-    else return false;
+    if (value_str == "Auto" || value_str == "0")
+      result = 0;
+    else if (value_str == "Incandescent" || value_str == "1")
+      result = 1;
+    else if (value_str == "Tungsten" || value_str == "2")
+      result = 2;
+    else if (value_str == "Fluorescent" || value_str == "3")
+      result = 3;
+    else if (value_str == "Indoor" || value_str == "4")
+      result = 4;
+    else if (value_str == "Daylight" || value_str == "5")
+      result = 5;
+    else if (value_str == "Cloudy" || value_str == "6")
+      result = 6;
+    else
+      return false;
   } else if (name == "ExposureTimeMode" || name == "AnalogueGainMode") {
-    if (value_str == "Auto" || value_str == "0") result = 0;
-    else if (value_str == "Manual" || value_str == "1") result = 1;
-    else return false;
+    if (value_str == "Auto" || value_str == "0")
+      result = 0;
+    else if (value_str == "Manual" || value_str == "1")
+      result = 1;
+    else
+      return false;
   } else {
     // その他の enum は数値として解析
     result = std::stoi(value_str);
@@ -342,7 +371,7 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
                                        const char* value_str) {
   auto cam = *(std::shared_ptr<libcamera::Camera>*)camera;
   auto list = (libcamera::ControlList*)p;
-  
+
   // カメラのコントロールから名前で検索
   const libcamera::ControlId* controlId = nullptr;
   for (const auto& [control, info] : cam->controls()) {
@@ -351,19 +380,19 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
       break;
     }
   }
-  
+
   if (!controlId) {
     return -1;  // コントロールが見つからない
   }
-  
+
   // 値の解析と設定
   try {
     libcamera::ControlValue value;
     std::string value_string(value_str);
-    
+
     // 配列型かどうかチェック
     bool is_array = controlId->isArray();
-    
+
     switch (controlId->type()) {
       case libcamera::ControlTypeBool: {
         bool val = (value_string == "1" || value_string == "true");
@@ -378,7 +407,8 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
           for (const auto& token : tokens) {
             values.push_back(std::stoi(token));
           }
-          value.set(libcamera::Span<const int32_t>(values.data(), values.size()));
+          value.set(
+              libcamera::Span<const int32_t>(values.data(), values.size()));
         } else {
           // enum かもしれないので、まず文字列として解析を試みる
           int32_t val;
@@ -397,7 +427,8 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
           for (const auto& token : tokens) {
             values.push_back(std::stoll(token));
           }
-          value.set(libcamera::Span<const int64_t>(values.data(), values.size()));
+          value.set(
+              libcamera::Span<const int64_t>(values.data(), values.size()));
         } else {
           int64_t val = std::stoll(value_string);
           value.set<int64_t>(val);
@@ -426,11 +457,10 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
         if (tokens.size() != 4) {
           return -3;  // 不正なフォーマット
         }
-        libcamera::Rectangle rect(
-          std::stoi(tokens[0]),  // x
-          std::stoi(tokens[1]),  // y
-          std::stoi(tokens[2]),  // width
-          std::stoi(tokens[3])   // height
+        libcamera::Rectangle rect(std::stoi(tokens[0]),  // x
+                                  std::stoi(tokens[1]),  // y
+                                  std::stoi(tokens[2]),  // width
+                                  std::stoi(tokens[3])   // height
         );
         if (is_array) {
           // Rectangle配列の場合（例：AfWindows）
@@ -443,13 +473,11 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
               return -3;
             }
             rectangles.emplace_back(
-              std::stoi(rect_tokens[0]),
-              std::stoi(rect_tokens[1]),
-              std::stoi(rect_tokens[2]),
-              std::stoi(rect_tokens[3])
-            );
+                std::stoi(rect_tokens[0]), std::stoi(rect_tokens[1]),
+                std::stoi(rect_tokens[2]), std::stoi(rect_tokens[3]));
           }
-          value.set(libcamera::Span<const libcamera::Rectangle>(rectangles.data(), rectangles.size()));
+          value.set(libcamera::Span<const libcamera::Rectangle>(
+              rectangles.data(), rectangles.size()));
         } else {
           value.set(rect);
         }
@@ -458,7 +486,7 @@ int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
       default:
         return -2;  // サポートされていない型
     }
-    
+
     list->set(controlId->id(), value);
     return 0;
   } catch (...) {
