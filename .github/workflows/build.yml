@@ -189,6 +189,49 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
 
+  test-e2e-ubuntu:
+    name: E2E Test Ubuntu ${{ matrix.os }}
+    needs: build-ubuntu
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: ubuntu-22.04_x86_64
+          - os: ubuntu-24.04
+            target: ubuntu-24.04_x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download ${{ matrix.target }}.env
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.target }}.env
+          path: .
+      - name: Get package name from env
+        run: |
+          source momo.env
+          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_name
+      - name: Download momo package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: .
+      - name: Extract momo binary
+        run: |
+          tar -xzf ${{ steps.package_name.outputs.name }}
+          # ビルドディレクトリ構造を再現
+          mkdir -p _build/${{ matrix.target }}/release/momo
+          mv momo/momo _build/${{ matrix.target }}/release/momo/
+      - uses: astral-sh/setup-uv@v6
+      - name: Run E2E tests
+        run: |
+          uv sync
+          # Test モードのテストのみ実行（Sora モードは環境変数がないためスキップされる）
+          MOMO_TARGET=${{ matrix.target }} uv run pytest test_momo.py -v
+        working-directory: ./e2e-test
+
   create-release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/202')
@@ -196,6 +239,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -246,6 +290,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
       - create-release
     if: always()
     steps:
@@ -255,6 +300,7 @@ jobs:
           needs.build-windows.result == 'failure' ||
           needs.build-macos.result == 'failure' ||
           needs.build-ubuntu.result == 'failure' ||
+          needs.test-e2e-ubuntu.result == 'failure' ||
           needs.create-release.result == 'failure'
         env:
           SLACK_CHANNEL: open-momo
