@@ -218,6 +218,22 @@ int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
     }
   }
 
+  // コントロールを設定
+  for (const auto& [name, value] : config.controls) {
+    int result = libcamerac_ControlList_set_by_name(
+        camera_.get(), controls_.get(), name.c_str(), value.c_str());
+    if (result == -1) {
+      RTC_LOG(LS_WARNING) << "Unknown control: " << name;
+    } else if (result == -2) {
+      RTC_LOG(LS_WARNING) << "Unsupported control type for: " << name;
+    } else if (result == -3) {
+      RTC_LOG(LS_WARNING) << "Invalid control value for " << name << ": "
+                          << value;
+    } else {
+      RTC_LOG(LS_INFO) << "Set control " << name << " = " << value;
+    }
+  }
+
   if (libcamerac_Camera_start(camera_.get(), controls_.get())) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to start camera";
     return -1;

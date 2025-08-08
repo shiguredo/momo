@@ -22,6 +22,8 @@ struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
   // 前者の方が効率が良いけれども、kNative なフレームはサイマルキャスト時に自動で
   // リサイズしてくれないので、状況に応じて使い分けるのが良い。
   bool native_frame_output = false;
+  // libcamera のコントロール設定。key value の形式。
+  std::vector<std::pair<std::string, std::string>> controls;
 };
 
 // Raspberry Pi 専用のカメラからの映像を取得するクラス
