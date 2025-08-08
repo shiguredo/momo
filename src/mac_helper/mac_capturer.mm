@@ -28,7 +28,8 @@
 
 - (void)capturer:(RTCVideoCapturer*)capturer
     didCaptureVideoFrame:(RTCVideoFrame*)frame {
-  const int64_t timestamp_us = frame.timeStampNs / webrtc::kNumNanosecsPerMicrosec;
+  const int64_t timestamp_us =
+      frame.timeStampNs / webrtc::kNumNanosecsPerMicrosec;
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
       webrtc::make_ref_counted<webrtc::ObjCFrameBuffer>(frame.buffer);
   _capturer->OnFrame(webrtc::VideoFrame::Builder()
@@ -112,8 +113,8 @@ webrtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
     return nullptr;
   }
-  return webrtc::make_ref_counted<MacCapturer>(
-          width, height, target_fps, device);
+  return webrtc::make_ref_counted<MacCapturer>(width, height, target_fps,
+                                               device);
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(

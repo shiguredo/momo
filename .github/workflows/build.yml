@@ -43,7 +43,7 @@ jobs:
           key: windows-cuda-${{ steps.versions.outputs.cuda_version }}.v1
       - run: echo "${CUDA_VERSION}" > _install\windows_x86_64\release\cuda.version
         if: steps.cache-cuda.outputs.cache-hit == 'true'
-      - run: python3 run.py --package ${{ matrix.name }}
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           Get-Content "_package\${{ matrix.name }}\release\momo.env" | Foreach-Object {
@@ -73,7 +73,7 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-      - run: python3 run.py --package ${{ matrix.name }}
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env
@@ -172,7 +172,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxfixes-dev libxcomposite-dev libxtst-dev
-      - run: python3 run.py --package ${{ matrix.name }}
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env

@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
   webrtc::LogMessage::LogThreads();
 
   std::unique_ptr<webrtc::FileRotatingLogSink> log_sink(
-      new webrtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
-                                   10));
+      new webrtc::FileRotatingLogSink("./", "webrtc_logs",
+                                      kDefaultMaxLogFileSize, 10));
   if (!log_sink->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to open log file";
     log_sink.reset();
@@ -107,73 +107,75 @@ int main(int argc, char* argv[]) {
   auto amf_context = sora::AMFContext::Create();
 #endif
 
-  auto capturer = ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {
-    if (args.no_video_device) {
-      return nullptr;
-    }
+  auto capturer =
+      ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {
+        if (args.no_video_device) {
+          return nullptr;
+        }
 
 #if defined(USE_SCREEN_CAPTURER)
-    if (args.screen_capture) {
-      RTC_LOG(LS_INFO) << "Screen capturer source list: "
-                       << ScreenVideoCapturer::GetSourceListString();
-      webrtc::DesktopCapturer::SourceList sources;
-      if (!ScreenVideoCapturer::GetSourceList(&sources)) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
-        return nullptr;
-      }
-      auto size = args.GetSize();
-      return webrtc::make_ref_counted<ScreenVideoCapturer>(
-          sources[0].id, size.width, size.height, args.framerate);
-    }
+        if (args.screen_capture) {
+          RTC_LOG(LS_INFO) << "Screen capturer source list: "
+                           << ScreenVideoCapturer::GetSourceListString();
+          webrtc::DesktopCapturer::SourceList sources;
+          if (!ScreenVideoCapturer::GetSourceList(&sources)) {
+            RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
+            return nullptr;
+          }
+          auto size = args.GetSize();
+          return webrtc::make_ref_counted<ScreenVideoCapturer>(
+              sources[0].id, size.width, size.height, args.framerate);
+        }
 #endif
 
-    auto size = args.GetSize();
+        auto size = args.GetSize();
 #if defined(__APPLE__)
-    return MacCapturer::Create(size.width, size.height, args.framerate,
-                               args.video_device);
+        return MacCapturer::Create(size.width, size.height, args.framerate,
+                                   args.video_device);
 #elif defined(__linux__)
-    sora::V4L2VideoCapturerConfig v4l2_config;
-    v4l2_config.video_device = args.video_device;
-    v4l2_config.width = size.width;
-    v4l2_config.height = size.height;
-    v4l2_config.framerate = args.framerate;
-    v4l2_config.force_i420 = args.force_i420;
-    v4l2_config.use_native = args.hw_mjpeg_decoder;
+        sora::V4L2VideoCapturerConfig v4l2_config;
+        v4l2_config.video_device = args.video_device;
+        v4l2_config.width = size.width;
+        v4l2_config.height = size.height;
+        v4l2_config.framerate = args.framerate;
+        v4l2_config.force_i420 = args.force_i420;
+        v4l2_config.use_native = args.hw_mjpeg_decoder;
 
 #if defined(USE_JETSON_ENCODER)
-    if (v4l2_config.use_native) {
-      return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (v4l2_config.use_native) {
+          return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #elif defined(USE_NVCODEC_ENCODER)
-    if (v4l2_config.use_native) {
-      sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
-      nvcodec_config.cuda_context = cuda_context;
-      return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (v4l2_config.use_native) {
+          sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
+          nvcodec_config.cuda_context = cuda_context;
+          return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #elif defined(USE_V4L2_ENCODER)
-    if (args.use_libcamera) {
-      LibcameraCapturerConfig libcamera_config = v4l2_config;
-      // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
-      libcamera_config.native_frame_output =
-          args.use_libcamera_native && !(use_sora && args.sora_simulcast);
-      return LibcameraCapturer::Create(libcamera_config);
-    } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
-      return V4L2Capturer::Create(std::move(v4l2_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (args.use_libcamera) {
+          LibcameraCapturerConfig libcamera_config = v4l2_config;
+          // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
+          libcamera_config.native_frame_output =
+              args.use_libcamera_native && !(use_sora && args.sora_simulcast);
+          return LibcameraCapturer::Create(libcamera_config);
+        } else if (v4l2_config.use_native &&
+                   !(use_sora && args.sora_simulcast)) {
+          return V4L2Capturer::Create(std::move(v4l2_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #else
-    return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif
 #else
-    return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,
-                                       args.video_device);
+        return DeviceVideoCapturer::Create(size.width, size.height,
+                                           args.framerate, args.video_device);
 #endif
-  })();
+      })();
 
   if (!capturer && !args.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
