@@ -27,7 +27,7 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
     return;
   }
 
-  window_ = SDL_CreateWindow("Momo WebRTC Native Client", width_, height_, 
+  window_ = SDL_CreateWindow("Momo WebRTC Native Client", width_, height_,
                              SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed "
@@ -151,14 +151,16 @@ int SDLRenderer::RenderThread() {
         if (width == 0 || height == 0)
           continue;
 
-        SDL_Surface* surface = SDL_CreateSurfaceFrom(
-            width, height, SDL_PIXELFORMAT_ARGB8888, sink->GetImage(), width * 4);
+        SDL_Surface* surface =
+            SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ARGB8888,
+                                  sink->GetImage(), width * 4);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
         SDL_DestroySurface(surface);
 
         SDL_FRect image_rect = {0, 0, (float)width, (float)height};
-        SDL_FRect draw_rect = {(float)sink->GetOffsetX(), (float)sink->GetOffsetY(),
-                               (float)sink->GetWidth(), (float)sink->GetHeight()};
+        SDL_FRect draw_rect = {
+            (float)sink->GetOffsetX(), (float)sink->GetOffsetY(),
+            (float)sink->GetWidth(), (float)sink->GetHeight()};
 
         // flip (自画像とか？)
         //SDL_RenderTextureRotated(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);

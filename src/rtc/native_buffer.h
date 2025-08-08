@@ -9,9 +9,8 @@
 
 class NativeBuffer : public webrtc::VideoFrameBuffer {
  public:
-  static webrtc::scoped_refptr<NativeBuffer> Create(webrtc::VideoType video_type,
-                                                 int width,
-                                                 int height);
+  static webrtc::scoped_refptr<NativeBuffer>
+  Create(webrtc::VideoType video_type, int width, int height);
 
   void InitializeData();
 

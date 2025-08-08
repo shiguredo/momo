@@ -34,8 +34,8 @@ class P2PServer : public std::enable_shared_from_this<P2PServer>,
   }
   void Run();
 
-  void GetStats(std::function<
-                void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+  void GetStats(std::function<void(
+                    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
                     callback) override;
 
  private:

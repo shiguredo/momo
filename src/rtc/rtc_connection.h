@@ -8,9 +8,10 @@
 
 class RTCConnection {
  public:
-  RTCConnection(RTCMessageSender* sender,
-                std::unique_ptr<PeerConnectionObserver> observer,
-                webrtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
+  RTCConnection(
+      RTCMessageSender* sender,
+      std::unique_ptr<PeerConnectionObserver> observer,
+      webrtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
       : sender_(sender),
         observer_(std::move(observer)),
         connection_(connection) {}
@@ -41,9 +42,8 @@ class RTCConnection {
   bool IsAudioEnabled();
   bool IsVideoEnabled();
 
-  void GetStats(
-      std::function<void(
-          const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
+  void GetStats(std::function<void(const webrtc::scoped_refptr<
+                                   const webrtc::RTCStatsReport>&)> callback);
 
   void SetEncodingParameters(
       std::string mid,

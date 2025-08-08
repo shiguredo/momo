@@ -20,12 +20,13 @@
 
 #include "sora/scalable_track_source.h"
 
-class DeviceVideoCapturer : public sora::ScalableVideoTrackSource,
-                            public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+class DeviceVideoCapturer
+    : public sora::ScalableVideoTrackSource,
+      public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   static webrtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
-                                                        size_t height,
-                                                        size_t target_fps);
+                                                           size_t height,
+                                                           size_t target_fps);
   static webrtc::scoped_refptr<DeviceVideoCapturer> Create(
       size_t width,
       size_t height,

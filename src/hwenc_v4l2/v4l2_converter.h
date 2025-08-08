@@ -44,10 +44,11 @@ class V4L2H264EncodeConverter {
  public:
   int fd() const;
 
-  int Encode(const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
-             int64_t timestamp_us,
-             bool force_key_frame,
-             OnCompleteCallback on_complete);
+  int Encode(
+      const webrtc::scoped_refptr<webrtc::VideoFrameBuffer>& frame_buffer,
+      int64_t timestamp_us,
+      bool force_key_frame,
+      OnCompleteCallback on_complete);
 
   ~V4L2H264EncodeConverter();
 

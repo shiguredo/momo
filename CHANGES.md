@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
+  - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更
+  - @voluntas
+- [CHANGE] Sora mode の type: connect から multistream 項目を削除
+  - Sora が multistream 項目を廃止したため削除
+  - @voluntas
 - [CHANGE] SDL2 から SDL3 へ移行
   - SDL を 2.30.8 から 3.2.18 に上げる
   - SDL3 の API 変更に伴い、以下の修正を実施:
@@ -58,6 +64,9 @@
 - [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
   - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
+- [ADD] run.py に format サブコマンドを追加
+  - `python3 run.py format` で clang-format を実行可能に
+  - @voluntas
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
 - [ADD] libcamera のコントロール機能を追加
@@ -68,6 +77,10 @@
 - [FIX] Intel VPL の VP9 エンコーダーでキーフレーム要求が機能しない問題を修正
   - VP9 では `MFX_FRAMETYPE_I` のみを設定するように修正
   - `MFX_FRAMETYPE_REF` や `MFX_FRAMETYPE_IDR` を同時に設定すると vpl-gpu-rt の CheckAndFixCtrl で `MFX_FRAMETYPE_P` に変更されてしまうため
+  - @voluntas
+- [FIX] Intel VPL の AV1 エンコーダーで Dependency Descriptor RTP ヘッダー拡張が出ない問題を修正
+  - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
+  - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
   - @voluntas
 
 ### misc

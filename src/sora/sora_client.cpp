@@ -47,8 +47,8 @@ std::shared_ptr<RTCConnection> SoraClient::GetRTCConnection() const {
 }
 
 void SoraClient::GetStats(
-    std::function<void(const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
-        callback) {
+    std::function<void(
+        const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback) {
   std::shared_ptr<RTCConnection> rtc_conn = GetRTCConnection();
   if (rtc_conn) {
     rtc_conn->GetStats(std::move(callback));
@@ -282,8 +282,6 @@ void SoraClient::DoSendConnect(bool redirect) {
   if (redirect) {
     json_message["redirect"] = true;
   }
-
-  json_message["multistream"] = true;
 
   if (config_.simulcast) {
     json_message["simulcast"] = true;
@@ -604,9 +602,8 @@ void SoraClient::OnRead(boost::system::error_code ec,
     if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
           [self = shared_from_this()](
-              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            self->DoSendPong(report);
-          });
+              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                  report) { self->DoSendPong(report); });
     } else {
       DoSendPong();
     }
