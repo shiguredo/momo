@@ -26,7 +26,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          model: "claude-opus-4-20250514"
+          model: "claude-opus-4-1-20250805"
           trigger_phrase: "!opus"
           timeout_minutes: 15
           disallowed_tools: "Bash(git:*)"

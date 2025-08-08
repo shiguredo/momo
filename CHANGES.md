@@ -80,6 +80,10 @@
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
   - 文字列ベースでコントロールを設定できる API を実装
   - @voluntas
+- [FIX] macOS ビルド時の SDL3 ライブラリのバージョン不一致警告を修正
+  - SDL3 ビルド時に CMAKE_OSX_DEPLOYMENT_TARGET を WebRTC と同じ値に設定
+  - SDL3 が macOS 15.0 でビルドされ、Momo が macOS 12.0 をターゲットにしていたことによる警告を解消
+  - @voluntas
 - [FIX] Intel VPL の VP9 エンコーダーでキーフレーム要求が機能しない問題を修正
   - VP9 では `MFX_FRAMETYPE_I` のみを設定するように修正
   - `MFX_FRAMETYPE_REF` や `MFX_FRAMETYPE_IDR` を同時に設定すると vpl-gpu-rt の CheckAndFixCtrl で `MFX_FRAMETYPE_P` に変更されてしまうため
