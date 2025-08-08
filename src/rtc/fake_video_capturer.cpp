@@ -156,7 +156,6 @@ void FakeVideoCapturer::DrawAnimations(
   // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
   if (audio_capturer_) {
     // 前フレームと現在フレームの角度を計算
-    uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
     uint32_t prev_frame = (current_frame > 0) ? current_frame - 1 : fps - 1;
     float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
     float curr_angle =
