@@ -310,6 +310,9 @@ def install_deps(
             install_sdl3_args["platform"] = "windows"
         elif platform.target.os == "macos":
             install_sdl3_args["platform"] = "macos"
+            install_sdl3_args["cmake_args"] = [
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+            ]
         elif platform.target.os == "ubuntu":
             install_sdl3_args["platform"] = "linux"
         elif platform.target.os in ("jetson", "raspberry-pi-os"):
