@@ -18,7 +18,7 @@ set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効�
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv8")
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
-set(USE_VPL_ENCODER OFF CACHE BOOL "oneVPL のハードウェアエンコーダを利用するかどうか")
+set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
@@ -377,7 +377,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
     )
   endif()
 
-  # oneVPL
+  # Intel VPL
   if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
@@ -505,7 +505,7 @@ elseif (TARGET_OS STREQUAL "linux")
     target_link_libraries(momo PRIVATE cudart_static dl rt)
   endif()
 
-  # oneVPL
+  # Intel VPL
   if (USE_VPL_ENCODER)
     find_package(Libdrm REQUIRED)
     find_package(Libva REQUIRED)

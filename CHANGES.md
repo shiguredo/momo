@@ -72,6 +72,10 @@
   - VP9 では `MFX_FRAMETYPE_I` のみを設定するように修正
   - `MFX_FRAMETYPE_REF` や `MFX_FRAMETYPE_IDR` を同時に設定すると vpl-gpu-rt の CheckAndFixCtrl で `MFX_FRAMETYPE_P` に変更されてしまうため
   - @voluntas
+- [FIX] Intel VPL の AV1 エンコーダーで Dependency Descriptor RTP ヘッダー拡張が出ない問題を修正
+  - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
+  - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
+  - @voluntas
 
 ### misc
 
