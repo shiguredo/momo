@@ -101,6 +101,8 @@ void FakeVideoCapturer::CaptureThread() {
                                         .build());
 
     if (captured) {
+      // スリープ時間を std::chrono::milliseconds(1000 / config_.fps) にすると
+      // 起きるための時間があるからフレームレートが保たれないことがあるので、少し短い時間にする
       std::this_thread::sleep_for(
           std::chrono::milliseconds(1000 / config_.fps - 2));
       frame_counter_ += 1;
@@ -140,16 +142,15 @@ void FakeVideoCapturer::DrawAnimations(
   int height = config_.height;
   int fps = config_.fps;
 
-  const float pi = M_PI;
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
-  ctx.rotate(-pi / 2);
+  ctx.rotate(-M_PI / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.3, 0, 2 * pi);  // 大きくする
+  ctx.fillPie(0, 0, width * 0.3, 0, 2 * M_PI);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
   uint32_t current_frame = frame_counter_;
   ctx.fillPie(0, 0, width * 0.3, 0,
-              (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
+              (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
 
   // 円が一周したときにビープ音を鳴らす
   auto fake_audio_capturer = GetAudioCapturer();
@@ -175,7 +176,7 @@ void FakeVideoCapturer::DrawBoxes(
     uint32_t current_frame = frame_counter_;
     double phase = (current_frame + i * 20) % 100 / 100.0;
     double x = phase * (width - box_size);
-    double y = height * 0.5 + sin(phase * 3.14159 * 2) * height * 0.2;
+    double y = height * 0.5 + sin(phase * M_PI * 2) * height * 0.2;
 
     // 各ボックスに異なる色を設定
     uint32_t color = 0xFF000000;
