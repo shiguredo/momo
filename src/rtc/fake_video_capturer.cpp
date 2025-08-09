@@ -3,6 +3,7 @@
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -139,7 +140,7 @@ void FakeVideoCapturer::DrawAnimations(
   int height = config_.height;
   int fps = config_.fps;
 
-  const float pi = 3.14159f;
+  const float pi = M_PI;
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
   ctx.rotate(-pi / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
@@ -150,16 +151,11 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.fillPie(0, 0, width * 0.3, 0,
               (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
 
-  // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
+  // 円が一周したときにビープ音を鳴らす
   auto fake_audio_capturer = GetAudioCapturer();
   if (fake_audio_capturer) {
-    // 前フレームと現在フレームの角度を計算
-    uint32_t prev_frame = (current_frame > 0) ? current_frame - 1 : fps - 1;
-    float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
-    float curr_angle = (current_frame % fps) / static_cast<float>(fps) * 360.0f;
-
-    // 0度を通過したかチェック（359度から0度への遷移）
-    if (prev_angle > 270.0f && curr_angle < 90.0f) {
+    // 0度になったかチェック
+    if (current_frame % fps == 0) {
       fake_audio_capturer->TriggerBeep();
     }
   }
