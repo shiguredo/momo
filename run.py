@@ -53,7 +53,7 @@ def install_deps(
     debug: bool,
     local_webrtc_build_dir: Optional[str],
     local_webrtc_build_args: List[str],
-    disable_fake_capture_device: bool = False,
+    disable_fake_capture_device: bool,
 ):
     with cd(BASE_DIR):
         version = read_version_file("VERSION")

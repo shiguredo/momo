@@ -113,8 +113,7 @@ int main(int argc, char* argv[]) {
         }
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
-        // --fake-capture-device が指定された場合、FakeAudioCapturer と一緒に生成するので
-        // とりあえず nullptr を返す。
+        // --fake-capture-device が指定された場合は FakeVideoCapturer を使用する
         if (args.fake_capture_device) {
           auto size = args.GetSize();
           FakeVideoCapturer::Config video_config;
@@ -247,6 +246,7 @@ int main(int argc, char* argv[]) {
     audio_config.fps = args.framerate;
     rtcm_config.create_adm = [audio_config, capturer]() {
       auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      // FakeVideoCapturer と連携するために fake_audio_capturer を設定する
       static_cast<FakeVideoCapturer*>(capturer.get())
           ->SetAudioCapturer(fake_audio_capturer);
       return fake_audio_capturer;
