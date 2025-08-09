@@ -204,8 +204,11 @@ RTCManager::RTCManager(
 }
 
 RTCManager::~RTCManager() {
+  config_.create_adm = nullptr;
+  video_sender_ = nullptr;
   audio_track_ = nullptr;
   video_track_ = nullptr;
+  context_ = nullptr;
   factory_ = nullptr;
   network_thread_->Stop();
   worker_thread_->Stop();
