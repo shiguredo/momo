@@ -1,5 +1,4 @@
 #include "rtc/fake_video_capturer.h"
-#include "rtc/fake_audio_capturer.h"
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
@@ -12,17 +11,27 @@
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-FakeVideoCapturer::FakeVideoCapturer(
-    Config config,
-    webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer)
-    : sora::ScalableVideoTrackSource(config),
-      config_(config),
-      audio_capturer_(audio_capturer) {
+#include "rtc/fake_audio_capturer.h"
+
+FakeVideoCapturer::FakeVideoCapturer(Config config)
+    : sora::ScalableVideoTrackSource(config), config_(config) {
   StartCapture();
 }
 
 FakeVideoCapturer::~FakeVideoCapturer() {
   StopCapture();
+}
+
+void FakeVideoCapturer::SetAudioCapturer(
+    webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer) {
+  std::lock_guard<std::mutex> lock(audio_capturer_mutex_);
+  audio_capturer_ = std::move(audio_capturer);
+}
+
+webrtc::scoped_refptr<FakeAudioCapturer> FakeVideoCapturer::GetAudioCapturer()
+    const {
+  std::lock_guard<std::mutex> lock(audio_capturer_mutex_);
+  return audio_capturer_;
 }
 
 void FakeVideoCapturer::StartCapture() {
@@ -67,17 +76,18 @@ void FakeVideoCapturer::CaptureThread() {
     if (result != BL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
       consecutive_error_count_++;
-      
+
       if (consecutive_error_count_ >= kMaxConsecutiveErrors) {
-        RTC_LOG(LS_ERROR) << "Too many consecutive errors (" << consecutive_error_count_ 
+        RTC_LOG(LS_ERROR) << "Too many consecutive errors ("
+                          << consecutive_error_count_
                           << "), stopping capture thread";
         break;
       }
-      
+
       std::this_thread::sleep_for(std::chrono::milliseconds(16));
       continue;
     }
-    
+
     // エラーカウンタをリセット
     consecutive_error_count_ = 0;
 
@@ -154,16 +164,16 @@ void FakeVideoCapturer::DrawAnimations(
               (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
 
   // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
-  if (audio_capturer_) {
+  auto fake_audio_capturer = GetAudioCapturer();
+  if (fake_audio_capturer) {
     // 前フレームと現在フレームの角度を計算
     uint32_t prev_frame = (current_frame > 0) ? current_frame - 1 : fps - 1;
     float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
-    float curr_angle =
-        (current_frame % fps) / static_cast<float>(fps) * 360.0f;
+    float curr_angle = (current_frame % fps) / static_cast<float>(fps) * 360.0f;
 
     // 0度を通過したかチェック（359度から0度への遷移）
     if (prev_angle > 270.0f && curr_angle < 90.0f) {
-      audio_capturer_->TriggerBeep();
+      fake_audio_capturer->TriggerBeep();
     }
   }
 }

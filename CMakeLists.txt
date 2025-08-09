@@ -153,10 +153,6 @@ target_link_libraries(momo
     CLI11::CLI11
 )
 
-if (USE_FAKE_CAPTURE_DEVICE)
-  target_link_libraries(momo PRIVATE Blend2D::Blend2D)
-endif()
-
 target_compile_definitions(momo
   PRIVATE
     # CLI11 は C++17 でのビルドにおいて std::filesystem を利用するが、これを clang で解決するには c++fs のリンクが必要になる。
@@ -251,6 +247,7 @@ if (USE_FAKE_CAPTURE_DEVICE)
       src/rtc/fake_video_capturer.cpp
       src/rtc/fake_audio_capturer.cpp
   )
+  target_link_libraries(momo PRIVATE Blend2D::Blend2D)
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")

@@ -1,6 +1,8 @@
 #ifndef RTC_FAKE_AUDIO_CAPTURER_H_
 #define RTC_FAKE_AUDIO_CAPTURER_H_
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+
 #include <atomic>
 #include <chrono>
 #include <memory>
@@ -14,8 +16,6 @@
 #include <modules/audio_device/audio_device_buffer.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <rtc_base/ref_counted_object.h>
-
-#if defined(USE_FAKE_CAPTURE_DEVICE)
 
 class FakeAudioCapturer : public webrtc::AudioDeviceModule {
  public:

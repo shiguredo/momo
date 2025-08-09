@@ -352,12 +352,11 @@ def install_deps(
 
         # Blend2D (fake capture device用)
         # Windows と ARM プラットフォームでは blend2d をインストールしない
-        disable_blend2d = (
-            platform.target.os == "windows" or
-            platform.target.package_name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
-            platform.target.arch == "arm"
+        disable_fake_capture = platform.target.os == "windows" or platform.target.arch in (
+            "armv8",
+            "arm64",
         )
-        if not disable_fake_capture_device and not disable_blend2d:
+        if not disable_fake_capture_device and not disable_fake_capture:
             install_blend2d_args = {
                 "version": version["BLEND2D_VERSION"],
                 "version_file": os.path.join(install_dir, "blend2d.version"),
@@ -365,7 +364,8 @@ def install_deps(
                 "source_dir": source_dir,
                 "build_dir": build_dir,
                 "install_dir": install_dir,
-                "platform": platform,
+                "ios": False,
+                "cmake_args": [],
             }
             install_blend2d_official(**install_blend2d_args)
 
@@ -579,13 +579,12 @@ def _build(args):
         cmake_args.append(f"-DSDL3_ROOT_DIR={os.path.join(install_dir, 'sdl3')}")
         cmake_args.append(f"-DCLI11_ROOT_DIR={os.path.join(install_dir, 'cli11')}")
         cmake_args.append(f"-DOPENH264_ROOT_DIR={os.path.join(install_dir, 'openh264')}")
-        
+
         # Fake capture device (Blend2D)
         # Windows と ARM プラットフォームでは fake capture device を無効化
-        disable_fake_capture = (
-            platform.target.os == "windows" or
-            platform.target.package_name in ("raspberry-pi-os_armv8", "ubuntu-22.04_armv8_jetson") or
-            platform.target.arch == "arm"
+        disable_fake_capture = platform.target.os == "windows" or platform.target.arch in (
+            "armv8",
+            "arm64",
         )
         if not args.disable_fake_capture_device and not disable_fake_capture:
             cmake_args.append("-DUSE_FAKE_CAPTURE_DEVICE=ON")
@@ -664,7 +663,7 @@ def _build(args):
 def main():
     parser = argparse.ArgumentParser()
     sp = parser.add_subparsers(dest="command")
-    
+
     # build コマンド
     bp = sp.add_parser("build")
     bp.add_argument("target", choices=AVAILABLE_TARGETS)
@@ -673,15 +672,18 @@ def main():
     add_webrtc_build_arguments(bp)
     bp.add_argument("--package", action="store_true")
     bp.add_argument("--disable-cuda", action="store_true")
-    bp.add_argument("--disable-fake-capture-device", action="store_true",
-                    help="Disable fake capture device support (requires Blend2D)")
-    
+    bp.add_argument(
+        "--disable-fake-capture-device",
+        action="store_true",
+        help="Disable fake capture device support (requires Blend2D)",
+    )
+
     # format コマンド
     fp = sp.add_parser("format")
     fp.add_argument("--clang-format-path", type=str, default=None)
-    
+
     args = parser.parse_args()
-    
+
     if args.command == "build":
         _build(args)
     elif args.command == "format":

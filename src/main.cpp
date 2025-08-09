@@ -10,7 +10,9 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
+#include <api/make_ref_counted.h>
 #include <rtc_base/log_sinks.h>
+#include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
 
 #if defined(USE_SCREEN_CAPTURER)
@@ -33,6 +35,11 @@
 #include "rtc/device_video_capturer.h"
 #endif
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#include "rtc/fake_video_capturer.h"
+#endif
+
 #include "serial_data_channel/serial_data_manager.h"
 
 #include "sdl_renderer/sdl_renderer.h"
@@ -40,10 +47,6 @@
 #include "ayame/ayame_client.h"
 #include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-#include "rtc/fake_audio_capturer.h"
-#include "rtc/fake_video_capturer.h"
-#endif
 #include "rtc/rtc_manager.h"
 #include "sora/sora_client.h"
 #include "sora/sora_server.h"
@@ -110,16 +113,15 @@ int main(int argc, char* argv[]) {
         }
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
-        // fake-capture-device が指定された場合は FakeVideoCapturer を使用
+        // --fake-capture-device が指定された場合、FakeAudioCapturer と一緒に生成するので
+        // とりあえず nullptr を返す。
         if (args.fake_capture_device) {
           auto size = args.GetSize();
-          FakeVideoCapturer::Config config;
-          config.width = size.width;
-          config.height = size.height;
-          config.fps = args.framerate;
-
-          // FakeVideoCapturer のみ返す（FakeAudioCapturer は後で作成）
-          return FakeVideoCapturer::Create(config);
+          FakeVideoCapturer::Config video_config;
+          video_config.width = size.width;
+          video_config.height = size.height;
+          video_config.fps = args.framerate;
+          return FakeVideoCapturer::Create(video_config);
         }
 #endif
 
@@ -236,25 +238,19 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_password = args.proxy_password;
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
-  // fake-capture-device が指定された場合は FakeAudioCapturer も作成
+  // --fake-capture-device が指定された場合、
+  // rtcm_config.create_adm で FakeAudioCapturer を作成する
   if (args.fake_capture_device && !args.no_audio_device) {
     FakeAudioCapturer::Config audio_config;
     audio_config.sample_rate = 48000;
     audio_config.channels = 1;
     audio_config.fps = args.framerate;
-    auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
-    rtcm_config.fake_audio_capturer = fake_audio_capturer;
-
-    // FakeVideoCapturer に FakeAudioCapturer を渡す
-    if (capturer) {
-      // すでに作成された FakeVideoCapturer を再作成
-      auto size = args.GetSize();
-      FakeVideoCapturer::Config video_config;
-      video_config.width = size.width;
-      video_config.height = size.height;
-      video_config.fps = args.framerate;
-      capturer = FakeVideoCapturer::Create(video_config, fake_audio_capturer);
-    }
+    rtcm_config.create_adm = [audio_config, capturer]() {
+      auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      static_cast<FakeVideoCapturer*>(capturer.get())
+          ->SetAudioCapturer(fake_audio_capturer);
+      return fake_audio_capturer;
+    };
   }
 #endif
 

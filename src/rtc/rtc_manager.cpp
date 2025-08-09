@@ -68,14 +68,6 @@ RTCManager::RTCManager(
     audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
   }
 
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-  // fake_audio_capturer が設定されている場合は、それを使用
-  if (config_.fake_audio_capturer) {
-    audio_layer = webrtc::AudioDeviceModule::
-        kDummyAudio;  // AudioDeviceModule を作成しない
-  }
-#endif
-
   auto env = webrtc::CreateEnvironment();
 
   webrtc::PeerConnectionFactoryDependencies dependencies;
@@ -85,27 +77,21 @@ RTCManager::RTCManager(
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
 
-#if defined(_WIN32)
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-            &env.task_queue_factory());
-      });
+        // create_adm が設定されている場合は、それを使って ADM を作成する
+        if (config_.create_adm) {
+          return config_.create_adm();
+        } else {
+#if defined(_WIN32)
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+              &env.task_queue_factory());
 #else
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-  if (config_.fake_audio_capturer) {
-    dependencies.adm = config_.fake_audio_capturer;
-  } else {
-#endif
-    dependencies.adm = worker_thread_->BlockingCall(
-        [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
           return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                  audio_layer);
-        });
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-  }
 #endif
-#endif
+        }
+      });
   dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
   dependencies.audio_decoder_factory =
