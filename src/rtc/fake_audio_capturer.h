@@ -29,6 +29,7 @@ class FakeAudioCapturer : public webrtc::AudioDeviceModule {
     return webrtc::make_ref_counted<FakeAudioCapturer>(std::move(config));
   }
 
+  FakeAudioCapturer(Config config);
   ~FakeAudioCapturer() override;
 
   // ビデオから円が一周したタイミングでビープ音を鳴らす
@@ -149,16 +150,13 @@ class FakeAudioCapturer : public webrtc::AudioDeviceModule {
   int32_t EnableBuiltInAGC(bool enable) override { return 0; }
   int32_t EnableBuiltInNS(bool enable) override { return 0; }
 
- protected:
-  explicit FakeAudioCapturer(Config config);
-
  private:
   void AudioThread();
   void GenerateBeep(std::vector<int16_t>& buffer, int samples);
   void GenerateSilence(std::vector<int16_t>& buffer, int samples);
 
-  Config config_;
   webrtc::Environment env_;
+  Config config_;
   std::unique_ptr<webrtc::AudioDeviceBuffer> device_buffer_;
   std::unique_ptr<std::thread> audio_thread_;
   std::atomic<bool> stop_audio_thread_{false};
@@ -174,8 +172,6 @@ class FakeAudioCapturer : public webrtc::AudioDeviceModule {
   double beep_phase_ = 0.0;           // sin波の位相
   const int beep_duration_ms_ = 100;  // ビープ音の長さ（ミリ秒）
   const int beep_frequency_ = 1000;   // ビープ音の周波数（Hz）
-
-  friend class webrtc::RefCountedObject<FakeAudioCapturer>;
 };
 
 #endif  // USE_FAKE_CAPTURE_DEVICE

@@ -67,11 +67,7 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
 
   // Blend2D 関連
   BLImage image_;
-  std::atomic<uint32_t> frame_counter_{0};
-
-  // エラーハンドリング用
-  static constexpr int kMaxConsecutiveErrors = 10;
-  int consecutive_error_count_ = 0;
+  uint32_t frame_counter_ = 0;
 
   mutable std::mutex audio_capturer_mutex_;
   webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer_;

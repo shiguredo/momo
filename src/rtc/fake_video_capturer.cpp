@@ -62,7 +62,6 @@ void FakeVideoCapturer::CaptureThread() {
   // Blend2D イメージの初期化
   image_.create(config_.width, config_.height, BL_FORMAT_PRGB32);
   frame_counter_ = 0;
-  consecutive_error_count_ = 0;
 
   while (!stop_capture_) {
     auto now = std::chrono::high_resolution_clock::now();
@@ -75,21 +74,9 @@ void FakeVideoCapturer::CaptureThread() {
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
-      consecutive_error_count_++;
-
-      if (consecutive_error_count_ >= kMaxConsecutiveErrors) {
-        RTC_LOG(LS_ERROR) << "Too many consecutive errors ("
-                          << consecutive_error_count_
-                          << "), stopping capture thread";
-        break;
-      }
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(16));
-      continue;
+      RTC_LOG(LS_ERROR) << "Stopping capture thread";
+      break;
     }
-
-    // エラーカウンタをリセット
-    consecutive_error_count_ = 0;
 
     webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(config_.width, config_.height);
@@ -115,7 +102,7 @@ void FakeVideoCapturer::CaptureThread() {
     if (captured) {
       std::this_thread::sleep_for(
           std::chrono::milliseconds(1000 / config_.fps - 2));
-      frame_counter_.fetch_add(1, std::memory_order_release);
+      frame_counter_ += 1;
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -159,7 +146,7 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.fillPie(0, 0, width * 0.3, 0, 2 * pi);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
-  uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+  uint32_t current_frame = frame_counter_;
   ctx.fillPie(0, 0, width * 0.3, 0,
               (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
 
@@ -189,7 +176,7 @@ void FakeVideoCapturer::DrawBoxes(
   const int num_boxes = 5;
 
   for (int i = 0; i < num_boxes; i++) {
-    uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+    uint32_t current_frame = frame_counter_;
     double phase = (current_frame + i * 20) % 100 / 100.0;
     double x = phase * (width - box_size);
     double y = height * 0.5 + sin(phase * 3.14159 * 2) * height * 0.2;
