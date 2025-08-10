@@ -4,8 +4,8 @@ import pytest
 
 # Sora モードのテストは TEST_SORA_SIGNALING_URLS が設定されていない場合スキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SORA_SIGNALING_URLS"),
-    reason="TEST_SORA_SIGNALING_URLS not set in environment",
+    not os.environ.get("TEST_SIGNALING_URLS"),
+    reason="TEST_SIGNALING_URLS not set in environment",
 )
 
 

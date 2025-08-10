@@ -6,4 +6,4 @@ requires-python = ">=3.13"
 dependencies = []
 
 [dependency-groups]
-dev = ["pytest", "httpx", "python-dotenv", "ruff", "ty"]
+dev = ["pytest", "httpx", "python-dotenv", "ruff", "ty", "pyjwt"]
