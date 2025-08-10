@@ -302,7 +302,12 @@ def _extractzip(z: zipfile.ZipFile, path: str):
 def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[str] = None):
     path = os.path.join(output_dir, output_dirname)
     logging.info(f"Extract {file} to {path}")
-    if filetype == "gzip" or file.endswith(".tar.gz"):
+    if (
+        filetype == "gzip"
+        or file.endswith(".tar.gz")
+        or filetype == "lzma"
+        or file.endswith(".tar.xz")
+    ):
         rm_rf(path)
         with tarfile.open(file) as t:
             dir = is_single_dir_tar(t)

@@ -21,6 +21,12 @@
   - VideoCodecInfo に AMD タイプを追加し、`--video-codec-engines` で確認可能
   - Sora C++ SDK の AMF 実装を取り込み、namespace を sora:: に統一
   - @voluntas
+- [ADD] `--fake-capture-device` オプションを追加する
+  - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
+  - デジタル時計、アニメーション、7 セグメントディスプレイを表示
+  - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
+  - macOS と Ubuntu x86_64 プラットフォームのみ対応
+  - @voluntas
 - [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
   - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更
   - @voluntas
@@ -80,9 +86,13 @@
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
 - [ADD] libcamera のコントロール機能を追加
-  - `--libcamera-control` オプションで key=value 形式でコントロールを指定可能
+  - `--libcamera-control` オプションで key value 形式でコントロールを指定可能
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
   - 文字列ベースでコントロールを設定できる API を実装
+  - @voluntas
+- [FIX] macOS ビルド時の SDL3 ライブラリのバージョン不一致警告を修正
+  - SDL3 ビルド時に CMAKE_OSX_DEPLOYMENT_TARGET を WebRTC と同じ値に設定
+  - SDL3 が macOS 15.0 でビルドされ、Momo が macOS 12.0 をターゲットにしていたことによる警告を解消
   - @voluntas
 - [FIX] Intel VPL の VP9 エンコーダーでキーフレーム要求が機能しない問題を修正
   - VP9 では `MFX_FRAMETYPE_I` のみを設定するように修正

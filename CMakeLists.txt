@@ -22,6 +22,7 @@ set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコー�
 set(USE_AMF_ENCODER OFF CACHE BOOL "AMD AMF のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
+set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
 set(SDL3_ROOT_DIR "" CACHE PATH "SDL3 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL3 を利用する")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
@@ -92,6 +93,9 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem json)
 find_package(CLI11 REQUIRED)
+if (USE_FAKE_CAPTURE_DEVICE)
+  find_package(Blend2D REQUIRED)
+endif()
 find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
@@ -165,6 +169,7 @@ target_compile_definitions(momo
     $<$<BOOL:${USE_AMF_ENCODER}>:USE_AMF_ENCODER>
     $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
     $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
+    $<$<BOOL:${USE_FAKE_CAPTURE_DEVICE}>:USE_FAKE_CAPTURE_DEVICE>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
     BOOST_NO_CXX98_FUNCTION_BASE
 )
@@ -238,6 +243,15 @@ if (USE_SCREEN_CAPTURER)
         "-framework IOSurface"
     )
   endif()
+endif()
+
+if (USE_FAKE_CAPTURE_DEVICE)
+  target_sources(momo
+    PRIVATE
+      src/rtc/fake_video_capturer.cpp
+      src/rtc/fake_audio_capturer.cpp
+  )
+  target_link_libraries(momo PRIVATE Blend2D::Blend2D)
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")

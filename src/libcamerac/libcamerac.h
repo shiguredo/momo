@@ -212,6 +212,12 @@ extern void libcamerac_ControlList_clear(libcamerac_ControlList* p);
 extern void libcamerac_ControlList_copy(const libcamerac_ControlList* p,
                                         libcamerac_ControlList* control_list);
 
+// コントロール設定用API
+extern int libcamerac_ControlList_set_by_name(libcamerac_Camera* camera,
+                                              libcamerac_ControlList* p,
+                                              const char* name,
+                                              const char* value_str);
+
 // libcamerac_Request
 
 extern void libcamerac_Request_destroy(libcamerac_Request* p);

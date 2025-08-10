@@ -89,6 +89,10 @@ void Util::ParseArgs(int argc,
                "Do not use video device");
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  app.add_flag("--fake-capture-device", args.fake_capture_device,
+               "Use fake video capture device instead of real camera");
+#endif
   app.add_flag(
       "--force-i420", args.force_i420,
       "Prefer I420 format for video capture (only on supported devices)");
@@ -101,6 +105,9 @@ void Util::ParseArgs(int argc,
                "Use libcamera for video capture (only on supported devices)");
   app.add_flag("--use-libcamera-native", args.use_libcamera_native,
                "Use native buffer for H.264 encoding");
+  app.add_option("--libcamera-control", args.libcamera_controls,
+                 "Set libcamera control (format: key value)")
+      ->allow_extra_args();
 
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,

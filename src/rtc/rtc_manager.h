@@ -100,6 +100,8 @@ struct RTCManagerConfig {
   std::string proxy_url;
   std::string proxy_username;
   std::string proxy_password;
+
+  std::function<webrtc::scoped_refptr<webrtc::AudioDeviceModule>()> create_adm;
 };
 
 class RTCManager {
