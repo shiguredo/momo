@@ -62,11 +62,20 @@ def momo_executable():
 @pytest.fixture(scope="function")
 def momo_server(momo_executable):
     """momo を --test モードと --metrics-port で起動するフィクスチャ"""
-    metrics_port = 8080  # テスト用のポート
+    metrics_port = 9090  # メトリクス用のポート
+    port = 8080  # WebSocket/HTTP 用のポート
 
     # momo を test モードで起動（映像・音声なし）
     process = subprocess.Popen(
-        [momo_executable, "--metrics-port", str(metrics_port), "--fake-capture-device", "test"],
+        [
+            momo_executable,
+            "--metrics-port",
+            str(metrics_port),
+            "--fake-capture-device",
+            "test",
+            "--port",
+            str(port),
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -136,7 +145,7 @@ def sora_server(momo_executable):
 
         metadata = {"access_token": access_token}
 
-    metrics_port = 8081  # Sora モード用のポート
+    metrics_port = 9090  # メトリクス用のポート
 
     # コマンドライン引数を構築
     cmd = [
