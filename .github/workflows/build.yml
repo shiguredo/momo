@@ -13,6 +13,7 @@ on:
 
 jobs:
   build-windows:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +65,7 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
   build-macos:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -94,10 +96,10 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - raspberry-pi-os_armv8
-          - ubuntu-22.04_x86_64
+          # - raspberry-pi-os_armv8
+          # - ubuntu-22.04_x86_64
           - ubuntu-24.04_x86_64
-          - ubuntu-22.04_armv8_jetson
+          # - ubuntu-22.04_armv8_jetson
     name: Build momo for ${{ matrix.name }}
     runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
     steps:
@@ -196,13 +198,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            target: ubuntu-22.04_x86_64
+          # - os: ubuntu-22.04
+          #   target: ubuntu-22.04_x86_64
           - os: ubuntu-24.04
             target: ubuntu-24.04_x86_64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libdrm2 libva2 libva-drm2
       - name: Download ${{ matrix.target }}.env
         uses: actions/download-artifact@v4
         with:
@@ -287,7 +293,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
