@@ -122,7 +122,7 @@ def sora_server(momo_executable):
     # 環境変数から設定を取得
     signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
     channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret = os.environ.get("TEST_SECRET", "")
+    secret_key = os.environ.get("TEST_SECRET_KEY", "")
 
     if not signaling_urls:
         pytest.skip("TEST_SORA_SIGNALING_URLS is not set in .env file")
@@ -130,7 +130,7 @@ def sora_server(momo_executable):
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
     metadata: dict[str, str] = {}
-    if secret:
+    if secret_key:
         payload = {
             "channel_id": channel_id,
             # 現在時刻 + 300 秒 (5分)
@@ -139,7 +139,7 @@ def sora_server(momo_executable):
 
         access_token = jwt.encode(
             payload,
-            secret,
+            secret_key,
             algorithm="HS256",
         )
 

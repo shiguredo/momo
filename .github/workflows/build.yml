@@ -237,8 +237,13 @@ jobs:
         run: |
           uv sync
           # Test モードのテストのみ実行（Sora モードは環境変数がないためスキップされる）
-          MOMO_TARGET=${{ matrix.target }} uv run pytest test_momo.py -v
+          uv run pytest test_momo.py -v
         working-directory: ./e2e-test
+        env:
+          MOMO_TARGET: ${{ matrix.target }}
+          TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+          TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+          TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
 
   create-release:
     name: Create Release
