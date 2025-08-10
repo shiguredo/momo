@@ -9,6 +9,10 @@
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#endif
 #include <api/enable_media.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
@@ -73,19 +77,21 @@ RTCManager::RTCManager(
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
 
+  dependencies.adm = worker_thread_->BlockingCall(
+      [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
+        // create_adm が設定されている場合は、それを使って ADM を作成する
+        if (config_.create_adm) {
+          return config_.create_adm();
+        } else {
 #if defined(_WIN32)
-  dependencies.adm = worker_thread_->BlockingCall(
-      [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-            &env.task_queue_factory());
-      });
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+              &env.task_queue_factory());
 #else
-  dependencies.adm = worker_thread_->BlockingCall(
-      [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
-        return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
-                                               audio_layer);
-      });
+          return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
+                                                 audio_layer);
 #endif
+        }
+      });
   dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
   dependencies.audio_decoder_factory =
@@ -198,8 +204,11 @@ RTCManager::RTCManager(
 }
 
 RTCManager::~RTCManager() {
+  config_.create_adm = nullptr;
+  video_sender_ = nullptr;
   audio_track_ = nullptr;
   video_track_ = nullptr;
+  context_ = nullptr;
   factory_ = nullptr;
   network_thread_->Stop();
   worker_thread_->Stop();

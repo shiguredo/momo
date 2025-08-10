@@ -10,7 +10,9 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
+#include <api/make_ref_counted.h>
 #include <rtc_base/log_sinks.h>
+#include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
 
 #if defined(USE_SCREEN_CAPTURER)
@@ -31,6 +33,11 @@
 #include "sora/v4l2/v4l2_video_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
+#endif
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#include "rtc/fake_video_capturer.h"
 #endif
 
 #include "serial_data_channel/serial_data_manager.h"
@@ -104,6 +111,18 @@ int main(int argc, char* argv[]) {
         if (args.no_video_device) {
           return nullptr;
         }
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+        // --fake-capture-device が指定された場合は FakeVideoCapturer を使用する
+        if (args.fake_capture_device) {
+          auto size = args.GetSize();
+          FakeVideoCapturer::Config video_config;
+          video_config.width = size.width;
+          video_config.height = size.height;
+          video_config.fps = args.framerate;
+          return FakeVideoCapturer::Create(video_config);
+        }
+#endif
 
 #if defined(USE_SCREEN_CAPTURER)
         if (args.screen_capture) {
@@ -216,6 +235,24 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_url = args.proxy_url;
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  // --fake-capture-device が指定された場合、
+  // rtcm_config.create_adm で FakeAudioCapturer を作成する
+  if (args.fake_capture_device && !args.no_audio_device) {
+    FakeAudioCapturer::Config audio_config;
+    audio_config.sample_rate = 48000;
+    audio_config.channels = 1;
+    audio_config.fps = args.framerate;
+    rtcm_config.create_adm = [audio_config, capturer]() {
+      auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      // FakeVideoCapturer と連携するために fake_audio_capturer を設定する
+      static_cast<FakeVideoCapturer*>(capturer.get())
+          ->SetAudioCapturer(fake_audio_capturer);
+      return fake_audio_capturer;
+    };
+  }
+#endif
 
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {
