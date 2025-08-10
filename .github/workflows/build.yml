@@ -224,6 +224,8 @@ jobs:
           # ビルドディレクトリ構造を再現
           mkdir -p _build/${{ matrix.target }}/release/momo
           mv momo/momo _build/${{ matrix.target }}/release/momo/
+          # 実行権限を付与
+          chmod +x _build/${{ matrix.target }}/release/momo/momo
       - uses: astral-sh/setup-uv@v6
       - name: Run E2E tests
         run: |
