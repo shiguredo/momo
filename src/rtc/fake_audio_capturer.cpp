@@ -9,7 +9,7 @@
 #include <rtc_base/logging.h>
 
 FakeAudioCapturer::FakeAudioCapturer(Config config)
-    : config_(config), env_(webrtc::CreateEnvironment()) {}
+    : env_(webrtc::CreateEnvironment()), config_(config) {}
 
 FakeAudioCapturer::~FakeAudioCapturer() {
   Terminate();
@@ -46,8 +46,8 @@ int32_t FakeAudioCapturer::Terminate() {
   microphone_initialized_ = false;
   recording_initialized_ = false;
 
-  if (audio_thread_ && audio_thread_->joinable()) {
-    stop_audio_thread_.store(true, std::memory_order_release);
+  if (audio_thread_) {
+    stop_audio_thread_.store(true);
     audio_thread_->join();
     audio_thread_.reset();
   }
@@ -83,7 +83,7 @@ bool FakeAudioCapturer::RecordingIsInitialized() const {
 
 int32_t FakeAudioCapturer::StartRecording() {
   if (!audio_thread_) {
-    stop_audio_thread_.store(false, std::memory_order_release);
+    stop_audio_thread_.store(false);
     audio_thread_ = std::make_unique<std::thread>([this] { AudioThread(); });
   }
   is_recording_ = true;
@@ -92,8 +92,8 @@ int32_t FakeAudioCapturer::StartRecording() {
 
 int32_t FakeAudioCapturer::StopRecording() {
   is_recording_ = false;
-  if (audio_thread_ && audio_thread_->joinable()) {
-    stop_audio_thread_.store(true, std::memory_order_release);
+  if (audio_thread_) {
+    stop_audio_thread_.store(true);
     audio_thread_->join();
     audio_thread_.reset();
   }
@@ -119,9 +119,9 @@ void FakeAudioCapturer::AudioThread() {
   std::vector<int16_t> buffer(samples_per_10ms * config_.channels);
 
   auto next_time = std::chrono::steady_clock::now();
-  const auto interval = std::chrono::microseconds(10000);  // 10ms = 10000us
+  const auto interval = std::chrono::milliseconds(10);
 
-  while (!stop_audio_thread_.load(std::memory_order_acquire)) {
+  while (!stop_audio_thread_.load()) {
     // ビープ音の生成またはサイレンス
     {
       std::lock_guard<std::mutex> lock(beep_mutex_);

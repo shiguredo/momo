@@ -302,7 +302,12 @@ def _extractzip(z: zipfile.ZipFile, path: str):
 def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[str] = None):
     path = os.path.join(output_dir, output_dirname)
     logging.info(f"Extract {file} to {path}")
-    if filetype == "gzip" or file.endswith(".tar.gz"):
+    if (
+        filetype == "gzip"
+        or file.endswith(".tar.gz")
+        or filetype == "lzma"
+        or file.endswith(".tar.xz")
+    ):
         rm_rf(path)
         with tarfile.open(file) as t:
             dir = is_single_dir_tar(t)
@@ -1333,52 +1338,6 @@ def install_cli11(version, install_dir):
     )
 
 
-@versioned  
-def install_blend2d_official(version, configuration=None, source_dir=None, build_dir=None, install_dir=None, platform=None):
-    rm_rf(os.path.join(source_dir, "blend2d"))
-    rm_rf(os.path.join(build_dir, "blend2d"))
-    rm_rf(os.path.join(install_dir, "blend2d"))
-    
-    # Blend2D の公式サイトから tar.gz をダウンロード
-    url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
-    path = download(url, source_dir)
-    extract(path, source_dir, "blend2d")
-    
-    # ビルド
-    _build_blend2d(
-        configuration=configuration,
-        source_dir=source_dir,
-        build_dir=build_dir,
-        install_dir=install_dir,
-        platform=platform,
-    )
-
-
-def _build_blend2d(configuration, source_dir, build_dir, install_dir, platform):
-    mkdir_p(os.path.join(build_dir, "blend2d"))
-    with cd(os.path.join(build_dir, "blend2d")):
-        cmake_args = [
-            f"-DCMAKE_BUILD_TYPE={configuration}",
-            f"-DCMAKE_INSTALL_PREFIX={cmake_path(os.path.join(install_dir, 'blend2d'))}",
-            "-DBLEND2D_STATIC=ON",
-        ]
-        
-        # プラットフォーム固有の設定
-        if platform and platform.target.os == "macos":
-            sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
-            arch = "x86_64" if platform.target.arch == "x86_64" else "arm64"
-            cmake_args.extend([
-                f"-DCMAKE_SYSTEM_PROCESSOR={arch}",
-                f"-DCMAKE_OSX_ARCHITECTURES={arch}",
-                f"-DCMAKE_OSX_DEPLOYMENT_TARGET=12.0",
-                f"-DCMAKE_OSX_SYSROOT={sysroot}",
-            ])
-        
-        cmd(["cmake", cmake_path(os.path.join(source_dir, "blend2d"))] + cmake_args)
-        cmd(["cmake", "--build", ".", "--config", configuration])
-        cmd(["cmake", "--install", ".", "--config", configuration])
-
-
 @versioned
 def install_cuda_windows(version, source_dir, build_dir, install_dir):
     rm_rf(os.path.join(build_dir, "cuda"))
@@ -1440,6 +1399,119 @@ def install_vpl(version, configuration, source_dir, build_dir, install_dir, cmak
             ["cmake", "--build", ".", f"-j{multiprocessing.cpu_count()}", "--config", configuration]
         )
         cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
+def install_blend2d_official(
+    version,
+    configuration,
+    source_dir,
+    build_dir,
+    install_dir,
+    ios,
+    cmake_args,
+):
+    rm_rf(os.path.join(source_dir, "blend2d"))
+    rm_rf(os.path.join(build_dir, "blend2d"))
+    rm_rf(os.path.join(install_dir, "blend2d"))
+
+    url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
+    path = download(url, source_dir)
+    extract(path, source_dir, "blend2d")
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        ios=ios,
+        cmake_args=cmake_args,
+    )
+
+
+@versioned
+def install_blend2d(
+    version,
+    configuration,
+    source_dir,
+    build_dir,
+    install_dir,
+    blend2d_version,
+    asmjit_version,
+    ios,
+    cmake_args,
+):
+    rm_rf(os.path.join(source_dir, "blend2d"))
+    rm_rf(os.path.join(build_dir, "blend2d"))
+    rm_rf(os.path.join(install_dir, "blend2d"))
+
+    git_clone_shallow(
+        "https://github.com/blend2d/blend2d", blend2d_version, os.path.join(source_dir, "blend2d")
+    )
+    mkdir_p(os.path.join(source_dir, "blend2d", "3rdparty"))
+    git_clone_shallow(
+        "https://github.com/asmjit/asmjit",
+        asmjit_version,
+        os.path.join(source_dir, "blend2d", "3rdparty", "asmjit"),
+    )
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        ios=ios,
+        cmake_args=cmake_args,
+    )
+
+
+def _build_blend2d(configuration, source_dir, build_dir, install_dir, ios, cmake_args):
+    mkdir_p(os.path.join(build_dir, "blend2d"))
+    with cd(os.path.join(build_dir, "blend2d")):
+        cmd(
+            [
+                "cmake",
+                os.path.join(source_dir, "blend2d"),
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(os.path.join(install_dir, 'blend2d'))}",
+                "-DBLEND2D_STATIC=ON",
+                *cmake_args,
+            ]
+        )
+        # 生成されたプロジェクトに対して静的ランタイムを使うように変更する
+        project_path = os.path.join(build_dir, "blend2d", "blend2d.vcxproj")
+        if os.path.exists(project_path):
+            replace_vcproj_static_runtime(project_path)
+
+        if ios:
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                    "--target",
+                    "blend2d",
+                    "--",
+                    "-arch",
+                    "arm64",
+                    "-sdk",
+                    "iphoneos",
+                ]
+            )
+            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
+        else:
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                ]
+            )
+            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
 
 
 @versioned

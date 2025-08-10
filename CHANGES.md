@@ -15,7 +15,7 @@
   - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
   - デジタル時計、アニメーション、7 セグメントディスプレイを表示
   - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
-  - Windows と ARM プラットフォームでは未対応
+  - macOS と Ubuntu x86_64 プラットフォームのみ対応
   - @voluntas
 - [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
   - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更

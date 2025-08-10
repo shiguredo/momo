@@ -1,9 +1,9 @@
 #include "rtc/fake_video_capturer.h"
-#include "rtc/fake_audio_capturer.h"
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -12,17 +12,27 @@
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-FakeVideoCapturer::FakeVideoCapturer(
-    Config config,
-    webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer)
-    : sora::ScalableVideoTrackSource(config),
-      config_(config),
-      audio_capturer_(audio_capturer) {
+#include "rtc/fake_audio_capturer.h"
+
+FakeVideoCapturer::FakeVideoCapturer(Config config)
+    : sora::ScalableVideoTrackSource(config), config_(config) {
   StartCapture();
 }
 
 FakeVideoCapturer::~FakeVideoCapturer() {
   StopCapture();
+}
+
+void FakeVideoCapturer::SetAudioCapturer(
+    webrtc::scoped_refptr<FakeAudioCapturer> audio_capturer) {
+  std::lock_guard<std::mutex> lock(audio_capturer_mutex_);
+  audio_capturer_ = std::move(audio_capturer);
+}
+
+webrtc::scoped_refptr<FakeAudioCapturer> FakeVideoCapturer::GetAudioCapturer()
+    const {
+  std::lock_guard<std::mutex> lock(audio_capturer_mutex_);
+  return audio_capturer_;
 }
 
 void FakeVideoCapturer::StartCapture() {
@@ -53,7 +63,6 @@ void FakeVideoCapturer::CaptureThread() {
   // Blend2D イメージの初期化
   image_.create(config_.width, config_.height, BL_FORMAT_PRGB32);
   frame_counter_ = 0;
-  consecutive_error_count_ = 0;
 
   while (!stop_capture_) {
     auto now = std::chrono::high_resolution_clock::now();
@@ -66,20 +75,9 @@ void FakeVideoCapturer::CaptureThread() {
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
-      consecutive_error_count_++;
-      
-      if (consecutive_error_count_ >= kMaxConsecutiveErrors) {
-        RTC_LOG(LS_ERROR) << "Too many consecutive errors (" << consecutive_error_count_ 
-                          << "), stopping capture thread";
-        break;
-      }
-      
-      std::this_thread::sleep_for(std::chrono::milliseconds(16));
-      continue;
+      RTC_LOG(LS_ERROR) << "Stopping capture thread";
+      break;
     }
-    
-    // エラーカウンタをリセット
-    consecutive_error_count_ = 0;
 
     webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(config_.width, config_.height);
@@ -103,9 +101,11 @@ void FakeVideoCapturer::CaptureThread() {
                                         .build());
 
     if (captured) {
+      // スリープ時間を std::chrono::milliseconds(1000 / config_.fps) にすると
+      // 起きるための時間があるからフレームレートが保たれないことがあるので、少し短い時間にする
       std::this_thread::sleep_for(
           std::chrono::milliseconds(1000 / config_.fps - 2));
-      frame_counter_.fetch_add(1, std::memory_order_release);
+      frame_counter_ += 1;
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -142,28 +142,22 @@ void FakeVideoCapturer::DrawAnimations(
   int height = config_.height;
   int fps = config_.fps;
 
-  const float pi = 3.14159f;
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
-  ctx.rotate(-pi / 2);
+  ctx.rotate(-M_PI / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.3, 0, 2 * pi);  // 大きくする
+  ctx.fillPie(0, 0, width * 0.3, 0, 2 * M_PI);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
-  uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+  uint32_t current_frame = frame_counter_;
   ctx.fillPie(0, 0, width * 0.3, 0,
-              (current_frame % fps) / static_cast<float>(fps) * 2 * pi);
+              (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
 
-  // 円が一周したときにビープ音を鳴らす（0度の位置を通過したとき）
-  if (audio_capturer_) {
-    // 前フレームと現在フレームの角度を計算
-    uint32_t prev_frame = (current_frame > 0) ? current_frame - 1 : fps - 1;
-    float prev_angle = (prev_frame % fps) / static_cast<float>(fps) * 360.0f;
-    float curr_angle =
-        (current_frame % fps) / static_cast<float>(fps) * 360.0f;
-
-    // 0度を通過したかチェック（359度から0度への遷移）
-    if (prev_angle > 270.0f && curr_angle < 90.0f) {
-      audio_capturer_->TriggerBeep();
+  // 円が一周したときにビープ音を鳴らす
+  auto fake_audio_capturer = GetAudioCapturer();
+  if (fake_audio_capturer) {
+    // 0度になったかチェック
+    if (current_frame % fps == 0) {
+      fake_audio_capturer->TriggerBeep();
     }
   }
 }
@@ -179,10 +173,10 @@ void FakeVideoCapturer::DrawBoxes(
   const int num_boxes = 5;
 
   for (int i = 0; i < num_boxes; i++) {
-    uint32_t current_frame = frame_counter_.load(std::memory_order_acquire);
+    uint32_t current_frame = frame_counter_;
     double phase = (current_frame + i * 20) % 100 / 100.0;
     double x = phase * (width - box_size);
-    double y = height * 0.5 + sin(phase * 3.14159 * 2) * height * 0.2;
+    double y = height * 0.5 + sin(phase * M_PI * 2) * height * 0.2;
 
     // 各ボックスに異なる色を設定
     uint32_t color = 0xFF000000;

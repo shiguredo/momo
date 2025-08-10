@@ -18,11 +18,6 @@
 #include "video_codec_info.h"
 #include "video_track_receiver.h"
 
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-// Forward declaration
-class FakeAudioCapturer;
-#endif
-
 // webrtc::PeerConnectionFactory から ConnectionContext を取り出す方法が無いので、
 // 継承して無理やり使えるようにする
 class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
@@ -100,9 +95,7 @@ struct RTCManagerConfig {
   std::string proxy_username;
   std::string proxy_password;
 
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-  webrtc::scoped_refptr<FakeAudioCapturer> fake_audio_capturer;
-#endif
+  std::function<webrtc::scoped_refptr<webrtc::AudioDeviceModule>()> create_adm;
 };
 
 class RTCManager {
