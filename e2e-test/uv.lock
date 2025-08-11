@@ -108,7 +108,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "httpx" },
-    { name = "pyjwt", specifier = ">=2.10.1" },
+    { name = "pyjwt" },
     { name = "pytest" },
     { name = "python-dotenv" },
     { name = "ruff" },
