@@ -4,7 +4,6 @@ import uuid
 
 import jwt
 import pytest
-
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_SIGNALING_URLS が設定されていない場合スキップ
@@ -23,7 +22,7 @@ def test_sora_metrics_endpoint_returns_200(http_client):
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,
@@ -56,7 +55,7 @@ def test_sora_metrics_response_structure(http_client):
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,
@@ -102,7 +101,7 @@ def test_sora_connection_stats(http_client):
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,
@@ -222,7 +221,7 @@ def test_sora_invalid_endpoint_returns_404(http_client):
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,
@@ -256,7 +255,7 @@ def test_sora_sendonly_recvonly_pair(http_client):
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
     # JWT トークンの生成（必要な場合）
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,
@@ -314,7 +313,7 @@ def test_sora_multiple_sendonly_clients(http_client):
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
     # JWT トークンの生成（必要な場合）
-    metadata: dict[str, str] = {}
+    metadata = {}
     if secret_key:
         payload = {
             "channel_id": channel_id,

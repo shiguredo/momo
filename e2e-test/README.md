@@ -104,13 +104,16 @@ Sora モードのテストを実行するには、`.env` ファイルの設定�
 
 ```plaintext
 e2e-test/
-├── .env.template      # 環境変数のテンプレート
-├── .gitignore        # Git 除外設定
-├── conftest.py       # pytest フィクスチャ定義
-├── pyproject.toml    # プロジェクト設定と依存関係
-├── test_momo.py      # Test モードのテスト
-├── test_sora.py      # Sora モードのテスト
-└── README.md         # このファイル
+├── .env.template           # 環境変数のテンプレート
+├── .gitignore             # Git 除外設定
+├── conftest.py            # pytest 設定（HTTP クライアント）
+├── momo.py                # Momo プロセス管理クラス
+├── pyproject.toml         # プロジェクト設定と依存関係
+├── test_metrics_api.py     # メトリクス API のテスト
+├── test_p2p_mode.py       # P2P (Test) モードのテスト
+├── test_momo_validation.py # モード固有オプション検証のテスト
+├── test_sora_mode.py      # Sora モードのテスト
+└── README.md              # このファイル
 ```
 
 ## トラブルシューティング

@@ -203,6 +203,11 @@ jobs:
           - os: ubuntu-24.04
             target: ubuntu-24.04_x86_64
     runs-on: ${{ matrix.os }}
+    env:
+      MOMO_TARGET: ${{ matrix.target }}
+      TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Install runtime dependencies
@@ -239,11 +244,6 @@ jobs:
           # Test モードのテストのみ実行（Sora モードは環境変数がないためスキップされる）
           uv run pytest test_momo.py -v
         working-directory: ./e2e-test
-        env:
-          MOMO_TARGET: ${{ matrix.target }}
-          TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
-          TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
-          TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
 
   create-release:
     name: Create Release
