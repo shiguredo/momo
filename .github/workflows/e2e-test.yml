@@ -14,6 +14,11 @@ on:
         required: false
         type: string
   workflow_call:
+    inputs:
+      from_workflow_call:
+        type: boolean
+        default: true
+        required: false
 
 env:
   # push イベント時に artifact を取得するブランチ
@@ -38,28 +43,28 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download artifacts from workflow_call
-        if: github.event_name == 'workflow_call'
+        if: inputs.from_workflow_call == true
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.package }}.env
           path: ./
       
       - name: Get package name for workflow_call
-        if: github.event_name == 'workflow_call'
+        if: inputs.from_workflow_call == true
         run: |
           source momo.env
           echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
         id: package_info
       
       - name: Download package artifact from workflow_call
-        if: github.event_name == 'workflow_call'
+        if: inputs.from_workflow_call == true
         uses: actions/download-artifact@v4
         with:
           name: ${{ steps.package_info.outputs.package_name }}
           path: ./
       
       - name: Get latest artifact from source branch
-        if: github.event_name == 'push' && github.event_name != 'workflow_call'
+        if: github.event_name == 'push' && inputs.from_workflow_call != true
         id: latest_artifact
         run: |
           echo "Getting latest successful build from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch..."
@@ -102,7 +107,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: Parse artifact URL
-        if: github.event_name == 'workflow_dispatch' && github.event_name != 'workflow_call'
+        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
         id: parse
         run: |
           # workflow_dispatch の場合は入力された URL を使用
@@ -134,7 +139,7 @@ jobs:
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
       - name: Download artifacts for push event
-        if: github.event_name == 'push' && github.event_name != 'workflow_call'
+        if: github.event_name == 'push' && inputs.from_workflow_call != true
         run: |
           echo "Downloading artifacts from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch build..."
           
@@ -157,7 +162,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: Download artifact using gh CLI
-        if: github.event_name == 'workflow_dispatch' && github.event_name != 'workflow_call'
+        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
         run: |
           # gh コマンドでアーティファクトをダウンロード
           gh api -H "Accept: application/vnd.github+json" \
