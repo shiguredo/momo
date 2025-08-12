@@ -10,6 +10,7 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
+      - "e2e-test/**"
 
 jobs:
   build-windows:

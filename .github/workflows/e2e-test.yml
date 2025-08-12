@@ -1,0 +1,80 @@
+name: e2e-test-workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Build workflow run ID to download artifacts from'
+        required: false
+        type: string
+  workflow_run:
+    workflows: ["build-workflow"]
+    types:
+      - completed
+    branches:
+      - develop
+      - main
+
+jobs:
+  e2e-test-ubuntu:
+    name: E2E Test Ubuntu 24.04
+    runs-on: ubuntu-24.04
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    env:
+      TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libdrm2 libva2 libva-drm2
+      
+      # ワークフローディスパッチの場合は指定された run_id から、
+      # workflow_run の場合は自動的に前のワークフローからアーティファクトをダウンロード
+      - name: Download artifacts from build workflow
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: build.yml
+          run_id: ${{ github.event.inputs.run_id || github.event.workflow_run.id }}
+          name: momo-ubuntu-24.04_x86_64.*
+          name_is_regexp: true
+          path: .
+          if_no_artifact_found: fail
+      
+      - name: Get package name from env
+        run: |
+          source ubuntu-24.04_x86_64.env/momo.env
+          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_name
+      
+      - name: Extract momo binary
+        run: |
+          # パッケージファイルを探す
+          PACKAGE_FILE=$(find . -name "momo-ubuntu-24.04_x86_64-*.tar.gz" -type f | head -1)
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "Package file not found"
+            exit 1
+          fi
+          
+          tar -xzf "$PACKAGE_FILE"
+          # ビルドディレクトリ構造を再現
+          mkdir -p _build/ubuntu-24.04_x86_64/release/momo
+          mv momo/momo _build/ubuntu-24.04_x86_64/release/momo/
+          # 実行権限を付与
+          chmod +x _build/ubuntu-24.04_x86_64/release/momo/momo
+          
+          # バージョン確認
+          _build/ubuntu-24.04_x86_64/release/momo/momo --version
+      
+      - uses: astral-sh/setup-uv@v6
+      
+      - name: Run E2E tests
+        run: |
+          uv sync
+          uv run pytest test_sora_mode.py::test_sora_connection_stats -v
+        working-directory: ./e2e-test
