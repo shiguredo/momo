@@ -1,27 +1,20 @@
 name: e2e-test-workflow
 
 on:
+  push:
+    branches:
+      - '**'
   workflow_dispatch:
     inputs:
-      run_id:
-        description: 'Build workflow run ID to download artifacts from'
+      artifact_url:
+        description: 'GitHub Actions artifact URL (e.g., https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585)'
         required: false
         type: string
-  workflow_run:
-    workflows: ["build-workflow"]
-    types:
-      - completed
-    branches:
-      - develop
-      - main
 
 jobs:
   e2e-test-ubuntu:
     name: E2E Test Ubuntu 24.04
     runs-on: ubuntu-24.04
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     env:
       TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
       TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
@@ -29,47 +22,90 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Parse artifact URL
+        id: parse
+        run: |
+          # pushイベントの場合はハードコードされたURLを使用
+          if [ "${{ github.event_name }}" = "push" ]; then
+            URL="https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585"
+            echo "Using hardcoded URL for push event: $URL"
+          else
+            # workflow_dispatchの場合は入力されたURLを使用
+            URL="${{ github.event.inputs.artifact_url }}"
+            if [ -z "$URL" ]; then
+              echo "Error: artifact_url is required for workflow_dispatch"
+              exit 1
+            fi
+            echo "Using provided URL: $URL"
+          fi
+          
+          # URLからrun_idとartifact_idを抽出
+          # 例: https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585
+          RUN_ID=$(echo "$URL" | sed -n 's|.*/runs/\([0-9]*\)/.*|\1|p')
+          ARTIFACT_ID=$(echo "$URL" | sed -n 's|.*/artifacts/\([0-9]*\).*|\1|p')
+          
+          if [ -z "$RUN_ID" ] || [ -z "$ARTIFACT_ID" ]; then
+            echo "Failed to parse artifact URL: $URL"
+            echo "Expected format: https://github.com/shiguredo/momo/actions/runs/{run_id}/artifacts/{artifact_id}"
+            exit 1
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "artifact_id=${ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "Parsed run_id: $RUN_ID, artifact_id: $ARTIFACT_ID"
+      
       - name: Install runtime dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libdrm2 libva2 libva-drm2
       
-      # ワークフローディスパッチの場合は指定された run_id から、
-      # workflow_run の場合は自動的に前のワークフローからアーティファクトをダウンロード
-      - name: Download artifacts from build workflow
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: build.yml
-          run_id: ${{ github.event.inputs.run_id || github.event.workflow_run.id }}
-          name: momo-ubuntu-24.04_x86_64.*
-          name_is_regexp: true
-          path: .
-          if_no_artifact_found: fail
-      
-      - name: Get package name from env
+      - name: Download artifact using gh CLI
         run: |
-          source ubuntu-24.04_x86_64.env/momo.env
-          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
-        id: package_name
+          # gh コマンドでアーティファクトをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.parse.outputs.artifact_id }}/zip \
+            > artifact.zip
+          
+          # ZIPファイルを展開
+          unzip -o artifact.zip
+          ls -la
+        env:
+          GH_TOKEN: ${{ github.token }}
       
       - name: Extract momo binary
         run: |
           # パッケージファイルを探す
-          PACKAGE_FILE=$(find . -name "momo-ubuntu-24.04_x86_64-*.tar.gz" -type f | head -1)
+          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
           if [ -z "$PACKAGE_FILE" ]; then
             echo "Package file not found"
+            ls -la
             exit 1
           fi
           
+          echo "Found package: $PACKAGE_FILE"
           tar -xzf "$PACKAGE_FILE"
+          
+          # ターゲットプラットフォームを特定
+          if [[ "$PACKAGE_FILE" == *"ubuntu-24.04_x86_64"* ]]; then
+            TARGET="ubuntu-24.04_x86_64"
+          elif [[ "$PACKAGE_FILE" == *"ubuntu-22.04_x86_64"* ]]; then
+            TARGET="ubuntu-22.04_x86_64"
+          else
+            echo "Unknown target platform in package: $PACKAGE_FILE"
+            exit 1
+          fi
+          
           # ビルドディレクトリ構造を再現
-          mkdir -p _build/ubuntu-24.04_x86_64/release/momo
-          mv momo/momo _build/ubuntu-24.04_x86_64/release/momo/
+          mkdir -p _build/$TARGET/release/momo
+          mv momo/momo _build/$TARGET/release/momo/
           # 実行権限を付与
-          chmod +x _build/ubuntu-24.04_x86_64/release/momo/momo
+          chmod +x _build/$TARGET/release/momo/momo
           
           # バージョン確認
-          _build/ubuntu-24.04_x86_64/release/momo/momo --version
+          _build/$TARGET/release/momo/momo --version
+          
+          # 環境変数を設定
+          echo "MOMO_TARGET=$TARGET" >> $GITHUB_ENV
       
       - uses: astral-sh/setup-uv@v6
       

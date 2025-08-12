@@ -11,6 +11,8 @@ on:
       - "LICENSE"
       - "NOTICE"
       - "e2e-test/**"
+      - ".github/workflows/e2e-test.yml"
+      - ".github/workflows/claude.yml"
 
 jobs:
   build-windows:
