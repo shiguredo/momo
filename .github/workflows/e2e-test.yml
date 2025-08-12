@@ -57,7 +57,7 @@ jobs:
       - name: Install runtime dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libdrm2 libva2 libva-drm2
+          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
       - name: Download artifact using gh CLI
         run: |
