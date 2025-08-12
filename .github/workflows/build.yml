@@ -92,6 +92,7 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
   build-ubuntu:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -191,9 +192,75 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
 
+
+  test-build-ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          # - raspberry-pi-os_armv8
+          # - ubuntu-22.04_x86_64
+          - ubuntu-24.04_x86_64
+          # - ubuntu-22.04_armv8_jetson
+    name: Build momo for ${{ matrix.name }}
+    runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Disk cleanup
+        run: |
+          set -x
+          df -h
+          sudo du -h -d1 /usr/local
+          sudo du -h -d1 /usr/local/share
+          sudo du -h -d1 /usr/local/lib
+          sudo du -h -d1 /usr/share
+          RMI=`docker images -q -a`
+          if [ -n "$RMI" ]; then
+            docker rmi $RMI
+          fi
+          # 4.6G
+          sudo rm -rf /usr/local/.ghcup
+          # 1.7G
+          sudo rm -rf /usr/share/swift
+          # 1.4G
+          sudo rm -rf /usr/share/dotnet
+          df -h
+      - name: Install deps for ${{ matrix.name }}
+        run: |
+          # clang-20 を入れる
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+
+          # Intel VPL のために libva-dev, libdrm-dev を入れる
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
+          # スクリーンキャプチャあたりのためのパッケージを入れる
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
+
+          wget https://apt.llvm.org/llvm.sh
+          chmod a+x llvm.sh
+          sudo ./llvm.sh 20
+
+      - run: python3 run.py build --package ${{ matrix.name }} --disable-cuda
+      - name: Get package name
+        run: |
+          source _package/${{ matrix.name }}/release/momo.env
+          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_name
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package_name.outputs.name }}
+          path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
+      - name: Upload Environment
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}.env
+          path: _package/${{ matrix.name }}/release/momo.env
+
+
   test-e2e-ubuntu:
     name: E2E Test Ubuntu ${{ matrix.os }}
-    needs: build-ubuntu
+    needs: test-build-ubuntu
     strategy:
       fail-fast: false
       matrix:
@@ -303,6 +370,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-build-ubuntu
       - test-e2e-ubuntu
       - create-release
     if: always()
