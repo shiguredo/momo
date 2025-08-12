@@ -96,8 +96,12 @@ def test_sora_connection_stats(http_client):
     """Sora モードで接続時の統計情報を確認"""
     # 環境変数から設定を取得
     signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URLS must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 

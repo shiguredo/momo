@@ -552,7 +552,7 @@ class Momo:
                     f"これらは {'/'.join(modes)} モード専用のオプションです"
                 )
 
-    def _wait_for_startup(self, metrics_port: int, timeout: int = 30):
+    def _wait_for_startup(self, metrics_port: int, timeout: int = 5):
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         with httpx.Client() as client:
             for _ in range(timeout):
@@ -567,7 +567,13 @@ class Momo:
                         else:
                             # test/ayame モードは即座に成功
                             return
-                except (httpx.ConnectError, httpx.ConnectTimeout, httpx.HTTPStatusError, json.JSONDecodeError, KeyError):
+                except (
+                    httpx.ConnectError,
+                    httpx.ConnectTimeout,
+                    httpx.HTTPStatusError,
+                    json.JSONDecodeError,
+                    KeyError,
+                ):
                     pass
                 time.sleep(1)
             else:

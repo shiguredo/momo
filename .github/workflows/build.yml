@@ -308,8 +308,7 @@ jobs:
       - name: Run E2E tests
         run: |
           uv sync
-          # Test モードのテストのみ実行（Sora モードは環境変数がないためスキップされる）
-          uv run pytest -v
+          uv run pytest test_sora_mode.py::test_sora_connection_stats -v
         working-directory: ./e2e-test
 
   create-release:
