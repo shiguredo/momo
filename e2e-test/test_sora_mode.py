@@ -60,18 +60,30 @@ def test_sora_metrics_response_structure(http_client, sora_settings):
         assert isinstance(data["environment"], str)
 
 
-def test_sora_connection_stats(http_client, sora_settings):
+@pytest.mark.parametrize(
+    "video_codec_type,expected_mime_type",
+    [
+        ("VP8", "video/VP8"),
+        ("VP9", "video/VP9"),
+        ("AV1", "video/AV1"),
+    ]
+)
+def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type):
     """Sora モードで接続時の統計情報を確認"""
-
+    # ポート番号をコーデックごとに変える
+    port_base = 9302
+    port_offset = {"VP8": 0, "VP9": 10, "AV1": 20}[video_codec_type]
+    
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=9302,
+        metrics_port=port_base + port_offset,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=True,
         video=True,
+        video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
         log_level="verbose",
     ) as m:
@@ -101,6 +113,13 @@ def test_sora_connection_stats(http_client, sora_settings):
         }
         for expected_type in expected_types:
             assert expected_type in stat_types
+        
+        # 指定されたビデオコーデックが実際に使われていることを確認
+        codec_mime_types = {
+            stat.get("mimeType") for stat in stats 
+            if stat.get("type") == "codec" and "mimeType" in stat
+        }
+        assert expected_mime_type in codec_mime_types, f"Expected codec {expected_mime_type} not found in {codec_mime_types}"
 
         # 各統計タイプの詳細をチェック
         for stat in stats:
@@ -133,16 +152,15 @@ def test_sora_connection_stats(http_client, sora_settings):
                     assert "mimeType" in stat
                     assert "clockRate" in stat
 
-                    # codec は audio/opus か video/VP9 のみ許可
-                    assert stat["mimeType"] in ["audio/opus", "video/VP9"]
+                    # codec は audio/opus か指定されたビデオコーデックのみ許可
+                    assert stat["mimeType"] in ["audio/opus", expected_mime_type]
 
                     # codec タイプ別の検証
-                    match stat["mimeType"]:
-                        case "audio/opus":
-                            assert "channels" in stat
-                            assert stat["clockRate"] == 48000
-                        case "video/VP9":
-                            assert stat["clockRate"] == 90000
+                    if stat["mimeType"] == "audio/opus":
+                        assert "channels" in stat
+                        assert stat["clockRate"] == 48000
+                    elif stat["mimeType"] == expected_mime_type:
+                        assert stat["clockRate"] == 90000
 
                 case "transport":
                     # transport の必須フィールドを確認
