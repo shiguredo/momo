@@ -86,7 +86,7 @@ class Momo:
         client_id: str | None = None,
         signaling_key: str | None = None,
         # === sora モード固有 ===
-        signaling_urls: str | None = None,  # 複数URL可
+        signaling_urls: str | None = None,  # 複数URL可（スペース区切り）
         channel_id: str | None = None,
         auto: bool | None = None,
         video: bool | None = None,
@@ -122,7 +122,7 @@ class Momo:
             # Sora モードの例
             with Momo(
                 mode=MomoMode.SORA,
-                signaling_urls="wss://sora.example.com/signaling",
+                signaling_urls="wss://sora.example.com/signaling wss://sora2.example.com/signaling",  # スペース区切りで複数指定可
                 channel_id="test-channel",
                 role="sendonly",
                 video_codec_type="H264",
@@ -423,11 +423,13 @@ class Momo:
         elif mode == MomoMode.SORA:
             args.append(mode.value)
             if kwargs.get("signaling_urls"):
-                # 複数URL対応
+                # 複数URL対応（文字列の場合はスペース区切りで分割）
                 if isinstance(kwargs["signaling_urls"], list):
                     args.extend(["--signaling-urls"] + kwargs["signaling_urls"])
                 else:
-                    args.extend(["--signaling-urls", kwargs["signaling_urls"]])
+                    # 文字列の場合はスペース区切りで分割して複数の引数として渡す
+                    urls = kwargs["signaling_urls"].split()
+                    args.extend(["--signaling-urls"] + urls)
             if kwargs.get("channel_id"):
                 args.extend(["--channel-id", kwargs["channel_id"]])
             if kwargs.get("auto"):

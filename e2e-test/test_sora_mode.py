@@ -1,87 +1,46 @@
 import os
-import time
-import uuid
 
-import jwt
 import pytest
 from momo import Momo, MomoMode
 
-# Sora モードのテストは TEST_SORA_SIGNALING_URLS が設定されていない場合スキップ
+# Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SIGNALING_URL"),
-    reason="TEST_SIGNALING_URLS not set in environment",
+    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
+    reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
 )
 
 
-def test_sora_metrics_endpoint_returns_200(http_client):
+def test_sora_metrics_endpoint_returns_200(http_client, sora_settings):
     """Sora モードでメトリクスエンドポイントが 200 を返すことを確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=9300,
         fake_capture_device=True,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=True,
         video=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
     ) as m:
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
 
 
-def test_sora_metrics_response_structure(http_client):
+def test_sora_metrics_response_structure(http_client, sora_settings):
     """Sora モードでメトリクスレスポンスの構造を確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=9301,
         fake_capture_device=True,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=True,
         video=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
     ) as m:
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
@@ -100,38 +59,19 @@ def test_sora_metrics_response_structure(http_client):
         assert isinstance(data["environment"], str)
 
 
-def test_sora_connection_stats(http_client):
+def test_sora_connection_stats(http_client, sora_settings):
     """Sora モードで接続時の統計情報を確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=9302,
         fake_capture_device=True,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=True,
         video=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
         log_level="verbose",
     ) as m:
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
@@ -221,88 +161,49 @@ def test_sora_connection_stats(http_client):
                     assert "dataChannelsOpened" in stat
 
 
-def test_sora_invalid_endpoint_returns_404(http_client):
+def test_sora_invalid_endpoint_returns_404(http_client, sora_settings):
     """Sora モードで存在しないエンドポイントが 404 を返すことを確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=9303,
         fake_capture_device=True,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=True,
         video=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
     ) as m:
         response = http_client.get(f"http://localhost:{m.metrics_port}/invalid")
         assert response.status_code == 404
 
 
-def test_sora_sendonly_recvonly_pair(http_client):
+def test_sora_sendonly_recvonly_pair(http_client, sora_settings):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    # JWT トークンの生成（必要な場合）
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     # 送信専用クライアント
     with Momo(
         mode=MomoMode.SORA,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         metrics_port=9304,
         fake_capture_device=True,
         video=True,
         audio=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
     ) as sender:
         # 受信専用クライアント
         with Momo(
             mode=MomoMode.SORA,
-            signaling_urls=signaling_urls,
-            channel_id=channel_id,
+            signaling_urls=sora_settings.signaling_urls,
+            channel_id=sora_settings.channel_id,
             role="recvonly",
             metrics_port=9305,
             video=True,
             audio=True,
-            metadata=metadata,
+            metadata=sora_settings.metadata,
         ) as receiver:
             # 送信側の統計を確認
             sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
@@ -317,51 +218,31 @@ def test_sora_sendonly_recvonly_pair(http_client):
             assert len(sender_stats) > 0 or len(receiver_stats) > 0
 
 
-def test_sora_multiple_sendonly_clients(http_client):
+def test_sora_multiple_sendonly_clients(http_client, sora_settings):
     """複数の sendonly クライアントが同じチャンネルに接続できることを確認"""
-    # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
-    secret_key = os.environ.get("TEST_SECRET_KEY")
-
-    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
-    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
-    assert secret_key, "TEST_SECRET_KEY must be set in environment"
-
-    channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
-
-    # JWT トークンの生成（必要な場合）
-    metadata = {}
-    if secret_key:
-        payload = {
-            "channel_id": channel_id,
-            "exp": int(time.time()) + 300,
-        }
-        access_token = jwt.encode(payload, secret_key, algorithm="HS256")
-        metadata = {"access_token": access_token}
 
     # 複数の sendonly クライアントを起動
     with Momo(
         mode=MomoMode.SORA,
-        signaling_urls=signaling_urls,
-        channel_id=channel_id,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
         role="sendonly",
         metrics_port=9306,
         fake_capture_device=True,
         video=True,
         audio=True,
-        metadata=metadata,
+        metadata=sora_settings.metadata,
     ) as sender1:
         with Momo(
             mode=MomoMode.SORA,
-            signaling_urls=signaling_urls,
-            channel_id=channel_id,
+            signaling_urls=sora_settings.signaling_urls,
+            channel_id=sora_settings.channel_id,
             role="sendonly",
             metrics_port=9307,
             fake_capture_device=True,
             video=True,
             audio=True,
-            metadata=metadata,
+            metadata=sora_settings.metadata,
         ) as sender2:
             # 両方のインスタンスが正常に動作していることを確認
             response1 = http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")

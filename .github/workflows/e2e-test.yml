@@ -16,10 +16,9 @@ jobs:
     name: E2E Test Ubuntu 24.04
     runs-on: ubuntu-24.04
     env:
-      # TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
-      TEST_SIGNALING_URL: ${{ secrets.TEST_SIGNALING_URL }}
-      TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
-      TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+      TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       
