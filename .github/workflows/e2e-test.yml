@@ -112,5 +112,5 @@ jobs:
       - name: Run E2E tests
         run: |
           uv sync
-          uv run pytest test_sora_mode.py::test_sora_connection_stats -v
+          uv run pytest test_sora_mode.py::test_sora_connection_stats -v -s
         working-directory: ./e2e-test

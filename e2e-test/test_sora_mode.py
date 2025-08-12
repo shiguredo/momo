@@ -124,6 +124,7 @@ def test_sora_connection_stats(http_client):
         audio=True,
         video=True,
         metadata=metadata,
+        log_level="verbose",
     ) as m:
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
