@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: anthropics/claude-code-action@beta
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
@@ -37,7 +37,7 @@ jobs:
     outputs:
       has_permission: ${{ steps.check.outputs.has-permission }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: check
         uses: shiguredo/github-actions/.github/actions/check-write-permission@main
         with:
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
