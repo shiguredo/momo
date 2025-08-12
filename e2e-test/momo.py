@@ -525,8 +525,8 @@ class Momo:
                 if invalid_options & sora_only_options:
                     modes.append("sora")
                 raise ValueError(
-                    f"Test モードで無効なオプションが指定されました: {', '.join(sorted(invalid_options))}\n"
-                    f"これらは {'/'.join(modes)} モード専用のオプションです"
+                    f"Invalid options specified for Test mode: {', '.join(sorted(invalid_options))}\n"
+                    f"These options are only for {'/'.join(modes)} mode"
                 )
 
         elif mode == MomoMode.AYAME:
@@ -540,8 +540,8 @@ class Momo:
                 if invalid_options & sora_only_options:
                     modes.append("sora")
                 raise ValueError(
-                    f"Ayame モードで無効なオプションが指定されました: {', '.join(sorted(invalid_options))}\n"
-                    f"これらは {'/'.join(modes)} モード専用のオプションです"
+                    f"Invalid options specified for Ayame mode: {', '.join(sorted(invalid_options))}\n"
+                    f"These options are only for {'/'.join(modes)} mode"
                 )
 
         elif mode == MomoMode.SORA:
@@ -555,8 +555,8 @@ class Momo:
                 if invalid_options & ayame_only_options:
                     modes.append("ayame")
                 raise ValueError(
-                    f"Sora モードで無効なオプションが指定されました: {', '.join(sorted(invalid_options))}\n"
-                    f"これらは {'/'.join(modes)} モード専用のオプションです"
+                    f"Invalid options specified for Sora mode: {', '.join(sorted(invalid_options))}\n"
+                    f"These options are only for {'/'.join(modes)} mode"
                 )
 
     def _wait_for_startup(self, metrics_port: int, timeout: int = 10, initial_wait: int = 2):
