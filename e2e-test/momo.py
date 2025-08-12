@@ -8,7 +8,8 @@ import subprocess
 import time
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Literal
+from types import TracebackType
+from typing import Any, Literal, Self
 
 import httpx
 
@@ -107,7 +108,7 @@ class Momo:
         metadata: dict[str, Any] | None = None,
         # その他のカスタム引数
         extra_args: list[str] | None = None,
-    ):
+    ) -> None:
         """
         Momo プロセスを管理するクラス
 
@@ -131,11 +132,11 @@ class Momo:
         """
         # 実行ファイルのパスを自動検出
         self.executable_path = self._get_momo_executable_path()
-        self.process: subprocess.Popen | None = None
+        self.process: subprocess.Popen[int] | None = None
         self.metrics_port = metrics_port
 
         # すべての引数を保存
-        self.kwargs = {
+        self.kwargs: dict[str, Any] = {
             "mode": mode,
             "no_google_stun": no_google_stun,
             "no_video_device": no_video_device,
@@ -285,7 +286,7 @@ class Momo:
 
         return str(momo_path)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """コンテキストマネージャーの開始"""
         # コマンドライン引数を構築
         args = self._build_args(**self.kwargs)
@@ -307,12 +308,17 @@ class Momo:
         self._wait_for_startup(self.metrics_port)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
         """コンテキストマネージャーの終了"""
         self._cleanup()
         return False
 
-    def _build_args(self, mode: MomoMode, **kwargs) -> list[str]:
+    def _build_args(self, mode: MomoMode, **kwargs: Any) -> list[str]:
         """コマンドライン引数を構築"""
         # モード固有オプションの検証
         self._validate_mode_options(mode, kwargs)
@@ -512,7 +518,7 @@ class Momo:
 
         return args
 
-    def _validate_mode_options(self, mode: MomoMode, kwargs: dict) -> None:
+    def _validate_mode_options(self, mode: MomoMode, kwargs: dict[str, Any]) -> None:
         """モード固有オプションの検証"""
         # test モード固有オプション
         test_only_options = {"document_root"}
@@ -592,7 +598,7 @@ class Momo:
                     f"These options are only for {'/'.join(modes)} mode"
                 )
 
-    def _wait_for_startup(self, metrics_port: int, timeout: int = 10, initial_wait: int = 2):
+    def _wait_for_startup(self, metrics_port: int, timeout: int = 10, initial_wait: int = 2) -> None:
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
             raise RuntimeError("Process not started")
@@ -656,7 +662,7 @@ class Momo:
             self._cleanup()
             raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
-    def _cleanup(self):
+    def _cleanup(self) -> None:
         """プロセスをクリーンアップ"""
         if self.process:
             self.process.terminate()
@@ -667,7 +673,7 @@ class Momo:
                 self.process.wait()
             self.process = None
 
-    def get_metrics(self, client: httpx.Client) -> dict:
+    def get_metrics(self, client: httpx.Client) -> dict[str, Any]:
         """メトリクスを取得"""
         if not self.metrics_port:
             raise RuntimeError("Process not started")
