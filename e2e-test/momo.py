@@ -468,7 +468,7 @@ class Momo:
             if kwargs.get("disconnect_wait_timeout") is not None:
                 args.extend(["--disconnect-wait-timeout", str(kwargs["disconnect_wait_timeout"])])
             if kwargs.get("metadata"):
-                args.extend(["--metadata", json.dumps(kwargs["metadata"])])
+                args.extend(["--metadata", f"'{json.dumps(kwargs['metadata'])}'"])
 
         # その他のカスタム引数
         if kwargs.get("extra_args"):

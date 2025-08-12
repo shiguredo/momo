@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       TEST_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_SIGNALING_URL: ${{ secrets.TEST_SIGNALING_URL }}
       TEST_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
       TEST_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
     steps:
