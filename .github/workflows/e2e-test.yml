@@ -111,7 +111,7 @@ jobs:
           timeout 5 _build/ubuntu-24.04_x86_64/release/momo/momo --fake-capture-device --log-level verbose --metrics-port 9302 \
             sora \
               --signaling-urls ${{ secrets.TEST_SIGNALING_URL }} \
-              --channel-id ${{ env.TEST_CHANNEL_ID_PREFIX}}_test
+              --channel-id ${{ env.TEST_CHANNEL_ID_PREFIX}}_test \
               --video true --audio true --role sendonly \
               --metadata '{"access_token": "${{ secrets.TEST_SECRET_KEY }}"}'
 
