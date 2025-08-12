@@ -559,9 +559,17 @@ class Momo:
                 try:
                     response = client.get(f"http://localhost:{metrics_port}/metrics")
                     if response.status_code == 200:
-                        return
-                except (httpx.ConnectError, httpx.ConnectTimeout):
-                    time.sleep(1)
+                        # sora モードの場合は stats が空でないことを確認
+                        if self.kwargs["mode"] == MomoMode.SORA:
+                            data = response.json()
+                            if data.get("stats") and len(data["stats"]) > 0:
+                                return
+                        else:
+                            # test/ayame モードは即座に成功
+                            return
+                except (httpx.ConnectError, httpx.ConnectTimeout, httpx.HTTPStatusError, json.JSONDecodeError, KeyError):
+                    pass
+                time.sleep(1)
             else:
                 # エラー時にログを出力
                 if self.process:

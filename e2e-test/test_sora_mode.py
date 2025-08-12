@@ -121,10 +121,6 @@ def test_sora_connection_stats(http_client):
         video=True,
         metadata=metadata,
     ) as m:
-        # Momo では接続が確立したことを確認する手段がないため、
-        # sleep 5 秒で「ほぼ確実に接続しただろう」と仮定する
-        time.sleep(10)
-
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
 
@@ -287,9 +283,6 @@ def test_sora_sendonly_recvonly_pair(http_client):
             audio=True,
             metadata=metadata,
         ) as receiver:
-            # 接続が確立するまで待機
-            time.sleep(3)
-
             # 送信側の統計を確認
             sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
             sender_stats = sender_response.json().get("stats", [])
@@ -345,9 +338,6 @@ def test_sora_multiple_sendonly_clients(http_client):
             audio=True,
             metadata=metadata,
         ) as sender2:
-            # 接続が確立するまで待機
-            time.sleep(10)
-
             # 両方のインスタンスが正常に動作していることを確認
             response1 = http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
             assert response1.status_code == 200
