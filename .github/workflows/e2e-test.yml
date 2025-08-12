@@ -10,6 +10,11 @@ on:
         description: 'GitHub Actions artifact URL (e.g., https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585)'
         required: false
         type: string
+  workflow_call:
+
+env:
+  # push イベント時に artifact を取得するブランチ
+  ARTIFACT_SOURCE_BRANCH: feature/pytest
 
 jobs:
   e2e-test-ubuntu:
@@ -22,22 +27,81 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Download artifacts from workflow_call
+        if: github.event_name == 'workflow_call'
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-24.04_x86_64.env
+          path: ./
+      
+      - name: Get package name for workflow_call
+        if: github.event_name == 'workflow_call'
+        run: |
+          source momo.env
+          echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_info
+      
+      - name: Download package artifact from workflow_call
+        if: github.event_name == 'workflow_call'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.package_info.outputs.package_name }}
+          path: ./
+      
+      - name: Get latest artifact from source branch
+        if: github.event_name == 'push' && github.event_name != 'workflow_call'
+        id: latest_artifact
+        run: |
+          echo "Getting latest successful build from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch..."
+          
+          # 指定ブランチの最新の成功したワークフローランを取得
+          RUN_ID=$(gh run list \
+            --branch "${{ env.ARTIFACT_SOURCE_BRANCH }}" \
+            --workflow build-workflow \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          if [ -z "$RUN_ID" ]; then
+            echo "Error: No successful workflow runs found on ${{ env.ARTIFACT_SOURCE_BRANCH }} branch"
+            exit 1
+          fi
+          
+          echo "Found successful run: $RUN_ID"
+          
+          # そのランから ubuntu-24.04_x86_64 に関連する artifact を取得
+          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("ubuntu-24.04_x86_64")) | {id: .id, name: .name}')
+          
+          # momo パッケージの artifact ID を取得
+          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
+          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
+          
+          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
+            echo "Error: Required artifacts not found in run $RUN_ID"
+            echo "Available artifacts:"
+            echo "$ARTIFACTS"
+            exit 1
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
       - name: Parse artifact URL
+        if: github.event_name == 'workflow_dispatch' && github.event_name != 'workflow_call'
         id: parse
         run: |
-          # pushイベントの場合はハードコードされたURLを使用
-          if [ "${{ github.event_name }}" = "push" ]; then
-            URL="https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585"
-            echo "Using hardcoded URL for push event: $URL"
-          else
-            # workflow_dispatchの場合は入力されたURLを使用
-            URL="${{ github.event.inputs.artifact_url }}"
-            if [ -z "$URL" ]; then
-              echo "Error: artifact_url is required for workflow_dispatch"
-              exit 1
-            fi
-            echo "Using provided URL: $URL"
+          # workflow_dispatchの場合は入力されたURLを使用
+          URL="${{ github.event.inputs.artifact_url }}"
+          if [ -z "$URL" ]; then
+            echo "Error: artifact_url is required for workflow_dispatch"
+            exit 1
           fi
+          echo "Using provided URL: $URL"
           
           # URLからrun_idとartifact_idを抽出
           # 例: https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585
@@ -59,7 +123,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
+      - name: Download artifacts for push event
+        if: github.event_name == 'push' && github.event_name != 'workflow_call'
+        run: |
+          echo "Downloading artifacts from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch build..."
+          
+          # 環境ファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
+            > env.zip
+          unzip -o env.zip
+          rm env.zip
+          
+          # パッケージファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
+            > package.zip
+          unzip -o package.zip
+          rm package.zip
+          
+          ls -la
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
       - name: Download artifact using gh CLI
+        if: github.event_name == 'workflow_dispatch' && github.event_name != 'workflow_call'
         run: |
           # gh コマンドでアーティファクトをダウンロード
           gh api -H "Accept: application/vnd.github+json" \
