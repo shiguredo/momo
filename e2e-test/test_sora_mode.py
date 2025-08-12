@@ -1,4 +1,5 @@
 import os
+import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -74,6 +75,8 @@ def test_sora_connection_stats(http_client, sora_settings):
         metadata=sora_settings.metadata,
         log_level="verbose",
     ) as m:
+        time.sleep(3)
+
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
 
