@@ -199,9 +199,6 @@ jobs:
           
           # バージョン確認
           _build/$TARGET/release/momo/momo --version
-          
-          # 環境変数を設定
-          echo "MOMO_TARGET=$TARGET" >> $GITHUB_ENV
 
       - uses: astral-sh/setup-uv@v6
       

@@ -34,13 +34,16 @@ uv run pytest -v
 uv run pytest test_momo.py::test_metrics_endpoint_returns_200
 ```
 
-## 環境変数
+## ビルドターゲットの自動検出
 
-- `MOMO_TARGET`: ビルドターゲットを明示的に指定する場合に使用
+テスト実行時、`_build` ディレクトリ内のビルド済みターゲットが自動的に検出されます：
 
-  ```bash
-  MOMO_TARGET=ubuntu-24.04_x86_64 uv run pytest
-  ```
+- ビルドが1つだけの場合：そのビルドを自動選択
+- 複数のビルドがある場合：実行環境のプラットフォームに応じて優先順位で選択
+  - macOS ARM64: `macos_arm64` → `macos_x86_64`
+  - macOS x86_64: `macos_x86_64` → `macos_arm64`
+  - Linux ARM64: `ubuntu-24.04_armv8` → `ubuntu-22.04_armv8` → `ubuntu-20.04_armv8`
+  - Linux x86_64: `ubuntu-24.04_x86_64` → `ubuntu-22.04_x86_64` → `ubuntu-20.04_x86_64`
 
 ## テスト内容
 
