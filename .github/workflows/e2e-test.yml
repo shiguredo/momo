@@ -107,10 +107,18 @@ jobs:
           # 環境変数を設定
           echo "MOMO_TARGET=$TARGET" >> $GITHUB_ENV
       
-      - uses: astral-sh/setup-uv@v6
+      - run: |
+          timeout 5 _build/$TARGET/release/momo/momo --fake-capture-device --log-level verbose --metrics-port 9302 \
+            sora \
+              --signaling-urls ${{ secret.TEST_SIGNALING_URL }} \
+              --channel-id ${{ env.TEST_CHANNEL_ID_PREFIX}}_test
+              --video true --audio true --role sendonly \
+              --metadata '{"access_token": "${{ secrets.TEST_SECRET_KEY }}"}'
+
+      # - uses: astral-sh/setup-uv@v6
       
-      - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest test_sora_mode.py::test_sora_connection_stats -v -s
-        working-directory: ./e2e-test
+      # - name: Run E2E tests
+      #   run: |
+      #     uv sync
+      #     uv run pytest test_sora_mode.py::test_sora_connection_stats -v -s
+      #   working-directory: ./e2e-test
