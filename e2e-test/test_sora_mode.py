@@ -61,22 +61,18 @@ def test_sora_metrics_response_structure(http_client, sora_settings):
 
 
 @pytest.mark.parametrize(
-    "video_codec_type,expected_mime_type",
+    "video_codec_type,expected_mime_type,port",
     [
-        ("VP8", "video/VP8"),
-        ("VP9", "video/VP9"),
-        ("AV1", "video/AV1"),
+        ("VP8", "video/VP8", 9302),
+        ("VP9", "video/VP9", 9312),
+        ("AV1", "video/AV1", 9322),
     ]
 )
-def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type):
+def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type, port):
     """Sora モードで接続時の統計情報を確認"""
-    # ポート番号をコーデックごとに変える
-    port_base = 9302
-    port_offset = {"VP8": 0, "VP9": 10, "AV1": 20}[video_codec_type]
-    
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=port_base + port_offset,
+        metrics_port=port,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
