@@ -258,11 +258,11 @@ class Momo:
         """コンテキストマネージャーの開始"""
         # コマンドライン引数を構築
         args = self._build_args(**self.kwargs)
-        
+
         # 起動コマンドを表示
         cmd = [self.executable_path] + args
         # JSON を含む引数を適切に表示するため、shlex.quote を使用
-        quoted_cmd = ' '.join(shlex.quote(arg) for arg in cmd)
+        quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
         print(f"Starting momo with command: {quoted_cmd}")
 
         # プロセスを起動
@@ -272,7 +272,7 @@ class Momo:
             stderr=subprocess.DEVNULL,
         )
 
-        # プロセスが起動するまで待機
+        # プロセスが起動してメトリクスが利用可能になるまで待機
         self._wait_for_startup(self.metrics_port)
         return self
 
@@ -559,72 +559,69 @@ class Momo:
                     f"これらは {'/'.join(modes)} モード専用のオプションです"
                 )
 
-    def _wait_for_startup(self, metrics_port: int, timeout: int = 60):
+    def _wait_for_startup(self, metrics_port: int, timeout: int = 10, initial_wait: int = 2):
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
             raise RuntimeError("Process not started")
-            
-        print(f"Waiting for momo to start (timeout: {timeout}s)...")
+
+        # プロセスが完全に起動するまで少し待機
+        # 即座にメトリクスエンドポイントをチェックすると失敗することがあるため
+        if initial_wait > 0:
+            time.sleep(initial_wait)
+
+        print(f"Waiting for metrics endpoint to be ready (timeout: {timeout}s)...")
         start_time = time.time()
-        
-        # 初期待機（プロセスが起動するまで）
-        time.sleep(2)
-        
+
         with httpx.Client() as client:
-            for i in range(timeout):
+            while time.time() - start_time < timeout:
                 # プロセスの状態を確認
                 if self.process.poll() is not None:
                     # プロセスが終了していたらエラー
                     raise RuntimeError(
                         f"momo process exited unexpectedly with code {self.process.returncode}"
                     )
-                
+
                 # メトリクスエンドポイントをチェック
                 try:
-                    print(f"  Checking metrics at http://localhost:{metrics_port}/metrics...")
-                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=2)
-                    print(f"  Response status: {response.status_code}")
+                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=1)
                     if response.status_code == 200:
-                        # メトリクスエンドポイントが応答したら成功とする
-                        # （Sora モードでも接続確立を待たずに起動確認のみ）
-                        print(f"Momo started successfully after {time.time() - start_time:.1f}s")
+                        # Soraモードの場合はstatsが空でないことを確認
                         if self.kwargs["mode"] == MomoMode.SORA:
                             data = response.json()
                             stats = data.get("stats", [])
-                            print(f"  Initial stats count: {len(stats)}")
-                        return
+                            if stats and len(stats) > 0:
+                                print(
+                                    f"Momo started successfully after {time.time() - start_time:.1f}s (stats count: {len(stats)})"
+                                )
+                                return
+                            else:
+                                # statsが空の場合は待機を続ける
+                                elapsed = time.time() - start_time
+                                print(
+                                    f"  Metrics endpoint is up but stats is empty, waiting for connection... ({elapsed:.1f}s elapsed)"
+                                )
+                        else:
+                            # test/ayameモードは200応答で成功（statsのチェック不要）
+                            print(
+                                f"Momo started successfully after {time.time() - start_time:.1f}s"
+                            )
+                            return
                     else:
-                        # 200以外のステータスコード
-                        print(f"  Non-200 status: {response.status_code}")
-                        print(f"  Response headers: {dict(response.headers)}")
-                        print(f"  Response body: {response.text[:500]}")
-                except httpx.ConnectError as e:
-                    # 接続エラー（サーバーに接続できない）
-                    print(f"  Connection error: Cannot connect to http://localhost:{metrics_port}/metrics - {e}")
-                except httpx.ConnectTimeout as e:
-                    # タイムアウトエラー
-                    print(f"  Timeout error: Request timed out - {e}")
+                        print(f"  Got status code: {response.status_code}")
+                except httpx.ConnectError:
+                    # 接続エラーは無視して次の試行へ
+                    pass
+                except httpx.ConnectTimeout:
+                    pass
                 except httpx.HTTPStatusError as e:
-                    # HTTPステータスエラー
-                    print(f"  HTTP error: Status {e.response.status_code} - {e}")
-                    print(f"  Response body: {e.response.text[:500]}")
-                except json.JSONDecodeError as e:
-                    # JSONパースエラー
-                    print(f"  JSON parse error: {e}")
-                except KeyError as e:
-                    # キーエラー
-                    print(f"  Key error: Missing key {e} in response")
-                except Exception as e:
-                    # その他のエラー
-                    print(f"  Unexpected error: {type(e).__name__}: {e}")
-                    
+                    print(f"  HTTP error: {e}")
+
+                # 次の試行まで1秒待機
                 time.sleep(1)
-            
+
             # タイムアウト
             self._cleanup()
-            raise RuntimeError(
-                f"momo process failed to start within {timeout} seconds"
-            )
+            raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
     def _cleanup(self):
         """プロセスをクリーンアップ"""
