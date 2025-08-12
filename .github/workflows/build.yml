@@ -242,7 +242,7 @@ jobs:
         run: |
           uv sync
           # Test モードのテストのみ実行（Sora モードは環境変数がないためスキップされる）
-          uv run pytest test_momo.py -v
+          uv run pytest -v
         working-directory: ./e2e-test
 
   create-release:

@@ -31,7 +31,7 @@ class Momo:
         no_google_stun: bool = False,
         no_video_device: bool = False,
         no_audio_device: bool = False,
-        fake_capture_device: bool = False,
+        fake_capture_device: bool = True,
         force_i420: bool = False,
         hw_mjpeg_decoder: bool | None = None,
         use_libcamera: bool = False,
