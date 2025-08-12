@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - '**'
+    paths:
+      - 'e2e-test/**/*.py'
+      - '.github/workflows/e2e-test.yml'
   workflow_dispatch:
     inputs:
       artifact_url:
@@ -18,8 +21,15 @@ env:
 
 jobs:
   e2e-test-ubuntu:
-    name: E2E Test Ubuntu 24.04
-    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            package: ubuntu-22.04_x86_64
+          - os: ubuntu-24.04
+            package: ubuntu-24.04_x86_64
+    name: E2E Test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     env:
       TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
       TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
@@ -31,7 +41,7 @@ jobs:
         if: github.event_name == 'workflow_call'
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-24.04_x86_64.env
+          name: ${{ matrix.package }}.env
           path: ./
       
       - name: Get package name for workflow_call
@@ -70,8 +80,8 @@ jobs:
           
           echo "Found successful run: $RUN_ID"
           
-          # そのランから ubuntu-24.04_x86_64 に関連する artifact を取得
-          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("ubuntu-24.04_x86_64")) | {id: .id, name: .name}')
+          # そのランから対象プラットフォームに関連する artifact を取得
+          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("${{ matrix.package }}")) | {id: .id, name: .name}')
           
           # momo パッケージの artifact ID を取得
           PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
@@ -95,7 +105,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event_name != 'workflow_call'
         id: parse
         run: |
-          # workflow_dispatchの場合は入力されたURLを使用
+          # workflow_dispatch の場合は入力された URL を使用
           URL="${{ github.event.inputs.artifact_url }}"
           if [ -z "$URL" ]; then
             echo "Error: artifact_url is required for workflow_dispatch"
@@ -103,7 +113,7 @@ jobs:
           fi
           echo "Using provided URL: $URL"
           
-          # URLからrun_idとartifact_idを抽出
+          # URL から run_id と artifact_id を抽出
           # 例: https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585
           RUN_ID=$(echo "$URL" | sed -n 's|.*/runs/\([0-9]*\)/.*|\1|p')
           ARTIFACT_ID=$(echo "$URL" | sed -n 's|.*/artifacts/\([0-9]*\).*|\1|p')
@@ -173,15 +183,8 @@ jobs:
           echo "Found package: $PACKAGE_FILE"
           tar -xzf "$PACKAGE_FILE"
           
-          # ターゲットプラットフォームを特定
-          if [[ "$PACKAGE_FILE" == *"ubuntu-24.04_x86_64"* ]]; then
-            TARGET="ubuntu-24.04_x86_64"
-          elif [[ "$PACKAGE_FILE" == *"ubuntu-22.04_x86_64"* ]]; then
-            TARGET="ubuntu-22.04_x86_64"
-          else
-            echo "Unknown target platform in package: $PACKAGE_FILE"
-            exit 1
-          fi
+          # ターゲットプラットフォームは matrix から取得
+          TARGET="${{ matrix.package }}"
           
           # ビルドディレクトリ構造を再現
           mkdir -p _build/$TARGET/release/momo
