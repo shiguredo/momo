@@ -16,10 +16,10 @@ def test_test_mode_with_sora_options_raises_error():
         ):
             pass
 
-    assert "Test モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Test mode" in str(exc_info.value)
     assert "signaling_urls" in str(exc_info.value)
     assert "channel_id" in str(exc_info.value)
-    assert "sora モード専用" in str(exc_info.value)
+    assert "sora mode" in str(exc_info.value)
 
 
 def test_test_mode_with_ayame_options_raises_error():
@@ -33,10 +33,10 @@ def test_test_mode_with_ayame_options_raises_error():
         ):
             pass
 
-    assert "Test モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Test mode" in str(exc_info.value)
     assert "room_id" in str(exc_info.value)
     assert "client_id" in str(exc_info.value)
-    assert "ayame" in str(exc_info.value)  # "ayame/sora モード専用" の可能性もある
+    assert "ayame" in str(exc_info.value)  # "ayame/sora mode" の可能性もある
 
 
 def test_sora_mode_with_test_options_raises_error():
@@ -51,9 +51,9 @@ def test_sora_mode_with_test_options_raises_error():
         ):
             pass
 
-    assert "Sora モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Sora mode" in str(exc_info.value)
     assert "document_root" in str(exc_info.value)
-    assert "test モード専用" in str(exc_info.value)
+    assert "test mode" in str(exc_info.value)
 
 
 def test_sora_mode_with_ayame_options_raises_error():
@@ -68,9 +68,9 @@ def test_sora_mode_with_ayame_options_raises_error():
         ):
             pass
 
-    assert "Sora モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Sora mode" in str(exc_info.value)
     assert "room_id" in str(exc_info.value)
-    assert "ayame モード専用" in str(exc_info.value)
+    assert "ayame mode" in str(exc_info.value)
 
 
 def test_ayame_mode_with_test_options_raises_error():
@@ -85,9 +85,9 @@ def test_ayame_mode_with_test_options_raises_error():
         ):
             pass
 
-    assert "Ayame モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Ayame mode" in str(exc_info.value)
     assert "document_root" in str(exc_info.value)
-    assert "test" in str(exc_info.value)  # "test/sora モード専用" の可能性もある
+    assert "test" in str(exc_info.value)  # "test/sora mode" の可能性もある
 
 
 def test_ayame_mode_with_sora_options_raises_error():
@@ -103,10 +103,10 @@ def test_ayame_mode_with_sora_options_raises_error():
         ):
             pass
 
-    assert "Ayame モードで無効なオプションが指定されました" in str(exc_info.value)
+    assert "Invalid options specified for Ayame mode" in str(exc_info.value)
     assert "role" in str(exc_info.value)
     assert "simulcast" in str(exc_info.value)
-    assert "sora モード専用" in str(exc_info.value)
+    assert "sora mode" in str(exc_info.value)
 
 
 def test_common_options_allowed_in_all_modes(http_client):

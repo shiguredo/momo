@@ -8,7 +8,7 @@ from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_SIGNALING_URLS が設定されていない場合スキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SIGNALING_URLS"),
+    not os.environ.get("TEST_SIGNALING_URL"),
     reason="TEST_SIGNALING_URLS not set in environment",
 )
 
@@ -16,9 +16,13 @@ pytestmark = pytest.mark.skipif(
 def test_sora_metrics_endpoint_returns_200(http_client):
     """Sora モードでメトリクスエンドポイントが 200 を返すことを確認"""
     # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
@@ -49,9 +53,13 @@ def test_sora_metrics_endpoint_returns_200(http_client):
 def test_sora_metrics_response_structure(http_client):
     """Sora モードでメトリクスレスポンスの構造を確認"""
     # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
@@ -216,9 +224,13 @@ def test_sora_connection_stats(http_client):
 def test_sora_invalid_endpoint_returns_404(http_client):
     """Sora モードで存在しないエンドポイントが 404 を返すことを確認"""
     # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
@@ -249,9 +261,13 @@ def test_sora_invalid_endpoint_returns_404(http_client):
 def test_sora_sendonly_recvonly_pair(http_client):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認"""
     # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
@@ -304,9 +320,13 @@ def test_sora_sendonly_recvonly_pair(http_client):
 def test_sora_multiple_sendonly_clients(http_client):
     """複数の sendonly クライアントが同じチャンネルに接続できることを確認"""
     # 環境変数から設定を取得
-    signaling_urls = os.environ.get("TEST_SIGNALING_URLS")
-    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX", "")
-    secret_key = os.environ.get("TEST_SECRET_KEY", "")
+    signaling_urls = os.environ.get("TEST_SIGNALING_URL")
+    channel_id_prefix = os.environ.get("TEST_CHANNEL_ID_PREFIX")
+    secret_key = os.environ.get("TEST_SECRET_KEY")
+
+    assert signaling_urls, "TEST_SIGNALING_URL must be set in environment"
+    assert channel_id_prefix, "TEST_CHANNEL_ID_PREFIX must be set in environment"
+    assert secret_key, "TEST_SECRET_KEY must be set in environment"
 
     channel_id = f"{channel_id_prefix}{uuid.uuid4().hex[:8]}"
 
