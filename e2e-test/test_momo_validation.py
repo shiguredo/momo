@@ -109,13 +109,13 @@ def test_ayame_mode_with_sora_options_raises_error():
     assert "sora mode" in str(exc_info.value)
 
 
-def test_common_options_allowed_in_all_modes(http_client):
+def test_common_options_allowed_in_all_modes(http_client, free_port, port_allocator):
     """共通オプションはすべてのモードで使用できることを確認"""
     # test モードで共通オプションを使用
     with Momo(
         mode=MomoMode.TEST,
-        metrics_port=9097,
-        port=8087,
+        metrics_port=free_port,
+        port=next(port_allocator),
         fake_capture_device=True,
         resolution="HD",  # 共通オプション
         framerate=30,  # 共通オプション

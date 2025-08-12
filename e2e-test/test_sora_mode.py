@@ -11,12 +11,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_sora_metrics_endpoint_returns_200(http_client, sora_settings):
+def test_sora_metrics_endpoint_returns_200(http_client, sora_settings, free_port):
     """Sora モードでメトリクスエンドポイントが 200 を返すことを確認"""
 
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=9300,
+        metrics_port=free_port,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
@@ -29,12 +29,12 @@ def test_sora_metrics_endpoint_returns_200(http_client, sora_settings):
         assert response.status_code == 200
 
 
-def test_sora_metrics_response_structure(http_client, sora_settings):
+def test_sora_metrics_response_structure(http_client, sora_settings, free_port):
     """Sora モードでメトリクスレスポンスの構造を確認"""
 
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=9301,
+        metrics_port=free_port,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
@@ -61,18 +61,18 @@ def test_sora_metrics_response_structure(http_client, sora_settings):
 
 
 @pytest.mark.parametrize(
-    "video_codec_type,expected_mime_type,port",
+    "video_codec_type,expected_mime_type",
     [
-        ("VP8", "video/VP8", 9302),
-        ("VP9", "video/VP9", 9312),
-        ("AV1", "video/AV1", 9322),
+        ("VP8", "video/VP8"),
+        ("VP9", "video/VP9"),
+        ("AV1", "video/AV1"),
     ]
 )
-def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type, port):
+def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type, free_port):
     """Sora モードで接続時の統計情報を確認"""
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=port,
+        metrics_port=free_port,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
@@ -178,12 +178,12 @@ def test_sora_connection_stats(http_client, sora_settings, video_codec_type, exp
                     assert "dataChannelsOpened" in stat
 
 
-def test_sora_invalid_endpoint_returns_404(http_client, sora_settings):
+def test_sora_invalid_endpoint_returns_404(http_client, sora_settings, free_port):
     """Sora モードで存在しないエンドポイントが 404 を返すことを確認"""
 
     with Momo(
         mode=MomoMode.SORA,
-        metrics_port=9303,
+        metrics_port=free_port,
         fake_capture_device=True,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
@@ -196,7 +196,7 @@ def test_sora_invalid_endpoint_returns_404(http_client, sora_settings):
         assert response.status_code == 404
 
 
-def test_sora_sendonly_recvonly_pair(http_client, sora_settings):
+def test_sora_sendonly_recvonly_pair(http_client, sora_settings, port_allocator):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認"""
 
     # 送信専用クライアント
@@ -205,7 +205,7 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings):
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
-        metrics_port=9304,
+        metrics_port=next(port_allocator),
         fake_capture_device=True,
         video=True,
         audio=True,
@@ -217,7 +217,7 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings):
             signaling_urls=sora_settings.signaling_urls,
             channel_id=sora_settings.channel_id,
             role="recvonly",
-            metrics_port=9305,
+            metrics_port=next(port_allocator),
             video=True,
             audio=True,
             metadata=sora_settings.metadata,
@@ -235,7 +235,7 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings):
             assert len(sender_stats) > 0 or len(receiver_stats) > 0
 
 
-def test_sora_multiple_sendonly_clients(http_client, sora_settings):
+def test_sora_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
     """複数の sendonly クライアントが同じチャンネルに接続できることを確認"""
 
     # 複数の sendonly クライアントを起動
@@ -244,7 +244,7 @@ def test_sora_multiple_sendonly_clients(http_client, sora_settings):
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
-        metrics_port=9306,
+        metrics_port=next(port_allocator),
         fake_capture_device=True,
         video=True,
         audio=True,
@@ -255,7 +255,7 @@ def test_sora_multiple_sendonly_clients(http_client, sora_settings):
             signaling_urls=sora_settings.signaling_urls,
             channel_id=sora_settings.channel_id,
             role="sendonly",
-            metrics_port=9307,
+            metrics_port=next(port_allocator),
             fake_capture_device=True,
             video=True,
             audio=True,

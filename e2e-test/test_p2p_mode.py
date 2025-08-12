@@ -3,12 +3,12 @@
 from momo import Momo, MomoMode
 
 
-def test_with_custom_arguments(http_client):
+def test_with_custom_arguments(http_client, free_port, port_allocator):
     """カスタム引数で momo を起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
-        metrics_port=9097,
-        port=8087,
+        metrics_port=free_port,
+        port=next(port_allocator),
         fake_capture_device=True,
         resolution="HD",
         framerate=30,
@@ -18,18 +18,18 @@ def test_with_custom_arguments(http_client):
         assert response.status_code == 200
 
 
-def test_multiple_instances_concurrent(http_client):
+def test_multiple_instances_concurrent(http_client, port_allocator):
     """複数の momo インスタンスを同時に起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
-        metrics_port=9098,
-        port=8088,
+        metrics_port=next(port_allocator),
+        port=next(port_allocator),
         fake_capture_device=True,
     ) as m1:
         with Momo(
             mode=MomoMode.TEST,
-            metrics_port=9099,
-            port=8089,
+            metrics_port=next(port_allocator),
+            port=next(port_allocator),
             fake_capture_device=True,
         ) as m2:
             # 両方のインスタンスが正常に動作していることを確認
@@ -47,20 +47,20 @@ def test_multiple_instances_concurrent(http_client):
             assert "version" in data2
 
 
-def test_multiple_instances_different_configs(http_client):
+def test_multiple_instances_different_configs(http_client, port_allocator):
     """異なる設定で複数のインスタンスを起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
-        metrics_port=9100,
-        port=8090,
+        metrics_port=next(port_allocator),
+        port=next(port_allocator),
         fake_capture_device=True,
         resolution="VGA",
         framerate=15,
     ) as m1:
         with Momo(
             mode=MomoMode.TEST,
-            metrics_port=9101,
-            port=8091,
+            metrics_port=next(port_allocator),
+            port=next(port_allocator),
             fake_capture_device=True,
             resolution="HD",
             framerate=30,
@@ -70,18 +70,16 @@ def test_multiple_instances_different_configs(http_client):
             assert http_client.get(f"http://localhost:{m2.metrics_port}/metrics").status_code == 200
 
 
-def test_dynamic_instance_creation_and_cleanup(http_client):
+def test_dynamic_instance_creation_and_cleanup(http_client, port_allocator):
     """動的にインスタンスを作成・削除できることを確認"""
     instances = []
-    base_metrics_port = 9102
-    base_port = 8092
 
     try:
         for i in range(3):
             momo = Momo(
                 mode=MomoMode.TEST,
-                metrics_port=base_metrics_port + i,
-                port=base_port + i,
+                metrics_port=next(port_allocator),
+                port=next(port_allocator),
                 fake_capture_device=True,
             )
             momo.__enter__()
