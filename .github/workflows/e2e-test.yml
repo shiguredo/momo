@@ -110,7 +110,7 @@ jobs:
       - run: |
           timeout 5 _build/$TARGET/release/momo/momo --fake-capture-device --log-level verbose --metrics-port 9302 \
             sora \
-              --signaling-urls ${{ secret.TEST_SIGNALING_URL }} \
+              --signaling-urls ${{ secrets.TEST_SIGNALING_URL }} \
               --channel-id ${{ env.TEST_CHANNEL_ID_PREFIX}}_test
               --video true --audio true --role sendonly \
               --metadata '{"access_token": "${{ secrets.TEST_SECRET_KEY }}"}'
