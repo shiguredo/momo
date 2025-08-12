@@ -123,7 +123,7 @@ def test_sora_connection_stats(http_client):
     ) as m:
         # Momo では接続が確立したことを確認する手段がないため、
         # sleep 5 秒で「ほぼ確実に接続しただろう」と仮定する
-        time.sleep(5)
+        time.sleep(10)
 
         response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
@@ -346,7 +346,7 @@ def test_sora_multiple_sendonly_clients(http_client):
             metadata=metadata,
         ) as sender2:
             # 接続が確立するまで待機
-            time.sleep(3)
+            time.sleep(10)
 
             # 両方のインスタンスが正常に動作していることを確認
             response1 = http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
