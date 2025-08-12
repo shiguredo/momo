@@ -108,7 +108,7 @@ jobs:
           echo "MOMO_TARGET=$TARGET" >> $GITHUB_ENV
       
       - run: |
-          timeout 5 _build/$TARGET/release/momo/momo --fake-capture-device --log-level verbose --metrics-port 9302 \
+          timeout 5 _build/ubuntu-24.04_x86_64/release/momo/momo --fake-capture-device --log-level verbose --metrics-port 9302 \
             sora \
               --signaling-urls ${{ secrets.TEST_SIGNALING_URL }} \
               --channel-id ${{ env.TEST_CHANNEL_ID_PREFIX}}_test
