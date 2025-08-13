@@ -190,6 +190,12 @@ def read_version_file(path: str) -> Dict[str, str]:
     return versions
 
 
+def read_version_string(path: str) -> str:
+    """VERSION ファイルからバージョン文字列を読み込む"""
+    with open(path, encoding="utf-8") as f:
+        return f.read().strip()
+
+
 # dir 以下にある全てのファイルパスを、dir2 からの相対パスで返す
 def enum_all_files(dir, dir2):
     for root, _, files in os.walk(dir):
