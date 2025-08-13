@@ -10,6 +10,13 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
+      - "test/**"
+      - ".github/workflows/e2e-test.yml"
+      - ".github/workflows/claude.yml"
+  schedule:
+    # UTC の 01:00 は JST だと 10:00 。
+    # 1-5 で 月曜日から金曜日
+    - cron: "0 1 * * 1-5"
 
 jobs:
   build-windows:
@@ -21,7 +28,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: microsoft/setup-msbuild@v2
       - name: Get Versions
         run: |
@@ -72,7 +79,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
@@ -101,7 +108,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Disk cleanup
         run: |
           set -x
@@ -189,6 +196,13 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
 
+  test-e2e-ubuntu:
+    name: E2E Test Ubuntu 24.04
+    needs:
+      - build-ubuntu
+    uses: ./.github/workflows/e2e-test.yml
+    secrets: inherit
+
   create-release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/202')
@@ -196,9 +210,10 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/download
         with:
           platform: windows_x86_64
@@ -241,20 +256,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
       - create-release
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||
           needs.build-macos.result == 'failure' ||
           needs.build-ubuntu.result == 'failure' ||
+          needs.test-e2e-ubuntu.result == 'failure' ||
           needs.create-release.result == 'failure'
         env:
           SLACK_CHANNEL: open-momo
