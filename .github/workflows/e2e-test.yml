@@ -5,7 +5,7 @@ on:
     branches:
       - '**'
     paths:
-      - 'e2e-test/**/*.py'
+      - 'test/**/*.py'
       - '.github/workflows/e2e-test.yml'
   workflow_dispatch:
     inputs:
@@ -202,4 +202,4 @@ jobs:
         run: |
           uv sync
           uv run pytest -v
-        working-directory: ./e2e-test
+        working-directory: ./test

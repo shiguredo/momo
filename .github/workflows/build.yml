@@ -10,7 +10,7 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
-      - "e2e-test/**"
+      - "test/**"
       - ".github/workflows/e2e-test.yml"
       - ".github/workflows/claude.yml"
 
