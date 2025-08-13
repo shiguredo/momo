@@ -9,6 +9,12 @@ momo の HTTP API を利用した pytest ベースの E2E テストです。
 uv sync
 ```
 
+## フォーマッター
+
+```bash
+uv run ruff format
+```
+
 ## ビルド
 
 テストを実行する前に、momo をビルドする必要があります：
@@ -41,8 +47,6 @@ uv run pytest test_momo.py::test_metrics_endpoint_returns_200
 - ビルドが1つだけの場合：そのビルドを自動選択
 - 複数のビルドがある場合：実行環境のプラットフォームに応じて優先順位で選択
   - macOS ARM64: `macos_arm64` → `macos_x86_64`
-  - macOS x86_64: `macos_x86_64` → `macos_arm64`
-  - Linux ARM64: `ubuntu-24.04_armv8` → `ubuntu-22.04_armv8` → `ubuntu-20.04_armv8`
   - Linux x86_64: `ubuntu-24.04_x86_64` → `ubuntu-22.04_x86_64` → `ubuntu-20.04_x86_64`
 
 ## テスト内容
@@ -106,9 +110,10 @@ Sora モードのテストを実行するには、`.env` ファイルの設定�
 ## ファイル構成
 
 ```plaintext
-e2e-test/
+test/
 ├── .env.template           # 環境変数のテンプレート
 ├── .gitignore             # Git 除外設定
+├── .python-version        # Python バージョン指定
 ├── conftest.py            # pytest 設定（HTTP クライアント）
 ├── momo.py                # Momo プロセス管理クラス
 ├── pyproject.toml         # プロジェクト設定と依存関係
@@ -116,6 +121,7 @@ e2e-test/
 ├── test_p2p_mode.py       # P2P (Test) モードのテスト
 ├── test_momo_validation.py # モード固有オプション検証のテスト
 ├── test_sora_mode.py      # Sora モードのテスト
+├── uv.lock                # uv のロックファイル
 └── README.md              # このファイル
 ```
 

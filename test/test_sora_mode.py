@@ -66,9 +66,11 @@ def test_sora_metrics_response_structure(http_client, sora_settings, free_port):
         ("VP8", "video/VP8"),
         ("VP9", "video/VP9"),
         ("AV1", "video/AV1"),
-    ]
+    ],
 )
-def test_sora_connection_stats(http_client, sora_settings, video_codec_type, expected_mime_type, free_port):
+def test_sora_connection_stats(
+    http_client, sora_settings, video_codec_type, expected_mime_type, free_port
+):
     """Sora モードで接続時の統計情報を確認"""
     with Momo(
         mode=MomoMode.SORA,
@@ -109,13 +111,16 @@ def test_sora_connection_stats(http_client, sora_settings, video_codec_type, exp
         }
         for expected_type in expected_types:
             assert expected_type in stat_types
-        
+
         # 指定されたビデオコーデックが実際に使われていることを確認
         codec_mime_types = {
-            stat.get("mimeType") for stat in stats 
+            stat.get("mimeType")
+            for stat in stats
             if stat.get("type") == "codec" and "mimeType" in stat
         }
-        assert expected_mime_type in codec_mime_types, f"Expected codec {expected_mime_type} not found in {codec_mime_types}"
+        assert expected_mime_type in codec_mime_types, (
+            f"Expected codec {expected_mime_type} not found in {codec_mime_types}"
+        )
 
         # 各統計タイプの詳細をチェック
         for stat in stats:
