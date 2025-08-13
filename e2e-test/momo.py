@@ -1,7 +1,6 @@
 """Momo プロセスを管理するためのクラス"""
 
 import json
-import os
 import platform
 import shlex
 import subprocess
@@ -132,7 +131,7 @@ class Momo:
         """
         # 実行ファイルのパスを自動検出
         self.executable_path = self._get_momo_executable_path()
-        self.process: subprocess.Popen[int] | None = None
+        self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
 
         # すべての引数を保存
@@ -228,16 +227,17 @@ class Momo:
             )
 
         available_targets = [
-            d.name for d in build_dir.iterdir() 
+            d.name
+            for d in build_dir.iterdir()
             if d.is_dir() and (d / "release" / "momo" / "momo").exists()
         ]
-        
+
         if not available_targets:
             raise RuntimeError(
                 f"No built momo executables found in {build_dir}. "
                 f"Please build with: python3 run.py build <target>"
             )
-        
+
         if len(available_targets) == 1:
             # ビルドが1つだけの場合は自動選択
             target = available_targets[0]
@@ -246,7 +246,7 @@ class Momo:
             # 複数ビルドがある場合は、プラットフォームに応じて優先順位を決める
             system = platform.system().lower()
             machine = platform.machine().lower()
-            
+
             # プラットフォームに応じた優先順位リスト
             if system == "darwin":
                 if machine == "arm64" or machine == "aarch64":
@@ -257,22 +257,30 @@ class Momo:
                 if machine == "aarch64":
                     preferred = ["ubuntu-24.04_armv8", "ubuntu-22.04_armv8", "ubuntu-20.04_armv8"]
                 else:
-                    preferred = ["ubuntu-24.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-20.04_x86_64"]
+                    preferred = [
+                        "ubuntu-24.04_x86_64",
+                        "ubuntu-22.04_x86_64",
+                        "ubuntu-20.04_x86_64",
+                    ]
             else:
                 preferred = []
-            
+
             # 優先順位に従って選択
             target = None
             for pref in preferred:
                 if pref in available_targets:
                     target = pref
-                    print(f"Auto-detected momo target: {target} (from {len(available_targets)} available)")
+                    print(
+                        f"Auto-detected momo target: {target} (from {len(available_targets)} available)"
+                    )
                     break
-            
+
             if not target:
                 # 優先順位で見つからない場合は最初のものを使用
                 target = available_targets[0]
-                print(f"Using first available target: {target} (available: {', '.join(available_targets)})")
+                print(
+                    f"Using first available target: {target} (available: {', '.join(available_targets)})"
+                )
 
         # momo のパスを構築
         assert target is not None
@@ -310,10 +318,10 @@ class Momo:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> bool:
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
+    ) -> Literal[False]:
         """コンテキストマネージャーの終了"""
         self._cleanup()
         return False
@@ -598,7 +606,9 @@ class Momo:
                     f"These options are only for {'/'.join(modes)} mode"
                 )
 
-    def _wait_for_startup(self, metrics_port: int, timeout: int = 10, initial_wait: int = 2) -> None:
+    def _wait_for_startup(
+        self, metrics_port: int, timeout: int = 10, initial_wait: int = 2
+    ) -> None:
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
             raise RuntimeError("Process not started")
