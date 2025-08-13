@@ -40,7 +40,7 @@ jobs:
       
       - name: Download artifacts from workflow_call
         if: inputs.from_workflow_call == true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ matrix.package }}.env
           path: ./
@@ -54,7 +54,7 @@ jobs:
       
       - name: Download package artifact from workflow_call
         if: inputs.from_workflow_call == true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ steps.package_info.outputs.package_name }}
           path: ./
