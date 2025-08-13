@@ -20,10 +20,6 @@ on:
         default: true
         required: false
 
-env:
-  # push イベント時に artifact を取得するブランチ
-  ARTIFACT_SOURCE_BRANCH: feature/pytest
-
 jobs:
   e2e-test-ubuntu:
     strategy:
@@ -67,11 +63,11 @@ jobs:
         if: github.event_name == 'push' && inputs.from_workflow_call != true
         id: latest_artifact
         run: |
-          echo "Getting latest successful build from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch..."
+          echo "Getting latest successful build from ${{ github.ref_name }} branch..."
           
-          # 指定ブランチの最新の成功したワークフローランを取得
+          # push されたブランチの最新の成功したワークフローランを取得
           RUN_ID=$(gh run list \
-            --branch "${{ env.ARTIFACT_SOURCE_BRANCH }}" \
+            --branch "${{ github.ref_name }}" \
             --workflow build-workflow \
             --status success \
             --limit 1 \
@@ -79,7 +75,7 @@ jobs:
             --jq '.[0].databaseId')
           
           if [ -z "$RUN_ID" ]; then
-            echo "Error: No successful workflow runs found on ${{ env.ARTIFACT_SOURCE_BRANCH }} branch"
+            echo "Error: No successful workflow runs found on ${{ github.ref_name }} branch"
             exit 1
           fi
           
@@ -141,7 +137,7 @@ jobs:
       - name: Download artifacts for push event
         if: github.event_name == 'push' && inputs.from_workflow_call != true
         run: |
-          echo "Downloading artifacts from ${{ env.ARTIFACT_SOURCE_BRANCH }} branch build..."
+          echo "Downloading artifacts from ${{ github.ref_name }} branch build..."
           
           # 環境ファイルをダウンロード
           gh api -H "Accept: application/vnd.github+json" \
