@@ -1,0 +1,205 @@
+name: e2e-test-workflow
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'test/**/*.py'
+      - '.github/workflows/e2e-test.yml'
+  workflow_dispatch:
+    inputs:
+      artifact_url:
+        description: 'GitHub Actions artifact URL (e.g., https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585)'
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      from_workflow_call:
+        type: boolean
+        default: true
+        required: false
+
+jobs:
+  e2e-test-ubuntu:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            package: ubuntu-22.04_x86_64
+          - os: ubuntu-24.04
+            package: ubuntu-24.04_x86_64
+    name: E2E Test ${{ matrix.package }}
+    runs-on: ${{ matrix.os }}
+    env:
+      TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download artifacts from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.package }}.env
+          path: ./
+      
+      - name: Get package name for workflow_call
+        if: inputs.from_workflow_call == true
+        run: |
+          source momo.env
+          echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_info
+      
+      - name: Download package artifact from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.package_info.outputs.package_name }}
+          path: ./
+      
+      - name: Get latest artifact from source branch
+        if: github.event_name == 'push' && inputs.from_workflow_call != true
+        id: latest_artifact
+        run: |
+          echo "Getting latest successful build from ${{ github.ref_name }} branch..."
+          
+          # push されたブランチの最新の成功したワークフローランを取得
+          RUN_ID=$(gh run list \
+            --branch "${{ github.ref_name }}" \
+            --workflow build-workflow \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          if [ -z "$RUN_ID" ]; then
+            echo "Error: No successful workflow runs found on ${{ github.ref_name }} branch"
+            exit 1
+          fi
+          
+          echo "Found successful run: $RUN_ID"
+          
+          # そのランから対象プラットフォームに関連する artifact を取得
+          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("${{ matrix.package }}")) | {id: .id, name: .name}')
+          
+          # momo パッケージの artifact ID を取得
+          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
+          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
+          
+          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
+            echo "Error: Required artifacts not found in run $RUN_ID"
+            echo "Available artifacts:"
+            echo "$ARTIFACTS"
+            exit 1
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Parse artifact URL
+        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
+        id: parse
+        run: |
+          # workflow_dispatch の場合は入力された URL を使用
+          URL="${{ github.event.inputs.artifact_url }}"
+          if [ -z "$URL" ]; then
+            echo "Error: artifact_url is required for workflow_dispatch"
+            exit 1
+          fi
+          echo "Using provided URL: $URL"
+          
+          # URL から run_id と artifact_id を抽出
+          # 例: https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585
+          RUN_ID=$(echo "$URL" | sed -n 's|.*/runs/\([0-9]*\)/.*|\1|p')
+          ARTIFACT_ID=$(echo "$URL" | sed -n 's|.*/artifacts/\([0-9]*\).*|\1|p')
+          
+          if [ -z "$RUN_ID" ] || [ -z "$ARTIFACT_ID" ]; then
+            echo "Failed to parse artifact URL: $URL"
+            echo "Expected format: https://github.com/shiguredo/momo/actions/runs/{run_id}/artifacts/{artifact_id}"
+            exit 1
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "artifact_id=${ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "Parsed run_id: $RUN_ID, artifact_id: $ARTIFACT_ID"
+      
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
+      
+      - name: Download artifacts for push event
+        if: github.event_name == 'push' && inputs.from_workflow_call != true
+        run: |
+          echo "Downloading artifacts from ${{ github.ref_name }} branch build..."
+          
+          # 環境ファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
+            > env.zip
+          unzip -o env.zip
+          rm env.zip
+          
+          # パッケージファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
+            > package.zip
+          unzip -o package.zip
+          rm package.zip
+          
+          ls -la
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Download artifact using gh CLI
+        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
+        run: |
+          # gh コマンドでアーティファクトをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.parse.outputs.artifact_id }}/zip \
+            > artifact.zip
+          
+          # ZIPファイルを展開
+          unzip -o artifact.zip
+          ls -la
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Extract momo binary
+        run: |
+          # パッケージファイルを探す
+          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "Package file not found"
+            ls -la
+            exit 1
+          fi
+          
+          echo "Found package: $PACKAGE_FILE"
+          tar -xzf "$PACKAGE_FILE"
+          
+          # ターゲットプラットフォームは matrix から取得
+          TARGET="${{ matrix.package }}"
+          
+          # ビルドディレクトリ構造を再現
+          mkdir -p _build/$TARGET/release/momo
+          mv momo/momo _build/$TARGET/release/momo/
+          # 実行権限を付与
+          chmod +x _build/$TARGET/release/momo/momo
+          
+          # バージョン確認
+          _build/$TARGET/release/momo/momo --version
+
+      - uses: astral-sh/setup-uv@v6
+      
+      - name: Run E2E tests
+        run: |
+          uv sync
+          uv run pytest -v
+        working-directory: ./test

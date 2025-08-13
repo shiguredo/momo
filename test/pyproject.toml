@@ -1,0 +1,13 @@
+[project]
+name = "momo-e2e-test"
+version = "0.0.0"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest", "httpx", "python-dotenv", "ruff", "ty", "pyjwt"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]

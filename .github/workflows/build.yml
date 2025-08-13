@@ -10,6 +10,9 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
+      - "test/**"
+      - ".github/workflows/e2e-test.yml"
+      - ".github/workflows/claude.yml"
 
 jobs:
   build-windows:
@@ -189,6 +192,13 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
 
+  test-e2e-ubuntu:
+    name: E2E Test Ubuntu 24.04
+    needs:
+      - build-ubuntu
+    uses: ./.github/workflows/e2e-test.yml
+    secrets: inherit
+
   create-release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/202')
@@ -196,6 +206,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
@@ -241,11 +252,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - test-e2e-ubuntu
       - create-release
     if: always()
     steps:
@@ -255,6 +267,7 @@ jobs:
           needs.build-windows.result == 'failure' ||
           needs.build-macos.result == 'failure' ||
           needs.build-ubuntu.result == 'failure' ||
+          needs.test-e2e-ubuntu.result == 'failure' ||
           needs.create-release.result == 'failure'
         env:
           SLACK_CHANNEL: open-momo
