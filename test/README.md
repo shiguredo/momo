@@ -42,12 +42,36 @@ uv run pytest test_momo.py::test_metrics_endpoint_returns_200
 
 ## ビルドターゲットの自動検出
 
-テスト実行時、`_build` ディレクトリ内のビルド済みターゲットが自動的に検出されます：
+テスト実行時、`_build` ディレクトリ内のビルド済みターゲットが自動的に検出されます。
 
-- ビルドが1つだけの場合：そのビルドを自動選択
-- 複数のビルドがある場合：実行環境のプラットフォームに応じて優先順位で選択
-  - macOS ARM64: `macos_arm64` → `macos_x86_64`
-  - Linux x86_64: `ubuntu-24.04_x86_64` → `ubuntu-22.04_x86_64` → `ubuntu-20.04_x86_64`
+### 検出ロジック
+
+1. **単一ビルドの場合**  
+   `_build` ディレクトリに 1 つだけビルドが存在する場合、そのビルドを自動的に選択します。
+
+2. **複数ビルドの場合**  
+   実行環境のプラットフォーム（OS）とアーキテクチャ（CPU）を判定し、以下の優先順位で適切なビルドを選択します：
+
+   **macOS（Darwin）**
+   - ARM64（Apple Silicon）環境：
+     1. `macos_arm64`
+     2. `macos_x86_64`（Rosetta 2 での実行用）
+   - x86_64（Intel）環境：
+     1. `macos_x86_64`
+     2. `macos_arm64`
+
+   **Linux**
+   - ARM64（aarch64）環境：
+     1. `ubuntu-24.04_armv8`
+     2. `ubuntu-22.04_armv8`
+     3. `ubuntu-20.04_armv8`
+   - x86_64 環境：
+     1. `ubuntu-24.04_x86_64`
+     2. `ubuntu-22.04_x86_64`
+     3. `ubuntu-20.04_x86_64`
+
+3. **フォールバック**  
+   優先順位リストにマッチするビルドが見つからない場合、利用可能な最初のビルドを使用します。
 
 ## テスト内容
 
@@ -76,13 +100,14 @@ Sora モードのテストを実行するには、`.env` ファイルの設定�
 2. `.env` ファイルを編集して、実際の Sora サーバー情報を設定
 
    ```bash
-   TEST_SORA_SIGNALING_URLS=wss://your-sora-server.com/signaling
-   TEST_SORA_CHANNEL_ID_PREFIX=test_
+   TEST_SORA_MODE_SIGNALING_URLS=wss://your-sora-server.com/signaling
+   TEST_SORA_MODE_CHANNEL_ID_PREFIX=test_
+   TEST_SORA_MODE_SECRET_KEY=your_secret_key
    ```
 
-   **注意**:
-   - チャンネル ID は自動的に生成されます（プレフィックス + UUID）
-   - 複数の Signaling URL を指定する場合はカンマ区切りで記述可能
+   > [!NOTE]
+   > - チャンネル ID は自動的に生成されます（プレフィックス + UUID）
+   > - 複数の Signaling URL を指定する場合はカンマ区切りで記述可能
 
 3. Sora モードのテストを実行
 
@@ -97,15 +122,8 @@ Sora モードのテストを実行するには、`.env` ファイルの設定�
 - `--audio true --video true` でメディアストリームを有効化
 - メトリクスサーバーはポート 8081 で起動
 
-#### オプション環境変数
-
-必要に応じて以下の環境変数も設定可能：
-
-- `TEST_SORA_METADATA`: JSON 形式のメタデータ
-- `TEST_SORA_CLIENT_ID`: クライアント ID
-- `TEST_SORA_BUNDLE_ID`: バンドル ID
-
-**注意**: Sora モードのテストは、環境変数 `TEST_SORA_SIGNALING_URLS` が設定されていない場合は自動的にスキップされます。
+> [!IMPORTANT]
+> Sora モードのテストは、環境変数 `TEST_SORA_MODE_SIGNALING_URLS` が設定されていない場合は自動的にスキップされます。
 
 ## ファイル構成
 
@@ -124,6 +142,41 @@ test/
 ├── uv.lock                # uv のロックファイル
 └── README.md              # このファイル
 ```
+
+## GitHub Actions での自動テスト
+
+E2E テストは GitHub Actions で自動実行されます（`.github/workflows/e2e-test.yml`）。
+
+### 実行トリガー
+
+1. **プッシュ時の自動実行**
+   - `test/**/*.py` または `.github/workflows/e2e-test.yml` が変更された場合
+   - プッシュされたブランチの最新の成功したビルドを自動的に取得してテスト
+
+2. **手動実行（workflow_dispatch）**
+   - GitHub Actions の UI から手動でトリガー可能
+   - ビルドアーティファクトの URL を指定してテスト実行
+   - 例：`https://github.com/shiguredo/momo/actions/runs/{run_id}/artifacts/{artifact_id}`
+
+3. **他のワークフローからの呼び出し（workflow_call）**
+   - ビルドワークフローから自動的に呼び出される
+
+### テスト環境
+
+- **対象プラットフォーム**：
+  - Ubuntu 22.04 x86_64
+  - Ubuntu 24.04 x86_64
+
+- **環境変数（GitHub Secrets）**：
+  - `TEST_SIGNALING_URLS`：Sora のシグナリング URL
+  - `TEST_CHANNEL_ID_PREFIX`：チャンネル ID のプレフィックス
+  - `TEST_SECRET_KEY`：認証用のシークレットキー
+
+### アーティファクトの自動取得
+
+- プッシュ時：そのブランチの最新の成功したビルドを自動検出
+- 手動実行時：指定された URL からアーティファクトをダウンロード
+- workflow_call 時：前のステップで生成されたアーティファクトを使用
 
 ## トラブルシューティング
 
