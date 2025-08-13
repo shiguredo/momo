@@ -36,7 +36,7 @@ jobs:
       TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
       TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Download artifacts from workflow_call
         if: inputs.from_workflow_call == true
