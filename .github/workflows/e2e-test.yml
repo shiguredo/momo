@@ -14,11 +14,6 @@ on:
       - 'test/**/*.py'
       - '.github/workflows/e2e-test.yml'
   workflow_dispatch:
-    inputs:
-      artifact_url:
-        description: 'GitHub Actions artifact URL (e.g., https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585)'
-        required: false
-        type: string
   workflow_call:
     inputs:
       from_workflow_call:
@@ -66,7 +61,7 @@ jobs:
           path: ./
       
       - name: Get latest artifact from branch
-        if: github.event_name == 'push' && inputs.from_workflow_call != true
+        if: inputs.from_workflow_call != true
         id: latest_artifact
         uses: ./.github/actions/get-latest-artifact
         with:
@@ -74,59 +69,18 @@ jobs:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
       
-      - name: Parse artifact URL
-        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
-        id: parse
-        run: |
-          # workflow_dispatch の場合は入力された URL を使用
-          URL="${{ github.event.inputs.artifact_url }}"
-          if [ -z "$URL" ]; then
-            echo "Error: artifact_url is required for workflow_dispatch"
-            exit 1
-          fi
-          echo "Using provided URL: $URL"
-          
-          # URL から run_id と artifact_id を抽出
-          # 例: https://github.com/shiguredo/momo/actions/runs/16897099336/artifacts/3740621585
-          RUN_ID=$(echo "$URL" | sed -n 's|.*/runs/\([0-9]*\)/.*|\1|p')
-          ARTIFACT_ID=$(echo "$URL" | sed -n 's|.*/artifacts/\([0-9]*\).*|\1|p')
-          
-          if [ -z "$RUN_ID" ] || [ -z "$ARTIFACT_ID" ]; then
-            echo "Failed to parse artifact URL: $URL"
-            echo "Expected format: https://github.com/shiguredo/momo/actions/runs/{run_id}/artifacts/{artifact_id}"
-            exit 1
-          fi
-          
-          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
-          echo "artifact_id=${ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "Parsed run_id: $RUN_ID, artifact_id: $ARTIFACT_ID"
-      
       - name: Install runtime dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
-      - name: Download artifacts for push event
-        if: github.event_name == 'push' && inputs.from_workflow_call != true
+      - name: Download artifacts
+        if: inputs.from_workflow_call != true
         uses: ./.github/actions/download-artifacts
         with:
           env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
           package_artifact_id: ${{ steps.latest_artifact.outputs.package_artifact_id }}
           github-token: ${{ github.token }}
-      
-      - name: Download artifact using gh CLI
-        if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
-        run: |
-          # gh コマンドでアーティファクトをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.parse.outputs.artifact_id }}/zip \
-            > artifact.zip
-          
-          # ZIPファイルを展開
-          unzip -o artifact.zip
-          ls -la
-        env:
-          GH_TOKEN: ${{ github.token }}
       
       - name: Extract momo binary
         uses: ./.github/actions/extract-momo-binary
@@ -147,8 +101,6 @@ jobs:
       group: Self
       labels: [self-hosted, linux, x64, Intel-VPL]
     timeout-minutes: 15
-    # 直接の push イベントの時だけ実行（workflow_call からの呼び出しでは動かない）
-    if: github.event_name == 'push' && inputs.from_workflow_call != true
     env:
       TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
       TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
@@ -159,7 +111,29 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
+      - name: Download artifacts from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v5
+        with:
+          name: ubuntu-24.04_x86_64.env
+          path: ./
+      
+      - name: Get package name for workflow_call
+        if: inputs.from_workflow_call == true
+        run: |
+          source momo.env
+          echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_info
+      
+      - name: Download package artifact from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ steps.package_info.outputs.package_name }}
+          path: ./
+      
       - name: Get latest artifact from branch
+        if: inputs.from_workflow_call != true
         id: latest_artifact
         uses: ./.github/actions/get-latest-artifact
         with:
@@ -168,6 +142,7 @@ jobs:
           github-token: ${{ github.token }}
       
       - name: Download artifacts
+        if: inputs.from_workflow_call != true
         uses: ./.github/actions/download-artifacts
         with:
           env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
@@ -195,8 +170,6 @@ jobs:
       group: Self
       labels: [self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]
     timeout-minutes: 15
-    # 直接の push イベントの時だけ実行（workflow_call からの呼び出しでは動かない）
-    if: github.event_name == 'push' && inputs.from_workflow_call != true
     env:
       TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
       TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
@@ -205,7 +178,29 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
+      - name: Download artifacts from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v5
+        with:
+          name: ubuntu-24.04_x86_64.env
+          path: ./
+      
+      - name: Get package name for workflow_call
+        if: inputs.from_workflow_call == true
+        run: |
+          source momo.env
+          echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        id: package_info
+      
+      - name: Download package artifact from workflow_call
+        if: inputs.from_workflow_call == true
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ steps.package_info.outputs.package_name }}
+          path: ./
+      
       - name: Get latest artifact from branch
+        if: inputs.from_workflow_call != true
         id: latest_artifact
         uses: ./.github/actions/get-latest-artifact
         with:
@@ -214,6 +209,7 @@ jobs:
           github-token: ${{ github.token }}
       
       - name: Download artifacts
+        if: inputs.from_workflow_call != true
         uses: ./.github/actions/download-artifacts
         with:
           env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
