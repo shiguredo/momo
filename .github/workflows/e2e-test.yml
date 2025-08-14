@@ -1,9 +1,10 @@
 name: e2e-test-workflow
 
 env:
-  # artifact 取得元のブランチ
-  TARGET_BRANCH: ${{ github.ref_name }}
-  # TARGET_BRANCH: 'develop'
+  # artifact 取得元のブランチはデフォルト develop
+  # 必要あれば変更してもよいが、マージする際は develop ブランチに戻すこと
+  # TARGET_BRANCH: ${{ github.ref_name }}
+  TARGET_BRANCH: 'develop'
 
 on:
   push:
