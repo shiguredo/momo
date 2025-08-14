@@ -24,7 +24,6 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 ### ハードウェアアクセラレーターへの対応
 
 - Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
-  - VP9 /AV1 の送信時、[既知の問題](https://github.com/shiguredo/momo/issues/357) がありますのでご確認ください
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
@@ -222,7 +221,6 @@ WebRTC Native Client に対する有料でのテクニカルサポート契約�
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加
 
-
 ## NVDIA Video Codec SDK
 
 <https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
@@ -272,4 +270,3 @@ H.265 が利用可能なバイナリを配布する事は、ライセンスが�
 
 - [Access Advance](https://accessadvance.com/ja/)
 - [Via LA Licensing](https://www.via-la.com/)
-
