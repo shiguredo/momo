@@ -26,9 +26,9 @@ def test_sora_connection_stats(
     """Sora モードで接続時の統計情報を確認"""
     with Momo(
         fake_capture_device=True,
-        av1_encoder="nvcodec",
-        h264_encoder="nvcodec",
-        h265_encoder="nvcodec",
+        av1_encoder="nvidia",
+        h264_encoder="nvidia",
+        h265_encoder="nvidia",
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
