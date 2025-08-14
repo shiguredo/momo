@@ -323,6 +323,6 @@ jobs:
       
       - name: Run Intel VPL E2E tests
         run: |
-          uv python pin 3.13
           uv sync
           uv run pytest test/test_sora_mode_intel_vpl.py -v
+        working-directory: ./test
