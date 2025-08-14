@@ -63,8 +63,7 @@ class Momo:
         vp9_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
         av1_encoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
         av1_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
-        h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"]
-        | None = None,
+        h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"] | None = None,
         h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
@@ -608,7 +607,7 @@ class Momo:
                 )
 
     def _wait_for_startup(
-        self, metrics_port: int, timeout: int = 10, initial_wait: int = 2
+        self, metrics_port: int, timeout: int = 30, initial_wait: int = 2
     ) -> None:
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
