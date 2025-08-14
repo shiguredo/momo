@@ -211,7 +211,7 @@ jobs:
         working-directory: ./test
 
   e2e-test-ubuntu-intel-vpl:
-    name: E2E Test Ubuntu Intel VPL
+    name: E2E Test ubuntu-24.04_x86_64 Intel VPL
     runs-on:
       group: Self
       labels: [self-hosted, linux, x64, Intel-VPL]
