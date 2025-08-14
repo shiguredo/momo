@@ -624,11 +624,6 @@ class Momo:
         if not self.process:
             raise RuntimeError("Process not started")
 
-        # Sora モードの場合は起動により時間がかかる可能性がある
-        # ただし、ユーザーが明示的に指定した場合はそれを優先
-        if self.kwargs["mode"] == MomoMode.SORA and initial_wait == 2:
-            initial_wait = 5
-            
         # プロセスが完全に起動するまで少し待機
         # 即座にメトリクスエンドポイントをチェックすると失敗することがあるため
         if initial_wait > 0:
