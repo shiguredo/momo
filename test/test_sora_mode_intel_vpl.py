@@ -57,7 +57,6 @@ def test_sora_connection_stats(
 
         # 統計タイプの収集
         stat_types = {stat.get("type") for stat in stats if "type" in stat}
-        print(f"Available stat types: {stat_types}")
 
         # 重要な統計タイプが存在することを確認
         expected_types = {
@@ -75,9 +74,7 @@ def test_sora_connection_stats(
             for stat in stats
             if stat.get("type") == "codec" and "mimeType" in stat
         }
-        assert expected_mime_type in codec_mime_types, (
-            f"Expected codec {expected_mime_type} not found in {codec_mime_types}"
-        )
+        assert expected_mime_type in codec_mime_types
 
         # 各統計タイプの詳細をチェック
         for stat in stats:
@@ -101,11 +98,9 @@ def test_sora_connection_stats(
                             assert "frameHeight" in stat
                             assert stat["framesEncoded"] > 0
 
-                            # エンコーダー実装を表示（Intel VPL 使用確認用）
-                            if "encoderImplementation" in stat:
-                                print(
-                                    f"Video encoder implementation: {stat['encoderImplementation']}"
-                                )
+                            # エンコーダー実装が Intel VPL であることを確認
+                            assert "encoderImplementation" in stat
+                            assert stat["encoderImplementation"] == "libvpl"
                         case "audio":
                             assert "headerBytesSent" in stat
                             assert stat["headerBytesSent"] > 0

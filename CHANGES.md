@@ -99,6 +99,10 @@
 
 ### misc
 
+- [ADD] Intel VPL を使った E2E テストジョブを追加
+  - GitHub Actions で self-hosted runner を使用して Intel VPL エンコーダーをテストする仕組みを追加
+  - test_sora_mode_intel_vpl.py テストファイルを追加
+  - @voluntas
 - [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
   - ubuntu-24.04 には意図的に上げていない
   - @voluntas
