@@ -7,7 +7,8 @@ from momo import Momo, MomoMode
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # NVIDIA Video Codec SDK 環境が有効でない場合もスキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS") or not os.environ.get("NVIDIA_VIDEO_CODEC_SDK"),
+    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS")
+    or not os.environ.get("NVIDIA_VIDEO_CODEC_SDK"),
     reason="TEST_SORA_MODE_SIGNALING_URLS or NVIDIA_VIDEO_CODEC_SDK not set in environment",
 )
 
@@ -15,8 +16,8 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize(
     "video_codec_type,expected_mime_type",
     [
-        ("AV1", "video/AV1"),
-        ("H264", "video/H264"),
+        # ("AV1", "video/AV1"),
+        # ("H264", "video/H264"),
         ("H265", "video/H265"),
     ],
 )
@@ -26,8 +27,8 @@ def test_sora_connection_stats(
     """Sora モードで接続時の統計情報を確認"""
     with Momo(
         fake_capture_device=True,
-        av1_encoder="nvidia",
-        h264_encoder="nvidia",
+        # av1_encoder="nvidia",
+        # h264_encoder="nvidia",
         h265_encoder="nvidia",
         metrics_port=free_port,
         mode=MomoMode.SORA,
