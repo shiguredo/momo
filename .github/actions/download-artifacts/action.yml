@@ -1,0 +1,39 @@
+name: download-artifacts
+description: Download package and environment artifacts from GitHub Actions
+
+inputs:
+  env_artifact_id:
+    description: Environment artifact ID
+    required: true
+  package_artifact_id:
+    description: Package artifact ID
+    required: true
+  github-token:
+    description: GitHub token for API access
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download artifacts
+      shell: bash
+      run: |
+        echo "Downloading artifacts..."
+        
+        # 環境ファイルをダウンロード
+        gh api -H "Accept: application/vnd.github+json" \
+          /repos/${{ github.repository }}/actions/artifacts/${{ inputs.env_artifact_id }}/zip \
+          > env.zip
+        unzip -o env.zip
+        rm env.zip
+        
+        # パッケージファイルをダウンロード
+        gh api -H "Accept: application/vnd.github+json" \
+          /repos/${{ github.repository }}/actions/artifacts/${{ inputs.package_artifact_id }}/zip \
+          > package.zip
+        unzip -o package.zip
+        rm package.zip
+        
+        ls -la
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}

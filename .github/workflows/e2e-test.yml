@@ -68,45 +68,11 @@ jobs:
       - name: Get latest artifact from branch
         if: github.event_name == 'push' && inputs.from_workflow_call != true
         id: latest_artifact
-        run: |
-          echo "Getting latest successful build from ${{ env.TARGET_BRANCH }} branch..."
-          
-          # 指定されたブランチの最新の成功したワークフローランを取得
-          RUN_ID=$(gh run list \
-            --branch "${{ env.TARGET_BRANCH }}" \
-            --workflow build-workflow \
-            --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')
-          
-          if [ -z "$RUN_ID" ]; then
-            echo "Error: No successful workflow runs found on ${{ env.TARGET_BRANCH }} branch"
-            exit 1
-          fi
-          
-          echo "Found successful run: $RUN_ID"
-          
-          # そのランから対象プラットフォームに関連する artifact を取得
-          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("${{ matrix.package }}")) | {id: .id, name: .name}')
-          
-          # momo パッケージの artifact ID を取得
-          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
-          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
-          
-          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
-            echo "Error: Required artifacts not found in run $RUN_ID"
-            echo "Available artifacts:"
-            echo "$ARTIFACTS"
-            exit 1
-          fi
-          
-          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
-          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/get-latest-artifact
+        with:
+          branch: ${{ env.TARGET_BRANCH }}
+          platform: ${{ matrix.package }}
+          github-token: ${{ github.token }}
       
       - name: Parse artifact URL
         if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
@@ -142,26 +108,11 @@ jobs:
       
       - name: Download artifacts for push event
         if: github.event_name == 'push' && inputs.from_workflow_call != true
-        run: |
-          echo "Downloading artifacts from ${{ env.TARGET_BRANCH }} branch build..."
-          
-          # 環境ファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
-            > env.zip
-          unzip -o env.zip
-          rm env.zip
-          
-          # パッケージファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
-            > package.zip
-          unzip -o package.zip
-          rm package.zip
-          
-          ls -la
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/download-artifacts
+        with:
+          env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
+          package_artifact_id: ${{ steps.latest_artifact.outputs.package_artifact_id }}
+          github-token: ${{ github.token }}
       
       - name: Download artifact using gh CLI
         if: github.event_name == 'workflow_dispatch' && inputs.from_workflow_call != true
@@ -178,29 +129,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: Extract momo binary
-        run: |
-          # パッケージファイルを探す
-          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
-          if [ -z "$PACKAGE_FILE" ]; then
-            echo "Package file not found"
-            ls -la
-            exit 1
-          fi
-          
-          echo "Found package: $PACKAGE_FILE"
-          tar -xzf "$PACKAGE_FILE"
-          
-          # ターゲットプラットフォームは matrix から取得
-          TARGET="${{ matrix.package }}"
-          
-          # ビルドディレクトリ構造を再現
-          mkdir -p _build/$TARGET/release/momo
-          mv momo/momo _build/$TARGET/release/momo/
-          # 実行権限を付与
-          chmod +x _build/$TARGET/release/momo/momo
-          
-          # バージョン確認
-          _build/$TARGET/release/momo/momo --version
+        uses: ./.github/actions/extract-momo-binary
+        with:
+          platform: ${{ matrix.package }}
 
       - uses: astral-sh/setup-uv@v6
       
@@ -230,92 +161,23 @@ jobs:
       
       - name: Get latest artifact from branch
         id: latest_artifact
-        run: |
-          echo "Getting latest successful build from ${{ env.TARGET_BRANCH }} branch..."
-          
-          # 指定されたブランチの最新の成功したワークフローランを取得
-          RUN_ID=$(gh run list \
-            --branch "${{ env.TARGET_BRANCH }}" \
-            --workflow build-workflow \
-            --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')
-          
-          if [ -z "$RUN_ID" ]; then
-            echo "Error: No successful workflow runs found on ${{ env.TARGET_BRANCH }} branch"
-            exit 1
-          fi
-          
-          echo "Found successful run: $RUN_ID"
-          
-          # ubuntu-24.04_x86_64 の artifact を取得（Intel VPL は Ubuntu 24.04 で動作）
-          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("ubuntu-24.04_x86_64")) | {id: .id, name: .name}')
-          
-          # momo パッケージの artifact ID を取得
-          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
-          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
-          
-          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
-            echo "Error: Required artifacts not found in run $RUN_ID"
-            echo "Available artifacts:"
-            echo "$ARTIFACTS"
-            exit 1
-          fi
-          
-          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
-          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/get-latest-artifact
+        with:
+          branch: ${{ env.TARGET_BRANCH }}
+          platform: ubuntu-24.04_x86_64
+          github-token: ${{ github.token }}
       
       - name: Download artifacts
-        run: |
-          echo "Downloading artifacts from ${{ env.TARGET_BRANCH }} branch build..."
-          
-          # 環境ファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
-            > env.zip
-          unzip -o env.zip
-          rm env.zip
-          
-          # パッケージファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
-            > package.zip
-          unzip -o package.zip
-          rm package.zip
-          
-          ls -la
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/download-artifacts
+        with:
+          env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
+          package_artifact_id: ${{ steps.latest_artifact.outputs.package_artifact_id }}
+          github-token: ${{ github.token }}
       
       - name: Extract momo binary
-        run: |
-          # パッケージファイルを探す
-          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
-          if [ -z "$PACKAGE_FILE" ]; then
-            echo "Package file not found"
-            ls -la
-            exit 1
-          fi
-          
-          echo "Found package: $PACKAGE_FILE"
-          tar -xzf "$PACKAGE_FILE"
-          
-          # ターゲットプラットフォームは Ubuntu 24.04
-          TARGET="ubuntu-24.04_x86_64"
-          
-          # ビルドディレクトリ構造を再現
-          mkdir -p _build/$TARGET/release/momo
-          mv momo/momo _build/$TARGET/release/momo/
-          # 実行権限を付与
-          chmod +x _build/$TARGET/release/momo/momo
-          
-          # バージョン確認
-          _build/$TARGET/release/momo/momo --version
+        uses: ./.github/actions/extract-momo-binary
+        with:
+          platform: ubuntu-24.04_x86_64
 
       - uses: astral-sh/setup-uv@v6
         with:
@@ -345,92 +207,23 @@ jobs:
       
       - name: Get latest artifact from branch
         id: latest_artifact
-        run: |
-          echo "Getting latest successful build from ${{ env.TARGET_BRANCH }} branch..."
-          
-          # 指定されたブランチの最新の成功したワークフローランを取得
-          RUN_ID=$(gh run list \
-            --branch "${{ env.TARGET_BRANCH }}" \
-            --workflow build-workflow \
-            --status success \
-            --limit 1 \
-            --json databaseId \
-            --jq '.[0].databaseId')
-          
-          if [ -z "$RUN_ID" ]; then
-            echo "Error: No successful workflow runs found on ${{ env.TARGET_BRANCH }} branch"
-            exit 1
-          fi
-          
-          echo "Found successful run: $RUN_ID"
-          
-          # ubuntu-24.04_x86_64 の artifact を取得（NVIDIA Video Codec SDK は Ubuntu 24.04 で動作）
-          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("ubuntu-24.04_x86_64")) | {id: .id, name: .name}')
-          
-          # momo パッケージの artifact ID を取得
-          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
-          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
-          
-          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
-            echo "Error: Required artifacts not found in run $RUN_ID"
-            echo "Available artifacts:"
-            echo "$ARTIFACTS"
-            exit 1
-          fi
-          
-          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
-          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
-          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/get-latest-artifact
+        with:
+          branch: ${{ env.TARGET_BRANCH }}
+          platform: ubuntu-24.04_x86_64
+          github-token: ${{ github.token }}
       
       - name: Download artifacts
-        run: |
-          echo "Downloading artifacts from ${{ env.TARGET_BRANCH }} branch build..."
-          
-          # 環境ファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
-            > env.zip
-          unzip -o env.zip
-          rm env.zip
-          
-          # パッケージファイルをダウンロード
-          gh api -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
-            > package.zip
-          unzip -o package.zip
-          rm package.zip
-          
-          ls -la
-        env:
-          GH_TOKEN: ${{ github.token }}
+        uses: ./.github/actions/download-artifacts
+        with:
+          env_artifact_id: ${{ steps.latest_artifact.outputs.env_artifact_id }}
+          package_artifact_id: ${{ steps.latest_artifact.outputs.package_artifact_id }}
+          github-token: ${{ github.token }}
       
       - name: Extract momo binary
-        run: |
-          # パッケージファイルを探す
-          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
-          if [ -z "$PACKAGE_FILE" ]; then
-            echo "Package file not found"
-            ls -la
-            exit 1
-          fi
-          
-          echo "Found package: $PACKAGE_FILE"
-          tar -xzf "$PACKAGE_FILE"
-          
-          # ターゲットプラットフォームは Ubuntu 24.04
-          TARGET="ubuntu-24.04_x86_64"
-          
-          # ビルドディレクトリ構造を再現
-          mkdir -p _build/$TARGET/release/momo
-          mv momo/momo _build/$TARGET/release/momo/
-          # 実行権限を付与
-          chmod +x _build/$TARGET/release/momo/momo
-          
-          # バージョン確認
-          _build/$TARGET/release/momo/momo --version
+        uses: ./.github/actions/extract-momo-binary
+        with:
+          platform: ubuntu-24.04_x86_64
 
       - uses: astral-sh/setup-uv@v6
         with:

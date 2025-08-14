@@ -1,0 +1,36 @@
+name: extract-momo-binary
+description: Extract momo binary from tar.gz package
+
+inputs:
+  platform:
+    description: Target platform (e.g., ubuntu-22.04_x86_64)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Extract momo binary
+      shell: bash
+      run: |
+        # パッケージファイルを探す
+        PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+        if [ -z "$PACKAGE_FILE" ]; then
+          echo "Package file not found"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Found package: $PACKAGE_FILE"
+        tar -xzf "$PACKAGE_FILE"
+        
+        # ターゲットプラットフォーム
+        TARGET="${{ inputs.platform }}"
+        
+        # ビルドディレクトリ構造を再現
+        mkdir -p _build/$TARGET/release/momo
+        mv momo/momo _build/$TARGET/release/momo/
+        # 実行権限を付与
+        chmod +x _build/$TARGET/release/momo/momo
+        
+        # バージョン確認
+        _build/$TARGET/release/momo/momo --version
