@@ -15,9 +15,10 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize(
     "video_codec_type,expected_mime_type",
     [
-        ("VP8", "video/VP8"),
         ("VP9", "video/VP9"),
         ("AV1", "video/AV1"),
+        ("H264", "video/H264"),
+        ("H265", "video/H265"),
     ],
 )
 def test_sora_connection_stats(
@@ -27,6 +28,9 @@ def test_sora_connection_stats(
     with Momo(
         fake_capture_device=True,
         vp9_encoder="vpl",
+        av1_encoder="vpl",
+        h264_encoder="vpl",
+        h265_encoder="vpl",
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
@@ -96,10 +100,12 @@ def test_sora_connection_stats(
                             assert "frameWidth" in stat
                             assert "frameHeight" in stat
                             assert stat["framesEncoded"] > 0
-                            
+
                             # エンコーダー実装を表示（Intel VPL 使用確認用）
                             if "encoderImplementation" in stat:
-                                print(f"Video encoder implementation: {stat['encoderImplementation']}")
+                                print(
+                                    f"Video encoder implementation: {stat['encoderImplementation']}"
+                                )
                         case "audio":
                             assert "headerBytesSent" in stat
                             assert stat["headerBytesSent"] > 0
