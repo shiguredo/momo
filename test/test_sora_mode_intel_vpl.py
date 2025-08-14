@@ -96,6 +96,10 @@ def test_sora_connection_stats(
                             assert "frameWidth" in stat
                             assert "frameHeight" in stat
                             assert stat["framesEncoded"] > 0
+                            
+                            # エンコーダー実装を表示（Intel VPL 使用確認用）
+                            if "encoderImplementation" in stat:
+                                print(f"Video encoder implementation: {stat['encoderImplementation']}")
                         case "audio":
                             assert "headerBytesSent" in stat
                             assert stat["headerBytesSent"] > 0
