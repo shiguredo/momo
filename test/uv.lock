@@ -89,7 +89,7 @@ wheels = [
 ]
 
 [[package]]
-name = "momo-test"
+name = "momo-e2e-test"
 version = "0.0.0"
 source = { virtual = "." }
 

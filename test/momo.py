@@ -59,14 +59,14 @@ class Momo:
         # コーデック設定
         vp8_encoder: Literal["default", "software"] | None = None,
         vp8_decoder: Literal["default", "software"] | None = None,
-        vp9_encoder: Literal["default", "software"] | None = None,
-        vp9_decoder: Literal["default", "software"] | None = None,
-        av1_encoder: Literal["default", "software"] | None = None,
-        av1_decoder: Literal["default", "software"] | None = None,
-        h264_encoder: Literal["default", "videotoolbox", "software"] | None = None,
-        h264_decoder: Literal["default", "videotoolbox"] | None = None,
-        h265_encoder: Literal["default", "videotoolbox"] | None = None,
-        h265_decoder: Literal["default", "videotoolbox"] | None = None,
+        vp9_encoder: Literal["default", "vpl", "software"] | None = None,
+        vp9_decoder: Literal["default", "vpl", "software"] | None = None,
+        av1_encoder: Literal["default", "vpl", "software"] | None = None,
+        av1_decoder: Literal["default", "vpl", "software"] | None = None,
+        h264_encoder: Literal["default", "vpl", "videotoolbox", "software"] | None = None,
+        h264_decoder: Literal["default", "vpl", "videotoolbox"] | None = None,
+        h265_encoder: Literal["default", "vpl", "videotoolbox"] | None = None,
+        h265_decoder: Literal["default", "vpl", "videotoolbox"] | None = None,
         openh264: str | None = None,  # ファイルパス
         # その他の共通設定
         serial: str | None = None,  # [DEVICE],[BAUDRATE]
