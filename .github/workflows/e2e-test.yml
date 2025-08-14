@@ -2,8 +2,8 @@ name: e2e-test-workflow
 
 env:
   # artifact 取得元のブランチ
-  # TARGET_BRANCH: ${{ github.ref_name }}
-  TARGET_BRANCH: 'develop'
+  TARGET_BRANCH: ${{ github.ref_name }}
+  # TARGET_BRANCH: 'develop'
 
 on:
   push:
@@ -27,7 +27,6 @@ on:
 
 jobs:
   e2e-test-ubuntu:
-    if: false
     strategy:
       matrix:
         include:
