@@ -23,21 +23,21 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアアクセラレーターへの対応
 
-- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
-  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
-  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
+  - ハードウェアエンコーダー: H.264
+  - ハードウェアデコーダー: H.264
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
   - ハードウェアエンコーダー: H.264 / H.265
   - ハードウェアデコーダー: H.264 / H.265
 - NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
+  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
+  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [Jetson JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
-  - ハードウェアエンコーダー: H.264
-  - ハードウェアデコーダー: H.264
 
 ### 4K の配信
 
@@ -123,10 +123,6 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
   - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-- Ubuntu 18.04 ARMv8 (NVIDIA Jetson JetPack 4)
-  - [NVIDIA Jetson Nano](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-nano/)
-  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
 - Raspberry Pi OS (32bit)
 
 ## 使ってみる
@@ -146,8 +142,8 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 Apache License 2.0
 
 ```text
-Copyright 2015-2024, tnoho (Original Author)
-Copyright 2018-2024, Shiguredo Inc.
+Copyright 2015-2025, tnoho (Original Author)
+Copyright 2018-2025, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
