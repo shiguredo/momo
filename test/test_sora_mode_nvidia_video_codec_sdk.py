@@ -40,6 +40,7 @@ def test_sora_connection_stats(
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
         log_level="verbose",
+        initial_wait=10,
     ) as m:
         time.sleep(3)
 
