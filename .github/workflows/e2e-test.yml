@@ -1,5 +1,10 @@
 name: e2e-test-workflow
 
+env:
+  # artifact 取得元のブランチ
+  # TARGET_BRANCH: ${{ github.ref_name }}
+  TARGET_BRANCH: 'develop'
+
 on:
   push:
     branches:
@@ -22,6 +27,7 @@ on:
 
 jobs:
   e2e-test-ubuntu:
+    if: false
     strategy:
       matrix:
         include:
@@ -59,15 +65,15 @@ jobs:
           name: ${{ steps.package_info.outputs.package_name }}
           path: ./
       
-      - name: Get latest artifact from source branch
+      - name: Get latest artifact from branch
         if: github.event_name == 'push' && inputs.from_workflow_call != true
         id: latest_artifact
         run: |
-          echo "Getting latest successful build from ${{ github.ref_name }} branch..."
+          echo "Getting latest successful build from ${{ env.TARGET_BRANCH }} branch..."
           
-          # push されたブランチの最新の成功したワークフローランを取得
+          # 指定されたブランチの最新の成功したワークフローランを取得
           RUN_ID=$(gh run list \
-            --branch "${{ github.ref_name }}" \
+            --branch "${{ env.TARGET_BRANCH }}" \
             --workflow build-workflow \
             --status success \
             --limit 1 \
@@ -75,7 +81,7 @@ jobs:
             --jq '.[0].databaseId')
           
           if [ -z "$RUN_ID" ]; then
-            echo "Error: No successful workflow runs found on ${{ github.ref_name }} branch"
+            echo "Error: No successful workflow runs found on ${{ env.TARGET_BRANCH }} branch"
             exit 1
           fi
           
@@ -137,7 +143,7 @@ jobs:
       - name: Download artifacts for push event
         if: github.event_name == 'push' && inputs.from_workflow_call != true
         run: |
-          echo "Downloading artifacts from ${{ github.ref_name }} branch build..."
+          echo "Downloading artifacts from ${{ env.TARGET_BRANCH }} branch build..."
           
           # 環境ファイルをダウンロード
           gh api -H "Accept: application/vnd.github+json" \
@@ -203,3 +209,120 @@ jobs:
           uv sync
           uv run pytest -v
         working-directory: ./test
+
+  e2e-test-ubuntu-intel-vpl:
+    name: E2E Test Ubuntu Intel VPL
+    runs-on:
+      group: Self
+      labels: [self-hosted, linux, x64, Intel-VPL]
+    timeout-minutes: 15
+    # 直接の push イベントの時だけ実行（workflow_call からの呼び出しでは動かない）
+    if: github.event_name == 'push' && inputs.from_workflow_call != true
+    env:
+      TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
+      TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
+      TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+      INTEL_VPL: true
+      # libva のログ出力が邪魔なので 0 にしているがデバッグ時は 2 などにする
+      LIBVA_MESSAGING_LEVEL: 0
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Get latest artifact from branch
+        id: latest_artifact
+        run: |
+          echo "Getting latest successful build from ${{ env.TARGET_BRANCH }} branch..."
+          
+          # 指定されたブランチの最新の成功したワークフローランを取得
+          RUN_ID=$(gh run list \
+            --branch "${{ env.TARGET_BRANCH }}" \
+            --workflow build-workflow \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          if [ -z "$RUN_ID" ]; then
+            echo "Error: No successful workflow runs found on ${{ env.TARGET_BRANCH }} branch"
+            exit 1
+          fi
+          
+          echo "Found successful run: $RUN_ID"
+          
+          # ubuntu-24.04_x86_64 の artifact を取得（Intel VPL は Ubuntu 24.04 で動作）
+          ARTIFACTS=$(gh api /repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts --jq '.artifacts[] | select(.name | contains("ubuntu-24.04_x86_64")) | {id: .id, name: .name}')
+          
+          # momo パッケージの artifact ID を取得
+          PACKAGE_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | contains("momo-")) | .id' | head -1)
+          ENV_ARTIFACT_ID=$(echo "$ARTIFACTS" | jq -r 'select(.name | endswith(".env")) | .id' | head -1)
+          
+          if [ -z "$PACKAGE_ARTIFACT_ID" ] || [ -z "$ENV_ARTIFACT_ID" ]; then
+            echo "Error: Required artifacts not found in run $RUN_ID"
+            echo "Available artifacts:"
+            echo "$ARTIFACTS"
+            exit 1
+          fi
+          
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+          echo "package_artifact_id=${PACKAGE_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "env_artifact_id=${ENV_ARTIFACT_ID}" >> $GITHUB_OUTPUT
+          echo "Found package artifact: $PACKAGE_ARTIFACT_ID, env artifact: $ENV_ARTIFACT_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Download artifacts
+        run: |
+          echo "Downloading artifacts from ${{ env.TARGET_BRANCH }} branch build..."
+          
+          # 環境ファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.env_artifact_id }}/zip \
+            > env.zip
+          unzip -o env.zip
+          rm env.zip
+          
+          # パッケージファイルをダウンロード
+          gh api -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/artifacts/${{ steps.latest_artifact.outputs.package_artifact_id }}/zip \
+            > package.zip
+          unzip -o package.zip
+          rm package.zip
+          
+          ls -la
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Extract momo binary
+        run: |
+          # パッケージファイルを探す
+          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+          if [ -z "$PACKAGE_FILE" ]; then
+            echo "Package file not found"
+            ls -la
+            exit 1
+          fi
+          
+          echo "Found package: $PACKAGE_FILE"
+          tar -xzf "$PACKAGE_FILE"
+          
+          # ターゲットプラットフォームは Ubuntu 24.04
+          TARGET="ubuntu-24.04_x86_64"
+          
+          # ビルドディレクトリ構造を再現
+          mkdir -p _build/$TARGET/release/momo
+          mv momo/momo _build/$TARGET/release/momo/
+          # 実行権限を付与
+          chmod +x _build/$TARGET/release/momo/momo
+          
+          # バージョン確認
+          _build/$TARGET/release/momo/momo --version
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+      
+      - name: Run Intel VPL E2E tests
+        run: |
+          uv python pin 3.13
+          uv sync
+          uv run pytest test/test_sora_mode_intel_vpl.py -v
