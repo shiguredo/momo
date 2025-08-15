@@ -75,6 +75,15 @@ def test_sora_mode_metrics_endpoint(
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
     
+    # エンコーダー設定を準備
+    encoder_params = {}
+    if video_codec_type == "VP8":
+        encoder_params["vp8_encoder"] = "software"
+    elif video_codec_type == "VP9":
+        encoder_params["vp9_encoder"] = "software"
+    elif video_codec_type == "AV1":
+        encoder_params["av1_encoder"] = "software"
+    
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=free_port,
@@ -87,6 +96,7 @@ def test_sora_mode_metrics_endpoint(
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
         log_level="verbose",
+        **encoder_params,
     ) as m:
         time.sleep(3)
 
@@ -115,75 +125,111 @@ def test_sora_mode_metrics_endpoint(
         for expected_type in expected_types:
             assert expected_type in stat_types
 
-        # 指定されたビデオコーデックが実際に使われていることを確認
-        codec_mime_types = {
-            stat.get("mimeType")
-            for stat in stats
-            if stat.get("type") == "codec" and "mimeType" in stat
-        }
-        assert expected_mime_type in codec_mime_types, (
-            f"Expected codec {expected_mime_type} not found in {codec_mime_types}"
+        # audio codec を取得して確認
+        audio_codec_stats = [
+            stat for stat in stats
+            if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
+        ]
+        assert len(audio_codec_stats) == 1, (
+            f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
         )
+        
+        # audio codec の中身を検証
+        audio_codec = audio_codec_stats[0]
+        assert "payloadType" in audio_codec
+        assert "mimeType" in audio_codec
+        assert "clockRate" in audio_codec
+        assert "channels" in audio_codec
+        assert audio_codec["clockRate"] == 48000
+        
+        # video codec を取得して確認
+        video_codec_stats = [
+            stat for stat in stats
+            if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
+        ]
+        assert len(video_codec_stats) == 1, (
+            f"Expected 1 video codec ({expected_mime_type}), but got {len(video_codec_stats)}"
+        )
+        
+        # video codec の中身を検証
+        video_codec = video_codec_stats[0]
+        assert "payloadType" in video_codec
+        assert "mimeType" in video_codec
+        assert "clockRate" in video_codec
+        assert video_codec["clockRate"] == 90000
 
-        # 各統計タイプの詳細をチェック
-        for stat in stats:
-            match stat.get("type"):
-                case "outbound-rtp":
-                    # outbound-rtp の必須フィールドを確認
-                    assert "ssrc" in stat
-                    assert "kind" in stat
-                    assert "packetsSent" in stat
-                    assert "bytesSent" in stat
+        # audio の outbound-rtp を取得して確認
+        audio_outbound_rtp_stats = [
+            stat for stat in stats
+            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
+        ]
+        assert len(audio_outbound_rtp_stats) == 1, (
+            f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
+        )
+        
+        # audio outbound-rtp の中身を検証
+        audio_rtp = audio_outbound_rtp_stats[0]
+        assert "ssrc" in audio_rtp
+        assert "packetsSent" in audio_rtp
+        assert "bytesSent" in audio_rtp
+        assert "headerBytesSent" in audio_rtp
+        assert audio_rtp["packetsSent"] > 0
+        assert audio_rtp["bytesSent"] > 0
+        assert audio_rtp["headerBytesSent"] > 0
 
-                    # データが実際に送信されていることを確認
-                    assert stat["packetsSent"] > 0
-                    assert stat["bytesSent"] > 0
+        # video の outbound-rtp を取得して確認
+        video_outbound_rtp_stats = [
+            stat for stat in stats
+            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
+        ]
+        assert len(video_outbound_rtp_stats) == 1, (
+            f"Expected 1 video outbound-rtp, but got {len(video_outbound_rtp_stats)}"
+        )
+        
+        # video outbound-rtp の中身を検証
+        video_rtp = video_outbound_rtp_stats[0]
+        assert "ssrc" in video_rtp
+        assert "packetsSent" in video_rtp
+        assert "bytesSent" in video_rtp
+        assert "framesEncoded" in video_rtp
+        assert "frameWidth" in video_rtp
+        assert "frameHeight" in video_rtp
+        assert video_rtp["packetsSent"] > 0
+        assert video_rtp["bytesSent"] > 0
+        assert video_rtp["framesEncoded"] > 0
 
-                    # audio/video の判定
-                    match stat["kind"]:
-                        case "video":
-                            assert "framesEncoded" in stat
-                            assert "frameWidth" in stat
-                            assert "frameHeight" in stat
-                            assert stat["framesEncoded"] > 0
-                        case "audio":
-                            assert "headerBytesSent" in stat
-                            assert stat["headerBytesSent"] > 0
+        # transport を取得して確認
+        transport_stats = [
+            stat for stat in stats
+            if stat.get("type") == "transport"
+        ]
+        assert len(transport_stats) >= 1, (
+            f"Expected at least 1 transport stat, but got {len(transport_stats)}"
+        )
+        
+        # transport の中身を検証
+        for transport in transport_stats:
+            assert "bytesSent" in transport
+            assert "bytesReceived" in transport
+            assert "dtlsState" in transport
+            assert "iceState" in transport
+            assert transport["bytesSent"] > 0
+            assert transport["bytesReceived"] > 0
+            assert transport["dtlsState"] == "connected"
+            assert transport["iceState"] == "connected"
 
-                case "codec":
-                    # codec の必須フィールドを確認
-                    assert "payloadType" in stat
-                    assert "mimeType" in stat
-                    assert "clockRate" in stat
-
-                    # codec は audio/opus か指定されたビデオコーデックのみ許可
-                    assert stat["mimeType"] in ["audio/opus", expected_mime_type]
-
-                    # codec タイプ別の検証
-                    if stat["mimeType"] == "audio/opus":
-                        assert "channels" in stat
-                        assert stat["clockRate"] == 48000
-                    elif stat["mimeType"] == expected_mime_type:
-                        assert stat["clockRate"] == 90000
-
-                case "transport":
-                    # transport の必須フィールドを確認
-                    assert "bytesSent" in stat
-                    assert "bytesReceived" in stat
-                    assert "dtlsState" in stat
-                    assert "iceState" in stat
-
-                    # データが実際に送受信されていることを確認
-                    assert stat["bytesSent"] > 0
-                    assert stat["bytesReceived"] > 0
-
-                    # 接続状態の確認
-                    assert stat["dtlsState"] == "connected"
-                    assert stat["iceState"] == "connected"
-
-                case "peer-connection":
-                    # peer-connection の必須フィールドを確認
-                    assert "dataChannelsOpened" in stat
+        # peer-connection を取得して確認
+        peer_connection_stats = [
+            stat for stat in stats
+            if stat.get("type") == "peer-connection"
+        ]
+        assert len(peer_connection_stats) == 1, (
+            f"Expected 1 peer-connection stat, but got {len(peer_connection_stats)}"
+        )
+        
+        # peer-connection の中身を検証
+        peer_connection = peer_connection_stats[0]
+        assert "dataChannelsOpened" in peer_connection
 
 
 def test_sora_mode_invalid_metrics_endpoint_returns_404(http_client, sora_settings, free_port):
