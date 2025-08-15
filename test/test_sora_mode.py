@@ -207,6 +207,8 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings, port_allocator)
     # 送信専用クライアント
     with Momo(
         mode=MomoMode.SORA,
+        vp9_encoder="default",
+        vp9_decoder="default",
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
@@ -227,6 +229,9 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings, port_allocator)
             audio=True,
             metadata=sora_settings.metadata,
         ) as receiver:
+            # 接続が確立するまで待機
+            time.sleep(3)
+
             # 送信側の統計を確認
             sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
             sender_stats = sender_response.json().get("stats", [])
@@ -235,9 +240,41 @@ def test_sora_sendonly_recvonly_pair(http_client, sora_settings, port_allocator)
             receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
             receiver_stats = receiver_response.json().get("stats", [])
 
-            # 実際にデータが送受信されているか確認可能
-            # Sora モードでは実際に WebRTC 接続が確立される
-            assert len(sender_stats) > 0 or len(receiver_stats) > 0
+            # 送信側では outbound-rtp が存在することを確認
+            sender_outbound_rtp = [
+                stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
+            ]
+            assert len(sender_outbound_rtp) > 0, "Sender should have outbound-rtp stats"
+
+            # 送信側でデータが送信されていることを確認
+            for stat in sender_outbound_rtp:
+                assert "packetsSent" in stat
+                assert "bytesSent" in stat
+                assert stat["packetsSent"] > 0
+                assert stat["bytesSent"] > 0
+
+                # video ストリームの場合、encoderImplementation が libvpx であることを確認
+                if stat.get("kind") == "video":
+                    assert "encoderImplementation" in stat
+                    assert stat["encoderImplementation"] == "libvpx"
+
+            # 受信側では inbound-rtp が存在することを確認
+            receiver_inbound_rtp = [
+                stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
+            ]
+            assert len(receiver_inbound_rtp) > 0, "Receiver should have inbound-rtp stats"
+
+            # 受信側でデータが受信されていることを確認
+            for stat in receiver_inbound_rtp:
+                assert "packetsReceived" in stat
+                assert "bytesReceived" in stat
+                assert stat["packetsReceived"] > 0
+                assert stat["bytesReceived"] > 0
+
+                # video ストリームの場合、decoderImplementation が libvpx であることを確認
+                if stat.get("kind") == "video":
+                    assert "decoderImplementation" in stat
+                    assert stat["decoderImplementation"] == "livpx"
 
 
 def test_sora_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
