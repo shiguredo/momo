@@ -68,10 +68,10 @@ def sora_settings():
 def port_allocator():
     """セッション全体で共有されるポート番号アロケーター
 
-    50000から始まるポート番号を順番に生成します。
+    エフェメラルポート開始の 55000 から始まるポート番号を順番に生成します。
     複数のテストが並列実行されても、各テストに一意のポート番号が割り当てられます。
     """
-    return itertools.count(50000)
+    return itertools.count(55000)
 
 
 @pytest.fixture
