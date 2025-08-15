@@ -628,7 +628,7 @@ def get_webrtc_info(
 
 
 @versioned
-def install_boost(version, source_dir, install_dir, sora_version, platform: str):
+def install_boost(version, source_dir, install_dir, sora_version, platform: str, expected_sha256: Optional[str] = None):
     win = platform.startswith("windows_")
     filename = (
         f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
@@ -637,6 +637,7 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}",
         output_dir=source_dir,
+        expected_sha256=expected_sha256,
     )
     rm_rf(os.path.join(install_dir, "boost"))
     extract(archive, output_dir=install_dir, output_dirname="boost")
@@ -743,6 +744,7 @@ def build_and_install_boost(
     source_dir,
     build_dir,
     install_dir,
+    expected_sha256: str,
     debug: bool,
     cxx: str,
     cflags: List[str],
@@ -759,17 +761,7 @@ def build_and_install_boost(
     android_build_platform="linux-x86_64",
 ):
     version_underscore = version.replace(".", "_")
-    
-    # Boost のバージョンごとの SHA256 ハッシュ値
-    boost_sha256_hashes = {
-        "1_89_0": "9de758db755e8330a01d995b0a24d09798048400ac25c03fc5ea9be364b13c93",
-    }
-    
-    # 対応するハッシュ値を取得（定義されていない場合は None）
-    expected_sha256 = boost_sha256_hashes.get(version_underscore)
-    if expected_sha256:
-        logging.info(f"SHA256 hash verification enabled for boost_{version_underscore}.tar.gz")
-    
+
     archive = download(
         # 公式サイトに負荷をかけないための時雨堂によるミラー
         f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",

@@ -134,6 +134,7 @@ def install_deps(
             "source_dir": source_dir,
             "build_dir": build_dir,
             "install_dir": install_dir,
+            "expected_sha256": deps["BOOST_SHA256_HASH"],
             "cxx": "",
             "cflags": [],
             "cxxflags": [],
