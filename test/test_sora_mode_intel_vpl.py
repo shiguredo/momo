@@ -13,24 +13,34 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.parametrize(
-    "video_codec_type,expected_mime_type",
+    "video_codec_type",
     [
-        ("VP9", "video/VP9"),
-        ("AV1", "video/AV1"),
-        ("H264", "video/H264"),
-        ("H265", "video/H265"),
+        "VP9",
+        "AV1",
+        "H264",
+        "H265",
     ],
 )
 def test_sora_connection_stats(
-    http_client, sora_settings, video_codec_type, expected_mime_type, free_port
+    http_client, sora_settings, video_codec_type, free_port
 ):
     """Sora モードで接続時の統計情報を確認"""
+    # expected_mime_type を生成
+    expected_mime_type = f"video/{video_codec_type}"
+    
+    # エンコーダー設定を準備
+    encoder_params = {}
+    if video_codec_type == "VP9":
+        encoder_params["vp9_encoder"] = "vpl"
+    elif video_codec_type == "AV1":
+        encoder_params["av1_encoder"] = "vpl"
+    elif video_codec_type == "H264":
+        encoder_params["h264_encoder"] = "vpl"
+    elif video_codec_type == "H265":
+        encoder_params["h265_encoder"] = "vpl"
+    
     with Momo(
         fake_capture_device=True,
-        vp9_encoder="vpl",
-        av1_encoder="vpl",
-        h264_encoder="vpl",
-        h265_encoder="vpl",
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
@@ -41,6 +51,7 @@ def test_sora_connection_stats(
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
         log_level="verbose",
+        **encoder_params,
     ) as m:
         time.sleep(3)
 
@@ -142,12 +153,12 @@ def test_sora_connection_stats(
 
 
 @pytest.mark.parametrize(
-    "video_codec_type, expected_mime_type",
+    "video_codec_type",
     [
-        ("VP9", "video/VP9"),
-        ("AV1", "video/AV1"),
-        ("H264", "video/H264"),
-        ("H265", "video/H265"),
+        "VP9",
+        "AV1",
+        "H264",
+        "H265",
     ],
 )
 def test_sora_sendonly_recvonly_pair(
@@ -155,21 +166,37 @@ def test_sora_sendonly_recvonly_pair(
     sora_settings,
     port_allocator,
     video_codec_type,
-    expected_mime_type,
 ):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（Intel VPL 使用）"""
+    
+    # expected_mime_type を生成
+    expected_mime_type = f"video/{video_codec_type}"
+
+    # エンコーダー設定を準備
+    encoder_params = {}
+    if video_codec_type == "VP9":
+        encoder_params["vp9_encoder"] = "vpl"
+    elif video_codec_type == "AV1":
+        encoder_params["av1_encoder"] = "vpl"
+    elif video_codec_type == "H264":
+        encoder_params["h264_encoder"] = "vpl"
+    elif video_codec_type == "H265":
+        encoder_params["h265_encoder"] = "vpl"
+
+    # デコーダー設定を準備
+    decoder_params = {}
+    if video_codec_type == "VP9":
+        decoder_params["vp9_decoder"] = "vpl"
+    elif video_codec_type == "AV1":
+        decoder_params["av1_decoder"] = "vpl"
+    elif video_codec_type == "H264":
+        decoder_params["h264_decoder"] = "vpl"
+    elif video_codec_type == "H265":
+        decoder_params["h265_decoder"] = "vpl"
 
     # 送信専用クライアント
     with Momo(
         mode=MomoMode.SORA,
-        vp9_encoder="vpl",
-        vp9_decoder="vpl",
-        av1_encoder="vpl",
-        av1_decoder="vpl",
-        h264_encoder="vpl",
-        h264_decoder="vpl",
-        h265_encoder="vpl",
-        h265_decoder="vpl",
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
@@ -180,14 +207,11 @@ def test_sora_sendonly_recvonly_pair(
         audio=True,
         metadata=sora_settings.metadata,
         initial_wait=10,
+        **encoder_params,
     ) as sender:
         # 受信専用クライアント
         with Momo(
             mode=MomoMode.SORA,
-            vp9_decoder="vpl",
-            av1_decoder="vpl",
-            h264_decoder="vpl",
-            h265_decoder="vpl",
             signaling_urls=sora_settings.signaling_urls,
             channel_id=sora_settings.channel_id,
             role="recvonly",
@@ -195,6 +219,7 @@ def test_sora_sendonly_recvonly_pair(
             video=True,
             audio=True,
             metadata=sora_settings.metadata,
+            **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
             time.sleep(5)

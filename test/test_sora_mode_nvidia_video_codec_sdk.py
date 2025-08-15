@@ -14,22 +14,31 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.parametrize(
-    "video_codec_type,expected_mime_type",
+    "video_codec_type",
     [
-        ("AV1", "video/AV1"),
-        ("H264", "video/H264"),
-        ("H265", "video/H265"),
+        "AV1",
+        "H264",
+        "H265",
     ],
 )
 def test_sora_connection_stats(
-    http_client, sora_settings, video_codec_type, expected_mime_type, free_port
+    http_client, sora_settings, video_codec_type, free_port
 ):
     """Sora モードで接続時の統計情報を確認"""
+    # expected_mime_type を生成
+    expected_mime_type = f"video/{video_codec_type}"
+    
+    # エンコーダー設定を準備
+    encoder_params = {}
+    if video_codec_type == "AV1":
+        encoder_params["av1_encoder"] = "nvidia"
+    elif video_codec_type == "H264":
+        encoder_params["h264_encoder"] = "nvidia"
+    elif video_codec_type == "H265":
+        encoder_params["h265_encoder"] = "nvidia"
+    
     with Momo(
         fake_capture_device=True,
-        av1_encoder="nvidia",
-        h264_encoder="nvidia",
-        h265_encoder="nvidia",
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
@@ -41,6 +50,7 @@ def test_sora_connection_stats(
         metadata=sora_settings.metadata,
         log_level="verbose",
         initial_wait=10,
+        **encoder_params,
     ) as m:
         time.sleep(3)
 
@@ -142,11 +152,11 @@ def test_sora_connection_stats(
 
 
 @pytest.mark.parametrize(
-    "video_codec_type, expected_mime_type",
+    "video_codec_type",
     [
-        ("AV1", "video/AV1"),
-        ("H264", "video/H264"),
-        ("H265", "video/H265"),
+        "AV1",
+        "H264",
+        "H265",
     ],
 )
 def test_sora_sendonly_recvonly_pair(
@@ -154,19 +164,33 @@ def test_sora_sendonly_recvonly_pair(
     sora_settings,
     port_allocator,
     video_codec_type,
-    expected_mime_type,
 ):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（NVIDIA Video Codec SDK 使用）"""
+    
+    # expected_mime_type を生成
+    expected_mime_type = f"video/{video_codec_type}"
+
+    # エンコーダー設定を準備
+    encoder_params = {}
+    if video_codec_type == "AV1":
+        encoder_params["av1_encoder"] = "nvidia"
+    elif video_codec_type == "H264":
+        encoder_params["h264_encoder"] = "nvidia"
+    elif video_codec_type == "H265":
+        encoder_params["h265_encoder"] = "nvidia"
+
+    # デコーダー設定を準備
+    decoder_params = {}
+    if video_codec_type == "AV1":
+        decoder_params["av1_decoder"] = "nvidia"
+    elif video_codec_type == "H264":
+        decoder_params["h264_decoder"] = "nvidia"
+    elif video_codec_type == "H265":
+        decoder_params["h265_decoder"] = "nvidia"
 
     # 送信専用クライアント
     with Momo(
         mode=MomoMode.SORA,
-        av1_encoder="nvidia",
-        av1_decoder="nvidia",
-        h264_encoder="nvidia",
-        h264_decoder="nvidia",
-        h265_encoder="nvidia",
-        h265_decoder="nvidia",
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
@@ -177,13 +201,11 @@ def test_sora_sendonly_recvonly_pair(
         audio=True,
         metadata=sora_settings.metadata,
         initial_wait=10,
+        **encoder_params,
     ) as sender:
         # 受信専用クライアント
         with Momo(
             mode=MomoMode.SORA,
-            av1_decoder="nvidia",
-            h264_decoder="nvidia",
-            h265_decoder="nvidia",
             signaling_urls=sora_settings.signaling_urls,
             channel_id=sora_settings.channel_id,
             role="recvonly",
@@ -191,6 +213,7 @@ def test_sora_sendonly_recvonly_pair(
             video=True,
             audio=True,
             metadata=sora_settings.metadata,
+            **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
             time.sleep(5)
