@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_sora_mode_metrics_endpoint_returns_200(http_client, sora_settings, free_port):
+def test_metrics_endpoint_returns_200(http_client, sora_settings, free_port):
     """Sora モードでメトリクスエンドポイントが 200 を返すことを確認"""
 
     with Momo(
@@ -29,7 +29,7 @@ def test_sora_mode_metrics_endpoint_returns_200(http_client, sora_settings, free
         assert response.status_code == 200
 
 
-def test_sora_mode_metrics_endpoint_response_structure(http_client, sora_settings, free_port):
+def test_metrics_endpoint_response_structure(http_client, sora_settings, free_port):
     """Sora モードでメトリクスレスポンスの構造を確認"""
 
     with Momo(
@@ -68,13 +68,11 @@ def test_sora_mode_metrics_endpoint_response_structure(http_client, sora_setting
         "AV1",
     ],
 )
-def test_sora_mode_metrics_endpoint(
-    http_client, sora_settings, video_codec_type, free_port
-):
+def test_metrics_endpoint(http_client, sora_settings, video_codec_type, free_port):
     """Sora モードで接続時の統計情報を確認"""
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
-    
+
     # エンコーダー設定を準備
     encoder_params = {}
     if video_codec_type == "VP8":
@@ -83,7 +81,7 @@ def test_sora_mode_metrics_endpoint(
         encoder_params["vp9_encoder"] = "software"
     elif video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "software"
-    
+
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=free_port,
@@ -127,13 +125,14 @@ def test_sora_mode_metrics_endpoint(
 
         # audio codec を取得して確認
         audio_codec_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
         ]
         assert len(audio_codec_stats) == 1, (
             f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
         )
-        
+
         # audio codec の中身を検証
         audio_codec = audio_codec_stats[0]
         assert "payloadType" in audio_codec
@@ -141,16 +140,17 @@ def test_sora_mode_metrics_endpoint(
         assert "clockRate" in audio_codec
         assert "channels" in audio_codec
         assert audio_codec["clockRate"] == 48000
-        
+
         # video codec を取得して確認
         video_codec_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
         ]
         assert len(video_codec_stats) == 1, (
             f"Expected 1 video codec ({expected_mime_type}), but got {len(video_codec_stats)}"
         )
-        
+
         # video codec の中身を検証
         video_codec = video_codec_stats[0]
         assert "payloadType" in video_codec
@@ -160,13 +160,14 @@ def test_sora_mode_metrics_endpoint(
 
         # audio の outbound-rtp を取得して確認
         audio_outbound_rtp_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
         ]
         assert len(audio_outbound_rtp_stats) == 1, (
             f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
         )
-        
+
         # audio outbound-rtp の中身を検証
         audio_rtp = audio_outbound_rtp_stats[0]
         assert "ssrc" in audio_rtp
@@ -179,13 +180,14 @@ def test_sora_mode_metrics_endpoint(
 
         # video の outbound-rtp を取得して確認
         video_outbound_rtp_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
         ]
         assert len(video_outbound_rtp_stats) == 1, (
             f"Expected 1 video outbound-rtp, but got {len(video_outbound_rtp_stats)}"
         )
-        
+
         # video outbound-rtp の中身を検証
         video_rtp = video_outbound_rtp_stats[0]
         assert "ssrc" in video_rtp
@@ -199,14 +201,11 @@ def test_sora_mode_metrics_endpoint(
         assert video_rtp["framesEncoded"] > 0
 
         # transport を取得して確認
-        transport_stats = [
-            stat for stat in stats
-            if stat.get("type") == "transport"
-        ]
+        transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
         assert len(transport_stats) >= 1, (
             f"Expected at least 1 transport stat, but got {len(transport_stats)}"
         )
-        
+
         # transport の中身を検証
         for transport in transport_stats:
             assert "bytesSent" in transport
@@ -219,20 +218,17 @@ def test_sora_mode_metrics_endpoint(
             assert transport["iceState"] == "connected"
 
         # peer-connection を取得して確認
-        peer_connection_stats = [
-            stat for stat in stats
-            if stat.get("type") == "peer-connection"
-        ]
+        peer_connection_stats = [stat for stat in stats if stat.get("type") == "peer-connection"]
         assert len(peer_connection_stats) == 1, (
             f"Expected 1 peer-connection stat, but got {len(peer_connection_stats)}"
         )
-        
+
         # peer-connection の中身を検証
         peer_connection = peer_connection_stats[0]
         assert "dataChannelsOpened" in peer_connection
 
 
-def test_sora_mode_invalid_metrics_endpoint_returns_404(http_client, sora_settings, free_port):
+def test_invalid_metrics_endpoint_returns_404(http_client, sora_settings, free_port):
     """Sora モードで存在しないエンドポイントが 404 を返すことを確認"""
 
     with Momo(

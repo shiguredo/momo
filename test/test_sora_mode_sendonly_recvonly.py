@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skipif(
         ("AV1", "libaom", "dav1d"),
     ],
 )
-def test_sora_mode_sendonly_recvonly_pair(
+def test_sendonly_recvonly_pair(
     http_client,
     sora_settings,
     port_allocator,
@@ -30,7 +30,7 @@ def test_sora_mode_sendonly_recvonly_pair(
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認"""
 
     print(sora_settings.channel_id)
-    
+
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
 
@@ -178,7 +178,7 @@ def test_sora_mode_sendonly_recvonly_pair(
                     assert stat["decoderImplementation"] == expected_decoder_implementation
 
 
-def test_sora_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
+def test_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
     """複数の sendonly クライアントが同じチャンネルに接続できることを確認"""
 
     # 複数の sendonly クライアントを起動
