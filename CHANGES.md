@@ -15,12 +15,6 @@
   - VERSION ファイルには momo のバージョンのみを記載するように変更
   - 依存ライブラリのバージョン情報は新たに作成した DEPS ファイルで管理
   - @voluntas
-- [ADD] `--fake-capture-device` オプションを追加する
-  - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
-  - デジタル時計、アニメーション、7 セグメントディスプレイを表示
-  - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
-  - macOS と Ubuntu x86_64 プラットフォームのみ対応
-  - @voluntas
 - [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
   - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更
   - @voluntas
@@ -69,11 +63,19 @@
   - @voluntas
 - [UPDATE] CLI11 を 2.5.0 に上げる
   - @voluntas
-- [UPDATE] Boost を 1.88.0 に上げる
+- [UPDATE] Boost を 1.89.0 に上げる
+  - buildbase.py に SHA256 ハッシュチェック機能を追加
   - @voluntas
 - [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
   - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
+  - @melpon
+- [ADD] `--fake-capture-device` オプションを追加する
+  - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
+  - デジタル時計、アニメーション、7 セグメントディスプレイを表示
+  - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
+  - macOS と Ubuntu x86_64 プラットフォームのみ対応
+  - @voluntas
 - [ADD] run.py に format サブコマンドを追加
   - `python3 run.py format` で clang-format を実行可能に
   - @voluntas
