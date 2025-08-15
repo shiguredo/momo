@@ -57,7 +57,7 @@
   - `webrtc::SdpVideoFormat::Parameters` は deprecated なので `webrtc::CodecParameterMap` を利用する
   - `webrtc::MediaType::MEDIA_TYPE_VIDEO` は deprecated なので `webrtc::MediaType::VIDEO` を利用する
   - @torikizi, @melpon
-- [UPDATE] CMake を 4.0.3 に上げる
+- [UPDATE] CMake を 4.1.0 に上げる
   - @voluntas
 - [UPDATE] OpenH264 を 2.6.0 に上げる
   - @voluntas
