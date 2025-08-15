@@ -120,14 +120,14 @@ def test_sora_mode_simulcast(
         )
         
         # audio outbound-rtp の中身を検証
-        audio_rtp = audio_outbound_rtp_stats[0]
-        assert "ssrc" in audio_rtp
-        assert "packetsSent" in audio_rtp
-        assert "bytesSent" in audio_rtp
-        assert "headerBytesSent" in audio_rtp
-        assert audio_rtp["packetsSent"] > 0
-        assert audio_rtp["bytesSent"] > 0
-        assert audio_rtp["headerBytesSent"] > 0
+        audio_outbound_rtp = audio_outbound_rtp_stats[0]
+        assert "ssrc" in audio_outbound_rtp
+        assert "packetsSent" in audio_outbound_rtp
+        assert "bytesSent" in audio_outbound_rtp
+        assert "headerBytesSent" in audio_outbound_rtp
+        assert audio_outbound_rtp["packetsSent"] > 0
+        assert audio_outbound_rtp["bytesSent"] > 0
+        assert audio_outbound_rtp["headerBytesSent"] > 0
 
         # simulcast では video の outbound-rtp を取得して必ず3本あることを確認
         video_outbound_rtp_stats = [
@@ -138,24 +138,142 @@ def test_sora_mode_simulcast(
             f"Expected 3 video outbound-rtp for simulcast, but got {len(video_outbound_rtp_stats)}"
         )
         
-        # video outbound-rtp の中身を検証
-        for video_rtp in video_outbound_rtp_stats:
-            assert "ssrc" in video_rtp
-            assert "packetsSent" in video_rtp
-            assert "bytesSent" in video_rtp
-            assert "framesEncoded" in video_rtp
-            assert "frameWidth" in video_rtp
-            assert "frameHeight" in video_rtp
-            assert video_rtp["packetsSent"] > 0
-            assert video_rtp["bytesSent"] > 0
-            assert video_rtp["framesEncoded"] > 0
-            
-            # encoder implementation を確認
-            assert "encoderImplementation" in video_rtp
-            assert video_rtp["encoderImplementation"] == expected_encoder_implementation, (
-                f"Expected encoder implementation {expected_encoder_implementation}, "
-                f"but got {video_rtp['encoderImplementation']}"
-            )
+        # rid ごとに分類
+        video_outbound_rtp_by_rid = {}
+        for video_outbound_rtp in video_outbound_rtp_stats:
+            rid = video_outbound_rtp.get("rid")
+            assert rid in ["r0", "r1", "r2"], f"Unexpected rid: {rid}"
+            video_outbound_rtp_by_rid[rid] = video_outbound_rtp
+        
+        # 全ての rid が存在することを確認
+        assert set(video_outbound_rtp_by_rid.keys()) == {"r0", "r1", "r2"}, (
+            f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
+        )
+        
+        # r0 (低解像度) の検証
+        outbound_rtp_r0 = video_outbound_rtp_by_rid["r0"]
+        assert "ssrc" in outbound_rtp_r0
+        assert "rid" in outbound_rtp_r0
+        assert outbound_rtp_r0["rid"] == "r0"
+        assert "packetsSent" in outbound_rtp_r0
+        assert "bytesSent" in outbound_rtp_r0
+        assert "framesEncoded" in outbound_rtp_r0
+        assert "frameWidth" in outbound_rtp_r0
+        assert "frameHeight" in outbound_rtp_r0
+        assert outbound_rtp_r0["packetsSent"] > 0
+        assert outbound_rtp_r0["bytesSent"] > 0
+        assert outbound_rtp_r0["framesEncoded"] > 0
+        
+        # r0 の encoder implementation を確認
+        assert "encoderImplementation" in outbound_rtp_r0
+        assert outbound_rtp_r0["encoderImplementation"] == expected_encoder_implementation, (
+            f"Expected encoder implementation {expected_encoder_implementation} for r0, "
+            f"but got {outbound_rtp_r0['encoderImplementation']}"
+        )
+        
+        # r0 の解像度を確認
+        # 元の解像度 960x540 の 1/4 スケール (240x135) 
+        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
+        # 128 (16×8) または 135 (元の値) の範囲を許容
+        assert outbound_rtp_r0["frameWidth"] == 240, (
+            f"Expected width 240 for r0, but got {outbound_rtp_r0['frameWidth']}"
+        )
+        assert 128 <= outbound_rtp_r0["frameHeight"] <= 135, (
+            f"Expected height between 128 and 135 for r0, but got {outbound_rtp_r0['frameHeight']}"
+        )
+        print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
+        
+        # r0 のフレームレートを確認（25 fps 以上）
+        assert "framesPerSecond" in outbound_rtp_r0
+        assert outbound_rtp_r0["framesPerSecond"] >= 25, (
+            f"Expected at least 25 fps for r0, but got {outbound_rtp_r0['framesPerSecond']}"
+        )
+        
+        # r1 (中解像度) の検証
+        outbound_rtp_r1 = video_outbound_rtp_by_rid["r1"]
+        assert "ssrc" in outbound_rtp_r1
+        assert "rid" in outbound_rtp_r1
+        assert outbound_rtp_r1["rid"] == "r1"
+        assert "packetsSent" in outbound_rtp_r1
+        assert "bytesSent" in outbound_rtp_r1
+        assert "framesEncoded" in outbound_rtp_r1
+        assert "frameWidth" in outbound_rtp_r1
+        assert "frameHeight" in outbound_rtp_r1
+        assert outbound_rtp_r1["packetsSent"] > 0
+        assert outbound_rtp_r1["bytesSent"] > 0
+        assert outbound_rtp_r1["framesEncoded"] > 0
+        
+        # r1 の encoder implementation を確認
+        assert "encoderImplementation" in outbound_rtp_r1
+        assert outbound_rtp_r1["encoderImplementation"] == expected_encoder_implementation, (
+            f"Expected encoder implementation {expected_encoder_implementation} for r1, "
+            f"but got {outbound_rtp_r1['encoderImplementation']}"
+        )
+        
+        # r1 の解像度を確認
+        # 元の解像度 960x540 の 1/2 スケール (480x270)
+        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
+        # 256 (16×16) から 270 (元の値) の範囲を許容
+        assert outbound_rtp_r1["frameWidth"] == 480, (
+            f"Expected width 480 for r1, but got {outbound_rtp_r1['frameWidth']}"
+        )
+        assert 256 <= outbound_rtp_r1["frameHeight"] <= 270, (
+            f"Expected height between 256 and 270 for r1, but got {outbound_rtp_r1['frameHeight']}"
+        )
+        print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
+        
+        # r1 のフレームレートを確認（25 fps 以上）
+        assert "framesPerSecond" in outbound_rtp_r1
+        assert outbound_rtp_r1["framesPerSecond"] >= 25, (
+            f"Expected at least 25 fps for r1, but got {outbound_rtp_r1['framesPerSecond']}"
+        )
+        
+        # r2 (高解像度) の検証
+        outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
+        assert "ssrc" in outbound_rtp_r2
+        assert "rid" in outbound_rtp_r2
+        assert outbound_rtp_r2["rid"] == "r2"
+        assert "packetsSent" in outbound_rtp_r2
+        assert "bytesSent" in outbound_rtp_r2
+        assert "framesEncoded" in outbound_rtp_r2
+        assert "frameWidth" in outbound_rtp_r2
+        assert "frameHeight" in outbound_rtp_r2
+        assert outbound_rtp_r2["packetsSent"] > 0
+        assert outbound_rtp_r2["bytesSent"] > 0
+        assert outbound_rtp_r2["framesEncoded"] > 0
+        
+        # r2 の encoder implementation を確認
+        assert "encoderImplementation" in outbound_rtp_r2
+        assert outbound_rtp_r2["encoderImplementation"] == expected_encoder_implementation, (
+            f"Expected encoder implementation {expected_encoder_implementation} for r2, "
+            f"but got {outbound_rtp_r2['encoderImplementation']}"
+        )
+        
+        # r2 の解像度を確認
+        # 元の解像度 960x540 そのまま
+        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
+        # 528 (16×33) から 540 (元の値) の範囲を許容
+        assert outbound_rtp_r2["frameWidth"] == 960, (
+            f"Expected width 960 for r2, but got {outbound_rtp_r2['frameWidth']}"
+        )
+        assert 528 <= outbound_rtp_r2["frameHeight"] <= 540, (
+            f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
+        )
+        print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
+        
+        # r2 のフレームレートを確認（25 fps 以上）
+        assert "framesPerSecond" in outbound_rtp_r2
+        assert outbound_rtp_r2["framesPerSecond"] >= 25, (
+            f"Expected at least 25 fps for r2, but got {outbound_rtp_r2['framesPerSecond']}"
+        )
+        
+        # パケット数とバイト数の関係を検証（r0 < r1 < r2）
+        assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
+            f"Expected r0 bytesSent ({outbound_rtp_r0['bytesSent']}) < r1 bytesSent ({outbound_rtp_r1['bytesSent']})"
+        )
+        assert outbound_rtp_r1["bytesSent"] < outbound_rtp_r2["bytesSent"], (
+            f"Expected r1 bytesSent ({outbound_rtp_r1['bytesSent']}) < r2 bytesSent ({outbound_rtp_r2['bytesSent']})"
+        )
 
         # 各統計タイプの詳細をチェック（outbound-rtp と codec は上で検証済みなのでスキップ）
         for stat in stats:
