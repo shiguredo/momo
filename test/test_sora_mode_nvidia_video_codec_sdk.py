@@ -139,3 +139,154 @@ def test_sora_connection_stats(
                 case "peer-connection":
                     # peer-connection の必須フィールドを確認
                     assert "dataChannelsOpened" in stat
+
+
+@pytest.mark.parametrize(
+    "video_codec_type, expected_mime_type",
+    [
+        ("AV1", "video/AV1"),
+        ("H264", "video/H264"),
+        ("H265", "video/H265"),
+    ],
+)
+def test_sora_sendonly_recvonly_pair(
+    http_client,
+    sora_settings,
+    port_allocator,
+    video_codec_type,
+    expected_mime_type,
+):
+    """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（NVIDIA Video Codec SDK 使用）"""
+
+    # 送信専用クライアント
+    with Momo(
+        mode=MomoMode.SORA,
+        av1_encoder="nvidia",
+        av1_decoder="nvidia",
+        h264_encoder="nvidia",
+        h264_decoder="nvidia",
+        h265_encoder="nvidia",
+        h265_decoder="nvidia",
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
+        role="sendonly",
+        metrics_port=next(port_allocator),
+        fake_capture_device=True,
+        video=True,
+        video_codec_type=video_codec_type,
+        audio=True,
+        metadata=sora_settings.metadata,
+        initial_wait=10,
+    ) as sender:
+        # 受信専用クライアント
+        with Momo(
+            mode=MomoMode.SORA,
+            av1_decoder="nvidia",
+            h264_decoder="nvidia",
+            h265_decoder="nvidia",
+            signaling_urls=sora_settings.signaling_urls,
+            channel_id=sora_settings.channel_id,
+            role="recvonly",
+            metrics_port=next(port_allocator),
+            video=True,
+            audio=True,
+            metadata=sora_settings.metadata,
+        ) as receiver:
+            # 接続が確立するまで待機
+            time.sleep(5)
+
+            # 送信側の統計を確認
+            sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
+            sender_stats = sender_response.json().get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
+            receiver_stats = receiver_response.json().get("stats", [])
+
+            # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
+            sender_outbound_rtp = [
+                stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
+            ]
+            assert len(sender_outbound_rtp) == 2, (
+                "Sender should have exactly 2 outbound-rtp stats (audio and video)"
+            )
+
+            # 送信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
+            assert len(sender_codecs) >= 2, "Should have at least 2 codecs (audio and video)"
+
+            # video codec の mimeType を確認
+            sender_video_codec = next(
+                (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert sender_video_codec is not None, "Video codec should be present"
+            assert sender_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
+            )
+
+            # audio codec の mimeType を確認
+            sender_audio_codec = next(
+                (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("audio/")),
+                None,
+            )
+            assert sender_audio_codec is not None, "Audio codec should be present"
+            assert sender_audio_codec["mimeType"] == "audio/opus", "Audio codec should be opus"
+
+            # 送信側でデータが送信されていることを確認
+            for stat in sender_outbound_rtp:
+                assert "packetsSent" in stat
+                assert "bytesSent" in stat
+                assert stat["packetsSent"] > 0
+                assert stat["bytesSent"] > 0
+
+                # video ストリームの場合、encoderImplementation が NvCodec であることを確認
+                if stat.get("kind") == "video":
+                    assert "encoderImplementation" in stat
+                    assert stat["encoderImplementation"] == "NvCodec"
+
+            # 受信側では inbound-rtp が音声と映像の2つ存在することを確認
+            receiver_inbound_rtp = [
+                stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
+            ]
+            assert len(receiver_inbound_rtp) == 2, (
+                "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
+            )
+
+            # 受信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
+            assert len(receiver_codecs) >= 2, (
+                "Should have at least 2 codecs (audio and video) on receiver"
+            )
+
+            # video codec の mimeType を確認
+            receiver_video_codec = next(
+                (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert receiver_video_codec is not None, "Video codec should be present on receiver"
+            assert receiver_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
+            )
+
+            # audio codec の mimeType を確認
+            receiver_audio_codec = next(
+                (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("audio/")),
+                None,
+            )
+            assert receiver_audio_codec is not None, "Audio codec should be present on receiver"
+            assert receiver_audio_codec["mimeType"] == "audio/opus", (
+                "Audio codec should be opus on receiver"
+            )
+
+            # 受信側でデータが受信されていることを確認
+            for stat in receiver_inbound_rtp:
+                assert "packetsReceived" in stat
+                assert "bytesReceived" in stat
+                assert stat["packetsReceived"] > 0
+                assert stat["bytesReceived"] > 0
+
+                # video ストリームの場合、decoderImplementation が NvCodec であることを確認
+                if stat.get("kind") == "video":
+                    assert "decoderImplementation" in stat
+                    assert stat["decoderImplementation"] == "NvCodec"
