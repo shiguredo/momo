@@ -42,9 +42,6 @@
     - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
     - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
   - @voluntas
-- [UPDATE] Boost を 1.89.0 に上げる
-  - buildbase.py に SHA256 ハッシュチェック機能を追加
-  - @voluntas
 - [UPDATE] WebRTC を m138.7204.0.4 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
   - jetson_video_encoder と nvcodec_video_encoder、vpl_video_encoder の `frame.timestamp()` を `frame.rtp_timestamp()` に変更
@@ -66,7 +63,8 @@
   - @voluntas
 - [UPDATE] CLI11 を 2.5.0 に上げる
   - @voluntas
-- [UPDATE] Boost を 1.88.0 に上げる
+- [UPDATE] Boost を 1.89.0 に上げる
+  - buildbase.py に SHA256 ハッシュチェック機能を追加
   - @voluntas
 - [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
   - @melpon
