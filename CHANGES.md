@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
+  - @voluntas
 - [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
   - VERSION ファイルには momo のバージョンのみを記載するように変更
   - 依存ライブラリのバージョン情報は新たに作成した DEPS ファイルで管理
