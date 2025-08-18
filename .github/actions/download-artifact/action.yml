@@ -1,5 +1,5 @@
-name: extract-momo-binary
-description: Extract momo binary from tar.gz package
+name: download-artifact
+description: Download artifact and extract momo binary
 
 inputs:
   platform:
@@ -9,6 +9,25 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Download env artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ inputs.platform }}.env
+        path: ./
+    
+    - name: Get package name
+      id: package_info
+      shell: bash
+      run: |
+        source momo.env
+        echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+    
+    - name: Download package artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ steps.package_info.outputs.package_name }}
+        path: ./
+    
     - name: Extract momo binary
       shell: bash
       run: |
