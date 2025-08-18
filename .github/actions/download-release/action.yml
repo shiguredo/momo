@@ -42,10 +42,10 @@ runs:
         
         # ビルドディレクトリ構造を再現
         TARGET="${{ inputs.platform }}"
-        mkdir -p _build/$TARGET/release/momo
+        mkdir -p _build/$TARGET/release
         
-        # momo バイナリを正しい場所に配置
-        mv momo-${{ steps.latest_release.outputs.tag }}_${{ inputs.platform }}/momo _build/$TARGET/release/momo/
+        # 展開されたディレクトリ（momo-<version>_<platform>）を momo にリネームして配置
+        mv momo-${{ steps.latest_release.outputs.tag }}_${{ inputs.platform }} _build/$TARGET/release/momo
         chmod +x _build/$TARGET/release/momo/momo
         
         # バージョン確認
