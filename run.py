@@ -657,15 +657,17 @@ def _build(args):
         with cd(BASE_DIR):
             momo_version = read_version_string("VERSION")
 
-        def archive(archive_path, files, is_windows):
+        def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:
                 with zipfile.ZipFile(archive_path, "w") as f:
                     for file in files:
-                        f.write(filename=file, arcname=file)
+                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        f.write(filename=file, arcname=arcname)
             else:
                 with tarfile.open(archive_path, "w:gz") as f:
                     for file in files:
-                        f.add(name=file, arcname=file)
+                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        f.add(name=file, arcname=arcname)
 
         ext = "zip" if platform.target.os == "windows" else "tar.gz"
         is_windows = platform.target.os == "windows"
@@ -674,7 +676,8 @@ def _build(args):
         with cd(install_dir):
             archive_name = f"momo-{momo_version}_{platform.target.package_name}.{ext}"
             archive_path = os.path.join(package_dir, archive_name)
-            archive(archive_path, enum_all_files("momo", "."), is_windows)
+            archive_dir_name = f"momo-{momo_version}_{platform.target.package_name}"
+            archive(archive_path, enum_all_files("momo", "."), is_windows, archive_dir_name)
 
             with open(os.path.join(package_dir, "momo.env"), "w") as f:
                 f.write(f"CONTENT_TYPE={content_type}\n")
