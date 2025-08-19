@@ -48,6 +48,8 @@
 #include <libyuv/convert.h>
 #include <libyuv/rotate.h>
 
+#include "../../rtc/native_buffer.h"
+
 #include "sora/scalable_track_source.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
@@ -532,19 +534,31 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
-      webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
-  i420_buffer->InitializeData();
-  if (libyuv::ConvertToI420(
-          data, bytesused, i420_buffer.get()->MutableDataY(),
-          i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
-          i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
-          i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
-          _currentWidth, _currentHeight, libyuv::kRotate0,
-          ConvertVideoType(_captureVideoType)) < 0) {
-    RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+  // YUY2 の場合は NativeBuffer を使用して変換を避ける
+  if (_captureVideoType == webrtc::VideoType::kYUY2) {
+    auto native_buffer = NativeBuffer::Create(
+        webrtc::VideoType::kYUY2, _currentWidth, _currentHeight);
+    // YUY2 データを直接コピー
+    memcpy(native_buffer->MutableData(), data, bytesused);
+    native_buffer->SetLength(bytesused);
+    dst_buffer = native_buffer;
+    RTC_LOG(LS_VERBOSE) << "Using NativeBuffer for YUY2 data (no conversion)";
   } else {
-    dst_buffer = i420_buffer;
+    // YUY2 以外の場合は I420 に変換
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+        webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
+    i420_buffer->InitializeData();
+    if (libyuv::ConvertToI420(
+            data, bytesused, i420_buffer.get()->MutableDataY(),
+            i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+            i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+            i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
+            _currentWidth, _currentHeight, libyuv::kRotate0,
+            ConvertVideoType(_captureVideoType)) < 0) {
+      RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+    } else {
+      dst_buffer = i420_buffer;
+    }
   }
 
   if (dst_buffer) {

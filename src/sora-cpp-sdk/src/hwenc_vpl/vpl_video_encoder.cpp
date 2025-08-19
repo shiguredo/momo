@@ -37,6 +37,7 @@
 #include <rtc_base/logging.h>
 
 // libyuv
+#include <libyuv/convert.h>
 #include <libyuv/convert_from.h>
 
 // Intel VPL
@@ -50,6 +51,7 @@
 #include "../vpl_session_impl.h"
 #include "sora/vpl_session.h"
 #include "vpl_utils.h"
+#include "../../rtc/native_buffer.h"
 
 namespace sora {
 
@@ -134,6 +136,7 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   std::vector<uint8_t> bitstream_buffer_;
   mfxBitstream bitstream_;
   mfxFrameInfo frame_info_;
+  bool use_yuy2_ = false;  // YUY2 フォーマットを使用するか
 
   int key_frame_interval_ = 0;
 };
@@ -216,7 +219,8 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     //param.mfx.CodecProfile = MFX_PROFILE_AVC_MAIN;
     //param.mfx.CodecLevel = MFX_LEVEL_AVC_1;
   } else if (codec == MFX_CODEC_HEVC) {
-    // param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+    // YUY2 を使う場合は HEVC REXT プロファイルを試す
+    // param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
     // param.mfx.CodecLevel = MFX_LEVEL_HEVC_1;
     // param.mfx.LowPower = MFX_CODINGOPTION_OFF;
   } else if (codec == MFX_CODEC_AV1) {
@@ -230,8 +234,17 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.RateControlMethod = MFX_RATECONTROL_VBR;
   param.mfx.FrameInfo.FrameRateExtN = framerate;
   param.mfx.FrameInfo.FrameRateExtD = 1;
-  param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
-  param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+  
+  // H.265 の場合は YUY2 (YUV422) を試す
+  bool try_yuy2 = (codec == MFX_CODEC_HEVC);
+  if (try_yuy2) {
+    param.mfx.FrameInfo.FourCC = MFX_FOURCC_YUY2;
+    param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+    param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;  // YUY2 には REXT プロファイルが必要
+  } else {
+    param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+    param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+  }
   param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   param.mfx.FrameInfo.CropX = 0;
   param.mfx.FrameInfo.CropY = 0;
@@ -359,6 +372,18 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   if (sts >= 0) {
     return sts;
   }
+  
+  // H.265 で YUY2 が失敗した場合は NV12 にフォールバック
+  if (codec == MFX_CODEC_HEVC && param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
+    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for HEVC, falling back to NV12";
+    param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+    param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+    param.mfx.CodecProfile = 0;  // プロファイルをリセット
+    sts = query(encoder, param);
+    if (sts >= 0) {
+      return sts;
+    }
+  }
 
   // IOPattern を MFX_IOPATTERN_IN_SYSTEM_MEMORY のみにしてみる
   // Coffee Lake の H265 はこのパターンでないと通らない
@@ -478,14 +503,49 @@ int32_t VplVideoEncoderImpl::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // I420 から NV12 に変換
-  webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
-      frame.video_frame_buffer()->ToI420();
-  libyuv::I420ToNV12(
-      frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
-      frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
-      surface->Data.Y, surface->Data.Pitch, surface->Data.U,
-      surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  // フレームバッファーからエンコーダー入力フォーマットに変換
+  auto video_frame_buffer = frame.video_frame_buffer();
+  
+  // NativeBuffer で YUY2 の場合は直接コピー（変換不要）
+  if (use_yuy2_ && video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    auto native_buffer = reinterpret_cast<const NativeBuffer*>(video_frame_buffer.get());
+    if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
+      // YUY2 データを直接コピー（変換なし）
+      memcpy(surface->Data.Y, native_buffer->Data(), native_buffer->Length());
+      RTC_LOG(LS_VERBOSE) << "Using YUY2 data directly from NativeBuffer (no conversion)";
+    } else {
+      // NativeBuffer だが YUY2 ではない場合は I420 から変換
+      webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+          video_frame_buffer->ToI420();
+      libyuv::I420ToYUY2(
+          frame_buffer->DataY(), frame_buffer->StrideY(),
+          frame_buffer->DataU(), frame_buffer->StrideU(),
+          frame_buffer->DataV(), frame_buffer->StrideV(),
+          surface->Data.Y, surface->Data.Pitch,
+          frame_buffer->width(), frame_buffer->height());
+      RTC_LOG(LS_VERBOSE) << "Converting from I420 to YUY2 (NativeBuffer not YUY2)";
+    }
+  } else if (use_yuy2_) {
+    // NativeBuffer ではない場合は I420 から YUY2 に変換
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+        video_frame_buffer->ToI420();
+    libyuv::I420ToYUY2(
+        frame_buffer->DataY(), frame_buffer->StrideY(),
+        frame_buffer->DataU(), frame_buffer->StrideU(),
+        frame_buffer->DataV(), frame_buffer->StrideV(),
+        surface->Data.Y, surface->Data.Pitch,
+        frame_buffer->width(), frame_buffer->height());
+    RTC_LOG(LS_VERBOSE) << "Converting from I420 to YUY2 (not NativeBuffer)";
+  } else {
+    // NV12 の場合は I420 から NV12 に変換
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+        video_frame_buffer->ToI420();
+    libyuv::I420ToNV12(
+        frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
+        frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
+        surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+        surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  }
 
   mfxStatus sts;
 
@@ -546,7 +606,7 @@ int32_t VplVideoEncoderImpl::Encode(
                      << " ms";
   }
 
-  // NV12 をハードウェアエンコード
+  // NV12/YUY2 をハードウェアエンコード
   mfxSyncPoint syncp;
   sts = encoder_->EncodeFrameAsync(&ctrl, &*surface, &bitstream_, &syncp);
   // alloc_request_.NumFrameSuggested が 1 の場合は MFX_ERR_MORE_DATA は発生しない
@@ -744,6 +804,12 @@ int32_t VplVideoEncoderImpl::InitVpl() {
                    << alloc_request_.NumFrameSuggested;
 
   frame_info_ = param.mfx.FrameInfo;
+  
+  // YUY2 フォーマットが選択されたか確認
+  use_yuy2_ = (frame_info_.FourCC == MFX_FOURCC_YUY2);
+  if (use_yuy2_) {
+    RTC_LOG(LS_INFO) << "Using YUY2 format for HEVC encoding";
+  }
 
   // 出力ビットストリームの初期化
   bitstream_buffer_.resize(param.mfx.BufferSizeInKB * 1000);
@@ -757,8 +823,14 @@ int32_t VplVideoEncoderImpl::InitVpl() {
     int width = (alloc_request_.Info.Width + 31) / 32 * 32;
     int height = (alloc_request_.Info.Height + 31) / 32 * 32;
     // 1枚あたりのバイト数
-    // NV12 なので 1 ピクセルあたり 12 ビット
-    int size = width * height * 12 / 8;
+    int size;
+    if (use_yuy2_) {
+      // YUY2 は 1 ピクセルあたり 16 ビット (2 バイト)
+      size = width * height * 2;
+    } else {
+      // NV12 は 1 ピクセルあたり 12 ビット
+      size = width * height * 12 / 8;
+    }
     surface_buffer_.resize(alloc_request_.NumFrameSuggested * size);
 
     surfaces_.clear();
@@ -767,10 +839,20 @@ int32_t VplVideoEncoderImpl::InitVpl() {
       mfxFrameSurface1 surface;
       memset(&surface, 0, sizeof(surface));
       surface.Info = frame_info_;
-      surface.Data.Y = surface_buffer_.data() + i * size;
-      surface.Data.U = surface_buffer_.data() + i * size + width * height;
-      surface.Data.V = surface_buffer_.data() + i * size + width * height + 1;
-      surface.Data.Pitch = width;
+      
+      if (use_yuy2_) {
+        // YUY2 の場合はパックドフォーマット
+        surface.Data.Y = surface_buffer_.data() + i * size;
+        surface.Data.U = surface.Data.Y + 1;  // U は Y の次のバイト
+        surface.Data.V = surface.Data.Y + 3;  // V は Y から 3 バイト目
+        surface.Data.Pitch = width * 2;  // YUY2 のピッチは幅の 2 倍
+      } else {
+        // NV12 の場合
+        surface.Data.Y = surface_buffer_.data() + i * size;
+        surface.Data.U = surface_buffer_.data() + i * size + width * height;
+        surface.Data.V = surface_buffer_.data() + i * size + width * height + 1;
+        surface.Data.Pitch = width;
+      }
       surfaces_.push_back(surface);
     }
   }

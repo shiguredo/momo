@@ -54,11 +54,28 @@ bool DeviceVideoCapturer::Init(size_t width,
   capability_.width = static_cast<int32_t>(width);
   capability_.height = static_cast<int32_t>(height);
   capability_.maxFPS = static_cast<int32_t>(target_fps);
-  capability_.videoType = webrtc::VideoType::kI420;
-
+  
+  // YUY2 を優先的に試す（H.265 エンコーダー用）
+  // YUY2 がサポートされていない場合は I420 にフォールバック
+  capability_.videoType = webrtc::VideoType::kYUY2;
+  
+  // YUY2 でのキャプチャーを試す
   if (vcm_->StartCapture(capability_) != 0) {
-    Destroy();
-    return false;
+    // YUY2 が失敗した場合は I420 にフォールバック
+    RTC_LOG(LS_INFO) << "YUY2 capture not supported, falling back to I420";
+    capability_.videoType = webrtc::VideoType::kI420;
+  } else {
+    // YUY2 のキャプチャーが成功した場合は一旦停止
+    vcm_->StopCapture();
+    RTC_LOG(LS_INFO) << "Using YUY2 format for video capture";
+  }
+
+  // すでに上でキャプチャーが開始されていない場合のみ開始
+  if (!vcm_->CaptureStarted()) {
+    if (vcm_->StartCapture(capability_) != 0) {
+      Destroy();
+      return false;
+    }
   }
 
   RTC_CHECK(vcm_->CaptureStarted());
