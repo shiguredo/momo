@@ -22,15 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
-        with:
-          platform: ${{ matrix.package }}
-      
       - name: Install runtime dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
+      
+      - name: Download and extract momo binary
+        uses: ./.github/actions/download-artifact
+        with:
+          platform: ${{ matrix.package }}
 
       - uses: astral-sh/setup-uv@v6
       

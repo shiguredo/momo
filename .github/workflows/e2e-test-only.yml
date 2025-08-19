@@ -27,16 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
+      
       - name: Download and extract momo binary
         uses: ./.github/actions/download-release
         with:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
-      
-      - name: Install runtime dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
       - uses: astral-sh/setup-uv@v6
       
