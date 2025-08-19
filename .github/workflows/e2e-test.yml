@@ -45,13 +45,13 @@ jobs:
       matrix:
         include:
           - name: Intel VPL
-            runner_labels: '[self-hosted, linux, x64, Intel-VPL]'
+            runner_labels: '["self-hosted", "linux", "x64", "Intel-VPL"]'
             test_file: test_sora_mode_intel_vpl.py
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
           - name: NVIDIA Video Codec SDK
-            runner_labels: '[self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]'
+            runner_labels: '["self-hosted", "linux", "x64", "NVIDIA-Video-Codec-SDK"]'
             test_file: test_sora_mode_nvidia_video_codec_sdk.py
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
