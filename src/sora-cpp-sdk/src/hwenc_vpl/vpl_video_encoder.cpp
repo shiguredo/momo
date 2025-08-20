@@ -604,9 +604,9 @@ int32_t VplVideoEncoderImpl::Encode(
 
   if (reconfigure_needed_) {
     auto start_time = std::chrono::system_clock::now();
-    RTC_LOG(LS_INFO) << "Start reconfigure: bps="
-                     << (bitrate_adjuster_.GetAdjustedBitrateBps() / 1000)
-                     << " framerate=" << framerate_;
+    RTC_LOG(LS_VERBOSE) << "Start reconfigure: bps="
+                        << (bitrate_adjuster_.GetAdjustedBitrateBps() / 1000)
+                        << " framerate=" << framerate_;
     // 今の設定を取得する
     mfxVideoParam param;
     memset(&param, 0, sizeof(param));
@@ -636,11 +636,11 @@ int32_t VplVideoEncoderImpl::Encode(
     reconfigure_needed_ = false;
 
     auto end_time = std::chrono::system_clock::now();
-    RTC_LOG(LS_INFO) << "Finish reconfigure: "
-                     << std::chrono::duration_cast<std::chrono::milliseconds>(
-                            end_time - start_time)
-                            .count()
-                     << " ms";
+    RTC_LOG(LS_VERBOSE) << "Finish reconfigure: "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(
+                               end_time - start_time)
+                               .count()
+                        << " ms";
   }
 
   // NV12/YUY2 をハードウェアエンコード
@@ -787,11 +787,11 @@ void VplVideoEncoderImpl::SetRates(const RateControlParameters& parameters) {
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
-                   << " new_framerate: " << new_framerate
-                   << " target_bitrate_bps_:" << target_bitrate_bps_
-                   << " new_bitrate:" << new_bitrate
-                   << " max_bitrate_bps_:" << max_bitrate_bps_;
+  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " framerate_:" << framerate_
+                      << " new_framerate: " << new_framerate
+                      << " target_bitrate_bps_:" << target_bitrate_bps_
+                      << " new_bitrate:" << new_bitrate
+                      << " max_bitrate_bps_:" << max_bitrate_bps_;
   framerate_ = new_framerate;
   target_bitrate_bps_ = new_bitrate;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
