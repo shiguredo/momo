@@ -270,6 +270,18 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
                      << webrtc::GetFourccName(fmts[fmtsIdx]);
   }
 
+  // force_yuy2 が指定されている場合、YUY2 以外はエラー
+  if (config.force_yuy2 && fmts[fmtsIdx] != V4L2_PIX_FMT_YUYV) {
+    RTC_LOG(LS_ERROR) << "YUY2 format forced but not available";
+    return -1;
+  }
+
+  // force_i420 が指定されている場合、I420 以外はエラー
+  if (config.force_i420 && fmts[fmtsIdx] != V4L2_PIX_FMT_YUV420) {
+    RTC_LOG(LS_ERROR) << "I420 format forced but not available";
+    return -1;
+  }
+
   struct v4l2_format video_fmt;
   memset(&video_fmt, 0, sizeof(struct v4l2_format));
   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;

@@ -248,6 +248,12 @@ int32_t JetsonV4L2Capturer::StartCapture(
                      << webrtc::GetFourccName(fmts[fmtsIdx]);
   }
 
+  // force_i420 が指定されている場合、I420 以外はエラー
+  if (config.force_i420 && fmts[fmtsIdx] != V4L2_PIX_FMT_YUV420) {
+    RTC_LOG(LS_ERROR) << "I420 format forced but not available";
+    return -1;
+  }
+
   struct v4l2_format video_fmt;
   memset(&video_fmt, 0, sizeof(struct v4l2_format));
   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
