@@ -49,10 +49,14 @@
 #include <libyuv/rotate.h>
 
 #include "../../rtc/native_buffer.h"
+#ifdef USE_VPL_ENCODER
 #include "../../rtc/vpl_backed_native_buffer.h"
+#endif
 
 #include "sora/scalable_track_source.h"
+#ifdef USE_VPL_ENCODER
 #include "sora/vpl_surface_pool.h"
+#endif
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
@@ -640,6 +644,7 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   // YUY2 の場合は NativeBuffer を使用して変換を避ける
   if (_captureVideoType == webrtc::VideoType::kYUY2) {
+#ifdef USE_VPL_ENCODER
     // VPL サーフェスプールが利用可能かチェック
     auto& surface_pool = VplSurfacePool::GetInstance();
     if (surface_pool.IsInitialized() && surface_pool.IsYuy2Enabled() &&
@@ -670,8 +675,10 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
         RTC_LOG(LS_VERBOSE)
             << "VPL surface not available, using regular NativeBuffer";
       }
-    } else {
-      // VPL プールが初期化されていないか、設定が一致しない
+    } else
+#endif  // USE_VPL_ENCODER
+    {
+      // VPL プールが初期化されていないか、設定が一致しない、または VPL が無効
       auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
                                                 _currentWidth, _currentHeight);
       memcpy(native_buffer->MutableData(), data, bytesused);
