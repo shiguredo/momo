@@ -3,8 +3,8 @@
 
 #include <vpl/mfxstructures.h>
 #include <memory>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace sora {
 

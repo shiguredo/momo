@@ -9,9 +9,12 @@ constexpr size_t YUY2_BYTES_PER_PIXEL = 2;
 constexpr size_t YUY2_U_OFFSET = 1;
 constexpr size_t YUY2_V_OFFSET = 3;
 
-void VplSurfacePool::Initialize(int width, int height, int num_surfaces, bool use_yuy2) {
+void VplSurfacePool::Initialize(int width,
+                                int height,
+                                int num_surfaces,
+                                bool use_yuy2) {
   std::lock_guard<std::mutex> lock(mutex_);
-  
+
   if (initialized_) {
     RTC_LOG(LS_WARNING) << "VplSurfacePool already initialized, clearing...";
     Clear();
@@ -42,7 +45,7 @@ void VplSurfacePool::Initialize(int width, int height, int num_surfaces, bool us
   for (int i = 0; i < num_surfaces; i++) {
     mfxFrameSurface1 surface;
     memset(&surface, 0, sizeof(surface));
-    
+
     // フレーム情報を設定
     surface.Info.Width = width;
     surface.Info.Height = height;
@@ -50,7 +53,7 @@ void VplSurfacePool::Initialize(int width, int height, int num_surfaces, bool us
     surface.Info.CropY = 0;
     surface.Info.CropW = width;
     surface.Info.CropH = height;
-    
+
     if (use_yuy2) {
       surface.Info.FourCC = MFX_FOURCC_YUY2;
       surface.Info.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
@@ -66,21 +69,20 @@ void VplSurfacePool::Initialize(int width, int height, int num_surfaces, bool us
       surface.Data.V = surface.Data.U + 1;
       surface.Data.Pitch = aligned_width;
     }
-    
+
     surface.Data.Locked = 0;  // 初期状態はアンロック
     surfaces_.push_back(surface);
   }
 
   initialized_ = true;
-  RTC_LOG(LS_INFO) << "VplSurfacePool initialized: " 
-                   << width << "x" << height 
+  RTC_LOG(LS_INFO) << "VplSurfacePool initialized: " << width << "x" << height
                    << " format=" << (use_yuy2 ? "YUY2" : "NV12")
                    << " surfaces=" << num_surfaces;
 }
 
 mfxFrameSurface1* VplSurfacePool::AcquireSurface() {
   std::lock_guard<std::mutex> lock(mutex_);
-  
+
   if (!initialized_) {
     RTC_LOG(LS_ERROR) << "VplSurfacePool not initialized";
     return nullptr;
@@ -90,7 +92,8 @@ mfxFrameSurface1* VplSurfacePool::AcquireSurface() {
   for (auto& surface : surfaces_) {
     if (!surface.Data.Locked) {
       surface.Data.Locked = 1;
-      RTC_LOG(LS_VERBOSE) << "Acquired surface at " << static_cast<void*>(&surface);
+      RTC_LOG(LS_VERBOSE) << "Acquired surface at "
+                          << static_cast<void*>(&surface);
       return &surface;
     }
   }
@@ -101,7 +104,7 @@ mfxFrameSurface1* VplSurfacePool::AcquireSurface() {
 
 void VplSurfacePool::ReleaseSurface(mfxFrameSurface1* surface) {
   std::lock_guard<std::mutex> lock(mutex_);
-  
+
   if (!surface) {
     return;
   }
@@ -113,14 +116,14 @@ void VplSurfacePool::ReleaseSurface(mfxFrameSurface1* surface) {
 
 void VplSurfacePool::Clear() {
   std::lock_guard<std::mutex> lock(mutex_);
-  
+
   surface_buffer_.clear();
   surfaces_.clear();
   initialized_ = false;
   use_yuy2_ = false;
   width_ = 0;
   height_ = 0;
-  
+
   RTC_LOG(LS_INFO) << "VplSurfacePool cleared";
 }
 

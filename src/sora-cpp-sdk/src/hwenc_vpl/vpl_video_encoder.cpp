@@ -49,11 +49,11 @@
 #include <vpl/mfxvp8.h>
 
 #include "../../rtc/native_buffer.h"
+#include "../../rtc/vpl_backed_native_buffer.h"
 #include "../vpl_session_impl.h"
 #include "sora/vpl_session.h"
 #include "sora/vpl_surface_pool.h"
 #include "vpl_utils.h"
-#include "../../rtc/vpl_backed_native_buffer.h"
 
 namespace sora {
 
@@ -528,7 +528,7 @@ int32_t VplVideoEncoderImpl::Encode(
       video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     auto native_buffer =
         reinterpret_cast<const NativeBuffer*>(video_frame_buffer.get());
-    
+
     // VplBackedNativeBuffer の場合はすでに VPL サーフェスを持っているのでコピー不要
     auto vpl_backed = dynamic_cast<const VplBackedNativeBuffer*>(native_buffer);
     if (vpl_backed && vpl_backed->GetVplSurface()) {
@@ -810,8 +810,8 @@ webrtc::VideoEncoder::EncoderInfo VplVideoEncoderImpl::GetEncoderInfo() const {
 int32_t VplVideoEncoderImpl::InitVpl() {
   // サーフェスプールを初期化（メモリコピー削減のため）
   VplSurfacePool::GetInstance().Initialize(
-      frame_info_.Width, frame_info_.Height,
-      alloc_request_.NumFrameSuggested, use_yuy2_);
+      frame_info_.Width, frame_info_.Height, alloc_request_.NumFrameSuggested,
+      use_yuy2_);
   encoder_ = CreateEncoder(session_, codec_, width_, height_, framerate_,
                            bitrate_adjuster_.GetAdjustedBitrateBps() / 1000,
                            max_bitrate_bps_ / 1000, true);
@@ -886,8 +886,10 @@ int32_t VplVideoEncoderImpl::InitVpl() {
         // YUY2 の場合はパックドフォーマット
         surface.Data.Y = surface_buffer_.data() + i * size;
         surface.Data.U = surface.Data.Y + YUY2_U_OFFSET;  // U は Y の次のバイト
-        surface.Data.V = surface.Data.Y + YUY2_V_OFFSET;  // V は Y から 3 バイト目
-        surface.Data.Pitch = width * YUY2_BYTES_PER_PIXEL;  // YUY2 のピッチは幅の 2 倍
+        surface.Data.V =
+            surface.Data.Y + YUY2_V_OFFSET;  // V は Y から 3 バイト目
+        surface.Data.Pitch =
+            width * YUY2_BYTES_PER_PIXEL;  // YUY2 のピッチは幅の 2 倍
       } else {
         // NV12 の場合
         surface.Data.Y = surface_buffer_.data() + i * size;

@@ -21,6 +21,10 @@
 
 - `python3 run.py build <target>` でビルドすること
 
+## フォーマッターについて
+
+- `python3 run.py format` でフォーマットすること
+
 ## コミットについて
 
 - 勝手にコミットしないこと

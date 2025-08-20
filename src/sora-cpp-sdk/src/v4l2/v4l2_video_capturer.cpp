@@ -650,25 +650,25 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
       if (surface) {
         // V4L2 から VPL サーフェスへ直接コピー（1回目のコピー）
         memcpy(surface->Data.Y, data, bytesused);
-        
+
         // VplBackedNativeBuffer を作成
         dst_buffer = VplBackedNativeBuffer::Create(
-            webrtc::VideoType::kYUY2, _currentWidth, _currentHeight,
-            surface,
+            webrtc::VideoType::kYUY2, _currentWidth, _currentHeight, surface,
             [&surface_pool](mfxFrameSurface1* s) {
               surface_pool.ReleaseSurface(s);
             });
-        
+
         RTC_LOG(LS_VERBOSE) << "Using VPL-backed surface for YUY2 capture"
                             << " (memory copy reduction)";
       } else {
         // サーフェスが取得できない場合は通常の NativeBuffer を使用
-        auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
-                                                  _currentWidth, _currentHeight);
+        auto native_buffer = NativeBuffer::Create(
+            webrtc::VideoType::kYUY2, _currentWidth, _currentHeight);
         memcpy(native_buffer->MutableData(), data, bytesused);
         native_buffer->SetLength(bytesused);
         dst_buffer = native_buffer;
-        RTC_LOG(LS_VERBOSE) << "VPL surface not available, using regular NativeBuffer";
+        RTC_LOG(LS_VERBOSE)
+            << "VPL surface not available, using regular NativeBuffer";
       }
     } else {
       // VPL プールが初期化されていないか、設定が一致しない

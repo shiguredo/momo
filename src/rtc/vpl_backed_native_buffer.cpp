@@ -34,15 +34,15 @@ VplBackedNativeBuffer::VplBackedNativeBuffer(
       release_callback_(release_callback) {
   // サーフェスをロック
   surface_->Data.Locked = 1;
-  
+
   // YUY2 の場合のデータサイズを設定
   if (video_type == webrtc::VideoType::kYUY2) {
     SetLength(width * height * 2);
   }
-  
-  RTC_LOG(LS_VERBOSE) << "VplBackedNativeBuffer created for " 
-                      << width << "x" << height 
-                      << " surface at " << static_cast<void*>(surface);
+
+  RTC_LOG(LS_VERBOSE) << "VplBackedNativeBuffer created for " << width << "x"
+                      << height << " surface at "
+                      << static_cast<void*>(surface);
 }
 
 VplBackedNativeBuffer::~VplBackedNativeBuffer() {
@@ -52,7 +52,7 @@ VplBackedNativeBuffer::~VplBackedNativeBuffer() {
     if (release_callback_) {
       release_callback_(surface_);
     }
-    RTC_LOG(LS_VERBOSE) << "VplBackedNativeBuffer released surface at " 
+    RTC_LOG(LS_VERBOSE) << "VplBackedNativeBuffer released surface at "
                         << static_cast<void*>(surface_);
   }
 }

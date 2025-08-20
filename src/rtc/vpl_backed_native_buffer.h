@@ -1,10 +1,10 @@
 #ifndef VPL_BACKED_NATIVE_BUFFER_H_
 #define VPL_BACKED_NATIVE_BUFFER_H_
 
-#include "native_buffer.h"
 #include <vpl/mfxstructures.h>
-#include <memory>
 #include <functional>
+#include <memory>
+#include "native_buffer.h"
 
 // VPL サーフェスメモリを直接使用する NativeBuffer
 // メモリコピーを削減するための最適化実装
@@ -29,8 +29,8 @@ class VplBackedNativeBuffer : public NativeBuffer {
   const mfxFrameSurface1* GetVplSurface() const { return surface_; }
 
   // NativeBuffer インターフェースのオーバーライド
-  const uint8_t* Data() const override;
-  uint8_t* MutableData() override;
+  const uint8_t* Data() const;
+  uint8_t* MutableData();
 
  protected:
   VplBackedNativeBuffer(webrtc::VideoType video_type,
