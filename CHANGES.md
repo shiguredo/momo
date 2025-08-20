@@ -83,6 +83,25 @@
   - @voluntas
 - [ADD] run.py の引数に `--disable-cuda` を追加
   - @melpon
+- [ADD] Intel VPL で YUY2 フォーマットサポートを追加
+  - Intel VPL エンコーダーで YUY2 (YUV422) フォーマットを直接エンコード可能に
+  - H.265 エンコード時に REXT プロファイルを自動選択し、YUV422 の高品質エンコードを実現
+  - カメラからの YUY2 入力を中間フォーマット変換なしで処理可能
+  - @voluntas
+- [ADD] `--force-yuy2` オプションを追加
+  - カメラデバイスに YUY2 フォーマットの使用を強制
+  - YUY2 が使用できない場合はエラーで終了
+  - 高フレームレート撮影時の品質向上に有効
+  - @voluntas
+- [ADD] `--framerate` オプションの上限を 60 から 240 に変更
+  - 高フレームレートカメラに対応
+  - 120fps、144fps、240fps などの高速撮影が可能に
+  - @voluntas
+- [ADD] V4L2 キャプチャのフレームレート診断ログを強化
+  - デバイスがサポートするフレームレートを列挙表示
+  - 要求したフレームレートと実際に設定されたフレームレートの不一致を警告
+  - フォーマット設定の詳細ログを追加
+  - @voluntas
 - [ADD] libcamera のコントロール機能を追加
   - `--libcamera-control` オプションで key value 形式でコントロールを指定可能
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
