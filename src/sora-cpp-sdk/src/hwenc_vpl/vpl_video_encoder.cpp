@@ -125,6 +125,8 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
 
   int32_t InitVpl();
   int32_t ReleaseVpl();
+  int32_t InitVpp();
+  int32_t ReleaseVpp();
 
   std::vector<uint8_t> surface_buffer_;
   std::vector<mfxFrameSurface1> surfaces_;
@@ -136,6 +138,15 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   std::vector<uint8_t> bitstream_buffer_;
   mfxBitstream bitstream_;
   mfxFrameInfo frame_info_;
+
+  // VPP 用のメンバー変数
+  std::unique_ptr<MFXVideoVPP> vpp_;
+  std::vector<uint8_t> vpp_input_surface_buffer_;
+  std::vector<mfxFrameSurface1> vpp_input_surfaces_;
+  std::vector<uint8_t> vpp_output_surface_buffer_;
+  std::vector<mfxFrameSurface1> vpp_output_surfaces_;
+  mfxFrameAllocRequest vpp_alloc_request_[2];
+  bool use_vpp_ = false;
 
   int key_frame_interval_ = 0;
 };
@@ -471,30 +482,76 @@ int32_t VplVideoEncoderImpl::Encode(
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
 
-  // 使ってない入力サーフェスを取り出す
-  auto surface =
-      std::find_if(surfaces_.begin(), surfaces_.end(),
-                   [](const mfxFrameSurface1& s) { return !s.Data.Locked; });
-  if (surface == surfaces_.end()) {
-    RTC_LOG(LS_ERROR) << "Surface not found";
-    return WEBRTC_VIDEO_CODEC_ERROR;
-  }
+  // エンコーダー用のサーフェスポインタ
+  mfxFrameSurface1* surface = nullptr;
 
   // フレームバッファのタイプをチェック
   auto video_frame_buffer = frame.video_frame_buffer();
   
-  // NativeBuffer で YUY2 の場合は直接 NV12 に変換
+  // NativeBuffer で YUY2 の場合、VPP が初期化されていなければ初期化を試みる
   if (video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
+    if (native_buffer->VideoType() == webrtc::VideoType::kYUY2 && !use_vpp_) {
+      // VPP を初期化してみる（初回のみ）
+      InitVpp();
+    }
+  }
+  
+  // VPP を使用する場合の処理
+  if (use_vpp_ && video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
     if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
-      // YUY2 から直接 NV12 に変換（中間の I420 変換をスキップ）
-      libyuv::YUY2ToNV12(
-          native_buffer->Data(), native_buffer->RawWidth() * 2,
-          surface->Data.Y, surface->Data.Pitch,
-          surface->Data.U, surface->Data.Pitch,
-          native_buffer->RawWidth(), native_buffer->RawHeight());
+      // 使ってない VPP 入力サーフェスを取得
+      auto vpp_input_surface = std::find_if(
+          vpp_input_surfaces_.begin(), vpp_input_surfaces_.end(),
+          [](const mfxFrameSurface1& s) { return !s.Data.Locked; });
+      if (vpp_input_surface == vpp_input_surfaces_.end()) {
+        RTC_LOG(LS_ERROR) << "VPP input surface not found";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      
+      // 使ってない VPP 出力サーフェスを取得
+      auto vpp_output_surface = std::find_if(
+          vpp_output_surfaces_.begin(), vpp_output_surfaces_.end(),
+          [](const mfxFrameSurface1& s) { return !s.Data.Locked; });
+      if (vpp_output_surface == vpp_output_surfaces_.end()) {
+        RTC_LOG(LS_ERROR) << "VPP output surface not found";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      
+      // YUY2 データを VPP 入力サーフェスにコピー（ビデオメモリーへのアップロード）
+      memcpy(vpp_input_surface->Data.Y, native_buffer->Data(),
+             native_buffer->RawWidth() * native_buffer->RawHeight() * 2);
+      
+      // VPP で YUY2 から NV12 に変換
+      mfxSyncPoint vpp_syncp;
+      mfxStatus sts = vpp_->RunFrameVPPAsync(&*vpp_input_surface, &*vpp_output_surface,
+                                              nullptr, &vpp_syncp);
+      if (sts == MFX_ERR_MORE_DATA || sts == MFX_ERR_MORE_SURFACE) {
+        // VPP がもっとデータを要求している場合はスキップ
+        return WEBRTC_VIDEO_CODEC_OK;
+      }
+      VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+      
+      // VPP の処理を待つ
+      sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), vpp_syncp, 60000);
+      VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+      
+      // VPP の出力サーフェスを encoder に直接使用
+      surface = &*vpp_output_surface;
+      
+      RTC_LOG(LS_VERBOSE) << "VPP converted YUY2 to NV12 using GPU acceleration";
     } else {
-      // その他の NativeBuffer は I420 経由で変換
+      // その他の NativeBuffer は従来通り I420 経由で変換
+      // まずエンコーダー用のサーフェスを取得
+      auto surface_it = std::find_if(surfaces_.begin(), surfaces_.end(),
+                                      [](const mfxFrameSurface1& s) { return !s.Data.Locked; });
+      if (surface_it == surfaces_.end()) {
+        RTC_LOG(LS_ERROR) << "Encoder surface not found";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
+      surface = &*surface_it;
+      
       webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
           video_frame_buffer->ToI420();
       libyuv::I420ToNV12(
@@ -504,14 +561,51 @@ int32_t VplVideoEncoderImpl::Encode(
           surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
     }
   } else {
-    // 通常のフレームバッファは I420 経由で変換
-    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
-        video_frame_buffer->ToI420();
-    libyuv::I420ToNV12(
-        frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
-        frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
-        surface->Data.Y, surface->Data.Pitch, surface->Data.U,
-        surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+    // VPP を使用しない場合は、エンコーダー用のサーフェスを取得
+    auto surface_it = std::find_if(surfaces_.begin(), surfaces_.end(),
+                                    [](const mfxFrameSurface1& s) { return !s.Data.Locked; });
+    if (surface_it == surfaces_.end()) {
+      RTC_LOG(LS_ERROR) << "Encoder surface not found";
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    surface = &*surface_it;
+    
+    if (video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+      // VPP が使用できない場合の NativeBuffer 処理
+      auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
+      if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
+        // YUY2 から直接 NV12 に変換（ソフトウェア変換）
+        libyuv::YUY2ToNV12(
+            native_buffer->Data(), native_buffer->RawWidth() * 2,
+            surface->Data.Y, surface->Data.Pitch,
+            surface->Data.U, surface->Data.Pitch,
+            native_buffer->RawWidth(), native_buffer->RawHeight());
+      } else {
+        // その他の NativeBuffer は I420 経由で変換
+        webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+            video_frame_buffer->ToI420();
+        libyuv::I420ToNV12(
+            frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
+            frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
+            surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+            surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+      }
+    } else {
+      // 通常のフレームバッファは I420 経由で変換
+      webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+          video_frame_buffer->ToI420();
+      libyuv::I420ToNV12(
+          frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
+          frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
+          surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+          surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+    }
+  }
+
+  // surface が正しく設定されていることを確認
+  if (surface == nullptr) {
+    RTC_LOG(LS_ERROR) << "Surface is null";
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   mfxStatus sts;
@@ -575,7 +669,7 @@ int32_t VplVideoEncoderImpl::Encode(
 
   // NV12 をハードウェアエンコード
   mfxSyncPoint syncp;
-  sts = encoder_->EncodeFrameAsync(&ctrl, &*surface, &bitstream_, &syncp);
+  sts = encoder_->EncodeFrameAsync(&ctrl, surface, &bitstream_, &syncp);
   // alloc_request_.NumFrameSuggested が 1 の場合は MFX_ERR_MORE_DATA は発生しない
   if (sts == MFX_ERR_MORE_DATA) {
     // もっと入力が必要なので出直す
@@ -809,6 +903,135 @@ int32_t VplVideoEncoderImpl::ReleaseVpl() {
     encoder_->Close();
   }
   encoder_.reset();
+  ReleaseVpp();
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t VplVideoEncoderImpl::InitVpp() {
+  // VPP を初期化（YUY2 から NV12 への変換用）
+  vpp_.reset(new MFXVideoVPP(GetVplSession(session_)));
+  
+  mfxVideoParam vpp_param;
+  memset(&vpp_param, 0, sizeof(vpp_param));
+  
+  // 入力フォーマット（YUY2）
+  vpp_param.vpp.In.FourCC = MFX_FOURCC_YUY2;
+  vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+  vpp_param.vpp.In.CropX = 0;
+  vpp_param.vpp.In.CropY = 0;
+  vpp_param.vpp.In.CropW = width_;
+  vpp_param.vpp.In.CropH = height_;
+  vpp_param.vpp.In.Width = (width_ + 15) / 16 * 16;
+  vpp_param.vpp.In.Height = (height_ + 15) / 16 * 16;
+  vpp_param.vpp.In.FrameRateExtN = framerate_;
+  vpp_param.vpp.In.FrameRateExtD = 1;
+  vpp_param.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  
+  // 出力フォーマット（NV12）
+  vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
+  vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+  vpp_param.vpp.Out.CropX = 0;
+  vpp_param.vpp.Out.CropY = 0;
+  vpp_param.vpp.Out.CropW = width_;
+  vpp_param.vpp.Out.CropH = height_;
+  vpp_param.vpp.Out.Width = (width_ + 15) / 16 * 16;
+  vpp_param.vpp.Out.Height = (height_ + 15) / 16 * 16;
+  vpp_param.vpp.Out.FrameRateExtN = framerate_;
+  vpp_param.vpp.Out.FrameRateExtD = 1;
+  vpp_param.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  
+  // システムメモリーを使用（入力: システムメモリー、出力: システムメモリー）
+  // ビデオメモリーの直接利用は GPU によってサポート状況が異なるため、
+  // まずはシステムメモリー経由で実装
+  vpp_param.IOPattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY | MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
+  vpp_param.AsyncDepth = 1;
+  
+  mfxStatus sts = vpp_->Query(&vpp_param, &vpp_param);
+  if (sts < MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "VPP Query failed, falling back to software conversion: " << sts;
+    vpp_.reset();
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  
+  sts = vpp_->Init(&vpp_param);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "VPP Init failed, falling back to software conversion: " << sts;
+    vpp_.reset();
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  
+  // VPP 用のサーフェースを照会
+  memset(&vpp_alloc_request_, 0, sizeof(vpp_alloc_request_));
+  sts = vpp_->QueryIOSurf(&vpp_param, vpp_alloc_request_);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "VPP QueryIOSurf failed: " << sts;
+    vpp_->Close();
+    vpp_.reset();
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  
+  RTC_LOG(LS_INFO) << "VPP Input NumFrameSuggested=" << vpp_alloc_request_[0].NumFrameSuggested
+                   << " Output NumFrameSuggested=" << vpp_alloc_request_[1].NumFrameSuggested;
+  
+  // VPP 入力サーフェース（YUY2）の作成
+  {
+    int width = (vpp_alloc_request_[0].Info.Width + 31) / 32 * 32;
+    int height = (vpp_alloc_request_[0].Info.Height + 31) / 32 * 32;
+    // YUY2 は 1 ピクセルあたり 16 ビット
+    int size = width * height * 2;
+    vpp_input_surface_buffer_.resize(vpp_alloc_request_[0].NumFrameSuggested * size);
+    
+    vpp_input_surfaces_.clear();
+    vpp_input_surfaces_.reserve(vpp_alloc_request_[0].NumFrameSuggested);
+    for (int i = 0; i < vpp_alloc_request_[0].NumFrameSuggested; i++) {
+      mfxFrameSurface1 surface;
+      memset(&surface, 0, sizeof(surface));
+      surface.Info = vpp_param.vpp.In;
+      surface.Data.Y = vpp_input_surface_buffer_.data() + i * size;
+      surface.Data.U = surface.Data.Y + 1;  // YUY2 インターリーブ
+      surface.Data.V = surface.Data.Y + 3;  // YUY2 インターリーブ
+      surface.Data.Pitch = width * 2;  // YUY2 は幅 * 2
+      vpp_input_surfaces_.push_back(surface);
+    }
+  }
+  
+  // VPP 出力サーフェース（NV12）の作成
+  {
+    int width = (vpp_alloc_request_[1].Info.Width + 31) / 32 * 32;
+    int height = (vpp_alloc_request_[1].Info.Height + 31) / 32 * 32;
+    // NV12 は 1 ピクセルあたり 12 ビット
+    int size = width * height * 12 / 8;
+    vpp_output_surface_buffer_.resize(vpp_alloc_request_[1].NumFrameSuggested * size);
+    
+    vpp_output_surfaces_.clear();
+    vpp_output_surfaces_.reserve(vpp_alloc_request_[1].NumFrameSuggested);
+    for (int i = 0; i < vpp_alloc_request_[1].NumFrameSuggested; i++) {
+      mfxFrameSurface1 surface;
+      memset(&surface, 0, sizeof(surface));
+      surface.Info = vpp_param.vpp.Out;
+      surface.Data.Y = vpp_output_surface_buffer_.data() + i * size;
+      surface.Data.U = surface.Data.Y + width * height;
+      surface.Data.V = surface.Data.U + 1;
+      surface.Data.Pitch = width;
+      vpp_output_surfaces_.push_back(surface);
+    }
+  }
+  
+  use_vpp_ = true;
+  RTC_LOG(LS_INFO) << "VPP initialized for YUY2 to NV12 conversion";
+  return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t VplVideoEncoderImpl::ReleaseVpp() {
+  if (vpp_ != nullptr) {
+    vpp_->Close();
+    vpp_.reset();
+  }
+  vpp_input_surfaces_.clear();
+  vpp_input_surface_buffer_.clear();
+  vpp_output_surfaces_.clear();
+  vpp_output_surface_buffer_.clear();
+  use_vpp_ = false;
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
