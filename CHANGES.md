@@ -11,10 +11,10 @@
 
 ## develop
 
-- [UPDATE] Intel VPL エンコーダーで YUY2 から NV12 への直接変換を実装
-  - NativeBuffer が YUY2 フォーマットの場合、中間の I420 変換をスキップ
-  - YUY2 → I420 → NV12 の2段階変換を YUY2 → NV12 の1段階変換に最適化
-  - メモリ帯域幅とCPU負荷を削減しエンコード性能を向上
+- [UPDATE] Intel VPL エンコーダーで YUY2 から NV12 への直接変換するようにする
+  - NativeBuffer が YUY2 フォーマットの場合、中間の I420 変換をスキップする
+  - YUY2 → I420 → NV12 の2段階変換を YUY2 -> NV12 の1段階変換に最適化
+  - メモリ帯域幅と CPU 負荷を削減しエンコード性能を向上
   - @voluntas
 - [ADD] `--force-yuy2` オプションを追加
   - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
