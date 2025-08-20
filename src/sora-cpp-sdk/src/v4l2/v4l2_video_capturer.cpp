@@ -48,7 +48,7 @@
 #include <libyuv/convert.h>
 #include <libyuv/rotate.h>
 
-#include "native_buffer.h"
+#include "rtc/native_buffer.h"
 #include "sora/scalable_track_source.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
