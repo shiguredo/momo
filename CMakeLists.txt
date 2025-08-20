@@ -123,6 +123,7 @@ target_sources(momo
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
     src/rtc/native_buffer.cpp
+    src/rtc/vpl_backed_native_buffer.cpp
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
@@ -380,6 +381,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       PRIVATE
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
+        src/sora-cpp-sdk/src/vpl_surface_pool.cpp
     )
     target_include_directories(momo PRIVATE ${VPL_ROOT_DIR}/include)
     target_link_libraries(momo
@@ -511,6 +513,7 @@ elseif (TARGET_OS STREQUAL "linux")
       PRIVATE
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
+        src/sora-cpp-sdk/src/vpl_surface_pool.cpp
     )
     target_link_libraries(momo
       PRIVATE

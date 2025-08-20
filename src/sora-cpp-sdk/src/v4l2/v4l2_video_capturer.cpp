@@ -49,8 +49,10 @@
 #include <libyuv/rotate.h>
 
 #include "../../rtc/native_buffer.h"
+#include "../../rtc/vpl_backed_native_buffer.h"
 
 #include "sora/scalable_track_source.h"
+#include "sora/vpl_surface_pool.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
@@ -638,13 +640,45 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   // YUY2 の場合は NativeBuffer を使用して変換を避ける
   if (_captureVideoType == webrtc::VideoType::kYUY2) {
-    auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
-                                              _currentWidth, _currentHeight);
-    // YUY2 データを直接コピー
-    memcpy(native_buffer->MutableData(), data, bytesused);
-    native_buffer->SetLength(bytesused);
-    dst_buffer = native_buffer;
-    RTC_LOG(LS_VERBOSE) << "Using NativeBuffer for YUY2 data (no conversion)";
+    // VPL サーフェスプールが利用可能かチェック
+    auto& surface_pool = VplSurfacePool::GetInstance();
+    if (surface_pool.IsInitialized() && surface_pool.IsYuy2Enabled() &&
+        surface_pool.GetWidth() == _currentWidth &&
+        surface_pool.GetHeight() == _currentHeight) {
+      // VPL サーフェスを使用（メモリコピー削減）
+      auto surface = surface_pool.AcquireSurface();
+      if (surface) {
+        // V4L2 から VPL サーフェスへ直接コピー（1回目のコピー）
+        memcpy(surface->Data.Y, data, bytesused);
+        
+        // VplBackedNativeBuffer を作成
+        dst_buffer = VplBackedNativeBuffer::Create(
+            webrtc::VideoType::kYUY2, _currentWidth, _currentHeight,
+            surface,
+            [&surface_pool](mfxFrameSurface1* s) {
+              surface_pool.ReleaseSurface(s);
+            });
+        
+        RTC_LOG(LS_VERBOSE) << "Using VPL-backed surface for YUY2 capture"
+                            << " (memory copy reduction)";
+      } else {
+        // サーフェスが取得できない場合は通常の NativeBuffer を使用
+        auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
+                                                  _currentWidth, _currentHeight);
+        memcpy(native_buffer->MutableData(), data, bytesused);
+        native_buffer->SetLength(bytesused);
+        dst_buffer = native_buffer;
+        RTC_LOG(LS_VERBOSE) << "VPL surface not available, using regular NativeBuffer";
+      }
+    } else {
+      // VPL プールが初期化されていないか、設定が一致しない
+      auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
+                                                _currentWidth, _currentHeight);
+      memcpy(native_buffer->MutableData(), data, bytesused);
+      native_buffer->SetLength(bytesused);
+      dst_buffer = native_buffer;
+      RTC_LOG(LS_VERBOSE) << "Using NativeBuffer for YUY2 data (no conversion)";
+    }
   } else {
     // YUY2 以外の場合は I420 に変換
     webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(

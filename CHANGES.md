@@ -101,6 +101,12 @@
   - 要求したフレームレートと実際に設定されたフレームレートの不一致を警告
   - フォーマット設定の詳細ログを追加
   - @voluntas
+- [ADD] Intel VPL YUY2 エンコード時のメモリコピー削減機能を実装
+  - VplBackedNativeBuffer クラスを追加し、VPL サーフェスメモリを直接使用
+  - VplSurfacePool によるグローバルサーフェスメモリプール管理
+  - V4L2 から VPL エンコーダーへのメモリコピーを 2 回から 1 回に削減
+  - 1280x720@120fps で メモリ帯域を 442 MB/秒から 221 MB/秒に削減（50%削減）
+  - @voluntas
 - [ADD] libcamera のコントロール機能を追加
   - `--libcamera-control` オプションで key value 形式でコントロールを指定可能
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応

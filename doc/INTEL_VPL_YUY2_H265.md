@@ -62,15 +62,16 @@ YUY2 は YUV422 サンプリング方式のパックドフォーマット実装�
 
 Intel VPL では HEVC (H.265) の Range Extension プロファイルを使用して YUV422 入力をサポートしています。これにより、カメラから取得した YUY2 データを **フォーマット変換なし** でエンコードできます。
 
-**処理フローの最適化：**
+#### VPL サーフェスバッキング実装
 
-- 従来：カメラ (YUY2) → I420 変換 → NV12 変換 → H.265 エンコード  
-- 最適化後：カメラ (YUY2) → メモリコピー → H.265 エンコード（フォーマット変換なし）
+Momo では以下の最適化を実装しています：
+
+1. **VplBackedNativeBuffer**：VPL サーフェスメモリを直接使用する特殊な NativeBuffer
+2. **VplSurfacePool**：エンコーダーとキャプチャラー間でサーフェスメモリを共有管理
+3. **メモリコピー削減**：V4L2 から VPL サーフェスへの直接コピー（1回）のみ
 
 > [!NOTE]
-> V4L2 からエンコーダーへのデータ転送では、WebRTC のアーキテクチャ上の制約により最低 2 回のメモリコピーが発生します。ただし、CPU 負荷の高いフォーマット変換処理（YUY2→I420→NV12）が不要になるため、大幅な性能向上が期待できます。
-
-この最適化により、以下の効果が実現できます：
+> VPL サーフェスバッキング機能により、メモリコピーを 2 回から 1 回に削減しています。V4L2 から VPL サーフェスへの直接コピーのみで、エンコーダーへの追加コピーは不要です。
 
 ## 使用方法
 
@@ -120,22 +121,25 @@ momo --force-yuy2 \
 
 ## パフォーマンス効果
 
-従来の処理フロー：
+### 処理フローの最適化
+
+**フォーマット変換が必要な処理フロー：**
 
 ```text
 カメラ (YUY2) → I420 変換 → NV12 変換 → H.265 エンコード
 ```
 
-最適化後の処理フロー：
+**Momo の処理フロー（VPL サーフェスバッキング）：**
 
 ```text
-カメラ (YUY2) → メモリコピー → H.265 エンコード（フォーマット変換なし）
+カメラ (YUY2) → VPL サーフェス → H.265 エンコード（メモリコピー1回のみ）
 ```
 
-この最適化により、以下の効果が期待できます：
+### 効果
 
 - **CPU 使用率の大幅削減**：フォーマット変換処理（YUY2→I420→NV12）が不要
-- **レイテンシの短縮**：変換処理の省略による処理時間短縮
+- **メモリ帯域の 50% 削減**：メモリコピーを 2 回から 1 回に削減（1280x720@120fps で 442→221 MB/秒）
+- **レイテンシの短縮**：変換処理とメモリコピーの削減による処理時間短縮
 - **高フレームレート（120fps）の実現**：CPU リソースの節約により高フレームレート処理が可能
 
 ## 制限事項
@@ -155,8 +159,17 @@ YUY2 サポートが有効になっているかは、ログで確認できます
 ```text
 [INFO] Using YUY2 format for HEVC encoding
 [INFO] Using YUY2 format for video capture (--force-yuy2): 1280x720 @ 120fps
-[INFO] Using YUY2 data directly from NativeBuffer (no conversion)
+[INFO] VplSurfacePool initialized: 1280x720 format=YUY2 surfaces=10
+[VERBOSE] Using VPL-backed surface for YUY2 capture (memory copy reduction)
+[VERBOSE] Using VPL-backed NativeBuffer (zero-copy from V4L2 to encoder)
 [INFO] V4L2: Capture format set to YUY2 1280x720 @ 120fps
+```
+
+**VPL サーフェスプールが利用できない場合：**
+
+```text
+[VERBOSE] VPL surface not available, using regular NativeBuffer
+[INFO] Using YUY2 data directly from NativeBuffer (no conversion)
 ```
 
 **エラー時のログ（--force-yuy2 使用時）：**
