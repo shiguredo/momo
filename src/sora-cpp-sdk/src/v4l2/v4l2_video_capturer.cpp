@@ -287,6 +287,48 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     return -1;
   }
 
+  // デバイスがサポートするフレームレートを列挙
+  struct v4l2_frmivalenum frmival;
+  memset(&frmival, 0, sizeof(frmival));
+  frmival.index = 0;
+  frmival.pixel_format = video_fmt.fmt.pix.pixelformat;
+  frmival.width = config.width;
+  frmival.height = config.height;
+  
+  RTC_LOG(LS_INFO) << "Enumerating supported frame rates for "
+                   << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " at " << config.width << "x" << config.height << ":";
+  
+  bool supports_requested_fps = false;
+  while (ioctl(_deviceFd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0) {
+    if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+      float fps = static_cast<float>(frmival.discrete.denominator) / 
+                  static_cast<float>(frmival.discrete.numerator);
+      RTC_LOG(LS_INFO) << "  " << fps << " fps "
+                       << "(" << frmival.discrete.denominator << "/" 
+                       << frmival.discrete.numerator << ")";
+      if (static_cast<int>(fps) == config.framerate) {
+        supports_requested_fps = true;
+      }
+    } else if (frmival.type == V4L2_FRMIVAL_TYPE_CONTINUOUS ||
+               frmival.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
+      float min_fps = static_cast<float>(frmival.stepwise.min.denominator) / 
+                      static_cast<float>(frmival.stepwise.min.numerator);
+      float max_fps = static_cast<float>(frmival.stepwise.max.denominator) / 
+                      static_cast<float>(frmival.stepwise.max.numerator);
+      RTC_LOG(LS_INFO) << "  " << min_fps << " - " << max_fps << " fps (continuous/stepwise)";
+      if (config.framerate >= min_fps && config.framerate <= max_fps) {
+        supports_requested_fps = true;
+      }
+    }
+    frmival.index++;
+  }
+  
+  if (!supports_requested_fps) {
+    RTC_LOG(LS_WARNING) << "Requested framerate " << config.framerate 
+                        << " fps may not be supported by the device for this format/resolution";
+  }
+
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
     _captureVideoType = webrtc::VideoType::kYUY2;
     RTC_LOG(LS_INFO) << "Using YUY2 format for V4L2 video capture"
@@ -302,10 +344,16 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     _captureVideoType = webrtc::VideoType::kMJPEG;
 
   // set format and frame size now
+  RTC_LOG(LS_INFO) << "Requesting format: " << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " " << video_fmt.fmt.pix.width << "x" << video_fmt.fmt.pix.height;
   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
-    RTC_LOG(LS_INFO) << "error in VIDIOC_S_FMT, errno = " << errno;
+    RTC_LOG(LS_ERROR) << "error in VIDIOC_S_FMT, errno = " << errno;
     return -1;
   }
+  
+  // カメラが実際に設定したフォーマットを確認
+  RTC_LOG(LS_INFO) << "Actual format set: " << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " " << video_fmt.fmt.pix.width << "x" << video_fmt.fmt.pix.height;
 
   // initialize current width and height
   _currentWidth = video_fmt.fmt.pix.width;
@@ -335,13 +383,25 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
         driver_framerate_support = false;
       } else {
         // 実際に設定された値を確認
+        memset(&streamparms, 0, sizeof(streamparms));
+        streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) == 0) {
-          int actual_fps = streamparms.parm.capture.timeperframe.denominator / 
-                          streamparms.parm.capture.timeperframe.numerator;
-          RTC_LOG(LS_INFO) << "Framerate set to " << actual_fps << " fps"
-                           << " (requested: " << config.framerate << " fps)";
+          int actual_fps = 0;
+          if (streamparms.parm.capture.timeperframe.numerator > 0) {
+            actual_fps = streamparms.parm.capture.timeperframe.denominator / 
+                        streamparms.parm.capture.timeperframe.numerator;
+          }
+          
+          if (actual_fps != config.framerate) {
+            RTC_LOG(LS_WARNING) << "Framerate mismatch: requested " << config.framerate 
+                               << " fps but device set " << actual_fps << " fps";
+            RTC_LOG(LS_WARNING) << "This may be a driver limitation with the current format/resolution";
+          } else {
+            RTC_LOG(LS_INFO) << "Framerate successfully set to " << actual_fps << " fps";
+          }
           _currentFrameRate = actual_fps;
         } else {
+          RTC_LOG(LS_WARNING) << "Could not verify actual framerate setting";
           _currentFrameRate = config.framerate;
         }
       }
