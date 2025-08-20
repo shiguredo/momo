@@ -813,10 +813,6 @@ webrtc::VideoEncoder::EncoderInfo VplVideoEncoderImpl::GetEncoderInfo() const {
 }
 
 int32_t VplVideoEncoderImpl::InitVpl() {
-  // サーフェスプールを初期化（メモリコピー削減のため）
-  VplSurfacePool::GetInstance().Initialize(
-      frame_info_.Width, frame_info_.Height, alloc_request_.NumFrameSuggested,
-      use_yuy2_);
   encoder_ = CreateEncoder(session_, codec_, width_, height_, framerate_,
                            bitrate_adjuster_.GetAdjustedBitrateBps() / 1000,
                            max_bitrate_bps_ / 1000, true);
@@ -858,6 +854,12 @@ int32_t VplVideoEncoderImpl::InitVpl() {
     const char* codec_name = (codec_ == MFX_CODEC_HEVC) ? "H.265/HEVC" : "H.264/AVC";
     RTC_LOG(LS_INFO) << "Using YUY2 format for " << codec_name << " encoding";
   }
+  
+  // frame_info_ が設定された後にサーフェスプールを初期化（メモリコピー削減のため）
+  // 実際のフレームサイズを使用（CropW/CropH が実際の解像度）
+  VplSurfacePool::GetInstance().Initialize(
+      frame_info_.CropW, frame_info_.CropH, alloc_request_.NumFrameSuggested,
+      use_yuy2_);
 
   // 出力ビットストリームの初期化
   bitstream_buffer_.resize(param.mfx.BufferSizeInKB * 1000);
