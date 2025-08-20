@@ -218,6 +218,14 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
+  } else if (config.force_yuy2) {
+    // --force-yuy2 が指定された場合は YUY2 を優先
+    fmts[0] = V4L2_PIX_FMT_YUYV;
+    fmts[1] = V4L2_PIX_FMT_UYVY;
+    fmts[2] = V4L2_PIX_FMT_YUV420;
+    fmts[3] = V4L2_PIX_FMT_YVU420;
+    fmts[4] = V4L2_PIX_FMT_MJPEG;
+    fmts[5] = V4L2_PIX_FMT_JPEG;
   } else if (!config.force_i420 &&
              (config.width > 640 || config.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
@@ -271,9 +279,10 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   video_fmt.fmt.pix.height = config.height;
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
-  if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
+  if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
     _captureVideoType = webrtc::VideoType::kYUY2;
-  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
+    RTC_LOG(LS_INFO) << "Using YUY2 format for V4L2 video capture";
+  } else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
     _captureVideoType = webrtc::VideoType::kI420;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)
     _captureVideoType = webrtc::VideoType::kYV12;

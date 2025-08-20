@@ -100,6 +100,10 @@
   - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
   - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
   - @voluntas
+- [ADD] `--force-yuy2` オプションを追加する
+  - YUY2 フォーマットを優先的に使用し、サポートされていない場合は I420 にフォールバックする
+  - Intel VPL での H.265 エンコード時の高フレームレート実現に有用
+  - @voluntas
 
 ### misc
 

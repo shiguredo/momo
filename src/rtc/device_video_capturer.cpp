@@ -31,6 +31,15 @@ bool DeviceVideoCapturer::Init(size_t width,
                                size_t height,
                                size_t target_fps,
                                size_t capture_device_index) {
+  return Init(width, height, target_fps, capture_device_index, false);
+}
+
+bool DeviceVideoCapturer::Init(size_t width,
+                               size_t height,
+                               size_t target_fps,
+                               size_t capture_device_index,
+                               bool force_yuy2) {
+  force_yuy2_ = force_yuy2;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
 
@@ -55,19 +64,22 @@ bool DeviceVideoCapturer::Init(size_t width,
   capability_.height = static_cast<int32_t>(height);
   capability_.maxFPS = static_cast<int32_t>(target_fps);
   
-  // YUY2 を優先的に試す（H.265 エンコーダー用）
-  // YUY2 がサポートされていない場合は I420 にフォールバック
-  capability_.videoType = webrtc::VideoType::kYUY2;
-  
-  // YUY2 でのキャプチャーを試す
-  if (vcm_->StartCapture(capability_) != 0) {
-    // YUY2 が失敗した場合は I420 にフォールバック
-    RTC_LOG(LS_INFO) << "YUY2 capture not supported, falling back to I420";
-    capability_.videoType = webrtc::VideoType::kI420;
+  if (force_yuy2_) {
+    // --force-yuy2 が指定された場合は YUY2 を優先
+    capability_.videoType = webrtc::VideoType::kYUY2;
+    if (vcm_->StartCapture(capability_) != 0) {
+      // YUY2 が失敗した場合は I420 にフォールバック
+      RTC_LOG(LS_INFO) << "YUY2 capture requested (--force-yuy2) but not supported, falling back to I420";
+      capability_.videoType = webrtc::VideoType::kI420;
+    } else {
+      // YUY2 のキャプチャーが成功した場合は一旦停止
+      vcm_->StopCapture();
+      RTC_LOG(LS_INFO) << "Using YUY2 format for video capture (--force-yuy2)";
+    }
   } else {
-    // YUY2 のキャプチャーが成功した場合は一旦停止
-    vcm_->StopCapture();
-    RTC_LOG(LS_INFO) << "Using YUY2 format for video capture";
+    // デフォルト: I420 を使用
+    capability_.videoType = webrtc::VideoType::kI420;
+    RTC_LOG(LS_INFO) << "Using default I420 format for video capture";
   }
 
   // すでに上でキャプチャーが開始されていない場合のみ開始
@@ -126,6 +138,15 @@ webrtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
     size_t height,
     size_t target_fps,
     const std::string& capture_device) {
+  return Create(width, height, target_fps, capture_device, false);
+}
+
+webrtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
+    size_t width,
+    size_t height,
+    size_t target_fps,
+    const std::string& capture_device,
+    bool force_yuy2) {
   webrtc::scoped_refptr<DeviceVideoCapturer> vcm_capturer(
       new webrtc::RefCountedObject<DeviceVideoCapturer>());
 
@@ -136,14 +157,36 @@ webrtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
 
   // デバイス指定なし
   if (capture_device.empty()) {
-    return Create(width, height, target_fps);
+    // デフォルトデバイスを探す
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+        webrtc::VideoCaptureFactory::CreateDeviceInfo());
+    if (!info) {
+      RTC_LOG(LS_WARNING) << "Failed to CreateDeviceInfo";
+      return nullptr;
+    }
+    int num_devices = info->NumberOfDevices();
+    for (int i = 0; i < num_devices; ++i) {
+      if (vcm_capturer->Init(width, height, target_fps, i, force_yuy2)) {
+        RTC_LOG(LS_WARNING) << "Get Capture";
+        return vcm_capturer;
+      }
+    }
+    RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer";
+    return nullptr;
   }
 
   auto index = vcm_capturer->GetDeviceIndex(capture_device);
   if (index < 0) {
     return nullptr;
   }
-  return Create(width, height, target_fps, static_cast<size_t>(index));
+  
+  if (!vcm_capturer->Init(width, height, target_fps, static_cast<size_t>(index), force_yuy2)) {
+    RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer(w = " << width
+                        << ", h = " << height << ", fps = " << target_fps
+                        << ")";
+    return nullptr;
+  }
+  return vcm_capturer;
 }
 
 void DeviceVideoCapturer::Destroy() {

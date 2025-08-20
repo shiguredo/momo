@@ -203,6 +203,14 @@ int32_t JetsonV4L2Capturer::StartCapture(
   if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
+  } else if (config.force_yuy2) {
+    // --force-yuy2 が指定された場合は YUY2 を優先
+    fmts[0] = V4L2_PIX_FMT_YUYV;
+    fmts[1] = V4L2_PIX_FMT_UYVY;
+    fmts[2] = V4L2_PIX_FMT_YUV420;
+    fmts[3] = V4L2_PIX_FMT_YVU420;
+    fmts[4] = V4L2_PIX_FMT_MJPEG;
+    fmts[5] = V4L2_PIX_FMT_JPEG;
   } else if (!config.force_i420 &&
              (config.width > 640 || config.height > 480)) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;

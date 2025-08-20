@@ -37,6 +37,12 @@ class DeviceVideoCapturer
       size_t height,
       size_t target_fps,
       const std::string& capture_device);
+  static webrtc::scoped_refptr<DeviceVideoCapturer> Create(
+      size_t width,
+      size_t height,
+      size_t target_fps,
+      const std::string& capture_device,
+      bool force_yuy2);
   DeviceVideoCapturer();
   virtual ~DeviceVideoCapturer();
 
@@ -45,6 +51,11 @@ class DeviceVideoCapturer
             size_t height,
             size_t target_fps,
             size_t capture_device_index);
+  bool Init(size_t width,
+            size_t height,
+            size_t target_fps,
+            size_t capture_device_index,
+            bool force_yuy2);
   void Destroy();
 
   // webrtc::VideoSinkInterface interface.
@@ -55,6 +66,7 @@ class DeviceVideoCapturer
 
   webrtc::scoped_refptr<webrtc::VideoCaptureModule> vcm_;
   webrtc::VideoCaptureCapability capability_;
+  bool force_yuy2_ = false;
 };
 
 #endif  // DEVICE_VIDEO_CAPTURER_H_
