@@ -174,9 +174,15 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
 
   mfxVideoParam param;
   ExtBuffer ext;
+  RTC_LOG(LS_INFO) << "CreateEncoder: codec=" << CodecToString(codec)
+                   << ", resolution=" << width << "x" << height
+                   << ", framerate=" << framerate << "fps"
+                   << ", bitrate=" << target_kbps << "-" << max_kbps << "kbps";
+
   mfxStatus sts = Queries(encoder.get(), codec, width, height, framerate,
                           target_kbps, max_kbps, param, ext);
   if (sts < MFX_ERR_NONE) {
+    RTC_LOG(LS_ERROR) << "Failed to query encoder: sts=" << sts;
     return nullptr;
   }
   if (sts > MFX_ERR_NONE) {
@@ -436,7 +442,9 @@ int32_t VplVideoEncoderImpl::InitEncode(
   framerate_ = codec_settings->maxFramerate;
   mode_ = codec_settings->mode;
 
-  RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
+  RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec"
+                   << ", framerate=" << framerate_ << "fps"
+                   << ", resolution=" << width_ << "x" << height_;
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
   encoded_image_._encodedWidth = 0;
@@ -793,7 +801,11 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   // - BufferSizeInKB parameter is required to set bit stream buffer size
   sts = encoder_->GetVideoParam(&param);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
-  RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB;
+  RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB
+                   << ", ActualFramerate=" << param.mfx.FrameInfo.FrameRateExtN 
+                   << "/" << param.mfx.FrameInfo.FrameRateExtD
+                   << " (" << (param.mfx.FrameInfo.FrameRateExtN / param.mfx.FrameInfo.FrameRateExtD) << "fps)"
+                   << ", FourCC=" << param.mfx.FrameInfo.FourCC;
 
   // Query number of required surfaces for encoder
   memset(&alloc_request_, 0, sizeof(alloc_request_));

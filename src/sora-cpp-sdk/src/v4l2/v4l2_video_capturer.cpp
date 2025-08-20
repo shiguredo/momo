@@ -312,6 +312,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   _currentHeight = video_fmt.fmt.pix.height;
 
   // Trying to set frame rate, before check driver capability.
+  RTC_LOG(LS_INFO) << "Attempting to set framerate to " << config.framerate << " fps";
   bool driver_framerate_support = true;
   struct v4l2_streamparm streamparms;
   memset(&streamparms, 0, sizeof(streamparms));
@@ -329,11 +330,23 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
       streamparms.parm.capture.timeperframe.numerator = 1;
       streamparms.parm.capture.timeperframe.denominator = config.framerate;
       if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
-        RTC_LOG(LS_INFO) << "Failed to set the framerate. errno=" << errno;
+        RTC_LOG(LS_ERROR) << "Failed to set the framerate to " << config.framerate 
+                          << " fps. errno=" << errno;
         driver_framerate_support = false;
       } else {
-        _currentFrameRate = config.framerate;
+        // 実際に設定された値を確認
+        if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) == 0) {
+          int actual_fps = streamparms.parm.capture.timeperframe.denominator / 
+                          streamparms.parm.capture.timeperframe.numerator;
+          RTC_LOG(LS_INFO) << "Framerate set to " << actual_fps << " fps"
+                           << " (requested: " << config.framerate << " fps)";
+          _currentFrameRate = actual_fps;
+        } else {
+          _currentFrameRate = config.framerate;
+        }
       }
+    } else {
+      RTC_LOG(LS_WARNING) << "Driver does not support framerate control (V4L2_CAP_TIMEPERFRAME not set)";
     }
   }
   // If driver doesn't support framerate control, need to hardcode.
