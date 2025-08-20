@@ -96,12 +96,10 @@ void Util::ParseArgs(int argc,
   app.add_flag("--fake-capture-device", args.fake_capture_device,
                "Use fake video capture device instead of real camera");
 #endif
-  app.add_flag(
-      "--force-i420", args.force_i420,
-      "Force I420 format for video capture (fails if not available)");
-  app.add_flag(
-      "--force-yuy2", args.force_yuy2,
-      "Force YUY2 format for video capture (fails if not available)")
+  app.add_flag("--force-i420", args.force_i420,
+               "Force I420 format for video capture (fails if not available)");
+  app.add_flag("--force-yuy2", args.force_yuy2,
+               "Force YUY2 format for video capture (fails if not available)")
       ->excludes("--force-i420");  // force-i420 と force-yuy2 は同時指定不可
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,

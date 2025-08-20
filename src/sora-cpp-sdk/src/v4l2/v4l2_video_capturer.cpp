@@ -553,7 +553,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  
+
   // YUY2 の場合は NativeBuffer を使用して変換を避ける
   if (_captureVideoType == webrtc::VideoType::kYUY2) {
     auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
