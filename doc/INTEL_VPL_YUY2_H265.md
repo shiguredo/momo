@@ -1,11 +1,11 @@
-# Intel VPL YUY2 サポート
+# Intel VPL H.265 YUY2 サポート
 
 ## 概要
 
-Momo は **Intel VPL 限定** で H.264 (AVC) および H.265 (HEVC) エンコードにおいて YUY2 フォーマットの直接入力をサポートしています。これにより、YUY2 出力対応のカメラから取得した映像データを変換なしで直接エンコードでき、高フレームレート（最大 120fps）の実現が可能になります。
+Momo は **Intel VPL 限定** で H.265 (HEVC) エンコードにおいて YUY2 フォーマットの直接入力をサポートしています。これにより、YUY2 出力対応のカメラから取得した映像データを変換なしで直接エンコードでき、高フレームレート（最大 120fps）の実現が可能になります。
 
 > [!IMPORTANT]
-> YUY2 サポートは Intel VPL エンコーダーのみです。H.264 と H.265 の両方で利用可能です。
+> YUY2 サポートは Intel VPL の H.265 エンコーダーのみです。
 
 ## 動作要件
 
@@ -15,8 +15,8 @@ Momo は **Intel VPL 限定** で H.264 (AVC) および H.265 (HEVC) エンコ�
     - Intel® Arc™ A-Series Graphics
 - Ubuntu 24.04 x86_64
 - YUY2 出力対応のカメラデバイス
-- H.264 または H.265 エンコーダーとして Intel VPL を使用
-  - `--h264-encoder vpl` または `--h265-encoder vpl` を指定する必要あり
+- H.265 エンコーダーとして Intel VPL を使用
+  - `--h265-encoder vpl` を指定する必要あり
 
 ## 技術詳細
 
@@ -60,10 +60,7 @@ YUY2 は YUV422 サンプリング方式のパックドフォーマット実装�
 
 ### Intel VPL での実装
 
-Intel VPL では以下のプロファイルを使用して YUV422 入力をサポートしています：
-
-- **H.264**: High 4:2:2 プロファイル (MFX_PROFILE_AVC_HIGH_422)
-- **H.265**: Range Extension プロファイル (MFX_PROFILE_HEVC_REXT)
+Intel VPL では H.265 の Range Extension プロファイル (MFX_PROFILE_HEVC_REXT) を使用して YUV422 入力をサポートしています。
 
 これにより、カメラから取得した YUY2 データを **フォーマット変換なし** でエンコードできます。
 
@@ -87,22 +84,12 @@ Momo では以下の最適化を実装しています：
 YUY2 フォーマットの使用を強制します。カメラが YUY2 をサポートしていない場合はエラーで終了します。
 
 ```bash
-# H.265 エンコードの場合
 momo --force-yuy2 \
       --video-device "Elgato Facecam MK.2" \
       --resolution 1280x720 \
       --framerate 120 \
       --h265-encoder vpl \
       --video-codec-type H265 \
-      sora ...
-
-# H.264 エンコードの場合
-momo --force-yuy2 \
-      --video-device "Elgato Facecam MK.2" \
-      --resolution 1280x720 \
-      --framerate 120 \
-      --h264-encoder vpl \
-      --video-codec-type H264 \
       sora ...
 ```
 
@@ -115,25 +102,12 @@ momo --force-yuy2 \
 **高フレームレート配信（120fps）：**
 
 ```bash
-# H.265 エンコードの場合
 momo --force-yuy2 \
       --video-device "Elgato Facecam MK.2" \
       --resolution 1280x720 \
       --framerate 120 \
       --h265-encoder vpl \
       --video-codec-type H265 \
-      --video-bit-rate 5000 \
-      sora --signaling-urls wss://example.com/signaling \
-           --role sendonly \
-           --channel-id test-channel
-
-# H.264 エンコードの場合（より広い互換性）
-momo --force-yuy2 \
-      --video-device "Elgato Facecam MK.2" \
-      --resolution 1280x720 \
-      --framerate 120 \
-      --h264-encoder vpl \
-      --video-codec-type H264 \
       --video-bit-rate 5000 \
       sora --signaling-urls wss://example.com/signaling \
            --role sendonly \
@@ -173,7 +147,7 @@ momo --force-yuy2 \
 ## 制限事項
 
 - Intel VPL エンコーダーのみ対応
-- H.264 および H.265 コーデック対応
+- H.265 コーデックのみ対応
 - Ubuntu 24.04 x86_64 のみ対応
 - カメラデバイスが YUY2 出力に対応している必要あり
 - `--force-yuy2` 使用時は YUY2 が利用できない場合エラーで終了する
@@ -185,8 +159,7 @@ YUY2 サポートが有効になっているかは、ログで確認できます
 **成功時のログ：**
 
 ```text
-[INFO] Using YUY2 format for H.265/HEVC encoding  # H.265 の場合
-[INFO] Using YUY2 format for H.264/AVC encoding    # H.264 の場合
+[INFO] Using YUY2 format for H.265/HEVC encoding
 [INFO] Using YUY2 format for video capture (--force-yuy2): 1280x720 @ 120fps
 [INFO] VplSurfacePool initialized: 1280x720 format=YUY2 surfaces=10
 [VERBOSE] Using VPL-backed surface for YUY2 capture (memory copy reduction)
@@ -219,7 +192,7 @@ YUY2 サポートが有効になっているかは、ログで確認できます
 
 1. カメラデバイスの YUY2 サポートを確認
 2. Intel VPL が正しくインストールされているか確認
-3. --h264-encoder vpl または --h265-encoder vpl が指定されているか確認
+3. --h265-encoder vpl が指定されているか確認
 
 ### 期待したフレームレートが出ない
 

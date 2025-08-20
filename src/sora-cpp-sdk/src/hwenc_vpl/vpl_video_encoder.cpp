@@ -248,16 +248,14 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.FrameRateExtN = framerate;
   param.mfx.FrameInfo.FrameRateExtD = 1;
 
-  // H.264 と H.265 の場合は YUY2 (YUV422) を試す
-  bool try_yuy2 = (codec == MFX_CODEC_HEVC || codec == MFX_CODEC_AVC);
+  // H.265 の場合は YUY2 (YUV422) を試す
+  bool try_yuy2 = (codec == MFX_CODEC_HEVC);
   if (try_yuy2) {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_YUY2;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-    // コーデックに応じた適切なプロファイルを設定
+    // H.265 用のプロファイルを設定
     if (codec == MFX_CODEC_HEVC) {
-      param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;  // HEVC には REXT プロファイル
-    } else if (codec == MFX_CODEC_AVC) {
-      param.mfx.CodecProfile = MFX_PROFILE_AVC_HIGH_422;  // H.264 には High 4:2:2 プロファイル
+      param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;  // HEVC Range Extension プロファイル
     }
   } else {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
@@ -391,11 +389,10 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     return sts;
   }
 
-  // H.264 または H.265 で YUY2 が失敗した場合は NV12 にフォールバック
-  if ((codec == MFX_CODEC_HEVC || codec == MFX_CODEC_AVC) &&
+  // H.265 で YUY2 が失敗した場合は NV12 にフォールバック
+  if (codec == MFX_CODEC_HEVC &&
       param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
-    const char* codec_name = (codec == MFX_CODEC_HEVC) ? "HEVC" : "H.264";
-    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for " << codec_name << ", falling back to NV12";
+    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for HEVC, falling back to NV12";
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
     param.mfx.CodecProfile = 0;  // プロファイルをリセット
