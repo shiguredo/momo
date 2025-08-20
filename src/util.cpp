@@ -126,7 +126,7 @@ void Util::ParseArgs(int argc,
                  "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
   app.add_option("--framerate", args.framerate, "Video framerate")
-      ->check(CLI::Range(1, 240));
+      ->check(CLI::Range(1, 120));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
   app.add_option(
