@@ -279,9 +279,18 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   video_fmt.fmt.pix.height = config.height;
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
+  // force_yuy2 が指定されていて、選択されたフォーマットが YUY2 でない場合はエラー
+  if (config.force_yuy2 && 
+      video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV &&
+      video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_UYVY) {
+    RTC_LOG(LS_ERROR) << "YUY2 format required (--force-yuy2) but not supported by device";
+    return -1;
+  }
+
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
     _captureVideoType = webrtc::VideoType::kYUY2;
-    RTC_LOG(LS_INFO) << "Using YUY2 format for V4L2 video capture";
+    RTC_LOG(LS_INFO) << "Using YUY2 format for V4L2 video capture"
+                     << (config.force_yuy2 ? " (--force-yuy2)" : "");
   } else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
     _captureVideoType = webrtc::VideoType::kI420;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)

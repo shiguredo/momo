@@ -98,7 +98,7 @@ void Util::ParseArgs(int argc,
       "Prefer I420 format for video capture (only on supported devices)");
   app.add_flag(
       "--force-yuy2", args.force_yuy2,
-      "Prefer YUY2 format for video capture (fallback to I420 if not supported)");
+      "Force YUY2 format for video capture (exits with error if not supported)");
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
          "Perform MJPEG deoode and video resize by hardware acceleration "

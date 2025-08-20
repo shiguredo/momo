@@ -65,17 +65,17 @@ bool DeviceVideoCapturer::Init(size_t width,
   capability_.maxFPS = static_cast<int32_t>(target_fps);
   
   if (force_yuy2_) {
-    // --force-yuy2 が指定された場合は YUY2 を優先
+    // --force-yuy2 が指定された場合は YUY2 を強制
     capability_.videoType = webrtc::VideoType::kYUY2;
     if (vcm_->StartCapture(capability_) != 0) {
-      // YUY2 が失敗した場合は I420 にフォールバック
-      RTC_LOG(LS_INFO) << "YUY2 capture requested (--force-yuy2) but not supported, falling back to I420";
-      capability_.videoType = webrtc::VideoType::kI420;
-    } else {
-      // YUY2 のキャプチャーが成功した場合は一旦停止
-      vcm_->StopCapture();
-      RTC_LOG(LS_INFO) << "Using YUY2 format for video capture (--force-yuy2)";
+      // YUY2 が失敗した場合はエラー
+      RTC_LOG(LS_ERROR) << "YUY2 capture required (--force-yuy2) but not supported by device";
+      Destroy();
+      return false;
     }
+    // YUY2 のキャプチャーが成功した場合は一旦停止
+    vcm_->StopCapture();
+    RTC_LOG(LS_INFO) << "Using YUY2 format for video capture (--force-yuy2)";
   } else {
     // デフォルト: I420 を使用
     capability_.videoType = webrtc::VideoType::kI420;
