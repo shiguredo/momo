@@ -248,13 +248,17 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.FrameRateExtN = framerate;
   param.mfx.FrameInfo.FrameRateExtD = 1;
 
-  // H.265 の場合は YUY2 (YUV422) を試す
-  bool try_yuy2 = (codec == MFX_CODEC_HEVC);
+  // H.264 と H.265 の場合は YUY2 (YUV422) を試す
+  bool try_yuy2 = (codec == MFX_CODEC_HEVC || codec == MFX_CODEC_AVC);
   if (try_yuy2) {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_YUY2;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-    param.mfx.CodecProfile =
-        MFX_PROFILE_HEVC_REXT;  // YUY2 には REXT プロファイルが必要
+    // コーデックに応じた適切なプロファイルを設定
+    if (codec == MFX_CODEC_HEVC) {
+      param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;  // HEVC には REXT プロファイル
+    } else if (codec == MFX_CODEC_AVC) {
+      param.mfx.CodecProfile = MFX_PROFILE_AVC_HIGH_422;  // H.264 には High 4:2:2 プロファイル
+    }
   } else {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -387,10 +391,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     return sts;
   }
 
-  // H.265 で YUY2 が失敗した場合は NV12 にフォールバック
-  if (codec == MFX_CODEC_HEVC &&
+  // H.264 または H.265 で YUY2 が失敗した場合は NV12 にフォールバック
+  if ((codec == MFX_CODEC_HEVC || codec == MFX_CODEC_AVC) &&
       param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
-    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for HEVC, falling back to NV12";
+    const char* codec_name = (codec == MFX_CODEC_HEVC) ? "HEVC" : "H.264";
+    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for " << codec_name << ", falling back to NV12";
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
     param.mfx.CodecProfile = 0;  // プロファイルをリセット
@@ -850,7 +855,8 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   // YUY2 フォーマットが選択されたか確認
   use_yuy2_ = (frame_info_.FourCC == MFX_FOURCC_YUY2);
   if (use_yuy2_) {
-    RTC_LOG(LS_INFO) << "Using YUY2 format for HEVC encoding";
+    const char* codec_name = (codec_ == MFX_CODEC_HEVC) ? "H.265/HEVC" : "H.264/AVC";
+    RTC_LOG(LS_INFO) << "Using YUY2 format for " << codec_name << " encoding";
   }
 
   // 出力ビットストリームの初期化
