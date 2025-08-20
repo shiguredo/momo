@@ -286,7 +286,9 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     ext_coding_option.Header.BufferSz = sizeof(ext_coding_option);
     ext_coding_option.AUDelimiter = MFX_CODINGOPTION_OFF;
     ext_coding_option.MaxDecFrameBuffering = 1;
-    //ext_coding_option.NalHrdConformance = MFX_CODINGOPTION_OFF;
+    // HRD conformance を OFF にすることで、Reset() 時に新しいキーフレームを生成しない
+    // これにより動的ビットレート変更時の映像途切れを防ぐ
+    ext_coding_option.NalHrdConformance = MFX_CODINGOPTION_OFF;
     //ext_coding_option.VuiVclHrdParameters = MFX_CODINGOPTION_ON;
     //ext_coding_option.SingleSeiNalUnit = MFX_CODINGOPTION_ON;
     //ext_coding_option.RefPicMarkRep = MFX_CODINGOPTION_OFF;
@@ -601,9 +603,9 @@ int32_t VplVideoEncoderImpl::Encode(
 
   if (reconfigure_needed_) {
     auto start_time = std::chrono::system_clock::now();
-    RTC_LOG(LS_INFO) << "Start reconfigure: bps="
-                      << (bitrate_adjuster_.GetAdjustedBitrateBps() / 1000)
-                      << " framerate=" << framerate_;
+    RTC_LOG(LS_VERBOSE) << "Start reconfigure: bps="
+                         << (bitrate_adjuster_.GetAdjustedBitrateBps() / 1000)
+                         << " framerate=" << framerate_;
     // 今の設定を取得する
     mfxVideoParam param;
     memset(&param, 0, sizeof(param));
@@ -633,11 +635,11 @@ int32_t VplVideoEncoderImpl::Encode(
     reconfigure_needed_ = false;
 
     auto end_time = std::chrono::system_clock::now();
-    RTC_LOG(LS_INFO) << "Finish reconfigure: "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(
-                             end_time - start_time)
-                             .count()
-                      << " ms";
+    RTC_LOG(LS_VERBOSE) << "Finish reconfigure: "
+                         << std::chrono::duration_cast<std::chrono::milliseconds>(
+                                end_time - start_time)
+                                .count()
+                         << " ms";
   }
 
   // NV12/YUY2 をハードウェアエンコード
@@ -785,22 +787,19 @@ void VplVideoEncoderImpl::SetRates(const RateControlParameters& parameters) {
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
   
-  // パラメータが実際に変更された場合のみ reconfigure を必要とする
+  // パラメータが変更された場合のみ reconfigure を必要とする
+  // HRD conformance = OFF なので、Reset() を呼んでもキーフレームは生成されない
   bool framerate_changed = (framerate_ != new_framerate);
   bool bitrate_changed = (target_bitrate_bps_ != new_bitrate);
   
   if (framerate_changed || bitrate_changed) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " Parameter changed -"
-                     << " framerate: " << framerate_ << " -> " << new_framerate
-                     << " bitrate: " << target_bitrate_bps_ << " -> " << new_bitrate;
+    RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " Parameter changed -"
+                        << " framerate: " << framerate_ << " -> " << new_framerate
+                        << " bitrate: " << target_bitrate_bps_ << " -> " << new_bitrate;
     framerate_ = new_framerate;
     target_bitrate_bps_ = new_bitrate;
     bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
     reconfigure_needed_ = true;
-  } else {
-    RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " No parameter change"
-                        << " framerate: " << framerate_
-                        << " bitrate: " << target_bitrate_bps_;
   }
 
   // bitrate が 0 の時レイヤーを無効にする
