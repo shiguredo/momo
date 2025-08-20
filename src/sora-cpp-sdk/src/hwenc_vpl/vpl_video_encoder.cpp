@@ -48,10 +48,10 @@
 #include <vpl/mfxvideo.h>
 #include <vpl/mfxvp8.h>
 
+#include "../../rtc/native_buffer.h"
 #include "../vpl_session_impl.h"
 #include "sora/vpl_session.h"
 #include "vpl_utils.h"
-#include "../../rtc/native_buffer.h"
 
 namespace sora {
 
@@ -240,13 +240,14 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.RateControlMethod = MFX_RATECONTROL_VBR;
   param.mfx.FrameInfo.FrameRateExtN = framerate;
   param.mfx.FrameInfo.FrameRateExtD = 1;
-  
+
   // H.265 の場合は YUY2 (YUV422) を試す
   bool try_yuy2 = (codec == MFX_CODEC_HEVC);
   if (try_yuy2) {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_YUY2;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-    param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;  // YUY2 には REXT プロファイルが必要
+    param.mfx.CodecProfile =
+        MFX_PROFILE_HEVC_REXT;  // YUY2 には REXT プロファイルが必要
   } else {
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -378,9 +379,10 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   if (sts >= 0) {
     return sts;
   }
-  
+
   // H.265 で YUY2 が失敗した場合は NV12 にフォールバック
-  if (codec == MFX_CODEC_HEVC && param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
+  if (codec == MFX_CODEC_HEVC &&
+      param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
     RTC_LOG(LS_VERBOSE) << "YUY2 not supported for HEVC, falling back to NV12";
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -513,36 +515,38 @@ int32_t VplVideoEncoderImpl::Encode(
 
   // フレームバッファーからエンコーダー入力フォーマットに変換
   auto video_frame_buffer = frame.video_frame_buffer();
-  
+
   // NativeBuffer で YUY2 の場合は直接コピー（変換不要）
-  if (use_yuy2_ && video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
-    auto native_buffer = reinterpret_cast<const NativeBuffer*>(video_frame_buffer.get());
+  if (use_yuy2_ &&
+      video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    auto native_buffer =
+        reinterpret_cast<const NativeBuffer*>(video_frame_buffer.get());
     if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
       // YUY2 データを直接コピー（変換なし）
       memcpy(surface->Data.Y, native_buffer->Data(), native_buffer->Length());
-      RTC_LOG(LS_VERBOSE) << "Using YUY2 data directly from NativeBuffer (no conversion)";
+      RTC_LOG(LS_VERBOSE)
+          << "Using YUY2 data directly from NativeBuffer (no conversion)";
     } else {
       // NativeBuffer だが YUY2 ではない場合は I420 から変換
       webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
           video_frame_buffer->ToI420();
-      libyuv::I420ToYUY2(
-          frame_buffer->DataY(), frame_buffer->StrideY(),
-          frame_buffer->DataU(), frame_buffer->StrideU(),
-          frame_buffer->DataV(), frame_buffer->StrideV(),
-          surface->Data.Y, surface->Data.Pitch,
-          frame_buffer->width(), frame_buffer->height());
-      RTC_LOG(LS_VERBOSE) << "Converting from I420 to YUY2 (NativeBuffer not YUY2)";
+      libyuv::I420ToYUY2(frame_buffer->DataY(), frame_buffer->StrideY(),
+                         frame_buffer->DataU(), frame_buffer->StrideU(),
+                         frame_buffer->DataV(), frame_buffer->StrideV(),
+                         surface->Data.Y, surface->Data.Pitch,
+                         frame_buffer->width(), frame_buffer->height());
+      RTC_LOG(LS_VERBOSE)
+          << "Converting from I420 to YUY2 (NativeBuffer not YUY2)";
     }
   } else if (use_yuy2_) {
     // NativeBuffer ではない場合は I420 から YUY2 に変換
     webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         video_frame_buffer->ToI420();
-    libyuv::I420ToYUY2(
-        frame_buffer->DataY(), frame_buffer->StrideY(),
-        frame_buffer->DataU(), frame_buffer->StrideU(),
-        frame_buffer->DataV(), frame_buffer->StrideV(),
-        surface->Data.Y, surface->Data.Pitch,
-        frame_buffer->width(), frame_buffer->height());
+    libyuv::I420ToYUY2(frame_buffer->DataY(), frame_buffer->StrideY(),
+                       frame_buffer->DataU(), frame_buffer->StrideU(),
+                       frame_buffer->DataV(), frame_buffer->StrideV(),
+                       surface->Data.Y, surface->Data.Pitch,
+                       frame_buffer->width(), frame_buffer->height());
     RTC_LOG(LS_VERBOSE) << "Converting from I420 to YUY2 (not NativeBuffer)";
   } else {
     // NV12 の場合は I420 から NV12 に変換
@@ -802,9 +806,11 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   sts = encoder_->GetVideoParam(&param);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
   RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB
-                   << ", ActualFramerate=" << param.mfx.FrameInfo.FrameRateExtN 
-                   << "/" << param.mfx.FrameInfo.FrameRateExtD
-                   << " (" << (param.mfx.FrameInfo.FrameRateExtN / param.mfx.FrameInfo.FrameRateExtD) << "fps)"
+                   << ", ActualFramerate=" << param.mfx.FrameInfo.FrameRateExtN
+                   << "/" << param.mfx.FrameInfo.FrameRateExtD << " ("
+                   << (param.mfx.FrameInfo.FrameRateExtN /
+                       param.mfx.FrameInfo.FrameRateExtD)
+                   << "fps)"
                    << ", FourCC=" << param.mfx.FrameInfo.FourCC;
 
   // Query number of required surfaces for encoder
@@ -816,7 +822,7 @@ int32_t VplVideoEncoderImpl::InitVpl() {
                    << alloc_request_.NumFrameSuggested;
 
   frame_info_ = param.mfx.FrameInfo;
-  
+
   // YUY2 フォーマットが選択されたか確認
   use_yuy2_ = (frame_info_.FourCC == MFX_FOURCC_YUY2);
   if (use_yuy2_) {
@@ -851,13 +857,13 @@ int32_t VplVideoEncoderImpl::InitVpl() {
       mfxFrameSurface1 surface;
       memset(&surface, 0, sizeof(surface));
       surface.Info = frame_info_;
-      
+
       if (use_yuy2_) {
         // YUY2 の場合はパックドフォーマット
         surface.Data.Y = surface_buffer_.data() + i * size;
         surface.Data.U = surface.Data.Y + 1;  // U は Y の次のバイト
         surface.Data.V = surface.Data.Y + 3;  // V は Y から 3 バイト目
-        surface.Data.Pitch = width * 2;  // YUY2 のピッチは幅の 2 倍
+        surface.Data.Pitch = width * 2;       // YUY2 のピッチは幅の 2 倍
       } else {
         // NV12 の場合
         surface.Data.Y = surface_buffer_.data() + i * size;

@@ -276,10 +276,10 @@ int32_t JetsonV4L2Capturer::StartCapture(
   _currentPixelFormat = video_fmt.fmt.pix.pixelformat;
 
   // force_yuy2 が指定されていて、選択されたフォーマットが YUY2 でない場合はエラー
-  if (config.force_yuy2 && 
-      video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV &&
+  if (config.force_yuy2 && video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV &&
       video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_UYVY) {
-    RTC_LOG(LS_ERROR) << "YUY2 format required (--force-yuy2) but not supported by device";
+    RTC_LOG(LS_ERROR)
+        << "YUY2 format required (--force-yuy2) but not supported by device";
     return -1;
   }
 

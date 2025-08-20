@@ -280,10 +280,10 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
   // force_yuy2 が指定されていて、選択されたフォーマットが YUY2 でない場合はエラー
-  if (config.force_yuy2 && 
-      video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV &&
+  if (config.force_yuy2 && video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_YUYV &&
       video_fmt.fmt.pix.pixelformat != V4L2_PIX_FMT_UYVY) {
-    RTC_LOG(LS_ERROR) << "YUY2 format required (--force-yuy2) but not supported by device";
+    RTC_LOG(LS_ERROR)
+        << "YUY2 format required (--force-yuy2) but not supported by device";
     return -1;
   }
 
@@ -294,39 +294,41 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   frmival.pixel_format = video_fmt.fmt.pix.pixelformat;
   frmival.width = config.width;
   frmival.height = config.height;
-  
+
   RTC_LOG(LS_INFO) << "Enumerating supported frame rates for "
                    << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
                    << " at " << config.width << "x" << config.height << ":";
-  
+
   bool supports_requested_fps = false;
   while (ioctl(_deviceFd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0) {
     if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
-      float fps = static_cast<float>(frmival.discrete.denominator) / 
+      float fps = static_cast<float>(frmival.discrete.denominator) /
                   static_cast<float>(frmival.discrete.numerator);
       RTC_LOG(LS_INFO) << "  " << fps << " fps "
-                       << "(" << frmival.discrete.denominator << "/" 
+                       << "(" << frmival.discrete.denominator << "/"
                        << frmival.discrete.numerator << ")";
       if (static_cast<int>(fps) == config.framerate) {
         supports_requested_fps = true;
       }
     } else if (frmival.type == V4L2_FRMIVAL_TYPE_CONTINUOUS ||
                frmival.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
-      float min_fps = static_cast<float>(frmival.stepwise.min.denominator) / 
+      float min_fps = static_cast<float>(frmival.stepwise.min.denominator) /
                       static_cast<float>(frmival.stepwise.min.numerator);
-      float max_fps = static_cast<float>(frmival.stepwise.max.denominator) / 
+      float max_fps = static_cast<float>(frmival.stepwise.max.denominator) /
                       static_cast<float>(frmival.stepwise.max.numerator);
-      RTC_LOG(LS_INFO) << "  " << min_fps << " - " << max_fps << " fps (continuous/stepwise)";
+      RTC_LOG(LS_INFO) << "  " << min_fps << " - " << max_fps
+                       << " fps (continuous/stepwise)";
       if (config.framerate >= min_fps && config.framerate <= max_fps) {
         supports_requested_fps = true;
       }
     }
     frmival.index++;
   }
-  
+
   if (!supports_requested_fps) {
-    RTC_LOG(LS_WARNING) << "Requested framerate " << config.framerate 
-                        << " fps may not be supported by the device for this format/resolution";
+    RTC_LOG(LS_WARNING)
+        << "Requested framerate " << config.framerate
+        << " fps may not be supported by the device for this format/resolution";
   }
 
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
@@ -344,23 +346,28 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     _captureVideoType = webrtc::VideoType::kMJPEG;
 
   // set format and frame size now
-  RTC_LOG(LS_INFO) << "Requesting format: " << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
-                   << " " << video_fmt.fmt.pix.width << "x" << video_fmt.fmt.pix.height;
+  RTC_LOG(LS_INFO) << "Requesting format: "
+                   << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " " << video_fmt.fmt.pix.width << "x"
+                   << video_fmt.fmt.pix.height;
   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
     RTC_LOG(LS_ERROR) << "error in VIDIOC_S_FMT, errno = " << errno;
     return -1;
   }
-  
+
   // カメラが実際に設定したフォーマットを確認
-  RTC_LOG(LS_INFO) << "Actual format set: " << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
-                   << " " << video_fmt.fmt.pix.width << "x" << video_fmt.fmt.pix.height;
+  RTC_LOG(LS_INFO) << "Actual format set: "
+                   << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " " << video_fmt.fmt.pix.width << "x"
+                   << video_fmt.fmt.pix.height;
 
   // initialize current width and height
   _currentWidth = video_fmt.fmt.pix.width;
   _currentHeight = video_fmt.fmt.pix.height;
 
   // Trying to set frame rate, before check driver capability.
-  RTC_LOG(LS_INFO) << "Attempting to set framerate to " << config.framerate << " fps";
+  RTC_LOG(LS_INFO) << "Attempting to set framerate to " << config.framerate
+                   << " fps";
   bool driver_framerate_support = true;
   struct v4l2_streamparm streamparms;
   memset(&streamparms, 0, sizeof(streamparms));
@@ -378,8 +385,8 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
       streamparms.parm.capture.timeperframe.numerator = 1;
       streamparms.parm.capture.timeperframe.denominator = config.framerate;
       if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
-        RTC_LOG(LS_ERROR) << "Failed to set the framerate to " << config.framerate 
-                          << " fps. errno=" << errno;
+        RTC_LOG(LS_ERROR) << "Failed to set the framerate to "
+                          << config.framerate << " fps. errno=" << errno;
         driver_framerate_support = false;
       } else {
         // 実際に設定された値を確認
@@ -388,16 +395,19 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
         if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) == 0) {
           int actual_fps = 0;
           if (streamparms.parm.capture.timeperframe.numerator > 0) {
-            actual_fps = streamparms.parm.capture.timeperframe.denominator / 
-                        streamparms.parm.capture.timeperframe.numerator;
+            actual_fps = streamparms.parm.capture.timeperframe.denominator /
+                         streamparms.parm.capture.timeperframe.numerator;
           }
-          
+
           if (actual_fps != config.framerate) {
-            RTC_LOG(LS_WARNING) << "Framerate mismatch: requested " << config.framerate 
-                               << " fps but device set " << actual_fps << " fps";
-            RTC_LOG(LS_WARNING) << "This may be a driver limitation with the current format/resolution";
+            RTC_LOG(LS_WARNING)
+                << "Framerate mismatch: requested " << config.framerate
+                << " fps but device set " << actual_fps << " fps";
+            RTC_LOG(LS_WARNING) << "This may be a driver limitation with the "
+                                   "current format/resolution";
           } else {
-            RTC_LOG(LS_INFO) << "Framerate successfully set to " << actual_fps << " fps";
+            RTC_LOG(LS_INFO)
+                << "Framerate successfully set to " << actual_fps << " fps";
           }
           _currentFrameRate = actual_fps;
         } else {
@@ -406,7 +416,8 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
         }
       }
     } else {
-      RTC_LOG(LS_WARNING) << "Driver does not support framerate control (V4L2_CAP_TIMEPERFRAME not set)";
+      RTC_LOG(LS_WARNING) << "Driver does not support framerate control "
+                             "(V4L2_CAP_TIMEPERFRAME not set)";
     }
   }
   // If driver doesn't support framerate control, need to hardcode.
@@ -627,8 +638,8 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
   // YUY2 の場合は NativeBuffer を使用して変換を避ける
   if (_captureVideoType == webrtc::VideoType::kYUY2) {
-    auto native_buffer = NativeBuffer::Create(
-        webrtc::VideoType::kYUY2, _currentWidth, _currentHeight);
+    auto native_buffer = NativeBuffer::Create(webrtc::VideoType::kYUY2,
+                                              _currentWidth, _currentHeight);
     // YUY2 データを直接コピー
     memcpy(native_buffer->MutableData(), data, bytesused);
     native_buffer->SetLength(bytesused);

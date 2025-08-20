@@ -59,22 +59,22 @@ bool DeviceVideoCapturer::Init(size_t width,
   vcm_->RegisterCaptureDataCallback(this);
 
   // デバイスがサポートするケーパビリティを列挙して最適なものを選択
-  int num_capabilities = device_info->NumberOfCapabilities(vcm_->CurrentDeviceName());
+  int num_capabilities =
+      device_info->NumberOfCapabilities(vcm_->CurrentDeviceName());
   RTC_LOG(LS_INFO) << "Device has " << num_capabilities << " capabilities";
-  
+
   bool capability_found = false;
   webrtc::VideoCaptureCapability best_capability;
-  
+
   if (force_yuy2_) {
     // YUY2 で指定された解像度・フレームレートをサポートするケーパビリティを探す
     for (int i = 0; i < num_capabilities; ++i) {
       webrtc::VideoCaptureCapability cap;
       if (device_info->GetCapability(vcm_->CurrentDeviceName(), i, cap) == 0) {
-        RTC_LOG(LS_VERBOSE) << "Capability " << i << ": " 
-                            << cap.width << "x" << cap.height 
-                            << " @ " << cap.maxFPS << "fps"
+        RTC_LOG(LS_VERBOSE) << "Capability " << i << ": " << cap.width << "x"
+                            << cap.height << " @ " << cap.maxFPS << "fps"
                             << " format=" << static_cast<int>(cap.videoType);
-        
+
         if (cap.videoType == webrtc::VideoType::kYUY2 &&
             cap.width == static_cast<int32_t>(width) &&
             cap.height == static_cast<int32_t>(height) &&
@@ -82,24 +82,23 @@ bool DeviceVideoCapturer::Init(size_t width,
           best_capability = cap;
           best_capability.maxFPS = static_cast<int32_t>(target_fps);
           capability_found = true;
-          RTC_LOG(LS_INFO) << "Found matching YUY2 capability: "
-                           << cap.width << "x" << cap.height 
-                           << " @ " << cap.maxFPS << "fps";
+          RTC_LOG(LS_INFO) << "Found matching YUY2 capability: " << cap.width
+                           << "x" << cap.height << " @ " << cap.maxFPS << "fps";
           break;
         }
       }
     }
-    
+
     if (!capability_found) {
-      RTC_LOG(LS_ERROR) << "YUY2 format with " << width << "x" << height 
+      RTC_LOG(LS_ERROR) << "YUY2 format with " << width << "x" << height
                         << " @ " << target_fps << "fps not supported by device";
       Destroy();
       return false;
     }
     capability_ = best_capability;
     RTC_LOG(LS_INFO) << "Using YUY2 format for video capture (--force-yuy2): "
-                     << capability_.width << "x" << capability_.height 
-                     << " @ " << capability_.maxFPS << "fps";
+                     << capability_.width << "x" << capability_.height << " @ "
+                     << capability_.maxFPS << "fps";
   } else {
     // デフォルト: GetCapability(0) の結果を使用し、I420 を設定
     device_info->GetCapability(vcm_->CurrentDeviceName(), 0, capability_);
@@ -207,8 +206,9 @@ webrtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
   if (index < 0) {
     return nullptr;
   }
-  
-  if (!vcm_capturer->Init(width, height, target_fps, static_cast<size_t>(index), force_yuy2)) {
+
+  if (!vcm_capturer->Init(width, height, target_fps, static_cast<size_t>(index),
+                          force_yuy2)) {
     RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer(w = " << width
                         << ", h = " << height << ", fps = " << target_fps
                         << ")";
