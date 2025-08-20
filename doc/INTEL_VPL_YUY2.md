@@ -61,6 +61,7 @@ YUY2 は YUV422 サンプリング方式のパックドフォーマット実装�
 ### Intel VPL での実装
 
 Intel VPL では以下のプロファイルを使用して YUV422 入力をサポートしています：
+
 - **H.264**: High 4:2:2 プロファイル (MFX_PROFILE_AVC_HIGH_422)
 - **H.265**: Range Extension プロファイル (MFX_PROFILE_HEVC_REXT)
 
