@@ -10,7 +10,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: ${{ inputs.platform }}.env
         path: ${{ inputs.platform }}.env
@@ -22,7 +22,7 @@ runs:
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
         echo "$PACKAGE_NAME/$PACKAGE_NAME" >> package_paths.env
       id: env
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: ${{ steps.env.outputs.package_name }}
         path: ${{ steps.env.outputs.package_name }}
