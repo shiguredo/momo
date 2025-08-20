@@ -11,6 +11,13 @@
 
 ## develop
 
+- [ADD] YUY2 (YUV422) フォーマットのネイティブサポートを追加
+  - `--force-yuy2` オプションで YUY2 フォーマットの使用を強制できるように
+  - V4L2 キャプチャーで YUY2 を NativeBuffer として保持し変換オーバーヘッドを削減
+  - @voluntas
+- [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
+  - 高フレームレートカメラのサポートを改善
+  - @voluntas
 - [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
   - @voluntas
 - [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
