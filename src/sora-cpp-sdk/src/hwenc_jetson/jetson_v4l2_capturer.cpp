@@ -198,19 +198,24 @@ int32_t JetsonV4L2Capturer::StartCapture(
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 6;
-  unsigned int fmts[nFormats] = {};
-  if (config.use_native) {
+  int nFormats = 0;
+  const int MaxFormats = 6;
+  unsigned int fmts[MaxFormats] = {};
+  if (config.force_i420) {
+    fmts[0] = V4L2_PIX_FMT_YUV420;
+    nFormats = 1;
+  } else if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
-  } else if (!config.force_i420 &&
-             (config.width > 640 || config.height > 480)) {
+    nFormats = 2;
+  } else if (config.width > 640 || config.height > 480) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;
     fmts[3] = V4L2_PIX_FMT_YUYV;
     fmts[4] = V4L2_PIX_FMT_UYVY;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YVU420;
@@ -218,6 +223,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
     fmts[3] = V4L2_PIX_FMT_UYVY;
     fmts[4] = V4L2_PIX_FMT_MJPEG;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   }
 
   // Enumerate image formats.
@@ -246,12 +252,6 @@ int32_t JetsonV4L2Capturer::StartCapture(
   } else {
     RTC_LOG(LS_INFO) << "We prefer format "
                      << webrtc::GetFourccName(fmts[fmtsIdx]);
-  }
-
-  // force_i420 が指定されている場合、I420 以外はエラー
-  if (config.force_i420 && fmts[fmtsIdx] != V4L2_PIX_FMT_YUV420) {
-    RTC_LOG(LS_ERROR) << "I420 format forced but not available";
-    return -1;
   }
 
   struct v4l2_format video_fmt;

@@ -9,18 +9,8 @@ static const int kBufferAlignment = 64;
 
 namespace {
 
-int GetDataSize(webrtc::VideoType video_type, int width, int height) {
-  switch (video_type) {
-    case webrtc::VideoType::kYUY2:
-      // YUY2 は 1 ピクセルあたり 2 バイト
-      return width * height * 2;
-    case webrtc::VideoType::kMJPEG:
-      // MJPEG は可変長なので大きめに確保
-      return width * height * 4;
-    default:
-      // その他のフォーマット（ARGB など）は 4 バイト
-      return width * height * 4;
-  }
+int ArgbDataSize(int height, int width) {
+  return width * height * 4;
 }
 
 }  // namespace
@@ -35,7 +25,7 @@ webrtc::VideoFrameBuffer::Type NativeBuffer::type() const {
 }
 
 void NativeBuffer::InitializeData() {
-  memset(data_.get(), 0, GetDataSize(video_type_, raw_width_, raw_height_));
+  memset(data_.get(), 0, ArgbDataSize(raw_height_, raw_width_));
 }
 
 int NativeBuffer::width() const {
@@ -99,10 +89,10 @@ NativeBuffer::NativeBuffer(webrtc::VideoType video_type, int width, int height)
       raw_height_(height),
       scaled_width_(width),
       scaled_height_(height),
-      length_(GetDataSize(video_type, width, height)),
+      length_(ArgbDataSize(height, width)),
       video_type_(video_type),
       data_(static_cast<uint8_t*>(
-          webrtc::AlignedMalloc(GetDataSize(video_type, width, height),
+          webrtc::AlignedMalloc(ArgbDataSize(height, width),
                                 kBufferAlignment))) {}
 
 NativeBuffer::~NativeBuffer() {}
