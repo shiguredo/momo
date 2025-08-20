@@ -339,7 +339,8 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
 
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
     _captureVideoType = webrtc::VideoType::kYUY2;
-    RTC_LOG(LS_INFO) << "Using YUY2 format for V4L2 video capture"
+    RTC_LOG(LS_INFO) << "V4L2: Capture format set to YUY2 " << config.width
+                     << "x" << config.height << " @ " << config.framerate << "fps"
                      << (config.force_yuy2 ? " (--force-yuy2)" : "");
   } else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
     _captureVideoType = webrtc::VideoType::kI420;
