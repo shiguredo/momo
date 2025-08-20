@@ -493,13 +493,18 @@ int32_t VplVideoEncoderImpl::Encode(
     auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
     if (native_buffer->VideoType() == webrtc::VideoType::kYUY2 && !use_vpp_) {
       // VPP を初期化してみる（初回のみ）
+      RTC_LOG(LS_INFO) << "YUY2 detected, attempting to initialize VPP";
       InitVpp();
+      if (!use_vpp_) {
+        RTC_LOG(LS_INFO) << "VPP initialization failed, will use software conversion";
+      }
     }
   }
   
   // VPP を使用する場合の処理
   if (use_vpp_ && video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
+    RTC_LOG(LS_INFO) << "VPP path: Native buffer type = " << (int)native_buffer->VideoType();
     if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
       // 使ってない VPP 入力サーフェスを取得
       auto vpp_input_surface = std::find_if(
@@ -540,7 +545,7 @@ int32_t VplVideoEncoderImpl::Encode(
       // VPP の出力サーフェスを encoder に直接使用
       surface = &*vpp_output_surface;
       
-      RTC_LOG(LS_VERBOSE) << "VPP converted YUY2 to NV12 using GPU acceleration";
+      RTC_LOG(LS_INFO) << "VPP converted YUY2 to NV12 using GPU acceleration";
     } else {
       // その他の NativeBuffer は従来通り I420 経由で変換
       // まずエンコーダー用のサーフェスを取得
@@ -575,6 +580,7 @@ int32_t VplVideoEncoderImpl::Encode(
       auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
       if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
         // YUY2 から直接 NV12 に変換（ソフトウェア変換）
+        RTC_LOG(LS_INFO) << "Using software YUY2 to NV12 conversion (VPP not available)";
         libyuv::YUY2ToNV12(
             native_buffer->Data(), native_buffer->RawWidth() * 2,
             surface->Data.Y, surface->Data.Pitch,
