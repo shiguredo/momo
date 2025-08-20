@@ -846,6 +846,16 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   RTC_LOG(LS_INFO) << "Encoder NumFrameSuggested="
                    << alloc_request_.NumFrameSuggested;
 
+  // 高フレームレート対応のため、最低8枚のサーフェースを確保
+  // VPL のQueryIOSurfが1を返す場合があるが、これはバッファリングには不十分
+  const int MIN_SURFACES = 8;
+  if (alloc_request_.NumFrameSuggested < MIN_SURFACES) {
+    RTC_LOG(LS_INFO) << "Increasing NumFrameSuggested from "
+                     << alloc_request_.NumFrameSuggested << " to " << MIN_SURFACES
+                     << " for proper buffering";
+    alloc_request_.NumFrameSuggested = MIN_SURFACES;
+  }
+
   frame_info_ = param.mfx.FrameInfo;
 
   // YUY2 フォーマットが選択されたか確認
