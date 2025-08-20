@@ -161,7 +161,7 @@ YUY2 サポートが有効になっているかは、ログで確認できます
 ```text
 [INFO] Using YUY2 format for H.265/HEVC encoding
 [INFO] Using YUY2 format for video capture (--force-yuy2): 1280x720 @ 120fps
-[INFO] VplSurfacePool initialized: 1280x720 format=YUY2 surfaces=10
+[INFO] VplSurfacePool initialized: 1280x720 format=NV12 surfaces=8
 [VERBOSE] Using VPL-backed surface for YUY2 capture (memory copy reduction)
 [VERBOSE] Using VPL-backed NativeBuffer (zero-copy from V4L2 to encoder)
 [INFO] V4L2: Capture format set to YUY2 1280x720 @ 120fps

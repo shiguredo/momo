@@ -337,6 +337,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     if (sts >= 0) {
       // デバッグ用。
       // Query によってどのパラメータが変更されたかを表示する
+      if (param.mfx.FrameInfo.FourCC != query_param.mfx.FrameInfo.FourCC) {
+        RTC_LOG(LS_WARNING) << "Query changed FourCC from " 
+                            << param.mfx.FrameInfo.FourCC 
+                            << " to " << query_param.mfx.FrameInfo.FourCC;
+      }
       // #define F(NAME)                                           \
       //   if (param.NAME != query_param.NAME)                     \
       //   std::cout << "param " << #NAME << " old=" << param.NAME \
@@ -391,10 +396,15 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     return sts;
   }
 
+  // YUY2 Query 失敗をログ出力
+  if (param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
+    RTC_LOG(LS_WARNING) << "YUY2 Query failed with status: " << sts;
+  }
+
   // H.265 で YUY2 が失敗した場合は NV12 にフォールバック
   if (codec == MFX_CODEC_HEVC &&
       param.mfx.FrameInfo.FourCC == MFX_FOURCC_YUY2) {
-    RTC_LOG(LS_VERBOSE) << "YUY2 not supported for HEVC, falling back to NV12";
+    RTC_LOG(LS_WARNING) << "YUY2 not supported for HEVC, falling back to NV12";
     param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
     param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
     param.mfx.CodecProfile = 0;  // プロファイルをリセット
