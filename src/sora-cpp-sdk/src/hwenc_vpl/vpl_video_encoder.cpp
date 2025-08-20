@@ -504,7 +504,7 @@ int32_t VplVideoEncoderImpl::Encode(
   // VPP を使用する場合の処理
   if (use_vpp_ && video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
     auto native_buffer = static_cast<NativeBuffer*>(video_frame_buffer.get());
-    RTC_LOG(LS_INFO) << "VPP path: Native buffer type = " << (int)native_buffer->VideoType();
+    RTC_LOG(LS_VERBOSE) << "VPP path: Native buffer type = " << (int)native_buffer->VideoType();
     if (native_buffer->VideoType() == webrtc::VideoType::kYUY2) {
       // 使ってない VPP 入力サーフェスを取得
       auto vpp_input_surface = std::find_if(
@@ -545,7 +545,7 @@ int32_t VplVideoEncoderImpl::Encode(
       // VPP の出力サーフェスを encoder に直接使用
       surface = &*vpp_output_surface;
       
-      RTC_LOG(LS_INFO) << "VPP converted YUY2 to NV12 using GPU acceleration";
+      RTC_LOG(LS_VERBOSE) << "VPP converted YUY2 to NV12 using GPU acceleration";
     } else {
       // その他の NativeBuffer は従来通り I420 経由で変換
       // まずエンコーダー用のサーフェスを取得
