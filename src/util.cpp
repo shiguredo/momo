@@ -18,6 +18,10 @@
 
 #include "momo_version.h"
 
+// フレームレート関連の定数
+constexpr int MIN_FRAMERATE = 1;
+constexpr int MAX_FRAMERATE = 120;
+
 static void add_optional_bool(CLI::App* app,
                               const std::string& option_name,
                               boost::optional<bool>& v,
@@ -126,7 +130,7 @@ void Util::ParseArgs(int argc,
                  "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
   app.add_option("--framerate", args.framerate, "Video framerate")
-      ->check(CLI::Range(1, 120));
+      ->check(CLI::Range(MIN_FRAMERATE, MAX_FRAMERATE));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
   app.add_option(

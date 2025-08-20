@@ -55,6 +55,11 @@
 
 namespace sora {
 
+// YUY2 フォーマット関連の定数
+constexpr size_t YUY2_BYTES_PER_PIXEL = 2;  // YUY2 は 1 ピクセルあたり 2 バイト
+constexpr size_t YUY2_U_OFFSET = 1;         // U は Y の次のバイト
+constexpr size_t YUY2_V_OFFSET = 3;         // V は Y から 3 バイト目
+
 class VplVideoEncoderImpl : public VplVideoEncoder {
  public:
   VplVideoEncoderImpl(std::shared_ptr<VplSession> session, mfxU32 codec);
@@ -844,7 +849,7 @@ int32_t VplVideoEncoderImpl::InitVpl() {
     int size;
     if (use_yuy2_) {
       // YUY2 は 1 ピクセルあたり 16 ビット (2 バイト)
-      size = width * height * 2;
+      size = width * height * YUY2_BYTES_PER_PIXEL;
     } else {
       // NV12 は 1 ピクセルあたり 12 ビット
       size = width * height * 12 / 8;
@@ -861,9 +866,9 @@ int32_t VplVideoEncoderImpl::InitVpl() {
       if (use_yuy2_) {
         // YUY2 の場合はパックドフォーマット
         surface.Data.Y = surface_buffer_.data() + i * size;
-        surface.Data.U = surface.Data.Y + 1;  // U は Y の次のバイト
-        surface.Data.V = surface.Data.Y + 3;  // V は Y から 3 バイト目
-        surface.Data.Pitch = width * 2;       // YUY2 のピッチは幅の 2 倍
+        surface.Data.U = surface.Data.Y + YUY2_U_OFFSET;  // U は Y の次のバイト
+        surface.Data.V = surface.Data.Y + YUY2_V_OFFSET;  // V は Y から 3 バイト目
+        surface.Data.Pitch = width * YUY2_BYTES_PER_PIXEL;  // YUY2 のピッチは幅の 2 倍
       } else {
         // NV12 の場合
         surface.Data.Y = surface_buffer_.data() + i * size;
