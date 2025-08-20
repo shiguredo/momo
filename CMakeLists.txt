@@ -514,6 +514,7 @@ elseif (TARGET_OS STREQUAL "linux")
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
         src/sora-cpp-sdk/src/vpl_surface_pool.cpp
+        src/rtc/vpl_backed_native_buffer.cpp
     )
     target_link_libraries(momo
       PRIVATE
