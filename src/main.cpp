@@ -150,6 +150,7 @@ int main(int argc, char* argv[]) {
         v4l2_config.height = size.height;
         v4l2_config.framerate = args.framerate;
         v4l2_config.force_i420 = args.force_i420;
+        v4l2_config.force_yuy2 = args.force_yuy2;
         v4l2_config.use_native = args.hw_mjpeg_decoder;
 
 #if defined(USE_JETSON_ENCODER)

@@ -38,6 +38,7 @@
 
 // libyuv
 #include <libyuv/convert_from.h>
+#include <libyuv/planar_functions.h>
 
 // Intel VPL
 #include <vpl/mfxcommon.h>
@@ -478,14 +479,26 @@ int32_t VplVideoEncoderImpl::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // I420 から NV12 に変換
-  webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
-      frame.video_frame_buffer()->ToI420();
-  libyuv::I420ToNV12(
-      frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
-      frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
-      surface->Data.Y, surface->Data.Pitch, surface->Data.U,
-      surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  // フレームバッファのタイプをチェック
+  auto video_frame_buffer = frame.video_frame_buffer();
+
+  if (video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
+    // NV12 の場合はそのまま利用する
+    auto nv12_buffer = video_frame_buffer->GetNV12();
+    libyuv::NV12Copy(nv12_buffer->DataY(), nv12_buffer->StrideY(),
+                     nv12_buffer->DataUV(), nv12_buffer->StrideUV(),
+                     surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+                     surface->Data.Pitch, frame.width(), frame.height());
+  } else {
+    // それ以外のフレームバッファは I420 経由で変換
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+        video_frame_buffer->ToI420();
+    libyuv::I420ToNV12(
+        frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
+        frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
+        surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+        surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  }
 
   mfxStatus sts;
 

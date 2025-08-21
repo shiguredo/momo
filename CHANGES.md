@@ -11,6 +11,18 @@
 
 ## develop
 
+- [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
+  - @melpon
+- [ADD] `--force-yuy2` オプションを追加
+  - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
+  - YUY2 が利用できない場合はエラーで停止
+  - @melpon @voluntas
+- [CHANGE] `--force-i420` オプションの挙動を変更
+  - I420 が利用できない場合はフォールバックせずエラーで停止するように
+  - @melpon @voluntas
+- [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
+  - 高フレームレートカメラのサポートを改善
+  - @voluntas
 - [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
   - @voluntas
 - [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
