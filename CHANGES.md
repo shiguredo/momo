@@ -110,6 +110,9 @@
 - [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
   - ubuntu-24.04 には意図的に上げていない
   - @voluntas
+- [UPDATE] actions/download-artifact と actions/checkout をアップデートする
+  - `@v4` から `@v5` にアップデート
+  - @voluntas @torikizi
 
 ## 2024.1.2
 
