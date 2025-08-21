@@ -625,24 +625,32 @@ bool V4L2VideoCapturer::AllocateDmaBufVideoBuffers(
   _buffersAllocatedByDevice = rbuffer.count;
 
   // DMABUF バッファをキューに追加
+  // V4L2 DMABUF インポートモードでは、VIDIOC_QBUF で fd を渡すだけ
   for (unsigned int i = 0; i < rbuffer.count && i < dmabuf_fds.size(); i++) {
-    struct v4l2_buffer buffer;
-    memset(&buffer, 0, sizeof(v4l2_buffer));
-    buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buffer.memory = V4L2_MEMORY_DMABUF;
-    buffer.index = i;
-    buffer.m.fd = dmabuf_fds[i];  // VPL サーフェースの fd
-    buffer.length = _currentWidth * _currentHeight * 2;  // YUY2 のサイズ
+    struct v4l2_buffer buf;
+    memset(&buf, 0, sizeof(buf));
+    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buf.memory = V4L2_MEMORY_DMABUF;
+    buf.index = i;
+    buf.m.fd = dmabuf_fds[i];  // DMABUF fd を設定
 
-    if (ioctl(_deviceFd, VIDIOC_QBUF, &buffer) < 0) {
+    if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to queue DMABUF buffer " << i
-                        << ", errno = " << errno;
+                        << ", errno = " << errno << " (" << strerror(errno) << ")";
       return false;
     }
   }
 
   RTC_LOG(LS_INFO) << "Allocated " << _buffersAllocatedByDevice
                    << " DMABUF video capture buffers";
+  
+  // ストリームを開始
+  enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) < 0) {
+    RTC_LOG(LS_ERROR) << "Failed to start streaming, errno = " << errno;
+    return false;
+  }
+  
   return true;
 }
 
