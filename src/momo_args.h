@@ -29,6 +29,10 @@ struct MomoArgs {
 #else
   bool hw_mjpeg_decoder = false;
 #endif
+#if defined(USE_VPL_ENCODER) && defined(__linux__)
+  // Intel VPL + V4L2 の DMABUF ゼロコピー機能 (Ubuntu 24.04 x86_64 のみ)
+  bool use_vpl_dmabuf = false;
+#endif
   // Raspberry Pi OS 64bit の場合だけ使える
   bool use_libcamera = false;
   // use_libcamera == true の場合だけ使える。

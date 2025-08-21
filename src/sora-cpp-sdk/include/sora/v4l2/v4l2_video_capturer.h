@@ -35,6 +35,8 @@ struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
   bool force_i420 = false;
   bool force_yuy2 = false;
   bool use_native = false;
+  bool use_dmabuf = false;      // DMABUF モードを使用
+  std::vector<int> dmabuf_fds;  // VPL からの DMABUF fd リスト
 };
 
 class V4L2VideoCapturer : public ScalableVideoTrackSource {
@@ -54,6 +56,8 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   virtual bool AllocateVideoBuffers();
   virtual bool DeAllocateVideoBuffers();
   virtual void OnCaptured(uint8_t* data, uint32_t bytesused);
+  virtual bool AllocateDmaBufVideoBuffers(const std::vector<int>& dmabuf_fds);
+  virtual bool DeAllocateDmaBufVideoBuffers();
 
   int32_t _deviceFd;
   int32_t _currentWidth;
@@ -77,6 +81,7 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
 
   static void CaptureThread(void*);
   bool CaptureProcess();
+  bool CaptureProcessDmaBuf();  // DMABUF モード専用のキャプチャ処理
 
   webrtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;
@@ -86,6 +91,17 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   int32_t _buffersAllocatedByDevice;
   bool _useNative;
   bool _captureStarted;
+  bool _useDmaBuf;
+  std::vector<int> _dmaBufFds;
+
+  // DMABUF モード用のコールバック
+  std::function<void(int buffer_index)> _dmaBufCallback;
+
+ public:
+  // DMABUF モードでバッファが準備できたときのコールバックを設定
+  void SetDmaBufCallback(std::function<void(int buffer_index)> callback) {
+    _dmaBufCallback = callback;
+  }
 };
 
 }  // namespace sora

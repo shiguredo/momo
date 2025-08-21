@@ -139,7 +139,9 @@ V4L2VideoCapturer::V4L2VideoCapturer(const V4L2VideoCapturerConfig& config)
       _useNative(false),
       _captureStarted(false),
       _captureVideoType(webrtc::VideoType::kI420),
-      _pool(NULL) {}
+      _pool(NULL),
+      _useDmaBuf(config.use_dmabuf),
+      _dmaBufFds(config.dmabuf_fds) {}
 
 bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
                                    const std::string& device) {
@@ -337,9 +339,17 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     }
   }
 
-  if (!AllocateVideoBuffers()) {
-    RTC_LOG(LS_INFO) << "failed to allocate video capture buffers";
-    return -1;
+  // DMABUF モードか通常モードかを選択
+  if (_useDmaBuf && !_dmaBufFds.empty()) {
+    if (!AllocateDmaBufVideoBuffers(_dmaBufFds)) {
+      RTC_LOG(LS_INFO) << "failed to allocate DMABUF video capture buffers";
+      return -1;
+    }
+  } else {
+    if (!AllocateVideoBuffers()) {
+      RTC_LOG(LS_INFO) << "failed to allocate video capture buffers";
+      return -1;
+    }
   }
 
   // start capture thread;
@@ -376,7 +386,11 @@ int32_t V4L2VideoCapturer::StopCapture() {
   if (_captureStarted) {
     _captureStarted = false;
 
-    DeAllocateVideoBuffers();
+    if (_useDmaBuf) {
+      DeAllocateDmaBufVideoBuffers();
+    } else {
+      DeAllocateVideoBuffers();
+    }
     close(_deviceFd);
     _deviceFd = -1;
   }
@@ -455,7 +469,14 @@ bool V4L2VideoCapturer::DeAllocateVideoBuffers() {
 
 void V4L2VideoCapturer::CaptureThread(void* obj) {
   V4L2VideoCapturer* capturer = static_cast<V4L2VideoCapturer*>(obj);
-  while (capturer->CaptureProcess()) {
+  if (capturer->_useDmaBuf) {
+    // DMABUF モード
+    while (capturer->CaptureProcessDmaBuf()) {
+    }
+  } else {
+    // 通常モード (MMAP)
+    while (capturer->CaptureProcess()) {
+    }
   }
 }
 
@@ -584,6 +605,115 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
                                          .build();
     OnCapturedFrame(video_frame);
   }
+}
+
+bool V4L2VideoCapturer::AllocateDmaBufVideoBuffers(
+    const std::vector<int>& dmabuf_fds) {
+  struct v4l2_requestbuffers rbuffer;
+  memset(&rbuffer, 0, sizeof(v4l2_requestbuffers));
+
+  rbuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  rbuffer.memory = V4L2_MEMORY_DMABUF;  // DMABUF を使用
+  rbuffer.count = dmabuf_fds.size();
+
+  if (ioctl(_deviceFd, VIDIOC_REQBUFS, &rbuffer) < 0) {
+    RTC_LOG(LS_INFO) << "Could not request DMABUF buffers from device. errno = "
+                     << errno;
+    return false;
+  }
+
+  _buffersAllocatedByDevice = rbuffer.count;
+
+  // DMABUF バッファをキューに追加
+  for (unsigned int i = 0; i < rbuffer.count && i < dmabuf_fds.size(); i++) {
+    struct v4l2_buffer buffer;
+    memset(&buffer, 0, sizeof(v4l2_buffer));
+    buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buffer.memory = V4L2_MEMORY_DMABUF;
+    buffer.index = i;
+    buffer.m.fd = dmabuf_fds[i];  // VPL サーフェースの fd
+    buffer.length = _currentWidth * _currentHeight * 2;  // YUY2 のサイズ
+
+    if (ioctl(_deviceFd, VIDIOC_QBUF, &buffer) < 0) {
+      RTC_LOG(LS_ERROR) << "Failed to queue DMABUF buffer " << i
+                        << ", errno = " << errno;
+      return false;
+    }
+  }
+
+  RTC_LOG(LS_INFO) << "Allocated " << _buffersAllocatedByDevice
+                   << " DMABUF video capture buffers";
+  return true;
+}
+
+bool V4L2VideoCapturer::DeAllocateDmaBufVideoBuffers() {
+  // DMABUF の場合、マッピング解除は不要
+  // fd は VPL 側が管理
+
+  // turn off stream
+  enum v4l2_buf_type type;
+  type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl(_deviceFd, VIDIOC_STREAMOFF, &type) < 0) {
+    RTC_LOG(LS_INFO) << "VIDIOC_STREAMOFF error. errno: " << errno;
+  }
+
+  return true;
+}
+
+bool V4L2VideoCapturer::CaptureProcessDmaBuf() {
+  int retVal = 0;
+  fd_set rSet;
+  struct timeval timeout;
+
+  FD_ZERO(&rSet);
+  FD_SET(_deviceFd, &rSet);
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+
+  retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
+  {
+    webrtc::MutexLock lock(&capture_lock_);
+
+    if (quit_) {
+      return false;
+    } else if (retVal < 0 && errno != EINTR) {
+      return false;
+    } else if (retVal == 0) {
+      return true;
+    } else if (!FD_ISSET(_deviceFd, &rSet)) {
+      return true;
+    }
+
+    if (_captureStarted) {
+      struct v4l2_buffer buf;
+      memset(&buf, 0, sizeof(struct v4l2_buffer));
+      buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      buf.memory = V4L2_MEMORY_DMABUF;  // DMABUF モード
+
+      // DMABUF バッファをデキュー
+      while (ioctl(_deviceFd, VIDIOC_DQBUF, &buf) < 0) {
+        if (errno != EINTR) {
+          RTC_LOG(LS_INFO) << "DMABUF: could not dequeue buffer: "
+                           << strerror(errno);
+          return true;
+        }
+      }
+
+      // DMABUF モードではデータは GPU メモリにある
+      // コールバックを呼び出して、VPL 側で処理させる
+      if (_dmaBufCallback) {
+        _dmaBufCallback(buf.index);
+      }
+
+      // バッファを再度エンキュー
+      buf.m.fd = _dmaBufFds[buf.index];  // DMABUF fd を設定
+      if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
+        RTC_LOG(LS_INFO) << "DMABUF: Failed to enqueue buffer";
+      }
+    }
+  }
+  usleep(0);
+  return true;
 }
 
 }  // namespace sora

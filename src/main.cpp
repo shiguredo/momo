@@ -60,6 +60,12 @@
 #include "sora/cuda_context.h"
 #endif
 
+#if defined(USE_VPL_ENCODER) && defined(__linux__)
+#include "sora/hwenc_vpl/vpl_video_encoder.h"
+#include "sora/v4l2_vpl_capturer.h"
+#include "sora/vpl_session.h"
+#endif
+
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 int main(int argc, char* argv[]) {
@@ -103,6 +109,21 @@ int main(int argc, char* argv[]) {
     std::cerr << "Specified --hw-mjpeg-decoder=true but CUDA is invalid."
               << std::endl;
     return 2;
+  }
+#endif
+
+#if defined(USE_VPL_ENCODER) && defined(__linux__)
+  // VPL DMABUF モード用のセッションとエンコーダー
+  std::shared_ptr<sora::VplSession> vpl_session;
+  std::shared_ptr<sora::VplVideoEncoder> vpl_encoder;
+
+  if (args.use_vpl_dmabuf) {
+    vpl_session = sora::VplSession::Create();
+    if (!vpl_session) {
+      std::cerr << "Failed to create VPL session for DMABUF mode" << std::endl;
+      return 1;
+    }
+    RTC_LOG(LS_INFO) << "VPL DMABUF mode enabled";
   }
 #endif
 
@@ -152,6 +173,47 @@ int main(int argc, char* argv[]) {
         v4l2_config.force_i420 = args.force_i420;
         v4l2_config.force_yuy2 = args.force_yuy2;
         v4l2_config.use_native = args.hw_mjpeg_decoder;
+
+#if defined(USE_VPL_ENCODER) && defined(__linux__)
+        // VPL DMABUF モードの処理
+        if (args.use_vpl_dmabuf && vpl_session) {
+          // AV1 エンコーダーを作成（他のコーデックも選択可能）
+          webrtc::VideoCodecType codec_type = webrtc::kVideoCodecAV1;
+          if (args.sora_video_codec_type == "H264") {
+            codec_type = webrtc::kVideoCodecH264;
+          } else if (args.sora_video_codec_type == "H265") {
+            codec_type = webrtc::kVideoCodecH265;
+          }
+
+          vpl_encoder = sora::VplVideoEncoder::Create(vpl_session, codec_type);
+          if (vpl_encoder) {
+            // エンコーダー初期化
+            webrtc::VideoCodec codec_settings;
+            codec_settings.codecType = codec_type;
+            codec_settings.width = size.width;
+            codec_settings.height = size.height;
+            codec_settings.maxFramerate = args.framerate;
+            codec_settings.startBitrate = 1000;
+            codec_settings.maxBitrate = 5000;
+
+            if (vpl_encoder->InitEncode(&codec_settings, 1, 0) ==
+                WEBRTC_VIDEO_CODEC_OK) {
+              if (vpl_encoder->EnableDmaBufMode()) {
+                // DMABUF モードが有効化されたら、V4L2 キャプチャを作成
+                v4l2_config.force_yuy2 = true;  // YUY2 を強制
+                RTC_LOG(LS_INFO)
+                    << "Creating V4L2 capturer with VPL DMABUF zero-copy";
+                return sora::V4L2VplCapturer::CreateWithVplEncoder(v4l2_config,
+                                                                   vpl_encoder);
+              }
+            }
+          }
+          // DMABUF モードが失敗したら通常モードにフォールバック
+          std::cerr << "Warning: Failed to enable VPL DMABUF mode, falling "
+                       "back to normal mode"
+                    << std::endl;
+        }
+#endif
 
 #if defined(USE_JETSON_ENCODER)
         if (v4l2_config.use_native) {

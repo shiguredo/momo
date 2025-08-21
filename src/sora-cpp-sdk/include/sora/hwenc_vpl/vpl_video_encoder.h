@@ -18,6 +18,10 @@ class VplVideoEncoder : public webrtc::VideoEncoder {
   static std::unique_ptr<VplVideoEncoder> Create(
       std::shared_ptr<VplSession> session,
       webrtc::VideoCodecType codec);
+
+  // DMABUF サポート
+  virtual std::vector<int> GetDmaBufFds() const { return {}; }
+  virtual bool EnableDmaBufMode() { return false; }
 };
 
 }  // namespace sora

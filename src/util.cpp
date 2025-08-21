@@ -96,12 +96,10 @@ void Util::ParseArgs(int argc,
   app.add_flag("--fake-capture-device", args.fake_capture_device,
                "Use fake video capture device instead of real camera");
 #endif
-  app.add_flag(
-      "--force-i420", args.force_i420,
-      "Force I420 format for video capture (fails if not available)");
-  app.add_flag(
-      "--force-yuy2", args.force_yuy2,
-      "Force YUY2 format for video capture (fails if not available)")
+  app.add_flag("--force-i420", args.force_i420,
+               "Force I420 format for video capture (fails if not available)");
+  app.add_flag("--force-yuy2", args.force_yuy2,
+               "Force YUY2 format for video capture (fails if not available)")
       ->excludes("--force-i420");  // force-i420 と force-yuy2 は同時指定不可
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
@@ -115,6 +113,11 @@ void Util::ParseArgs(int argc,
   app.add_option("--libcamera-control", args.libcamera_controls,
                  "Set libcamera control (format: key value)")
       ->allow_extra_args();
+#if defined(USE_VPL_ENCODER) && defined(__linux__)
+  app.add_flag("--use-vpl-dmabuf", args.use_vpl_dmabuf,
+               "Use Intel VPL with V4L2 DMABUF for zero-copy video pipeline "
+               "(Ubuntu 24.04 x86_64 with Intel GPU only)");
+#endif
 
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,

@@ -52,6 +52,16 @@
 #include "sora/vpl_session.h"
 #include "vpl_utils.h"
 
+// VA-API for DMABUF support
+#ifdef __linux__
+#include <fcntl.h>
+#include <unistd.h>
+#include <va/va.h>
+#include <va/va_drm.h>
+#include "sora/hwenc_vpl/vpl_frame_allocator.h"
+#include "sora/hwenc_vpl/vpl_video_processor.h"
+#endif
+
 namespace sora {
 
 class VplVideoEncoderImpl : public VplVideoEncoder {
@@ -70,6 +80,10 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
       const std::vector<webrtc::VideoFrameType>* frame_types) override;
   void SetRates(const RateControlParameters& parameters) override;
   webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
+
+  // DMABUF サポート
+  std::vector<int> GetDmaBufFds() const override;
+  bool EnableDmaBufMode() override;
 
   static std::unique_ptr<MFXVideoENCODE> CreateEncoder(
       std::shared_ptr<VplSession> session,
@@ -128,6 +142,17 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   std::vector<uint8_t> surface_buffer_;
   std::vector<mfxFrameSurface1> surfaces_;
 
+#ifdef __linux__
+  // DMABUF サポート用
+  std::unique_ptr<VplFrameAllocator> frame_allocator_;
+  std::unique_ptr<VplVideoProcessor> vpp_;  // VPP プロセッサ
+  VADisplay va_display_ = nullptr;
+  bool use_dmabuf_ = false;
+  std::vector<int> dmabuf_fds_;
+  int current_vpp_surface_index_ =
+      0;  // 現在処理中の VPP サーフェースインデックス
+#endif
+
   std::shared_ptr<VplSession> session_;
   mfxU32 codec_;
   mfxFrameAllocRequest alloc_request_;
@@ -137,6 +162,13 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   mfxFrameInfo frame_info_;
 
   int key_frame_interval_ = 0;
+
+  // DMABUF fd を取得
+  std::vector<int> GetDmaBufFds() const;
+  // DMABUF モードを有効化
+  bool EnableDmaBufMode();
+  // VPP サーフェースが準備できたときの処理
+  void OnVppSurfaceReady(int surface_index);
 };
 
 const int kLowH264QpThreshold = 34;
@@ -765,7 +797,18 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   bitstream_.MaxLength = bitstream_buffer_.size();
   bitstream_.Data = bitstream_buffer_.data();
 
-  // 必要な枚数分の入力サーフェスを作る
+#ifdef __linux__
+  // DMABUF モードの初期化を試みる
+  if (EnableDmaBufMode()) {
+    RTC_LOG(LS_INFO) << "Using DMABUF mode for zero-copy";
+    // DMABUF モードではフレームアロケータがサーフェースを管理
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  RTC_LOG(LS_INFO)
+      << "DMABUF mode not available, falling back to system memory";
+#endif
+
+  // 必要な枚数分の入力サーフェスを作る（システムメモリ）
   {
     int width = (alloc_request_.Info.Width + 31) / 32 * 32;
     int height = (alloc_request_.Info.Height + 31) / 32 * 32;
@@ -795,6 +838,19 @@ int32_t VplVideoEncoderImpl::ReleaseVpl() {
     encoder_->Close();
   }
   encoder_.reset();
+
+#ifdef __linux__
+  if (use_dmabuf_) {
+    frame_allocator_.reset();
+    if (va_display_) {
+      vaTerminate(va_display_);
+      va_display_ = nullptr;
+    }
+    dmabuf_fds_.clear();
+    use_dmabuf_ = false;
+  }
+#endif
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -822,6 +878,157 @@ std::unique_ptr<VplVideoEncoder> VplVideoEncoder::Create(
     webrtc::VideoCodecType codec) {
   return std::unique_ptr<VplVideoEncoder>(
       new VplVideoEncoderImpl(session, ToMfxCodec(codec)));
+}
+
+bool VplVideoEncoderImpl::EnableDmaBufMode() {
+#ifdef __linux__
+  // VA-API ディスプレイをオープン
+  int drm_fd = open("/dev/dri/renderD128", O_RDWR);
+  if (drm_fd < 0) {
+    // renderD129 を試す
+    drm_fd = open("/dev/dri/renderD129", O_RDWR);
+    if (drm_fd < 0) {
+      RTC_LOG(LS_WARNING) << "Failed to open DRM device";
+      return false;
+    }
+  }
+
+  va_display_ = vaGetDisplayDRM(drm_fd);
+  if (!va_display_) {
+    RTC_LOG(LS_WARNING) << "Failed to get VA display";
+    close(drm_fd);
+    return false;
+  }
+
+  int major, minor;
+  VAStatus va_status = vaInitialize(va_display_, &major, &minor);
+  if (va_status != VA_STATUS_SUCCESS) {
+    RTC_LOG(LS_WARNING) << "Failed to initialize VA display: " << va_status;
+    close(drm_fd);
+    return false;
+  }
+
+  // フレームアロケータを作成
+  frame_allocator_ = std::make_unique<VplFrameAllocator>();
+  mfxStatus sts = frame_allocator_->Init(va_display_);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "Failed to init frame allocator: " << sts;
+    vaTerminate(va_display_);
+    close(drm_fd);
+    return false;
+  }
+
+  // VPP を初期化 (YUY2 -> NV12 変換)
+  vpp_ = std::make_unique<VplVideoProcessor>(session_);
+  if (!vpp_->Init(width_, height_, framerate_)) {
+    RTC_LOG(LS_WARNING) << "Failed to init VPP";
+    vaTerminate(va_display_);
+    close(drm_fd);
+    return false;
+  }
+
+  // VPP にフレームアロケータを設定
+  if (!vpp_->SetFrameAllocator(frame_allocator_.get())) {
+    RTC_LOG(LS_WARNING) << "Failed to set frame allocator to VPP";
+    vaTerminate(va_display_);
+    close(drm_fd);
+    return false;
+  }
+
+  // エンコーダーにフレームアロケータを設定
+  sts = encoder_->SetFrameAllocator(frame_allocator_.get());
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "Failed to set frame allocator to encoder: " << sts;
+    vaTerminate(va_display_);
+    close(drm_fd);
+    return false;
+  }
+
+  // エンコーダー用の NV12 サーフェースを作成
+  mfxFrameAllocRequest encoder_request;
+  memset(&encoder_request, 0, sizeof(encoder_request));
+  encoder_request.Info = alloc_request_.Info;
+  encoder_request.Info.FourCC = MFX_FOURCC_NV12;  // NV12 フォーマット
+  encoder_request.NumFrameSuggested = alloc_request_.NumFrameSuggested;
+  encoder_request.Type = MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET;
+
+  mfxFrameAllocResponse encoder_response;
+  sts = frame_allocator_->Alloc(&encoder_request, &encoder_response);
+  if (sts != MFX_ERR_NONE) {
+    RTC_LOG(LS_WARNING) << "Failed to allocate encoder surfaces: " << sts;
+    vaTerminate(va_display_);
+    close(drm_fd);
+    return false;
+  }
+
+  // エンコーダー用サーフェースを設定
+  surfaces_.clear();
+  surfaces_.reserve(encoder_response.NumFrameActual);
+  for (int i = 0; i < encoder_response.NumFrameActual; i++) {
+    mfxFrameSurface1 surface;
+    memset(&surface, 0, sizeof(surface));
+    surface.Info = encoder_request.Info;
+    surface.Data.MemId = encoder_response.mids[i];
+    surfaces_.push_back(surface);
+  }
+
+  // V4L2 用の DMABUF fd を取得 (VPP 入力サーフェースから)
+  dmabuf_fds_.clear();
+  for (auto& surface : vpp_->GetInputSurfaces()) {
+    int fd = frame_allocator_->GetDmaBufFd(surface.Data.MemId);
+    dmabuf_fds_.push_back(fd);
+  }
+
+  use_dmabuf_ = true;
+
+  RTC_LOG(LS_INFO) << "DMABUF mode enabled with VPP: "
+                   << vpp_->GetInputSurfaces().size()
+                   << " input surfaces (YUY2), " << surfaces_.size()
+                   << " encoder surfaces (NV12)";
+  return true;
+#else
+  return false;
+#endif
+}
+
+std::vector<int> VplVideoEncoderImpl::GetDmaBufFds() const {
+#ifdef __linux__
+  return dmabuf_fds_;
+#else
+  return {};
+#endif
+}
+
+void VplVideoEncoderImpl::OnVppSurfaceReady(int surface_index) {
+#ifdef __linux__
+  if (!use_dmabuf_ || !vpp_) {
+    return;
+  }
+
+  // VPP 入力サーフェースを取得
+  auto& input_surfaces = vpp_->GetInputSurfaces();
+  if (surface_index >= input_surfaces.size()) {
+    RTC_LOG(LS_ERROR) << "Invalid surface index: " << surface_index;
+    return;
+  }
+
+  mfxFrameSurface1* input_surface = &input_surfaces[surface_index];
+  mfxFrameSurface1* output_surface = nullptr;
+
+  // VPP で YUY2 -> NV12 変換
+  mfxStatus sts = vpp_->ProcessFrame(input_surface, &output_surface);
+  if (sts != MFX_ERR_NONE || !output_surface) {
+    RTC_LOG(LS_ERROR) << "VPP ProcessFrame failed: " << sts;
+    return;
+  }
+
+  // エンコーダーで NV12 -> AV1/H264/H265 エンコード
+  // (ここではサーフェースをキューに追加するだけ)
+  current_vpp_surface_index_ = surface_index;
+
+  // TODO: エンコーダーの Encode メソッドを呼び出す
+  // ここで output_surface を使ってエンコード処理を実行
+#endif
 }
 
 }  // namespace sora
