@@ -221,6 +221,9 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   } else if (config.force_i420) {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     nFormats = 1;
+  } else if (config.force_nv12) {
+    fmts[0] = V4L2_PIX_FMT_NV12;
+    nFormats = 1;
   } else if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
@@ -287,6 +290,8 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     _captureVideoType = webrtc::VideoType::kYV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
@@ -543,7 +548,16 @@ bool V4L2VideoCapturer::CaptureProcess() {
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
 
-  if (_captureVideoType == webrtc::VideoType::kYUY2) {
+  if (_captureVideoType == webrtc::VideoType::kNV12) {
+    // NV12 の場合はそのまま使用
+    webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
+        webrtc::NV12Buffer::Create(_currentWidth, _currentHeight);
+    nv12_buffer->InitializeData();
+    memcpy(nv12_buffer->MutableDataY(), data, _currentWidth * _currentHeight);
+    memcpy(nv12_buffer->MutableDataUV(), data + _currentWidth * _currentHeight,
+           _currentWidth * _currentHeight / 2);
+    dst_buffer = nv12_buffer;
+  } else if (_captureVideoType == webrtc::VideoType::kYUY2) {
     // YUY2 の場合は NV12 に変換
     webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
         webrtc::NV12Buffer::Create(_currentWidth, _currentHeight);

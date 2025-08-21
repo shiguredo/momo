@@ -201,8 +201,14 @@ int32_t JetsonV4L2Capturer::StartCapture(
   int nFormats = 0;
   const int MaxFormats = 6;
   unsigned int fmts[MaxFormats] = {};
-  if (config.force_i420) {
+  if (config.force_yuy2) {
+    fmts[0] = V4L2_PIX_FMT_YUYV;
+    nFormats = 1;
+  } else if (config.force_i420) {
     fmts[0] = V4L2_PIX_FMT_YUV420;
+    nFormats = 1;
+  } else if (config.force_nv12) {
+    fmts[0] = V4L2_PIX_FMT_NV12;
     nFormats = 1;
   } else if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
@@ -281,6 +287,8 @@ int32_t JetsonV4L2Capturer::StartCapture(
     _captureVideoType = webrtc::VideoType::kYV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
@@ -404,6 +412,8 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
       params.colorFormat = NVBUF_COLOR_FORMAT_YVU420;
     else if (_captureVideoType == webrtc::VideoType::kUYVY)
       params.colorFormat = NVBUF_COLOR_FORMAT_UYVY;
+    else if (_captureVideoType == webrtc::VideoType::kNV12)
+      params.colorFormat = NVBUF_COLOR_FORMAT_NV12;
     params.memtag = NvBufSurfaceTag_CAMERA;
     if (NvBufSurf::NvAllocate(&params, rbuffer.count, fds.get())) {
       return false;

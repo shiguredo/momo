@@ -103,6 +103,11 @@ void Util::ParseArgs(int argc,
       "--force-yuy2", args.force_yuy2,
       "Force YUY2 format for video capture (fails if not available)")
       ->excludes("--force-i420");  // force-i420 と force-yuy2 は同時指定不可
+  app.add_flag(
+      "--force-nv12", args.force_nv12,
+      "Force NV12 format for video capture (fails if not available)")
+      ->excludes("--force-i420")
+      ->excludes("--force-yuy2");  // force-nv12 は他の force オプションと同時指定不可
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
          "Perform MJPEG deoode and video resize by hardware acceleration "

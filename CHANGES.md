@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] `--force-nv12` オプションを追加
+  - V4L2 キャプチャーで NV12 フォーマットの使用を強制
+  - NV12 が利用できない場合はエラーで停止
+  - NV12 フォーマットは変換せずそのまま使用
+  - @voluntas
 - [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
   - @melpon
 - [ADD] `--force-yuy2` オプションを追加
