@@ -11,18 +11,15 @@
 
 ## develop
 
-- [UPDATE] Intel VPL エンコーダーで YUY2 から NV12 への直接変換するようにする
-  - NativeBuffer が YUY2 フォーマットの場合、中間の I420 変換をスキップする
-  - YUY2 → I420 → NV12 の2段階変換を YUY2 -> NV12 の1段階変換に最適化
-  - メモリ帯域幅と CPU 負荷を削減しエンコード性能を向上
-  - @voluntas
+- [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
+  - @melpon
 - [ADD] `--force-yuy2` オプションを追加
   - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
   - YUY2 が利用できない場合はエラーで停止
-  - @voluntas
+  - @melpon @voluntas
 - [CHANGE] `--force-i420` オプションの挙動を変更
   - I420 が利用できない場合はフォールバックせずエラーで停止するように
-  - @voluntas
+  - @melpon @voluntas
 - [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
   - 高フレームレートカメラのサポートを改善
   - @voluntas
