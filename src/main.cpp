@@ -64,7 +64,7 @@
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
 #include "sora/v4l2_vpl_capturer.h"
 #include "sora/vpl_session.h"
-#include <api/video_codecs/video_encoder.h>
+#include <modules/video_coding/include/video_error_codes.h>
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
