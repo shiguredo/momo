@@ -49,7 +49,6 @@
 #include <libyuv/convert.h>
 #include <libyuv/rotate.h>
 
-#include "rtc/native_buffer.h"
 #include "sora/scalable_track_source.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
@@ -557,7 +556,6 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
     } else {
       dst_buffer = nv12_buffer;
     }
-    RTC_LOG(LS_VERBOSE) << "Using NativeBuffer for YUY2 data (no conversion)";
   } else {
     // YUY2 以外の場合は I420 に変換
     webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
