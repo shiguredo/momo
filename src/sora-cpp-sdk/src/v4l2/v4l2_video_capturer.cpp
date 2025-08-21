@@ -609,6 +609,21 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
 
 bool V4L2VideoCapturer::AllocateDmaBufVideoBuffers(
     const std::vector<int>& dmabuf_fds) {
+  RTC_LOG(LS_INFO) << "AllocateDmaBufVideoBuffers: Starting DMABUF allocation"
+                   << ", dmabuf_fds.size()=" << dmabuf_fds.size()
+                   << ", width=" << _currentWidth
+                   << ", height=" << _currentHeight
+                   << ", format=" << static_cast<int>(_captureVideoType);
+  
+  // DMABUF fd が有効か確認
+  for (size_t i = 0; i < dmabuf_fds.size(); i++) {
+    RTC_LOG(LS_INFO) << "DMABUF fd[" << i << "]=" << dmabuf_fds[i];
+    if (dmabuf_fds[i] < 0) {
+      RTC_LOG(LS_ERROR) << "Invalid DMABUF fd at index " << i;
+      return false;
+    }
+  }
+  
   struct v4l2_requestbuffers rbuffer;
   memset(&rbuffer, 0, sizeof(v4l2_requestbuffers));
 
@@ -617,11 +632,12 @@ bool V4L2VideoCapturer::AllocateDmaBufVideoBuffers(
   rbuffer.count = dmabuf_fds.size();
 
   if (ioctl(_deviceFd, VIDIOC_REQBUFS, &rbuffer) < 0) {
-    RTC_LOG(LS_INFO) << "Could not request DMABUF buffers from device. errno = "
-                     << errno;
+    RTC_LOG(LS_ERROR) << "Could not request DMABUF buffers from device. errno = "
+                     << errno << " (" << strerror(errno) << ")";
     return false;
   }
 
+  RTC_LOG(LS_INFO) << "VIDIOC_REQBUFS succeeded, allocated count=" << rbuffer.count;
   _buffersAllocatedByDevice = rbuffer.count;
 
   // DMABUF バッファをキューに追加
@@ -633,12 +649,28 @@ bool V4L2VideoCapturer::AllocateDmaBufVideoBuffers(
     buf.memory = V4L2_MEMORY_DMABUF;
     buf.index = i;
     buf.m.fd = dmabuf_fds[i];  // DMABUF fd を設定
+    
+    // デバッグ: バッファ情報を出力
+    RTC_LOG(LS_INFO) << "Queueing DMABUF buffer " << i
+                     << ": index=" << buf.index
+                     << ", fd=" << buf.m.fd
+                     << ", type=" << buf.type
+                     << ", memory=" << buf.memory;
 
     if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to queue DMABUF buffer " << i
-                        << ", errno = " << errno << " (" << strerror(errno) << ")";
+                        << ", errno = " << errno << " (" << strerror(errno) << ")"
+                        << ", index=" << buf.index
+                        << ", fd=" << buf.m.fd;
+      
+      // エラーの詳細を確認
+      if (errno == EINVAL) {
+        RTC_LOG(LS_ERROR) << "EINVAL: Device may not support DMABUF import, "
+                         << "or buffer parameters are invalid";
+      }
       return false;
     }
+    RTC_LOG(LS_INFO) << "Successfully queued DMABUF buffer " << i;
   }
 
   RTC_LOG(LS_INFO) << "Allocated " << _buffersAllocatedByDevice

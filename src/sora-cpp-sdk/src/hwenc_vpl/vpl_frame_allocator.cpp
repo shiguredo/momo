@@ -118,6 +118,11 @@ mfxStatus VplFrameAllocator::Alloc(mfxFrameAllocRequest* request,
     // 最初のレイヤーの fd を保存
     surface->dmabuf_fd = desc.objects[0].fd;
     surfaces_.push_back(std::move(surface));
+    
+    RTC_LOG(LS_INFO) << "Exported DMABUF: surface_id=" << va_surfaces[i]
+                     << ", fd=" << desc.objects[0].fd
+                     << ", size=" << desc.objects[0].size
+                     << ", fourcc=0x" << std::hex << desc.fourcc;
 
     // 他のオブジェクトの fd をクローズ（必要に応じて）
     for (uint32_t j = 1; j < desc.num_objects; j++) {
@@ -218,6 +223,10 @@ std::vector<int> VplFrameAllocator::GetDmaBufFds() {
   fds.reserve(surfaces_.size());
   for (const auto& surface : surfaces_) {
     fds.push_back(surface->dmabuf_fd);
+  }
+  RTC_LOG(LS_INFO) << "GetDmaBufFds: returning " << fds.size() << " fds";
+  for (size_t i = 0; i < fds.size(); i++) {
+    RTC_LOG(LS_INFO) << "  fd[" << i << "]=" << fds[i];
   }
   return fds;
 }
