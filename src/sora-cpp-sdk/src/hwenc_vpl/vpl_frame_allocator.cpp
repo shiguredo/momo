@@ -12,28 +12,32 @@ namespace sora {
 
 VplFrameAllocator::VplFrameAllocator() : va_display_(nullptr) {
   // 基本クラスのコールバック関数ポインタを設定
-  Alloc = [](mfxHDL pthis, mfxFrameAllocRequest* request,
-             mfxFrameAllocResponse* response) -> mfxStatus {
+  mfxFrameAllocator::Alloc = [](mfxHDL pthis, mfxFrameAllocRequest* request,
+                                 mfxFrameAllocResponse* response) -> mfxStatus {
     return static_cast<VplFrameAllocator*>(pthis)->Alloc(request, response);
   };
 
-  Lock = [](mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) -> mfxStatus {
+  mfxFrameAllocator::Lock = [](mfxHDL pthis, mfxMemId mid,
+                                mfxFrameData* ptr) -> mfxStatus {
     return static_cast<VplFrameAllocator*>(pthis)->Lock(mid, ptr);
   };
 
-  Unlock = [](mfxHDL pthis, mfxMemId mid, mfxFrameData* ptr) -> mfxStatus {
+  mfxFrameAllocator::Unlock = [](mfxHDL pthis, mfxMemId mid,
+                                  mfxFrameData* ptr) -> mfxStatus {
     return static_cast<VplFrameAllocator*>(pthis)->Unlock(mid, ptr);
   };
 
-  GetHDL = [](mfxHDL pthis, mfxMemId mid, mfxHDL* handle) -> mfxStatus {
+  mfxFrameAllocator::GetHDL = [](mfxHDL pthis, mfxMemId mid,
+                                  mfxHDL* handle) -> mfxStatus {
     return static_cast<VplFrameAllocator*>(pthis)->GetHDL(mid, handle);
   };
 
-  Free = [](mfxHDL pthis, mfxFrameAllocResponse* response) -> mfxStatus {
+  mfxFrameAllocator::Free = [](mfxHDL pthis,
+                                mfxFrameAllocResponse* response) -> mfxStatus {
     return static_cast<VplFrameAllocator*>(pthis)->Free(response);
   };
 
-  pthis = this;
+  mfxFrameAllocator::pthis = this;
 }
 
 VplFrameAllocator::~VplFrameAllocator() {

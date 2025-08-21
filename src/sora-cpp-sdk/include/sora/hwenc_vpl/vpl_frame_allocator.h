@@ -31,11 +31,11 @@ class VplFrameAllocator : public mfxFrameAllocator {
 
   // mfxFrameAllocator インターフェース実装
   mfxStatus Alloc(mfxFrameAllocRequest* request,
-                  mfxFrameAllocResponse* response) override;
-  mfxStatus Lock(mfxMemId mid, mfxFrameData* ptr) override;
-  mfxStatus Unlock(mfxMemId mid, mfxFrameData* ptr) override;
-  mfxStatus GetHDL(mfxMemId mid, mfxHDL* handle) override;
-  mfxStatus Free(mfxFrameAllocResponse* response) override;
+                  mfxFrameAllocResponse* response);
+  mfxStatus Lock(mfxMemId mid, mfxFrameData* ptr);
+  mfxStatus Unlock(mfxMemId mid, mfxFrameData* ptr);
+  mfxStatus GetHDL(mfxMemId mid, mfxHDL* handle);
+  mfxStatus Free(mfxFrameAllocResponse* response);
 
  private:
   struct Surface {

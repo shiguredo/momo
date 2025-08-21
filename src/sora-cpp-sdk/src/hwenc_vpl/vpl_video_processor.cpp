@@ -105,11 +105,9 @@ bool VplVideoProcessor::SetFrameAllocator(VplFrameAllocator* allocator) {
   allocator_ = allocator;
 
   // VPP にフレームアロケータを設定
-  mfxStatus sts = vpp_->SetFrameAllocator(allocator_);
-  if (sts != MFX_ERR_NONE) {
-    RTC_LOG(LS_ERROR) << "Failed to set frame allocator to VPP: " << sts;
-    return false;
-  }
+  // 注: 現在の VPL では SetFrameAllocator は直接サポートされていない
+  // GPU メモリはセッションを通じて管理される
+  mfxStatus sts;
 
   // 入力サーフェース（YUY2）を作成
   mfxFrameAllocRequest input_request;

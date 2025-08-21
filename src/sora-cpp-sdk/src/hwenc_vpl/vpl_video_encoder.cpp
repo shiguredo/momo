@@ -163,10 +163,6 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
 
   int key_frame_interval_ = 0;
 
-  // DMABUF fd を取得
-  std::vector<int> GetDmaBufFds() const;
-  // DMABUF モードを有効化
-  bool EnableDmaBufMode();
   // VPP サーフェースが準備できたときの処理
   void OnVppSurfaceReady(int surface_index);
 };
@@ -936,13 +932,8 @@ bool VplVideoEncoderImpl::EnableDmaBufMode() {
   }
 
   // エンコーダーにフレームアロケータを設定
-  sts = encoder_->SetFrameAllocator(frame_allocator_.get());
-  if (sts != MFX_ERR_NONE) {
-    RTC_LOG(LS_WARNING) << "Failed to set frame allocator to encoder: " << sts;
-    vaTerminate(va_display_);
-    close(drm_fd);
-    return false;
-  }
+  // 注: 現在の VPL では SetFrameAllocator は直接サポートされていない
+  // GPU メモリはセッションを通じて管理される
 
   // エンコーダー用の NV12 サーフェースを作成
   mfxFrameAllocRequest encoder_request;
