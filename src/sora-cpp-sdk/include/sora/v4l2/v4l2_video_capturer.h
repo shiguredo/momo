@@ -34,6 +34,7 @@ struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
   int framerate = 30;
   bool force_i420 = false;
   bool force_yuy2 = false;
+  bool force_nv12 = false;
   bool use_native = false;
 };
 
