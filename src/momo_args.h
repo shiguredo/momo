@@ -23,6 +23,7 @@ struct MomoArgs {
 #endif
   bool force_i420 = false;
   bool force_yuy2 = false;
+  bool force_nv12 = false;
   // Jetson の場合だけデフォルト true
 #if defined(USE_JETSON_ENCODER)
   bool hw_mjpeg_decoder = true;
