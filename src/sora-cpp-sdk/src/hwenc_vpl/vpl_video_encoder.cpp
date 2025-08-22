@@ -243,6 +243,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
   param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
 
+  // キーフレーム間隔を 20 秒に設定（120fps の場合 2400 フレーム）
+  // GopPicSize: GOP 内のピクチャ数
+  // IdrInterval: IDR フレームの間隔（I フレーム単位）
+  param.mfx.GopPicSize = framerate * 20;  // 20 秒分のフレーム数
+  param.mfx.IdrInterval = 0;  // すべての I フレームを IDR フレームにする
   param.mfx.GopRefDist = 1;
   param.AsyncDepth = 1;
   param.IOPattern =
