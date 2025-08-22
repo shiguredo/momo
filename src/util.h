@@ -42,7 +42,7 @@ class Util {
       boost::beast::string_view what);
 
  private:
-  static void ShowVideoCodecs(VideoCodecInfo info);
+  static void ShowVideoCodecs(VideoCodecInfo info, const std::string& openh264);
 };
 
 // boost::system::error_code のエラーをいい感じに出力するマクロ

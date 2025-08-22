@@ -394,7 +394,7 @@ void Util::ParseArgs(int argc,
   }
 
   if (video_codecs) {
-    ShowVideoCodecs(VideoCodecInfo::Get());
+    ShowVideoCodecs(VideoCodecInfo::Get(), args.openh264);
     exit(0);
   }
 
@@ -416,7 +416,7 @@ void Util::ParseArgs(int argc,
   }
 }
 
-void Util::ShowVideoCodecs(VideoCodecInfo info) {
+void Util::ShowVideoCodecs(VideoCodecInfo info, const std::string& openh264) {
   // VP8:
   //   Encoder:
   //     - Software (default)
@@ -466,7 +466,33 @@ void Util::ShowVideoCodecs(VideoCodecInfo info) {
   std::cout << "" << std::endl;
   std::cout << "H264:" << std::endl;
   std::cout << "  Encoder:" << std::endl;
-  list_codecs(info.h264_encoders);
+  if (!openh264.empty()) {
+    // OpenH264 が指定されている場合、Software エンコーダに OpenH264 を明示
+    std::vector<VideoCodecInfo::Type> h264_encoders_with_openh264;
+    for (auto type : info.h264_encoders) {
+      h264_encoders_with_openh264.push_back(type);
+    }
+    // Software エンコーダの表示を変更
+    if (h264_encoders_with_openh264.empty()) {
+      std::cout << "    *UNAVAILABLE*" << std::endl;
+    } else {
+      for (int i = 0; i < h264_encoders_with_openh264.size(); i++) {
+        auto type = h264_encoders_with_openh264[i];
+        auto p = VideoCodecInfo::TypeToString(type);
+        if (type == VideoCodecInfo::Type::Software) {
+          std::cout << "    - OpenH264 [openh264]";
+        } else {
+          std::cout << "    - " << p.first << " [" << p.second << "]";
+        }
+        if (i == 0) {
+          std::cout << " (default)";
+        }
+        std::cout << std::endl;
+      }
+    }
+  } else {
+    list_codecs(info.h264_encoders);
+  }
   std::cout << "  Decoder:" << std::endl;
   list_codecs(info.h264_decoders);
   std::cout << "" << std::endl;
