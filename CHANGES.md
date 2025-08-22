@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] `--openh264` オプション指定時に `--video-codec-engines` で OpenH264 が表示されない問題を修正
+  - `--openh264` でライブラリパスを指定した場合、H264 エンコーダーの Software を OpenH264 として表示するように修正
+  - @voluntas
 - [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
   - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
   - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
