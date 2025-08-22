@@ -553,10 +553,16 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
     webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
         webrtc::NV12Buffer::Create(_currentWidth, _currentHeight);
     nv12_buffer->InitializeData();
-    memcpy(nv12_buffer->MutableDataY(), data, _currentWidth * _currentHeight);
-    memcpy(nv12_buffer->MutableDataUV(), data + _currentWidth * _currentHeight,
-           _currentWidth * _currentHeight / 2);
-    dst_buffer = nv12_buffer;
+    const uint8_t* src_y = data;
+    const uint8_t* src_uv = data + _currentWidth * _currentHeight;
+    if (libyuv::NV12Copy(src_y, _currentWidth, src_uv, _currentWidth,
+                         nv12_buffer->MutableDataY(), nv12_buffer->StrideY(),
+                         nv12_buffer->MutableDataUV(), nv12_buffer->StrideUV(),
+                         _currentWidth, _currentHeight) < 0) {
+      RTC_LOG(LS_ERROR) << "NV12Copy Failed";
+    } else {
+      dst_buffer = nv12_buffer;
+    }
   } else if (_captureVideoType == webrtc::VideoType::kYUY2) {
     // YUY2 の場合は NV12 に変換
     webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
@@ -571,7 +577,7 @@ void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
       dst_buffer = nv12_buffer;
     }
   } else {
-    // YUY2 以外の場合は I420 に変換
+    // それ以外の場合は I420 に変換
     webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
         webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
     i420_buffer->InitializeData();
