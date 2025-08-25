@@ -160,7 +160,7 @@ def test_connection_stats(
     ],
 )
 def test_simulcast(
-    http_client, sora_settings, video_codec_type, expected_encoder_implementation, free_port
+    sora_settings, video_codec_type, expected_encoder_implementation, free_port
 ):
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
@@ -450,7 +450,6 @@ def test_simulcast(
     ],
 )
 def test_sora_sendonly_recvonly_pair(
-    http_client,
     sora_settings,
     port_allocator,
     video_codec_type,

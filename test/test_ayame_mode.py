@@ -1,12 +1,48 @@
 """Ayame モードの E2E テスト"""
 
 import uuid
+from typing import Any
 
 import pytest
 
 from momo import Momo, MomoMode
 
 AYAME_SIGNALING_URL = "wss://ayame-labo.shiguredo.app/signaling"
+
+
+def find_stats(metrics_data: dict[str, Any], **filters) -> dict[str, Any] | None:
+    """メトリクスデータから指定した条件に合う最初の統計情報を検索
+    
+    Args:
+        metrics_data: get_metrics() で取得したメトリクスデータ
+        **filters: 検索条件（例: type="outbound-rtp", kind="video"）
+    
+    Returns:
+        条件に合う統計情報、見つからない場合は None
+    """
+    stats = metrics_data.get("stats", [])
+    return next(
+        (stat for stat in stats 
+         if all(stat.get(key) == value for key, value in filters.items())),
+        None
+    )
+
+
+def find_all_stats(metrics_data: dict[str, Any], **filters) -> list[dict[str, Any]]:
+    """メトリクスデータから指定した条件に合う全ての統計情報を検索
+    
+    Args:
+        metrics_data: get_metrics() で取得したメトリクスデータ
+        **filters: 検索条件（例: type="codec"）
+    
+    Returns:
+        条件に合う統計情報のリスト
+    """
+    stats = metrics_data.get("stats", [])
+    return [
+        stat for stat in stats 
+        if all(stat.get(key) == value for key, value in filters.items())
+    ]
 
 
 def test_ayame_mode_basic(free_port, port_allocator):
@@ -99,7 +135,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
         fake_capture_device=True,
         resolution="QVGA",
         **codec_settings,
-    ) as peer1:
+    ) as m1:
         with Momo(
             mode=MomoMode.AYAME,
             ayame_signaling_url=AYAME_SIGNALING_URL,
@@ -109,59 +145,45 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             fake_capture_device=True,
             resolution="QVGA",
             **codec_settings,
-        ) as peer2:
-            # 接続が確立されるまで待機（片方が繋がれば両方繋がるはず）
-            assert peer1.wait_for_connection(timeout=10), \
-                f"Failed to establish peer connection for {codec} codec within timeout"
+        ) as m2:
+            # 両方のピアの接続が確立されるまで待機
+            assert m1.wait_for_connection(timeout=10), \
+                f"M1 failed to establish connection for {codec} codec within timeout"
+            assert m2.wait_for_connection(timeout=10), \
+                f"M2 failed to establish connection for {codec} codec within timeout"
             
-            peer1_data = peer1.get_metrics()
-            peer2_data = peer2.get_metrics()
+            p1_data = m1.get_metrics()
+            p2_data = m2.get_metrics()
             
-            # peer1 の outbound-rtp でコーデックを確認
-            peer1_outbound = next(
-                (stat for stat in peer1_data["stats"] 
-                 if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            assert peer1_outbound is not None, "Could not find peer1 outbound-rtp video stream"
+            # p1 の outbound-rtp でコーデックを確認
+            assert (p1_outbound := find_stats(p1_data, type="outbound-rtp", kind="video")) is not None, \
+                "Could not find p1 outbound-rtp video stream"
             
-            codec_id = peer1_outbound.get("codecId")
-            assert codec_id is not None, "No codecId found in peer1 outbound-rtp stats"
+            assert (codec_id := p1_outbound.get("codecId")) is not None, \
+                "No codecId found in p1 outbound-rtp stats"
             
             # codecId から codec 統計を探す
-            peer1_codec = next(
-                (stat for stat in peer1_data["stats"] 
-                 if stat.get("id") == codec_id and stat.get("type") == "codec"),
-                None
-            )
-            assert peer1_codec is not None, f"Could not find codec stats for codecId: {codec_id}"
+            assert (p1_codec := find_stats(p1_data, id=codec_id, type="codec")) is not None, \
+                f"Could not find codec stats for codecId: {codec_id}"
             
-            mime_type = peer1_codec.get("mimeType", "")
+            mime_type = p1_codec.get("mimeType", "")
             assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
-            print(f"Peer1 codec for {codec}: {mime_type}")
+            print(f"P1 codec for {codec}: {mime_type}")
             
-            # peer2 の outbound-rtp でもコーデックを確認（双方向通信なので）
-            peer2_outbound = next(
-                (stat for stat in peer2_data["stats"] 
-                 if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            assert peer2_outbound is not None, "Could not find peer2 outbound-rtp video stream"
+            # p2 の outbound-rtp でもコーデックを確認（双方向通信なので）
+            assert (p2_outbound := find_stats(p2_data, type="outbound-rtp", kind="video")) is not None, \
+                "Could not find p2 outbound-rtp video stream"
             
-            codec_id = peer2_outbound.get("codecId")
-            assert codec_id is not None, "No codecId found in peer2 outbound-rtp stats"
+            assert (codec_id := p2_outbound.get("codecId")) is not None, \
+                "No codecId found in p2 outbound-rtp stats"
             
             # codecId から codec 統計を探す
-            peer2_codec = next(
-                (stat for stat in peer2_data["stats"] 
-                 if stat.get("id") == codec_id and stat.get("type") == "codec"),
-                None
-            )
-            assert peer2_codec is not None, f"Could not find codec stats for codecId: {codec_id}"
+            assert (p2_codec := find_stats(p2_data, id=codec_id, type="codec")) is not None, \
+                f"Could not find codec stats for codecId: {codec_id}"
             
-            mime_type = peer2_codec.get("mimeType", "")
+            mime_type = p2_codec.get("mimeType", "")
             assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
-            print(f"Peer2 codec for {codec}: {mime_type}")
+            print(f"P2 codec for {codec}: {mime_type}")
 
 
 def test_ayame_mode_with_audio_settings(free_port, port_allocator):
@@ -194,7 +216,7 @@ def test_ayame_mode_peer_connection(port_allocator):
         metrics_port=next(port_allocator),
         fake_capture_device=True,
         resolution="QVGA",
-    ) as peer1:
+    ) as m1:
         with Momo(
             mode=MomoMode.AYAME,
             ayame_signaling_url=AYAME_SIGNALING_URL,
@@ -203,51 +225,32 @@ def test_ayame_mode_peer_connection(port_allocator):
             metrics_port=next(port_allocator),
             fake_capture_device=True,
             resolution="QVGA",
-        ) as peer2:
-            # 接続が確立されるまで待機（片方が繋がれば両方繋がるはず）
-            assert peer1.wait_for_connection(timeout=10), \
-                "Failed to establish peer connection within timeout"
+        ) as m2:
+            # 両方のピアの接続が確立されるまで弅機
+            assert m1.wait_for_connection(timeout=10), \
+                "M1 failed to establish connection within timeout"
+            assert m2.wait_for_connection(timeout=10), \
+                "M2 failed to establish connection within timeout"
             
-            peer1_data = peer1.get_metrics()
-            peer2_data = peer2.get_metrics()
+            p1_data = m1.get_metrics()
+            p2_data = m2.get_metrics()
             
-            # stats が存在することを確認
-            assert "stats" in peer1_data
-            assert "stats" in peer2_data
-            assert len(peer1_data["stats"]) > 0
-            assert len(peer2_data["stats"]) > 0
+            # wait_for_connection が成功している時点で stats は存在しているはず
+            # p1 の送受信を確認（送信と受信の両方があるはず）
+            assert (p1_video_out := find_stats(p1_data, type="outbound-rtp", kind="video")) is not None, \
+                "P1 should have video outbound-rtp"
+            assert (p1_video_in := find_stats(p1_data, type="inbound-rtp", kind="video")) is not None, \
+                "P1 should have video inbound-rtp"
+            assert p1_video_out.get("packetsSent", 0) > 0
+            assert p1_video_in.get("packetsReceived", 0) > 0
             
-            # peer1 の送受信を確認（送信と受信の両方があるはず）
-            peer1_video_out = next(
-                (stat for stat in peer1_data["stats"] 
-                 if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            peer1_video_in = next(
-                (stat for stat in peer1_data["stats"] 
-                 if stat.get("type") == "inbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            assert peer1_video_out is not None, "Peer1 should have video outbound-rtp"
-            assert peer1_video_in is not None, "Peer1 should have video inbound-rtp"
-            assert peer1_video_out.get("packetsSent", 0) > 0
-            assert peer1_video_in.get("packetsReceived", 0) > 0
+            # p2 の送受信を確認（送信と受信の両方があるはず）
+            assert (p2_video_out := find_stats(p2_data, type="outbound-rtp", kind="video")) is not None, \
+                "P2 should have video outbound-rtp"
+            assert (p2_video_in := find_stats(p2_data, type="inbound-rtp", kind="video")) is not None, \
+                "P2 should have video inbound-rtp"
+            assert p2_video_out.get("packetsSent", 0) > 0
+            assert p2_video_in.get("packetsReceived", 0) > 0
             
-            # peer2 の送受信を確認（送信と受信の両方があるはず）
-            peer2_video_out = next(
-                (stat for stat in peer2_data["stats"] 
-                 if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            peer2_video_in = next(
-                (stat for stat in peer2_data["stats"] 
-                 if stat.get("type") == "inbound-rtp" and stat.get("kind") == "video"),
-                None
-            )
-            assert peer2_video_out is not None, "Peer2 should have video outbound-rtp"
-            assert peer2_video_in is not None, "Peer2 should have video inbound-rtp"
-            assert peer2_video_out.get("packetsSent", 0) > 0
-            assert peer2_video_in.get("packetsReceived", 0) > 0
-            
-            print(f"Peer1 video - sent: {peer1_video_out.get('packetsSent')}, received: {peer1_video_in.get('packetsReceived')}")
-            print(f"Peer2 video - sent: {peer2_video_out.get('packetsSent')}, received: {peer2_video_in.get('packetsReceived')}")
+            print(f"P1 video - sent: {p1_video_out.get('packetsSent')}, received: {p1_video_in.get('packetsReceived')}")
+            print(f"P2 video - sent: {p2_video_out.get('packetsSent')}, received: {p2_video_in.get('packetsReceived')}")
