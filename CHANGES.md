@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
+  - ダウンロード URL を https://oss-mirrors.shiguredo.jp/ に変更
+  - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
+  - @voluntas
 - [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
   - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
   - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
