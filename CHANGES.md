@@ -12,7 +12,7 @@
 ## develop
 
 - [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
-  - ダウンロード URL を https://oss-mirrors.shiguredo.jp/ に変更
+  - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
   - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
   - @voluntas
 - [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
@@ -94,8 +94,6 @@
 - [UPDATE] Boost を 1.89.0 に上げる
   - buildbase.py に SHA256 ハッシュチェック機能を追加
   - @voluntas
-- [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
-  - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
   - @melpon
 - [ADD] `--fake-capture-device` オプションを追加する
