@@ -1,28 +1,33 @@
 <!doctype html>
-<html>
+<html lang="ja">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="shortcut icon" href="#">
-    <title>Momo P2P</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="#">
+    <title>Momo P2P Test</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+      label { margin-right: 8px; }
+      select, input[type="text"], button { margin: 4px 6px 4px 0; }
+      video { border: 3px solid #888; max-width: 100%; height: auto; }
+    </style>
   </head>
   <body>
     <h3>Momo P2P</h3>
     <div>
+      <label for="codec">Video codec</label>
       <select id="codec">
-        <option value="H264">H264</option>
-        <option value="VP8">VP8</option>
-        <option value="VP9">VP9</option>
-        <option value="AV1">AV1</option>
+        <option value="">Loading...</option>
       </select>
-      <input type="button" onclick="connect();" value="Connect">
-      <input type="button" onclick="disconnect();" value="Disconnect">
-      <input type="button" onclick="play();" value="Play">
-      <input type="text" id="data_text">
-      <input type="button" onclick="sendDataChannel();" value="Send">
+      <button id="btnConnect" type="button">Connect</button>
+      <button id="btnDisconnect" type="button">Disconnect</button>
+      <button id="btnPlay" type="button">Play</button>
+      <input type="text" id="data_text" placeholder="Message via DataChannel">
+      <button id="btnSend" type="button">Send</button>
     </div>
     <div>
-      <video id="remote_video" autoplay style="border: 3px solid gray;"></video>
+      <video id="remote_video" autoplay muted playsinline></video>
     </div>
-    <script type='text/javascript' src='./webrtc.js'></script>
+    <script src="./webrtc.js"></script>
   </body>
-</html>
+ </html>
