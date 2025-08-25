@@ -11,7 +11,7 @@ on:
       - "LICENSE"
       - "NOTICE"
       - "test/**"
-      - ".github/workflows/e2e-test.yml"
+      - ".github/workflows/e2e-test-only.yml"
       - ".github/workflows/claude.yml"
   schedule:
     # UTC の 01:00 は JST だと 10:00 。
@@ -32,7 +32,7 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - name: Get Versions
         run: |
-          Get-Content "VERSION" | Foreach-Object {
+          Get-Content "DEPS" | Foreach-Object {
             if (!$_) { continue }
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
@@ -155,7 +155,7 @@ jobs:
           EOF
       - name: Install deps for ${{ matrix.name }}
         run: |
-          source VERSION
+          source DEPS
           # clang-20 と CUDA を入れる
           sudo apt-get update
           sudo apt-get install -y software-properties-common

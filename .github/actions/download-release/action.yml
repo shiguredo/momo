@@ -1,0 +1,53 @@
+name: download-release
+description: 'Download and extract momo binary from the latest GitHub release'
+
+inputs:
+  platform:
+    description: 'Platform name (e.g. ubuntu-24.04_x86_64)'
+    required: true
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+
+outputs:
+  release-tag:
+    description: 'The tag of the downloaded release'
+    value: ${{ steps.latest_release.outputs.tag }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get latest release tag
+      id: latest_release
+      run: |
+        LATEST_TAG=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+        echo "Latest release tag: $LATEST_TAG"
+        echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+    
+    - name: Download momo binary from release
+      run: |
+        gh release download ${{ steps.latest_release.outputs.tag }} \
+          --pattern "momo-${{ steps.latest_release.outputs.tag }}_${{ inputs.platform }}.tar.gz" \
+          --clobber
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+    
+    - name: Extract momo binary
+      run: |
+        tar -xzf momo-${{ steps.latest_release.outputs.tag }}_${{ inputs.platform }}.tar.gz
+        
+        # ビルドディレクトリ構造を再現
+        TARGET="${{ inputs.platform }}"
+        mkdir -p _build/$TARGET/release
+        
+        # 展開されたディレクトリ（momo-<version>_<platform>）を momo にリネームして配置
+        mv momo-${{ steps.latest_release.outputs.tag }}_${{ inputs.platform }} _build/$TARGET/release/momo
+        chmod +x _build/$TARGET/release/momo/momo
+        
+        # バージョン確認
+        _build/$TARGET/release/momo/momo --version
+      shell: bash

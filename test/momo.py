@@ -59,14 +59,14 @@ class Momo:
         # コーデック設定
         vp8_encoder: Literal["default", "software"] | None = None,
         vp8_decoder: Literal["default", "software"] | None = None,
-        vp9_encoder: Literal["default", "software"] | None = None,
-        vp9_decoder: Literal["default", "software"] | None = None,
-        av1_encoder: Literal["default", "software"] | None = None,
-        av1_decoder: Literal["default", "software"] | None = None,
-        h264_encoder: Literal["default", "videotoolbox", "software"] | None = None,
-        h264_decoder: Literal["default", "videotoolbox"] | None = None,
-        h265_encoder: Literal["default", "videotoolbox"] | None = None,
-        h265_decoder: Literal["default", "videotoolbox"] | None = None,
+        vp9_encoder: Literal["default", "vpl", "software"] | None = None,
+        vp9_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        av1_encoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        av1_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"] | None = None,
+        h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
+        h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
+        h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         openh264: str | None = None,  # ファイルパス
         # その他の共通設定
         serial: str | None = None,  # [DEVICE],[BAUDRATE]
@@ -107,6 +107,8 @@ class Momo:
         metadata: dict[str, Any] | None = None,
         # その他のカスタム引数
         extra_args: list[str] | None = None,
+        # 起動待機時間
+        initial_wait: int = 2,
     ) -> None:
         """
         Momo プロセスを管理するクラス
@@ -133,6 +135,7 @@ class Momo:
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
+        self.initial_wait = initial_wait
 
         # すべての引数を保存
         self.kwargs: dict[str, Any] = {
@@ -296,25 +299,33 @@ class Momo:
 
     def __enter__(self) -> Self:
         """コンテキストマネージャーの開始"""
-        # コマンドライン引数を構築
-        args = self._build_args(**self.kwargs)
+        try:
+            # コマンドライン引数を構築
+            args = self._build_args(**self.kwargs)
 
-        # 起動コマンドを表示
-        cmd = [self.executable_path] + args
-        # JSON を含む引数を適切に表示するため、shlex.quote を使用
-        quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
-        print(f"Starting momo with command: {quoted_cmd}")
+            # 起動コマンドを表示
+            cmd = [self.executable_path] + args
+            # JSON を含む引数を適切に表示するため、shlex.quote を使用
+            quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
+            print(f"Starting momo with command: {quoted_cmd}")
 
-        # プロセスを起動
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+            # プロセスを起動
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            print(f"Started momo process with PID: {self.process.pid}")
 
-        # プロセスが起動してメトリクスが利用可能になるまで待機
-        self._wait_for_startup(self.metrics_port)
-        return self
+            # プロセスが起動してメトリクスが利用可能になるまで待機
+            self._wait_for_startup(self.metrics_port, timeout=30, initial_wait=self.initial_wait)
+            return self
+        except Exception as e:
+            # 例外が発生した場合は必ずクリーンアップ
+            if self.process:
+                print(f"Cleaning up momo process (PID: {self.process.pid}) due to exception: {e}")
+            self._cleanup()
+            raise
 
     def __exit__(
         self,
@@ -607,7 +618,7 @@ class Momo:
                 )
 
     def _wait_for_startup(
-        self, metrics_port: int, timeout: int = 10, initial_wait: int = 2
+        self, metrics_port: int, timeout: int = 30, initial_wait: int = 2
     ) -> None:
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
@@ -632,7 +643,7 @@ class Momo:
 
                 # メトリクスエンドポイントをチェック
                 try:
-                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=1)
+                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=5)
                     if response.status_code == 200:
                         # Soraモードの場合はstatsが空でないことを確認
                         if self.kwargs["mode"] == MomoMode.SORA:
@@ -669,18 +680,25 @@ class Momo:
                 time.sleep(1)
 
             # タイムアウト
+            if self.process:
+                print(f"Timeout waiting for momo process (PID: {self.process.pid}) to start")
             self._cleanup()
             raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
     def _cleanup(self) -> None:
         """プロセスをクリーンアップ"""
         if self.process:
+            pid = self.process.pid
+            print(f"Terminating momo process (PID: {pid})")
             self.process.terminate()
             try:
                 self.process.wait(timeout=5)
+                print(f"Momo process (PID: {pid}) terminated gracefully")
             except subprocess.TimeoutExpired:
+                print(f"Force killing momo process (PID: {pid})")
                 self.process.kill()
                 self.process.wait()
+                print(f"Momo process (PID: {pid}) killed")
             self.process = None
 
     def get_metrics(self, client: httpx.Client) -> dict[str, Any]:

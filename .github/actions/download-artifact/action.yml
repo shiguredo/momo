@@ -1,0 +1,65 @@
+name: download-artifact
+description: Download artifact and extract momo binary
+
+inputs:
+  platform:
+    description: Target platform (e.g., ubuntu-22.04_x86_64)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download env artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ inputs.platform }}.env
+        path: ./
+    
+    - name: Get package name
+      id: package_info
+      shell: bash
+      run: |
+        source momo.env
+        echo "package_name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+    
+    - name: Download package artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: ${{ steps.package_info.outputs.package_name }}
+        path: ./
+    
+    - name: Extract momo binary
+      shell: bash
+      run: |
+        # パッケージファイルを探す
+        PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+        if [ -z "$PACKAGE_FILE" ]; then
+          echo "Package file not found"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Found package: $PACKAGE_FILE"
+        tar -xzf "$PACKAGE_FILE"
+        
+        # 展開されたディレクトリを探す（momo-<version>_<platform>/ の形式）
+        EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "momo-*_*" | head -1)
+        if [ -z "$EXTRACTED_DIR" ]; then
+          echo "Extracted directory not found"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Found extracted directory: $EXTRACTED_DIR"
+        
+        # ターゲットプラットフォーム
+        TARGET="${{ inputs.platform }}"
+        
+        # ビルドディレクトリ構造を再現
+        mkdir -p _build/$TARGET/release/momo
+        mv "$EXTRACTED_DIR/momo" _build/$TARGET/release/momo/
+        # 実行権限を付与
+        chmod +x _build/$TARGET/release/momo/momo
+        
+        # バージョン確認
+        _build/$TARGET/release/momo/momo --version

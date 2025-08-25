@@ -18,6 +18,9 @@
 
 #include "momo_version.h"
 
+// 最大フレームレート定数
+constexpr int MAX_FRAMERATE = 120;
+
 static void add_optional_bool(CLI::App* app,
                               const std::string& option_name,
                               boost::optional<bool>& v,
@@ -93,9 +96,15 @@ void Util::ParseArgs(int argc,
   app.add_flag("--fake-capture-device", args.fake_capture_device,
                "Use fake video capture device instead of real camera");
 #endif
-  app.add_flag(
-      "--force-i420", args.force_i420,
-      "Prefer I420 format for video capture (only on supported devices)");
+  app.add_flag("--force-i420", args.force_i420,
+               "Force I420 format for video capture (fails if not available)");
+  app.add_flag("--force-yuy2", args.force_yuy2,
+               "Force YUY2 format for video capture (fails if not available)")
+      ->excludes("--force-i420");  // force-* 系は同時指定不可
+  app.add_flag("--force-nv12", args.force_nv12,
+               "Force NV12 format for video capture (fails if not available)")
+      ->excludes("--force-i420")
+      ->excludes("--force-yuy2");  // force-* 系は同時指定不可
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
          "Perform MJPEG deoode and video resize by hardware acceleration "
@@ -123,7 +132,7 @@ void Util::ParseArgs(int argc,
                  "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
   app.add_option("--framerate", args.framerate, "Video framerate")
-      ->check(CLI::Range(1, 60));
+      ->check(CLI::Range(1, MAX_FRAMERATE));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
   app.add_option(
