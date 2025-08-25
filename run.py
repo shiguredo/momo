@@ -369,6 +369,7 @@ def install_deps(
                 "install_dir": install_dir,
                 "ios": False,
                 "cmake_args": [],
+                "expected_sha256": deps["BLEND2D_SHA256_HASH"],
             }
 
             if platform.target.os == "macos":
