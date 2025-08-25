@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(
     ],
 )
 def test_simulcast(
-    http_client, sora_settings, video_codec_type, expected_encoder_implementation, free_port
+    sora_settings, video_codec_type, expected_encoder_implementation, free_port
 ):
     """Sora モードで接続時の統計情報を確認"""
     # エンコーダー設定を準備
@@ -49,12 +49,11 @@ def test_simulcast(
         log_level="verbose",
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(timeout=10), \
+            f"Failed to establish simulcast connection for {video_codec_type}"
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある

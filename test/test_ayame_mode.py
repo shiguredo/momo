@@ -9,7 +9,7 @@ from momo import Momo, MomoMode
 AYAME_SIGNALING_URL = "wss://ayame-labo.shiguredo.app/signaling"
 
 
-def test_ayame_mode_basic(http_client, free_port, port_allocator):
+def test_ayame_mode_basic(free_port, port_allocator):
     """Ayame モードで momo を起動できることを確認"""
     room_id = str(uuid.uuid4())
     
@@ -23,14 +23,11 @@ def test_ayame_mode_basic(http_client, free_port, port_allocator):
         framerate=30,
         log_level="info",
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-        
-        data = response.json()
+        data = m.get_metrics()
         assert "version" in data
 
 
-def test_ayame_mode_with_client_id(http_client, free_port, port_allocator):
+def test_ayame_mode_with_client_id(free_port, port_allocator):
     """Ayame モードで client_id を指定して起動できることを確認"""
     room_id = str(uuid.uuid4())
     client_id = str(uuid.uuid4())
@@ -45,12 +42,12 @@ def test_ayame_mode_with_client_id(http_client, free_port, port_allocator):
         resolution="QVGA",
         framerate=15,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert "version" in data  # メトリクスが取得できることを確認
 
 
 
-def test_ayame_mode_with_video_settings(http_client, free_port, port_allocator):
+def test_ayame_mode_with_video_settings(free_port, port_allocator):
     """Ayame モードでビデオ設定をカスタマイズして起動できることを確認"""
     room_id = str(uuid.uuid4())
     
@@ -65,13 +62,13 @@ def test_ayame_mode_with_video_settings(http_client, free_port, port_allocator):
         vp8_encoder="software",
         log_level="verbose",
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert "version" in data  # メトリクスが取得できることを確認
 
 
 @pytest.mark.skip(reason="コーデック強制機能が未実装のため")
 @pytest.mark.parametrize("codec", ["VP8", "VP9", "AV1"])
-def test_ayame_mode_with_codec(http_client, port_allocator, codec):
+def test_ayame_mode_with_codec(port_allocator, codec):
     """Ayame モードで各種コーデックを使用した通信を確認"""
     room_id = str(uuid.uuid4())
     
@@ -113,12 +110,12 @@ def test_ayame_mode_with_codec(http_client, port_allocator, codec):
             resolution="QVGA",
             **codec_settings,
         ) as peer2:
-            # 接続が確立するまで待機
-            import time
-            time.sleep(5)
+            # 接続が確立されるまで待機（片方が繋がれば両方繋がるはず）
+            assert peer1.wait_for_connection(timeout=10), \
+                f"Failed to establish peer connection for {codec} codec within timeout"
             
-            peer1_data = http_client.get(f"http://localhost:{peer1.metrics_port}/metrics").json()
-            peer2_data = http_client.get(f"http://localhost:{peer2.metrics_port}/metrics").json()
+            peer1_data = peer1.get_metrics()
+            peer2_data = peer2.get_metrics()
             
             # peer1 の outbound-rtp でコーデックを確認
             peer1_outbound = next(
@@ -167,7 +164,7 @@ def test_ayame_mode_with_codec(http_client, port_allocator, codec):
             print(f"Peer2 codec for {codec}: {mime_type}")
 
 
-def test_ayame_mode_with_audio_settings(http_client, free_port, port_allocator):
+def test_ayame_mode_with_audio_settings(free_port, port_allocator):
     """Ayame モードでオーディオ設定をカスタマイズして起動できることを確認"""
     room_id = str(uuid.uuid4())
     
@@ -181,11 +178,11 @@ def test_ayame_mode_with_audio_settings(http_client, free_port, port_allocator):
         disable_auto_gain_control=True,
         disable_noise_suppression=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert "version" in data  # メトリクスが取得できることを確認
 
 
-def test_ayame_mode_peer_connection(http_client, port_allocator):
+def test_ayame_mode_peer_connection(port_allocator):
     """Ayame モードで2つのピアが双方向通信できることを確認"""
     room_id = str(uuid.uuid4())
     
@@ -207,19 +204,12 @@ def test_ayame_mode_peer_connection(http_client, port_allocator):
             fake_capture_device=True,
             resolution="QVGA",
         ) as peer2:
-            # 両方のインスタンスが正常に動作していることを確認
-            response_peer1 = http_client.get(f"http://localhost:{peer1.metrics_port}/metrics")
-            assert response_peer1.status_code == 200
+            # 接続が確立されるまで待機（片方が繋がれば両方繋がるはず）
+            assert peer1.wait_for_connection(timeout=10), \
+                "Failed to establish peer connection within timeout"
             
-            response_peer2 = http_client.get(f"http://localhost:{peer2.metrics_port}/metrics")
-            assert response_peer2.status_code == 200
-            
-            # stats を確認して接続が確立されているかチェック
-            import time
-            time.sleep(5)  # 接続が確立するまで待機
-            
-            peer1_data = http_client.get(f"http://localhost:{peer1.metrics_port}/metrics").json()
-            peer2_data = http_client.get(f"http://localhost:{peer2.metrics_port}/metrics").json()
+            peer1_data = peer1.get_metrics()
+            peer2_data = peer2.get_metrics()
             
             # stats が存在することを確認
             assert "stats" in peer1_data

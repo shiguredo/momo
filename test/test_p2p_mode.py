@@ -3,7 +3,7 @@
 from momo import Momo, MomoMode
 
 
-def test_with_custom_arguments(http_client, free_port, port_allocator):
+def test_with_custom_arguments(free_port, port_allocator):
     """カスタム引数で momo を起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -14,11 +14,11 @@ def test_with_custom_arguments(http_client, free_port, port_allocator):
         framerate=30,
         log_level="info",
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert "version" in data
 
 
-def test_multiple_instances_concurrent(http_client, port_allocator):
+def test_multiple_instances_concurrent(port_allocator):
     """複数の momo インスタンスを同時に起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -33,21 +33,14 @@ def test_multiple_instances_concurrent(http_client, port_allocator):
             fake_capture_device=True,
         ) as m2:
             # 両方のインスタンスが正常に動作していることを確認
-            response1 = http_client.get(f"http://localhost:{m1.metrics_port}/metrics")
-            assert response1.status_code == 200
-
-            response2 = http_client.get(f"http://localhost:{m2.metrics_port}/metrics")
-            assert response2.status_code == 200
-
-            # それぞれが独立したデータを返すことを確認
-            data1 = response1.json()
-            data2 = response2.json()
+            data1 = m1.get_metrics()
+            data2 = m2.get_metrics()
 
             assert "version" in data1
             assert "version" in data2
 
 
-def test_multiple_instances_different_configs(http_client, port_allocator):
+def test_multiple_instances_different_configs(port_allocator):
     """異なる設定で複数のインスタンスを起動できることを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -66,11 +59,13 @@ def test_multiple_instances_different_configs(http_client, port_allocator):
             framerate=30,
         ) as m2:
             # 両方のインスタンスにアクセス可能
-            assert http_client.get(f"http://localhost:{m1.metrics_port}/metrics").status_code == 200
-            assert http_client.get(f"http://localhost:{m2.metrics_port}/metrics").status_code == 200
+            data1 = m1.get_metrics()
+            data2 = m2.get_metrics()
+            assert "version" in data1
+            assert "version" in data2
 
 
-def test_dynamic_instance_creation_and_cleanup(http_client, port_allocator):
+def test_dynamic_instance_creation_and_cleanup(port_allocator):
     """動的にインスタンスを作成・削除できることを確認"""
     instances = []
 
@@ -86,13 +81,13 @@ def test_dynamic_instance_creation_and_cleanup(http_client, port_allocator):
             instances.append(momo)
 
             # 新しく作成したインスタンスが動作していることを確認
-            response = http_client.get(f"http://localhost:{momo.metrics_port}/metrics")
-            assert response.status_code == 200
+            data = momo.get_metrics()
+            assert "version" in data
 
         # すべてのインスタンスが同時に動作していることを確認
         for momo in instances:
-            response = http_client.get(f"http://localhost:{momo.metrics_port}/metrics")
-            assert response.status_code == 200
+            data = momo.get_metrics()
+            assert "version" in data
 
     finally:
         # クリーンアップ

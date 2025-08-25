@@ -3,7 +3,7 @@
 from momo import Momo, MomoMode
 
 
-def test_metrics_endpoint_returns_200(http_client, free_port, port_allocator):
+def test_metrics_endpoint_returns_200(free_port, port_allocator):
     """メトリクスエンドポイントが 200 を返すことを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -11,11 +11,12 @@ def test_metrics_endpoint_returns_200(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        # get_metrics() は内部で raise_for_status() を呼ぶので 200 でない場合は例外が発生する
+        data = m.get_metrics()
+        assert data is not None
 
 
-def test_metrics_endpoint_returns_json(http_client, free_port, port_allocator):
+def test_metrics_endpoint_returns_json(free_port, port_allocator):
     """メトリクスエンドポイントが JSON を返すことを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -23,7 +24,7 @@ def test_metrics_endpoint_returns_json(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
+        response = m._http_client.get(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 200
         assert response.headers.get("content-type", "").startswith("application/json")
 
@@ -31,7 +32,7 @@ def test_metrics_endpoint_returns_json(http_client, free_port, port_allocator):
         assert isinstance(data, dict)
 
 
-def test_metrics_response_structure(http_client, free_port, port_allocator):
+def test_metrics_response_structure(free_port, port_allocator):
     """メトリクスレスポンスの構造を確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -39,10 +40,7 @@ def test_metrics_response_structure(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
 
         # 必須フィールドの確認
         assert "version" in data
@@ -59,7 +57,7 @@ def test_metrics_response_structure(http_client, free_port, port_allocator):
         assert data["stats"] is not None
 
 
-def test_metrics_stats_format(http_client, free_port, port_allocator):
+def test_metrics_stats_format(free_port, port_allocator):
     """統計情報の形式を確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -67,10 +65,7 @@ def test_metrics_stats_format(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # stats は配列またはオブジェクトであるべき
@@ -86,7 +81,7 @@ def test_metrics_stats_format(http_client, free_port, port_allocator):
                 assert "timestamp" in stat
 
 
-def test_invalid_endpoint_returns_404(http_client, free_port, port_allocator):
+def test_invalid_endpoint_returns_404(free_port, port_allocator):
     """存在しないエンドポイントが 404 を返すことを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -94,11 +89,11 @@ def test_invalid_endpoint_returns_404(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/invalid")
+        response = m._http_client.get(f"http://localhost:{m.metrics_port}/invalid")
         assert response.status_code == 404
 
 
-def test_post_method_returns_error(http_client, free_port, port_allocator):
+def test_post_method_returns_error(free_port, port_allocator):
     """POST メソッドがエラーを返すことを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -106,11 +101,11 @@ def test_post_method_returns_error(http_client, free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
-        response = http_client.post(f"http://localhost:{m.metrics_port}/metrics")
+        response = m._http_client.post(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 400  # Bad Request
 
 
-def test_get_metrics_method(http_client, free_port, port_allocator):
+def test_get_metrics_method(free_port, port_allocator):
     """get_metrics メソッドが正しく動作することを確認"""
     with Momo(
         mode=MomoMode.TEST,
@@ -118,7 +113,7 @@ def test_get_metrics_method(http_client, free_port, port_allocator):
         port=next(port_allocator),
     ) as m:
         # get_metrics メソッドを使用
-        metrics = m.get_metrics(http_client)
+        metrics = m.get_metrics()
 
         assert isinstance(metrics, dict)
         assert "version" in metrics

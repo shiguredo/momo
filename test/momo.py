@@ -216,6 +216,9 @@ class Momo:
 
         # モード固有オプションの検証を実行
         self._validate_mode_options(mode, self.kwargs)
+        
+        # HTTP クライアントの初期化（None で初期化）
+        self._http_client: httpx.Client | None = None
 
     def _get_momo_executable_path(self) -> str:
         """ビルド済みの momo 実行ファイルのパスを自動検出"""
@@ -319,6 +322,10 @@ class Momo:
 
             # プロセスが起動してメトリクスが利用可能になるまで待機
             self._wait_for_startup(self.metrics_port, timeout=30, initial_wait=self.initial_wait)
+            
+            # HTTP クライアントを作成
+            self._http_client = httpx.Client(timeout=10.0)
+            
             return self
         except Exception as e:
             # 例外が発生した場合は必ずクリーンアップ
@@ -334,6 +341,11 @@ class Momo:
         _exc_tb: TracebackType | None,
     ) -> Literal[False]:
         """コンテキストマネージャーの終了"""
+        # HTTP クライアントをクリーンアップ
+        if self._http_client:
+            self._http_client.close()
+            self._http_client = None
+        
         self._cleanup()
         return False
 
@@ -701,10 +713,62 @@ class Momo:
                 print(f"Momo process (PID: {pid}) killed")
             self.process = None
 
-    def get_metrics(self, client: httpx.Client) -> dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """メトリクスを取得"""
+        if not self._http_client:
+            raise RuntimeError("HTTP client not initialized")
         if not self.metrics_port:
             raise RuntimeError("Process not started")
-        response = client.get(f"http://localhost:{self.metrics_port}/metrics")
+        response = self._http_client.get(f"http://localhost:{self.metrics_port}/metrics")
         response.raise_for_status()
         return response.json()
+    
+    def wait_for_connection(
+        self,
+        timeout: int = 5,
+        interval: float = 0.5,
+    ) -> bool:
+        """
+        接続が確立されるまで待機（transport の dtlsState と iceState が connected になるまで）
+        
+        Args:
+            timeout: タイムアウト時間（秒）
+            interval: チェック間隔（秒）
+        
+        Returns:
+            接続が確立された場合 True、タイムアウトした場合 False
+        """
+        if not self._http_client:
+            raise RuntimeError("HTTP client not initialized")
+        
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                response = self._http_client.get(f"http://localhost:{self.metrics_port}/metrics")
+                if response.status_code == 200:
+                    data = response.json()
+                    stats = data.get("stats", [])
+                    
+                    # transport タイプの統計情報を探す
+                    transport_stat = next(
+                        (stat for stat in stats if stat.get("type") == "transport"),
+                        None
+                    )
+                    
+                    if transport_stat:
+                        # dtlsState と iceState が両方 connected であることを確認
+                        dtls_state = transport_stat.get("dtlsState")
+                        ice_state = transport_stat.get("iceState")
+                        
+                        if dtls_state == "connected" and ice_state == "connected":
+                            return True
+            except (httpx.ConnectError, httpx.HTTPStatusError):
+                # 接続エラーは無視して続行
+                pass
+            
+            time.sleep(interval)
+        
+        return False
+
+
+
