@@ -15,7 +15,6 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize(
     "video_codec_type",
     [
-        "VP9",
         "AV1",
         "H264",
         "H265",
@@ -30,9 +29,7 @@ def test_connection_stats(
     
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "amf"
-    elif video_codec_type == "AV1":
+    if video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "amf"
     elif video_codec_type == "H264":
         encoder_params["h264_encoder"] = "amf"
@@ -111,7 +108,7 @@ def test_connection_stats(
 
                             # エンコーダー実装が AMD AMF であることを確認
                             assert "encoderImplementation" in stat
-                            assert stat["encoderImplementation"] == "libamf"
+                            assert stat["encoderImplementation"] == "AMF"
                         case "audio":
                             assert "headerBytesSent" in stat
                             assert stat["headerBytesSent"] > 0
@@ -155,10 +152,9 @@ def test_connection_stats(
 @pytest.mark.parametrize(
     "video_codec_type,expected_encoder_implementation",
     [
-        ("VP9", "SimulcastEncoderAdapter (libamf, libamf, libamf)"),
-        ("AV1", "SimulcastEncoderAdapter (libamf, libamf, libamf)"),
-        ("H264", "SimulcastEncoderAdapter (libamf, libamf, libamf)"),
-        ("H265", "SimulcastEncoderAdapter (libamf, libamf, libamf)"),
+        ("AV1", "SimulcastEncoderAdapter (AMF, AMF, AMF)"),
+        ("H264", "SimulcastEncoderAdapter (AMF, AMF, AMF)"),
+        ("H265", "SimulcastEncoderAdapter (AMF, AMF, AMF)"),
     ],
 )
 def test_simulcast(
@@ -167,9 +163,7 @@ def test_simulcast(
     """Sora モードで simulcast 接続時の統計情報を確認（AMD AMF 使用）"""
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "amf"
-    elif video_codec_type == "AV1":
+    if video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "amf"
     elif video_codec_type == "H264":
         encoder_params["h264_encoder"] = "amf"
@@ -446,7 +440,6 @@ def test_simulcast(
 @pytest.mark.parametrize(
     "video_codec_type",
     [
-        "VP9",
         "AV1",
         "H264",
         "H265",
@@ -465,9 +458,7 @@ def test_sora_sendonly_recvonly_pair(
 
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "amf"
-    elif video_codec_type == "AV1":
+    if video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "amf"
     elif video_codec_type == "H264":
         encoder_params["h264_encoder"] = "amf"
@@ -476,9 +467,7 @@ def test_sora_sendonly_recvonly_pair(
 
     # デコーダー設定を準備
     decoder_params = {}
-    if video_codec_type == "VP9":
-        decoder_params["vp9_decoder"] = "amf"
-    elif video_codec_type == "AV1":
+    if video_codec_type == "AV1":
         decoder_params["av1_decoder"] = "amf"
     elif video_codec_type == "H264":
         decoder_params["h264_decoder"] = "amf"
@@ -560,10 +549,10 @@ def test_sora_sendonly_recvonly_pair(
                 assert stat["packetsSent"] > 0
                 assert stat["bytesSent"] > 0
                 
-                # video ストリームの場合、encoderImplementation が libamf であることを確認
+                # video ストリームの場合、encoderImplementation が AMF であることを確認
                 if stat.get("kind") == "video":
                     assert "encoderImplementation" in stat
-                    assert stat["encoderImplementation"] == "libamf"
+                    assert stat["encoderImplementation"] == "AMF"
 
             # 受信側では inbound-rtp が音声と映像の2つ存在することを確認
             receiver_inbound_rtp = [
@@ -606,7 +595,126 @@ def test_sora_sendonly_recvonly_pair(
                 assert stat["packetsReceived"] > 0
                 assert stat["bytesReceived"] > 0
                 
-                # video ストリームの場合、decoderImplementation が libamf であることを確認
+                # video ストリームの場合、decoderImplementation が AMF であることを確認
                 if stat.get("kind") == "video":
                     assert "decoderImplementation" in stat
-                    assert stat["decoderImplementation"] == "libamf"
+                    assert stat["decoderImplementation"] == "AMF"
+
+
+def test_vp9_decode_only(
+    http_client,
+    sora_settings,
+    port_allocator,
+):
+    """VP9 はデコードのみサポートしているため、VP9 デコードテストを別途用意"""
+    # VP9 の expected_mime_type
+    expected_mime_type = "video/VP9"
+
+    # 送信側は VP9 ソフトウェアエンコーダーを使用
+    with Momo(
+        mode=MomoMode.SORA,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
+        role="sendonly",
+        metrics_port=next(port_allocator),
+        fake_capture_device=True,
+        video=True,
+        video_codec_type="VP9",
+        audio=True,
+        metadata=sora_settings.metadata,
+        initial_wait=10,
+        # VP9 エンコーダーを明示的に指定しない（ソフトウェアエンコーダーを使用）
+    ) as sender:
+        # 受信側は VP9 AMD AMF デコーダーを使用
+        with Momo(
+            mode=MomoMode.SORA,
+            signaling_urls=sora_settings.signaling_urls,
+            channel_id=sora_settings.channel_id,
+            role="recvonly",
+            metrics_port=next(port_allocator),
+            video=True,
+            audio=True,
+            metadata=sora_settings.metadata,
+            vp9_decoder="amf",  # VP9 デコーダーに AMF を指定
+        ) as receiver:
+            # 接続が確立するまで待機
+            time.sleep(5)
+            
+            # 送信側の統計を確認
+            sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
+            sender_stats = sender_response.json().get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
+            receiver_stats = receiver_response.json().get("stats", [])
+
+            # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
+            sender_outbound_rtp = [
+                stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
+            ]
+            assert len(sender_outbound_rtp) == 2, (
+                "Sender should have exactly 2 outbound-rtp stats (audio and video)"
+            )
+
+            # 送信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
+            assert len(sender_codecs) >= 2, "Should have at least 2 codecs (audio and video)"
+
+            # video codec の mimeType を確認
+            sender_video_codec = next(
+                (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert sender_video_codec is not None, "Video codec should be present"
+            assert sender_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
+            )
+
+            # 送信側でデータが送信されていることを確認
+            for stat in sender_outbound_rtp:
+                assert "packetsSent" in stat
+                assert "bytesSent" in stat
+                assert stat["packetsSent"] > 0
+                assert stat["bytesSent"] > 0
+                
+                # 送信側の VP9 は AMF ではない（ソフトウェアエンコーダー）
+                if stat.get("kind") == "video":
+                    assert "encoderImplementation" in stat
+                    # AMF ではないことを確認
+                    assert stat["encoderImplementation"] != "AMF"
+
+            # 受信側では inbound-rtp が音声と映像の2つ存在することを確認
+            receiver_inbound_rtp = [
+                stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
+            ]
+            assert len(receiver_inbound_rtp) == 2, (
+                "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
+            )
+
+            # 受信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
+            assert len(receiver_codecs) >= 2, (
+                "Should have at least 2 codecs (audio and video) on receiver"
+            )
+
+            # video codec の mimeType を確認
+            receiver_video_codec = next(
+                (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert receiver_video_codec is not None, "Video codec should be present on receiver"
+            assert receiver_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
+            )
+
+            # 受信側でデータが受信されていることを確認
+            for stat in receiver_inbound_rtp:
+                assert "packetsReceived" in stat
+                assert "bytesReceived" in stat
+                assert stat["packetsReceived"] > 0
+                assert stat["bytesReceived"] > 0
+                
+                # video ストリームの場合、decoderImplementation が AMF であることを確認
+                if stat.get("kind") == "video":
+                    assert "decoderImplementation" in stat
+                    assert stat["decoderImplementation"] == "AMF"

@@ -55,6 +55,11 @@ jobs:
             test_file: test_sora_mode_nvidia_video_codec_sdk.py
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
+          - name: AMD AMF
+            runner_labels: '["self-hosted", "linux", "x64", "AMD-AMF"]'
+            test_file: test_sora_mode_amd_amf.py
+            env_vars: |
+              AMD_AMF=true
     name: E2E Test ubuntu-24.04_x86_64 ${{ matrix.name }}
     runs-on:
       group: Self
