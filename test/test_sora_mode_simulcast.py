@@ -50,7 +50,7 @@ def test_simulcast(
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(timeout=10), \
+        assert m.wait_for_connection(timeout=10, post_connection_wait=3), \
             f"Failed to establish simulcast connection for {video_codec_type}"
 
         data = m.get_metrics()

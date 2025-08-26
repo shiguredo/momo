@@ -727,6 +727,7 @@ class Momo:
         self,
         timeout: int = 5,
         interval: float = 0.5,
+        post_connection_wait: float = 0,
     ) -> bool:
         """
         接続が確立されるまで待機（transport の dtlsState と iceState が connected になるまで）
@@ -734,6 +735,7 @@ class Momo:
         Args:
             timeout: タイムアウト時間（秒）
             interval: チェック間隔（秒）
+            post_connection_wait: 接続確立後の追加待機時間（秒）
         
         Returns:
             接続が確立された場合 True、タイムアウトした場合 False
@@ -761,6 +763,9 @@ class Momo:
                         ice_state = transport_stat.get("iceState")
                         
                         if dtls_state == "connected" and ice_state == "connected":
+                            # 接続確立後の待機時間がある場合は待つ
+                            if post_connection_wait > 0:
+                                time.sleep(post_connection_wait)
                             return True
             except (httpx.ConnectError, httpx.HTTPStatusError):
                 # 接続エラーは無視して続行
