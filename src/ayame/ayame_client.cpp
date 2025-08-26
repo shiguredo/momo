@@ -211,8 +211,17 @@ void AyameClient::CreatePeerConnection() {
   connection_ = manager_->CreateConnection(rtc_config, this);
   manager_->InitTracks(connection_.get());
 
-  // InitTracks の後に SetCodecPreferences を呼ぶ
-  SetCodecPreferences();
+  // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
+  // Transceiver の存在を確認してから呼び出す
+  auto pc = connection_->GetConnection();
+  if (pc) {
+    auto transceivers = pc->GetTransceivers();
+    if (!transceivers.empty()) {
+      SetCodecPreferences();
+    } else {
+      RTC_LOG(LS_WARNING) << "No transceivers available after InitTracks";
+    }
+  }
 }
 
 void AyameClient::SetCodecPreferences() {
@@ -234,6 +243,13 @@ void AyameClient::SetCodecPreferences() {
   }
 
   auto transceivers = pc->GetTransceivers();
+  
+  // Transceiver が存在しない場合は警告を出して終了
+  if (transceivers.empty()) {
+    RTC_LOG(LS_ERROR) << "No transceivers found when trying to set codec preferences";
+    return;
+  }
+  
   for (auto transceiver : transceivers) {
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
 
