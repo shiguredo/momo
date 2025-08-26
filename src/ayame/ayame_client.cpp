@@ -9,6 +9,8 @@
 #include <api/rtp_transceiver_interface.h>
 
 #include <algorithm>
+#include <string>
+#include <vector>
 
 #include "momo_version.h"
 #include "ssl_verifier.h"
