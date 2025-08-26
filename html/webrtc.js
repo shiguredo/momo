@@ -274,6 +274,9 @@
   function labelForMime(mime) {
     const lower = (mime || '').toLowerCase();
     const name = lower.split('/')[1] || lower;
+    if (name === 'vp8') return 'VP8';
+    if (name === 'vp9') return 'VP9';
+    if (name === 'av1') return 'AV1';
     if (name === 'h264') return 'H264';
     if (name === 'h265' || name === 'hevc') return 'H265';
     return name.toUpperCase();
@@ -304,16 +307,31 @@
       mimes.push(mt);
     });
 
+    // VP8/VP9/AV1/H264/H265 の順番に並べ替え
+    const codecOrder = ['video/vp8', 'video/vp9', 'video/av1', 'video/h264', 'video/h265'];
+    const sortedMimes = [];
+    codecOrder.forEach(codec => {
+      if (mimes.includes(codec)) {
+        sortedMimes.push(codec);
+      }
+    });
+    // 上記以外のコーデックも末尾に追加
+    mimes.forEach(mt => {
+      if (!sortedMimes.includes(mt)) {
+        sortedMimes.push(mt);
+      }
+    });
+
     // いったん空にしてから再構築
     while (select.firstChild) select.removeChild(select.firstChild);
-    mimes.forEach(mt => {
+    sortedMimes.forEach(mt => {
       const opt = document.createElement('option');
       opt.value = mt;
       opt.textContent = labelForMime(mt);
       select.appendChild(opt);
     });
     // 以前の選択があれば維持、なければ H264、なければ先頭
-    const prefer = before && mimes.includes(before) ? before : (mimes.includes('video/h264') ? 'video/h264' : (mimes[0] || ''));
+    const prefer = before && sortedMimes.includes(before) ? before : (sortedMimes.includes('video/h264') ? 'video/h264' : (sortedMimes[0] || ''));
     if (prefer) select.value = prefer;
   }
 
