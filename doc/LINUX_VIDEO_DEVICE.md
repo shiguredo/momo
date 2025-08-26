@@ -8,7 +8,7 @@ Momo ではデバイスを指定する際、デバイスファイルではなく
 1 台の Raspberry Pi で複数のカメラを利用して複数の Momo を起動する時に、カメラデバイスを個別に割り当てることができます。
 
 ```bash
-./momo --video-device "MX Brio" test
+./momo --video-device "MX Brio" p2p
 ```
 
 ### デバイス名を取得する
@@ -52,5 +52,5 @@ Integrated_Webcam: Integrate (usb-0000:00:00.0-12):
 `Bus info` を指定する実行例は以下の通りです。
 
 ```bash
-./momo --video-device "usb-0000:00:00.0-1" test
+./momo --video-device "usb-0000:00:00.0-1" p2p
 ```
