@@ -27,13 +27,11 @@ const std::vector<std::string> kAudioAuxiliaryCodecs = {
 };
 
 // 大文字変換ヘルパー関数
+// 注意: この関数は ASCII 文字のみを対象としている
+// コーデック名（VP8, H264, OPUS 等）は ASCII のみなので問題ない
 std::string ToUpperCase(const std::string& str) {
   std::string result = str;
-  for (char& c : result) {
-    if (c >= 'a' && c <= 'z') {
-      c = c - 'a' + 'A';
-    }
-  }
+  std::transform(result.begin(), result.end(), result.begin(), ::toupper);
   return result;
 }
 
