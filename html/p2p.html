@@ -1,33 +1,52 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="#">
-    <title>Momo P2P Test</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
-      label { margin-right: 8px; }
-      select, input[type="text"], button { margin: 4px 6px 4px 0; }
-      video { border: 3px solid #888; max-width: 100%; height: auto; }
-    </style>
-  </head>
-  <body>
-    <h3>Momo P2P</h3>
-    <div>
-      <label for="codec">Video codec</label>
-      <select id="codec">
-        <option value="">Loading...</option>
-      </select>
-      <button id="btnConnect" type="button">Connect</button>
-      <button id="btnDisconnect" type="button">Disconnect</button>
-      <button id="btnPlay" type="button">Play</button>
-      <input type="text" id="data_text" placeholder="Message via DataChannel">
-      <button id="btnSend" type="button">Send</button>
-    </div>
-    <div>
-      <video id="remote_video" autoplay muted playsinline></video>
-    </div>
-    <script src="./webrtc.js"></script>
-  </body>
- </html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="#">
+  <title>Momo P2P Mode</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 16px;
+    }
+
+    label {
+      margin-right: 8px;
+    }
+
+    select,
+    input[type="text"],
+    button {
+      margin: 4px 6px 4px 0;
+    }
+
+    video {
+      border: 3px solid #888;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>Momo P2P</h3>
+  <div>
+    <label for="codec">Video codec</label>
+    <select id="codec">
+      <option value="">Loading...</option>
+    </select>
+    <button id="btnConnect" type="button">Connect</button>
+    <button id="btnDisconnect" type="button">Disconnect</button>
+    <button id="btnPlay" type="button">Play</button>
+    <input type="text" id="data_text" placeholder="Message via DataChannel">
+    <button id="btnSend" type="button">Send</button>
+  </div>
+  <div>
+    <video id="remote_video" autoplay muted playsinline></video>
+  </div>
+  <script src="./webrtc.js"></script>
+</body>
+
+</html>

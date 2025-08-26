@@ -103,6 +103,7 @@
       cleanupVideoElement(remoteVideo);
       candidates = [];
       hasReceivedSdp = false;
+      try { updateUiState(); } catch (_) {}
     } else {
       console.log('peerConnection is closed.');
     }
@@ -149,6 +150,28 @@
 
   function playVideo(element, stream) {
     element.srcObject = stream;
+    // リモートストリーム更新に応じて UI も更新
+    try { updateUiState(); } catch (_) {}
+  }
+
+  // 接続状況に応じて UI を更新
+  function updateUiState() {
+    const connectBtn = document.getElementById('btnConnect');
+    const disconnectBtn = document.getElementById('btnDisconnect');
+    const playBtn = document.getElementById('btnPlay');
+    const sendBtn = document.getElementById('btnSend');
+    const codecSelect = document.getElementById('codec');
+
+    const hasPc = !!peerConnection;
+    const hasStream = !!remoteVideo.srcObject;
+    const canSend = !!(dataChannel && dataChannel.readyState === 'open');
+
+    if (connectBtn) connectBtn.disabled = hasPc;
+    if (disconnectBtn) disconnectBtn.disabled = !hasPc;
+    if (playBtn) playBtn.disabled = !hasStream;
+    if (sendBtn) sendBtn.disabled = !canSend;
+    if (dataTextInput) dataTextInput.disabled = !canSend;
+    if (codecSelect) codecSelect.disabled = hasPc; // 接続中は変更不可にする
   }
 
   function prepareNewConnection() {
@@ -158,6 +181,9 @@
 
     const peer = new RTCPeerConnection(peerConnectionConfig);
     dataChannel = peer.createDataChannel('serial');
+    // DataChannel の状態に応じて UI 更新
+    dataChannel.onopen = () => { console.log('DataChannel open'); updateUiState(); };
+    dataChannel.onclose = () => { console.log('DataChannel close'); updateUiState(); };
 
     if ('ontrack' in peer) {
       if (isSafari()) {
@@ -203,6 +229,7 @@
         case 'disconnected':
           break;
       }
+      updateUiState();
     };
 
     const videoTransceiver = peer.addTransceiver('video', { direction: 'recvonly' });
@@ -230,7 +257,11 @@
       dataTextInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') sendDataChannel();
       });
+      // 入力変化で送信可否の見た目を即時反映
+      dataTextInput.addEventListener('input', () => updateUiState());
     }
+    // 初期状態反映
+    updateUiState();
   }
 
   // コーデック選好関連の補助関数
@@ -326,10 +357,10 @@
 
   async function makeOffer() {
     peerConnection = prepareNewConnection();
+    updateUiState();
     try {
       const sessionDescription = await peerConnection.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true,
+        // 受信方向は addTransceiver('recvonly') によって指定済み
       });
       console.log('createOffer() success in promise, SDP=', sessionDescription.sdp);
       await peerConnection.setLocalDescription(sessionDescription);
@@ -365,6 +396,7 @@
       try { peerConnection.close(); } catch (_) {}
     }
     peerConnection = prepareNewConnection();
+    updateUiState();
     try {
       await peerConnection.setRemoteDescription(sessionDescription);
       console.log('setRemoteDescription(offer) success in promise');
@@ -389,8 +421,19 @@
   }
 
   function cleanupVideoElement(element) {
+    try {
+      const stream = element.srcObject;
+      if (stream && typeof stream.getTracks === 'function') {
+        stream.getTracks().forEach((t) => {
+          try { t.stop(); } catch (_) {}
+        });
+      }
+    } catch (e) {
+      console.warn('cleanupVideoElement: stop tracks error:', e);
+    }
     element.pause();
     element.srcObject = null;
+    try { updateUiState(); } catch (_) {}
   }
 
   // SDP 書き換えは廃止し、setCodecPreferences のみに統一
