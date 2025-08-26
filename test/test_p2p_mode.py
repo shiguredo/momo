@@ -1,4 +1,4 @@
-"""P2P (Test) モードの E2E テスト"""
+"""P2P モードの E2E テスト"""
 
 from momo import Momo, MomoMode
 
@@ -6,7 +6,7 @@ from momo import Momo, MomoMode
 def test_with_custom_arguments(free_port, port_allocator):
     """カスタム引数で momo を起動できることを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -21,13 +21,13 @@ def test_with_custom_arguments(free_port, port_allocator):
 def test_multiple_instances_concurrent(port_allocator):
     """複数の momo インスタンスを同時に起動できることを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=next(port_allocator),
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m1:
         with Momo(
-            mode=MomoMode.TEST,
+            mode=MomoMode.P2P,
             metrics_port=next(port_allocator),
             port=next(port_allocator),
             fake_capture_device=True,
@@ -43,7 +43,7 @@ def test_multiple_instances_concurrent(port_allocator):
 def test_multiple_instances_different_configs(port_allocator):
     """異なる設定で複数のインスタンスを起動できることを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=next(port_allocator),
         port=next(port_allocator),
         fake_capture_device=True,
@@ -51,7 +51,7 @@ def test_multiple_instances_different_configs(port_allocator):
         framerate=15,
     ) as m1:
         with Momo(
-            mode=MomoMode.TEST,
+            mode=MomoMode.P2P,
             metrics_port=next(port_allocator),
             port=next(port_allocator),
             fake_capture_device=True,
@@ -72,7 +72,7 @@ def test_dynamic_instance_creation_and_cleanup(port_allocator):
     try:
         for i in range(3):
             momo = Momo(
-                mode=MomoMode.TEST,
+                mode=MomoMode.P2P,
                 metrics_port=next(port_allocator),
                 port=next(port_allocator),
                 fake_capture_device=True,

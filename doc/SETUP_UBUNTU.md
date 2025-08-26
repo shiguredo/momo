@@ -12,7 +12,7 @@
 $ tree
 .
 ├── html
-│   ├── test.html
+│   ├── p2p.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -43,7 +43,7 @@ chmod a+x ./momo
 
 ## 動かしてみる
 
-動かし方については [USE_TEST.md](USE_TEST.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
 
 ## ビデオデバイスの指定
 

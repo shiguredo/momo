@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -78,10 +77,12 @@ def test_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(timeout=10, post_connection_wait=3), \
+            assert sender.wait_for_connection(), (
                 f"Sender failed to establish connection for {video_codec_type}"
-            assert receiver.wait_for_connection(timeout=10, post_connection_wait=3), \
+            )
+            assert receiver.wait_for_connection(), (
                 f"Receiver failed to establish connection for {video_codec_type}"
+            )
 
             # 送信側の統計を確認
             sender_data = sender.get_metrics()

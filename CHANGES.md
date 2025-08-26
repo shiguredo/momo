@@ -14,6 +14,10 @@
 - [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
   - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
   - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能
+- [CHANGE] test モードを p2p モードに名前変更
+  - コマンドラインオプションを `test` から `p2p` に変更
+  - HTML ファイル名を `test.html` から `p2p.html` に変更
+  - ドキュメントファイル名を `USE_TEST.md` から `USE_P2P.md` に変更
   - @voluntas
 - [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
   - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更

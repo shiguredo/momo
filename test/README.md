@@ -75,9 +75,9 @@ uv run pytest test_momo.py::test_metrics_endpoint_returns_200
 
 ## テスト内容
 
-### Test モード
+### P2P モード
 
-Test モードは追加設定なしで実行できます。以下のテストが含まれます：
+P2P モードは追加設定なしで実行できます。以下のテストが含まれます：
 
 - HTTP メトリクスエンドポイント (`/metrics`) のテスト
   - ステータスコードの確認
@@ -183,7 +183,7 @@ test/
 ├── pyproject.toml         # プロジェクト設定と依存関係
 ├── test_ayame_mode.py     # Ayame モードのテスト
 ├── test_metrics_api.py    # メトリクス API のテスト
-├── test_p2p_mode.py       # P2P (Test) モードのテスト
+├── test_p2p_mode.py       # P2P モードのテスト
 ├── test_momo_validation.py # モード固有オプション検証のテスト
 ├── test_sora_mode.py      # Sora モードのテスト
 ├── uv.lock                # uv のロックファイル
