@@ -15,6 +15,32 @@
 #include "url_parts.h"
 #include "util.h"
 
+namespace {
+// 映像補助コーデック
+const std::vector<std::string> kVideoAuxiliaryCodecs = {
+    "RTX", "RED", "ULPFEC", "FLEXFEC-03"
+};
+
+// 音声補助コーデック  
+const std::vector<std::string> kAudioAuxiliaryCodecs = {
+    "TELEPHONE-EVENT", "CN"
+};
+
+// 大文字変換ヘルパー関数
+std::string ToUpperCase(const std::string& str) {
+  std::string result = str;
+  std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+  return result;
+}
+
+// コーデックが補助コーデックかどうかを判定
+bool IsAuxiliaryCodec(const std::string& codec_name,
+                      const std::vector<std::string>& auxiliary_codecs) {
+  return std::find(auxiliary_codecs.begin(), auxiliary_codecs.end(),
+                   codec_name) != auxiliary_codecs.end();
+}
+}  // namespace
+
 bool AyameClient::ParseURL(URLParts& parts) const {
   std::string url = config_.signaling_url;
 
@@ -234,37 +260,28 @@ void AyameClient::SetCodecPreferences() {
     if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
         !config_.video_codec_type.empty()) {
       // 映像コーデックのフィルタリング
-      std::string target_codec = config_.video_codec_type;
-      std::transform(target_codec.begin(), target_codec.end(),
-                     target_codec.begin(), ::toupper);
+      std::string target_codec = ToUpperCase(config_.video_codec_type);
 
       for (const auto& codec : current_codecs) {
-        std::string codec_name = codec.name;
-        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(),
-                       ::toupper);
+        std::string codec_name = ToUpperCase(codec.name);
 
         // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec || codec_name == "RTX" ||
-            codec_name == "RED" || codec_name == "ULPFEC" ||
-            codec_name == "FLEXFEC-03") {
+        if (codec_name == target_codec ||
+            IsAuxiliaryCodec(codec_name, kVideoAuxiliaryCodecs)) {
           filtered_codecs.push_back(codec);
         }
       }
     } else if (transceiver->media_type() == webrtc::MediaType::AUDIO &&
                !config_.audio_codec_type.empty()) {
       // 音声コーデックのフィルタリング
-      std::string target_codec = config_.audio_codec_type;
-      std::transform(target_codec.begin(), target_codec.end(),
-                     target_codec.begin(), ::toupper);
+      std::string target_codec = ToUpperCase(config_.audio_codec_type);
 
       for (const auto& codec : current_codecs) {
-        std::string codec_name = codec.name;
-        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(),
-                       ::toupper);
+        std::string codec_name = ToUpperCase(codec.name);
 
         // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec || codec_name == "TELEPHONE-EVENT" ||
-            codec_name == "CN") {
+        if (codec_name == target_codec ||
+            IsAuxiliaryCodec(codec_name, kAudioAuxiliaryCodecs)) {
           filtered_codecs.push_back(codec);
         }
       }
