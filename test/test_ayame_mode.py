@@ -259,3 +259,33 @@ def test_ayame_mode_peer_connection(port_allocator):
             
             print(f"P1 video - sent: {p1_video_out.get('packetsSent')}, received: {p1_video_in.get('packetsReceived')}")
             print(f"P2 video - sent: {p2_video_out.get('packetsSent')}, received: {p2_video_in.get('packetsReceived')}")
+
+
+def test_ayame_mode_with_invalid_codec(port_allocator):
+    """存在しないコーデックを指定した場合にエラーで終了することを確認"""
+    room_id = str(uuid.uuid4())
+    
+    # 存在しないビデオコーデックを指定
+    # 型チェッカーの警告を抑制するため type: ignore コメントを使用
+    with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            metrics_port=next(port_allocator),
+            fake_capture_device=True,
+            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type] 存在しないコーデック
+        ):
+            pass  # ここには到達しないはず
+    
+    # 存在しないオーディオコーデックを指定
+    with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            metrics_port=next(port_allocator),
+            fake_capture_device=True,
+            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type] 存在しないコーデック
+        ):
+            pass  # ここには到達しないはず

@@ -253,32 +253,58 @@ void AyameClient::SetCodecPreferences() {
   for (auto transceiver : transceivers) {
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
 
-    // PeerConnectionFactory から capabilities を取得
-    webrtc::RtpCapabilities capabilities;
+    // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
+    webrtc::RtpCapabilities sender_capabilities;
+    webrtc::RtpCapabilities receiver_capabilities;
+    
     if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
-      capabilities =
+      sender_capabilities =
           factory->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO);
+      receiver_capabilities =
+          factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
     } else if (transceiver->media_type() == webrtc::MediaType::AUDIO) {
-      capabilities =
+      sender_capabilities =
           factory->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO);
+      receiver_capabilities =
+          factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
     } else {
       continue;
     }
 
-    auto current_codecs = capabilities.codecs;
-
-    // 現在のコーデック一覧が空の場合はスキップ
-    if (current_codecs.empty()) {
-      RTC_LOG(LS_WARNING) << "No codec capabilities available for transceiver";
-      continue;
+    // 送信側と受信側の両方でサポートされているコーデックを見つける
+    std::vector<webrtc::RtpCodecCapability> common_codecs;
+    for (const auto& sender_codec : sender_capabilities.codecs) {
+      for (const auto& receiver_codec : receiver_capabilities.codecs) {
+        // コーデック名とMIMEタイプが一致する場合に共通コーデックとみなす
+        if (sender_codec.name == receiver_codec.name &&
+            sender_codec.mime_type() == receiver_codec.mime_type()) {
+          common_codecs.push_back(sender_codec);
+          break;
+        }
+      }
     }
 
+    // 共通コーデックが空の場合はスキップ
+    if (common_codecs.empty()) {
+      RTC_LOG(LS_WARNING) << "No common codec capabilities available for transceiver";
+      continue;
+    }
+    
+    RTC_LOG(LS_INFO) << "Found " << common_codecs.size() << " common codecs for "
+                     << (transceiver->media_type() == webrtc::MediaType::VIDEO 
+                             ? "video" : "audio");
+
+    bool codec_specified = false;
+    std::string specified_codec_type;
+    
     if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
         !config_.video_codec_type.empty()) {
       // 映像コーデックのフィルタリング
+      codec_specified = true;
+      specified_codec_type = config_.video_codec_type;
       std::string target_codec = ToUpperCase(config_.video_codec_type);
 
-      for (const auto& codec : current_codecs) {
+      for (const auto& codec : common_codecs) {
         std::string codec_name = ToUpperCase(codec.name);
 
         // 指定されたコーデックまたは補助的なコーデックは残す
@@ -290,9 +316,11 @@ void AyameClient::SetCodecPreferences() {
     } else if (transceiver->media_type() == webrtc::MediaType::AUDIO &&
                !config_.audio_codec_type.empty()) {
       // 音声コーデックのフィルタリング
+      codec_specified = true;
+      specified_codec_type = config_.audio_codec_type;
       std::string target_codec = ToUpperCase(config_.audio_codec_type);
 
-      for (const auto& codec : current_codecs) {
+      for (const auto& codec : common_codecs) {
         std::string codec_name = ToUpperCase(codec.name);
 
         // 指定されたコーデックまたは補助的なコーデックは残す
@@ -303,11 +331,28 @@ void AyameClient::SetCodecPreferences() {
       }
     }
 
+    // コーデックが指定されているが見つからなかった場合はエラー
+    if (codec_specified && filtered_codecs.empty()) {
+      RTC_LOG(LS_ERROR) << "Specified codec '" << specified_codec_type 
+                        << "' for " 
+                        << (transceiver->media_type() == webrtc::MediaType::VIDEO 
+                                ? "video" : "audio")
+                        << " is not available. Available codecs:";
+      for (const auto& codec : common_codecs) {
+        RTC_LOG(LS_ERROR) << "  - " << codec.name;
+      }
+      // エラーで接続を終了
+      Close();
+      return;
+    }
+
     if (!filtered_codecs.empty()) {
       auto error = transceiver->SetCodecPreferences(filtered_codecs);
       if (!error.ok()) {
         RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
                           << error.message();
+        Close();
+        return;
       } else {
         RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
                          << (transceiver->media_type() ==
