@@ -473,7 +473,7 @@ class Momo:
             args.append(mode.value)
             if kwargs.get("document_root"):
                 args.extend(["--document-root", kwargs["document_root"]])
-            # test モードのデフォルトポートは 8080
+            # p2p モードのデフォルトポートは 8080
             port = kwargs.get("port") if kwargs.get("port") is not None else 8080
             args.extend(["--port", str(port)])
 
@@ -673,7 +673,7 @@ class Momo:
                                     f"  Metrics endpoint is up but stats is empty, waiting for connection... ({elapsed:.1f}s elapsed)"
                                 )
                         else:
-                            # test/ayameモードは200応答で成功（statsのチェック不要）
+                            # p2p/ayameモードは200応答で成功（statsのチェック不要）
                             print(
                                 f"Momo started successfully after {time.time() - start_time:.1f}s"
                             )
