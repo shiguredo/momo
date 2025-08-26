@@ -4,7 +4,6 @@ import time
 import uuid
 from dataclasses import dataclass
 
-import httpx
 import jwt
 import pytest
 from dotenv import load_dotenv
@@ -81,10 +80,3 @@ def free_port(port_allocator):
     各テスト関数で使用すると、自動的に一意のポート番号が割り当てられます。
     """
     return next(port_allocator)
-
-
-@pytest.fixture
-def http_client():
-    """同期 HTTP クライアントを提供するフィクスチャ"""
-    with httpx.Client(timeout=10.0) as client:
-        yield client

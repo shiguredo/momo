@@ -11,7 +11,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_metrics_endpoint_returns_200(http_client, sora_settings, free_port):
+def test_metrics_endpoint_returns_200(sora_settings, free_port):
     """Sora モードでメトリクスエンドポイントが 200 を返すことを確認"""
 
     with Momo(
@@ -25,11 +25,11 @@ def test_metrics_endpoint_returns_200(http_client, sora_settings, free_port):
         video=True,
         metadata=sora_settings.metadata,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert data is not None  # メトリクスが取得できることを確認
 
 
-def test_metrics_endpoint_response_structure(http_client, sora_settings, free_port):
+def test_metrics_endpoint_response_structure(sora_settings, free_port):
     """Sora モードでメトリクスレスポンスの構造を確認"""
 
     with Momo(
@@ -43,10 +43,7 @@ def test_metrics_endpoint_response_structure(http_client, sora_settings, free_po
         video=True,
         metadata=sora_settings.metadata,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
 
         # 必須フィールドの確認
         assert "version" in data
@@ -68,7 +65,7 @@ def test_metrics_endpoint_response_structure(http_client, sora_settings, free_po
         "AV1",
     ],
 )
-def test_metrics_endpoint(http_client, sora_settings, video_codec_type, free_port):
+def test_metrics_endpoint(sora_settings, video_codec_type, free_port):
     """Sora モードで接続時の統計情報を確認"""
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
@@ -96,12 +93,11 @@ def test_metrics_endpoint(http_client, sora_settings, video_codec_type, free_por
         log_level="verbose",
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(timeout=10), \
+            f"Failed to establish connection for {video_codec_type} codec"
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -228,7 +224,7 @@ def test_metrics_endpoint(http_client, sora_settings, video_codec_type, free_por
         assert "dataChannelsOpened" in peer_connection
 
 
-def test_invalid_metrics_endpoint_returns_404(http_client, sora_settings, free_port):
+def test_invalid_metrics_endpoint_returns_404(sora_settings, free_port):
     """Sora モードで存在しないエンドポイントが 404 を返すことを確認"""
 
     with Momo(
@@ -242,5 +238,5 @@ def test_invalid_metrics_endpoint_returns_404(http_client, sora_settings, free_p
         video=True,
         metadata=sora_settings.metadata,
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/invalid")
+        response = m._http_client.get(f"http://localhost:{m.metrics_port}/invalid")
         assert response.status_code == 404

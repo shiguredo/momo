@@ -109,7 +109,7 @@ def test_ayame_mode_with_sora_options_raises_error():
     assert "sora mode" in str(exc_info.value)
 
 
-def test_common_options_allowed_in_all_modes(http_client, free_port, port_allocator):
+def test_common_options_allowed_in_all_modes(free_port, port_allocator):
     """共通オプションはすべてのモードで使用できることを確認"""
     # test モードで共通オプションを使用
     with Momo(
@@ -121,5 +121,5 @@ def test_common_options_allowed_in_all_modes(http_client, free_port, port_alloca
         framerate=30,  # 共通オプション
         log_level="info",  # 共通オプション
     ) as m:
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
+        data = m.get_metrics()
+        assert "version" in data
