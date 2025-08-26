@@ -184,6 +184,9 @@ void AyameClient::CreatePeerConnection() {
   rtc_config.servers = ice_servers_;
   connection_ = manager_->CreateConnection(rtc_config, this);
   manager_->InitTracks(connection_.get());
+  
+  // InitTracks の後に SetCodecPreferences を呼ぶ
+  SetCodecPreferences();
 }
 
 void AyameClient::SetCodecPreferences() {
@@ -196,15 +199,33 @@ void AyameClient::SetCodecPreferences() {
     RTC_LOG(LS_ERROR) << "PeerConnection is null";
     return;
   }
+  
+  // PeerConnectionFactory から GetRtpReceiverCapabilities を使ってコーデック一覧を取得
+  auto factory = manager_->GetFactory();
+  if (!factory) {
+    RTC_LOG(LS_ERROR) << "PeerConnectionFactory is null";
+    return;
+  }
 
   auto transceivers = pc->GetTransceivers();
   for (auto transceiver : transceivers) {
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
-    auto current_codecs = transceiver->codec_preferences();
+    
+    // PeerConnectionFactory から capabilities を取得
+    webrtc::RtpCapabilities capabilities;
+    if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
+      capabilities = factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
+    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO) {
+      capabilities = factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
+    } else {
+      continue;
+    }
+    
+    auto current_codecs = capabilities.codecs;
     
     // 現在のコーデック一覧が空の場合はスキップ
     if (current_codecs.empty()) {
-      RTC_LOG(LS_WARNING) << "No codec preferences available for transceiver";
+      RTC_LOG(LS_WARNING) << "No codec capabilities available for transceiver";
       continue;
     }
     
@@ -217,11 +238,12 @@ void AyameClient::SetCodecPreferences() {
         std::string codec_name = codec.name;
         std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(), ::toupper);
         
-        // 指定されたコーデックまたは RTX、RED、ULPFEC などの補助的なコーデックは残す
+        // 指定されたコーデックまたは補助的なコーデックは残す
         if (codec_name == target_codec || 
             codec_name == "RTX" || 
             codec_name == "RED" || 
-            codec_name == "ULPFEC") {
+            codec_name == "ULPFEC" ||
+            codec_name == "FLEXFEC-03") {
           filtered_codecs.push_back(codec);
         }
       }
@@ -318,9 +340,6 @@ void AyameClient::OnRead(boost::system::error_code ec,
       boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
       ws_->WriteText(boost::json::serialize(json_message));
     };
-    
-    // CreateOffer の前にコーデックを設定
-    SetCodecPreferences();
 
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
     if (is_exist_user) {
@@ -340,8 +359,6 @@ void AyameClient::OnRead(boost::system::error_code ec,
     connection_->SetOffer(sdp, [this]() {
       boost::asio::post(ioc_, [this, self = shared_from_this()]() {
         if (!is_send_offer_ || !has_is_exist_user_flag_) {
-          // CreateAnswer の前にコーデックを設定
-          SetCodecPreferences();
           connection_->CreateAnswer(
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;

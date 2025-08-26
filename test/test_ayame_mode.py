@@ -102,7 +102,6 @@ def test_ayame_mode_with_video_settings(free_port, port_allocator):
         assert "version" in data  # メトリクスが取得できることを確認
 
 
-@pytest.mark.skip(reason="コーデック強制機能が未実装のため")
 @pytest.mark.parametrize("codec", ["VP8", "VP9", "AV1"])
 def test_ayame_mode_with_codec(port_allocator, codec):
     """Ayame モードで各種コーデックを使用した通信を確認"""
@@ -134,6 +133,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
         metrics_port=next(port_allocator),
         fake_capture_device=True,
         resolution="QVGA",
+        ayame_video_codec_type=codec,  # コーデックを指定
         **codec_settings,
     ) as m1:
         with Momo(
@@ -144,6 +144,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             metrics_port=next(port_allocator),
             fake_capture_device=True,
             resolution="QVGA",
+            ayame_video_codec_type=codec,  # コーデックを指定
             **codec_settings,
         ) as m2:
             # 両方のピアの接続が確立されるまで待機
@@ -167,7 +168,9 @@ def test_ayame_mode_with_codec(port_allocator, codec):
                 f"Could not find codec stats for codecId: {codec_id}"
             
             mime_type = p1_codec.get("mimeType", "")
-            assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
+            # mimeType から "video/" や "audio/" を除去してコーデック名だけを取得
+            codec_name = mime_type.split('/')[-1] if '/' in mime_type else mime_type
+            assert codec == codec_name.upper(), f"Expected {codec} codec but got: {mime_type}"
             print(f"P1 codec for {codec}: {mime_type}")
             
             # p2 の outbound-rtp でもコーデックを確認（双方向通信なので）
@@ -182,7 +185,9 @@ def test_ayame_mode_with_codec(port_allocator, codec):
                 f"Could not find codec stats for codecId: {codec_id}"
             
             mime_type = p2_codec.get("mimeType", "")
-            assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
+            # mimeType から "video/" や "audio/" を除去してコーデック名だけを取得
+            codec_name = mime_type.split('/')[-1] if '/' in mime_type else mime_type
+            assert codec == codec_name.upper(), f"Expected {codec} codec but got: {mime_type}"
             print(f"P2 codec for {codec}: {mime_type}")
 
 

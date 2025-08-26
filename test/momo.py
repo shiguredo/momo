@@ -85,6 +85,8 @@ class Momo:
         room_id: str | None = None,
         client_id: str | None = None,
         signaling_key: str | None = None,
+        ayame_video_codec_type: Literal["VP8", "VP9", "AV1", "H264", "H265"] | None = None,
+        ayame_audio_codec_type: Literal["OPUS", "PCMU", "PCMA"] | None = None,
         # === sora モード固有 ===
         signaling_urls: str | None = None,  # 複数URL可（スペース区切り）
         channel_id: str | None = None,
@@ -192,6 +194,8 @@ class Momo:
             "room_id": room_id,
             "client_id": client_id,
             "signaling_key": signaling_key,
+            "ayame_video_codec_type": ayame_video_codec_type,
+            "ayame_audio_codec_type": ayame_audio_codec_type,
             "signaling_urls": signaling_urls,
             "channel_id": channel_id,
             "auto": auto,
@@ -487,6 +491,10 @@ class Momo:
                 args.extend(["--client-id", kwargs["client_id"]])
             if kwargs.get("signaling_key"):
                 args.extend(["--signaling-key", kwargs["signaling_key"]])
+            if kwargs.get("ayame_video_codec_type"):
+                args.extend(["--video-codec-type", kwargs["ayame_video_codec_type"]])
+            if kwargs.get("ayame_audio_codec_type"):
+                args.extend(["--audio-codec-type", kwargs["ayame_audio_codec_type"]])
 
         elif mode == MomoMode.SORA:
             args.append(mode.value)
@@ -555,7 +563,14 @@ class Momo:
         test_only_options = {"document_root"}
 
         # ayame モード固有オプション
-        ayame_only_options = {"ayame_signaling_url", "room_id", "client_id", "signaling_key"}
+        ayame_only_options = {
+            "ayame_signaling_url",
+            "room_id",
+            "client_id",
+            "signaling_key",
+            "ayame_video_codec_type",
+            "ayame_audio_codec_type",
+        }
 
         # sora モード固有オプション
         sora_only_options = {
