@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -19,9 +18,7 @@ pytestmark = pytest.mark.skipif(
         ("AV1", "SimulcastEncoderAdapter (libaom, libaom, libaom)"),
     ],
 )
-def test_simulcast(
-    sora_settings, video_codec_type, expected_encoder_implementation, free_port
-):
+def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで接続時の統計情報を確認"""
     # エンコーダー設定を準備
     encoder_params = {}
@@ -50,8 +47,9 @@ def test_simulcast(
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(timeout=10, post_connection_wait=3), \
+        assert m.wait_for_connection(), (
             f"Failed to establish simulcast connection for {video_codec_type}"
+        )
 
         data = m.get_metrics()
         stats = data["stats"]

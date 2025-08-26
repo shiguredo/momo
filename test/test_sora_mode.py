@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -94,8 +93,9 @@ def test_metrics_endpoint(sora_settings, video_codec_type, free_port):
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(timeout=10), \
+        assert m.wait_for_connection(), (
             f"Failed to establish connection for {video_codec_type} codec"
+        )
 
         data = m.get_metrics()
         stats = data["stats"]

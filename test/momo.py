@@ -216,7 +216,7 @@ class Momo:
 
         # モード固有オプションの検証を実行
         self._validate_mode_options(mode, self.kwargs)
-        
+
         # HTTP クライアントの初期化（None で初期化）
         self._http_client: httpx.Client | None = None
 
@@ -322,10 +322,10 @@ class Momo:
 
             # プロセスが起動してメトリクスが利用可能になるまで待機
             self._wait_for_startup(self.metrics_port, timeout=30, initial_wait=self.initial_wait)
-            
+
             # HTTP クライアントを作成
             self._http_client = httpx.Client(timeout=10.0)
-            
+
             return self
         except Exception as e:
             # 例外が発生した場合は必ずクリーンアップ
@@ -345,7 +345,7 @@ class Momo:
         if self._http_client:
             self._http_client.close()
             self._http_client = None
-        
+
         self._cleanup()
         return False
 
@@ -722,27 +722,27 @@ class Momo:
         response = self._http_client.get(f"http://localhost:{self.metrics_port}/metrics")
         response.raise_for_status()
         return response.json()
-    
+
     def wait_for_connection(
         self,
-        timeout: int = 5,
+        timeout: int = 10,
         interval: float = 0.5,
-        post_connection_wait: float = 0,
+        post_connection_wait: float = 3.0,
     ) -> bool:
         """
         接続が確立されるまで待機（transport の dtlsState と iceState が connected になるまで）
-        
+
         Args:
             timeout: タイムアウト時間（秒）
             interval: チェック間隔（秒）
             post_connection_wait: 接続確立後の追加待機時間（秒）
-        
+
         Returns:
             接続が確立された場合 True、タイムアウトした場合 False
         """
         if not self._http_client:
             raise RuntimeError("HTTP client not initialized")
-        
+
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
@@ -750,18 +750,17 @@ class Momo:
                 if response.status_code == 200:
                     data = response.json()
                     stats = data.get("stats", [])
-                    
+
                     # transport タイプの統計情報を探す
                     transport_stat = next(
-                        (stat for stat in stats if stat.get("type") == "transport"),
-                        None
+                        (stat for stat in stats if stat.get("type") == "transport"), None
                     )
-                    
+
                     if transport_stat:
                         # dtlsState と iceState が両方 connected であることを確認
                         dtls_state = transport_stat.get("dtlsState")
                         ice_state = transport_stat.get("iceState")
-                        
+
                         if dtls_state == "connected" and ice_state == "connected":
                             # 接続確立後の待機時間がある場合は待つ
                             if post_connection_wait > 0:
@@ -770,10 +769,7 @@ class Momo:
             except (httpx.ConnectError, httpx.HTTPStatusError):
                 # 接続エラーは無視して続行
                 pass
-            
+
             time.sleep(interval)
-        
+
         return False
-
-
-

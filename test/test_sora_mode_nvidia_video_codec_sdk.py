@@ -50,8 +50,9 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(timeout=10), \
+        assert m.wait_for_connection(), (
             f"Failed to establish connection for {video_codec_type} codec"
+        )
 
         data = m.get_metrics()
         stats = data["stats"]
@@ -155,9 +156,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         ("H265", "SimulcastEncoderAdapter (NvCodec, NvCodec, NvCodec)"),
     ],
 )
-def test_simulcast(
-    sora_settings, video_codec_type, expected_encoder_implementation, free_port
-):
+def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（NVIDIA Video Codec SDK 使用）"""
     # エンコーダー設定を準備
     encoder_params = {}
@@ -187,8 +186,9 @@ def test_simulcast(
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(timeout=10), \
+        assert m.wait_for_connection(), (
             f"Failed to establish connection for {video_codec_type} codec"
+        )
 
         data = m.get_metrics()
         stats = data["stats"]
@@ -502,10 +502,12 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(timeout=10), \
+            assert sender.wait_for_connection(), (
                 f"Sender failed to establish connection for {video_codec_type}"
-            assert receiver.wait_for_connection(timeout=10), \
+            )
+            assert receiver.wait_for_connection(), (
                 f"Receiver failed to establish connection for {video_codec_type}"
+            )
 
             # 送信側の統計を確認
             sender_data = sender.get_metrics()
