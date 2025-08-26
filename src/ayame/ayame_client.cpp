@@ -29,7 +29,11 @@ const std::vector<std::string> kAudioAuxiliaryCodecs = {
 // 大文字変換ヘルパー関数
 std::string ToUpperCase(const std::string& str) {
   std::string result = str;
-  std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+  for (char& c : result) {
+    if (c >= 'a' && c <= 'z') {
+      c = c - 'a' + 'A';
+    }
+  }
   return result;
 }
 
