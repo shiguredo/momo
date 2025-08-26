@@ -200,7 +200,7 @@ void AyameClient::SetCodecPreferences() {
     return;
   }
 
-  // PeerConnectionFactory から GetRtpReceiverCapabilities を使ってコーデック一覧を取得
+  // PeerConnectionFactory から GetRtpSenderCapabilities を使ってコーデック一覧を取得
   auto factory = manager_->GetFactory();
   if (!factory) {
     RTC_LOG(LS_ERROR) << "PeerConnectionFactory is null";
@@ -215,10 +215,10 @@ void AyameClient::SetCodecPreferences() {
     webrtc::RtpCapabilities capabilities;
     if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
       capabilities =
-          factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
+          factory->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO);
     } else if (transceiver->media_type() == webrtc::MediaType::AUDIO) {
       capabilities =
-          factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
+          factory->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO);
     } else {
       continue;
     }
