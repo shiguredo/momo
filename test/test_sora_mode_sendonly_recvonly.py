@@ -20,7 +20,6 @@ pytestmark = pytest.mark.skipif(
     ],
 )
 def test_sendonly_recvonly_pair(
-    http_client,
     sora_settings,
     port_allocator,
     video_codec_type,
@@ -79,15 +78,18 @@ def test_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            time.sleep(3)
+            assert sender.wait_for_connection(timeout=10, post_connection_wait=3), \
+                f"Sender failed to establish connection for {video_codec_type}"
+            assert receiver.wait_for_connection(timeout=10, post_connection_wait=3), \
+                f"Receiver failed to establish connection for {video_codec_type}"
 
             # 送信側の統計を確認
-            sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
-            sender_stats = sender_response.json().get("stats", [])
+            sender_data = sender.get_metrics()
+            sender_stats = sender_data.get("stats", [])
 
             # 受信側の統計を確認
-            receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
-            receiver_stats = receiver_response.json().get("stats", [])
+            receiver_data = receiver.get_metrics()
+            receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
             sender_outbound_rtp = [
@@ -178,7 +180,7 @@ def test_sendonly_recvonly_pair(
                     assert stat["decoderImplementation"] == expected_decoder_implementation
 
 
-def test_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
+def test_multiple_sendonly_clients(sora_settings, port_allocator):
     """複数の sendonly クライアントが同じチャンネルに接続できることを確認"""
 
     # 複数の sendonly クライアントを起動
@@ -205,8 +207,8 @@ def test_multiple_sendonly_clients(http_client, sora_settings, port_allocator):
             metadata=sora_settings.metadata,
         ) as sender2:
             # 両方のインスタンスが正常に動作していることを確認
-            response1 = http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
+            response1 = sender1._http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
             assert response1.status_code == 200
 
-            response2 = http_client.get(f"http://localhost:{sender2.metrics_port}/metrics")
+            response2 = sender2._http_client.get(f"http://localhost:{sender2.metrics_port}/metrics")
             assert response2.status_code == 200

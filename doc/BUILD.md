@@ -75,7 +75,7 @@ momo
 ├── LICENSE
 ├── NOTICE
 ├── html
-│   ├── test.html
+│   ├── p2p.html
 │   └── webrtc.js
 └── momo
 ```

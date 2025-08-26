@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -22,7 +21,7 @@ pytestmark = pytest.mark.skipif(
     ],
 )
 def test_connection_stats(
-    http_client, sora_settings, video_codec_type, free_port
+    sora_settings, video_codec_type, free_port
 ):
     """Sora モードで接続時の統計情報を確認"""
     # expected_mime_type を生成
@@ -53,12 +52,11 @@ def test_connection_stats(
         log_level="verbose",
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(timeout=10), \
+            f"Failed to establish connection for {video_codec_type} codec"
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -162,7 +160,7 @@ def test_connection_stats(
     ],
 )
 def test_simulcast(
-    http_client, sora_settings, video_codec_type, expected_encoder_implementation, free_port
+    sora_settings, video_codec_type, expected_encoder_implementation, free_port
 ):
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
@@ -194,12 +192,11 @@ def test_simulcast(
         initial_wait=10,
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(timeout=10), \
+            f"Failed to establish connection for {video_codec_type} codec"
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -453,7 +450,6 @@ def test_simulcast(
     ],
 )
 def test_sora_sendonly_recvonly_pair(
-    http_client,
     sora_settings,
     port_allocator,
     video_codec_type,
@@ -513,15 +509,18 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            time.sleep(5)
+            assert sender.wait_for_connection(timeout=10), \
+                f"Sender failed to establish connection for {video_codec_type}"
+            assert receiver.wait_for_connection(timeout=10), \
+                f"Receiver failed to establish connection for {video_codec_type}"
             
             # 送信側の統計を確認
-            sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
-            sender_stats = sender_response.json().get("stats", [])
+            sender_data = sender.get_metrics()
+            sender_stats = sender_data.get("stats", [])
 
             # 受信側の統計を確認
-            receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
-            receiver_stats = receiver_response.json().get("stats", [])
+            receiver_data = receiver.get_metrics()
+            receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
             sender_outbound_rtp = [
