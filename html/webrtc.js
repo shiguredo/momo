@@ -1,391 +1,446 @@
-const remoteVideo = document.getElementById('remote_video');
-const dataTextInput = document.getElementById('data_text');
-remoteVideo.controls = true;
-let peerConnection = null;
-let dataChannel = null;
-let candidates = [];
-let hasReceivedSdp = false;
-// iceServer を定義
-const iceServers = [{ 'urls': 'stun:stun.l.google.com:19302' }];
-// peer connection の 設定
-const peerConnectionConfig = {
-  'iceServers': iceServers
-};
+(() => {
+  'use strict';
 
+  // DOM 参照
+  const remoteVideo = document.getElementById('remote_video');
+  const dataTextInput = document.getElementById('data_text');
+  remoteVideo.controls = true;
 
-const isSSL = location.protocol === 'https:';
-const wsProtocol = isSSL ? 'wss://' : 'ws://';
-const wsUrl = wsProtocol + location.host + '/ws';
-const ws = new WebSocket(wsUrl);
-ws.onopen = onWsOpen.bind();
-ws.onerror = onWsError.bind();
-ws.onmessage = onWsMessage.bind();
+  // 状態
+  let peerConnection = null;
+  let dataChannel = null;
+  let candidates = [];
+  let hasReceivedSdp = false;
 
-function onWsError(error){
-  console.error('ws onerror() ERROR:', error);
-}
+  // ICE サーバー設定
+  const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+  const peerConnectionConfig = { iceServers };
 
-function onWsOpen(event) {
-  console.log('ws open()');
-}
-function onWsMessage(event) {
-  console.log('ws onmessage() data:', event.data);
-  const message = JSON.parse(event.data);
-  if (message.type === 'offer') {
-    console.log('Received offer ...');
-    const offer = new RTCSessionDescription(message);
-    console.log('offer: ', offer);
-    setOffer(offer);
-  }
-  else if (message.type === 'answer') {
-    console.log('Received answer ...');
-    const answer = new RTCSessionDescription(message);
-    console.log('answer: ', answer);
-    setAnswer(answer);
-  }
-  else if (message.type === 'candidate') {
-    console.log('Received ICE candidate ...');
-    const candidate = new RTCIceCandidate(message.ice);
-    console.log('candidate: ', candidate);
-    if (hasReceivedSdp) {
-      addIceCandidate(candidate);
-    } else {
-      candidates.push(candidate);
-    }
-  }
-  else if (message.type === 'close') {
-    console.log('peer connection is closed ...');
-  }
-}
+  // WebSocket 設定
+  const isSSL = location.protocol === 'https:';
+  const wsProtocol = isSSL ? 'wss://' : 'ws://';
+  const wsUrl = wsProtocol + location.host + '/ws';
+  const ws = new WebSocket(wsUrl);
 
-function connect() {
-  console.group();
-  if (!peerConnection) {
-    console.log('make Offer');
-    makeOffer();
-  }
-  else {
-    console.warn('peer connection already exists.');
-  }
-  console.groupEnd();
-}
-
-function disconnect() {
-  console.group();
-  if (peerConnection) {
-    if (peerConnection.iceConnectionState !== 'closed') {
-      peerConnection.close();
-      peerConnection = null;
-      if (ws && ws.readyState === 1) {
-        const message = JSON.stringify({ type: 'close' });
-        ws.send(message);
+  ws.onopen = () => {
+    console.log('ws open()');
+  };
+  ws.onerror = (error) => {
+    console.error('ws onerror() ERROR:', error);
+  };
+  ws.onmessage = (event) => {
+    console.log('ws onmessage() data:', event.data);
+    const message = JSON.parse(event.data);
+    switch (message.type) {
+      case 'offer': {
+        console.log('Received offer ...');
+        const offer = new RTCSessionDescription(message);
+        console.log('offer: ', offer);
+        setOffer(offer);
+        break;
       }
-      console.log('sending close message');
+      case 'answer': {
+        console.log('Received answer ...');
+        const answer = new RTCSessionDescription(message);
+        console.log('answer: ', answer);
+        setAnswer(answer);
+        break;
+      }
+      case 'candidate': {
+        console.log('Received ICE candidate ...');
+        const candidate = new RTCIceCandidate(message.ice);
+        console.log('candidate: ', candidate);
+        if (hasReceivedSdp) {
+          addIceCandidate(candidate);
+        } else {
+          candidates.push(candidate);
+        }
+        break;
+      }
+      case 'close': {
+        console.log('peer connection is closed ...');
+        break;
+      }
+      default:
+        console.warn('Unknown WS message type:', message.type);
+    }
+  };
+
+  // ページ読み込み時に能力からコーデック一覧を構築
+  try { populateVideoCodecSelect(); } catch (e) { console.warn('populateVideoCodecSelect failed:', e); }
+  try { bindUi(); } catch (e) { console.warn('bindUi failed:', e); }
+
+  // 公開 API
+  function connect() {
+    console.group();
+    if (!peerConnection) {
+      console.log('make Offer');
+      makeOffer();
+    } else {
+      console.warn('peer connection already exists.');
+    }
+    console.groupEnd();
+  }
+
+  function disconnect() {
+    console.group();
+    if (peerConnection && peerConnection.iceConnectionState !== 'closed') {
+      try {
+        peerConnection.close();
+      } catch (e) {
+        console.warn('close() error:', e);
+      }
+      peerConnection = null;
+      if (dataChannel) {
+        try { dataChannel.close(); } catch (_) {}
+        dataChannel = null;
+      }
+      // 相手側へ通知
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'close' }));
+        console.log('sending close message');
+      }
       cleanupVideoElement(remoteVideo);
+      candidates = [];
+      hasReceivedSdp = false;
+      try { updateUiState(); } catch (_) {}
+    } else {
+      console.log('peerConnection is closed.');
+    }
+    console.groupEnd();
+  }
+
+  function play() {
+    remoteVideo.play();
+  }
+
+  function sendDataChannel() {
+    const textData = dataTextInput.value;
+    if (textData.length === 0) return;
+    if (!dataChannel || dataChannel.readyState !== 'open') return;
+    dataChannel.send(new TextEncoder().encode(textData));
+    dataTextInput.value = '';
+  }
+
+  // 内部処理
+  function drainCandidate() {
+    hasReceivedSdp = true;
+    candidates.forEach((candidate) => addIceCandidate(candidate));
+    candidates = [];
+  }
+
+  function addIceCandidate(candidate) {
+    if (!peerConnection) {
+      console.error('PeerConnection does not exist!');
       return;
     }
+    try {
+      peerConnection.addIceCandidate(candidate);
+    } catch (e) {
+      console.error('addIceCandidate() failed:', e);
+    }
   }
-  console.log('peerConnection is closed.');
-  console.groupEnd();
-}
 
-function drainCandidate() {
-  hasReceivedSdp = true;
-  candidates.forEach((candidate) => {
-    addIceCandidate(candidate);
-  });
-  candidates = [];
-}
-
-function addIceCandidate(candidate) {
-  if (peerConnection) {
-    peerConnection.addIceCandidate(candidate);
+  function sendIceCandidate(candidate) {
+    console.log('---sending ICE candidate ---');
+    const message = JSON.stringify({ type: 'candidate', ice: candidate });
+    console.log('sending candidate=' + message);
+    ws.send(message);
   }
-  else {
-    console.error('PeerConnection does not exist!');
+
+  function playVideo(element, stream) {
+    element.srcObject = stream;
+    // リモートストリーム更新に応じて UI も更新
+    try { updateUiState(); } catch (_) {}
   }
-}
 
-function sendIceCandidate(candidate) {
-  console.log('---sending ICE candidate ---');
-  const message = JSON.stringify({ type: 'candidate', ice: candidate });
-  console.log('sending candidate=' + message);
-  ws.send(message);
-}
+  // 接続状況に応じて UI を更新
+  function updateUiState() {
+    const connectBtn = document.getElementById('btnConnect');
+    const disconnectBtn = document.getElementById('btnDisconnect');
+    const playBtn = document.getElementById('btnPlay');
+    const sendBtn = document.getElementById('btnSend');
+    const codecSelect = document.getElementById('codec');
 
-function playVideo(element, stream) {
-  element.srcObject = stream;
-}
+    const hasPc = !!peerConnection;
+    const hasStream = !!remoteVideo.srcObject;
+    const canSend = !!(dataChannel && dataChannel.readyState === 'open');
 
-function prepareNewConnection() {
-  const peer = new RTCPeerConnection(peerConnectionConfig);
-  dataChannel = peer.createDataChannel("serial");
-  if ('ontrack' in peer) {
-    if (isSafari()) {
-      let tracks = [];
-      peer.ontrack = (event) => {
-        console.log('-- peer.ontrack()');
-        tracks.push(event.track)
-        // safari で動作させるために、ontrack が発火するたびに MediaStream を作成する
-        let mediaStream = new MediaStream(tracks);
+    if (connectBtn) connectBtn.disabled = hasPc;
+    if (disconnectBtn) disconnectBtn.disabled = !hasPc;
+    if (playBtn) playBtn.disabled = !hasStream;
+    if (sendBtn) sendBtn.disabled = !canSend;
+    if (dataTextInput) dataTextInput.disabled = !canSend;
+    if (codecSelect) codecSelect.disabled = hasPc; // 接続中は変更不可にする
+  }
+
+  function prepareNewConnection() {
+    // 新規接続用に候補バッファ状態をリセット
+    candidates = [];
+    hasReceivedSdp = false;
+
+    const peer = new RTCPeerConnection(peerConnectionConfig);
+    dataChannel = peer.createDataChannel('serial');
+    // DataChannel の状態に応じて UI 更新
+    dataChannel.onopen = () => { console.log('DataChannel open'); updateUiState(); };
+    dataChannel.onclose = () => { console.log('DataChannel close'); updateUiState(); };
+
+    if ('ontrack' in peer) {
+      if (isSafari()) {
+        const tracks = [];
+        peer.ontrack = (event) => {
+          console.log('-- peer.ontrack()');
+          tracks.push(event.track);
+          // safari で動作させるために、ontrack が発火するたびに MediaStream を作成する
+          const mediaStream = new MediaStream(tracks);
+          playVideo(remoteVideo, mediaStream);
+        };
+      } else {
+        const mediaStream = new MediaStream();
         playVideo(remoteVideo, mediaStream);
-      };
-    }
-    else {
-      let mediaStream = new MediaStream();
-      playVideo(remoteVideo, mediaStream);
-      peer.ontrack = (event) => {
-        console.log('-- peer.ontrack()');
-        mediaStream.addTrack(event.track);
-      };
-    }
-  }
-  else {
-    peer.onaddstream = (event) => {
-      console.log('-- peer.onaddstream()');
-      playVideo(remoteVideo, event.stream);
-    };
-  }
-
-  peer.onicecandidate = (event) => {
-    console.log('-- peer.onicecandidate()');
-    if (event.candidate) {
-      console.log(event.candidate);
-      sendIceCandidate(event.candidate);
+        peer.ontrack = (event) => {
+          console.log('-- peer.ontrack()');
+          mediaStream.addTrack(event.track);
+        };
+      }
     } else {
-      console.log('empty ice event');
+      peer.onaddstream = (event) => {
+        console.log('-- peer.onaddstream()');
+        playVideo(remoteVideo, event.stream);
+      };
     }
-  };
 
-  peer.oniceconnectionstatechange = () => {
-    console.log('-- peer.oniceconnectionstatechange()');
-    console.log('ICE connection Status has changed to ' + peer.iceConnectionState);
-    switch (peer.iceConnectionState) {
-      case 'closed':
-      case 'failed':
-      case 'disconnected':
-        break;
+    peer.onicecandidate = (event) => {
+      console.log('-- peer.onicecandidate()');
+      if (event.candidate) {
+        console.log(event.candidate);
+        sendIceCandidate(event.candidate);
+      } else {
+        console.log('empty ice event');
+      }
+    };
+
+    peer.oniceconnectionstatechange = () => {
+      console.log('-- peer.oniceconnectionstatechange()');
+      console.log('ICE connection Status has changed to ' + peer.iceConnectionState);
+      switch (peer.iceConnectionState) {
+        case 'closed':
+        case 'failed':
+        case 'disconnected':
+          break;
+      }
+      updateUiState();
+    };
+
+    const videoTransceiver = peer.addTransceiver('video', { direction: 'recvonly' });
+    applyVideoCodecPreferences(videoTransceiver);
+    peer.addTransceiver('audio', { direction: 'recvonly' });
+
+    dataChannel.onmessage = (event) => {
+      console.log('Got Data Channel Message:', new TextDecoder().decode(event.data));
+    };
+
+    return peer;
+  }
+
+  // テストページ要素がある場合に UI イベントを結線
+  function bindUi() {
+    const connectBtn = document.getElementById('btnConnect');
+    const disconnectBtn = document.getElementById('btnDisconnect');
+    const playBtn = document.getElementById('btnPlay');
+    const sendBtn = document.getElementById('btnSend');
+    if (connectBtn) connectBtn.addEventListener('click', () => connect());
+    if (disconnectBtn) disconnectBtn.addEventListener('click', () => disconnect());
+    if (playBtn) playBtn.addEventListener('click', () => play());
+    if (sendBtn) sendBtn.addEventListener('click', () => sendDataChannel());
+    if (dataTextInput) {
+      dataTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendDataChannel();
+      });
+      // 入力変化で送信可否の見た目を即時反映
+      dataTextInput.addEventListener('input', () => updateUiState());
     }
-  };
-  peer.addTransceiver('video', {direction: 'recvonly'});
-  peer.addTransceiver('audio', {direction: 'recvonly'});
-
-  dataChannel.onmessage = function (event) {
-    console.log("Got Data Channel Message:", new TextDecoder().decode(event.data));
-  };
-  
-  return peer;
-}
-
-function browser() {
-  const ua = window.navigator.userAgent.toLocaleLowerCase();
-  if (ua.indexOf('edge') !== -1) {
-    return 'edge';
+    // 初期状態反映
+    updateUiState();
   }
-  else if (ua.indexOf('chrome')  !== -1 && ua.indexOf('edge') === -1) {
-    return 'chrome';
-  }
-  else if (ua.indexOf('safari')  !== -1 && ua.indexOf('chrome') === -1) {
-    return 'safari';
-  }
-  else if (ua.indexOf('opera')   !== -1) {
-    return 'opera';
-  }
-  else if (ua.indexOf('firefox') !== -1) {
-    return 'firefox';
-  }
-  return ;
-}
 
-function isSafari() {
-  return browser() === 'safari';
-}
+  // コーデック選好関連の補助関数
+  function getSelectedVideoCodecMime() {
+    const el = document.getElementById('codec');
+    if (!el) return null;
+    return (el.value || '').toLowerCase() || null; // value は 'video/h264' のような完全な mimeType
+  }
 
-function sendSdp(sessionDescription) {
-  console.log('---sending sdp ---');
-  const message = JSON.stringify(sessionDescription);
-  console.log('sending SDP=' + message);
-  ws.send(message);
-}
+  function labelForMime(mime) {
+    const lower = (mime || '').toLowerCase();
+    const name = lower.split('/')[1] || lower;
+    if (name === 'h264') return 'H264';
+    if (name === 'h265' || name === 'hevc') return 'H265';
+    return name.toUpperCase();
+  }
 
-async function makeOffer() {
-  peerConnection = prepareNewConnection();
-  try {
-    const sessionDescription = await peerConnection.createOffer({
-      'offerToReceiveAudio': true,
-      'offerToReceiveVideo': true
-    })
-    console.log('createOffer() success in promise, SDP=', sessionDescription.sdp);
-    switch (document.getElementById('codec').value) {
-      case 'H264':
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
-        break;
-      case 'VP8':
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
-        break;
-      case 'VP9':
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'AV1');
-        break;
-      case 'AV1':
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'H264');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP8');
-        sessionDescription.sdp = removeCodec(sessionDescription.sdp, 'VP9');
-        break;
+  function isVideoPrimaryCodec(codec) {
+    const mt = (codec && codec.mimeType ? codec.mimeType : '').toLowerCase();
+    if (!mt.startsWith('video/')) return false;
+    return !/(\/rtx|\/red|\/ulpfec|\/flexfec)/.test(mt);
+  }
+
+  function populateVideoCodecSelect() {
+    const select = document.getElementById('codec');
+    if (!select) return;
+    if (typeof RTCRtpSender === 'undefined' || !RTCRtpSender.getCapabilities) return;
+    const caps = RTCRtpSender.getCapabilities('video');
+    if (!caps || !Array.isArray(caps.codecs)) return;
+
+    const before = (select.value || '').toLowerCase();
+    // mimeType で重複排除し、RTX/FEC 系を除外
+    const seen = new Set();
+    const mimes = [];
+    caps.codecs.forEach(c => {
+      if (!isVideoPrimaryCodec(c)) return;
+      const mt = (c.mimeType || '').toLowerCase();
+      if (seen.has(mt)) return;
+      seen.add(mt);
+      mimes.push(mt);
+    });
+
+    // いったん空にしてから再構築
+    while (select.firstChild) select.removeChild(select.firstChild);
+    mimes.forEach(mt => {
+      const opt = document.createElement('option');
+      opt.value = mt;
+      opt.textContent = labelForMime(mt);
+      select.appendChild(opt);
+    });
+    // 以前の選択があれば維持、なければ H264、なければ先頭
+    const prefer = before && mimes.includes(before) ? before : (mimes.includes('video/h264') ? 'video/h264' : (mimes[0] || ''));
+    if (prefer) select.value = prefer;
+  }
+
+  function applyVideoCodecPreferences(transceiver) {
+    const mime = getSelectedVideoCodecMime();
+    if (!mime) return;
+    if (typeof RTCRtpSender === 'undefined' || !RTCRtpSender.getCapabilities) return;
+    if (!transceiver || typeof transceiver.setCodecPreferences !== 'function') return;
+    const caps = RTCRtpSender.getCapabilities('video');
+    if (!caps || !Array.isArray(caps.codecs)) return;
+    // RTX/FEC 系を除外し、一次の映像コーデックのみを使用
+    const primary = caps.codecs.filter(isVideoPrimaryCodec);
+    const selected = primary.filter(c => (c.mimeType || '').toLowerCase() === mime);
+    const others = primary.filter(c => (c.mimeType || '').toLowerCase() !== mime);
+    if (selected.length === 0) return; // 選択したコーデックが未対応
+    const ordered = selected.concat(others);
+    transceiver.setCodecPreferences(ordered);
+    console.log('Applied codec preferences via setCodecPreferences:', mime);
+  }
+
+  function browser() {
+    const ua = window.navigator.userAgent.toLocaleLowerCase();
+    if (ua.indexOf('edge') !== -1) return 'edge';
+    if (ua.indexOf('chrome') !== -1 && ua.indexOf('edge') === -1) return 'chrome';
+    if (ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1) return 'safari';
+    if (ua.indexOf('opera') !== -1) return 'opera';
+    if (ua.indexOf('firefox') !== -1) return 'firefox';
+    return undefined;
+  }
+
+  function isSafari() {
+    return browser() === 'safari';
+  }
+
+  function sendSdp(sessionDescription) {
+    console.log('---sending sdp ---');
+    const message = JSON.stringify(sessionDescription);
+    console.log('sending SDP=' + message);
+    ws.send(message);
+  }
+
+  async function makeOffer() {
+    peerConnection = prepareNewConnection();
+    updateUiState();
+    try {
+      const sessionDescription = await peerConnection.createOffer({
+        // 受信方向は addTransceiver('recvonly') によって指定済み
+      });
+      console.log('createOffer() success in promise, SDP=', sessionDescription.sdp);
+      await peerConnection.setLocalDescription(sessionDescription);
+      console.log('setLocalDescription() success in promise');
+      sendSdp(peerConnection.localDescription);
+    } catch (error) {
+      console.error('makeOffer() ERROR:', error);
     }
-    await peerConnection.setLocalDescription(sessionDescription);
-    console.log('setLocalDescription() success in promise');
-    sendSdp(peerConnection.localDescription);
-  } catch (error) {
-    console.error('makeOffer() ERROR:', error);
   }
-}
 
-async function makeAnswer() {
-  console.log('sending Answer. Creating remote session description...');
-  if (!peerConnection) {
-    console.error('peerConnection DOES NOT exist!');
-    return;
+  async function makeAnswer() {
+    console.log('sending Answer. Creating remote session description...');
+    if (!peerConnection) {
+      console.error('peerConnection DOES NOT exist!');
+      return;
+    }
+    try {
+      const sessionDescription = await peerConnection.createAnswer();
+      console.log('createAnswer() success in promise');
+      await peerConnection.setLocalDescription(sessionDescription);
+      console.log('setLocalDescription() success in promise');
+      sendSdp(peerConnection.localDescription);
+      drainCandidate();
+    } catch (error) {
+      console.error('makeAnswer() ERROR:', error);
+    }
   }
-  try {
-    const sessionDescription = await peerConnection.createAnswer();
-    console.log('createAnswer() success in promise');
-    await peerConnection.setLocalDescription(sessionDescription);
-    console.log('setLocalDescription() success in promise');
-    sendSdp(peerConnection.localDescription);
-    drainCandidate();
-  } catch (error) {
-    console.error('makeAnswer() ERROR:', error);
-  }
-}
 
-// offer sdp を生成する
-function setOffer(sessionDescription) {
-  if (peerConnection) {
-    console.error('peerConnection already exists!');
-  }
-  const peerConnection = prepareNewConnection();
-  peerConnection.onnegotiationneeded = async function () {
-    try{
+  // offer SDP を受信した際の処理
+  async function setOffer(sessionDescription) {
+    if (peerConnection) {
+      console.warn('peerConnection already exists. Replacing with a new one.');
+      try { peerConnection.close(); } catch (_) {}
+    }
+    peerConnection = prepareNewConnection();
+    updateUiState();
+    try {
       await peerConnection.setRemoteDescription(sessionDescription);
       console.log('setRemoteDescription(offer) success in promise');
-      makeAnswer();
-    }catch(error) {
-      console.error('setRemoteDescription(offer) ERROR: ', error);
+      await makeAnswer();
+    } catch (error) {
+      console.error('setRemoteDescription(offer) ERROR:', error);
     }
   }
-}
 
-async function setAnswer(sessionDescription) {
-  if (!peerConnection) {
-    console.error('peerConnection DOES NOT exist!');
-    return;
+  async function setAnswer(sessionDescription) {
+    if (!peerConnection) {
+      console.error('peerConnection DOES NOT exist!');
+      return;
+    }
+    try {
+      await peerConnection.setRemoteDescription(sessionDescription);
+      console.log('setRemoteDescription(answer) success in promise');
+      drainCandidate();
+    } catch (error) {
+      console.error('setRemoteDescription(answer) ERROR:', error);
+    }
   }
-  try {
-    await peerConnection.setRemoteDescription(sessionDescription);
-    console.log('setRemoteDescription(answer) success in promise');
-    drainCandidate();
-  } catch(error) {
-    console.error('setRemoteDescription(answer) ERROR: ', error);
-  }
-}
 
-function cleanupVideoElement(element) {
-  element.pause();
-  element.srcObject = null;
-}
-
-
-/* getOffer() function is currently unused.
-function getOffer() {
-  initiator = false;
-  createPeerConnection();
-  sendXHR(
-    ".GetOffer",
-    JSON.stringify(peer_connection.localDescription),
-    function (respnse) {
-      peer_connection.setRemoteDescription(
-        new RTCSessionDescription(respnse),
-        function () {
-          peer_connection.createAnswer(
-            function (answer) {
-              peer_connection.setLocalDescription(answer);
-            }, function (e) { });
-        }, function (e) {
-          console.error(e);
+  function cleanupVideoElement(element) {
+    try {
+      const stream = element.srcObject;
+      if (stream && typeof stream.getTracks === 'function') {
+        stream.getTracks().forEach((t) => {
+          try { t.stop(); } catch (_) {}
         });
-    }, true);
-}
-*/
-
-// Stack Overflow より引用: https://stackoverflow.com/a/52760103
-// https://stackoverflow.com/questions/52738290/how-to-remove-video-codecs-in-webrtc-sdp
-function removeCodec(orgsdp, codec) {
-  const internalFunc = (sdp) => {
-    const codecre = new RegExp('(a=rtpmap:(\\d*) ' + codec + '\/90000\\r\\n)');
-    const rtpmaps = sdp.match(codecre);
-    if (rtpmaps == null || rtpmaps.length <= 2) {
-      return sdp;
+      }
+    } catch (e) {
+      console.warn('cleanupVideoElement: stop tracks error:', e);
     }
-    const rtpmap = rtpmaps[2];
-    let modsdp = sdp.replace(codecre, "");
-
-    const rtcpre = new RegExp('(a=rtcp-fb:' + rtpmap + '.*\r\n)', 'g');
-    modsdp = modsdp.replace(rtcpre, "");
-
-    const fmtpre = new RegExp('(a=fmtp:' + rtpmap + '.*\r\n)', 'g');
-    modsdp = modsdp.replace(fmtpre, "");
-
-    const aptpre = new RegExp('(a=fmtp:(\\d*) apt=' + rtpmap + '\\r\\n)');
-    const aptmaps = modsdp.match(aptpre);
-    let fmtpmap = "";
-    if (aptmaps != null && aptmaps.length >= 3) {
-      fmtpmap = aptmaps[2];
-      modsdp = modsdp.replace(aptpre, "");
-
-      const rtppre = new RegExp('(a=rtpmap:' + fmtpmap + '.*\r\n)', 'g');
-      modsdp = modsdp.replace(rtppre, "");
-    }
-
-    let videore = /(m=video.*\r\n)/;
-    const videolines = modsdp.match(videore);
-    if (videolines != null) {
-      //If many m=video are found in SDP, this program doesn't work.
-      let videoline = videolines[0].substring(0, videolines[0].length - 2);
-      const videoelems = videoline.split(" ");
-      let modvideoline = videoelems[0];
-      videoelems.forEach((videoelem, index) => {
-        if (index === 0) return;
-        if (videoelem == rtpmap || videoelem == fmtpmap) {
-          return;
-        }
-        modvideoline += " " + videoelem;
-      })
-      modvideoline += "\r\n";
-      modsdp = modsdp.replace(videore, modvideoline);
-    }
-    return internalFunc(modsdp);
+    element.pause();
+    element.srcObject = null;
+    try { updateUiState(); } catch (_) {}
   }
-  return internalFunc(orgsdp);
-}
 
-function play() {
-  remoteVideo.play();
-}
+  // SDP 書き換えは廃止し、setCodecPreferences のみに統一
 
-function sendDataChannel() {
-  let textData = dataTextInput.value;
-  if (textData.length == 0) {
-    return;
-  }
-  if (dataChannel == null || dataChannel.readyState != "open") {
-    return;
-  }
-  dataChannel.send(new TextEncoder().encode(textData));
-  dataTextInput.value = "";
-}
+  // グローバルに公開する API（クラス未使用）
+  window.connect = connect;
+  window.disconnect = disconnect;
+  window.play = play;
+  window.sendDataChannel = sendDataChannel;
+})();
