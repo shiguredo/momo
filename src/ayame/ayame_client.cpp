@@ -5,8 +5,8 @@
 #include <boost/json.hpp>
 
 // WebRTC
-#include <api/rtp_transceiver_interface.h>
 #include <api/peer_connection_interface.h>
+#include <api/rtp_transceiver_interface.h>
 
 #include <algorithm>
 
@@ -184,7 +184,7 @@ void AyameClient::CreatePeerConnection() {
   rtc_config.servers = ice_servers_;
   connection_ = manager_->CreateConnection(rtc_config, this);
   manager_->InitTracks(connection_.get());
-  
+
   // InitTracks の後に SetCodecPreferences を呼ぶ
   SetCodecPreferences();
 }
@@ -199,7 +199,7 @@ void AyameClient::SetCodecPreferences() {
     RTC_LOG(LS_ERROR) << "PeerConnection is null";
     return;
   }
-  
+
   // PeerConnectionFactory から GetRtpReceiverCapabilities を使ってコーデック一覧を取得
   auto factory = manager_->GetFactory();
   if (!factory) {
@@ -210,68 +210,77 @@ void AyameClient::SetCodecPreferences() {
   auto transceivers = pc->GetTransceivers();
   for (auto transceiver : transceivers) {
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
-    
+
     // PeerConnectionFactory から capabilities を取得
     webrtc::RtpCapabilities capabilities;
     if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
-      capabilities = factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
+      capabilities =
+          factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
     } else if (transceiver->media_type() == webrtc::MediaType::AUDIO) {
-      capabilities = factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
+      capabilities =
+          factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
     } else {
       continue;
     }
-    
+
     auto current_codecs = capabilities.codecs;
-    
+
     // 現在のコーデック一覧が空の場合はスキップ
     if (current_codecs.empty()) {
       RTC_LOG(LS_WARNING) << "No codec capabilities available for transceiver";
       continue;
     }
-    
-    if (transceiver->media_type() == webrtc::MediaType::VIDEO && !config_.video_codec_type.empty()) {
+
+    if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
+        !config_.video_codec_type.empty()) {
       // 映像コーデックのフィルタリング
       std::string target_codec = config_.video_codec_type;
-      std::transform(target_codec.begin(), target_codec.end(), target_codec.begin(), ::toupper);
-      
+      std::transform(target_codec.begin(), target_codec.end(),
+                     target_codec.begin(), ::toupper);
+
       for (const auto& codec : current_codecs) {
         std::string codec_name = codec.name;
-        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(), ::toupper);
-        
+        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(),
+                       ::toupper);
+
         // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec || 
-            codec_name == "RTX" || 
-            codec_name == "RED" || 
-            codec_name == "ULPFEC" ||
+        if (codec_name == target_codec || codec_name == "RTX" ||
+            codec_name == "RED" || codec_name == "ULPFEC" ||
             codec_name == "FLEXFEC-03") {
           filtered_codecs.push_back(codec);
         }
       }
-    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO && !config_.audio_codec_type.empty()) {
+    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO &&
+               !config_.audio_codec_type.empty()) {
       // 音声コーデックのフィルタリング
       std::string target_codec = config_.audio_codec_type;
-      std::transform(target_codec.begin(), target_codec.end(), target_codec.begin(), ::toupper);
-      
+      std::transform(target_codec.begin(), target_codec.end(),
+                     target_codec.begin(), ::toupper);
+
       for (const auto& codec : current_codecs) {
         std::string codec_name = codec.name;
-        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(), ::toupper);
-        
+        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(),
+                       ::toupper);
+
         // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec || 
-            codec_name == "TELEPHONE-EVENT" || 
+        if (codec_name == target_codec || codec_name == "TELEPHONE-EVENT" ||
             codec_name == "CN") {
           filtered_codecs.push_back(codec);
         }
       }
     }
-    
+
     if (!filtered_codecs.empty()) {
       auto error = transceiver->SetCodecPreferences(filtered_codecs);
       if (!error.ok()) {
-        RTC_LOG(LS_ERROR) << "Failed to set codec preferences: " << error.message();
+        RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
+                          << error.message();
       } else {
-        RTC_LOG(LS_INFO) << "Successfully set codec preferences for " 
-                         << (transceiver->media_type() == webrtc::MediaType::VIDEO ? "video" : "audio");
+        RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
+                         << (transceiver->media_type() ==
+                                     webrtc::MediaType::VIDEO
+                                 ? "video"
+                                 : "audio");
       }
     }
   }

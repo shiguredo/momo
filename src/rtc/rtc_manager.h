@@ -111,8 +111,9 @@ class RTCManager {
       RTCMessageSender* sender);
   void InitTracks(RTCConnection* conn);
   void SetParameters();
-  
-  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> GetFactory() const {
+
+  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> GetFactory()
+      const {
     return factory_;
   }
 
