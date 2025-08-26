@@ -26,7 +26,7 @@
 
 ### テストモードを利用して Momo を動かしてみる
 
-[USE_TEST.md](USE_TEST.md) をお読みください。
+[USE_P2P.md](USE_P2P.md) をお読みください。
 
 ### Ayame モードを 利用して Momo を動かしてみる
 
@@ -46,7 +46,7 @@ Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を�
 
 ### データチャネルを利用したシリアル読み書きを使ってみる
 
-Test と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
+P2P と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
 
 [USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
@@ -150,7 +150,7 @@ Options:
   --proxy-password TEXT       Proxy password
 
 Subcommands:
-  test                        Mode for momo development with simple HTTP server
+  p2p                         P2P mode for momo development with simple HTTP server
   ayame                       Mode for working with WebRTC Signaling Server Ayame
   sora                        Mode for working with WebRTC SFU Sora
 ```
@@ -184,12 +184,12 @@ H264:
     - VideoToolbox [videotoolbox] (default)
 ```
 
-### test モードヘルプ
+### p2p モードヘルプ
 
 ```
-$ ./momo test --help
-Mode for momo development with simple HTTP server
-Usage: ./momo test [OPTIONS]
+$ ./momo p2p --help
+P2P mode for momo development with simple HTTP server
+Usage: ./momo p2p [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit

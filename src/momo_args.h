@@ -78,8 +78,8 @@ struct MomoArgs {
   boost::optional<bool> sora_ignore_disconnect_websocket;
   int sora_disconnect_wait_timeout = 5;
 
-  std::string test_document_root;
-  int test_port = 8080;
+  std::string p2p_document_root;
+  int p2p_port = 8080;
 
   std::string ayame_signaling_url;
   std::string ayame_room_id;

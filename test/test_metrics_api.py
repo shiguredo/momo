@@ -6,7 +6,7 @@ from momo import Momo, MomoMode
 def test_metrics_endpoint_returns_200(free_port, port_allocator):
     """メトリクスエンドポイントが 200 を返すことを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -19,7 +19,7 @@ def test_metrics_endpoint_returns_200(free_port, port_allocator):
 def test_metrics_endpoint_returns_json(free_port, port_allocator):
     """メトリクスエンドポイントが JSON を返すことを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -35,7 +35,7 @@ def test_metrics_endpoint_returns_json(free_port, port_allocator):
 def test_metrics_response_structure(free_port, port_allocator):
     """メトリクスレスポンスの構造を確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -60,7 +60,7 @@ def test_metrics_response_structure(free_port, port_allocator):
 def test_metrics_stats_format(free_port, port_allocator):
     """統計情報の形式を確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -84,7 +84,7 @@ def test_metrics_stats_format(free_port, port_allocator):
 def test_invalid_endpoint_returns_404(free_port, port_allocator):
     """存在しないエンドポイントが 404 を返すことを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -96,7 +96,7 @@ def test_invalid_endpoint_returns_404(free_port, port_allocator):
 def test_post_method_returns_error(free_port, port_allocator):
     """POST メソッドがエラーを返すことを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
@@ -108,7 +108,7 @@ def test_post_method_returns_error(free_port, port_allocator):
 def test_get_metrics_method(free_port, port_allocator):
     """get_metrics メソッドが正しく動作することを確認"""
     with Momo(
-        mode=MomoMode.TEST,
+        mode=MomoMode.P2P,
         metrics_port=free_port,
         port=next(port_allocator),
     ) as m:

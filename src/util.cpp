@@ -43,7 +43,7 @@ static void add_optional_bool(CLI::App* app,
 
 void Util::ParseArgs(int argc,
                      char* argv[],
-                     bool& use_test,
+                     bool& use_p2p,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
@@ -245,18 +245,18 @@ void Util::ParseArgs(int argc,
   app.add_option("--proxy-username", args.proxy_username, "Proxy username");
   app.add_option("--proxy-password", args.proxy_password, "Proxy password");
 
-  auto test_app = app.add_subcommand(
-      "test", "Mode for momo development with simple HTTP server");
+  auto p2p_app = app.add_subcommand(
+      "p2p", "P2P mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
       "ayame", "Mode for working with WebRTC Signaling Server Ayame");
   auto sora_app =
       app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
-  test_app
-      ->add_option("--document-root", args.test_document_root,
+  p2p_app
+      ->add_option("--document-root", args.p2p_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
-  test_app->add_option("--port", args.test_port, "Port number (default: 8080)")
+  p2p_app->add_option("--port", args.p2p_port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
 
   ayame_app
@@ -367,8 +367,8 @@ void Util::ParseArgs(int argc,
     args.sora_metadata = boost::json::parse(sora_metadata);
   }
 
-  if (args.test_document_root.empty()) {
-    args.test_document_root = boost::filesystem::current_path().string();
+  if (args.p2p_document_root.empty()) {
+    args.p2p_document_root = boost::filesystem::current_path().string();
   }
 
   if (version) {
@@ -398,7 +398,7 @@ void Util::ParseArgs(int argc,
     exit(0);
   }
 
-  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
+  if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
     std::cout << app.help() << std::endl;
     exit(1);
   }
@@ -407,8 +407,8 @@ void Util::ParseArgs(int argc,
     use_sora = true;
   }
 
-  if (test_app->parsed()) {
-    use_test = true;
+  if (p2p_app->parsed()) {
+    use_p2p = true;
   }
 
   if (ayame_app->parsed()) {
