@@ -4,6 +4,12 @@
 #include <boost/beast/websocket/stream.hpp>
 #include <boost/json.hpp>
 
+// WebRTC
+#include <api/rtp_transceiver_interface.h>
+#include <api/peer_connection_interface.h>
+
+#include <algorithm>
+
 #include "momo_version.h"
 #include "ssl_verifier.h"
 #include "url_parts.h"
@@ -180,6 +186,75 @@ void AyameClient::CreatePeerConnection() {
   manager_->InitTracks(connection_.get());
 }
 
+void AyameClient::SetCodecPreferences() {
+  if (config_.video_codec_type.empty() && config_.audio_codec_type.empty()) {
+    return;
+  }
+
+  auto pc = connection_->GetConnection();
+  if (!pc) {
+    RTC_LOG(LS_ERROR) << "PeerConnection is null";
+    return;
+  }
+
+  auto transceivers = pc->GetTransceivers();
+  for (auto transceiver : transceivers) {
+    std::vector<webrtc::RtpCodecCapability> filtered_codecs;
+    auto current_codecs = transceiver->codec_preferences();
+    
+    // 現在のコーデック一覧が空の場合はスキップ
+    if (current_codecs.empty()) {
+      RTC_LOG(LS_WARNING) << "No codec preferences available for transceiver";
+      continue;
+    }
+    
+    if (transceiver->media_type() == webrtc::MediaType::VIDEO && !config_.video_codec_type.empty()) {
+      // 映像コーデックのフィルタリング
+      std::string target_codec = config_.video_codec_type;
+      std::transform(target_codec.begin(), target_codec.end(), target_codec.begin(), ::toupper);
+      
+      for (const auto& codec : current_codecs) {
+        std::string codec_name = codec.name;
+        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(), ::toupper);
+        
+        // 指定されたコーデックまたは RTX、RED、ULPFEC などの補助的なコーデックは残す
+        if (codec_name == target_codec || 
+            codec_name == "RTX" || 
+            codec_name == "RED" || 
+            codec_name == "ULPFEC") {
+          filtered_codecs.push_back(codec);
+        }
+      }
+    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO && !config_.audio_codec_type.empty()) {
+      // 音声コーデックのフィルタリング
+      std::string target_codec = config_.audio_codec_type;
+      std::transform(target_codec.begin(), target_codec.end(), target_codec.begin(), ::toupper);
+      
+      for (const auto& codec : current_codecs) {
+        std::string codec_name = codec.name;
+        std::transform(codec_name.begin(), codec_name.end(), codec_name.begin(), ::toupper);
+        
+        // 指定されたコーデックまたは補助的なコーデックは残す
+        if (codec_name == target_codec || 
+            codec_name == "TELEPHONE-EVENT" || 
+            codec_name == "CN") {
+          filtered_codecs.push_back(codec);
+        }
+      }
+    }
+    
+    if (!filtered_codecs.empty()) {
+      auto error = transceiver->SetCodecPreferences(filtered_codecs);
+      if (!error.ok()) {
+        RTC_LOG(LS_ERROR) << "Failed to set codec preferences: " << error.message();
+      } else {
+        RTC_LOG(LS_INFO) << "Successfully set codec preferences for " 
+                         << (transceiver->media_type() == webrtc::MediaType::VIDEO ? "video" : "audio");
+      }
+    }
+  }
+}
+
 void AyameClient::Close() {
   ws_->Close(std::bind(&AyameClient::OnClose, shared_from_this(),
                        std::placeholders::_1));
@@ -243,6 +318,9 @@ void AyameClient::OnRead(boost::system::error_code ec,
       boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
       ws_->WriteText(boost::json::serialize(json_message));
     };
+    
+    // CreateOffer の前にコーデックを設定
+    SetCodecPreferences();
 
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
     if (is_exist_user) {
@@ -262,6 +340,8 @@ void AyameClient::OnRead(boost::system::error_code ec,
     connection_->SetOffer(sdp, [this]() {
       boost::asio::post(ioc_, [this, self = shared_from_this()]() {
         if (!is_send_offer_ || !has_is_exist_user_flag_) {
+          // CreateAnswer の前にコーデックを設定
+          SetCodecPreferences();
           connection_->CreateAnswer(
               [this](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;

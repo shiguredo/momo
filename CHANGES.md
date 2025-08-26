@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
+  - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
+  - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能
+  - WebRTC の SetCodecPreferences API を使用した効率的な実装
+  - @voluntas
 - [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
   - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
   - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
