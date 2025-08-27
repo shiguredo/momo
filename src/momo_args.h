@@ -22,6 +22,8 @@ struct MomoArgs {
   bool fake_capture_device = false;
 #endif
   bool force_i420 = false;
+  bool force_yuy2 = false;
+  bool force_nv12 = false;
   // Jetson の場合だけデフォルト true
 #if defined(USE_JETSON_ENCODER)
   bool hw_mjpeg_decoder = true;
@@ -76,8 +78,8 @@ struct MomoArgs {
   boost::optional<bool> sora_ignore_disconnect_websocket;
   int sora_disconnect_wait_timeout = 5;
 
-  std::string test_document_root;
-  int test_port = 8080;
+  std::string p2p_document_root;
+  int p2p_port = 8080;
 
   std::string ayame_signaling_url;
   std::string ayame_room_id;

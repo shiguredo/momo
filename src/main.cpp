@@ -74,12 +74,12 @@ int main(int argc, char* argv[]) {
 
   MomoArgs args;
 
-  bool use_test = false;
+  bool use_p2p = false;
   bool use_ayame = false;
   bool use_sora = false;
   int log_level = webrtc::LS_NONE;
 
-  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, args);
+  Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
 
   webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)log_level);
   webrtc::LogMessage::LogTimestamps();
@@ -150,6 +150,8 @@ int main(int argc, char* argv[]) {
         v4l2_config.height = size.height;
         v4l2_config.framerate = args.framerate;
         v4l2_config.force_i420 = args.force_i420;
+        v4l2_config.force_yuy2 = args.force_yuy2;
+        v4l2_config.force_nv12 = args.force_nv12;
         v4l2_config.use_native = args.hw_mjpeg_decoder;
 
 #if defined(USE_JETSON_ENCODER)
@@ -341,14 +343,14 @@ int main(int argc, char* argv[]) {
       stats_collector = sora_client;
     }
 
-    if (use_test) {
+    if (use_p2p) {
       P2PServerConfig config;
       config.no_google_stun = args.no_google_stun;
-      config.doc_root = args.test_document_root;
+      config.doc_root = args.p2p_document_root;
 
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
-          static_cast<unsigned short>(args.test_port)};
+          static_cast<unsigned short>(args.p2p_port)};
       p2p_server = P2PServer::Create(ioc, endpoint, rtc_manager.get(),
                                      std::move(config));
       p2p_server->Run();

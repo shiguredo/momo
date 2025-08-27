@@ -31,6 +31,7 @@
 #include <api/make_ref_counted.h>
 #include <api/scoped_refptr.h>
 #include <api/video/i420_buffer.h>
+#include <api/video/nv12_buffer.h>
 #include <api/video/video_frame.h>
 #include <api/video/video_frame_buffer.h>
 #include <api/video/video_rotation.h>
@@ -211,19 +212,30 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 6;
-  unsigned int fmts[nFormats] = {};
-  if (config.use_native) {
+  int nFormats = 0;
+  const int MaxFormats = 6;
+  unsigned int fmts[MaxFormats] = {};
+  if (config.force_yuy2) {
+    fmts[0] = V4L2_PIX_FMT_YUYV;
+    nFormats = 1;
+  } else if (config.force_i420) {
+    fmts[0] = V4L2_PIX_FMT_YUV420;
+    nFormats = 1;
+  } else if (config.force_nv12) {
+    fmts[0] = V4L2_PIX_FMT_NV12;
+    nFormats = 1;
+  } else if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
-  } else if (!config.force_i420 &&
-             (config.width > 640 || config.height > 480)) {
+    nFormats = 2;
+  } else if (config.width > 640 || config.height > 480) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;
     fmts[3] = V4L2_PIX_FMT_YUYV;
     fmts[4] = V4L2_PIX_FMT_UYVY;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YVU420;
@@ -231,6 +243,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     fmts[3] = V4L2_PIX_FMT_UYVY;
     fmts[4] = V4L2_PIX_FMT_MJPEG;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   }
 
   // Enumerate image formats.
@@ -277,6 +290,8 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     _captureVideoType = webrtc::VideoType::kYV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
@@ -532,19 +547,51 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
 void V4L2VideoCapturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   webrtc::scoped_refptr<webrtc::VideoFrameBuffer> dst_buffer = nullptr;
-  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
-      webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
-  i420_buffer->InitializeData();
-  if (libyuv::ConvertToI420(
-          data, bytesused, i420_buffer.get()->MutableDataY(),
-          i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
-          i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
-          i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
-          _currentWidth, _currentHeight, libyuv::kRotate0,
-          ConvertVideoType(_captureVideoType)) < 0) {
-    RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+
+  if (_captureVideoType == webrtc::VideoType::kNV12) {
+    // NV12 の場合はそのまま使用
+    webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
+        webrtc::NV12Buffer::Create(_currentWidth, _currentHeight);
+    nv12_buffer->InitializeData();
+    const uint8_t* src_y = data;
+    const uint8_t* src_uv = data + _currentWidth * _currentHeight;
+    if (libyuv::NV12Copy(src_y, _currentWidth, src_uv, _currentWidth,
+                         nv12_buffer->MutableDataY(), nv12_buffer->StrideY(),
+                         nv12_buffer->MutableDataUV(), nv12_buffer->StrideUV(),
+                         _currentWidth, _currentHeight) < 0) {
+      RTC_LOG(LS_ERROR) << "NV12Copy Failed";
+    } else {
+      dst_buffer = nv12_buffer;
+    }
+  } else if (_captureVideoType == webrtc::VideoType::kYUY2) {
+    // YUY2 の場合は NV12 に変換
+    webrtc::scoped_refptr<webrtc::NV12Buffer> nv12_buffer =
+        webrtc::NV12Buffer::Create(_currentWidth, _currentHeight);
+    nv12_buffer->InitializeData();
+    if (libyuv::YUY2ToNV12(data, _currentWidth * 2, nv12_buffer->MutableDataY(),
+                           nv12_buffer->StrideY(), nv12_buffer->MutableDataUV(),
+                           nv12_buffer->StrideUV(), _currentWidth,
+                           _currentHeight) < 0) {
+      RTC_LOG(LS_ERROR) << "YUY2ToNV12 Failed";
+    } else {
+      dst_buffer = nv12_buffer;
+    }
   } else {
-    dst_buffer = i420_buffer;
+    // それ以外の場合は I420 に変換
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+        webrtc::I420Buffer::Create(_currentWidth, _currentHeight));
+    i420_buffer->InitializeData();
+    if (libyuv::ConvertToI420(
+            data, bytesused, i420_buffer.get()->MutableDataY(),
+            i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+            i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+            i420_buffer.get()->StrideV(), 0, 0, _currentWidth, _currentHeight,
+            _currentWidth, _currentHeight, libyuv::kRotate0,
+            ConvertVideoType(_captureVideoType)) < 0) {
+      RTC_LOG(LS_ERROR) << "ConvertToI420 Failed";
+    } else {
+      dst_buffer = i420_buffer;
+    }
   }
 
   if (dst_buffer) {

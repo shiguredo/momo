@@ -1,7 +1,13 @@
-name: e2e-test-workflow
+name: e2e-test-only
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'test/**'
+      - '.github/workflows/e2e-test-only.yml'
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
@@ -28,10 +34,11 @@ jobs:
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-release
         with:
           platform: ${{ matrix.package }}
-
+          github-token: ${{ github.token }}
+      
       - uses: astral-sh/setup-uv@v6
       
       - name: Run E2E tests
@@ -72,10 +79,11 @@ jobs:
           done
       
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-release
         with:
           platform: ubuntu-24.04_x86_64
-
+          github-token: ${{ github.token }}
+      
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: false

@@ -36,6 +36,7 @@ from buildbase import (
     install_webrtc,
     mkdir_p,
     read_version_file,
+    read_version_string,
     rm_rf,
 )
 
@@ -56,7 +57,8 @@ def install_deps(
     disable_fake_capture_device: bool,
 ):
     with cd(BASE_DIR):
-        version = read_version_file("VERSION")
+        momo_version = read_version_string("VERSION")
+        deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
 
         # multistrap を使った sysroot の構築
@@ -78,7 +80,7 @@ def install_deps(
 
         if local_webrtc_build_dir is None:
             install_webrtc_args = {
-                "version": version["WEBRTC_BUILD_VERSION"],
+                "version": deps["WEBRTC_BUILD_VERSION"],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -127,11 +129,12 @@ def install_deps(
 
         # Boost
         install_boost_args = {
-            "version": version["BOOST_VERSION"],
+            "version": deps["BOOST_VERSION"],
             "version_file": os.path.join(install_dir, "boost.version"),
             "source_dir": source_dir,
             "build_dir": build_dir,
             "install_dir": install_dir,
+            "expected_sha256": deps["BOOST_SHA256_HASH"],
             "cxx": "",
             "cflags": [],
             "cxxflags": [],
@@ -221,7 +224,7 @@ def install_deps(
 
         # CMake
         install_cmake_args = {
-            "version": version["CMAKE_VERSION"],
+            "version": deps["CMAKE_VERSION"],
             "version_file": os.path.join(install_dir, "cmake.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -249,7 +252,7 @@ def install_deps(
         # CUDA
         if platform.target.os == "windows":
             install_cuda_args = {
-                "version": version["CUDA_VERSION"],
+                "version": deps["CUDA_VERSION"],
                 "version_file": os.path.join(install_dir, "cuda.version"),
                 "source_dir": source_dir,
                 "build_dir": build_dir,
@@ -260,7 +263,7 @@ def install_deps(
         # Intel VPL
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             install_vpl_args = {
-                "version": version["VPL_VERSION"],
+                "version": deps["VPL_VERSION"],
                 "version_file": os.path.join(install_dir, "vpl.version"),
                 "configuration": "Debug" if debug else "Release",
                 "source_dir": source_dir,
@@ -300,7 +303,7 @@ def install_deps(
 
         # SDL3
         install_sdl3_args = {
-            "version": version["SDL3_VERSION"],
+            "version": deps["SDL3_VERSION"],
             "version_file": os.path.join(install_dir, "sdl3.version"),
             "source_dir": source_dir,
             "build_dir": build_dir,
@@ -344,7 +347,7 @@ def install_deps(
 
         # CLI11
         install_cli11_args = {
-            "version": version["CLI11_VERSION"],
+            "version": deps["CLI11_VERSION"],
             "version_file": os.path.join(install_dir, "cli11.version"),
             "install_dir": install_dir,
         }
@@ -358,7 +361,7 @@ def install_deps(
         )
         if not disable_fake_capture_device and enable_fake_capture:
             install_blend2d_args = {
-                "version": version["BLEND2D_VERSION"],
+                "version": deps["BLEND2D_VERSION"],
                 "version_file": os.path.join(install_dir, "blend2d.version"),
                 "configuration": configuration,
                 "source_dir": source_dir,
@@ -366,6 +369,7 @@ def install_deps(
                 "install_dir": install_dir,
                 "ios": False,
                 "cmake_args": [],
+                "expected_sha256": deps["BLEND2D_SHA256_HASH"],
             }
 
             if platform.target.os == "macos":
@@ -391,7 +395,7 @@ def install_deps(
 
         # OpenH264
         install_openh264_args = {
-            "version": version["OPENH264_VERSION"],
+            "version": deps["OPENH264_VERSION"],
             "version_file": os.path.join(install_dir, "openh264.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -504,8 +508,7 @@ def _build(args):
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_deps = read_version_file(webrtc_info.deps_file)
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            momo_version = version["MOMO_VERSION"]
+            momo_version = read_version_string("VERSION")
             momo_commit = cmdcap(["git", "rev-parse", "HEAD"])
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
@@ -653,18 +656,19 @@ def _build(args):
         rm_rf(os.path.join(package_dir, "momo.env"))
 
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            momo_version = version["MOMO_VERSION"]
+            momo_version = read_version_string("VERSION")
 
-        def archive(archive_path, files, is_windows):
+        def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:
                 with zipfile.ZipFile(archive_path, "w") as f:
                     for file in files:
-                        f.write(filename=file, arcname=file)
+                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        f.write(filename=file, arcname=arcname)
             else:
                 with tarfile.open(archive_path, "w:gz") as f:
                     for file in files:
-                        f.add(name=file, arcname=file)
+                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        f.add(name=file, arcname=arcname)
 
         ext = "zip" if platform.target.os == "windows" else "tar.gz"
         is_windows = platform.target.os == "windows"
@@ -673,7 +677,8 @@ def _build(args):
         with cd(install_dir):
             archive_name = f"momo-{momo_version}_{platform.target.package_name}.{ext}"
             archive_path = os.path.join(package_dir, archive_name)
-            archive(archive_path, enum_all_files("momo", "."), is_windows)
+            archive_dir_name = f"momo-{momo_version}_{platform.target.package_name}"
+            archive(archive_path, enum_all_files("momo", "."), is_windows, archive_dir_name)
 
             with open(os.path.join(package_dir, "momo.env"), "w") as f:
                 f.write(f"CONTENT_TYPE={content_type}\n")

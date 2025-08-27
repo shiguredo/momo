@@ -25,6 +25,7 @@
 # limitations under the License.
 import filecmp
 import glob
+import hashlib
 import logging
 import multiprocessing
 import os
@@ -33,6 +34,7 @@ import shlex
 import shutil
 import stat
 import subprocess
+import sys
 import tarfile
 import urllib.parse
 import zipfile
@@ -143,7 +145,7 @@ def add_path(path: str, is_after=False):
         os.environ["PATH"] = path + PATH_SEPARATOR + os.environ["PATH"]
 
 
-def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None) -> str:
+def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None, expected_sha256: Optional[str] = None) -> str:
     if filename is None:
         output_path = urllib.parse.urlparse(url).path.split("/")[-1]
     else:
@@ -153,20 +155,65 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
         output_path = os.path.join(output_dir, output_path)
 
     if os.path.exists(output_path):
-        return output_path
+        # ファイルが既に存在する場合でもハッシュチェックを行う
+        if expected_sha256 is not None:
+            try:
+                verify_sha256(output_path, expected_sha256)
+            except ValueError as e:
+                # ハッシュ不一致の場合はファイルを削除して再ダウンロードを試みる
+                logging.warning(f"Existing file has invalid hash, removing: {output_path}")
+                os.remove(output_path)
+                # 再ダウンロードを試みる
+                return download(url, output_dir, filename, expected_sha256)
+        else:
+            return output_path
 
     try:
+        logging.info(f"Downloading {url} to {output_path}")
         if shutil.which("curl") is not None:
             cmd(["curl", "-fLo", output_path, url])
         else:
             cmd(["wget", "-cO", output_path, url])
-    except Exception:
+        
+        # ダウンロード後にハッシュチェック
+        if expected_sha256 is not None:
+            verify_sha256(output_path, expected_sha256)
+            
+    except Exception as e:
         # ゴミを残さないようにする
         if os.path.exists(output_path):
+            logging.error(f"Removing incomplete/invalid file: {output_path}")
             os.remove(output_path)
+        # ハッシュチェックエラーの場合は即座に終了
+        if isinstance(e, ValueError) and "SHA256 hash mismatch" in str(e):
+            logging.critical("Critical error: Hash verification failed. Aborting.")
+            sys.exit(1)
         raise
 
     return output_path
+
+
+def verify_sha256(file_path: str, expected_sha256: str):
+    """ファイルの SHA256 ハッシュを検証する"""
+    logging.info(f"Verifying SHA256 hash for {file_path}")
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        # メモリ効率のため、チャンクごとに読み込む
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    
+    actual_sha256 = sha256_hash.hexdigest()
+    if actual_sha256 != expected_sha256.lower():
+        error_msg = (
+            f"SHA256 hash mismatch for {file_path}:\n"
+            f"  Expected: {expected_sha256.lower()}\n"
+            f"  Actual:   {actual_sha256}"
+        )
+        logging.error(error_msg)
+        logging.error("Aborting due to hash verification failure")
+        raise ValueError(error_msg)
+    else:
+        logging.info(f"SHA256 hash verified successfully for {file_path}")
 
 
 def read_version_file(path: str) -> Dict[str, str]:
@@ -188,6 +235,12 @@ def read_version_file(path: str) -> Dict[str, str]:
         versions[a] = b.strip('"')
 
     return versions
+
+
+def read_version_string(path: str) -> str:
+    """VERSION ファイルからバージョン文字列を読み込む"""
+    with open(path, encoding="utf-8") as f:
+        return f.read().strip()
 
 
 # dir 以下にある全てのファイルパスを、dir2 からの相対パスで返す
@@ -575,7 +628,7 @@ def get_webrtc_info(
 
 
 @versioned
-def install_boost(version, source_dir, install_dir, sora_version, platform: str):
+def install_boost(version, source_dir, install_dir, sora_version, platform: str, expected_sha256: Optional[str] = None):
     win = platform.startswith("windows_")
     filename = (
         f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
@@ -584,6 +637,7 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}",
         output_dir=source_dir,
+        expected_sha256=expected_sha256,
     )
     rm_rf(os.path.join(install_dir, "boost"))
     extract(archive, output_dir=install_dir, output_dirname="boost")
@@ -690,6 +744,7 @@ def build_and_install_boost(
     source_dir,
     build_dir,
     install_dir,
+    expected_sha256: str,
     debug: bool,
     cxx: str,
     cflags: List[str],
@@ -706,12 +761,14 @@ def build_and_install_boost(
     android_build_platform="linux-x86_64",
 ):
     version_underscore = version.replace(".", "_")
+
     archive = download(
         # 公式サイトに負荷をかけないための時雨堂によるミラー
         f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",
         # Boost 公式のミラー
         # f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
+        expected_sha256=expected_sha256,
     )
     extract(archive, output_dir=build_dir, output_dirname="boost")
     with cd(os.path.join(build_dir, "boost")):
@@ -1410,13 +1467,17 @@ def install_blend2d_official(
     install_dir,
     ios,
     cmake_args,
+    expected_sha256: Optional[str] = None,
 ):
     rm_rf(os.path.join(source_dir, "blend2d"))
     rm_rf(os.path.join(build_dir, "blend2d"))
     rm_rf(os.path.join(install_dir, "blend2d"))
 
-    url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
-    path = download(url, source_dir)
+    # 公式サイトに負荷をかけないための時雨堂によるミラー
+    url = f"https://oss-mirrors.shiguredo.jp/blend2d-{version}.tar.gz"
+    # Blend2d 公式
+    # url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
+    path = download(url, source_dir, expected_sha256=expected_sha256)
     extract(path, source_dir, "blend2d")
     _build_blend2d(
         configuration=configuration,

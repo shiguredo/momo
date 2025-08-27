@@ -11,11 +11,42 @@
 
 ## develop
 
-- [ADD] `--fake-capture-device` オプションを追加する
-  - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
-  - デジタル時計、アニメーション、7 セグメントディスプレイを表示
-  - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
-  - macOS と Ubuntu x86_64 プラットフォームのみ対応
+- [CHANGE] test モードを p2p モードに名前変更
+  - コマンドラインオプションを `test` から `p2p` に変更
+  - HTML ファイル名を `test.html` から `p2p.html` に変更
+  - ドキュメントファイル名を `USE_TEST.md` から `USE_P2P.md` に変更
+  - @voluntas
+- [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
+  - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
+  - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
+  - @voluntas
+- [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
+  - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
+  - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
+  - 例: 120fps の場合は 2400 フレームごとにキーフレームが生成される
+  - @voluntas
+- [ADD] `--force-nv12` オプションを追加
+  - V4L2 キャプチャーで NV12 フォーマットの使用を強制
+  - NV12 が利用できない場合はエラーで停止
+  - NV12 フォーマットは変換せずそのまま使用
+  - @voluntas
+- [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
+  - @melpon
+- [ADD] `--force-yuy2` オプションを追加
+  - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
+  - YUY2 が利用できない場合はエラーで停止
+  - @melpon @voluntas
+- [CHANGE] `--force-i420` オプションの挙動を変更
+  - I420 が利用できない場合はフォールバックせずエラーで停止するように
+  - @melpon @voluntas
+- [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
+  - 高フレームレートカメラのサポートを改善
+  - @voluntas
+- [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
+  - @voluntas
+- [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
+  - VERSION ファイルには momo のバージョンのみを記載するように変更
+  - 依存ライブラリのバージョン情報は新たに作成した DEPS ファイルで管理
   - @voluntas
 - [CHANGE] run.py のビルドコマンドを build サブコマンドに変更
   - 従来の `python3 run.py <platform>` によるビルドを `python3 run.py build <platform>` に変更
@@ -59,17 +90,23 @@
   - `webrtc::SdpVideoFormat::Parameters` は deprecated なので `webrtc::CodecParameterMap` を利用する
   - `webrtc::MediaType::MEDIA_TYPE_VIDEO` は deprecated なので `webrtc::MediaType::VIDEO` を利用する
   - @torikizi, @melpon
-- [UPDATE] CMake を 4.0.3 に上げる
+- [UPDATE] CMake を 4.1.0 に上げる
   - @voluntas
 - [UPDATE] OpenH264 を 2.6.0 に上げる
   - @voluntas
 - [UPDATE] CLI11 を 2.5.0 に上げる
   - @voluntas
-- [UPDATE] Boost を 1.88.0 に上げる
+- [UPDATE] Boost を 1.89.0 に上げる
+  - buildbase.py に SHA256 ハッシュチェック機能を追加
   - @voluntas
-- [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
-  - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
+  - @melpon
+- [ADD] `--fake-capture-device` オプションを追加する
+  - Blend2D を使用したフェイクビデオキャプチャーデバイス機能を追加
+  - デジタル時計、アニメーション、7 セグメントディスプレイを表示
+  - ビデオと同期したビープ音を生成するフェイクオーディオデバイスも追加
+  - macOS と Ubuntu x86_64 プラットフォームのみ対応
+  - @voluntas
 - [ADD] run.py に format サブコマンドを追加
   - `python3 run.py format` で clang-format を実行可能に
   - @voluntas
@@ -95,8 +132,30 @@
 
 ### misc
 
+- [ADD] Intel VPL を使った E2E テストジョブを追加
+  - GitHub Actions で self-hosted runner を使用して Intel VPL エンコーダーをテストする仕組みを追加
+  - test_sora_mode_intel_vpl.py テストファイルを追加
+  - @voluntas
 - [UPDATE] GitHub Actions の ubuntu-latest を ubuntu-22.04 に変更する
   - ubuntu-24.04 には意図的に上げていない
+  - @voluntas
+- [UPDATE] actions/download-artifact と actions/checkout をアップデートする
+  - `@v4` から `@v5` にアップデート
+  - @voluntas @torikizi
+
+## 2024.1.4
+
+**リリース日**: 2025-08-27
+
+- [FIX] バージョン番号修正ミス
+  - @voluntas
+
+## 2024.1.3
+
+**リリース日**: 2025-08-27
+
+- [FIX] Sora の network.status notify イベントの処理を削除
+  - Sora の network.status が新しい仕組みに変更され unstable_level が廃止されたため削除
   - @voluntas
 
 ## 2024.1.2

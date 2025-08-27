@@ -1,10 +1,12 @@
 #ifndef WATCH_DOG_H_
 #define WATCH_DOG_H_
 
+#include <chrono>
 #include <functional>
 
 // Boost
 #include <boost/asio.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 /*
 タイムアウトを監視するためのクラス。
@@ -22,7 +24,7 @@ class WatchDog {
 
  private:
   int timeout_;
-  boost::asio::deadline_timer timer_;
+  boost::asio::steady_timer timer_;
   std::function<void()> callback_;
 };
 

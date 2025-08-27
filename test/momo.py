@@ -16,7 +16,7 @@ import httpx
 class MomoMode(StrEnum):
     """Momo の動作モード"""
 
-    TEST = "test"
+    P2P = "p2p"
     AYAME = "ayame"
     SORA = "sora"
 
@@ -59,14 +59,14 @@ class Momo:
         # コーデック設定
         vp8_encoder: Literal["default", "software"] | None = None,
         vp8_decoder: Literal["default", "software"] | None = None,
-        vp9_encoder: Literal["default", "software"] | None = None,
-        vp9_decoder: Literal["default", "software"] | None = None,
-        av1_encoder: Literal["default", "software"] | None = None,
-        av1_decoder: Literal["default", "software"] | None = None,
-        h264_encoder: Literal["default", "videotoolbox", "software"] | None = None,
-        h264_decoder: Literal["default", "videotoolbox"] | None = None,
-        h265_encoder: Literal["default", "videotoolbox"] | None = None,
-        h265_decoder: Literal["default", "videotoolbox"] | None = None,
+        vp9_encoder: Literal["default", "vpl", "software"] | None = None,
+        vp9_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        av1_encoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        av1_decoder: Literal["default", "vpl", "nvidia", "software"] | None = None,
+        h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"] | None = None,
+        h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
+        h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
+        h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         openh264: str | None = None,  # ファイルパス
         # その他の共通設定
         serial: str | None = None,  # [DEVICE],[BAUDRATE]
@@ -77,9 +77,9 @@ class Momo:
         proxy_url: str | None = None,
         proxy_username: str | None = None,
         proxy_password: str | None = None,
-        # === test モード固有 ===
+        # === p2p モード固有 ===
         document_root: str | None = None,  # ディレクトリパス
-        port: int | None = None,  # test モードのポート
+        port: int | None = None,  # p2p モードのポート
         # === ayame モード固有 ===
         ayame_signaling_url: str | None = None,
         room_id: str | None = None,
@@ -107,13 +107,15 @@ class Momo:
         metadata: dict[str, Any] | None = None,
         # その他のカスタム引数
         extra_args: list[str] | None = None,
+        # 起動待機時間
+        initial_wait: int = 2,
     ) -> None:
         """
         Momo プロセスを管理するクラス
 
         使用例:
             with Momo(
-                mode=MomoMode.TEST,
+                mode=MomoMode.P2P,
                 resolution="HD"
             ) as m:
                 # テストコード
@@ -133,6 +135,7 @@ class Momo:
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
+        self.initial_wait = initial_wait
 
         # すべての引数を保存
         self.kwargs: dict[str, Any] = {
@@ -213,6 +216,9 @@ class Momo:
 
         # モード固有オプションの検証を実行
         self._validate_mode_options(mode, self.kwargs)
+
+        # HTTP クライアントの初期化（None で初期化）
+        self._http_client: httpx.Client | None = None
 
     def _get_momo_executable_path(self) -> str:
         """ビルド済みの momo 実行ファイルのパスを自動検出"""
@@ -296,25 +302,37 @@ class Momo:
 
     def __enter__(self) -> Self:
         """コンテキストマネージャーの開始"""
-        # コマンドライン引数を構築
-        args = self._build_args(**self.kwargs)
+        try:
+            # コマンドライン引数を構築
+            args = self._build_args(**self.kwargs)
 
-        # 起動コマンドを表示
-        cmd = [self.executable_path] + args
-        # JSON を含む引数を適切に表示するため、shlex.quote を使用
-        quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
-        print(f"Starting momo with command: {quoted_cmd}")
+            # 起動コマンドを表示
+            cmd = [self.executable_path] + args
+            # JSON を含む引数を適切に表示するため、shlex.quote を使用
+            quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
+            print(f"Starting momo with command: {quoted_cmd}")
 
-        # プロセスを起動
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+            # プロセスを起動
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            print(f"Started momo process with PID: {self.process.pid}")
 
-        # プロセスが起動してメトリクスが利用可能になるまで待機
-        self._wait_for_startup(self.metrics_port)
-        return self
+            # プロセスが起動してメトリクスが利用可能になるまで待機
+            self._wait_for_startup(self.metrics_port, timeout=30, initial_wait=self.initial_wait)
+
+            # HTTP クライアントを作成
+            self._http_client = httpx.Client(timeout=10.0)
+
+            return self
+        except Exception as e:
+            # 例外が発生した場合は必ずクリーンアップ
+            if self.process:
+                print(f"Cleaning up momo process (PID: {self.process.pid}) due to exception: {e}")
+            self._cleanup()
+            raise
 
     def __exit__(
         self,
@@ -323,6 +341,11 @@ class Momo:
         _exc_tb: TracebackType | None,
     ) -> Literal[False]:
         """コンテキストマネージャーの終了"""
+        # HTTP クライアントをクリーンアップ
+        if self._http_client:
+            self._http_client.close()
+            self._http_client = None
+
         self._cleanup()
         return False
 
@@ -446,11 +469,11 @@ class Momo:
 
         # === モード指定とモード固有オプション ===
 
-        if mode == MomoMode.TEST:
+        if mode == MomoMode.P2P:
             args.append(mode.value)
             if kwargs.get("document_root"):
                 args.extend(["--document-root", kwargs["document_root"]])
-            # test モードのデフォルトポートは 8080
+            # p2p モードのデフォルトポートは 8080
             port = kwargs.get("port") if kwargs.get("port") is not None else 8080
             args.extend(["--port", str(port)])
 
@@ -528,8 +551,8 @@ class Momo:
 
     def _validate_mode_options(self, mode: MomoMode, kwargs: dict[str, Any]) -> None:
         """モード固有オプションの検証"""
-        # test モード固有オプション
-        test_only_options = {"document_root"}
+        # p2p モード固有オプション
+        p2p_only_options = {"document_root"}
 
         # ayame モード固有オプション
         ayame_only_options = {"ayame_signaling_url", "room_id", "client_id", "signaling_key"}
@@ -561,8 +584,8 @@ class Momo:
         specified_options = {k for k, v in kwargs.items() if v is not None}
 
         # モードごとの検証
-        if mode == MomoMode.TEST:
-            # test モードで ayame/sora オプションが指定されていたらエラー
+        if mode == MomoMode.P2P:
+            # p2p モードで ayame/sora オプションが指定されていたらエラー
             invalid_options = specified_options & (ayame_only_options | sora_only_options)
             if invalid_options:
                 # どのモードのオプションか判定
@@ -572,18 +595,18 @@ class Momo:
                 if invalid_options & sora_only_options:
                     modes.append("sora")
                 raise ValueError(
-                    f"Invalid options specified for Test mode: {', '.join(sorted(invalid_options))}\n"
+                    f"Invalid options specified for P2P mode: {', '.join(sorted(invalid_options))}\n"
                     f"These options are only for {'/'.join(modes)} mode"
                 )
 
         elif mode == MomoMode.AYAME:
-            # ayame モードで test/sora オプションが指定されていたらエラー
-            invalid_options = specified_options & (test_only_options | sora_only_options)
+            # ayame モードで p2p/sora オプションが指定されていたらエラー
+            invalid_options = specified_options & (p2p_only_options | sora_only_options)
             if invalid_options:
                 # どのモードのオプションか判定
                 modes = []
-                if invalid_options & test_only_options:
-                    modes.append("test")
+                if invalid_options & p2p_only_options:
+                    modes.append("p2p")
                 if invalid_options & sora_only_options:
                     modes.append("sora")
                 raise ValueError(
@@ -592,13 +615,13 @@ class Momo:
                 )
 
         elif mode == MomoMode.SORA:
-            # sora モードで test/ayame オプションが指定されていたらエラー
-            invalid_options = specified_options & (test_only_options | ayame_only_options)
+            # sora モードで p2p/ayame オプションが指定されていたらエラー
+            invalid_options = specified_options & (p2p_only_options | ayame_only_options)
             if invalid_options:
                 # どのモードのオプションか判定
                 modes = []
-                if invalid_options & test_only_options:
-                    modes.append("test")
+                if invalid_options & p2p_only_options:
+                    modes.append("p2p")
                 if invalid_options & ayame_only_options:
                     modes.append("ayame")
                 raise ValueError(
@@ -607,7 +630,7 @@ class Momo:
                 )
 
     def _wait_for_startup(
-        self, metrics_port: int, timeout: int = 10, initial_wait: int = 2
+        self, metrics_port: int, timeout: int = 30, initial_wait: int = 2
     ) -> None:
         """プロセスが起動してメトリクスが利用可能になるまで待機"""
         if not self.process:
@@ -632,7 +655,7 @@ class Momo:
 
                 # メトリクスエンドポイントをチェック
                 try:
-                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=1)
+                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=5)
                     if response.status_code == 200:
                         # Soraモードの場合はstatsが空でないことを確認
                         if self.kwargs["mode"] == MomoMode.SORA:
@@ -650,7 +673,7 @@ class Momo:
                                     f"  Metrics endpoint is up but stats is empty, waiting for connection... ({elapsed:.1f}s elapsed)"
                                 )
                         else:
-                            # test/ayameモードは200応答で成功（statsのチェック不要）
+                            # p2p/ayameモードは200応答で成功（statsのチェック不要）
                             print(
                                 f"Momo started successfully after {time.time() - start_time:.1f}s"
                             )
@@ -669,24 +692,171 @@ class Momo:
                 time.sleep(1)
 
             # タイムアウト
+            if self.process:
+                print(f"Timeout waiting for momo process (PID: {self.process.pid}) to start")
             self._cleanup()
             raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
     def _cleanup(self) -> None:
         """プロセスをクリーンアップ"""
         if self.process:
+            pid = self.process.pid
+            print(f"Terminating momo process (PID: {pid})")
             self.process.terminate()
             try:
                 self.process.wait(timeout=5)
+                print(f"Momo process (PID: {pid}) terminated gracefully")
             except subprocess.TimeoutExpired:
+                print(f"Force killing momo process (PID: {pid})")
                 self.process.kill()
                 self.process.wait()
+                print(f"Momo process (PID: {pid}) killed")
             self.process = None
 
-    def get_metrics(self, client: httpx.Client) -> dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """メトリクスを取得"""
+        if not self._http_client:
+            raise RuntimeError("HTTP client not initialized")
         if not self.metrics_port:
             raise RuntimeError("Process not started")
-        response = client.get(f"http://localhost:{self.metrics_port}/metrics")
+        response = self._http_client.get(f"http://localhost:{self.metrics_port}/metrics")
         response.raise_for_status()
         return response.json()
+
+    def wait_for_connection(
+        self,
+        timeout: int = 10,
+        interval: float = 0.5,
+        additional_wait_stats: list[dict[str, Any]] | None = None,
+        additional_wait_stats_timeout: int = 5,
+    ) -> bool:
+        """
+        接続が確立されるまで待機し、追加でこの統計情報が入ってくるまで待つ
+
+        Args:
+            timeout: 接続確立までのタイムアウト時間（秒）
+            interval: チェック間隔（秒）
+            additional_wait_stats: 追加でこの統計情報が入ってくるまで待つ。
+                                  各要素は期待する統計情報の辞書。type を含む全項目が一致する統計情報を待つ。
+                                  接続確立後、ここで指定した統計情報が現れるまで追加で待機する。
+            additional_wait_stats_timeout: 追加統計情報を待つタイムアウト時間（秒）。デフォルト5秒。
+
+        Returns:
+            期待したすべての統計情報が入ってきた場合 True、タイムアウトした場合 False
+
+        使用例:
+            # デフォルト動作のみ（transport の接続確認）
+            momo.wait_for_connection()
+
+            # デフォルト + 追加でこの統計情報が入ってくるまで待つ（デフォルト5秒）
+            momo.wait_for_connection(additional_wait_stats=[
+                {"type": "candidate-pair", "state": "succeeded"},
+                {"type": "outbound-rtp", "rid": "r0", "encoderImplementation": "libvpx"},
+                {"type": "outbound-rtp", "rid": "r1", "encoderImplementation": "libvpx"},
+            ])
+
+            # 追加統計情報のタイムアウトを10秒に設定
+            momo.wait_for_connection(
+                additional_wait_stats=[{"type": "codec", "mimeType": "video/H264"}],
+                additional_wait_stats_timeout=10
+            )
+        """
+        if not self._http_client:
+            raise RuntimeError("HTTP client not initialized")
+
+        # まず接続確立を待つ（デフォルト条件）
+        default_conditions = [
+            {"type": "transport", "key": "dtlsState", "value": "connected"},
+            {"type": "transport", "key": "iceState", "value": "connected"},
+        ]
+
+        start_time = time.time()
+        connection_established = False
+
+        # 接続確立を待つ
+        while time.time() - start_time < timeout:
+            try:
+                response = self._http_client.get(f"http://localhost:{self.metrics_port}/metrics")
+                if response.status_code == 200:
+                    data = response.json()
+                    stats = data.get("stats", [])
+
+                    # デフォルト条件をチェック
+                    all_conditions_met = True
+                    for expected in default_conditions:
+                        expected_type = expected.get("type")
+                        expected_key = expected.get("key")
+                        expected_value = expected.get("value")
+
+                        # 同じ type の統計情報の中から、key と value が一致するものを探す
+                        found = False
+                        for stat in stats:
+                            if stat.get("type") == expected_type:
+                                if stat.get(expected_key) == expected_value:
+                                    found = True
+                                    break
+                        
+                        if not found:
+                            all_conditions_met = False
+                            break
+
+                    if all_conditions_met:
+                        connection_established = True
+                        break
+
+            except (httpx.ConnectError, httpx.HTTPStatusError):
+                pass
+
+            time.sleep(interval)
+
+        if not connection_established:
+            return False
+
+        # 追加の統計情報を待つ
+        if additional_wait_stats:
+            additional_start_time = time.time()
+            while time.time() - additional_start_time < additional_wait_stats_timeout:
+                try:
+                    response = self._http_client.get(
+                        f"http://localhost:{self.metrics_port}/metrics"
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        stats = data.get("stats", [])
+
+                        # 追加条件をチェック - 各期待辞書がすべて一致する統計情報があるか確認
+                        all_conditions_met = True
+                        for expected_dict in additional_wait_stats:
+                            # この期待辞書と完全に一致する統計情報を探す
+                            found = False
+                            for stat in stats:
+                                # まず type が一致するかチェック
+                                if stat.get("type") != expected_dict.get("type"):
+                                    continue
+                                
+                                # expected_dict のすべての項目が stat に含まれ、値が一致するかチェック
+                                all_items_match = True
+                                for key, expected_value in expected_dict.items():
+                                    if stat.get(key) != expected_value:
+                                        all_items_match = False
+                                        break
+                                
+                                if all_items_match:
+                                    found = True
+                                    break
+                            
+                            if not found:
+                                all_conditions_met = False
+                                break
+
+                        if all_conditions_met:
+                            return True
+
+                except (httpx.ConnectError, httpx.HTTPStatusError):
+                    pass
+
+                time.sleep(interval)
+
+            return False  # 追加統計情報のタイムアウト
+
+        return True  # 追加統計情報なしで接続確立
