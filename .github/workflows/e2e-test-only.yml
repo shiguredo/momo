@@ -1,6 +1,7 @@
 name: e2e-test-only
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - '**'

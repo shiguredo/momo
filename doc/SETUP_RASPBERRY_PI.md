@@ -16,7 +16,7 @@ Raspberry Pi OS のレガシー版には対応しておりません。最新版�
 $ tree
 .
 ├── html
-│   ├── test.html
+│   ├── p2p.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -62,7 +62,7 @@ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 
 ## 使ってみる
 
-[USE_TEST.md](USE_TEST.md) をご確認ください。
+[USE_P2P.md](USE_P2P.md) をご確認ください。
 
 ## ビデオデバイスの指定
 
@@ -76,7 +76,7 @@ sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
 USB カメラでは逆にフレームレートが落ちるため使わないでください。
 
 ```bash
-./momo --force-i420 --no-audio-device test
+./momo --force-i420 --no-audio-device p2p
 ```
 
 ## Raspberry Pi 専用カメラでが利用できない
@@ -88,7 +88,7 @@ Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カ�
 `--use-libcamera` は Raspberry Pi 専用カメラを利用するためのオプションです。
 
 ```bash
-./momo --use-libcamera --no-audio-device test
+./momo --use-libcamera --no-audio-device p2p
 ```
 
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない
@@ -99,7 +99,7 @@ MJPEG のハードウェアデコーダーの利用を検討してみてくだ�
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズをします。
 
 ```bash
-./momo --hw-mjpeg-decoder true --no-audio-device test
+./momo --hw-mjpeg-decoder true --no-audio-device p2p
 ```
 
 ### Raspberry Pi の設定を見直す
@@ -112,7 +112,7 @@ MJPEG のハードウェアデコーダーの利用を検討してみてくだ�
 Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用すると CPU 使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
 
 ```bash
-./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true test
+./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true p2p
 ```
 
 がリアルタイムでの最高解像度設定となります。
@@ -124,7 +124,7 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 一部の MJPEG に対応した USB カメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
 
 ```bash
-./momo --hw-mjpeg-decoder true --no-audio-device test
+./momo --hw-mjpeg-decoder true --no-audio-device p2p
 ```
 
 ### Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない
