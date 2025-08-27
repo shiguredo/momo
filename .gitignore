@@ -34,7 +34,7 @@
 momo
 core
 *.tar.gz
-webrtc_logs_0
+webrtc_logs_*
 .DS_Store
 *.swp
 
@@ -43,3 +43,9 @@ webrtc_logs_0
 /_source
 /_install
 /_package
+
+# Claude Code
+CLAUDE.local.md
+
+# Serena
+.serena

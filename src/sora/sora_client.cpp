@@ -582,10 +582,6 @@ void SoraClient::OnRead(boost::system::error_code ec,
                        << ": client_id=" << json_message.at("client_id")
                        << ": connection_id="
                        << json_message.at("connection_id");
-    } else if (event_type == "network.status") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
-                       << ": unstable_level="
-                       << json_message.at("unstable_level");
     } else if (event_type == "spotlight.changed") {
       RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
                        << ": client_id=" << json_message.at("client_id")
