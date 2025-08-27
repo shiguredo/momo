@@ -1,6 +1,7 @@
 """Momo プロセスを管理するためのクラス"""
 
 import json
+import os
 import platform
 import shlex
 import subprocess
@@ -67,7 +68,7 @@ class Momo:
         h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
-        openh264: str | None = None,  # ファイルパス
+        openh264: str | None = None,  # ファイルパス（OPENH264_PATH 環境変数から自動取得可能）
         # その他の共通設定
         serial: str | None = None,  # [DEVICE],[BAUDRATE]
         metrics_port: int = 9090,
@@ -131,6 +132,10 @@ class Momo:
             ) as m:
                 # テストコード
         """
+        # openh264 が None の場合、環境変数から取得
+        if openh264 is None:
+            openh264 = os.environ.get("OPENH264_PATH")
+        
         # 実行ファイルのパスを自動検出
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
