@@ -34,7 +34,7 @@
 momo
 core
 *.tar.gz
-webrtc_logs_0
+webrtc_logs_*
 .DS_Store
 *.swp
 

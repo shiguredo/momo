@@ -1,6 +1,6 @@
 # Momo E2E テスト
 
-momo の HTTP API を利用した pytest ベースの E2E テストです。
+momo の統計用 HTTP API を利用した pytest ベースの E2E テストです。
 
 ## セットアップ
 
@@ -75,15 +75,61 @@ uv run pytest test_momo.py::test_metrics_endpoint_returns_200
 
 ## テスト内容
 
-### Test モード
+### P2P モード
 
-Test モードは追加設定なしで実行できます。以下のテストが含まれます：
+P2P モードは追加設定なしで実行できます。以下のテストが含まれます：
 
 - HTTP メトリクスエンドポイント (`/metrics`) のテスト
   - ステータスコードの確認
   - JSON レスポンスの構造確認
   - W3C WebRTC 統計情報のフォーマット確認
   - エラー処理の確認
+
+### Ayame モード
+
+Ayame モードのテストは、[Ayame Labo](https://ayame-labo.shiguredo.app/) を使用して実行します。追加の設定は不要で、そのまま実行できます。
+
+#### テスト実行
+
+```bash
+# Ayame モードのテストを実行
+uv run pytest test_ayame_mode.py -v
+
+# 特定のテストを実行
+uv run pytest test_ayame_mode.py::test_ayame_mode_basic -v
+```
+
+#### Ayame モードのテスト内容
+
+- **基本動作のテスト**
+  - Ayame モードでの起動確認
+  - メトリクス API の動作確認
+  - ランダムなルーム ID の生成と接続
+
+- **クライアント ID 指定のテスト**
+  - カスタムクライアント ID での接続確認
+
+- **ビデオ設定のカスタマイズテスト**
+  - 解像度（QVGA、VGA など）の設定
+  - フレームレート（15fps、30fps、60fps など）の設定
+  - エンコーダー設定（VP8 など）
+
+- **オーディオ設定のカスタマイズテスト**
+  - エコーキャンセレーションの無効化
+  - オートゲインコントロールの無効化
+  - ノイズ抑制の無効化
+
+- **P2P 接続テスト**
+  - 2 つのピア間での双方向通信の確立
+  - ビデオストリームの送受信確認
+  - パケット送受信の統計情報確認
+
+#### Ayame モードの動作
+
+- `--fake-capture-device` オプションを使用して仮想的なオーディオ・ビデオストリームを送信
+- 各テストで一意のルーム ID を自動生成（UUID 使用）
+- メトリクスサーバーは動的にポートを割り当て
+- WebRTC の統計情報を使用した接続状態の検証
 
 ### Sora モード
 
@@ -135,8 +181,9 @@ test/
 ├── conftest.py            # pytest 設定（HTTP クライアント）
 ├── momo.py                # Momo プロセス管理クラス
 ├── pyproject.toml         # プロジェクト設定と依存関係
-├── test_metrics_api.py     # メトリクス API のテスト
-├── test_p2p_mode.py       # P2P (Test) モードのテスト
+├── test_ayame_mode.py     # Ayame モードのテスト
+├── test_metrics_api.py    # メトリクス API のテスト
+├── test_p2p_mode.py       # P2P モードのテスト
 ├── test_momo_validation.py # モード固有オプション検証のテスト
 ├── test_sora_mode.py      # Sora モードのテスト
 ├── uv.lock                # uv のロックファイル

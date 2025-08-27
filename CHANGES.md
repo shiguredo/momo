@@ -14,6 +14,15 @@
 - [FIX] `--openh264` オプション指定時に `--video-codec-engines` で OpenH264 が表示されない問題を修正
   - `--openh264` でライブラリパスを指定した場合、H264 エンコーダーの Software を OpenH264 として表示するように修正
   - @voluntas
+- [CHANGE] test モードを p2p モードに名前変更
+  - コマンドラインオプションを `test` から `p2p` に変更
+  - HTML ファイル名を `test.html` から `p2p.html` に変更
+  - ドキュメントファイル名を `USE_TEST.md` から `USE_P2P.md` に変更
+  - @voluntas
+- [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
+  - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
+  - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
+  - @voluntas
 - [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
   - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
   - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
@@ -93,8 +102,6 @@
 - [UPDATE] Boost を 1.89.0 に上げる
   - buildbase.py に SHA256 ハッシュチェック機能を追加
   - @voluntas
-- [UPDATE] Sora C++ SDK のバージョン `2025.5.0-canary.0` のソースを同期する
-  - @melpon
 - [UPDATE] NVIDIA VIDEO CODEC SDK を 13.0 に上げる
   - @melpon
 - [ADD] `--fake-capture-device` オプションを追加する
@@ -138,6 +145,21 @@
 - [UPDATE] actions/download-artifact と actions/checkout をアップデートする
   - `@v4` から `@v5` にアップデート
   - @voluntas @torikizi
+
+## 2024.1.4
+
+**リリース日**: 2025-08-27
+
+- [FIX] バージョン番号修正ミス
+  - @voluntas
+
+## 2024.1.3
+
+**リリース日**: 2025-08-27
+
+- [FIX] Sora の network.status notify イベントの処理を削除
+  - Sora の network.status が新しい仕組みに変更され unstable_level が廃止されたため削除
+  - @voluntas
 
 ## 2024.1.2
 

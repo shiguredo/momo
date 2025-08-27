@@ -14,7 +14,7 @@ class Util {
  public:
   static void ParseArgs(int argc,
                         char* argv[],
-                        bool& use_test,
+                        bool& use_p2p,
                         bool& use_ayame,
                         bool& use_sora,
                         int& log_level,

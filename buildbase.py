@@ -1467,13 +1467,17 @@ def install_blend2d_official(
     install_dir,
     ios,
     cmake_args,
+    expected_sha256: Optional[str] = None,
 ):
     rm_rf(os.path.join(source_dir, "blend2d"))
     rm_rf(os.path.join(build_dir, "blend2d"))
     rm_rf(os.path.join(install_dir, "blend2d"))
 
-    url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
-    path = download(url, source_dir)
+    # 公式サイトに負荷をかけないための時雨堂によるミラー
+    url = f"https://oss-mirrors.shiguredo.jp/blend2d-{version}.tar.gz"
+    # Blend2d 公式
+    # url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
+    path = download(url, source_dir, expected_sha256=expected_sha256)
     extract(path, source_dir, "blend2d")
     _build_blend2d(
         configuration=configuration,

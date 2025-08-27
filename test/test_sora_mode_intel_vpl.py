@@ -1,5 +1,4 @@
 import os
-import time
 
 import pytest
 from momo import Momo, MomoMode
@@ -21,13 +20,11 @@ pytestmark = pytest.mark.skipif(
         "H265",
     ],
 )
-def test_connection_stats(
-    http_client, sora_settings, video_codec_type, free_port
-):
+def test_connection_stats(sora_settings, video_codec_type, free_port):
     """Sora モードで接続時の統計情報を確認"""
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
-    
+
     # エンコーダー設定を準備
     encoder_params = {}
     if video_codec_type == "VP9":
@@ -38,7 +35,7 @@ def test_connection_stats(
         encoder_params["h264_encoder"] = "vpl"
     elif video_codec_type == "H265":
         encoder_params["h265_encoder"] = "vpl"
-    
+
     with Momo(
         fake_capture_device=True,
         metrics_port=free_port,
@@ -53,12 +50,12 @@ def test_connection_stats(
         log_level="verbose",
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(), (
+            f"Failed to establish connection for {video_codec_type} codec"
+        )
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -161,9 +158,7 @@ def test_connection_stats(
         ("H265", "SimulcastEncoderAdapter (libvpl, libvpl, libvpl)"),
     ],
 )
-def test_simulcast(
-    http_client, sora_settings, video_codec_type, expected_encoder_implementation, free_port
-):
+def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
     encoder_params = {}
@@ -175,7 +170,7 @@ def test_simulcast(
         encoder_params["h264_encoder"] = "vpl"
     elif video_codec_type == "H265":
         encoder_params["h265_encoder"] = "vpl"
-    
+
     with Momo(
         mode=MomoMode.SORA,
         metrics_port=free_port,
@@ -194,12 +189,28 @@ def test_simulcast(
         initial_wait=10,
         **encoder_params,
     ) as m:
-        time.sleep(3)
+        # 接続が確立されるまで待つ
+        assert m.wait_for_connection(
+            additional_wait_stats=[
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r0",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r1",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r2",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+            ]
+        ), f"Failed to establish connection for {video_codec_type} codec"
 
-        response = http_client.get(f"http://localhost:{m.metrics_port}/metrics")
-        assert response.status_code == 200
-
-        data = response.json()
+        data = m.get_metrics()
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -223,13 +234,14 @@ def test_simulcast(
 
         # audio codec を取得して確認
         audio_codec_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
         ]
         assert len(audio_codec_stats) == 1, (
             f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
         )
-        
+
         # audio codec の中身を検証
         audio_codec = audio_codec_stats[0]
         assert "payloadType" in audio_codec
@@ -237,17 +249,18 @@ def test_simulcast(
         assert "clockRate" in audio_codec
         assert "channels" in audio_codec
         assert audio_codec["clockRate"] == 48000
-        
+
         # video codec を取得して確認
         expected_mime_type = f"video/{video_codec_type}"
         video_codec_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
         ]
         assert len(video_codec_stats) == 1, (
             f"Expected 1 video codec ({expected_mime_type}), but got {len(video_codec_stats)}"
         )
-        
+
         # video codec の中身を検証
         video_codec = video_codec_stats[0]
         assert "payloadType" in video_codec
@@ -257,13 +270,14 @@ def test_simulcast(
 
         # audio の outbound-rtp を取得して確認
         audio_outbound_rtp_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
         ]
         assert len(audio_outbound_rtp_stats) == 1, (
             f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
         )
-        
+
         # audio outbound-rtp の中身を検証
         audio_outbound_rtp = audio_outbound_rtp_stats[0]
         assert "ssrc" in audio_outbound_rtp
@@ -276,25 +290,26 @@ def test_simulcast(
 
         # simulcast では video の outbound-rtp を取得して必ず3本あることを確認
         video_outbound_rtp_stats = [
-            stat for stat in stats
+            stat
+            for stat in stats
             if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
         ]
         assert len(video_outbound_rtp_stats) == 3, (
             f"Expected 3 video outbound-rtp for simulcast, but got {len(video_outbound_rtp_stats)}"
         )
-        
+
         # rid ごとに分類
         video_outbound_rtp_by_rid = {}
         for video_outbound_rtp in video_outbound_rtp_stats:
             rid = video_outbound_rtp.get("rid")
             assert rid in ["r0", "r1", "r2"], f"Unexpected rid: {rid}"
             video_outbound_rtp_by_rid[rid] = video_outbound_rtp
-        
+
         # 全ての rid が存在することを確認
         assert set(video_outbound_rtp_by_rid.keys()) == {"r0", "r1", "r2"}, (
             f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
         )
-        
+
         # r0 (低解像度) の検証
         outbound_rtp_r0 = video_outbound_rtp_by_rid["r0"]
         assert "ssrc" in outbound_rtp_r0
@@ -308,16 +323,16 @@ def test_simulcast(
         assert outbound_rtp_r0["packetsSent"] > 0
         assert outbound_rtp_r0["bytesSent"] > 0
         assert outbound_rtp_r0["framesEncoded"] > 0
-        
+
         # r0 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r0
         assert outbound_rtp_r0["encoderImplementation"] == expected_encoder_implementation, (
             f"Expected encoder implementation {expected_encoder_implementation} for r0, "
             f"but got {outbound_rtp_r0['encoderImplementation']}"
         )
-        
+
         # r0 の解像度を確認
-        # 元の解像度 960x540 の 1/4 スケール (240x135) 
+        # 元の解像度 960x540 の 1/4 スケール (240x135)
         # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
         # 128 (16×8) または 135 (元の値) の範囲を許容
         assert outbound_rtp_r0["frameWidth"] == 240, (
@@ -327,13 +342,13 @@ def test_simulcast(
             f"Expected height between 128 and 135 for r0, but got {outbound_rtp_r0['frameHeight']}"
         )
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
-        
+
         # r0 のフレームレートを確認（25 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r0
         assert outbound_rtp_r0["framesPerSecond"] >= 25, (
             f"Expected at least 25 fps for r0, but got {outbound_rtp_r0['framesPerSecond']}"
         )
-        
+
         # r1 (中解像度) の検証
         outbound_rtp_r1 = video_outbound_rtp_by_rid["r1"]
         assert "ssrc" in outbound_rtp_r1
@@ -347,14 +362,14 @@ def test_simulcast(
         assert outbound_rtp_r1["packetsSent"] > 0
         assert outbound_rtp_r1["bytesSent"] > 0
         assert outbound_rtp_r1["framesEncoded"] > 0
-        
+
         # r1 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r1
         assert outbound_rtp_r1["encoderImplementation"] == expected_encoder_implementation, (
             f"Expected encoder implementation {expected_encoder_implementation} for r1, "
             f"but got {outbound_rtp_r1['encoderImplementation']}"
         )
-        
+
         # r1 の解像度を確認
         # 元の解像度 960x540 の 1/2 スケール (480x270)
         # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
@@ -366,13 +381,13 @@ def test_simulcast(
             f"Expected height between 256 and 270 for r1, but got {outbound_rtp_r1['frameHeight']}"
         )
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
-        
+
         # r1 のフレームレートを確認（25 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r1
         assert outbound_rtp_r1["framesPerSecond"] >= 25, (
             f"Expected at least 25 fps for r1, but got {outbound_rtp_r1['framesPerSecond']}"
         )
-        
+
         # r2 (高解像度) の検証
         outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
         assert "ssrc" in outbound_rtp_r2
@@ -386,14 +401,14 @@ def test_simulcast(
         assert outbound_rtp_r2["packetsSent"] > 0
         assert outbound_rtp_r2["bytesSent"] > 0
         assert outbound_rtp_r2["framesEncoded"] > 0
-        
+
         # r2 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r2
         assert outbound_rtp_r2["encoderImplementation"] == expected_encoder_implementation, (
             f"Expected encoder implementation {expected_encoder_implementation} for r2, "
             f"but got {outbound_rtp_r2['encoderImplementation']}"
         )
-        
+
         # r2 の解像度を確認
         # 元の解像度 960x540 そのまま
         # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
@@ -405,13 +420,13 @@ def test_simulcast(
             f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
         )
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
-        
+
         # r2 のフレームレートを確認（25 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r2
         assert outbound_rtp_r2["framesPerSecond"] >= 25, (
             f"Expected at least 25 fps for r2, but got {outbound_rtp_r2['framesPerSecond']}"
         )
-        
+
         # パケット数とバイト数の関係を検証（r0 < r1 < r2）
         assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
             f"Expected r0 bytesSent ({outbound_rtp_r0['bytesSent']}) < r1 bytesSent ({outbound_rtp_r1['bytesSent']})"
@@ -453,13 +468,12 @@ def test_simulcast(
     ],
 )
 def test_sora_sendonly_recvonly_pair(
-    http_client,
     sora_settings,
     port_allocator,
     video_codec_type,
 ):
     """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（Intel VPL 使用）"""
-    
+
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
 
@@ -513,15 +527,20 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            time.sleep(5)
-            
+            assert sender.wait_for_connection(), (
+                f"Sender failed to establish connection for {video_codec_type}"
+            )
+            assert receiver.wait_for_connection(), (
+                f"Receiver failed to establish connection for {video_codec_type}"
+            )
+
             # 送信側の統計を確認
-            sender_response = http_client.get(f"http://localhost:{sender.metrics_port}/metrics")
-            sender_stats = sender_response.json().get("stats", [])
+            sender_data = sender.get_metrics()
+            sender_stats = sender_data.get("stats", [])
 
             # 受信側の統計を確認
-            receiver_response = http_client.get(f"http://localhost:{receiver.metrics_port}/metrics")
-            receiver_stats = receiver_response.json().get("stats", [])
+            receiver_data = receiver.get_metrics()
+            receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
             sender_outbound_rtp = [
@@ -559,7 +578,7 @@ def test_sora_sendonly_recvonly_pair(
                 assert "bytesSent" in stat
                 assert stat["packetsSent"] > 0
                 assert stat["bytesSent"] > 0
-                
+
                 # video ストリームの場合、encoderImplementation が libvpl であることを確認
                 if stat.get("kind") == "video":
                     assert "encoderImplementation" in stat
@@ -605,7 +624,7 @@ def test_sora_sendonly_recvonly_pair(
                 assert "bytesReceived" in stat
                 assert stat["packetsReceived"] > 0
                 assert stat["bytesReceived"] > 0
-                
+
                 # video ストリームの場合、decoderImplementation が libvpl であることを確認
                 if stat.get("kind") == "video":
                     assert "decoderImplementation" in stat
