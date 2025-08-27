@@ -57,14 +57,16 @@ def test_metrics_endpoint_response_structure(sora_settings, free_port):
 
 
 @pytest.mark.parametrize(
-    "video_codec_type",
+    "video_codec_type, expected_encoder_implementation",
     [
-        "VP8",
-        "VP9",
-        "AV1",
+        ("VP8", "libvpx"),
+        ("VP9", "libvpx"),
+        ("AV1", "libaom"),
     ],
 )
-def test_metrics_endpoint(sora_settings, video_codec_type, free_port):
+def test_metrics_endpoint(
+    sora_settings, video_codec_type, expected_encoder_implementation, free_port
+):
     """Sora モードで接続時の統計情報を確認"""
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
@@ -93,9 +95,11 @@ def test_metrics_endpoint(sora_settings, video_codec_type, free_port):
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(), (
-            f"Failed to establish connection for {video_codec_type} codec"
-        )
+        assert m.wait_for_connection(
+            additional_wait_stats=[
+                {"type": "outbound-rtp", "encoderImplementation": expected_encoder_implementation}
+            ]
+        ), f"Failed to establish connection for {video_codec_type} codec"
 
         data = m.get_metrics()
         stats = data["stats"]
@@ -192,9 +196,11 @@ def test_metrics_endpoint(sora_settings, video_codec_type, free_port):
         assert "framesEncoded" in video_rtp
         assert "frameWidth" in video_rtp
         assert "frameHeight" in video_rtp
+        assert "encoderImplementation" in video_rtp
         assert video_rtp["packetsSent"] > 0
         assert video_rtp["bytesSent"] > 0
         assert video_rtp["framesEncoded"] > 0
+        assert video_rtp["encoderImplementation"] == expected_encoder_implementation
 
         # transport を取得して確認
         transport_stats = [stat for stat in stats if stat.get("type") == "transport"]

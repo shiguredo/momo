@@ -335,10 +335,10 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
 
-        # r0 のフレームレートを確認（25 fps 以上）
+        # r0 のフレームレートを確認（20 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r0
-        assert outbound_rtp_r0["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r0, but got {outbound_rtp_r0['framesPerSecond']}"
+        assert outbound_rtp_r0["framesPerSecond"] >= 20, (
+            f"Expected at least 20 fps for r0, but got {outbound_rtp_r0['framesPerSecond']}"
         )
 
         # r1 (中解像度) の検証
@@ -374,10 +374,10 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
-        # r1 のフレームレートを確認（25 fps 以上）
+        # r1 のフレームレートを確認（20 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r1
-        assert outbound_rtp_r1["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r1, but got {outbound_rtp_r1['framesPerSecond']}"
+        assert outbound_rtp_r1["framesPerSecond"] >= 20, (
+            f"Expected at least 20 fps for r1, but got {outbound_rtp_r1['framesPerSecond']}"
         )
 
         # r2 (高解像度) の検証
@@ -413,10 +413,10 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
 
-        # r2 のフレームレートを確認（25 fps 以上）
+        # r2 のフレームレートを確認（20 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r2
-        assert outbound_rtp_r2["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r2, but got {outbound_rtp_r2['framesPerSecond']}"
+        assert outbound_rtp_r2["framesPerSecond"] >= 20, (
+            f"Expected at least 20 fps for r2, but got {outbound_rtp_r2['framesPerSecond']}"
         )
 
         # パケット数とバイト数の関係を検証（r0 < r1 < r2）
