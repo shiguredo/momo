@@ -6,7 +6,8 @@ from momo import Momo, MomoMode
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # Apple Video Toolbox 環境が有効でない場合もスキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS") or not os.environ.get("APPLE_VIDEO_TOOLBOX"),
+    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS")
+    or not os.environ.get("APPLE_VIDEO_TOOLBOX"),
     reason="TEST_SORA_MODE_SIGNALING_URLS or APPLE_VIDEO_TOOLBOX not set in environment",
 )
 
@@ -45,9 +46,11 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(), (
-            f"Failed to establish connection for {video_codec_type} codec"
-        )
+        assert m.wait_for_connection(
+            additional_wait_stats=[
+                {"type": "outbound-rtp", "kind": "video", "encoderImplementation": "VideoToolbox"}
+            ]
+        ), f"Failed to establish connection for {video_codec_type} codec"
 
         data = m.get_metrics()
         stats = data["stats"]
