@@ -77,12 +77,22 @@ def test_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(), (
-                f"Sender failed to establish connection for {video_codec_type}"
-            )
-            assert receiver.wait_for_connection(), (
-                f"Receiver failed to establish connection for {video_codec_type}"
-            )
+            assert sender.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "encoderImplementation": expected_encoder_implementation,
+                    }
+                ]
+            ), f"Sender failed to establish connection for {video_codec_type}"
+            assert receiver.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "inbound-rtp",
+                        "decoderImplementation": expected_decoder_implementation,
+                    }
+                ]
+            ), f"Receiver failed to establish connection for {video_codec_type}"
 
             # 送信側の統計を確認
             sender_data = sender.get_metrics()

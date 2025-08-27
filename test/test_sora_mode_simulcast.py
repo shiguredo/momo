@@ -47,9 +47,25 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(), (
-            f"Failed to establish simulcast connection for {video_codec_type}"
-        )
+        assert m.wait_for_connection(
+            additional_wait_stats=[
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r0",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r1",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+                {
+                    "type": "outbound-rtp",
+                    "rid": "r2",
+                    "encoderImplementation": expected_encoder_implementation,
+                },
+            ],
+        ), f"Failed to establish simulcast connection for {video_codec_type}"
 
         data = m.get_metrics()
         stats = data["stats"]
