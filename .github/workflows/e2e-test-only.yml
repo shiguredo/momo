@@ -108,13 +108,21 @@ jobs:
             platform: ubuntu-24.04_x86_64
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
-    name: E2E Test ubuntu-24.04_x86_64 ${{ matrix.name }}
+    name: E2E Test HWA ${{ matrix.name }}
     runs-on:
       group: Self
       labels: ${{ fromJSON(matrix.runner_labels) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+      
+      - name: Setup Homebrew
+        if: startsWith(matrix.platform, 'macos')
+        uses: Homebrew/actions/setup-homebrew@master
+      
+      - name: Install GitHub CLI
+        if: startsWith(matrix.platform, 'macos')
+        run: brew install gh
       
       - name: Set environment variables
         run: |
