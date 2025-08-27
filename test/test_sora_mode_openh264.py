@@ -160,7 +160,6 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
-            additional_wait_stats_timeout=15,
         ), "Failed to establish simulcast connection with OpenH264"
 
         data = m.get_metrics()
