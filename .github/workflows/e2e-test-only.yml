@@ -39,6 +39,13 @@ jobs:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
       
+      - name: Download and setup OpenH264
+        run: |
+          curl -L -o libopenh264.so.bz2 http://ciscobinary.openh264.org/libopenh264-2.6.0-linux64.8.so.bz2
+          bunzip2 libopenh264.so.bz2
+          chmod +x libopenh264.so
+          echo "OPENH264_PATH=${{ github.workspace }}/libopenh264.so" >> $GITHUB_ENV
+      
       - uses: astral-sh/setup-uv@v6
       
       - name: Run E2E tests
