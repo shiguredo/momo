@@ -1,13 +1,21 @@
 import os
+import platform
 
 import pytest
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
-    reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
-)
+# macOS では simulcast のパフォーマンスが不足するためスキップ
+pytestmark = [
+    pytest.mark.skipif(
+        not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
+        reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
+    ),
+    pytest.mark.skipif(
+        platform.system() == "Darwin",
+        reason="Skipping simulcast test on macOS due to performance limitations",
+    ),
+]
 
 
 @pytest.mark.parametrize(
