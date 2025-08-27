@@ -65,6 +65,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
+            additional_wait_after_stats=3,
         ), f"Failed to establish simulcast connection for {video_codec_type}"
 
         data = m.get_metrics()
