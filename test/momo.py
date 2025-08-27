@@ -729,6 +729,7 @@ class Momo:
         interval: float = 0.5,
         additional_wait_stats: list[dict[str, Any]] | None = None,
         additional_wait_stats_timeout: int = 5,
+        additional_wait_after_stats: float = 0,
     ) -> bool:
         """
         接続が確立されるまで待機し、追加でこの統計情報が入ってくるまで待つ
@@ -740,6 +741,8 @@ class Momo:
                                   各要素は期待する統計情報の辞書。type を含む全項目が一致する統計情報を待つ。
                                   接続確立後、ここで指定した統計情報が現れるまで追加で待機する。
             additional_wait_stats_timeout: 追加統計情報を待つタイムアウト時間（秒）。デフォルト5秒。
+            additional_wait_after_stats: すべての統計情報条件が満たされた後の追加待機時間（秒）。デフォルト0秒。
+                                        統計情報がたまるまで追加で待機したい場合に使用。
 
         Returns:
             期待したすべての統計情報が入ってきた場合 True、タイムアウトした場合 False
@@ -759,6 +762,12 @@ class Momo:
             momo.wait_for_connection(
                 additional_wait_stats=[{"type": "codec", "mimeType": "video/H264"}],
                 additional_wait_stats_timeout=10
+            )
+
+            # すべての統計情報が揃った後、さらに2秒待機
+            momo.wait_for_connection(
+                additional_wait_stats=[{"type": "codec", "mimeType": "video/H264"}],
+                additional_wait_after_stats=2
             )
         """
         if not self._http_client:
@@ -850,6 +859,9 @@ class Momo:
                                 break
 
                         if all_conditions_met:
+                            # すべての追加統計情報条件が満たされた場合、さらに指定された時間待機
+                            if additional_wait_after_stats > 0:
+                                time.sleep(additional_wait_after_stats)
                             return True
 
                 except (httpx.ConnectError, httpx.HTTPStatusError):
@@ -859,4 +871,7 @@ class Momo:
 
             return False  # 追加統計情報のタイムアウト
 
+        # 追加統計情報なしで接続確立した場合も、指定された時間待機
+        if additional_wait_after_stats > 0:
+            time.sleep(additional_wait_after_stats)
         return True  # 追加統計情報なしで接続確立
