@@ -11,6 +11,14 @@
 
 ## develop
 
+## 2024.1.3
+
+**リリース日**: 2025-08-27
+
+- [FIX] Sora の network.status notify イベントの処理を削除
+  - Sora の network.status が新しい仕組みに変更され unstable_level が廃止されたため削除
+  - @voluntas
+
 ## 2024.1.2
 
 **リリース日**: 2025-06-10
