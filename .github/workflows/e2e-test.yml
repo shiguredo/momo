@@ -40,7 +40,26 @@ jobs:
           uv run pytest -v
         working-directory: ./test
 
-  e2e-test-ubuntu-self-hosted:
+  e2e-test-macos:
+    name: E2E Test macos_arm64
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Download and extract momo binary
+        uses: ./.github/actions/download-artifact
+        with:
+          platform: macos_arm64
+
+      - uses: astral-sh/setup-uv@v6
+      
+      - name: Run E2E tests
+        run: |
+          uv sync
+          uv run pytest -v
+        working-directory: ./test
+
+  e2e-test-ubuntu-haw:
     strategy:
       matrix:
         include:
