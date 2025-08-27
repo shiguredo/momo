@@ -47,7 +47,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(), (
+        assert m.wait_for_connection(post_connection_wait=5), (
             f"Failed to establish simulcast connection for {video_codec_type}"
         )
 
