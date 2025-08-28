@@ -132,10 +132,6 @@ class Momo:
             ) as m:
                 # テストコード
         """
-        # openh264 が None の場合、環境変数から取得
-        if openh264 is None:
-            openh264 = os.environ.get("OPENH264_PATH")
-        
         # 実行ファイルのパスを自動検出
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None

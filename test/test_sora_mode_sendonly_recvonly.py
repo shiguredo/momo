@@ -218,8 +218,8 @@ def test_multiple_sendonly_clients(sora_settings, port_allocator):
             metadata=sora_settings.metadata,
         ) as sender2:
             # 両方のインスタンスが正常に動作していることを確認
-            response1 = sender1._http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
-            assert response1.status_code == 200
+            metrics1 = sender1.get_metrics()
+            assert metrics1 is not None
 
-            response2 = sender2._http_client.get(f"http://localhost:{sender2.metrics_port}/metrics")
-            assert response2.status_code == 200
+            metrics2 = sender2.get_metrics()
+            assert metrics2 is not None
