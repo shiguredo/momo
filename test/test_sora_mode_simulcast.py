@@ -1,4 +1,5 @@
 import os
+import platform
 
 import pytest
 
@@ -11,11 +12,10 @@ pytestmark = [
         not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
         reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
     ),
-    # デバッグのため一時的にコメントアウト
-    # pytest.mark.skipif(
-    #     platform.system() == "Darwin",
-    #     reason="Skipping simulcast test on macOS due to performance limitations",
-    # ),
+    pytest.mark.skipif(
+        platform.system() == "Darwin",
+        reason="Skipping simulcast test on macOS due to performance limitations",
+    ),
 ]
 
 

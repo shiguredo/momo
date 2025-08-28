@@ -48,6 +48,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
+        initial_wait=10,
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ

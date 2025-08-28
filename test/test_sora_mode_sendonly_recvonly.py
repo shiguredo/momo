@@ -63,6 +63,7 @@ def test_sendonly_recvonly_pair(
         video_codec_type=video_codec_type,
         audio=True,
         metadata=sora_settings.metadata,
+        initial_wait=10,
         **encoder_params,
     ) as sender:
         # 受信専用クライアント
