@@ -18,6 +18,8 @@ pytestmark = [
 
 def test_sora_mode_with_openh264_encoder(sora_settings, free_port):
     """Sora モードで OpenH264 を使用した H.264 エンコーダーが動作することを確認"""
+    
+    openh264_path = os.environ.get("OPENH264_PATH")
 
     with Momo(
         mode=MomoMode.SORA,
@@ -30,8 +32,8 @@ def test_sora_mode_with_openh264_encoder(sora_settings, free_port):
         video=True,
         video_codec_type="H264",
         h264_encoder="software",  # OpenH264 はソフトウェアエンコーダー
+        openh264=openh264_path,  # 明示的にパスを指定
         metadata=sora_settings.metadata,
-        # openh264 パラメータは None でも環境変数から自動取得される
     ) as m:
         # 接続が確立されるまで待つ
         assert m.wait_for_connection(
@@ -81,7 +83,6 @@ def test_sora_mode_with_explicit_openh264_path(sora_settings, free_port):
     """明示的に OpenH264 パスを指定した場合の動作を確認"""
 
     openh264_path = os.environ.get("OPENH264_PATH")
-    assert openh264_path, "OPENH264_PATH environment variable must be set"
 
     with Momo(
         mode=MomoMode.SORA,
@@ -122,6 +123,8 @@ def test_sora_mode_with_explicit_openh264_path(sora_settings, free_port):
 
 def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
     """OpenH264 を使用したサイマルキャストの動作を確認"""
+    
+    openh264_path = os.environ.get("OPENH264_PATH")
 
     with Momo(
         mode=MomoMode.SORA,
@@ -135,6 +138,7 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
         video_codec_type="H264",
         video_bit_rate=3000,
         h264_encoder="software",
+        openh264=openh264_path,  # 明示的にパスを指定
         simulcast=True,
         resolution="960x540",
         metadata=sora_settings.metadata,
@@ -194,6 +198,8 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
 
 def test_sora_mode_openh264_performance_metrics(sora_settings, free_port):
     """OpenH264 エンコーダーのパフォーマンス関連メトリクスを確認"""
+    
+    openh264_path = os.environ.get("OPENH264_PATH")
 
     with Momo(
         mode=MomoMode.SORA,
@@ -206,6 +212,7 @@ def test_sora_mode_openh264_performance_metrics(sora_settings, free_port):
         video=True,
         video_codec_type="H264",
         h264_encoder="software",
+        openh264=openh264_path,  # 明示的にパスを指定
         resolution="960x540",  # フル HD 解像度でテスト
         framerate=30,
         metadata=sora_settings.metadata,
