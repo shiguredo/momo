@@ -88,9 +88,8 @@ def test_ayame_mode_with_video_settings(free_port, port_allocator):
         metrics_port=free_port,
         fake_capture_device=True,
         resolution="VGA",
-        framerate=60,
+        framerate=30,
         vp8_encoder="software",
-        log_level="verbose",
     ) as m:
         data = m.get_metrics()
         assert "version" in data  # メトリクスが取得できることを確認

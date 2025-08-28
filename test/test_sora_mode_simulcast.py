@@ -32,7 +32,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
     print(f"\n=== Running test for {video_codec_type} ===")
     print(f"Expected encoder implementation: {expected_encoder_implementation}")
     print(f"Free port: {free_port}")
-    
+
     # エンコーダー設定を準備
     encoder_params = {}
     if video_codec_type == "VP8":
@@ -44,7 +44,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
     elif video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "software"
         print(f"Setting AV1 encoder parameter: {encoder_params}")
-    
+
     print(f"Final encoder_params: {encoder_params}")
 
     with Momo(
@@ -61,7 +61,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         resolution="960x540",  # 540p の解像度
         video_bit_rate=3000,  # ビットレート 3000
         metadata=sora_settings.metadata,
-        log_level="verbose",
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ

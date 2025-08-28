@@ -42,7 +42,6 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
-        log_level="verbose",
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
@@ -176,7 +175,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         resolution="960x540",  # 540p の解像度
         video_bit_rate=3000,  # ビットレート 3000
         metadata=sora_settings.metadata,
-        log_level="verbose",
         initial_wait=10,
         **encoder_params,
     ) as m:
