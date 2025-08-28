@@ -643,7 +643,9 @@ class Momo:
         if initial_wait > 0:
             time.sleep(initial_wait)
 
-        print(f"Waiting for metrics endpoint to be ready on port {metrics_port} (timeout: {timeout}s)...")
+        print(
+            f"Waiting for metrics endpoint to be ready on port {metrics_port} (timeout: {timeout}s)..."
+        )
         start_time = time.time()
 
         with httpx.Client() as client:
@@ -651,7 +653,9 @@ class Momo:
                 # プロセスの状態を確認
                 if self.process.poll() is not None:
                     # プロセスが終了していたらエラー
-                    error_msg = f"momo process exited unexpectedly with code {self.process.returncode}"
+                    error_msg = (
+                        f"momo process exited unexpectedly with code {self.process.returncode}"
+                    )
                     # stderrの内容を表示
                     if hasattr(self.process, "stderr") and self.process.stderr:
                         stderr_output = self.process.stderr.read()
@@ -691,15 +695,20 @@ class Momo:
                     # 接続エラーは無視して次の試行へ
                     elapsed = time.time() - start_time
                     if elapsed > 5 and int(elapsed) % 5 == 0:  # 5秒ごとに状況を出力
-                        print(f"  Still waiting for metrics on port {metrics_port} ({elapsed:.1f}s elapsed)")
+                        print(
+                            f"  Still waiting for metrics on port {metrics_port} ({elapsed:.1f}s elapsed)"
+                        )
                         # stderr を非ブロッキングで確認
                         if hasattr(self.process, "stderr") and self.process.stderr:
                             import select
+
                             # stderr に読み取り可能なデータがあるか確認
                             if select.select([self.process.stderr], [], [], 0)[0]:
                                 import os
+
                                 # 非ブロッキングモードに設定
                                 import fcntl
+
                                 fd = self.process.stderr.fileno()
                                 fl = fcntl.fcntl(fd, fcntl.F_GETFL)
                                 fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
@@ -747,9 +756,10 @@ class Momo:
                 self.process.wait()
                 print(f"Momo process (PID: {pid}) killed")
             self.process = None
-            
+
             # プロセス終了後の短い待機（リソース解放のため）
             import time
+
             time.sleep(0.2)
 
     def get_metrics(self) -> dict[str, Any]:
@@ -843,7 +853,7 @@ class Momo:
                                 if stat.get(expected_key) == expected_value:
                                     found = True
                                     break
-                        
+
                         if not found:
                             all_conditions_met = False
                             break
@@ -881,18 +891,18 @@ class Momo:
                                 # まず type が一致するかチェック
                                 if stat.get("type") != expected_dict.get("type"):
                                     continue
-                                
+
                                 # expected_dict のすべての項目が stat に含まれ、値が一致するかチェック
                                 all_items_match = True
                                 for key, expected_value in expected_dict.items():
                                     if stat.get(key) != expected_value:
                                         all_items_match = False
                                         break
-                                
+
                                 if all_items_match:
                                     found = True
                                     break
-                            
+
                             if not found:
                                 all_conditions_met = False
                                 break

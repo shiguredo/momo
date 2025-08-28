@@ -140,12 +140,12 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             **codec_settings,
         ) as m2:
             # 両方のピアの接続が確立されるまで待機
-            assert m1.wait_for_connection(timeout=10), (
-                f"M1 failed to establish connection for {codec} codec within timeout"
-            )
-            assert m2.wait_for_connection(timeout=10), (
-                f"M2 failed to establish connection for {codec} codec within timeout"
-            )
+            assert m1.wait_for_connection(
+                timeout=10
+            ), f"M1 failed to establish connection for {codec} codec within timeout"
+            assert m2.wait_for_connection(
+                timeout=10
+            ), f"M2 failed to establish connection for {codec} codec within timeout"
 
             p1_data = m1.get_metrics()
             p2_data = m2.get_metrics()
@@ -155,14 +155,14 @@ def test_ayame_mode_with_codec(port_allocator, codec):
                 p1_outbound := find_stats(p1_data, type="outbound-rtp", kind="video")
             ) is not None, "Could not find p1 outbound-rtp video stream"
 
-            assert (codec_id := p1_outbound.get("codecId")) is not None, (
-                "No codecId found in p1 outbound-rtp stats"
-            )
+            assert (
+                codec_id := p1_outbound.get("codecId")
+            ) is not None, "No codecId found in p1 outbound-rtp stats"
 
             # codecId から codec 統計を探す
-            assert (p1_codec := find_stats(p1_data, id=codec_id, type="codec")) is not None, (
-                f"Could not find codec stats for codecId: {codec_id}"
-            )
+            assert (
+                p1_codec := find_stats(p1_data, id=codec_id, type="codec")
+            ) is not None, f"Could not find codec stats for codecId: {codec_id}"
 
             mime_type = p1_codec.get("mimeType", "")
             assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
@@ -173,14 +173,14 @@ def test_ayame_mode_with_codec(port_allocator, codec):
                 p2_outbound := find_stats(p2_data, type="outbound-rtp", kind="video")
             ) is not None, "Could not find p2 outbound-rtp video stream"
 
-            assert (codec_id := p2_outbound.get("codecId")) is not None, (
-                "No codecId found in p2 outbound-rtp stats"
-            )
+            assert (
+                codec_id := p2_outbound.get("codecId")
+            ) is not None, "No codecId found in p2 outbound-rtp stats"
 
             # codecId から codec 統計を探す
-            assert (p2_codec := find_stats(p2_data, id=codec_id, type="codec")) is not None, (
-                f"Could not find codec stats for codecId: {codec_id}"
-            )
+            assert (
+                p2_codec := find_stats(p2_data, id=codec_id, type="codec")
+            ) is not None, f"Could not find codec stats for codecId: {codec_id}"
 
             mime_type = p2_codec.get("mimeType", "")
             assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
@@ -228,12 +228,12 @@ def test_ayame_mode_peer_connection(port_allocator):
             resolution="QVGA",
         ) as m2:
             # 両方のピアの接続が確立されるまで弅機
-            assert m1.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
-                "M1 failed to establish connection within timeout"
-            )
-            assert m2.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
-                "M2 failed to establish connection within timeout"
-            )
+            assert m1.wait_for_connection(
+                timeout=10, additional_wait_after_stats=3
+            ), "M1 failed to establish connection within timeout"
+            assert m2.wait_for_connection(
+                timeout=10, additional_wait_after_stats=3
+            ), "M2 failed to establish connection within timeout"
 
             p1_data = m1.get_metrics()
             p2_data = m2.get_metrics()
