@@ -1,7 +1,6 @@
 """Momo プロセスを管理するためのクラス"""
 
 import json
-import os
 import platform
 import shlex
 import subprocess
@@ -644,7 +643,7 @@ class Momo:
         if initial_wait > 0:
             time.sleep(initial_wait)
 
-        print(f"Waiting for metrics endpoint to be ready (timeout: {timeout}s)...")
+        print(f"Waiting for metrics endpoint to be ready on port {metrics_port} (timeout: {timeout}s)...")
         start_time = time.time()
 
         with httpx.Client() as client:
@@ -662,7 +661,8 @@ class Momo:
 
                 # メトリクスエンドポイントをチェック
                 try:
-                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=5)
+                    url = f"http://localhost:{metrics_port}/metrics"
+                    response = client.get(url, timeout=5)
                     if response.status_code == 200:
                         # Soraモードの場合はstatsが空でないことを確認
                         if self.kwargs["mode"] == MomoMode.SORA:
@@ -689,6 +689,28 @@ class Momo:
                         print(f"  Got status code: {response.status_code}")
                 except httpx.ConnectError:
                     # 接続エラーは無視して次の試行へ
+                    elapsed = time.time() - start_time
+                    if elapsed > 5 and int(elapsed) % 5 == 0:  # 5秒ごとに状況を出力
+                        print(f"  Still waiting for metrics on port {metrics_port} ({elapsed:.1f}s elapsed)")
+                        # stderr を非ブロッキングで確認
+                        if hasattr(self.process, "stderr") and self.process.stderr:
+                            import select
+                            # stderr に読み取り可能なデータがあるか確認
+                            if select.select([self.process.stderr], [], [], 0)[0]:
+                                import os
+                                # 非ブロッキングモードに設定
+                                import fcntl
+                                fd = self.process.stderr.fileno()
+                                fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+                                fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+                                try:
+                                    stderr_chunk = self.process.stderr.read(4096)
+                                    if stderr_chunk:
+                                        print(f"  Stderr (during startup): {stderr_chunk}")
+                                except IOError:
+                                    pass
+                                # 元に戻す
+                                fcntl.fcntl(fd, fcntl.F_SETFL, fl)
                     pass
                 except httpx.ConnectTimeout:
                     pass

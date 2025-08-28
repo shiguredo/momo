@@ -1,5 +1,4 @@
 import os
-import platform
 
 import pytest
 from momo import Momo, MomoMode
@@ -11,10 +10,11 @@ pytestmark = [
         not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
         reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
     ),
-    pytest.mark.skipif(
-        platform.system() == "Darwin",
-        reason="Skipping simulcast test on macOS due to performance limitations",
-    ),
+    # デバッグのため一時的にコメントアウト
+    # pytest.mark.skipif(
+    #     platform.system() == "Darwin",
+    #     reason="Skipping simulcast test on macOS due to performance limitations",
+    # ),
 ]
 
 
@@ -28,14 +28,24 @@ pytestmark = [
 )
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで接続時の統計情報を確認"""
+    # デバッグ: テストケースの情報を出力
+    print(f"\n=== Running test for {video_codec_type} ===")
+    print(f"Expected encoder implementation: {expected_encoder_implementation}")
+    print(f"Free port: {free_port}")
+    
     # エンコーダー設定を準備
     encoder_params = {}
     if video_codec_type == "VP8":
         encoder_params["vp8_encoder"] = "software"
+        print(f"Setting VP8 encoder parameter: {encoder_params}")
     elif video_codec_type == "VP9":
         encoder_params["vp9_encoder"] = "software"
+        print(f"Setting VP9 encoder parameter: {encoder_params}")
     elif video_codec_type == "AV1":
         encoder_params["av1_encoder"] = "software"
+        print(f"Setting AV1 encoder parameter: {encoder_params}")
+    
+    print(f"Final encoder_params: {encoder_params}")
 
     with Momo(
         mode=MomoMode.SORA,
