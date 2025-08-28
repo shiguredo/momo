@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from momo import Momo, MomoMode
 
 # OpenH264 を使用する Sora モードのテストは OPENH264_PATH が設定されていない場合スキップ

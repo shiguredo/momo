@@ -1,6 +1,7 @@
 """Momo のモード固有オプション検証をテストする"""
 
 import pytest
+
 from momo import Momo, MomoMode
 
 

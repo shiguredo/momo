@@ -704,10 +704,9 @@ class Momo:
 
                             # stderr に読み取り可能なデータがあるか確認
                             if select.select([self.process.stderr], [], [], 0)[0]:
-                                import os
-
                                 # 非ブロッキングモードに設定
                                 import fcntl
+                                import os
 
                                 fd = self.process.stderr.fileno()
                                 fl = fcntl.fcntl(fd, fcntl.F_GETFL)
