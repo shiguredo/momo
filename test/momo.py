@@ -109,7 +109,7 @@ class Momo:
         # その他のカスタム引数
         extra_args: list[str] | None = None,
         # 起動待機時間
-        initial_wait: int = 2,
+        initial_wait: int | None = None,
     ) -> None:
         """
         Momo プロセスを管理するクラス
@@ -140,7 +140,8 @@ class Momo:
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
-        self.initial_wait = initial_wait
+        # デフォルトの初期待機時間を設定
+        self.initial_wait = initial_wait if initial_wait is not None else 2
 
         # すべての引数を保存
         self.kwargs: dict[str, Any] = {
@@ -317,11 +318,12 @@ class Momo:
             quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
             print(f"Starting momo with command: {quoted_cmd}")
 
-            # プロセスを起動
+            # プロセスを起動 (エラー出力をキャプチャして問題発生時に確認できるようにする)
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
             )
             print(f"Started momo process with PID: {self.process.pid}")
 
@@ -654,9 +656,13 @@ class Momo:
                 # プロセスの状態を確認
                 if self.process.poll() is not None:
                     # プロセスが終了していたらエラー
-                    raise RuntimeError(
-                        f"momo process exited unexpectedly with code {self.process.returncode}"
-                    )
+                    error_msg = f"momo process exited unexpectedly with code {self.process.returncode}"
+                    # stderrの内容を表示
+                    if hasattr(self.process, "stderr") and self.process.stderr:
+                        stderr_output = self.process.stderr.read()
+                        if stderr_output:
+                            error_msg += f"\nStderr output:\n{stderr_output}"
+                    raise RuntimeError(error_msg)
 
                 # メトリクスエンドポイントをチェック
                 try:
@@ -699,6 +705,12 @@ class Momo:
             # タイムアウト
             if self.process:
                 print(f"Timeout waiting for momo process (PID: {self.process.pid}) to start")
+                # stderrの内容を表示
+                if hasattr(self.process, "stderr") and self.process.stderr:
+                    print("Checking for stderr output...")
+                    stderr_output = self.process.stderr.read()
+                    if stderr_output:
+                        print(f"Stderr output:\n{stderr_output}")
             self._cleanup()
             raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
@@ -717,6 +729,10 @@ class Momo:
                 self.process.wait()
                 print(f"Momo process (PID: {pid}) killed")
             self.process = None
+            
+            # プロセス終了後の短い待機（リソース解放のため）
+            import time
+            time.sleep(0.2)
 
     def get_metrics(self) -> dict[str, Any]:
         """メトリクスを取得"""
