@@ -1,7 +1,6 @@
 """Momo のモード固有オプション検証をテストする"""
 
 import pytest
-
 from momo import Momo, MomoMode
 
 
@@ -117,8 +116,8 @@ def test_common_options_allowed_in_all_modes(free_port, port_allocator):
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
-        resolution="HD",  # 共通オプション
-        framerate=30,  # 共通オプション
+        resolution="QVGA",  # 共通オプション
+        framerate=15,  # 共通オプション
         log_level="info",  # 共通オプション
     ) as m:
         data = m.get_metrics()

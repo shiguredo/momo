@@ -87,8 +87,8 @@ def test_ayame_mode_with_video_settings(free_port, port_allocator):
         room_id=room_id,
         metrics_port=free_port,
         fake_capture_device=True,
-        resolution="VGA",
-        framerate=30,
+        resolution="QVGA",
+        framerate=15,
         vp8_encoder="software",
     ) as m:
         data = m.get_metrics()
