@@ -13,10 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 // Linux
 #include <dirent.h>
@@ -154,8 +156,22 @@ bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
                     strlen((const char*)deviceUniqueIdUTF8)) ==
             0)  // match with device id
         {
-          close(fd);
-          return true;
+          // Check if device supports video capture formats
+          struct v4l2_fmtdesc fmt;
+          memset(&fmt, 0, sizeof(fmt));
+          fmt.index = 0;
+          fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+          
+          // Try to enumerate at least one format
+          if (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0) {
+            // Device supports at least one video format
+            close(fd);
+            return true;
+          } else {
+            // Device doesn't support any video formats, skip it
+            RTC_LOG(LS_INFO) << "Device " << device 
+                             << " matches but doesn't support video formats";
+          }
         }
       }
     }
@@ -165,47 +181,42 @@ bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
 }
 
 int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8) {
-  int fd;
   bool found = false;
 
-  /* detect /dev/video [0-63] entries */
-  char device[32];
-  int n;
-  for (n = 0; n < 64; n++) {
-    sprintf(device, "/dev/video%d", n);
-    if (FindDevice(deviceUniqueIdUTF8, device)) {
-      found = true;
-      _videoDevice = device;  // store the video device
-      break;
-    }
-  }
-
-  /* If not found, scan /sys/class/video4linux for additional video devices
-     This handles /dev/video64+ and devices that may not be in sequence */
-  if (!found) {
-    DIR* dir = opendir("/sys/class/video4linux");
-    if (dir) {
-      struct dirent* entry;
-      while ((entry = readdir(dir)) != NULL) {
-        // Check if it's a video device
-        if (strncmp(entry->d_name, "video", 5) == 0) {
-          char path[256];
-          snprintf(path, sizeof(path), "/dev/%s", entry->d_name);
-          // Skip devices we already checked in the loop above
-          int device_num = -1;
-          if (sscanf(entry->d_name, "video%d", &device_num) == 1 && 
-              device_num >= 0 && device_num < 64) {
-            continue;  // Already checked in the first loop
-          }
-          if (FindDevice(deviceUniqueIdUTF8, path)) {
-            found = true;
-            _videoDevice = path;
-            break;
-          }
-        }
+  /* Scan /sys/class/video4linux for all video devices in numeric order */
+  DIR* dir = opendir("/sys/class/video4linux");
+  if (dir) {
+    // Collect all video device names
+    std::vector<std::string> video_devices;
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+      if (strncmp(entry->d_name, "video", 5) == 0) {
+        video_devices.push_back(entry->d_name);
       }
-      closedir(dir);
     }
+    closedir(dir);
+    
+    // Sort devices numerically (video0, video1, video2, ...)
+    std::sort(video_devices.begin(), video_devices.end(),
+              [](const std::string& a, const std::string& b) {
+                int num_a = -1, num_b = -1;
+                sscanf(a.c_str(), "video%d", &num_a);
+                sscanf(b.c_str(), "video%d", &num_b);
+                return num_a < num_b;
+              });
+    
+    // Try devices in order
+    for (const auto& device_name : video_devices) {
+      char path[256];
+      snprintf(path, sizeof(path), "/dev/%s", device_name.c_str());
+      if (FindDevice(deviceUniqueIdUTF8, path)) {
+        found = true;
+        _videoDevice = path;
+        break;
+      }
+    }
+  } else {
+    RTC_LOG(LS_WARNING) << "Could not open /sys/class/video4linux: " << strerror(errno);
   }
 
   if (!found) {
