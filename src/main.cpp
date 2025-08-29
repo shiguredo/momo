@@ -72,8 +72,75 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 #if defined(__linux__)
 
+static std::string GetFourccString(uint32_t fourcc) {
+  std::string result;
+  result += (char)(fourcc & 0xFF);
+  result += (char)((fourcc >> 8) & 0xFF);
+  result += (char)((fourcc >> 16) & 0xFF);
+  result += (char)((fourcc >> 24) & 0xFF);
+  return result;
+}
+
+static void ListDeviceFormats(const char* device_path) {
+  int fd = open(device_path, O_RDONLY);
+  if (fd < 0) return;
+  
+  struct v4l2_fmtdesc fmt;
+  memset(&fmt, 0, sizeof(fmt));
+  fmt.index = 0;
+  fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  
+  while (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0) {
+    std::cout << "\t  [" << fmt.index << "]: " 
+              << GetFourccString(fmt.pixelformat) 
+              << " (" << fmt.description << ")" << std::endl;
+    
+    // Enumerate frame sizes for this format
+    struct v4l2_frmsizeenum frmsize;
+    memset(&frmsize, 0, sizeof(frmsize));
+    frmsize.index = 0;
+    frmsize.pixel_format = fmt.pixelformat;
+    
+    while (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) == 0) {
+      if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+        std::cout << "\t      " << frmsize.discrete.width << "x" 
+                  << frmsize.discrete.height;
+        
+        // Enumerate frame intervals for this size
+        struct v4l2_frmivalenum frmival;
+        memset(&frmival, 0, sizeof(frmival));
+        frmival.index = 0;
+        frmival.pixel_format = fmt.pixelformat;
+        frmival.width = frmsize.discrete.width;
+        frmival.height = frmsize.discrete.height;
+        
+        std::cout << " (";
+        bool first = true;
+        while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0) {
+          if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+            if (!first) std::cout << ", ";
+            // Convert to fps
+            if (frmival.discrete.numerator != 0) {
+              int fps = frmival.discrete.denominator / frmival.discrete.numerator;
+              std::cout << fps << " fps";
+            }
+            first = false;
+          }
+          frmival.index++;
+        }
+        std::cout << ")" << std::endl;
+      }
+      frmsize.index++;
+    }
+    
+    fmt.index++;
+  }
+  
+  close(fd);
+}
+
 static void ListVideoDevices() {
-  std::cout << "Available video devices:" << std::endl;
+  std::cout << "=== Available video devices ===" << std::endl;
   
   // Collect video devices grouped by bus_info
   std::map<std::string, std::vector<std::string>> devices_by_bus;
@@ -135,14 +202,17 @@ static void ListVideoDevices() {
     close(fd);
   }
   
-  // Print devices grouped by camera
+  // Print devices grouped by camera with format details
   if (devices_by_bus.empty()) {
     std::cout << "No video capture devices found" << std::endl;
   } else {
     for (const auto& [bus_info, device_list] : devices_by_bus) {
+      std::cout << std::endl;
       std::cout << device_names[bus_info] << " (" << bus_info << "):" << std::endl;
       for (const auto& device : device_list) {
         std::cout << "\t" << device << std::endl;
+        std::cout << "\tSupported formats:" << std::endl;
+        ListDeviceFormats(device.c_str());
       }
     }
   }
