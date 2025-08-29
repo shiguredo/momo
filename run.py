@@ -662,12 +662,20 @@ def _build(args):
             if is_windows:
                 with zipfile.ZipFile(archive_path, "w") as f:
                     for file in files:
-                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        arcname = (
+                            os.path.join(archive_dir_name, os.path.relpath(file, "momo"))
+                            if archive_dir_name
+                            else file
+                        )
                         f.write(filename=file, arcname=arcname)
             else:
                 with tarfile.open(archive_path, "w:gz") as f:
                     for file in files:
-                        arcname = os.path.join(archive_dir_name, os.path.relpath(file, "momo")) if archive_dir_name else file
+                        arcname = (
+                            os.path.join(archive_dir_name, os.path.relpath(file, "momo"))
+                            if archive_dir_name
+                            else file
+                        )
                         f.add(name=file, arcname=arcname)
 
         ext = "zip" if platform.target.os == "windows" else "tar.gz"
