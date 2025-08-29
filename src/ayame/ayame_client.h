@@ -30,6 +30,8 @@ struct AyameClientConfig {
   std::string room_id;
   std::string client_id;
   std::string signaling_key;
+  // sendrecv, sendonly, recvonly
+  std::string direction = "sendrecv";
 };
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,

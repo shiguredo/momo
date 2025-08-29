@@ -368,6 +368,7 @@ int main(int argc, char* argv[]) {
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;
       config.signaling_key = args.ayame_signaling_key;
+      config.direction = args.ayame_direction;
 
       ayame_client =
           AyameClient::Create(ioc, rtc_manager.get(), std::move(config));

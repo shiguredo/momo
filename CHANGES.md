@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] Ayame モードに `--direction` オプションを追加
+  - `sendrecv`（デフォルト）、`sendonly`、`recvonly` の 3 種類の送受信方向を指定可能
+  - WebRTC の RTCRtpTransceiver の direction プロパティを制御
+  - 配信用途や視聴用途での利用を想定
+  - @voluntas
 - [CHANGE] test モードを p2p モードに名前変更
   - コマンドラインオプションを `test` から `p2p` に変更
   - HTML ファイル名を `test.html` から `p2p.html` に変更

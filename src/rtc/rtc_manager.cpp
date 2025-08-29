@@ -302,26 +302,63 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
                                          connection.value());
 }
 
-void RTCManager::InitTracks(RTCConnection* conn) {
+void RTCManager::InitTracks(RTCConnection* conn, const std::string& direction) {
   auto connection = conn->GetConnection();
 
   std::string stream_id = Util::GenerateRandomChars();
 
-  if (audio_track_) {
-    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
-        audio_sender = connection->AddTrack(audio_track_, {stream_id});
-    if (!audio_sender.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+  // sendonly と sendrecv の場合はトラックを追加
+  if (direction != "recvonly") {
+    if (audio_track_) {
+      webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
+          audio_sender = connection->AddTrack(audio_track_, {stream_id});
+      if (!audio_sender.ok()) {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+      }
+    }
+
+    if (video_track_) {
+      webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
+          video_add_result = connection->AddTrack(video_track_, {stream_id});
+      if (video_add_result.ok()) {
+        video_sender_ = video_add_result.value();
+      } else {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+      }
+    }
+  } else {
+    // recvonly の場合はトラックなしでトランシーバーを作成
+    webrtc::RtpTransceiverInit init;
+    init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+
+    // Audio トランシーバーを作成
+    auto audio_result = connection->AddTransceiver(webrtc::MediaType::AUDIO, init);
+    if (!audio_result.ok()) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio transceiver for recvonly";
+    }
+
+    // Video トランシーバーを作成
+    auto video_result = connection->AddTransceiver(webrtc::MediaType::VIDEO, init);
+    if (!video_result.ok()) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video transceiver for recvonly";
     }
   }
 
-  if (video_track_) {
-    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
-        video_add_result = connection->AddTrack(video_track_, {stream_id});
-    if (video_add_result.ok()) {
-      video_sender_ = video_add_result.value();
-    } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+  // direction が指定されている場合、AddTrack 後にトランシーバーの direction を設定
+  if (!direction.empty() && direction != "recvonly") {
+    webrtc::RtpTransceiverDirection transceiver_direction;
+    if (direction == "sendonly") {
+      transceiver_direction = webrtc::RtpTransceiverDirection::kSendOnly;
+    } else {  // sendrecv
+      transceiver_direction = webrtc::RtpTransceiverDirection::kSendRecv;
+    }
+
+    // すべてのトランシーバーに direction を設定
+    for (auto transceiver : connection->GetTransceivers()) {
+      auto error = transceiver->SetDirectionWithError(transceiver_direction);
+      if (!error.ok()) {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Failed to set transceiver direction: " << error.message();
+      }
     }
   }
 }

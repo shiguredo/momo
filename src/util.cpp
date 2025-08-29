@@ -266,6 +266,9 @@ void Util::ParseArgs(int argc,
   ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", args.ayame_signaling_key,
                         "Signaling key");
+  ayame_app->add_option("--direction", args.ayame_direction,
+                        "Direction (default: sendrecv)")
+      ->check(CLI::IsMember({"sendrecv", "sendonly", "recvonly"}));
 
   sora_app
       ->add_option("--signaling-urls", args.sora_signaling_urls,

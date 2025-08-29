@@ -266,3 +266,111 @@ def test_ayame_mode_peer_connection(port_allocator):
             print(
                 f"P2 video - sent: {p2_video_out.get('packetsSent')}, received: {p2_video_in.get('packetsReceived')}"
             )
+
+
+def test_ayame_mode_direction_sendonly_recvonly(port_allocator):
+    """Ayame モードで direction を使って sendonly と recvonly のペアが通信できることを確認"""
+    room_id = str(uuid.uuid4())
+
+    # sendonly 側
+    with Momo(
+        mode=MomoMode.AYAME,
+        ayame_signaling_url=AYAME_SIGNALING_URL,
+        room_id=room_id,
+        client_id=str(uuid.uuid4()),
+        direction="sendonly",
+        metrics_port=next(port_allocator),
+        fake_capture_device=True,
+        resolution="QVGA",
+    ) as sender:
+        # recvonly 側
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            client_id=str(uuid.uuid4()),
+            direction="recvonly",
+            metrics_port=next(port_allocator),
+            resolution="QVGA",
+        ) as receiver:
+            # 両方のピアの接続が確立されるまで待機
+            assert sender.wait_for_connection(timeout=10), (
+                "Sender failed to establish connection within timeout"
+            )
+            assert receiver.wait_for_connection(timeout=10), (
+                "Receiver failed to establish connection within timeout"
+            )
+
+            sender_data = sender.get_metrics()
+            receiver_data = receiver.get_metrics()
+
+            # sendonly は送信のみ（outbound-rtp はあるが inbound-rtp はない）
+            assert (
+                sender_video_out := find_stats(sender_data, type="outbound-rtp", kind="video")
+            ) is not None, "Sender should have video outbound-rtp"
+            assert sender_video_out.get("packetsSent", 0) > 0
+            
+            # sendonly は受信しない
+            assert (
+                find_stats(sender_data, type="inbound-rtp", kind="video")
+            ) is None, "Sender should NOT have video inbound-rtp"
+
+            # recvonly は受信のみ（inbound-rtp はあるが outbound-rtp はない）
+            assert (
+                receiver_video_in := find_stats(receiver_data, type="inbound-rtp", kind="video")
+            ) is not None, "Receiver should have video inbound-rtp"
+            assert receiver_video_in.get("packetsReceived", 0) > 0
+            
+            # recvonly は送信しない
+            assert (
+                find_stats(receiver_data, type="outbound-rtp", kind="video")
+            ) is None, "Receiver should NOT have video outbound-rtp"
+
+            print(
+                f"Sender video - sent: {sender_video_out.get('packetsSent')}"
+            )
+            print(
+                f"Receiver video - received: {receiver_video_in.get('packetsReceived')}"
+            )
+
+
+def test_ayame_mode_direction_sendrecv_default(free_port):
+    """Ayame モードで direction のデフォルトが sendrecv として動作することを確認"""
+    room_id = str(uuid.uuid4())
+
+    # direction を指定しない（デフォルト = sendrecv）
+    with Momo(
+        mode=MomoMode.AYAME,
+        ayame_signaling_url=AYAME_SIGNALING_URL,
+        room_id=room_id,
+        metrics_port=free_port,
+        fake_capture_device=True,
+        resolution="QVGA",
+    ) as m:
+        # 明示的に sendrecv を指定
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            client_id=str(uuid.uuid4()),
+            direction="sendrecv",
+            metrics_port=free_port + 1,
+            fake_capture_device=True,
+            resolution="QVGA",
+        ) as m2:
+            # 両方のピアの接続が確立されるまで待機
+            assert m.wait_for_connection(timeout=10), (
+                "M1 failed to establish connection within timeout"
+            )
+            assert m2.wait_for_connection(timeout=10), (
+                "M2 failed to establish connection within timeout"
+            )
+
+            m1_data = m.get_metrics()
+            m2_data = m2.get_metrics()
+
+            # 両方とも送受信できるはず
+            assert find_stats(m1_data, type="outbound-rtp", kind="video") is not None
+            assert find_stats(m1_data, type="inbound-rtp", kind="video") is not None
+            assert find_stats(m2_data, type="outbound-rtp", kind="video") is not None
+            assert find_stats(m2_data, type="inbound-rtp", kind="video") is not None

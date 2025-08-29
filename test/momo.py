@@ -85,6 +85,7 @@ class Momo:
         room_id: str | None = None,
         client_id: str | None = None,
         signaling_key: str | None = None,
+        direction: Literal["sendrecv", "sendonly", "recvonly"] | None = None,
         # === sora モード固有 ===
         signaling_urls: str | None = None,  # 複数URL可（スペース区切り）
         channel_id: str | None = None,
@@ -193,6 +194,7 @@ class Momo:
             "room_id": room_id,
             "client_id": client_id,
             "signaling_key": signaling_key,
+            "direction": direction,
             "signaling_urls": signaling_urls,
             "channel_id": channel_id,
             "auto": auto,
@@ -489,6 +491,8 @@ class Momo:
                 args.extend(["--client-id", kwargs["client_id"]])
             if kwargs.get("signaling_key"):
                 args.extend(["--signaling-key", kwargs["signaling_key"]])
+            if kwargs.get("direction"):
+                args.extend(["--direction", kwargs["direction"]])
 
         elif mode == MomoMode.SORA:
             args.append(mode.value)
@@ -557,7 +561,7 @@ class Momo:
         p2p_only_options = {"document_root"}
 
         # ayame モード固有オプション
-        ayame_only_options = {"ayame_signaling_url", "room_id", "client_id", "signaling_key"}
+        ayame_only_options = {"ayame_signaling_url", "room_id", "client_id", "signaling_key", "direction"}
 
         # sora モード固有オプション
         sora_only_options = {

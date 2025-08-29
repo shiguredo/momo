@@ -85,6 +85,8 @@ struct MomoArgs {
   std::string ayame_room_id;
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
+  // sendrecv, sendonly, recvonly
+  std::string ayame_direction = "sendrecv";
 
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;
