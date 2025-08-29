@@ -19,6 +19,7 @@
 #include <string>
 
 // Linux
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/videodev2.h>
@@ -164,19 +165,26 @@ bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
 }
 
 int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8) {
-  int fd;
   bool found = false;
 
-  /* detect /dev/video [0-63] entries */
-  char device[32];
-  int n;
-  for (n = 0; n < 64; n++) {
-    sprintf(device, "/dev/video%d", n);
-    if (FindDevice(deviceUniqueIdUTF8, device)) {
-      found = true;
-      _videoDevice = device;  // store the video device
-      break;
+  /* Scan /sys/class/video4linux for all video devices
+     This handles all /dev/video* devices including those from /dev/media */
+  DIR* dir = opendir("/sys/class/video4linux");
+  if (dir) {
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+      // Check if it's a video device
+      if (strncmp(entry->d_name, "video", 5) == 0) {
+        char path[256];
+        snprintf(path, sizeof(path), "/dev/%s", entry->d_name);
+        if (FindDevice(deviceUniqueIdUTF8, path)) {
+          found = true;
+          _videoDevice = path;
+          break;
+        }
+      }
     }
+    closedir(dir);
   }
 
   if (!found) {
