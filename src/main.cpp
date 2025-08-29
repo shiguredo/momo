@@ -75,7 +75,6 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 static void ListVideoDevices() {
   std::cout << "Available video devices:" << std::endl;
-  std::cout.flush();  // Force flush output
   
   // Collect video devices grouped by bus_info
   std::map<std::string, std::vector<std::string>> devices_by_bus;
@@ -86,7 +85,6 @@ static void ListVideoDevices() {
     std::cerr << "Could not open /sys/class/video4linux: " << strerror(errno) << std::endl;
     return;
   }
-  std::cout << "Scanning /sys/class/video4linux..." << std::endl;
   
   // Collect all video devices
   std::vector<std::string> video_devices;
