@@ -60,7 +60,117 @@
 #include "sora/cuda_context.h"
 #endif
 
+#if defined(__linux__)
+#include <dirent.h>
+#include <fcntl.h>
+#include <linux/media.h>
+#include <linux/videodev2.h>
+#include <map>
+#include <sys/ioctl.h>
+#endif
+
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
+
+#if defined(__linux__)
+
+static void ListVideoDevices() {
+  std::cout << "Available video devices:" << std::endl;
+  
+  // Collect video devices grouped by bus_info
+  std::map<std::string, std::vector<std::string>> devices_by_bus;
+  std::map<std::string, std::string> device_names;
+  
+  DIR* dir = opendir("/sys/class/video4linux");
+  if (!dir) {
+    std::cerr << "Could not open /sys/class/video4linux" << std::endl;
+    return;
+  }
+  
+  // Collect all video devices
+  std::vector<std::string> video_devices;
+  struct dirent* entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strncmp(entry->d_name, "video", 5) == 0) {
+      video_devices.push_back(entry->d_name);
+    }
+  }
+  closedir(dir);
+  
+  // Sort devices numerically
+  std::sort(video_devices.begin(), video_devices.end(),
+            [](const std::string& a, const std::string& b) {
+              int num_a = -1, num_b = -1;
+              sscanf(a.c_str(), "video%d", &num_a);
+              sscanf(b.c_str(), "video%d", &num_b);
+              return num_a < num_b;
+            });
+  
+  // Query each device
+  for (const auto& device_name : video_devices) {
+    char device_path[256];
+    snprintf(device_path, sizeof(device_path), "/dev/%s", device_name.c_str());
+    
+    int fd = open(device_path, O_RDONLY);
+    if (fd < 0) continue;
+    
+    struct v4l2_capability cap;
+    if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
+      std::string bus_info((const char*)cap.bus_info);
+      std::string card((const char*)cap.card);
+      
+      // Check if device supports video capture
+      struct v4l2_fmtdesc fmt;
+      memset(&fmt, 0, sizeof(fmt));
+      fmt.index = 0;
+      fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      
+      bool has_formats = (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0);
+      
+      if (has_formats) {
+        devices_by_bus[bus_info].push_back(device_path);
+        if (device_names.find(bus_info) == device_names.end()) {
+          device_names[bus_info] = card;
+        }
+      }
+    }
+    close(fd);
+  }
+  
+  // Check for media devices
+  std::map<std::string, std::string> media_devices;
+  for (int i = 0; i < 16; i++) {
+    char media_path[32];
+    snprintf(media_path, sizeof(media_path), "/dev/media%d", i);
+    
+    int fd = open(media_path, O_RDONLY);
+    if (fd < 0) continue;
+    
+    struct media_device_info mdi;
+    if (ioctl(fd, MEDIA_IOC_DEVICE_INFO, &mdi) == 0) {
+      std::string bus_info((const char*)mdi.bus_info);
+      if (devices_by_bus.find(bus_info) != devices_by_bus.end()) {
+        media_devices[bus_info] = media_path;
+      }
+    }
+    close(fd);
+  }
+  
+  // Print devices grouped by camera
+  if (devices_by_bus.empty()) {
+    std::cout << "No video capture devices found" << std::endl;
+  } else {
+    for (const auto& [bus_info, device_list] : devices_by_bus) {
+      std::cout << device_names[bus_info] << " (" << bus_info << "):" << std::endl;
+      for (const auto& device : device_list) {
+        std::cout << "\t" << device << std::endl;
+      }
+      if (media_devices.find(bus_info) != media_devices.end()) {
+        std::cout << "\t" << media_devices[bus_info] << std::endl;
+      }
+    }
+  }
+}
+#endif
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
@@ -80,6 +190,19 @@ int main(int argc, char* argv[]) {
   int log_level = webrtc::LS_NONE;
 
   Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
+
+#if defined(__linux__)
+  // Handle --list-devices option
+  if (args.list_devices) {
+    ListVideoDevices();
+    return 0;
+  }
+#else
+  if (args.list_devices) {
+    std::cerr << "--list-devices is only supported on Linux" << std::endl;
+    return 1;
+  }
+#endif
 
   webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)log_level);
   webrtc::LogMessage::LogTimestamps();

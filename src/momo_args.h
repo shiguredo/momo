@@ -18,6 +18,7 @@ struct MomoArgs {
   bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;
+  bool list_devices = false;
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   bool fake_capture_device = false;
 #endif
