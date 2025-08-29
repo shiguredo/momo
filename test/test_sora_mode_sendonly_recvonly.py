@@ -108,9 +108,9 @@ def test_sendonly_recvonly_pair(
             sender_outbound_rtp = [
                 stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
             ]
-            assert (
-                len(sender_outbound_rtp) == 2
-            ), "Sender should have exactly 2 outbound-rtp stats (audio and video)"
+            assert len(sender_outbound_rtp) == 2, (
+                "Sender should have exactly 2 outbound-rtp stats (audio and video)"
+            )
 
             # 送信側の codec 情報を確認（音声と映像で少なくとも2つ）
             sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
@@ -122,9 +122,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert sender_video_codec is not None, "Video codec should be present"
-            assert (
-                sender_video_codec["mimeType"] == expected_mime_type
-            ), f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
+            assert sender_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
+            )
 
             # audio codec の mimeType を確認
             sender_audio_codec = next(
@@ -150,15 +150,15 @@ def test_sendonly_recvonly_pair(
             receiver_inbound_rtp = [
                 stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
             ]
-            assert (
-                len(receiver_inbound_rtp) == 2
-            ), "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
+            assert len(receiver_inbound_rtp) == 2, (
+                "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
+            )
 
             # 受信側の codec 情報を確認（音声と映像で少なくとも2つ）
             receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
-            assert (
-                len(receiver_codecs) >= 2
-            ), "Should have at least 2 codecs (audio and video) on receiver"
+            assert len(receiver_codecs) >= 2, (
+                "Should have at least 2 codecs (audio and video) on receiver"
+            )
 
             # video codec の mimeType を確認
             receiver_video_codec = next(
@@ -166,9 +166,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert receiver_video_codec is not None, "Video codec should be present on receiver"
-            assert (
-                receiver_video_codec["mimeType"] == expected_mime_type
-            ), f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
+            assert receiver_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
+            )
 
             # audio codec の mimeType を確認
             receiver_audio_codec = next(
@@ -176,9 +176,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert receiver_audio_codec is not None, "Audio codec should be present on receiver"
-            assert (
-                receiver_audio_codec["mimeType"] == "audio/opus"
-            ), "Audio codec should be opus on receiver"
+            assert receiver_audio_codec["mimeType"] == "audio/opus", (
+                "Audio codec should be opus on receiver"
+            )
 
             # 受信側でデータが受信されていることを確認
             for stat in receiver_inbound_rtp:

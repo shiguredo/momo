@@ -64,9 +64,9 @@ def test_sora_mode_with_openh264_encoder(sora_settings, free_port):
             and stat.get("kind") == "video"
             and stat.get("encoderImplementation") == "OpenH264"
         ]
-        assert (
-            len(video_outbound_rtp_stats) >= 1
-        ), "OpenH264 encoder not found in outbound-rtp stats"
+        assert len(video_outbound_rtp_stats) >= 1, (
+            "OpenH264 encoder not found in outbound-rtp stats"
+        )
 
         # OpenH264 エンコーダーの統計情報を検証
         openh264_rtp = video_outbound_rtp_stats[0]
@@ -179,9 +179,9 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
             and stat.get("rid") in ["r0", "r1", "r2"]
             and stat.get("encoderImplementation") == expected_encoder_implementation
         ]
-        assert (
-            len(simulcast_stats) == 3
-        ), f"Expected 3 simulcast streams with OpenH264, but got {len(simulcast_stats)}"
+        assert len(simulcast_stats) == 3, (
+            f"Expected 3 simulcast streams with OpenH264, but got {len(simulcast_stats)}"
+        )
 
         # 各 rid の統計情報を確認
         rids = {stat.get("rid") for stat in simulcast_stats}
@@ -261,6 +261,6 @@ def test_sora_mode_openh264_performance_metrics(sora_settings, free_port):
             avg_encode_time = openh264_stat["totalEncodeTime"] / openh264_stat["framesEncoded"]
             print(f"OpenH264 average encode time per frame: {avg_encode_time:.3f}s")
             # エンコード時間が異常に長くないことを確認（1フレームあたり1秒未満）
-            assert (
-                avg_encode_time < 1.0
-            ), f"Encoding time per frame is too long: {avg_encode_time:.3f}s"
+            assert avg_encode_time < 1.0, (
+                f"Encoding time per frame is too long: {avg_encode_time:.3f}s"
+            )
