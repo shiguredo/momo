@@ -96,29 +96,30 @@ def test_ayame_mode_with_video_settings(free_port, port_allocator):
         assert "version" in data  # メトリクスが取得できることを確認
 
 
-@pytest.mark.skip(reason="コーデック強制機能が未実装のため")
 @pytest.mark.parametrize("codec", ["VP8", "VP9", "AV1"])
 def test_ayame_mode_with_codec(port_allocator, codec):
     """Ayame モードで各種コーデックを使用した通信を確認"""
     room_id = str(uuid.uuid4())
 
     # コーデックごとのエンコーダー/デコーダー設定
-    codec_settings = {}
-    if codec == "VP8":
-        codec_settings = {
-            "vp8_encoder": "software",
-            "vp8_decoder": "software",
-        }
-    elif codec == "VP9":
-        codec_settings = {
-            "vp9_encoder": "software",
-            "vp9_decoder": "software",
-        }
-    elif codec == "AV1":
-        codec_settings = {
-            "av1_encoder": "software",
-            "av1_decoder": "software",
-        }
+    match codec:
+        case "VP8":
+            codec_settings = {
+                "vp8_encoder": "software",
+                "vp8_decoder": "software",
+            }
+        case "VP9":
+            codec_settings = {
+                "vp9_encoder": "software",
+                "vp9_decoder": "software",
+            }
+        case "AV1":
+            codec_settings = {
+                "av1_encoder": "software",
+                "av1_decoder": "software",
+            }
+        case _:
+            codec_settings = {}
 
     with Momo(
         mode=MomoMode.AYAME,
@@ -128,6 +129,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
         metrics_port=next(port_allocator),
         fake_capture_device=True,
         resolution="QVGA",
+        ayame_video_codec_type=codec,  # コーデックを指定
         **codec_settings,
     ) as m1:
         with Momo(
@@ -138,6 +140,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             metrics_port=next(port_allocator),
             fake_capture_device=True,
             resolution="QVGA",
+            ayame_video_codec_type=codec,  # コーデックを指定
             **codec_settings,
         ) as m2:
             # 両方のピアの接続が確立されるまで待機
@@ -166,7 +169,9 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             )
 
             mime_type = p1_codec.get("mimeType", "")
-            assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
+            # mimeType から "video/" や "audio/" を除去してコーデック名だけを取得
+            codec_name = mime_type.split("/")[-1] if "/" in mime_type else mime_type
+            assert codec == codec_name.upper(), f"Expected {codec} codec but got: {mime_type}"
             print(f"P1 codec for {codec}: {mime_type}")
 
             # p2 の outbound-rtp でもコーデックを確認（双方向通信なので）
@@ -184,7 +189,9 @@ def test_ayame_mode_with_codec(port_allocator, codec):
             )
 
             mime_type = p2_codec.get("mimeType", "")
-            assert codec in mime_type.upper(), f"Expected {codec} codec but got: {mime_type}"
+            # mimeType から "video/" や "audio/" を除去してコーデック名だけを取得
+            codec_name = mime_type.split("/")[-1] if "/" in mime_type else mime_type
+            assert codec == codec_name.upper(), f"Expected {codec} codec but got: {mime_type}"
             print(f"P2 codec for {codec}: {mime_type}")
 
 
@@ -218,6 +225,7 @@ def test_ayame_mode_peer_connection(port_allocator):
         metrics_port=next(port_allocator),
         fake_capture_device=True,
         resolution="QVGA",
+        initial_wait=10,
     ) as m1:
         with Momo(
             mode=MomoMode.AYAME,
@@ -227,12 +235,13 @@ def test_ayame_mode_peer_connection(port_allocator):
             metrics_port=next(port_allocator),
             fake_capture_device=True,
             resolution="QVGA",
+            initial_wait=10,
         ) as m2:
             # 両方のピアの接続が確立されるまで弅機
-            assert m1.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
+            assert m1.wait_for_connection(timeout=10), (
                 "M1 failed to establish connection within timeout"
             )
-            assert m2.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
+            assert m2.wait_for_connection(timeout=10), (
                 "M2 failed to establish connection within timeout"
             )
 
@@ -374,3 +383,33 @@ def test_ayame_mode_direction_sendrecv_default(free_port):
             assert find_stats(m1_data, type="inbound-rtp", kind="video") is not None
             assert find_stats(m2_data, type="outbound-rtp", kind="video") is not None
             assert find_stats(m2_data, type="inbound-rtp", kind="video") is not None
+
+
+def test_ayame_mode_with_invalid_codec(port_allocator):
+    """存在しないコーデックを指定した場合にエラーで終了することを確認"""
+    room_id = str(uuid.uuid4())
+
+    # 存在しないビデオコーデックを指定
+    # 型チェッカーの警告を抑制するため type: ignore コメントを使用
+    with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            metrics_port=next(port_allocator),
+            fake_capture_device=True,
+            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type] 存在しないコーデック
+        ):
+            pass  # ここには到達しないはず
+
+    # 存在しないオーディオコーデックを指定
+    with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
+        with Momo(
+            mode=MomoMode.AYAME,
+            ayame_signaling_url=AYAME_SIGNALING_URL,
+            room_id=room_id,
+            metrics_port=next(port_allocator),
+            fake_capture_device=True,
+            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type] 存在しないコーデック
+        ):
+            pass  # ここには到達しないはず

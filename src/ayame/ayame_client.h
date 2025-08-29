@@ -32,6 +32,8 @@ struct AyameClientConfig {
   std::string signaling_key;
   // sendrecv, sendonly, recvonly
   std::string direction = "sendrecv";
+  std::string video_codec_type;
+  std::string audio_codec_type;
 };
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
@@ -62,6 +64,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void ReconnectAfter();
   void OnWatchdogExpired();
   bool ParseURL(URLParts& parts) const;
+  void SetCodecPreferences();
 
  private:
   void DoRead();
