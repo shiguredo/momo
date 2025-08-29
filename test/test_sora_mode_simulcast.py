@@ -223,6 +223,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected height between 128 and 135 for r0, but got {outbound_rtp_r0['frameHeight']}"
         )
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
+        
+        # r0 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r0:
+            print("r0 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r0["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
 
         # r0 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r0
@@ -262,6 +268,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected height between 256 and 270 for r1, but got {outbound_rtp_r1['frameHeight']}"
         )
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
+        
+        # r1 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r1:
+            print("r1 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r1["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
 
         # r1 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r1
@@ -301,6 +313,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
         )
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
+        
+        # r2 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r2:
+            print("r2 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r2["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
 
         # r2 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r2
