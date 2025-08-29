@@ -185,8 +185,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        assert m.wait_for_connection(), (
+            f"Failed to establish connection for {video_codec_type} codec"
+        )
+
+        data = m.get_metrics(
+            wait_stats=[
                 {
                     "type": "outbound-rtp",
                     "rid": "r0",
@@ -203,10 +207,8 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
-            additional_wait_after_stats=3,
-        ), f"Failed to establish connection for {video_codec_type} codec"
-
-        data = m.get_metrics()
+            wait_after_stats=3,
+        )
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -520,31 +522,35 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(
-                additional_wait_stats=[
+            assert sender.wait_for_connection(), (
+                f"Sender failed to establish connection for {video_codec_type}"
+            )
+            assert receiver.wait_for_connection(), (
+                f"Receiver failed to establish connection for {video_codec_type}"
+            )
+
+            # 送信側の統計を確認
+            sender_data = sender.get_metrics(
+                wait_stats=[
                     {
                         "type": "outbound-rtp",
                         "kind": "video",
                         "encoderImplementation": "NvCodec",
                     }
                 ]
-            ), f"Sender failed to establish connection for {video_codec_type}"
-            assert receiver.wait_for_connection(
-                additional_wait_stats=[
+            )
+            sender_stats = sender_data.get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_data = receiver.get_metrics(
+                wait_stats=[
                     {
                         "type": "inbound-rtp",
                         "kind": "video",
                         "decoderImplementation": "NvCodec",
                     }
                 ]
-            ), f"Receiver failed to establish connection for {video_codec_type}"
-
-            # 送信側の統計を確認
-            sender_data = sender.get_metrics()
-            sender_stats = sender_data.get("stats", [])
-
-            # 受信側の統計を確認
-            receiver_data = receiver.get_metrics()
+            )
             receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認

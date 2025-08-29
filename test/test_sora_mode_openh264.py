@@ -37,15 +37,15 @@ def test_sora_mode_with_openh264_encoder(sora_settings, free_port):
         metadata=sora_settings.metadata,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        assert m.wait_for_connection(), "Failed to establish connection with OpenH264 encoder"
+
+        data = m.get_metrics(
+            wait_stats=[
                 {"type": "codec", "mimeType": "video/H264"},
                 {"type": "outbound-rtp", "kind": "video", "encoderImplementation": "OpenH264"},
             ],
-            additional_wait_stats_timeout=10,
-        ), "Failed to establish connection with OpenH264 encoder"
-
-        data = m.get_metrics()
+            wait_stats_timeout=10,
+        )
         stats = data["stats"]
 
         # H.264 codec が存在することを確認
@@ -100,15 +100,15 @@ def test_sora_mode_with_explicit_openh264_path(sora_settings, free_port):
         metadata=sora_settings.metadata,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        assert m.wait_for_connection(), "Failed to establish connection with explicit OpenH264 path"
+
+        data = m.get_metrics(
+            wait_stats=[
                 {"type": "codec", "mimeType": "video/H264"},
                 {"type": "outbound-rtp", "kind": "video", "encoderImplementation": "OpenH264"},
             ],
-            additional_wait_stats_timeout=10,
-        ), "Failed to establish connection with explicit OpenH264 path"
-
-        data = m.get_metrics()
+            wait_stats_timeout=10,
+        )
         stats = data["stats"]
 
         # OpenH264 エンコーダーが使用されていることを確認
@@ -146,8 +146,10 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
     ) as m:
         expected_encoder_implementation = "SimulcastEncoderAdapter (OpenH264, OpenH264, OpenH264)"
         # 接続が確立されるまで待つ（サイマルキャストの場合は複数の rid を待つ）
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        assert m.wait_for_connection(), "Failed to establish simulcast connection with OpenH264"
+
+        data = m.get_metrics(
+            wait_stats=[
                 {"type": "codec", "mimeType": "video/H264"},
                 {
                     "type": "outbound-rtp",
@@ -165,9 +167,7 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
-        ), "Failed to establish simulcast connection with OpenH264"
-
-        data = m.get_metrics()
+        )
         stats = data["stats"]
 
         # サイマルキャストで複数の rid が存在することを確認
@@ -218,17 +218,19 @@ def test_sora_mode_openh264_performance_metrics(sora_settings, free_port):
         framerate=30,
         metadata=sora_settings.metadata,
     ) as m:
-        # 接続が確立され、統計情報が蓄積されるまで待つ
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        # 接続が磺立され、統計情報が蓄積されるまで待つ
+        assert m.wait_for_connection(), (
+            "Failed to establish connection for performance metrics test"
+        )
+
+        data = m.get_metrics(
+            wait_stats=[
                 {"type": "codec", "mimeType": "video/H264"},
                 {"type": "outbound-rtp", "kind": "video", "encoderImplementation": "OpenH264"},
             ],
-            additional_wait_stats_timeout=10,
-            additional_wait_after_stats=3,  # 統計情報を蓄積するため追加で待機
-        ), "Failed to establish connection for performance metrics test"
-
-        data = m.get_metrics()
+            wait_stats_timeout=10,
+            wait_after_stats=3,  # 統計情報を蓄積するため追加で待機
+        )
         stats = data["stats"]
 
         # OpenH264 エンコーダーの統計情報を取得
