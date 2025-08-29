@@ -102,22 +102,24 @@ def test_ayame_mode_with_codec(port_allocator, codec):
     room_id = str(uuid.uuid4())
 
     # コーデックごとのエンコーダー/デコーダー設定
-    codec_settings = {}
-    if codec == "VP8":
-        codec_settings = {
-            "vp8_encoder": "software",
-            "vp8_decoder": "software",
-        }
-    elif codec == "VP9":
-        codec_settings = {
-            "vp9_encoder": "software",
-            "vp9_decoder": "software",
-        }
-    elif codec == "AV1":
-        codec_settings = {
-            "av1_encoder": "software",
-            "av1_decoder": "software",
-        }
+    match codec:
+        case "VP8":
+            codec_settings = {
+                "vp8_encoder": "software",
+                "vp8_decoder": "software",
+            }
+        case "VP9":
+            codec_settings = {
+                "vp9_encoder": "software",
+                "vp9_decoder": "software",
+            }
+        case "AV1":
+            codec_settings = {
+                "av1_encoder": "software",
+                "av1_decoder": "software",
+            }
+        case _:
+            codec_settings = {}
 
     with Momo(
         mode=MomoMode.AYAME,
