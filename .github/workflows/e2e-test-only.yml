@@ -89,7 +89,7 @@ jobs:
       - name: Run E2E tests
         run: |
           uv sync
-          uv run pytest -v -s
+          uv run pytest -v
         working-directory: ./test
 
   e2e-test-hwa:
