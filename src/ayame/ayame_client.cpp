@@ -248,6 +248,11 @@ void AyameClient::SetCodecPreferences() {
   }
 
   for (auto transceiver : transceivers) {
+    if (transceiver->media_type() != webrtc::MediaType::VIDEO &&
+        transceiver->media_type() != webrtc::MediaType::AUDIO) {
+      continue;
+    }
+
     if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
             config_.video_codec_type.empty() ||
         transceiver->media_type() == webrtc::MediaType::AUDIO &&
@@ -263,22 +268,10 @@ void AyameClient::SetCodecPreferences() {
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
 
     // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
-    webrtc::RtpCapabilities sender_capabilities;
-    webrtc::RtpCapabilities receiver_capabilities;
-
-    if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
-      sender_capabilities =
-          factory->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO);
-      receiver_capabilities =
-          factory->GetRtpReceiverCapabilities(webrtc::MediaType::VIDEO);
-    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO) {
-      sender_capabilities =
-          factory->GetRtpSenderCapabilities(webrtc::MediaType::AUDIO);
-      receiver_capabilities =
-          factory->GetRtpReceiverCapabilities(webrtc::MediaType::AUDIO);
-    } else {
-      continue;
-    }
+    webrtc::RtpCapabilities sender_capabilities =
+        factory->GetRtpSenderCapabilities(transceiver->media_type());
+    webrtc::RtpCapabilities receiver_capabilities =
+        factory->GetRtpReceiverCapabilities(transceiver->media_type());
 
     // 送信側と受信側の両方でサポートされているコーデックを見つける
     std::vector<webrtc::RtpCodecCapability> common_codecs;
