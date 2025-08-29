@@ -400,6 +400,12 @@ void Util::ParseArgs(int argc,
     exit(0);
   }
 
+  // --list-devices が指定された場合は、サブコマンドチェックをスキップ
+  if (args.list_devices) {
+    // main.cpp で処理されるので、ここでは何もしない
+    return;
+  }
+
   if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
     std::cout << app.help() << std::endl;
     exit(1);
