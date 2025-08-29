@@ -267,8 +267,6 @@ void AyameClient::SetCodecPreferences() {
             ? config_.video_codec_type
             : config_.audio_codec_type;
 
-    std::vector<webrtc::RtpCodecCapability> filtered_codecs;
-
     // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
     webrtc::RtpCapabilities sender_capabilities =
         factory->GetRtpSenderCapabilities(transceiver->media_type());
@@ -299,6 +297,7 @@ void AyameClient::SetCodecPreferences() {
                      << webrtc::MediaTypeToString(transceiver->media_type());
 
     // コーデックのフィルタリング
+    std::vector<webrtc::RtpCodecCapability> filtered_codecs;
     for (const auto& codec : common_codecs) {
       // 指定されたコーデックまたは補助的なコーデックは残す
       if (codec.name == target_codec ||
