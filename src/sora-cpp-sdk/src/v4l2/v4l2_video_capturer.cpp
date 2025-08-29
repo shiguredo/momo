@@ -165,26 +165,47 @@ bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
 }
 
 int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8) {
+  int fd;
   bool found = false;
 
-  /* Scan /sys/class/video4linux for all video devices
-     This handles all /dev/video* devices including those from /dev/media */
-  DIR* dir = opendir("/sys/class/video4linux");
-  if (dir) {
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != NULL) {
-      // Check if it's a video device
-      if (strncmp(entry->d_name, "video", 5) == 0) {
-        char path[256];
-        snprintf(path, sizeof(path), "/dev/%s", entry->d_name);
-        if (FindDevice(deviceUniqueIdUTF8, path)) {
-          found = true;
-          _videoDevice = path;
-          break;
+  /* detect /dev/video [0-63] entries */
+  char device[32];
+  int n;
+  for (n = 0; n < 64; n++) {
+    sprintf(device, "/dev/video%d", n);
+    if (FindDevice(deviceUniqueIdUTF8, device)) {
+      found = true;
+      _videoDevice = device;  // store the video device
+      break;
+    }
+  }
+
+  /* If not found, scan /sys/class/video4linux for additional video devices
+     This handles /dev/video64+ and devices that may not be in sequence */
+  if (!found) {
+    DIR* dir = opendir("/sys/class/video4linux");
+    if (dir) {
+      struct dirent* entry;
+      while ((entry = readdir(dir)) != NULL) {
+        // Check if it's a video device
+        if (strncmp(entry->d_name, "video", 5) == 0) {
+          char path[256];
+          snprintf(path, sizeof(path), "/dev/%s", entry->d_name);
+          // Skip devices we already checked in the loop above
+          int device_num = -1;
+          if (sscanf(entry->d_name, "video%d", &device_num) == 1 && 
+              device_num >= 0 && device_num < 64) {
+            continue;  // Already checked in the first loop
+          }
+          if (FindDevice(deviceUniqueIdUTF8, path)) {
+            found = true;
+            _videoDevice = path;
+            break;
+          }
         }
       }
+      closedir(dir);
     }
-    closedir(dir);
   }
 
   if (!found) {
