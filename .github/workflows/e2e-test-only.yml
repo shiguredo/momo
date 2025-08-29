@@ -33,6 +33,7 @@ jobs:
             package: ubuntu-24.04_x86_64
     name: E2E Test ${{ matrix.package }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       
@@ -75,6 +76,7 @@ jobs:
   e2e-test-macos:
     name: E2E Test macos_arm64
     runs-on: macos-15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       
@@ -119,7 +121,7 @@ jobs:
     runs-on:
       group: Self
       labels: ${{ fromJSON(matrix.runner_labels) }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       
