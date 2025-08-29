@@ -79,29 +79,33 @@ def test_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(
-                additional_wait_stats=[
+            assert sender.wait_for_connection(), (
+                f"Sender failed to establish connection for {video_codec_type}"
+            )
+            assert receiver.wait_for_connection(), (
+                f"Receiver failed to establish connection for {video_codec_type}"
+            )
+
+            # 送信側の統計を確認
+            sender_data = sender.get_metrics(
+                wait_stats=[
                     {
                         "type": "outbound-rtp",
                         "encoderImplementation": expected_encoder_implementation,
                     }
                 ]
-            ), f"Sender failed to establish connection for {video_codec_type}"
-            assert receiver.wait_for_connection(
-                additional_wait_stats=[
+            )
+            sender_stats = sender_data.get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_data = receiver.get_metrics(
+                wait_stats=[
                     {
                         "type": "inbound-rtp",
                         "decoderImplementation": expected_decoder_implementation,
                     }
                 ]
-            ), f"Receiver failed to establish connection for {video_codec_type}"
-
-            # 送信側の統計を確認
-            sender_data = sender.get_metrics()
-            sender_stats = sender_data.get("stats", [])
-
-            # 受信側の統計を確認
-            receiver_data = receiver.get_metrics()
+            )
             receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認

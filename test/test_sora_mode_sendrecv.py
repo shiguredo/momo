@@ -76,54 +76,58 @@ def test_sendrecv(
             **decoder_params,
         ) as client2:
             # 接続が確立するまで待機
-            assert client1.wait_for_connection(
-                additional_wait_stats=[
-                    {
-                        "type": "outbound-rtp",
-                        "encoderImplementation": expected_encoder_implementation,
-                    },
-                    {
-                        "type": "inbound-rtp",
-                        "decoderImplementation": expected_decoder_implementation,
-                    },
-                ]
-            ), f"Client1 failed to establish connection for {video_codec_type}"
-            assert client2.wait_for_connection(
-                additional_wait_stats=[
-                    {
-                        "type": "outbound-rtp",
-                        "encoderImplementation": expected_encoder_implementation,
-                    },
-                    {
-                        "type": "inbound-rtp",
-                        "decoderImplementation": expected_decoder_implementation,
-                    },
-                ]
-            ), f"Client2 failed to establish connection for {video_codec_type}"
+            assert client1.wait_for_connection(), (
+                f"Client1 failed to establish connection for {video_codec_type}"
+            )
+            assert client2.wait_for_connection(), (
+                f"Client2 failed to establish connection for {video_codec_type}"
+            )
 
             # クライアント1の統計を確認
-            client1_data = client1.get_metrics()
+            client1_data = client1.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "encoderImplementation": expected_encoder_implementation,
+                    },
+                    {
+                        "type": "inbound-rtp",
+                        "decoderImplementation": expected_decoder_implementation,
+                    },
+                ]
+            )
             client1_stats = client1_data.get("stats", [])
 
             # クライアント2の統計を確認
-            client2_data = client2.get_metrics()
+            client2_data = client2.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "encoderImplementation": expected_encoder_implementation,
+                    },
+                    {
+                        "type": "inbound-rtp",
+                        "decoderImplementation": expected_decoder_implementation,
+                    },
+                ]
+            )
             client2_stats = client2_data.get("stats", [])
 
             # クライアント1: outbound-rtp（送信）が音声と映像の2つ存在することを確認
             client1_outbound_rtp = [
                 stat for stat in client1_stats if stat.get("type") == "outbound-rtp"
             ]
-            assert (
-                len(client1_outbound_rtp) == 2
-            ), "Client1 should have exactly 2 outbound-rtp stats (audio and video)"
+            assert len(client1_outbound_rtp) == 2, (
+                "Client1 should have exactly 2 outbound-rtp stats (audio and video)"
+            )
 
             # クライアント1: inbound-rtp（受信）が音声と映像の2つ存在することを確認
             client1_inbound_rtp = [
                 stat for stat in client1_stats if stat.get("type") == "inbound-rtp"
             ]
-            assert (
-                len(client1_inbound_rtp) == 2
-            ), "Client1 should have exactly 2 inbound-rtp stats (audio and video)"
+            assert len(client1_inbound_rtp) == 2, (
+                "Client1 should have exactly 2 inbound-rtp stats (audio and video)"
+            )
 
             # クライアント1の送信データを確認
             for stat in client1_outbound_rtp:
@@ -153,17 +157,17 @@ def test_sendrecv(
             client2_outbound_rtp = [
                 stat for stat in client2_stats if stat.get("type") == "outbound-rtp"
             ]
-            assert (
-                len(client2_outbound_rtp) == 2
-            ), "Client2 should have exactly 2 outbound-rtp stats (audio and video)"
+            assert len(client2_outbound_rtp) == 2, (
+                "Client2 should have exactly 2 outbound-rtp stats (audio and video)"
+            )
 
             # クライアント2: inbound-rtp（受信）が音声と映像の2つ存在することを確認
             client2_inbound_rtp = [
                 stat for stat in client2_stats if stat.get("type") == "inbound-rtp"
             ]
-            assert (
-                len(client2_inbound_rtp) == 2
-            ), "Client2 should have exactly 2 inbound-rtp stats (audio and video)"
+            assert len(client2_inbound_rtp) == 2, (
+                "Client2 should have exactly 2 inbound-rtp stats (audio and video)"
+            )
 
             # クライアント2の送信データを確認
             for stat in client2_outbound_rtp:
@@ -190,9 +194,14 @@ def test_sendrecv(
                     assert stat["decoderImplementation"] == expected_decoder_implementation
 
             # コーデック情報の確認（両クライアント）
-            for client_stats, client_name in [(client1_stats, "Client1"), (client2_stats, "Client2")]:
+            for client_stats, client_name in [
+                (client1_stats, "Client1"),
+                (client2_stats, "Client2"),
+            ]:
                 codecs = [stat for stat in client_stats if stat.get("type") == "codec"]
-                assert len(codecs) >= 2, f"{client_name} should have at least 2 codecs (audio and video)"
+                assert len(codecs) >= 2, (
+                    f"{client_name} should have at least 2 codecs (audio and video)"
+                )
 
                 # video codec の mimeType を確認
                 video_codec = next(
@@ -200,9 +209,9 @@ def test_sendrecv(
                     None,
                 )
                 assert video_codec is not None, f"Video codec should be present on {client_name}"
-                assert (
-                    video_codec["mimeType"] == expected_mime_type
-                ), f"Expected {expected_mime_type}, got {video_codec['mimeType']} on {client_name}"
+                assert video_codec["mimeType"] == expected_mime_type, (
+                    f"Expected {expected_mime_type}, got {video_codec['mimeType']} on {client_name}"
+                )
 
                 # audio codec の mimeType を確認
                 audio_codec = next(
@@ -210,6 +219,6 @@ def test_sendrecv(
                     None,
                 )
                 assert audio_codec is not None, f"Audio codec should be present on {client_name}"
-                assert (
-                    audio_codec["mimeType"] == "audio/opus"
-                ), f"Audio codec should be opus on {client_name}"
+                assert audio_codec["mimeType"] == "audio/opus", (
+                    f"Audio codec should be opus on {client_name}"
+                )
