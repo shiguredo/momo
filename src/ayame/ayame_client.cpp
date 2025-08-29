@@ -249,9 +249,9 @@ void AyameClient::SetCodecPreferences() {
 
   for (auto transceiver : transceivers) {
     if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
-            !config_.video_codec_type.empty() ||
+            config_.video_codec_type.empty() ||
         transceiver->media_type() == webrtc::MediaType::AUDIO &&
-            !config_.audio_codec_type.empty()) {
+            config_.audio_codec_type.empty()) {
       continue;
     }
 
