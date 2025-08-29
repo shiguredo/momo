@@ -28,14 +28,15 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
 
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "vpl"
-    elif video_codec_type == "AV1":
-        encoder_params["av1_encoder"] = "vpl"
-    elif video_codec_type == "H264":
-        encoder_params["h264_encoder"] = "vpl"
-    elif video_codec_type == "H265":
-        encoder_params["h265_encoder"] = "vpl"
+    match video_codec_type:
+        case "VP9":
+            encoder_params["vp9_encoder"] = "vpl"
+        case "AV1":
+            encoder_params["av1_encoder"] = "vpl"
+        case "H264":
+            encoder_params["h264_encoder"] = "vpl"
+        case "H265":
+            encoder_params["h265_encoder"] = "vpl"
 
     with Momo(
         fake_capture_device=True,
@@ -77,77 +78,109 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         for expected_type in expected_types:
             assert expected_type in stat_types
 
-        # 指定されたビデオコーデックが実際に使われていることを確認
-        codec_mime_types = {
-            stat.get("mimeType")
+        # audio codec を取得して確認
+        audio_codec_stats = [
+            stat
             for stat in stats
-            if stat.get("type") == "codec" and "mimeType" in stat
-        }
-        assert expected_mime_type in codec_mime_types
+            if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
+        ]
+        assert len(audio_codec_stats) == 1, (
+            f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
+        )
 
-        # 各統計タイプの詳細をチェック
-        for stat in stats:
-            match stat.get("type"):
-                case "outbound-rtp":
-                    # outbound-rtp の必須フィールドを確認
-                    assert "ssrc" in stat
-                    assert "kind" in stat
-                    assert "packetsSent" in stat
-                    assert "bytesSent" in stat
+        # audio codec の中身を検証
+        audio_codec = audio_codec_stats[0]
+        assert "payloadType" in audio_codec
+        assert "mimeType" in audio_codec
+        assert "clockRate" in audio_codec
+        assert "channels" in audio_codec
+        assert audio_codec["clockRate"] == 48000
 
-                    # データが実際に送信されていることを確認
-                    assert stat["packetsSent"] > 0
-                    assert stat["bytesSent"] > 0
+        # video codec を取得して確認
+        video_codec_stats = [
+            stat
+            for stat in stats
+            if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
+        ]
+        assert len(video_codec_stats) == 1, (
+            f"Expected 1 video codec ({expected_mime_type}), but got {len(video_codec_stats)}"
+        )
 
-                    # audio/video の判定
-                    match stat["kind"]:
-                        case "video":
-                            assert "framesEncoded" in stat
-                            assert "frameWidth" in stat
-                            assert "frameHeight" in stat
-                            assert stat["framesEncoded"] > 0
+        # video codec の中身を検証
+        video_codec = video_codec_stats[0]
+        assert "payloadType" in video_codec
+        assert "mimeType" in video_codec
+        assert "clockRate" in video_codec
+        assert video_codec["clockRate"] == 90000
 
-                            # エンコーダー実装が Intel VPL であることを確認
-                            assert "encoderImplementation" in stat
-                            assert stat["encoderImplementation"] == "libvpl"
-                        case "audio":
-                            assert "headerBytesSent" in stat
-                            assert stat["headerBytesSent"] > 0
+        # audio の outbound-rtp を取得して確認
+        audio_outbound_rtp_stats = [
+            stat
+            for stat in stats
+            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
+        ]
+        assert len(audio_outbound_rtp_stats) == 1, (
+            f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
+        )
 
-                case "codec":
-                    # codec の必須フィールドを確認
-                    assert "payloadType" in stat
-                    assert "mimeType" in stat
-                    assert "clockRate" in stat
+        # audio outbound-rtp の中身を検証
+        audio_outbound_rtp = audio_outbound_rtp_stats[0]
+        assert "ssrc" in audio_outbound_rtp
+        assert "packetsSent" in audio_outbound_rtp
+        assert "bytesSent" in audio_outbound_rtp
+        assert "headerBytesSent" in audio_outbound_rtp
+        assert audio_outbound_rtp["packetsSent"] > 0
+        assert audio_outbound_rtp["bytesSent"] > 0
+        assert audio_outbound_rtp["headerBytesSent"] > 0
 
-                    # codec は audio/opus か指定されたビデオコーデックのみ許可
-                    assert stat["mimeType"] in ["audio/opus", expected_mime_type]
+        # video の outbound-rtp を取得して確認
+        video_outbound_rtp_stats = [
+            stat
+            for stat in stats
+            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
+        ]
+        assert len(video_outbound_rtp_stats) == 1, (
+            f"Expected 1 video outbound-rtp, but got {len(video_outbound_rtp_stats)}"
+        )
 
-                    # codec タイプ別の検証
-                    if stat["mimeType"] == "audio/opus":
-                        assert "channels" in stat
-                        assert stat["clockRate"] == 48000
-                    elif stat["mimeType"] == expected_mime_type:
-                        assert stat["clockRate"] == 90000
+        # video outbound-rtp の中身を検証
+        video_outbound_rtp = video_outbound_rtp_stats[0]
+        assert "ssrc" in video_outbound_rtp
+        assert "packetsSent" in video_outbound_rtp
+        assert "bytesSent" in video_outbound_rtp
+        assert "framesEncoded" in video_outbound_rtp
+        assert "frameWidth" in video_outbound_rtp
+        assert "frameHeight" in video_outbound_rtp
+        assert "encoderImplementation" in video_outbound_rtp
+        assert video_outbound_rtp["packetsSent"] > 0
+        assert video_outbound_rtp["bytesSent"] > 0
+        assert video_outbound_rtp["framesEncoded"] > 0
+        assert video_outbound_rtp["encoderImplementation"] == "libvpl"
 
-                case "transport":
-                    # transport の必須フィールドを確認
-                    assert "bytesSent" in stat
-                    assert "bytesReceived" in stat
-                    assert "dtlsState" in stat
-                    assert "iceState" in stat
+        # transport を取得して確認
+        transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
+        assert len(transport_stats) == 1, f"Expected 1 transport, but got {len(transport_stats)}"
 
-                    # データが実際に送受信されていることを確認
-                    assert stat["bytesSent"] > 0
-                    assert stat["bytesReceived"] > 0
+        # transport の中身を検証
+        transport = transport_stats[0]
+        assert "bytesSent" in transport
+        assert "bytesReceived" in transport
+        assert "dtlsState" in transport
+        assert "iceState" in transport
+        assert transport["bytesSent"] > 0
+        assert transport["bytesReceived"] > 0
+        assert transport["dtlsState"] == "connected"
+        assert transport["iceState"] == "connected"
 
-                    # 接続状態の確認
-                    assert stat["dtlsState"] == "connected"
-                    assert stat["iceState"] == "connected"
+        # peer-connection を取得して確認
+        peer_connection_stats = [stat for stat in stats if stat.get("type") == "peer-connection"]
+        assert len(peer_connection_stats) == 1, (
+            f"Expected 1 peer-connection, but got {len(peer_connection_stats)}"
+        )
 
-                case "peer-connection":
-                    # peer-connection の必須フィールドを確認
-                    assert "dataChannelsOpened" in stat
+        # peer-connection の中身を検証
+        peer_connection = peer_connection_stats[0]
+        assert "dataChannelsOpened" in peer_connection
 
 
 @pytest.mark.parametrize(
@@ -163,14 +196,15 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "vpl"
-    elif video_codec_type == "AV1":
-        encoder_params["av1_encoder"] = "vpl"
-    elif video_codec_type == "H264":
-        encoder_params["h264_encoder"] = "vpl"
-    elif video_codec_type == "H265":
-        encoder_params["h265_encoder"] = "vpl"
+    match video_codec_type:
+        case "VP9":
+            encoder_params["vp9_encoder"] = "vpl"
+        case "AV1":
+            encoder_params["av1_encoder"] = "vpl"
+        case "H264":
+            encoder_params["h264_encoder"] = "vpl"
+        case "H265":
+            encoder_params["h265_encoder"] = "vpl"
 
     with Momo(
         mode=MomoMode.SORA,
@@ -438,27 +472,30 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected r1 bytesSent ({outbound_rtp_r1['bytesSent']}) < r2 bytesSent ({outbound_rtp_r2['bytesSent']})"
         )
 
-        # 各統計タイプの詳細をチェック（outbound-rtp と codec は上で検証済みなのでスキップ）
-        for stat in stats:
-            match stat.get("type"):
-                case "transport":
-                    # transport の必須フィールドを確認
-                    assert "bytesSent" in stat
-                    assert "bytesReceived" in stat
-                    assert "dtlsState" in stat
-                    assert "iceState" in stat
+        # transport を取得して確認
+        transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
+        assert len(transport_stats) == 1, f"Expected 1 transport, but got {len(transport_stats)}"
 
-                    # データが実際に送受信されていることを確認
-                    assert stat["bytesSent"] > 0
-                    assert stat["bytesReceived"] > 0
+        # transport の中身を検証
+        transport = transport_stats[0]
+        assert "bytesSent" in transport
+        assert "bytesReceived" in transport
+        assert "dtlsState" in transport
+        assert "iceState" in transport
+        assert transport["bytesSent"] > 0
+        assert transport["bytesReceived"] > 0
+        assert transport["dtlsState"] == "connected"
+        assert transport["iceState"] == "connected"
 
-                    # 接続状態の確認
-                    assert stat["dtlsState"] == "connected"
-                    assert stat["iceState"] == "connected"
+        # peer-connection を取得して確認
+        peer_connection_stats = [stat for stat in stats if stat.get("type") == "peer-connection"]
+        assert len(peer_connection_stats) == 1, (
+            f"Expected 1 peer-connection, but got {len(peer_connection_stats)}"
+        )
 
-                case "peer-connection":
-                    # peer-connection の必須フィールドを確認
-                    assert "dataChannelsOpened" in stat
+        # peer-connection の中身を検証
+        peer_connection = peer_connection_stats[0]
+        assert "dataChannelsOpened" in peer_connection
 
 
 @pytest.mark.parametrize(
@@ -482,25 +519,27 @@ def test_sora_sendonly_recvonly_pair(
 
     # エンコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "vpl"
-    elif video_codec_type == "AV1":
-        encoder_params["av1_encoder"] = "vpl"
-    elif video_codec_type == "H264":
-        encoder_params["h264_encoder"] = "vpl"
-    elif video_codec_type == "H265":
-        encoder_params["h265_encoder"] = "vpl"
+    match video_codec_type:
+        case "VP9":
+            encoder_params["vp9_encoder"] = "vpl"
+        case "AV1":
+            encoder_params["av1_encoder"] = "vpl"
+        case "H264":
+            encoder_params["h264_encoder"] = "vpl"
+        case "H265":
+            encoder_params["h265_encoder"] = "vpl"
 
     # デコーダー設定を準備
     decoder_params = {}
-    if video_codec_type == "VP9":
-        decoder_params["vp9_decoder"] = "vpl"
-    elif video_codec_type == "AV1":
-        decoder_params["av1_decoder"] = "vpl"
-    elif video_codec_type == "H264":
-        decoder_params["h264_decoder"] = "vpl"
-    elif video_codec_type == "H265":
-        decoder_params["h265_decoder"] = "vpl"
+    match video_codec_type:
+        case "VP9":
+            decoder_params["vp9_decoder"] = "vpl"
+        case "AV1":
+            decoder_params["av1_decoder"] = "vpl"
+        case "H264":
+            decoder_params["h264_decoder"] = "vpl"
+        case "H265":
+            decoder_params["h265_decoder"] = "vpl"
 
     # 送信専用クライアント
     with Momo(
@@ -530,12 +569,24 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(), (
-                f"Sender failed to establish connection for {video_codec_type}"
-            )
-            assert receiver.wait_for_connection(), (
-                f"Receiver failed to establish connection for {video_codec_type}"
-            )
+            assert sender.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "kind": "video",
+                        "encoderImplementation": "libvpl",
+                    }
+                ]
+            ), f"Sender failed to establish connection for {video_codec_type}"
+            assert receiver.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "inbound-rtp",
+                        "kind": "video",
+                        "decoderImplementation": "libvpl",
+                    }
+                ]
+            ), f"Receiver failed to establish connection for {video_codec_type}"
 
             # 送信側の統計を確認
             sender_data = sender.get_metrics()
@@ -575,17 +626,27 @@ def test_sora_sendonly_recvonly_pair(
             assert sender_audio_codec is not None, "Audio codec should be present"
             assert sender_audio_codec["mimeType"] == "audio/opus", "Audio codec should be opus"
 
-            # 送信側でデータが送信されていることを確認
-            for stat in sender_outbound_rtp:
-                assert "packetsSent" in stat
-                assert "bytesSent" in stat
-                assert stat["packetsSent"] > 0
-                assert stat["bytesSent"] > 0
+            # 送信側の audio outbound-rtp を取得して確認
+            sender_audio_outbound = next(
+                (stat for stat in sender_outbound_rtp if stat.get("kind") == "audio"), None
+            )
+            assert sender_audio_outbound is not None, "Audio outbound-rtp should be present"
+            assert "packetsSent" in sender_audio_outbound
+            assert "bytesSent" in sender_audio_outbound
+            assert sender_audio_outbound["packetsSent"] > 0
+            assert sender_audio_outbound["bytesSent"] > 0
 
-                # video ストリームの場合、encoderImplementation が libvpl であることを確認
-                if stat.get("kind") == "video":
-                    assert "encoderImplementation" in stat
-                    assert stat["encoderImplementation"] == "libvpl"
+            # 送信側の video outbound-rtp を取得して確認
+            sender_video_outbound = next(
+                (stat for stat in sender_outbound_rtp if stat.get("kind") == "video"), None
+            )
+            assert sender_video_outbound is not None, "Video outbound-rtp should be present"
+            assert "packetsSent" in sender_video_outbound
+            assert "bytesSent" in sender_video_outbound
+            assert "encoderImplementation" in sender_video_outbound
+            assert sender_video_outbound["packetsSent"] > 0
+            assert sender_video_outbound["bytesSent"] > 0
+            assert sender_video_outbound["encoderImplementation"] == "libvpl"
 
             # 受信側では inbound-rtp が音声と映像の2つ存在することを確認
             receiver_inbound_rtp = [
@@ -621,14 +682,24 @@ def test_sora_sendonly_recvonly_pair(
                 "Audio codec should be opus on receiver"
             )
 
-            # 受信側でデータが受信されていることを確認
-            for stat in receiver_inbound_rtp:
-                assert "packetsReceived" in stat
-                assert "bytesReceived" in stat
-                assert stat["packetsReceived"] > 0
-                assert stat["bytesReceived"] > 0
+            # 受信側の audio inbound-rtp を取得して確認
+            receiver_audio_inbound = next(
+                (stat for stat in receiver_inbound_rtp if stat.get("kind") == "audio"), None
+            )
+            assert receiver_audio_inbound is not None, "Audio inbound-rtp should be present"
+            assert "packetsReceived" in receiver_audio_inbound
+            assert "bytesReceived" in receiver_audio_inbound
+            assert receiver_audio_inbound["packetsReceived"] > 0
+            assert receiver_audio_inbound["bytesReceived"] > 0
 
-                # video ストリームの場合、decoderImplementation が libvpl であることを確認
-                if stat.get("kind") == "video":
-                    assert "decoderImplementation" in stat
-                    assert stat["decoderImplementation"] == "libvpl"
+            # 受信側の video inbound-rtp を取得して確認
+            receiver_video_inbound = next(
+                (stat for stat in receiver_inbound_rtp if stat.get("kind") == "video"), None
+            )
+            assert receiver_video_inbound is not None, "Video inbound-rtp should be present"
+            assert "packetsReceived" in receiver_video_inbound
+            assert "bytesReceived" in receiver_video_inbound
+            assert "decoderImplementation" in receiver_video_inbound
+            assert receiver_video_inbound["packetsReceived"] > 0
+            assert receiver_video_inbound["bytesReceived"] > 0
+            assert receiver_video_inbound["decoderImplementation"] == "libvpl"

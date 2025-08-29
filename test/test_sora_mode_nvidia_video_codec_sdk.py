@@ -520,12 +520,24 @@ def test_sora_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(), (
-                f"Sender failed to establish connection for {video_codec_type}"
-            )
-            assert receiver.wait_for_connection(), (
-                f"Receiver failed to establish connection for {video_codec_type}"
-            )
+            assert sender.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "kind": "video",
+                        "encoderImplementation": "NvCodec",
+                    }
+                ]
+            ), f"Sender failed to establish connection for {video_codec_type}"
+            assert receiver.wait_for_connection(
+                additional_wait_stats=[
+                    {
+                        "type": "inbound-rtp",
+                        "kind": "video",
+                        "decoderImplementation": "NvCodec",
+                    }
+                ]
+            ), f"Receiver failed to establish connection for {video_codec_type}"
 
             # 送信側の統計を確認
             sender_data = sender.get_metrics()
