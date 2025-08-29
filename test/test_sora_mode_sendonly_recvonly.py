@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
@@ -62,6 +63,7 @@ def test_sendonly_recvonly_pair(
         video_codec_type=video_codec_type,
         audio=True,
         metadata=sora_settings.metadata,
+        initial_wait=10,
         **encoder_params,
     ) as sender:
         # 受信専用クライアント
@@ -106,9 +108,9 @@ def test_sendonly_recvonly_pair(
             sender_outbound_rtp = [
                 stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
             ]
-            assert len(sender_outbound_rtp) == 2, (
-                "Sender should have exactly 2 outbound-rtp stats (audio and video)"
-            )
+            assert (
+                len(sender_outbound_rtp) == 2
+            ), "Sender should have exactly 2 outbound-rtp stats (audio and video)"
 
             # 送信側の codec 情報を確認（音声と映像で少なくとも2つ）
             sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
@@ -120,9 +122,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert sender_video_codec is not None, "Video codec should be present"
-            assert sender_video_codec["mimeType"] == expected_mime_type, (
-                f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
-            )
+            assert (
+                sender_video_codec["mimeType"] == expected_mime_type
+            ), f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
 
             # audio codec の mimeType を確認
             sender_audio_codec = next(
@@ -148,15 +150,15 @@ def test_sendonly_recvonly_pair(
             receiver_inbound_rtp = [
                 stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
             ]
-            assert len(receiver_inbound_rtp) == 2, (
-                "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
-            )
+            assert (
+                len(receiver_inbound_rtp) == 2
+            ), "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
 
             # 受信側の codec 情報を確認（音声と映像で少なくとも2つ）
             receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
-            assert len(receiver_codecs) >= 2, (
-                "Should have at least 2 codecs (audio and video) on receiver"
-            )
+            assert (
+                len(receiver_codecs) >= 2
+            ), "Should have at least 2 codecs (audio and video) on receiver"
 
             # video codec の mimeType を確認
             receiver_video_codec = next(
@@ -164,9 +166,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert receiver_video_codec is not None, "Video codec should be present on receiver"
-            assert receiver_video_codec["mimeType"] == expected_mime_type, (
-                f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
-            )
+            assert (
+                receiver_video_codec["mimeType"] == expected_mime_type
+            ), f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
 
             # audio codec の mimeType を確認
             receiver_audio_codec = next(
@@ -174,9 +176,9 @@ def test_sendonly_recvonly_pair(
                 None,
             )
             assert receiver_audio_codec is not None, "Audio codec should be present on receiver"
-            assert receiver_audio_codec["mimeType"] == "audio/opus", (
-                "Audio codec should be opus on receiver"
-            )
+            assert (
+                receiver_audio_codec["mimeType"] == "audio/opus"
+            ), "Audio codec should be opus on receiver"
 
             # 受信側でデータが受信されていることを確認
             for stat in receiver_inbound_rtp:
@@ -218,8 +220,8 @@ def test_multiple_sendonly_clients(sora_settings, port_allocator):
             metadata=sora_settings.metadata,
         ) as sender2:
             # 両方のインスタンスが正常に動作していることを確認
-            response1 = sender1._http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
-            assert response1.status_code == 200
+            metrics1 = sender1.get_metrics()
+            assert metrics1 is not None
 
-            response2 = sender2._http_client.get(f"http://localhost:{sender2.metrics_port}/metrics")
-            assert response2.status_code == 200
+            metrics2 = sender2.get_metrics()
+            assert metrics2 is not None

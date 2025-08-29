@@ -67,7 +67,7 @@ class Momo:
         h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
         h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"] | None = None,
-        openh264: str | None = None,  # ファイルパス
+        openh264: str | None = None,  # ファイルパス（OPENH264_PATH 環境変数から自動取得可能）
         # その他の共通設定
         serial: str | None = None,  # [DEVICE],[BAUDRATE]
         metrics_port: int = 9090,
@@ -110,7 +110,7 @@ class Momo:
         # その他のカスタム引数
         extra_args: list[str] | None = None,
         # 起動待機時間
-        initial_wait: int = 2,
+        initial_wait: int | None = None,
     ) -> None:
         """
         Momo プロセスを管理するクラス
@@ -137,7 +137,8 @@ class Momo:
         self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
-        self.initial_wait = initial_wait
+        # デフォルトの初期待機時間を設定
+        self.initial_wait = initial_wait if initial_wait is not None else 2
 
         # すべての引数を保存
         self.kwargs: dict[str, Any] = {
@@ -316,11 +317,12 @@ class Momo:
             quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
             print(f"Starting momo with command: {quoted_cmd}")
 
-            # プロセスを起動
+            # プロセスを起動 (エラー出力をキャプチャして問題発生時に確認できるようにする)
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
             )
             print(f"Started momo process with PID: {self.process.pid}")
 
@@ -656,7 +658,9 @@ class Momo:
         if initial_wait > 0:
             time.sleep(initial_wait)
 
-        print(f"Waiting for metrics endpoint to be ready (timeout: {timeout}s)...")
+        print(
+            f"Waiting for metrics endpoint to be ready on port {metrics_port} (timeout: {timeout}s)..."
+        )
         start_time = time.time()
 
         with httpx.Client() as client:
@@ -664,13 +668,20 @@ class Momo:
                 # プロセスの状態を確認
                 if self.process.poll() is not None:
                     # プロセスが終了していたらエラー
-                    raise RuntimeError(
+                    error_msg = (
                         f"momo process exited unexpectedly with code {self.process.returncode}"
                     )
+                    # stderrの内容を表示
+                    if hasattr(self.process, "stderr") and self.process.stderr:
+                        stderr_output = self.process.stderr.read()
+                        if stderr_output:
+                            error_msg += f"\nStderr output:\n{stderr_output}"
+                    raise RuntimeError(error_msg)
 
                 # メトリクスエンドポイントをチェック
                 try:
-                    response = client.get(f"http://localhost:{metrics_port}/metrics", timeout=5)
+                    url = f"http://localhost:{metrics_port}/metrics"
+                    response = client.get(url, timeout=5)
                     if response.status_code == 200:
                         # Soraモードの場合はstatsが空でないことを確認
                         if self.kwargs["mode"] == MomoMode.SORA:
@@ -697,6 +708,32 @@ class Momo:
                         print(f"  Got status code: {response.status_code}")
                 except httpx.ConnectError:
                     # 接続エラーは無視して次の試行へ
+                    elapsed = time.time() - start_time
+                    if elapsed > 5 and int(elapsed) % 5 == 0:  # 5秒ごとに状況を出力
+                        print(
+                            f"  Still waiting for metrics on port {metrics_port} ({elapsed:.1f}s elapsed)"
+                        )
+                        # stderr を非ブロッキングで確認
+                        if hasattr(self.process, "stderr") and self.process.stderr:
+                            import select
+
+                            # stderr に読み取り可能なデータがあるか確認
+                            if select.select([self.process.stderr], [], [], 0)[0]:
+                                # 非ブロッキングモードに設定
+                                import fcntl
+                                import os
+
+                                fd = self.process.stderr.fileno()
+                                fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+                                fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+                                try:
+                                    stderr_chunk = self.process.stderr.read(4096)
+                                    if stderr_chunk:
+                                        print(f"  Stderr (during startup): {stderr_chunk}")
+                                except IOError:
+                                    pass
+                                # 元に戻す
+                                fcntl.fcntl(fd, fcntl.F_SETFL, fl)
                     pass
                 except httpx.ConnectTimeout:
                     pass
@@ -709,6 +746,12 @@ class Momo:
             # タイムアウト
             if self.process:
                 print(f"Timeout waiting for momo process (PID: {self.process.pid}) to start")
+                # stderrの内容を表示
+                if hasattr(self.process, "stderr") and self.process.stderr:
+                    print("Checking for stderr output...")
+                    stderr_output = self.process.stderr.read()
+                    if stderr_output:
+                        print(f"Stderr output:\n{stderr_output}")
             self._cleanup()
             raise RuntimeError(f"momo process failed to start within {timeout} seconds")
 
@@ -728,6 +771,11 @@ class Momo:
                 print(f"Momo process (PID: {pid}) killed")
             self.process = None
 
+            # プロセス終了後の短い待機（リソース解放のため）
+            import time
+
+            time.sleep(0.2)
+
     def get_metrics(self) -> dict[str, Any]:
         """メトリクスを取得"""
         if not self._http_client:
@@ -744,6 +792,7 @@ class Momo:
         interval: float = 0.5,
         additional_wait_stats: list[dict[str, Any]] | None = None,
         additional_wait_stats_timeout: int = 5,
+        additional_wait_after_stats: float = 0,
     ) -> bool:
         """
         接続が確立されるまで待機し、追加でこの統計情報が入ってくるまで待つ
@@ -755,6 +804,8 @@ class Momo:
                                   各要素は期待する統計情報の辞書。type を含む全項目が一致する統計情報を待つ。
                                   接続確立後、ここで指定した統計情報が現れるまで追加で待機する。
             additional_wait_stats_timeout: 追加統計情報を待つタイムアウト時間（秒）。デフォルト5秒。
+            additional_wait_after_stats: すべての統計情報条件が満たされた後の追加待機時間（秒）。デフォルト0秒。
+                                        統計情報がたまるまで追加で待機したい場合に使用。
 
         Returns:
             期待したすべての統計情報が入ってきた場合 True、タイムアウトした場合 False
@@ -774,6 +825,12 @@ class Momo:
             momo.wait_for_connection(
                 additional_wait_stats=[{"type": "codec", "mimeType": "video/H264"}],
                 additional_wait_stats_timeout=10
+            )
+
+            # すべての統計情報が揃った後、さらに2秒待機
+            momo.wait_for_connection(
+                additional_wait_stats=[{"type": "codec", "mimeType": "video/H264"}],
+                additional_wait_after_stats=2
             )
         """
         if not self._http_client:
@@ -810,7 +867,7 @@ class Momo:
                                 if stat.get(expected_key) == expected_value:
                                     found = True
                                     break
-                        
+
                         if not found:
                             all_conditions_met = False
                             break
@@ -848,23 +905,26 @@ class Momo:
                                 # まず type が一致するかチェック
                                 if stat.get("type") != expected_dict.get("type"):
                                     continue
-                                
+
                                 # expected_dict のすべての項目が stat に含まれ、値が一致するかチェック
                                 all_items_match = True
                                 for key, expected_value in expected_dict.items():
                                     if stat.get(key) != expected_value:
                                         all_items_match = False
                                         break
-                                
+
                                 if all_items_match:
                                     found = True
                                     break
-                            
+
                             if not found:
                                 all_conditions_met = False
                                 break
 
                         if all_conditions_met:
+                            # すべての追加統計情報条件が満たされた場合、さらに指定された時間待機
+                            if additional_wait_after_stats > 0:
+                                time.sleep(additional_wait_after_stats)
                             return True
 
                 except (httpx.ConnectError, httpx.HTTPStatusError):
@@ -874,4 +934,7 @@ class Momo:
 
             return False  # 追加統計情報のタイムアウト
 
+        # 追加統計情報なしで接続確立した場合も、指定された時間待機
+        if additional_wait_after_stats > 0:
+            time.sleep(additional_wait_after_stats)
         return True  # 追加統計情報なしで接続確立
