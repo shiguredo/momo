@@ -218,6 +218,7 @@ def test_ayame_mode_peer_connection(port_allocator):
         metrics_port=next(port_allocator),
         fake_capture_device=True,
         resolution="QVGA",
+        initial_wait=10,
     ) as m1:
         with Momo(
             mode=MomoMode.AYAME,
@@ -227,12 +228,13 @@ def test_ayame_mode_peer_connection(port_allocator):
             metrics_port=next(port_allocator),
             fake_capture_device=True,
             resolution="QVGA",
+            initial_wait=10,
         ) as m2:
             # 両方のピアの接続が確立されるまで弅機
-            assert m1.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
+            assert m1.wait_for_connection(timeout=10), (
                 "M1 failed to establish connection within timeout"
             )
-            assert m2.wait_for_connection(timeout=10, additional_wait_after_stats=3), (
+            assert m2.wait_for_connection(timeout=10), (
                 "M2 failed to establish connection within timeout"
             )
 
