@@ -87,7 +87,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
-            wait_after_stats=3,
+            wait_after_stats=10,
         )
         stats = data["stats"]
 
