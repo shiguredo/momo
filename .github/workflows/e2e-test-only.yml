@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - 'develop'
-      - 'feature/pytest-*'
+      - 'feature/**'
     paths:
       - 'test/**'
       - '.github/workflows/e2e-test-only.yml'
