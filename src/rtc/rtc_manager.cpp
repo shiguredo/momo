@@ -335,3 +335,8 @@ void RTCManager::SetParameters() {
   parameters.degradation_preference = config_.GetPriority();
   video_sender_->SetParameters(parameters);
 }
+
+webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+RTCManager::GetFactory() const {
+  return factory_;
+}

@@ -113,9 +113,7 @@ class RTCManager {
   void SetParameters();
 
   webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> GetFactory()
-      const {
-    return factory_;
-  }
+      const;
 
  private:
   webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
