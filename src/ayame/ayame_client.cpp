@@ -19,27 +19,19 @@
 
 namespace {
 // 映像補助コーデック
-const std::vector<std::string> kVideoAuxiliaryCodecs = {
-    "RTX", "RED", "ULPFEC", "FLEXFEC-03"
-};
+const std::vector<std::string> kVideoAuxiliaryCodecs = {"RTX", "RED", "ULPFEC",
+                                                        "FLEXFEC-03"};
 
-// 音声補助コーデック  
-const std::vector<std::string> kAudioAuxiliaryCodecs = {
-    "TELEPHONE-EVENT", "CN"
-};
-
-// 大文字変換ヘルパー関数
-// 注意: この関数は ASCII 文字のみを対象としている
-// コーデック名（VP8, H264, OPUS 等）は ASCII のみなので問題ない
-std::string ToUpperCase(const std::string& str) {
-  std::string result = str;
-  std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-  return result;
-}
+// 音声補助コーデック
+const std::vector<std::string> kAudioAuxiliaryCodecs = {"TELEPHONE-EVENT",
+                                                        "CN"};
 
 // コーデックが補助コーデックかどうかを判定
 bool IsAuxiliaryCodec(const std::string& codec_name,
-                      const std::vector<std::string>& auxiliary_codecs) {
+                      webrtc::MediaType media_type) {
+  const auto& auxiliary_codecs = media_type == webrtc::MediaType::VIDEO
+                                     ? kVideoAuxiliaryCodecs
+                                     : kAudioAuxiliaryCodecs;
   return std::find(auxiliary_codecs.begin(), auxiliary_codecs.end(),
                    codec_name) != auxiliary_codecs.end();
 }
@@ -218,7 +210,7 @@ void AyameClient::CreatePeerConnection() {
   // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
   // Transceiver の存在を確認してから呼び出す
   auto pc = connection_->GetConnection();
-  if (pc) {
+  if (pc != nullptr) {
     auto transceivers = pc->GetTransceivers();
     if (!transceivers.empty()) {
       SetCodecPreferences();
@@ -234,33 +226,46 @@ void AyameClient::SetCodecPreferences() {
   }
 
   auto pc = connection_->GetConnection();
-  if (!pc) {
+  if (pc == nullptr) {
     RTC_LOG(LS_ERROR) << "PeerConnection is null";
     return;
   }
 
   // PeerConnectionFactory から GetRtpSenderCapabilities を使ってコーデック一覧を取得
   auto factory = manager_->GetFactory();
-  if (!factory) {
+  if (factory == nullptr) {
     RTC_LOG(LS_ERROR) << "PeerConnectionFactory is null";
     return;
   }
 
   auto transceivers = pc->GetTransceivers();
-  
-  // Transceiver が存在しない場合は警告を出して終了
+
+  // Transceiver が存在しない場合はエラーを出して何もしない
   if (transceivers.empty()) {
-    RTC_LOG(LS_ERROR) << "No transceivers found when trying to set codec preferences";
+    RTC_LOG(LS_ERROR)
+        << "No transceivers found when trying to set codec preferences";
     return;
   }
-  
+
   for (auto transceiver : transceivers) {
+    if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
+            config_.video_codec_type.empty() ||
+        transceiver->media_type() == webrtc::MediaType::AUDIO &&
+            config_.audio_codec_type.empty()) {
+      continue;
+    }
+
+    std::string target_codec =
+        transceiver->media_type() == webrtc::MediaType::VIDEO
+            ? config_.video_codec_type
+            : config_.audio_codec_type;
+
     std::vector<webrtc::RtpCodecCapability> filtered_codecs;
 
     // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
     webrtc::RtpCapabilities sender_capabilities;
     webrtc::RtpCapabilities receiver_capabilities;
-    
+
     if (transceiver->media_type() == webrtc::MediaType::VIDEO) {
       sender_capabilities =
           factory->GetRtpSenderCapabilities(webrtc::MediaType::VIDEO);
@@ -279,9 +284,8 @@ void AyameClient::SetCodecPreferences() {
     std::vector<webrtc::RtpCodecCapability> common_codecs;
     for (const auto& sender_codec : sender_capabilities.codecs) {
       for (const auto& receiver_codec : receiver_capabilities.codecs) {
-        // コーデック名とMIMEタイプが一致する場合に共通コーデックとみなす
-        if (sender_codec.name == receiver_codec.name &&
-            sender_codec.mime_type() == receiver_codec.mime_type()) {
+        // MIMEタイプが一致する場合に共通コーデックとみなす
+        if (sender_codec.mime_type() == receiver_codec.mime_type()) {
           common_codecs.push_back(sender_codec);
           break;
         }
@@ -290,81 +294,44 @@ void AyameClient::SetCodecPreferences() {
 
     // 共通コーデックが空の場合はスキップ
     if (common_codecs.empty()) {
-      RTC_LOG(LS_WARNING) << "No common codec capabilities available for transceiver";
+      RTC_LOG(LS_WARNING)
+          << "No common codec capabilities available for transceiver";
       continue;
     }
-    
-    RTC_LOG(LS_INFO) << "Found " << common_codecs.size() << " common codecs for "
-                     << (transceiver->media_type() == webrtc::MediaType::VIDEO 
-                             ? "video" : "audio");
 
-    bool codec_specified = false;
-    std::string specified_codec_type;
-    
-    if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
-        !config_.video_codec_type.empty()) {
-      // 映像コーデックのフィルタリング
-      codec_specified = true;
-      specified_codec_type = config_.video_codec_type;
-      std::string target_codec = ToUpperCase(config_.video_codec_type);
+    RTC_LOG(LS_INFO) << "Found " << common_codecs.size()
+                     << " common codecs for "
+                     << webrtc::MediaTypeToString(transceiver->media_type());
 
-      for (const auto& codec : common_codecs) {
-        std::string codec_name = ToUpperCase(codec.name);
-
-        // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec ||
-            IsAuxiliaryCodec(codec_name, kVideoAuxiliaryCodecs)) {
-          filtered_codecs.push_back(codec);
-        }
-      }
-    } else if (transceiver->media_type() == webrtc::MediaType::AUDIO &&
-               !config_.audio_codec_type.empty()) {
-      // 音声コーデックのフィルタリング
-      codec_specified = true;
-      specified_codec_type = config_.audio_codec_type;
-      std::string target_codec = ToUpperCase(config_.audio_codec_type);
-
-      for (const auto& codec : common_codecs) {
-        std::string codec_name = ToUpperCase(codec.name);
-
-        // 指定されたコーデックまたは補助的なコーデックは残す
-        if (codec_name == target_codec ||
-            IsAuxiliaryCodec(codec_name, kAudioAuxiliaryCodecs)) {
-          filtered_codecs.push_back(codec);
-        }
+    // コーデックのフィルタリング
+    for (const auto& codec : common_codecs) {
+      // 指定されたコーデックまたは補助的なコーデックは残す
+      if (codec.name == target_codec ||
+          IsAuxiliaryCodec(codec.name, transceiver->media_type())) {
+        filtered_codecs.push_back(codec);
       }
     }
 
-    // コーデックが指定されているが見つからなかった場合はエラー
-    if (codec_specified && filtered_codecs.empty()) {
-      RTC_LOG(LS_ERROR) << "Specified codec '" << specified_codec_type 
-                        << "' for " 
-                        << (transceiver->media_type() == webrtc::MediaType::VIDEO 
-                                ? "video" : "audio")
+    // 指定されたコーデックが見つからなかった場合はエラー
+    if (filtered_codecs.empty()) {
+      RTC_LOG(LS_ERROR) << "Specified codec '" << target_codec << "' for "
+                        << webrtc::MediaTypeToString(transceiver->media_type())
                         << " is not available. Available codecs:";
       for (const auto& codec : common_codecs) {
         RTC_LOG(LS_ERROR) << "  - " << codec.name;
       }
-      // エラーで接続を終了
-      Close();
-      return;
+      continue;
     }
 
-    if (!filtered_codecs.empty()) {
-      auto error = transceiver->SetCodecPreferences(filtered_codecs);
-      if (!error.ok()) {
-        RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
-                          << error.message();
-        Close();
-        return;
-      } else {
-        RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
-                         << (transceiver->media_type() ==
-                                     webrtc::MediaType::VIDEO
-                                 ? "video"
-                                 : "audio");
-      }
+    auto error = transceiver->SetCodecPreferences(filtered_codecs);
+    if (!error.ok()) {
+      RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
+                        << error.message();
+      continue;
     }
+
+    RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
+                     << webrtc::MediaTypeToString(transceiver->media_type());
   }
 }
 

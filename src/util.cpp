@@ -269,12 +269,11 @@ void Util::ParseArgs(int argc,
   ayame_app
       ->add_option("--video-codec-type", args.ayame_video_codec_type,
                    "Video codec type (VP8, VP9, AV1, H264, H265)")
-      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264", "H265"},
-                            CLI::ignore_case));
+      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264", "H265"}));
   ayame_app
       ->add_option("--audio-codec-type", args.ayame_audio_codec_type,
                    "Audio codec type (OPUS, PCMU, PCMA)")
-      ->check(CLI::IsMember({"", "OPUS", "PCMU", "PCMA"}, CLI::ignore_case));
+      ->check(CLI::IsMember({"", "OPUS", "PCMU", "PCMA"}));
 
   sora_app
       ->add_option("--signaling-urls", args.sora_signaling_urls,
