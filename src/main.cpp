@@ -63,7 +63,6 @@
 #if defined(__linux__)
 #include <dirent.h>
 #include <fcntl.h>
-#include <linux/media.h>
 #include <linux/videodev2.h>
 #include <map>
 #include <sys/ioctl.h>
@@ -136,25 +135,6 @@ static void ListVideoDevices() {
     close(fd);
   }
   
-  // Check for media devices
-  std::map<std::string, std::string> media_devices;
-  for (int i = 0; i < 16; i++) {
-    char media_path[32];
-    snprintf(media_path, sizeof(media_path), "/dev/media%d", i);
-    
-    int fd = open(media_path, O_RDONLY);
-    if (fd < 0) continue;
-    
-    struct media_device_info mdi;
-    if (ioctl(fd, MEDIA_IOC_DEVICE_INFO, &mdi) == 0) {
-      std::string bus_info((const char*)mdi.bus_info);
-      if (devices_by_bus.find(bus_info) != devices_by_bus.end()) {
-        media_devices[bus_info] = media_path;
-      }
-    }
-    close(fd);
-  }
-  
   // Print devices grouped by camera
   if (devices_by_bus.empty()) {
     std::cout << "No video capture devices found" << std::endl;
@@ -163,9 +143,6 @@ static void ListVideoDevices() {
       std::cout << device_names[bus_info] << " (" << bus_info << "):" << std::endl;
       for (const auto& device : device_list) {
         std::cout << "\t" << device << std::endl;
-      }
-      if (media_devices.find(bus_info) != media_devices.end()) {
-        std::cout << "\t" << media_devices[bus_info] << std::endl;
       }
     }
   }
