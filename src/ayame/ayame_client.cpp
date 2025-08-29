@@ -208,16 +208,7 @@ void AyameClient::CreatePeerConnection() {
   manager_->InitTracks(connection_.get());
 
   // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
-  // Transceiver の存在を確認してから呼び出す
-  auto pc = connection_->GetConnection();
-  if (pc != nullptr) {
-    auto transceivers = pc->GetTransceivers();
-    if (!transceivers.empty()) {
-      SetCodecPreferences();
-    } else {
-      RTC_LOG(LS_WARNING) << "No transceivers available after InitTracks";
-    }
-  }
+  SetCodecPreferences();
 }
 
 void AyameClient::SetCodecPreferences() {
