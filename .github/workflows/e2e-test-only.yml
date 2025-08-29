@@ -152,5 +152,5 @@ jobs:
       - name: Run HW accelerated E2E tests
         run: |
           uv sync
-          uv run pytest ${{ matrix.test_file }} -v
+          uv run pytest ${{ matrix.test_file }} -v -s
         working-directory: ./test
