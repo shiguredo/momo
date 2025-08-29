@@ -1,5 +1,4 @@
 import os
-import platform
 
 import pytest
 
@@ -12,10 +11,10 @@ pytestmark = [
         not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS"),
         reason="TEST_SORA_MODE_SIGNALING_URLS not set in environment",
     ),
-    pytest.mark.skipif(
-        platform.system() == "Darwin",
-        reason="Skipping simulcast test on macOS due to performance limitations",
-    ),
+    # pytest.mark.skipif(
+    #     platform.system() == "Darwin",
+    #     reason="Skipping simulcast test on macOS due to performance limitations",
+    # ),
 ]
 
 
@@ -224,6 +223,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
 
+        # r0 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r0:
+            print("r0 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r0["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
+
         # r0 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r0
         assert outbound_rtp_r0["framesPerSecond"] >= 1, (
@@ -263,6 +268,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
+        # r1 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r1:
+            print("r1 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r1["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
+
         # r1 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r1
         assert outbound_rtp_r1["framesPerSecond"] >= 1, (
@@ -301,6 +312,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
         )
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
+
+        # r2 の qualityLimitationDurations を出力
+        if "qualityLimitationDurations" in outbound_rtp_r2:
+            print("r2 qualityLimitationDurations:")
+            for reason, duration in outbound_rtp_r2["qualityLimitationDurations"].items():
+                print(f"  {reason}: {duration}")
 
         # r2 のフレームレートを確認（1 fps 以上）
         assert "framesPerSecond" in outbound_rtp_r2
