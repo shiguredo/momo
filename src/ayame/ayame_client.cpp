@@ -248,11 +248,13 @@ void AyameClient::SetCodecPreferences() {
   }
 
   for (auto transceiver : transceivers) {
+    // VIDEO でも AUDIO でもない Transceiver はスキップ
     if (transceiver->media_type() != webrtc::MediaType::VIDEO &&
         transceiver->media_type() != webrtc::MediaType::AUDIO) {
       continue;
     }
 
+    // 指定されたコーデックが空の場合はスキップ
     if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
             config_.video_codec_type.empty() ||
         transceiver->media_type() == webrtc::MediaType::AUDIO &&
