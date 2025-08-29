@@ -31,23 +31,19 @@ def test_sendrecv(
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
 
-    # エンコーダー設定を準備
+    # エンコーダー・デコーダー設定を準備
     encoder_params = {}
-    if video_codec_type == "VP8":
-        encoder_params["vp8_encoder"] = "software"
-    elif video_codec_type == "VP9":
-        encoder_params["vp9_encoder"] = "software"
-    elif video_codec_type == "AV1":
-        encoder_params["av1_encoder"] = "software"
-
-    # デコーダー設定を準備
     decoder_params = {}
-    if video_codec_type == "VP8":
-        decoder_params["vp8_decoder"] = "software"
-    elif video_codec_type == "VP9":
-        decoder_params["vp9_decoder"] = "software"
-    elif video_codec_type == "AV1":
-        decoder_params["av1_decoder"] = "software"
+    match video_codec_type:
+        case "VP8":
+            encoder_params["vp8_encoder"] = "software"
+            decoder_params["vp8_decoder"] = "software"
+        case "VP9":
+            encoder_params["vp9_encoder"] = "software"
+            decoder_params["vp9_decoder"] = "software"
+        case "AV1":
+            encoder_params["av1_encoder"] = "software"
+            decoder_params["av1_decoder"] = "software"
 
     # クライアント1（sendrecv）
     with Momo(
