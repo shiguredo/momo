@@ -85,6 +85,9 @@ struct MomoArgs {
   std::string ayame_room_id;
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
+  // 空文字の場合コーデックは WebRTC デフォルトを使用
+  std::string ayame_video_codec_type = "";
+  std::string ayame_audio_codec_type = "";
 
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;

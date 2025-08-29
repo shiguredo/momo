@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - '**'
+      - 'feature/pytest-*'
     paths:
       - 'test/**'
       - '.github/workflows/e2e-test-only.yml'
