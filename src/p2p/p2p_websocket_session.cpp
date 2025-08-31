@@ -150,7 +150,7 @@ std::shared_ptr<RTCConnection> P2PWebsocketSession::CreateRTCConnection() {
   }
   rtc_config.servers = servers;
   auto connection = rtc_manager_->CreateConnection(rtc_config, this);
-  rtc_manager_->InitTracks(connection.get());
+  rtc_manager_->InitTracks(connection.get(), std::nullopt);
 
   return connection;
 }

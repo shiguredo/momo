@@ -31,7 +31,7 @@ struct AyameClientConfig {
   std::string client_id;
   std::string signaling_key;
   // sendrecv, sendonly, recvonly
-  std::string direction = "sendrecv";
+  std::string direction;
   std::string video_codec_type;
   std::string audio_codec_type;
 };
