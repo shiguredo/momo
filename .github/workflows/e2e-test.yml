@@ -34,9 +34,8 @@ jobs:
             runs_on: ubuntu-24.04
           - package: macos_arm64
             runs_on: macos-15
-          # Windows サポート予定
-          #- package: windows_x86_64
-          #  runs_on: windows-2025
+          - package: windows_x86_64
+            runs_on: windows-2025
           # Self-hosted runners for HWA tests
           - name: Apple Video Toolbox
             package: macos_arm64

@@ -231,6 +231,10 @@ class Momo:
         """ビルド済みの momo 実行ファイルのパスを自動検出"""
         project_root = Path(__file__).parent.parent
         build_dir = project_root / "_build"
+        system = platform.system().lower()
+        
+        # Windows の場合は拡張子が必要
+        exe_name = "momo.exe" if system == "windows" else "momo"
 
         # _build ディレクトリ内の実際のビルドターゲットを検出
         if not build_dir.exists():
@@ -242,7 +246,7 @@ class Momo:
         available_targets = [
             d.name
             for d in build_dir.iterdir()
-            if d.is_dir() and (d / "release" / "momo" / "momo").exists()
+            if d.is_dir() and (d / "release" / "momo" / exe_name).exists()
         ]
 
         if not available_targets:
@@ -257,11 +261,13 @@ class Momo:
             print(f"Auto-detected momo target: {target}")
         else:
             # 複数ビルドがある場合は、プラットフォームに応じて優先順位を決める
-            system = platform.system().lower()
             machine = platform.machine().lower()
 
             # プラットフォームに応じた優先順位リスト
-            if system == "darwin":
+            if system == "windows":
+                # Windows の場合
+                preferred = ["windows_x86_64"]
+            elif system == "darwin":
                 if machine == "arm64" or machine == "aarch64":
                     preferred = ["macos_arm64", "macos_x86_64"]
                 else:
@@ -297,7 +303,7 @@ class Momo:
 
         # momo のパスを構築
         assert target is not None
-        momo_path = project_root / "_build" / target / "release" / "momo" / "momo"
+        momo_path = project_root / "_build" / target / "release" / "momo" / exe_name
 
         if not momo_path.exists():
             raise RuntimeError(
@@ -718,8 +724,8 @@ class Momo:
                         print(
                             f"  Still waiting for metrics on port {metrics_port} ({elapsed:.1f}s elapsed)"
                         )
-                        # stderr を非ブロッキングで確認
-                        if hasattr(self.process, "stderr") and self.process.stderr:
+                        # stderr を非ブロッキングで確認（Windows 以外のみ）
+                        if hasattr(self.process, "stderr") and self.process.stderr and platform.system().lower() != "windows":
                             import select
 
                             # stderr に読み取り可能なデータがあるか確認
