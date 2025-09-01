@@ -354,8 +354,8 @@ def install_deps(
         install_cli11(**install_cli11_args)
 
         # Blend2D (fake capture device用)
-        # macOS と Ubuntu x86_64 のみインストール
-        enable_fake_capture = platform.target.os == "macos" or platform.target.package_name in (
+        # macOS、Windows、Ubuntu x86_64 でインストール
+        enable_fake_capture = platform.target.os in ("macos", "windows") or platform.target.package_name in (
             "ubuntu-22.04_x86_64",
             "ubuntu-24.04_x86_64",
         )
@@ -604,8 +604,8 @@ def _build(args):
         cmake_args.append(f"-DOPENH264_ROOT_DIR={os.path.join(install_dir, 'openh264')}")
 
         # Fake capture device (Blend2D)
-        # macOS と Ubuntu x86_64 のみインストール
-        enable_fake_capture = platform.target.os == "macos" or platform.target.package_name in (
+        # macOS、Windows、Ubuntu x86_64 でインストール
+        enable_fake_capture = platform.target.os in ("macos", "windows") or platform.target.package_name in (
             "ubuntu-22.04_x86_64",
             "ubuntu-24.04_x86_64",
         )
