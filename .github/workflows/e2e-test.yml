@@ -29,42 +29,42 @@ jobs:
         include:
           # GitHub-hosted runners
           - package: ubuntu-22.04_x86_64
-            runs-on: ubuntu-22.04
+            runs_on: ubuntu-22.04
           - package: ubuntu-24.04_x86_64
-            runs-on: ubuntu-24.04
+            runs_on: ubuntu-24.04
           - package: macos_arm64
-            runs-on: macos-15
+            runs_on: macos-15
           # Windows サポート予定
           #- package: windows_x86_64
-          #  runs-on: windows-2025
+          #  runs_on: windows-2025
           # Self-hosted runners for HWA tests
           - name: Apple Video Toolbox
             package: macos_arm64
-            runs-on:
+            runs_on:
               group: Self
-              labels: ["self-hosted", "macOS", "ARM64", "Apple-M2-Pro"]
-            test_file: test_sora_mode_apple_video_toolbox.py
+              labels: [self-hosted, macOS, ARM64, Apple-M2-Pro]
+            test_target: test_sora_mode_apple_video_toolbox.py
             env_vars: |
               APPLE_VIDEO_TOOLBOX=true
           - name: Intel VPL
             package: ubuntu-24.04_x86_64
-            runs-on:
+            runs_on:
               group: Self
-              labels: ["self-hosted", "linux", "x64", "Intel-VPL"]
-            test_file: test_sora_mode_intel_vpl.py
+              labels: [self-hosted, linux, x64, Intel-VPL]
+            test_target: test_sora_mode_intel_vpl.py
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
           - name: NVIDIA Video Codec SDK
             package: ubuntu-24.04_x86_64
-            runs-on:
+            runs_on:
               group: Self
-              labels: ["self-hosted", "linux", "x64", "NVIDIA-Video-Codec-SDK"]
-            test_file: test_sora_mode_nvidia_video_codec_sdk.py
+              labels: [self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]
+            test_target: test_sora_mode_nvidia_video_codec_sdk.py
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
     name: E2E Test ${{ matrix.name || matrix.package }}
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -125,5 +125,5 @@ jobs:
       - name: Run E2E tests
         run: |
           uv sync
-          uv run pytest ${{ matrix.test_file || '.' }} -v
+          uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test
