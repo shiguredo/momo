@@ -24,6 +24,7 @@
 #include <rtc_base/thread_annotations.h>
 
 #include "sora/scalable_track_source.h"
+#include "sora/v4l2/v4l2_device.h"
 
 namespace sora {
 
@@ -42,13 +43,8 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
  public:
   static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       const V4L2VideoCapturerConfig& config);
-  static void LogDeviceList(
-      webrtc::VideoCaptureModule::DeviceInfo* device_info);
   V4L2VideoCapturer(const V4L2VideoCapturerConfig& config);
   ~V4L2VideoCapturer();
-
-  int32_t Init(const char* deviceUniqueId);
-  virtual int32_t StartCapture(const V4L2VideoCapturerConfig& config);
 
  protected:
   virtual int32_t StopCapture();
@@ -68,16 +64,17 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   Buffer* _pool;
 
  private:
-  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
-      webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      const V4L2VideoCapturerConfig& config,
-      size_t capture_device_index);
-  bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
+  int32_t Init();
+  virtual int32_t StartCapture();
 
   enum { kNoOfV4L2Bufffers = 4 };
 
   static void CaptureThread(void*);
   bool CaptureProcess();
+
+ private:
+  V4L2VideoCapturerConfig config_;
+  V4L2Device device_;
 
   webrtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;

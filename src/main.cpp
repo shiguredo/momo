@@ -52,6 +52,10 @@
 #include "sora/sora_server.h"
 #include "util.h"
 
+#if defined(__linux__)
+#include "sora/v4l2/v4l2_device.h"
+#endif
+
 #ifdef _WIN32
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
@@ -60,163 +64,22 @@
 #include "sora/cuda_context.h"
 #endif
 
-#if defined(__linux__)
-#include <dirent.h>
-#include <fcntl.h>
-#include <linux/videodev2.h>
-#include <map>
-#include <sys/ioctl.h>
-#endif
-
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 #if defined(__linux__)
 
-static std::string GetFourccString(uint32_t fourcc) {
-  std::string result;
-  result += (char)(fourcc & 0xFF);
-  result += (char)((fourcc >> 8) & 0xFF);
-  result += (char)((fourcc >> 16) & 0xFF);
-  result += (char)((fourcc >> 24) & 0xFF);
-  return result;
-}
-
-static void ListDeviceFormats(const char* device_path) {
-  int fd = open(device_path, O_RDONLY);
-  if (fd < 0) return;
-  
-  struct v4l2_fmtdesc fmt;
-  memset(&fmt, 0, sizeof(fmt));
-  fmt.index = 0;
-  fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  
-  while (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0) {
-    std::cout << "\t  [" << fmt.index << "]: " 
-              << GetFourccString(fmt.pixelformat) 
-              << " (" << fmt.description << ")" << std::endl;
-    
-    // Enumerate frame sizes for this format
-    struct v4l2_frmsizeenum frmsize;
-    memset(&frmsize, 0, sizeof(frmsize));
-    frmsize.index = 0;
-    frmsize.pixel_format = fmt.pixelformat;
-    
-    while (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) == 0) {
-      if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
-        std::cout << "\t      " << frmsize.discrete.width << "x" 
-                  << frmsize.discrete.height;
-        
-        // Enumerate frame intervals for this size
-        struct v4l2_frmivalenum frmival;
-        memset(&frmival, 0, sizeof(frmival));
-        frmival.index = 0;
-        frmival.pixel_format = fmt.pixelformat;
-        frmival.width = frmsize.discrete.width;
-        frmival.height = frmsize.discrete.height;
-        
-        std::cout << " (";
-        bool first = true;
-        while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0) {
-          if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
-            if (!first) std::cout << ", ";
-            // Convert to fps
-            if (frmival.discrete.numerator != 0) {
-              int fps = frmival.discrete.denominator / frmival.discrete.numerator;
-              std::cout << fps << " fps";
-            }
-            first = false;
-          }
-          frmival.index++;
-        }
-        std::cout << ")" << std::endl;
-      }
-      frmsize.index++;
-    }
-    
-    fmt.index++;
-  }
-  
-  close(fd);
-}
-
 static void ListVideoDevices() {
-  std::cout << "=== Available video devices ===" << std::endl;
-  
-  // Collect video devices grouped by bus_info
-  std::map<std::string, std::vector<std::string>> devices_by_bus;
-  std::map<std::string, std::string> device_names;
-  
-  DIR* dir = opendir("/sys/class/video4linux");
-  if (!dir) {
-    std::cerr << "Could not open /sys/class/video4linux: " << strerror(errno) << std::endl;
+  auto devices = sora::EnumV4L2CaptureDevices();
+  if (!devices) {
+    std::cerr << "Failed to enumerate video devices" << std::endl;
     return;
   }
-  
-  // Collect all video devices
-  std::vector<std::string> video_devices;
-  struct dirent* entry;
-  while ((entry = readdir(dir)) != NULL) {
-    if (strncmp(entry->d_name, "video", 5) == 0) {
-      video_devices.push_back(entry->d_name);
-    }
-  }
-  closedir(dir);
-  
-  // Sort devices numerically
-  std::sort(video_devices.begin(), video_devices.end(),
-            [](const std::string& a, const std::string& b) {
-              int num_a = -1, num_b = -1;
-              sscanf(a.c_str(), "video%d", &num_a);
-              sscanf(b.c_str(), "video%d", &num_b);
-              return num_a < num_b;
-            });
-  
-  // Query each device
-  for (const auto& device_name : video_devices) {
-    char device_path[256];
-    snprintf(device_path, sizeof(device_path), "/dev/%s", device_name.c_str());
-    
-    int fd = open(device_path, O_RDONLY);
-    if (fd < 0) continue;
-    
-    struct v4l2_capability cap;
-    if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-      std::string bus_info((const char*)cap.bus_info);
-      std::string card((const char*)cap.card);
-      
-      // Check if device supports video capture
-      struct v4l2_fmtdesc fmt;
-      memset(&fmt, 0, sizeof(fmt));
-      fmt.index = 0;
-      fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-      
-      bool has_formats = (ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == 0);
-      
-      if (has_formats) {
-        devices_by_bus[bus_info].push_back(device_path);
-        if (device_names.find(bus_info) == device_names.end()) {
-          device_names[bus_info] = card;
-        }
-      }
-    }
-    close(fd);
-  }
-  
-  // Print devices grouped by camera with format details
-  if (devices_by_bus.empty()) {
-    std::cout << "No video capture devices found" << std::endl;
-  } else {
-    for (const auto& [bus_info, device_list] : devices_by_bus) {
-      std::cout << std::endl;
-      std::cout << device_names[bus_info] << " (" << bus_info << "):" << std::endl;
-      for (const auto& device : device_list) {
-        std::cout << "\t" << device << std::endl;
-        std::cout << "\tSupported formats:" << std::endl;
-        ListDeviceFormats(device.c_str());
-      }
-    }
-  }
+
+  std::cout << "=== Available video devices ===" << std::endl;
+  std::cout << std::endl;
+  std::cout << sora::FormatV4L2Devices(*devices);
 }
+
 #endif
 
 int main(int argc, char* argv[]) {
@@ -239,7 +102,7 @@ int main(int argc, char* argv[]) {
   Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
 
 #if defined(__linux__)
-  // Handle --list-devices option
+  // --list-devices オプションの処理
   if (args.list_devices) {
     ListVideoDevices();
     return 0;
