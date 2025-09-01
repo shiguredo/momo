@@ -29,5 +29,5 @@ git diff を使う関係上、`(last_updated, current]` という範囲になる
   1. Sora C++ SDK に移動して `../momo/sora-cpp-sdk/diff-sora-cpp-sdk.sh | patch -p1` でパッチを適用する
   2. コンフリクトが起きたら修正する
   3. `../momo/sora-cpp-sdk/copy-to-sora-cpp-sdk.sh .` を実行して Momo にもソースを反映する
-4. Momo と Sora C++ SDK の現在のコミットハッシュをメモして LAST_UPDATED にメモしておく
+4. Momo と Sora C++ SDK の現在のコミットハッシュを LAST_UPDATED にメモしておく（`git rev-parse HEAD` すれば分かる）
 5. Momo と Sora C++ SDK をコミットする
