@@ -118,8 +118,15 @@ runs:
         
         echo "Downloading from release $VERSION for platform $PLATFORM"
         
+        # Windows は .zip、それ以外は .tar.gz
+        if [[ "$PLATFORM" == windows* ]]; then
+          FILE_EXTENSION="zip"
+        else
+          FILE_EXTENSION="tar.gz"
+        fi
+        
         gh release download "$VERSION" \
-          --pattern "momo-${VERSION}_${PLATFORM}.tar.gz" \
+          --pattern "momo-${VERSION}_${PLATFORM}.${FILE_EXTENSION}" \
           --clobber || {
           echo "Failed to download release"
           exit 1
@@ -136,13 +143,22 @@ runs:
         VERSION="${{ steps.get_version.outputs.version }}"
         PLATFORM="${{ inputs.platform }}"
         
-        # tar.gz ファイルを探す
+        # Windows は .zip、それ以外は .tar.gz
+        if [[ "$PLATFORM" == windows* ]]; then
+          FILE_EXTENSION="zip"
+          BINARY_NAME="momo.exe"
+        else
+          FILE_EXTENSION="tar.gz"
+          BINARY_NAME="momo"
+        fi
+        
+        # パッケージファイルを探す
         if [ "$SOURCE" == "artifact" ]; then
           # artifact からダウンロードした場合
-          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+          PACKAGE_FILE=$(find . -name "momo-*.${FILE_EXTENSION}" -type f | head -1)
         else
           # release からダウンロードした場合
-          PACKAGE_FILE="momo-${VERSION}_${PLATFORM}.tar.gz"
+          PACKAGE_FILE="momo-${VERSION}_${PLATFORM}.${FILE_EXTENSION}"
         fi
         
         if [ -z "$PACKAGE_FILE" ] || [ ! -f "$PACKAGE_FILE" ]; then
@@ -152,7 +168,11 @@ runs:
         fi
         
         echo "Extracting: $PACKAGE_FILE"
-        tar -xzf "$PACKAGE_FILE"
+        if [[ "$PLATFORM" == windows* ]]; then
+          unzip -q "$PACKAGE_FILE"
+        else
+          tar -xzf "$PACKAGE_FILE"
+        fi
         
         # 展開されたディレクトリを探す
         EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "momo-*_*" | head -1)
@@ -167,11 +187,15 @@ runs:
         # ビルドディレクトリ構造を再現
         mkdir -p _build/$PLATFORM/release
         mv "$EXTRACTED_DIR" _build/$PLATFORM/release/momo
-        chmod +x _build/$PLATFORM/release/momo/momo
+        
+        # 実行権限を設定（Windows 以外）
+        if [[ "$PLATFORM" != windows* ]]; then
+          chmod +x "_build/$PLATFORM/release/momo/$BINARY_NAME"
+        fi
         
         # バージョン確認
         echo "Verifying momo binary..."
-        _build/$PLATFORM/release/momo/momo --version
+        "_build/$PLATFORM/release/momo/$BINARY_NAME" --version
         
         echo "Binary setup complete (source: $SOURCE)"
       shell: bash
