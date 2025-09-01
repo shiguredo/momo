@@ -1,6 +1,7 @@
 #ifndef SORA_V4L2_DEVICE_H_
 #define SORA_V4L2_DEVICE_H_
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>

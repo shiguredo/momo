@@ -13,15 +13,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 // Linux
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/videodev2.h>
@@ -41,8 +39,6 @@
 #include <bits/types/struct_timeval.h>
 #include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <media/base/video_common.h>
-#include <modules/video_capture/video_capture.h>
-#include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
@@ -50,6 +46,7 @@
 
 // libyuv
 #include <libyuv/convert.h>
+#include <libyuv/planar_functions.h>
 #include <libyuv/rotate.h>
 
 #include "sora/scalable_track_source.h"
