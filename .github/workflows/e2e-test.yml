@@ -23,7 +23,7 @@ env:
   OPENH264_VERSION: 2.6.0
 
 jobs:
-  e2e-test-ubuntu:
+  e2e-test:
     strategy:
       matrix:
         include:
@@ -31,6 +31,11 @@ jobs:
             package: ubuntu-22.04_x86_64
           - os: ubuntu-24.04
             package: ubuntu-24.04_x86_64
+          - os: macos-15
+            package: macos_arm64
+          # Windows サポート予定
+          #- os: windows-2022
+          #  package: windows_x86_64
     name: E2E Test ${{ matrix.package }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -38,6 +43,7 @@ jobs:
       - uses: actions/checkout@v5
       
       - name: Install runtime dependencies
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
@@ -48,43 +54,16 @@ jobs:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
       
-      - name: Cache OpenH264
-        id: cache-openh264
-        uses: actions/cache@v4
-        with:
-          path: libopenh264.so
-          key: openh264-${{ env.OPENH264_VERSION }}-linux64
-
       - name: Download OpenH264
-        if: steps.cache-openh264.outputs.cache-hit != 'true'
-        run: |
-          curl -L -o libopenh264.so.bz2 http://ciscobinary.openh264.org/libopenh264-${{ env.OPENH264_VERSION }}-linux64.8.so.bz2
-          bunzip2 libopenh264.so.bz2
-          chmod +x libopenh264.so
+        uses: shiguredo/github-actions/.github/actions/download-openh264@main
+        id: openh264
+        with:
+          platform_name: ${{ matrix.package }}
+          openh264_version: ${{ env.OPENH264_VERSION }}
+          use-cache: true
 
       - name: Setup OpenH264 environment
-        run: echo "OPENH264_PATH=${{ github.workspace }}/libopenh264.so" >> $GITHUB_ENV
-      
-      - uses: astral-sh/setup-uv@v6
-      
-      - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest -v
-        working-directory: ./test
-
-  e2e-test-macos:
-    name: E2E Test macos_arm64
-    runs-on: macos-15
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Download and extract momo binary
-        uses: ./.github/actions/download-binary
-        with:
-          platform: macos_arm64
-          github-token: ${{ github.token }}
+        run: echo "OPENH264_PATH=${{ steps.openh264.outputs.openh264_path }}" >> $GITHUB_ENV
       
       - uses: astral-sh/setup-uv@v6
       
