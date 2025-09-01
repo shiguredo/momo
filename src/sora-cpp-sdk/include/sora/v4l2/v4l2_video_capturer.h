@@ -47,6 +47,8 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   ~V4L2VideoCapturer();
 
  protected:
+  virtual int32_t Init();
+
   virtual int32_t StopCapture();
   virtual bool AllocateVideoBuffers();
   virtual bool DeAllocateVideoBuffers();
@@ -64,7 +66,6 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   Buffer* _pool;
 
  private:
-  int32_t Init();
   virtual int32_t StartCapture();
 
   enum { kNoOfV4L2Bufffers = 4 };
