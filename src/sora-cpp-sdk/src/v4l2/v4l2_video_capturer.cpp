@@ -13,12 +13,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 // Linux
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/videodev2.h>
@@ -50,6 +53,7 @@
 #include <libyuv/rotate.h>
 
 #include "sora/scalable_track_source.h"
+#include "sora/v4l2/v4l2_device.h"
 
 #define MJPEG_EOS_SEARCH_SIZE 4096
 
@@ -57,80 +61,21 @@ namespace sora {
 
 webrtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
     const V4L2VideoCapturerConfig& config) {
-  webrtc::scoped_refptr<V4L2VideoCapturer> capturer;
-  std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
-      webrtc::VideoCaptureFactory::CreateDeviceInfo());
-  if (!device_info) {
-    RTC_LOG(LS_ERROR) << "Failed to CreateDeviceInfo";
+  auto capturer = webrtc::make_ref_counted<V4L2VideoCapturer>(config);
+  if (capturer->Init() != 0) {
+    RTC_LOG(LS_ERROR) << "Failed to initialize V4L2VideoCapturer";
     return nullptr;
   }
-
-  LogDeviceList(device_info.get());
-
-  for (int i = 0; i < device_info->NumberOfDevices(); ++i) {
-    capturer = Create(device_info.get(), config, i);
-    if (capturer) {
-      RTC_LOG(LS_INFO) << "Get Capture";
-      return capturer;
-    }
-  }
-  RTC_LOG(LS_ERROR) << "Failed to create V4L2VideoCapturer";
-  return nullptr;
-}
-
-void V4L2VideoCapturer::LogDeviceList(
-    webrtc::VideoCaptureModule::DeviceInfo* device_info) {
-  for (int i = 0; i < device_info->NumberOfDevices(); ++i) {
-    char device_name[256];
-    char unique_name[256];
-    if (device_info->GetDeviceName(static_cast<uint32_t>(i), device_name,
-                                   sizeof(device_name), unique_name,
-                                   sizeof(unique_name)) != 0) {
-      RTC_LOG(LS_WARNING) << "Failed to GetDeviceName(" << i << ")";
-      continue;
-    }
-    RTC_LOG(LS_INFO) << "GetDeviceName(" << i
-                     << "): device_name=" << device_name
-                     << ", unique_name=" << unique_name;
-  }
-}
-
-webrtc::scoped_refptr<V4L2VideoCapturer> V4L2VideoCapturer::Create(
-    webrtc::VideoCaptureModule::DeviceInfo* device_info,
-    const V4L2VideoCapturerConfig& config,
-    size_t capture_device_index) {
-  char device_name[256];
-  char unique_name[256];
-  if (device_info->GetDeviceName(static_cast<uint32_t>(capture_device_index),
-                                 device_name, sizeof(device_name), unique_name,
-                                 sizeof(unique_name)) != 0) {
-    RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
+  if (capturer->StartCapture() != 0) {
+    RTC_LOG(LS_ERROR) << "Failed to start capture";
     return nullptr;
   }
-  // config.video_device が指定されている場合は、デバイス名かユニーク名と一致する必要がある
-  if (!(config.video_device.empty() || config.video_device == device_name ||
-        config.video_device == unique_name)) {
-    return nullptr;
-  }
-
-  webrtc::scoped_refptr<V4L2VideoCapturer> v4l2_capturer =
-      webrtc::make_ref_counted<V4L2VideoCapturer>(config);
-  if (v4l2_capturer->Init(unique_name) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to create V4L2VideoCapturer(" << unique_name
-                        << ")";
-    return nullptr;
-  }
-  if (v4l2_capturer->StartCapture(config) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to start V4L2VideoCapturer(w = "
-                        << config.width << ", h = " << config.height
-                        << ", fps = " << config.framerate << ")";
-    return nullptr;
-  }
-  return v4l2_capturer;
+  return capturer;
 }
 
 V4L2VideoCapturer::V4L2VideoCapturer(const V4L2VideoCapturerConfig& config)
     : ScalableVideoTrackSource(config),
+      config_(config),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
       _currentWidth(-1),
@@ -141,48 +86,39 @@ V4L2VideoCapturer::V4L2VideoCapturer(const V4L2VideoCapturerConfig& config)
       _captureVideoType(webrtc::VideoType::kI420),
       _pool(NULL) {}
 
-bool V4L2VideoCapturer::FindDevice(const char* deviceUniqueIdUTF8,
-                                   const std::string& device) {
-  int fd;
-  if ((fd = open(device.c_str(), O_RDONLY)) != -1) {
-    // query device capabilities
-    struct v4l2_capability cap;
-    if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-      if (cap.bus_info[0] != 0) {
-        if (strncmp((const char*)cap.bus_info, (const char*)deviceUniqueIdUTF8,
-                    strlen((const char*)deviceUniqueIdUTF8)) ==
-            0)  // match with device id
-        {
-          close(fd);
-          return true;
-        }
-      }
-    }
-    close(fd);  // close since this is not the matching device
-  }
-  return false;
-}
-
-int32_t V4L2VideoCapturer::Init(const char* deviceUniqueIdUTF8) {
-  int fd;
-  bool found = false;
-
-  /* detect /dev/video [0-63] entries */
-  char device[32];
-  int n;
-  for (n = 0; n < 64; n++) {
-    sprintf(device, "/dev/video%d", n);
-    if (FindDevice(deviceUniqueIdUTF8, device)) {
-      found = true;
-      _videoDevice = device;  // store the video device
-      break;
-    }
-  }
-
-  if (!found) {
-    RTC_LOG(LS_INFO) << "no matching device found";
+int32_t V4L2VideoCapturer::Init() {
+  auto devices = EnumV4L2CaptureDevices();
+  if (!devices) {
+    RTC_LOG(LS_ERROR) << "Failed to enumerate V4L2 devices";
     return -1;
   }
+  if (devices->size() == 0) {
+    RTC_LOG(LS_ERROR) << "No V4L2 capture devices found";
+    return -1;
+  }
+  if (config_.video_device.empty()) {
+    // デバイスが指定されていない場合は最初のデバイスを使う
+    device_ = devices->at(0);
+    RTC_LOG(LS_INFO) << "Using first video device: " << device_.path << " ("
+                     << device_.card << ", " << device_.bus_info << ")";
+  } else {
+    // 指定されたデバイス名に一致するデバイスを探す
+    bool found = false;
+    for (const auto& device : *devices) {
+      if (config_.video_device == device.card ||
+          config_.video_device == device.path) {
+        device_ = device;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      RTC_LOG(LS_ERROR) << "Specified video device not found: "
+                        << config_.video_device;
+      return -1;
+    }
+  }
+
   return 0;
 }
 
@@ -192,43 +128,38 @@ V4L2VideoCapturer::~V4L2VideoCapturer() {
     close(_deviceFd);
 }
 
-int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
+int32_t V4L2VideoCapturer::StartCapture() {
   if (_captureStarted) {
-    if (config.width == _currentWidth && config.height == _currentHeight) {
-      return 0;
-    } else {
-      StopCapture();
-    }
+    return 0;
   }
 
   webrtc::MutexLock lock(&capture_lock_);
   // first open /dev/video device
-  if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
-    RTC_LOG(LS_INFO) << "error in opening " << _videoDevice
+  if ((_deviceFd = open(device_.path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
+    RTC_LOG(LS_INFO) << "error in opening " << device_.path
                      << " errono = " << errno;
     return -1;
   }
 
-  // Supported video formats in preferred order.
-  // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
-  // I420 otherwise.
+  // 順番にサポートしているビデオフォーマットを探す。
+  // 特に指定が無ければ VGA より大きいのは MJPEG 優先、それ以下は I420 優先となる。
   int nFormats = 0;
   const int MaxFormats = 6;
   unsigned int fmts[MaxFormats] = {};
-  if (config.force_yuy2) {
+  if (config_.force_yuy2) {
     fmts[0] = V4L2_PIX_FMT_YUYV;
     nFormats = 1;
-  } else if (config.force_i420) {
+  } else if (config_.force_i420) {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     nFormats = 1;
-  } else if (config.force_nv12) {
+  } else if (config_.force_nv12) {
     fmts[0] = V4L2_PIX_FMT_NV12;
     nFormats = 1;
-  } else if (config.use_native) {
+  } else if (config_.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
     nFormats = 2;
-  } else if (config.width > 640 || config.height > 480) {
+  } else if (config_.width > 640 || config_.height > 480) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;
@@ -246,42 +177,35 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     nFormats = 6;
   }
 
-  // Enumerate image formats.
-  struct v4l2_fmtdesc fmt;
-  int fmtsIdx = nFormats;
-  memset(&fmt, 0, sizeof(fmt));
-  fmt.index = 0;
-  fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  RTC_LOG(LS_INFO) << "Video Capture enumerats supported image formats:";
-  while (ioctl(_deviceFd, VIDIOC_ENUM_FMT, &fmt) == 0) {
-    RTC_LOG(LS_INFO) << "  { pixelformat = "
-                     << webrtc::GetFourccName(fmt.pixelformat)
-                     << ", description = '" << fmt.description << "' }";
-    // Match the preferred order.
-    for (int i = 0; i < nFormats; i++) {
-      if (fmt.pixelformat == fmts[i] && i < fmtsIdx)
-        fmtsIdx = i;
+  std::optional<uint32_t> found_format;
+  for (int i = 0; i < nFormats; i++) {
+    for (int j = 0; j < device_.format_descriptions.size(); j++) {
+      if (fmts[i] == device_.format_descriptions[j].pixel_format) {
+        found_format = fmts[i];
+        break;
+      }
     }
-    // Keep enumerating.
-    fmt.index++;
   }
-
-  if (fmtsIdx == nFormats) {
-    RTC_LOG(LS_INFO) << "no supporting video formats found";
+  if (!found_format) {
+    RTC_LOG(LS_ERROR) << "No supporting video formats found";
     return -1;
-  } else {
-    RTC_LOG(LS_INFO) << "We prefer format "
-                     << webrtc::GetFourccName(fmts[fmtsIdx]);
   }
 
+  // ビデオフォーマットとサイズを設定する
   struct v4l2_format video_fmt;
   memset(&video_fmt, 0, sizeof(struct v4l2_format));
   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   video_fmt.fmt.pix.sizeimage = 0;
-  video_fmt.fmt.pix.width = config.width;
-  video_fmt.fmt.pix.height = config.height;
-  video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
+  video_fmt.fmt.pix.width = config_.width;
+  video_fmt.fmt.pix.height = config_.height;
+  video_fmt.fmt.pix.pixelformat = *found_format;
 
+  if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
+    RTC_LOG(LS_INFO) << "error in VIDIOC_S_FMT, errno = " << errno;
+    return -1;
+  }
+
+  // FOURCC を webrtc::VideoType に変換する
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
     _captureVideoType = webrtc::VideoType::kYUY2;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
@@ -296,13 +220,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
 
-  // set format and frame size now
-  if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
-    RTC_LOG(LS_INFO) << "error in VIDIOC_S_FMT, errno = " << errno;
-    return -1;
-  }
-
-  // initialize current width and height
+  // 現在の幅と高さを保存しておく
   _currentWidth = video_fmt.fmt.pix.width;
   _currentHeight = video_fmt.fmt.pix.height;
 
@@ -322,25 +240,30 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
       memset(&streamparms, 0, sizeof(streamparms));
       streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       streamparms.parm.capture.timeperframe.numerator = 1;
-      streamparms.parm.capture.timeperframe.denominator = config.framerate;
+      streamparms.parm.capture.timeperframe.denominator = config_.framerate;
       if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
         RTC_LOG(LS_INFO) << "Failed to set the framerate. errno=" << errno;
         driver_framerate_support = false;
       } else {
-        _currentFrameRate = config.framerate;
+        _currentFrameRate = config_.framerate;
       }
     }
   }
   // If driver doesn't support framerate control, need to hardcode.
   // Hardcoding the value based on the frame size.
   if (!driver_framerate_support) {
-    if (!config.use_native && _currentWidth >= 800 &&
+    if (!config_.use_native && _currentWidth >= 800 &&
         _captureVideoType != webrtc::VideoType::kMJPEG) {
       _currentFrameRate = 15;
     } else {
       _currentFrameRate = 30;
     }
   }
+
+  RTC_LOG(LS_INFO) << "Camera is started with format: "
+                   << webrtc::GetFourccName(video_fmt.fmt.pix.pixelformat)
+                   << " size: " << _currentWidth << "x" << _currentHeight
+                   << " fps: " << _currentFrameRate;
 
   if (!AllocateVideoBuffers()) {
     RTC_LOG(LS_INFO) << "failed to allocate video capture buffers";
@@ -363,7 +286,7 @@ int32_t V4L2VideoCapturer::StartCapture(const V4L2VideoCapturerConfig& config) {
     return -1;
   }
 
-  _useNative = config.use_native;
+  _useNative = config_.use_native;
   _captureStarted = true;
   return 0;
 }

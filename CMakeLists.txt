@@ -433,6 +433,7 @@ elseif (TARGET_OS STREQUAL "linux")
 
   target_sources(momo
     PRIVATE
+      src/sora-cpp-sdk/src/v4l2/v4l2_device.cpp
       src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp
   )
   target_compile_definitions(momo

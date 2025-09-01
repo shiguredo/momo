@@ -137,6 +137,20 @@
   - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
   - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
   - @voluntas
+- [ADD] V4L2 ビデオキャプチャデバイスの一覧を取得する `EnumV4L2CaptureDevices()` 関数を追加
+  - `FormatV4L2Devices()` にこのデバイス一覧を渡すと出力可能な文字列にできる
+  - @melpon
+- [ADD] Linux 環境で `--list-devices` オプションを追加
+  - 利用可能なビデオデバイスの一覧を表示する機能
+  - カメラごとにグループ化して表示
+  - 各デバイスのサポートフォーマット、解像度、フレームレートを詳細表示
+  - @voluntas
+- [UPDATE] V4L2 ビデオキャプチャの探索方法を改善
+  - `/sys/class/video4linux` 経由で全ビデオデバイスを探索するように変更
+  - `/dev/video64` 以降の番号のデバイスにも対応
+  - フォーマットをサポートするデバイスのみを使用するようにフィルタリング
+  - デバイスの数値順ソート処理を追加
+  - @voluntas
 
 ### misc
 
