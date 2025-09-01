@@ -205,7 +205,7 @@ void AyameClient::CreatePeerConnection() {
 
   rtc_config.servers = ice_servers_;
   connection_ = manager_->CreateConnection(rtc_config, this);
-  manager_->InitTracks(connection_.get());
+  manager_->InitTracks(connection_.get(), config_.direction);
 
   // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
   SetCodecPreferences();
