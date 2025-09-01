@@ -13,7 +13,12 @@ fi
 
 source_dir=$1
 
-find . -mindepth 2 -type f | while read file; do
+INCLUDE_FILES=$(find include -type f)
+SRC_FILES=$(find src -type f)
+
+ALL_FILES=$(echo -e "$INCLUDE_FILES\n$SRC_FILES" | sort)
+
+echo "$ALL_FILES" | while read file; do
   if [ ! -f "$source_dir/$file" ]; then
     continue
   fi
