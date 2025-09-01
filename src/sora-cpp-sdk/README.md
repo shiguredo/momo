@@ -2,8 +2,7 @@
 
 ## 前提
 
-LAST_UPDATED に記載されている LAST_UPDATED_MOMO と LAST_UPDATED_SORA_CPP_SDK が、お互いに最後に同期する **直前の** のコミットハッシュであること。
-git diff を使う関係上、`(last_updated, current]` という範囲になるため、同期したソースをコミットする前のコミットハッシュにする必要がある。
+LAST_UPDATED に記載されている LAST_UPDATED_MOMO と LAST_UPDATED_SORA_CPP_SDK が、お互いに最後に同期した時のコミットハッシュであること。
 
 ## スクリプト
 
@@ -29,5 +28,5 @@ git diff を使う関係上、`(last_updated, current]` という範囲になる
     1. Sora C++ SDK に移動して `../momo/sora-cpp-sdk/diff-sora-cpp-sdk.sh | patch -p1` でパッチを適用する
     2. コンフリクトが起きたら修正する
     3. `../momo/sora-cpp-sdk/copy-to-sora-cpp-sdk.sh .` を実行して Momo にもソースを反映する
-4. Momo と Sora C++ SDK の現在のコミットハッシュを LAST_UPDATED にメモしておく（`git rev-parse HEAD` すれば分かる）
-5. Momo と Sora C++ SDK をコミットする
+4. Momo と Sora C++ SDK をコミットする
+5. Momo と Sora C++ SDK の現在のコミットハッシュを `LAST_UPDATED` に書き込んで再度コミットする（`git rev-parse HEAD` すれば分かる）
