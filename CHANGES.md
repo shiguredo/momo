@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] Ayame モードに `--direction` オプションを追加
+  - `sendrecv`（デフォルト）、`sendonly`、`recvonly` の 3 種類の送受信方向を指定可能
+  - WebRTC の RTCRtpTransceiver の direction プロパティを制御
+  - 配信用途や視聴用途での利用を想定
+  - @voluntas
 - [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
   - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
   - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能

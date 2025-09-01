@@ -85,6 +85,7 @@ class Momo:
         room_id: str | None = None,
         client_id: str | None = None,
         signaling_key: str | None = None,
+        direction: Literal["sendrecv", "sendonly", "recvonly"] | None = None,
         ayame_video_codec_type: Literal["VP8", "VP9", "AV1", "H264", "H265"] | None = None,
         ayame_audio_codec_type: Literal["OPUS", "PCMU", "PCMA"] | None = None,
         # === sora モード固有 ===
@@ -195,6 +196,7 @@ class Momo:
             "room_id": room_id,
             "client_id": client_id,
             "signaling_key": signaling_key,
+            "direction": direction,
             "ayame_video_codec_type": ayame_video_codec_type,
             "ayame_audio_codec_type": ayame_audio_codec_type,
             "signaling_urls": signaling_urls,
@@ -493,6 +495,8 @@ class Momo:
                 args.extend(["--client-id", kwargs["client_id"]])
             if kwargs.get("signaling_key"):
                 args.extend(["--signaling-key", kwargs["signaling_key"]])
+            if kwargs.get("direction"):
+                args.extend(["--direction", kwargs["direction"]])
             if kwargs.get("ayame_video_codec_type"):
                 args.extend(["--video-codec-type", kwargs["ayame_video_codec_type"]])
             if kwargs.get("ayame_audio_codec_type"):
@@ -570,6 +574,7 @@ class Momo:
             "room_id",
             "client_id",
             "signaling_key",
+            "direction",
             "ayame_video_codec_type",
             "ayame_audio_codec_type",
         }

@@ -1,7 +1,20 @@
 name: e2e-test-workflow
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'develop'
+      - 'feature/**'
+    paths:
+      - 'test/**'
+      - '.github/workflows/e2e-test.yml'
+  schedule:
+    # JST 14:00-16:30 の間、30分ごとに実行
+    # UTC 05:00-07:30 (JST 14:00-16:30)
+    # 1-5 で 月曜日から金曜日
+    - cron: "0,30 5-7 * * 1-5"  # UTC 05:00-07:30 (JST 14:00-16:30)
+
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
@@ -30,10 +43,11 @@ jobs:
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
       
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-binary
         with:
           platform: ${{ matrix.package }}
-
+          github-token: ${{ github.token }}
+      
       - name: Cache OpenH264
         id: cache-openh264
         uses: actions/cache@v4
@@ -50,7 +64,7 @@ jobs:
 
       - name: Setup OpenH264 environment
         run: echo "OPENH264_PATH=${{ github.workspace }}/libopenh264.so" >> $GITHUB_ENV
-
+      
       - uses: astral-sh/setup-uv@v6
       
       - name: Run E2E tests
@@ -67,10 +81,11 @@ jobs:
       - uses: actions/checkout@v5
       
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-binary
         with:
           platform: macos_arm64
-
+          github-token: ${{ github.token }}
+      
       - uses: astral-sh/setup-uv@v6
       
       - name: Run E2E tests
@@ -79,28 +94,44 @@ jobs:
           uv run pytest -v
         working-directory: ./test
 
-  e2e-test-ubuntu-haw:
+  e2e-test-hwa:
     strategy:
       matrix:
         include:
+          - name: Apple Video Toolbox
+            runner_labels: '["self-hosted", "macOS", "ARM64", "Apple-M2-Pro"]'
+            test_file: test_sora_mode_apple_video_toolbox.py
+            platform: macos_arm64
+            env_vars: |
+              APPLE_VIDEO_TOOLBOX=true
           - name: Intel VPL
             runner_labels: '["self-hosted", "linux", "x64", "Intel-VPL"]'
             test_file: test_sora_mode_intel_vpl.py
+            platform: ubuntu-24.04_x86_64
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
           - name: NVIDIA Video Codec SDK
             runner_labels: '["self-hosted", "linux", "x64", "NVIDIA-Video-Codec-SDK"]'
             test_file: test_sora_mode_nvidia_video_codec_sdk.py
+            platform: ubuntu-24.04_x86_64
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
-    name: E2E Test ubuntu-24.04_x86_64 ${{ matrix.name }}
+    name: E2E Test HWA ${{ matrix.name }}
     runs-on:
       group: Self
       labels: ${{ fromJSON(matrix.runner_labels) }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+      
+      - name: Setup Homebrew
+        if: startsWith(matrix.platform, 'macos')
+        uses: Homebrew/actions/setup-homebrew@master
+      
+      - name: Install GitHub CLI
+        if: startsWith(matrix.platform, 'macos')
+        run: brew install gh
       
       - name: Set environment variables
         run: |
@@ -111,10 +142,11 @@ jobs:
           done
       
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-binary
         with:
-          platform: ubuntu-24.04_x86_64
-
+          platform: ${{ matrix.platform }}
+          github-token: ${{ github.token }}
+      
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: false

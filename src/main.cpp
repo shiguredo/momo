@@ -401,6 +401,7 @@ int main(int argc, char* argv[]) {
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;
       config.signaling_key = args.ayame_signaling_key;
+      config.direction = args.ayame_direction;
       config.video_codec_type = args.ayame_video_codec_type;
       config.audio_codec_type = args.ayame_audio_codec_type;
 

@@ -455,7 +455,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
 
         // simulcast では offer の setRemoteDescription が終わった後に
         // トラックを追加する必要があるため、ここで初期化する
-        self->manager_->InitTracks(self->connection_.get());
+        self->manager_->InitTracks(self->connection_.get(), std::nullopt);
 
         if (self->config_.simulcast &&
             json_message.as_object().count("encodings") != 0) {
