@@ -94,35 +94,114 @@ std::optional<std::vector<V4L2Device>> EnumV4L2CaptureDevices() {
       frmsize.pixel_format = fmt.pixelformat;
 
       while (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) == 0) {
-        if (frmsize.type != V4L2_FRMSIZE_TYPE_DISCRETE) {
-          frmsize.index++;
-          continue;
-        }
-        V4L2DiscreteFrameSize frame_size;
+        V4L2FrameSize frame_size;
         frame_size.index = frmsize.index;
-        frame_size.width = frmsize.discrete.width;
-        frame_size.height = frmsize.discrete.height;
+
+        if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+          frame_size.type = V4L2FrameSizeType::DISCRETE;
+          frame_size.width = frmsize.discrete.width;
+          frame_size.height = frmsize.discrete.height;
+        } else if (frmsize.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+          frame_size.type = V4L2FrameSizeType::STEPWISE;
+          frame_size.min_width = frmsize.stepwise.min_width;
+          frame_size.max_width = frmsize.stepwise.max_width;
+          frame_size.step_width = frmsize.stepwise.step_width;
+          frame_size.min_height = frmsize.stepwise.min_height;
+          frame_size.max_height = frmsize.stepwise.max_height;
+          frame_size.step_height = frmsize.stepwise.step_height;
+        } else if (frmsize.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
+          frame_size.type = V4L2FrameSizeType::CONTINUOUS;
+          frame_size.min_width = frmsize.stepwise.min_width;
+          frame_size.max_width = frmsize.stepwise.max_width;
+          frame_size.step_width = 1;
+          frame_size.min_height = frmsize.stepwise.min_height;
+          frame_size.max_height = frmsize.stepwise.max_height;
+          frame_size.step_height = 1;
+        }
 
         // 各フォーマットの各解像度がサポートしているフレームレートの列挙
-        struct v4l2_frmivalenum frmival;
-        memset(&frmival, 0, sizeof(frmival));
-        frmival.index = 0;
-        frmival.pixel_format = fmt.pixelformat;
-        frmival.width = frmsize.discrete.width;
-        frmival.height = frmsize.discrete.height;
+        auto enum_intervals = [&](int w, int h,
+                                  V4L2IntervalsAtSize& dst) {
+          struct v4l2_frmivalenum frmival;
+          memset(&frmival, 0, sizeof(frmival));
+          frmival.index = 0;
+          frmival.pixel_format = fmt.pixelformat;
+          frmival.width = static_cast<uint32_t>(w);
+          frmival.height = static_cast<uint32_t>(h);
 
-        while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0) {
-          if (frmival.type != V4L2_FRMIVAL_TYPE_DISCRETE) {
-            frmival.index++;
-            continue;
+          if (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) != 0) {
+            return;  // 取得不可
           }
-          V4L2DiscreteInterval interval;
-          interval.index = frmival.index;
-          interval.numerator = frmival.discrete.numerator;
-          interval.denominator = frmival.discrete.denominator;
-          frame_size.intervals.push_back(interval);
-          frmival.index++;
+
+          if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+            do {
+              V4L2FrameInterval interval;
+              interval.index = frmival.index;
+              interval.type = V4L2FrameIntervalType::DISCRETE;
+              interval.numerator = frmival.discrete.numerator;
+              interval.denominator = frmival.discrete.denominator;
+              dst.intervals.push_back(interval);
+              frmival.index++;
+            } while (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) == 0 &&
+                     frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE);
+          } else if (frmival.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
+            V4L2FrameInterval interval;
+            interval.index = 0;
+            interval.type = V4L2FrameIntervalType::STEPWISE;
+            interval.min_numerator = frmival.stepwise.min.numerator;
+            interval.min_denominator = frmival.stepwise.min.denominator;
+            interval.max_numerator = frmival.stepwise.max.numerator;
+            interval.max_denominator = frmival.stepwise.max.denominator;
+            interval.step_numerator = frmival.stepwise.step.numerator;
+            interval.step_denominator = frmival.stepwise.step.denominator;
+            dst.intervals.push_back(interval);
+          } else if (frmival.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
+            V4L2FrameInterval interval;
+            interval.index = 0;
+            interval.type = V4L2FrameIntervalType::CONTINUOUS;
+            interval.min_numerator = frmival.stepwise.min.numerator;
+            interval.min_denominator = frmival.stepwise.min.denominator;
+            interval.max_numerator = frmival.stepwise.max.numerator;
+            interval.max_denominator = frmival.stepwise.max.denominator;
+            interval.step_numerator = 1;
+            interval.step_denominator = 1;
+            dst.intervals.push_back(interval);
+          }
+        };
+
+        // DISCRETE は 1 種のみ、範囲は min/mid/max の 3 種
+        if (frame_size.type == V4L2FrameSizeType::DISCRETE) {
+          V4L2IntervalsAtSize at;
+          at.point = V4L2SizePoint::MIN;  // 意味的には唯一のサイズ
+          at.width = frame_size.width;
+          at.height = frame_size.height;
+          enum_intervals(at.width, at.height, at);
+          // 既存との互換のため intervals も埋める
+          frame_size.intervals = at.intervals;
+        } else {
+          auto min_w = frame_size.min_width;
+          auto max_w = frame_size.max_width;
+          auto step_w = std::max(1, frame_size.step_width);
+          auto min_h = frame_size.min_height;
+          auto max_h = frame_size.max_height;
+          auto step_h = std::max(1, frame_size.step_height);
+
+          auto mid_w = min_w + ((max_w - min_w) / 2 / step_w) * step_w;
+          auto mid_h = min_h + ((max_h - min_h) / 2 / step_h) * step_h;
+
+          V4L2IntervalsAtSize at_min{V4L2SizePoint::MIN, min_w, min_h, {}};
+          enum_intervals(at_min.width, at_min.height, at_min);
+          frame_size.intervals_at_sizes.push_back(at_min);
+
+          V4L2IntervalsAtSize at_mid{V4L2SizePoint::MID, mid_w, mid_h, {}};
+          enum_intervals(at_mid.width, at_mid.height, at_mid);
+          frame_size.intervals_at_sizes.push_back(at_mid);
+
+          V4L2IntervalsAtSize at_max{V4L2SizePoint::MAX, max_w, max_h, {}};
+          enum_intervals(at_max.width, at_max.height, at_max);
+          frame_size.intervals_at_sizes.push_back(at_max);
         }
+
         format_desc.frame_sizes.push_back(frame_size);
         frmsize.index++;
       }
@@ -170,30 +249,95 @@ std::string FormatV4L2FormatDescription(
      << webrtc::GetFourccName(format_desc.pixel_format) << " ("
      << format_desc.description << ")\n";
   for (const auto& frame_size : format_desc.frame_sizes) {
-    ss << FormatV4L2DiscreteFrameSize(frame_size, indent + 2);
+    ss << FormatV4L2FrameSize(frame_size, indent + 2);
   }
   return ss.str();
 }
-std::string FormatV4L2DiscreteFrameSize(const V4L2DiscreteFrameSize& frame_size,
-                                        int indent) {
+std::string FormatV4L2FrameSize(const V4L2FrameSize& frame_size, int indent) {
   std::string indent_str(indent, ' ');
   std::stringstream ss;
-  ss << indent_str << frame_size.width << "x" << frame_size.height;
+  if (frame_size.type == V4L2FrameSizeType::DISCRETE) {
+    ss << indent_str << frame_size.width << "x" << frame_size.height;
+  } else {
+    // RANGE 表現
+    auto step_w = frame_size.step_width;
+    auto step_h = frame_size.step_height;
+    ss << indent_str << "W[" << frame_size.min_width << ":" << frame_size.max_width
+       << ":" << (step_w == 0 ? 1 : step_w) << "] x H[" << frame_size.min_height
+       << ":" << frame_size.max_height << ":" << (step_h == 0 ? 1 : step_h)
+       << "]";
+  }
 
-  ss << " (";
-  bool first = true;
-  for (const auto& interval : frame_size.intervals) {
-    if (!first) {
-      ss << ", ";
-    }
-    first = false;
-    if (interval.numerator == 1) {
-      ss << interval.denominator << " fps";
+  if (!frame_size.intervals.empty()) {
+    ss << " (";
+    // 代表して 1 つ目の type を見て体裁を変える
+    if (frame_size.intervals[0].type == V4L2FrameIntervalType::DISCRETE) {
+      bool first = true;
+      for (const auto& interval : frame_size.intervals) {
+        if (!first) ss << ", ";
+        first = false;
+        if (interval.numerator == 1) {
+          ss << interval.denominator << " fps";
+        } else {
+          ss << interval.denominator << "/" << interval.numerator << " fps";
+        }
+      }
     } else {
-      ss << interval.denominator << "/" << interval.numerator << " fps";
+      const auto& iv = frame_size.intervals[0];
+      // 区間表示: fps は denominator/numerator
+      // 便宜的に min/max の分数を表示
+      ss << "fps min=" << iv.max_denominator << "/" << iv.max_numerator
+         << ", max=" << iv.min_denominator << "/" << iv.min_numerator;
+      if (iv.type == V4L2FrameIntervalType::STEPWISE) {
+        ss << ", step=" << iv.step_denominator << "/" << iv.step_numerator;
+      }
+    }
+    ss << ")";
+  }
+  ss << "\n";
+
+  // 範囲サイズは代表サイズごとのフレームレートも表示
+  if (!frame_size.intervals_at_sizes.empty()) {
+    for (const auto& at : frame_size.intervals_at_sizes) {
+      ss << FormatV4L2IntervalsAtSize(at, indent + 2);
     }
   }
-  ss << ")\n";
+
+  return ss.str();
+}
+
+std::string FormatV4L2IntervalsAtSize(const V4L2IntervalsAtSize& at,
+                                      int indent) {
+  std::string indent_str(indent, ' ');
+  std::stringstream ss;
+  const char* name = at.point == V4L2SizePoint::MIN
+                         ? "min"
+                         : (at.point == V4L2SizePoint::MID ? "mid" : "max");
+  ss << indent_str << "[" << name << "] " << at.width << "x" << at.height;
+  if (!at.intervals.empty()) {
+    ss << " (";
+    if (at.intervals[0].type == V4L2FrameIntervalType::DISCRETE) {
+      bool first = true;
+      for (const auto& iv : at.intervals) {
+        if (!first) ss << ", ";
+        first = false;
+        if (iv.numerator == 1) {
+          ss << iv.denominator << " fps";
+        } else {
+          ss << iv.denominator << "/" << iv.numerator << " fps";
+        }
+      }
+    } else {
+      const auto& iv = at.intervals[0];
+      ss << "fps min=" << iv.max_denominator << "/" << iv.max_numerator
+         << ", max=" << iv.min_denominator << "/" << iv.min_numerator;
+      if (iv.type == V4L2FrameIntervalType::STEPWISE) {
+        ss << ", step=" << iv.step_denominator << "/" << iv.step_numerator;
+      }
+    }
+    ss << ")";
+  }
+  ss << "\n";
   return ss.str();
 }
 
