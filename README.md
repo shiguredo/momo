@@ -130,17 +130,6 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - Raspberry Pi 2 Model B v1.2
   - Raspberry Pi Zero 2 W
 
-### 対応終了
-
-**優先実装にて対応することができます**
-
-- macOS x86_64
-- Ubuntu 20.04 ARMv8 (NVIDIA Jetson JetPack 5)
-  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-- Raspberry Pi OS (32bit)
-
 ## 使ってみる
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
