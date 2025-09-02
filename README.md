@@ -51,6 +51,12 @@ Momo は Momo 自体がシグナリングサーバーを持っているため、
 
 Momo は WebRTC Signaling サーバーである Ayame に対応したモードがあり、 Momo 同士での利用もできます。
 
+### Raspberry Pi の libcamera に対応
+
+[raspberrypi/libcamera](https://github.com/raspberrypi/libcamera) に対応しています。
+
+詳細は [LIBCAMERA.md](doc/LIBCAMERA.md) をご確認ください。
+
 ### 120 fps 対応
 
 Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用することで 120 fps の配信が利用できます。
