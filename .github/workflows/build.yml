@@ -71,6 +71,8 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
   build-macos:
+    # Windows の fake-capture-device デバッグ中は一時的にスキップ
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -97,6 +99,8 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
   build-ubuntu:
+    # Windows の fake-capture-device デバッグ中は一時的にスキップ
+    if: false
     strategy:
       fail-fast: false
       matrix:
