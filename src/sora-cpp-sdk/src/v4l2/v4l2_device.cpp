@@ -1,9 +1,15 @@
 #include "sora/v4l2/v4l2_device.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstddef>
+#include <cstdio>
+#include <cstring>
 #include <iostream>
-#include <map>
+#include <optional>
 #include <sstream>
+#include <string>
+#include <vector>
 
 // linux
 #include <dirent.h>
