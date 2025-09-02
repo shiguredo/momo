@@ -11,45 +11,6 @@
 
 ## develop
 
-- [ADD] Ayame モードに `--direction` オプションを追加
-  - `sendrecv`（デフォルト）、`sendonly`、`recvonly` の 3 種類の送受信方向を指定可能
-  - WebRTC の RTCRtpTransceiver の direction プロパティを制御
-  - 配信用途や視聴用途での利用を想定
-  - @voluntas
-- [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
-  - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
-  - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能
-- [CHANGE] test モードを p2p モードに名前変更
-  - コマンドラインオプションを `test` から `p2p` に変更
-  - HTML ファイル名を `test.html` から `p2p.html` に変更
-  - ドキュメントファイル名を `USE_TEST.md` から `USE_P2P.md` に変更
-  - @voluntas
-- [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
-  - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
-  - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
-  - @voluntas
-- [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
-  - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
-  - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
-  - 例: 120fps の場合は 2400 フレームごとにキーフレームが生成される
-  - @voluntas
-- [ADD] `--force-nv12` オプションを追加
-  - V4L2 キャプチャーで NV12 フォーマットの使用を強制
-  - NV12 が利用できない場合はエラーで停止
-  - NV12 フォーマットは変換せずそのまま使用
-  - @voluntas
-- [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
-  - @melpon
-- [ADD] `--force-yuy2` オプションを追加
-  - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
-  - YUY2 が利用できない場合はエラーで停止
-  - @melpon @voluntas
-- [CHANGE] `--force-i420` オプションの挙動を変更
-  - I420 が利用できない場合はフォールバックせずエラーで停止するように
-  - @melpon @voluntas
-- [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
-  - 高フレームレートカメラのサポートを改善
-  - @voluntas
 - [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
   - @voluntas
 - [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
@@ -82,6 +43,29 @@
   - ビルド設定の修正:
     - Windows: Game Input API を無効化し、静的ランタイムライブラリ（/MT）を使用
     - Linux クロスコンパイル: X11/Wayland チェックをスキップするため `SDL_UNIX_CONSOLE_BUILD=ON` を追加
+  - @voluntas
+- [CHANGE] YUY2 は V4L2 で NV12 に変換するようにする
+  - @melpon
+- [CHANGE] test モードを p2p モードに名前変更
+  - コマンドラインオプションを `test` から `p2p` に変更
+  - HTML ファイル名を `test.html` から `p2p.html` に変更
+  - ドキュメントファイル名を `USE_TEST.md` から `USE_P2P.md` に変更
+  - @voluntas
+- [UPDATE] blend2d のダウンロード先を時雨堂ミラーに変更し SHA256 ハッシュチェックを追加
+  - ダウンロード URL を <https://oss-mirrors.shiguredo.jp/> に変更
+  - boost と同様にダウンロード時の SHA256 ハッシュチェック機能を実装
+  - @voluntas
+- [UPDATE] V4L2 ビデオキャプチャの探索方法を改善
+  - `/sys/class/video4linux` 経由で全ビデオデバイスを探索するように変更
+  - `/dev/video64` 以降の番号のデバイスにも対応
+  - フォーマットをサポートするデバイスのみを使用するようにフィルタリング
+  - デバイスの数値順ソート処理を追加
+  - @voluntas
+- [CHANGE] `--force-i420` オプションの挙動を変更
+  - I420 が利用できない場合はフォールバックせずエラーで停止するように
+  - @melpon @voluntas
+- [UPDATE] フレームレートの最大値を 60fps から 120fps に引き上げる
+  - 高フレームレートカメラのサポートを改善
   - @voluntas
 - [UPDATE] WebRTC を m138.7204.0.4 に上げる
   - アップデートに伴い、nvcodec_video_encoder.cpp に `video_frame.h` のインクルードを追加
@@ -125,6 +109,36 @@
   - AfMode, AfRange, AfSpeed などの enum 型コントロールに対応
   - 文字列ベースでコントロールを設定できる API を実装
   - @voluntas
+- [ADD] Ayame モードに `--direction` オプションを追加
+  - `sendrecv`（デフォルト）、`sendonly`、`recvonly` の 3 種類の送受信方向を指定可能
+  - WebRTC の RTCRtpTransceiver の direction プロパティを制御
+  - 配信用途や視聴用途での利用を想定
+  - @voluntas
+- [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
+  - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
+  - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能
+- [ADD] Intel VPL エンコーダーのキーフレーム間隔設定を追加
+  - GopPicSize にフレームレート × 20 を設定し、20 秒間隔でキーフレームを生成
+  - IdrInterval を 0 に設定し、すべての I フレームを IDR フレームにする
+  - 例: 120fps の場合は 2400 フレームごとにキーフレームが生成される
+  - @voluntas
+- [ADD] `--force-nv12` オプションを追加
+  - V4L2 キャプチャーで NV12 フォーマットの使用を強制
+  - NV12 が利用できない場合はエラーで停止
+  - NV12 フォーマットは変換せずそのまま使用
+  - @voluntas
+- [ADD] `--force-yuy2` オプションを追加
+  - V4L2 キャプチャーで YUY2 フォーマットの使用を強制
+  - YUY2 が利用できない場合はエラーで停止
+  - @melpon @voluntas
+- [ADD] V4L2 ビデオキャプチャデバイスの一覧を取得する `EnumV4L2CaptureDevices()` 関数を追加
+  - `FormatV4L2Devices()` にこのデバイス一覧を渡すと出力可能な文字列にできる
+  - @melpon
+- [ADD] Linux 環境で `--list-devices` オプションを追加
+  - 利用可能なビデオデバイスの一覧を表示する機能
+  - カメラごとにグループ化して表示
+  - 各デバイスのサポートフォーマット、解像度、フレームレートを詳細表示
+  - @voluntas
 - [FIX] macOS ビルド時の SDL3 ライブラリのバージョン不一致警告を修正
   - SDL3 ビルド時に CMAKE_OSX_DEPLOYMENT_TARGET を WebRTC と同じ値に設定
   - SDL3 が macOS 15.0 でビルドされ、Momo が macOS 12.0 をターゲットにしていたことによる警告を解消
@@ -136,20 +150,6 @@
 - [FIX] Intel VPL の AV1 エンコーダーで Dependency Descriptor RTP ヘッダー拡張が出ない問題を修正
   - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
   - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
-  - @voluntas
-- [ADD] V4L2 ビデオキャプチャデバイスの一覧を取得する `EnumV4L2CaptureDevices()` 関数を追加
-  - `FormatV4L2Devices()` にこのデバイス一覧を渡すと出力可能な文字列にできる
-  - @melpon
-- [ADD] Linux 環境で `--list-devices` オプションを追加
-  - 利用可能なビデオデバイスの一覧を表示する機能
-  - カメラごとにグループ化して表示
-  - 各デバイスのサポートフォーマット、解像度、フレームレートを詳細表示
-  - @voluntas
-- [UPDATE] V4L2 ビデオキャプチャの探索方法を改善
-  - `/sys/class/video4linux` 経由で全ビデオデバイスを探索するように変更
-  - `/dev/video64` 以降の番号のデバイスにも対応
-  - フォーマットをサポートするデバイスのみを使用するようにフィルタリング
-  - デバイスの数値順ソート処理を追加
   - @voluntas
 
 ### misc
