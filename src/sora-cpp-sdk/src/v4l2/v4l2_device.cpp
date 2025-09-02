@@ -130,7 +130,56 @@ std::optional<std::vector<V4L2Device>> EnumV4L2CaptureDevices() {
           frmival.height = static_cast<uint32_t>(h);
 
           if (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) != 0) {
-            return;  // 取得不可
+            int saved_errno = errno;
+            // 一部ドライバは ENUM_FRAMEINTERVALS を未実装のため、
+            // VIDIOC_G_PARM から timeperframe を取得してフォールバック表示する
+            std::cerr << "VIDIOC_ENUM_FRAMEINTERVALS failed: "
+                      << strerror(saved_errno) << " (" << saved_errno
+                      << ") for format="
+                      << webrtc::GetFourccName(fmt.pixelformat) << ", size="
+                      << w << "x" << h << ". Trying fallback via VIDIOC_G_PARM."
+                      << std::endl;
+            struct v4l2_format tryfmt;
+            memset(&tryfmt, 0, sizeof(tryfmt));
+            tryfmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            tryfmt.fmt.pix.width = static_cast<uint32_t>(w);
+            tryfmt.fmt.pix.height = static_cast<uint32_t>(h);
+            tryfmt.fmt.pix.pixelformat = fmt.pixelformat;
+            (void)ioctl(fd, VIDIOC_TRY_FMT, &tryfmt);  // 成否は問わない
+
+            struct v4l2_streamparm parm;
+            memset(&parm, 0, sizeof(parm));
+            parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            if (ioctl(fd, VIDIOC_G_PARM, &parm) == 0) {
+              // capability に V4L2_CAP_TIMEPERFRAME が立っていれば有効
+              if (parm.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
+                V4L2FrameInterval iv;
+                iv.index = 0;
+                iv.type = V4L2FrameIntervalType::DISCRETE;
+                iv.numerator = parm.parm.capture.timeperframe.numerator;
+                iv.denominator = parm.parm.capture.timeperframe.denominator;
+                if (iv.numerator > 0 && iv.denominator > 0) {
+                  dst.intervals.push_back(iv);
+                }
+              } else {
+                std::cerr << "VIDIOC_G_PARM returned without V4L2_CAP_TIMEPERFRAME"
+                          << ", format="
+                          << webrtc::GetFourccName(fmt.pixelformat)
+                          << ", size=" << w << "x" << h << std::endl;
+              }
+            } else {
+              int e2 = errno;
+              std::cerr << "VIDIOC_G_PARM failed: " << strerror(e2) << " (" << e2
+                        << ") for format="
+                        << webrtc::GetFourccName(fmt.pixelformat)
+                        << ", size=" << w << "x" << h << std::endl;
+            }
+            if (dst.intervals.empty()) {
+              std::cerr << "Could not obtain frame intervals (fps) even with fallback"
+                        << ", format=" << webrtc::GetFourccName(fmt.pixelformat)
+                        << ", size=" << w << "x" << h << std::endl;
+            }
+            return;  // フォールバックの有無にかかわらず終了
           }
 
           if (frmival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
