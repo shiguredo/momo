@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <numbers>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -148,14 +149,14 @@ void FakeVideoCapturer::DrawAnimations(
   int fps = config_.fps;
 
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
-  ctx.rotate(-M_PI / 2);
+  ctx.rotate(-std::numbers::pi / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.3, width * 0.3, 0, 2 * M_PI);  // 大きくする
+  ctx.fillPie(0, 0, width * 0.3, width * 0.3, 0, 2 * std::numbers::pi);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
   uint32_t current_frame = frame_counter_;
   ctx.fillPie(0, 0, width * 0.3, width * 0.3, 0,
-              (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
+              (current_frame % fps) / static_cast<float>(fps) * 2 * std::numbers::pi);
 
   // 円が一周したときにビープ音を鳴らす
   auto fake_audio_capturer = GetAudioCapturer();
@@ -181,7 +182,7 @@ void FakeVideoCapturer::DrawBoxes(
     uint32_t current_frame = frame_counter_;
     double phase = (current_frame + i * 20) % 100 / 100.0;
     double x = phase * (width - box_size);
-    double y = height * 0.5 + sin(phase * M_PI * 2) * height * 0.2;
+    double y = height * 0.5 + sin(phase * std::numbers::pi * 2) * height * 0.2;
 
     // 各ボックスに異なる色を設定
     uint32_t color = 0xFF000000;
