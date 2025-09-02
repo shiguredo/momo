@@ -126,8 +126,21 @@ std::optional<std::vector<V4L2Device>> EnumV4L2CaptureDevices() {
           memset(&frmival, 0, sizeof(frmival));
           frmival.index = 0;
           frmival.pixel_format = fmt.pixelformat;
-          frmival.width = static_cast<uint32_t>(w);
-          frmival.height = static_cast<uint32_t>(h);
+          // まず TRY_FMT でデバイスが受け付けるサイズに丸める
+          struct v4l2_format tryfmt;
+          memset(&tryfmt, 0, sizeof(tryfmt));
+          tryfmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+          tryfmt.fmt.pix.width = static_cast<uint32_t>(w);
+          tryfmt.fmt.pix.height = static_cast<uint32_t>(h);
+          tryfmt.fmt.pix.pixelformat = fmt.pixelformat;
+          bool try_ok = (ioctl(fd, VIDIOC_TRY_FMT, &tryfmt) == 0);
+          uint32_t used_w = try_ok ? tryfmt.fmt.pix.width : static_cast<uint32_t>(w);
+          uint32_t used_h = try_ok ? tryfmt.fmt.pix.height : static_cast<uint32_t>(h);
+          frmival.width = used_w;
+          frmival.height = used_h;
+          // 表示用にも調整後サイズを反映
+          dst.width = used_w;
+          dst.height = used_h;
 
           if (ioctl(fd, VIDIOC_ENUM_FRAMEINTERVALS, &frmival) != 0) {
             int saved_errno = errno;
@@ -137,16 +150,14 @@ std::optional<std::vector<V4L2Device>> EnumV4L2CaptureDevices() {
                       << strerror(saved_errno) << " (" << saved_errno
                       << ") for format="
                       << webrtc::GetFourccName(fmt.pixelformat) << ", size="
-                      << w << "x" << h << ". Trying fallback via VIDIOC_G_PARM."
+                      << w << "x" << h
+                      << (try_ok && (used_w != (uint32_t)w || used_h != (uint32_t)h)
+                              ? (std::string(" (adjusted to ") +
+                                 std::to_string(used_w) + "x" +
+                                 std::to_string(used_h) + ")")
+                              : std::string())
+                      << ". Trying fallback via VIDIOC_G_PARM."
                       << std::endl;
-            struct v4l2_format tryfmt;
-            memset(&tryfmt, 0, sizeof(tryfmt));
-            tryfmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            tryfmt.fmt.pix.width = static_cast<uint32_t>(w);
-            tryfmt.fmt.pix.height = static_cast<uint32_t>(h);
-            tryfmt.fmt.pix.pixelformat = fmt.pixelformat;
-            (void)ioctl(fd, VIDIOC_TRY_FMT, &tryfmt);  // 成否は問わない
-
             struct v4l2_streamparm parm;
             memset(&parm, 0, sizeof(parm));
             parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -165,19 +176,19 @@ std::optional<std::vector<V4L2Device>> EnumV4L2CaptureDevices() {
                 std::cerr << "VIDIOC_G_PARM returned without V4L2_CAP_TIMEPERFRAME"
                           << ", format="
                           << webrtc::GetFourccName(fmt.pixelformat)
-                          << ", size=" << w << "x" << h << std::endl;
+                          << ", size=" << used_w << "x" << used_h << std::endl;
               }
             } else {
               int e2 = errno;
               std::cerr << "VIDIOC_G_PARM failed: " << strerror(e2) << " (" << e2
                         << ") for format="
                         << webrtc::GetFourccName(fmt.pixelformat)
-                        << ", size=" << w << "x" << h << std::endl;
+                        << ", size=" << used_w << "x" << used_h << std::endl;
             }
             if (dst.intervals.empty()) {
               std::cerr << "Could not obtain frame intervals (fps) even with fallback"
                         << ", format=" << webrtc::GetFourccName(fmt.pixelformat)
-                        << ", size=" << w << "x" << h << std::endl;
+                        << ", size=" << used_w << "x" << used_h << std::endl;
             }
             return;  // フォールバックの有無にかかわらず終了
           }
