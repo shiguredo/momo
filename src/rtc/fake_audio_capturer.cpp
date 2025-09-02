@@ -2,6 +2,11 @@
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
+// Windows で数学定数を有効化
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#endif
+
 #include <chrono>
 #include <cmath>
 

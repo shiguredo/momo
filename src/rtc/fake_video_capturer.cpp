@@ -2,6 +2,11 @@
 
 #if defined(USE_FAKE_CAPTURE_DEVICE)
 
+// Windows で数学定数を有効化
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#endif
+
 #include <chrono>
 #include <cmath>
 #include <cstring>
@@ -145,11 +150,11 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
   ctx.rotate(-M_PI / 2);
   ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.3, 0, 2 * M_PI);  // 大きくする
+  ctx.fillPie(0, 0, width * 0.3, width * 0.3, 0, 2 * M_PI);  // 大きくする
 
   ctx.setFillStyle(BLRgba32(160, 160, 160));
   uint32_t current_frame = frame_counter_;
-  ctx.fillPie(0, 0, width * 0.3, 0,
+  ctx.fillPie(0, 0, width * 0.3, width * 0.3, 0,
               (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
 
   // 円が一周したときにビープ音を鳴らす
