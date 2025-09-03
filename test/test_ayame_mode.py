@@ -318,29 +318,25 @@ def test_ayame_mode_direction_sendonly_recvonly(port_allocator):
                 sender_video_out := find_stats(sender_data, type="outbound-rtp", kind="video")
             ) is not None, "Sender should have video outbound-rtp"
             assert sender_video_out.get("packetsSent", 0) > 0
-            
+
             # sendonly は受信しない
-            assert (
-                find_stats(sender_data, type="inbound-rtp", kind="video")
-            ) is None, "Sender should NOT have video inbound-rtp"
+            assert (find_stats(sender_data, type="inbound-rtp", kind="video")) is None, (
+                "Sender should NOT have video inbound-rtp"
+            )
 
             # recvonly は受信のみ（inbound-rtp はあるが outbound-rtp はない）
             assert (
                 receiver_video_in := find_stats(receiver_data, type="inbound-rtp", kind="video")
             ) is not None, "Receiver should have video inbound-rtp"
             assert receiver_video_in.get("packetsReceived", 0) > 0
-            
-            # recvonly は送信しない
-            assert (
-                find_stats(receiver_data, type="outbound-rtp", kind="video")
-            ) is None, "Receiver should NOT have video outbound-rtp"
 
-            print(
-                f"Sender video - sent: {sender_video_out.get('packetsSent')}"
+            # recvonly は送信しない
+            assert (find_stats(receiver_data, type="outbound-rtp", kind="video")) is None, (
+                "Receiver should NOT have video outbound-rtp"
             )
-            print(
-                f"Receiver video - received: {receiver_video_in.get('packetsReceived')}"
-            )
+
+            print(f"Sender video - sent: {sender_video_out.get('packetsSent')}")
+            print(f"Receiver video - received: {receiver_video_in.get('packetsReceived')}")
 
 
 def test_ayame_mode_direction_sendrecv_default(free_port):
