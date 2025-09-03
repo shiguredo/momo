@@ -18,6 +18,7 @@ struct MomoArgs {
   bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;
+  bool list_devices = false;
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   bool fake_capture_device = false;
 #endif
@@ -85,6 +86,11 @@ struct MomoArgs {
   std::string ayame_room_id;
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
+  // sendrecv, sendonly, recvonly
+  std::string ayame_direction = "sendrecv";
+  // 空文字の場合コーデックは WebRTC デフォルトを使用
+  std::string ayame_video_codec_type = "";
+  std::string ayame_audio_codec_type = "";
 
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;

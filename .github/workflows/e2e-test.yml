@@ -1,74 +1,99 @@
 name: e2e-test-workflow
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'develop'
+      - 'feature/**'
+    paths:
+      - 'test/**'
+      - '.github/workflows/e2e-test.yml'
+  schedule:
+    # JST 14:00-16:30 の間、30分ごとに実行
+    # UTC 05:00-07:30 (JST 14:00-16:30)
+    # 1-5 で 月曜日から金曜日
+    - cron: "0,30 5-7 * * 1-5"  # UTC 05:00-07:30 (JST 14:00-16:30)
+
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
   TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_CHANNEL_ID_PREFIX }}
   TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+  OPENH264_VERSION: 2.6.0
 
 jobs:
-  e2e-test-ubuntu:
+  e2e-test:
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
-            package: ubuntu-22.04_x86_64
-          - os: ubuntu-24.04
-            package: ubuntu-24.04_x86_64
-    name: E2E Test ${{ matrix.package }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Install runtime dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
-      
-      - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
-        with:
-          platform: ${{ matrix.package }}
-
-      - uses: astral-sh/setup-uv@v6
-      
-      - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest -v
-        working-directory: ./test
-
-  e2e-test-ubuntu-self-hosted:
-    strategy:
-      matrix:
-        include:
+          # GitHub-hosted runners
+          - package: ubuntu-22.04_x86_64
+            runs_on: ubuntu-22.04
+          - package: ubuntu-24.04_x86_64
+            runs_on: ubuntu-24.04
+          - package: macos_arm64
+            runs_on: macos-15
+          # Windows サポート予定
+          #- package: windows_x86_64
+          #  runs_on: windows-2025
+          # Self-hosted runners for HWA tests
+          - name: Apple Video Toolbox
+            package: macos_arm64
+            runs_on:
+              group: Self
+              labels: [self-hosted, macOS, ARM64, Apple-M2-Pro]
+            test_target: test_sora_mode_apple_video_toolbox.py
+            env_vars: |
+              APPLE_VIDEO_TOOLBOX=true
           - name: Intel VPL
-            runner_labels: '["self-hosted", "linux", "x64", "Intel-VPL"]'
-            test_file: test_sora_mode_intel_vpl.py
+            package: ubuntu-24.04_x86_64
+            runs_on:
+              group: Self
+              labels: [self-hosted, linux, x64, Intel-VPL]
+            test_target: test_sora_mode_intel_vpl.py
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
           - name: NVIDIA Video Codec SDK
-            runner_labels: '["self-hosted", "linux", "x64", "NVIDIA-Video-Codec-SDK"]'
-            test_file: test_sora_mode_nvidia_video_codec_sdk.py
+            package: ubuntu-24.04_x86_64
+            runs_on:
+              group: Self
+              labels: [self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]
+            test_target: test_sora_mode_nvidia_video_codec_sdk.py
             env_vars: |
               NVIDIA_VIDEO_CODEC_SDK=true
           - name: AMD AMF
-            runner_labels: '["self-hosted", "linux", "x64", "AMD-AMF"]'
-            test_file: test_sora_mode_amd_amf.py
+            runner_labels: [self-hosted, linux, x64, AMD-AMF]
+            test_target: test_sora_mode_amd_amf.py
             env_vars: |
               AMD_AMF=true
-    name: E2E Test ubuntu-24.04_x86_64 ${{ matrix.name }}
-    runs-on:
-      group: Self
-      labels: ${{ fromJSON(matrix.runner_labels) }}
-    timeout-minutes: 15
+    name: E2E Test ${{ matrix.name || matrix.package }}
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       
+      # Homebrew のセットアップ (self-hosted macOS ランナー用)
+      - name: Setup Homebrew
+        if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
+        uses: Homebrew/actions/setup-homebrew@master
+      
+      # GitHub CLI のインストール (self-hosted macOS ランナー用)
+      - name: Install GitHub CLI
+        if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
+        run: brew install gh
+      
+      # ランタイム依存関係のインストール (GitHub-hosted Ubuntu のみ)
+      - name: Install runtime dependencies
+        if: ${{ runner.environment != 'self-hosted' && startsWith(matrix.package, 'ubuntu') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
+      
+      # 環境変数の設定 (HWA テスト用)
       - name: Set environment variables
+        if: matrix.env_vars
         run: |
           echo "${{ matrix.env_vars }}" | while read line; do
             if [ -n "$line" ]; then
@@ -76,17 +101,34 @@ jobs:
             fi
           done
       
+      # momo バイナリのダウンロード
       - name: Download and extract momo binary
-        uses: ./.github/actions/download-artifact
+        uses: ./.github/actions/download-binary
         with:
-          platform: ubuntu-24.04_x86_64
-
-      - uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: false
+          platform: ${{ matrix.package }}
+          github-token: ${{ github.token }}
       
-      - name: Run HW accelerated E2E tests
+      # OpenH264 のダウンロード (GitHub-hosted ランナーのみ)
+      - name: Download OpenH264
+        if: ${{ runner.environment != 'self-hosted' }}
+        uses: shiguredo/github-actions/.github/actions/download-openh264@main
+        id: openh264
+        with:
+          platform_name: ${{ matrix.package }}
+          openh264_version: ${{ env.OPENH264_VERSION }}
+          use-cache: true
+
+      # OpenH264 環境変数の設定 (GitHub-hosted ランナーのみ)
+      - name: Setup OpenH264 environment
+        if: ${{ runner.environment != 'self-hosted' && steps.openh264.outputs.openh264_path }}
+        run: echo "OPENH264_PATH=${{ steps.openh264.outputs.openh264_path }}" >> $GITHUB_ENV
+      
+      # UV のセットアップ
+      - uses: astral-sh/setup-uv@v6
+      
+      # E2E テストの実行
+      - name: Run E2E tests
         run: |
           uv sync
-          uv run pytest ${{ matrix.test_file }} -v
+          uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test

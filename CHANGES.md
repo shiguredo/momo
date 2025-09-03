@@ -21,6 +21,15 @@
   - VideoCodecInfo に AMD タイプを追加し、`--video-codec-engines` で確認可能
   - Sora C++ SDK の AMF 実装を取り込み、namespace を sora:: に統一
   - @voluntas
+- [ADD] Ayame モードに `--direction` オプションを追加
+  - `sendrecv`（デフォルト）、`sendonly`、`recvonly` の 3 種類の送受信方向を指定可能
+  - WebRTC の RTCRtpTransceiver の direction プロパティを制御
+  - 配信用途や視聴用途での利用を想定
+  - @voluntas
+- [ADD] ayame モードに映像・音声コーデックを指定するオプションを追加
+  - `--video-codec-type` オプションで VP8, VP9, AV1, H264, H265 から選択可能
+  - `--audio-codec-type` オプションで OPUS, PCMU, PCMA から選択可能
+  - @voluntas
 - [CHANGE] test モードを p2p モードに名前変更
   - コマンドラインオプションを `test` から `p2p` に変更
   - HTML ファイル名を `test.html` から `p2p.html` に変更
@@ -138,6 +147,20 @@
 - [FIX] Intel VPL の AV1 エンコーダーで Dependency Descriptor RTP ヘッダー拡張が出ない問題を修正
   - AMD AMF と NVIDIA Video Codec SDK では既に実装されていた AV1 用の SVC コントローラーを Intel VPL にも追加
   - これにより、Intel VPL でも AV1 エンコード時に RTP パケットに適切な依存関係情報が含まれるようになる
+  - @voluntas
+- [ADD] V4L2 ビデオキャプチャデバイスの一覧を取得する `EnumV4L2CaptureDevices()` 関数を追加
+  - `FormatV4L2Devices()` にこのデバイス一覧を渡すと出力可能な文字列にできる
+  - @melpon
+- [ADD] Linux 環境で `--list-devices` オプションを追加
+  - 利用可能なビデオデバイスの一覧を表示する機能
+  - カメラごとにグループ化して表示
+  - 各デバイスのサポートフォーマット、解像度、フレームレートを詳細表示
+  - @voluntas
+- [UPDATE] V4L2 ビデオキャプチャの探索方法を改善
+  - `/sys/class/video4linux` 経由で全ビデオデバイスを探索するように変更
+  - `/dev/video64` 以降の番号のデバイスにも対応
+  - フォーマットをサポートするデバイスのみを使用するようにフィルタリング
+  - デバイスの数値順ソート処理を追加
   - @voluntas
 
 ### misc

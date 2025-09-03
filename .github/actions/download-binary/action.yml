@@ -1,0 +1,177 @@
+name: download-binary
+description: 'Download momo binary from artifacts (for develop/feature branches) or from release'
+
+inputs:
+  platform:
+    description: 'Platform name (e.g. ubuntu-24.04_x86_64)'
+    required: true
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+
+outputs:
+  source:
+    description: 'Source of the binary (artifact or release)'
+    value: ${{ steps.determine_source.outputs.source }}
+  version:
+    description: 'Version of the downloaded binary'
+    value: ${{ steps.get_version.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get current branch and version
+      id: get_version
+      run: |
+        # VERSION ファイルからバージョンを取得
+        VERSION=$(cat VERSION | tr -d '\n')
+        echo "Version from VERSION file: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # 現在のブランチ名を取得
+        if [ -n "${{ github.ref_name }}" ]; then
+          BRANCH="${{ github.ref_name }}"
+        else
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        fi
+        echo "Current branch: $BRANCH"
+        echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+      shell: bash
+    
+    - name: Determine download source
+      id: determine_source
+      run: |
+        BRANCH="${{ steps.get_version.outputs.branch }}"
+        
+        # develop または feature/ ブランチの場合
+        if [[ "$BRANCH" == "develop" ]] || [[ "$BRANCH" == feature/* ]]; then
+          echo "Target branch detected: $BRANCH"
+          echo "Searching for artifacts from successful build workflow..."
+          
+          # gh コマンドで最新の成功したビルドワークフローを探す
+          # build.yml ワークフローの最新の成功した実行を検索
+          RUN_ID=$(gh run list \
+            --workflow=build.yml \
+            --branch="$BRANCH" \
+            --status=success \
+            --limit=1 \
+            --json databaseId \
+            --jq '.[0].databaseId' 2>/dev/null || echo "")
+          
+          if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "null" ]; then
+            echo "Found successful build run: $RUN_ID"
+            echo "source=artifact" >> $GITHUB_OUTPUT
+            echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          else
+            echo "No successful build found for branch $BRANCH, will use release"
+            echo "source=release" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "Not a develop or feature branch, will use release"
+          echo "source=release" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+    
+    - name: Download artifact from workflow run
+      if: steps.determine_source.outputs.source == 'artifact'
+      run: |
+        RUN_ID="${{ steps.determine_source.outputs.run_id }}"
+        PLATFORM="${{ inputs.platform }}"
+        
+        echo "Downloading artifacts from run $RUN_ID for platform $PLATFORM"
+        
+        # 環境ファイルをダウンロード
+        echo "Downloading $PLATFORM.env artifact..."
+        gh run download $RUN_ID --name "$PLATFORM.env" || {
+          echo "Failed to download $PLATFORM.env artifact"
+          exit 1
+        }
+        
+        # 環境ファイルからパッケージ名を取得
+        if [ -f momo.env ]; then
+          source momo.env
+          echo "Package name from env: $PACKAGE_NAME"
+        else
+          echo "momo.env not found"
+          exit 1
+        fi
+        
+        # パッケージファイルをダウンロード
+        echo "Downloading $PACKAGE_NAME artifact..."
+        gh run download $RUN_ID --name "$PACKAGE_NAME" || {
+          echo "Failed to download $PACKAGE_NAME artifact"
+          exit 1
+        }
+        
+        echo "Successfully downloaded artifacts from feature branch build"
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+    
+    - name: Download from release
+      if: steps.determine_source.outputs.source == 'release'
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        PLATFORM="${{ inputs.platform }}"
+        
+        echo "Downloading from release $VERSION for platform $PLATFORM"
+        
+        gh release download "$VERSION" \
+          --pattern "momo-${VERSION}_${PLATFORM}.tar.gz" \
+          --clobber || {
+          echo "Failed to download release"
+          exit 1
+        }
+        
+        echo "Successfully downloaded from release"
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+    
+    - name: Extract momo binary
+      run: |
+        SOURCE="${{ steps.determine_source.outputs.source }}"
+        VERSION="${{ steps.get_version.outputs.version }}"
+        PLATFORM="${{ inputs.platform }}"
+        
+        # tar.gz ファイルを探す
+        if [ "$SOURCE" == "artifact" ]; then
+          # artifact からダウンロードした場合
+          PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
+        else
+          # release からダウンロードした場合
+          PACKAGE_FILE="momo-${VERSION}_${PLATFORM}.tar.gz"
+        fi
+        
+        if [ -z "$PACKAGE_FILE" ] || [ ! -f "$PACKAGE_FILE" ]; then
+          echo "Package file not found: $PACKAGE_FILE"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Extracting: $PACKAGE_FILE"
+        tar -xzf "$PACKAGE_FILE"
+        
+        # 展開されたディレクトリを探す
+        EXTRACTED_DIR=$(find . -maxdepth 1 -type d -name "momo-*_*" | head -1)
+        if [ -z "$EXTRACTED_DIR" ]; then
+          echo "Extracted directory not found"
+          ls -la
+          exit 1
+        fi
+        
+        echo "Found extracted directory: $EXTRACTED_DIR"
+        
+        # ビルドディレクトリ構造を再現
+        mkdir -p _build/$PLATFORM/release
+        mv "$EXTRACTED_DIR" _build/$PLATFORM/release/momo
+        chmod +x _build/$PLATFORM/release/momo/momo
+        
+        # バージョン確認
+        echo "Verifying momo binary..."
+        _build/$PLATFORM/release/momo/momo --version
+        
+        echo "Binary setup complete (source: $SOURCE)"
+      shell: bash

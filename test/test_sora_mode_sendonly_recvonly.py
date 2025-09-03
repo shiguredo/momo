@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
@@ -62,6 +63,7 @@ def test_sendonly_recvonly_pair(
         video_codec_type=video_codec_type,
         audio=True,
         metadata=sora_settings.metadata,
+        initial_wait=10,
         **encoder_params,
     ) as sender:
         # 受信専用クライアント
@@ -77,29 +79,33 @@ def test_sendonly_recvonly_pair(
             **decoder_params,
         ) as receiver:
             # 接続が確立するまで待機
-            assert sender.wait_for_connection(
-                additional_wait_stats=[
+            assert sender.wait_for_connection(), (
+                f"Sender failed to establish connection for {video_codec_type}"
+            )
+            assert receiver.wait_for_connection(), (
+                f"Receiver failed to establish connection for {video_codec_type}"
+            )
+
+            # 送信側の統計を確認
+            sender_data = sender.get_metrics(
+                wait_stats=[
                     {
                         "type": "outbound-rtp",
                         "encoderImplementation": expected_encoder_implementation,
                     }
                 ]
-            ), f"Sender failed to establish connection for {video_codec_type}"
-            assert receiver.wait_for_connection(
-                additional_wait_stats=[
+            )
+            sender_stats = sender_data.get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_data = receiver.get_metrics(
+                wait_stats=[
                     {
                         "type": "inbound-rtp",
                         "decoderImplementation": expected_decoder_implementation,
                     }
                 ]
-            ), f"Receiver failed to establish connection for {video_codec_type}"
-
-            # 送信側の統計を確認
-            sender_data = sender.get_metrics()
-            sender_stats = sender_data.get("stats", [])
-
-            # 受信側の統計を確認
-            receiver_data = receiver.get_metrics()
+            )
             receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
@@ -218,8 +224,8 @@ def test_multiple_sendonly_clients(sora_settings, port_allocator):
             metadata=sora_settings.metadata,
         ) as sender2:
             # 両方のインスタンスが正常に動作していることを確認
-            response1 = sender1._http_client.get(f"http://localhost:{sender1.metrics_port}/metrics")
-            assert response1.status_code == 200
+            metrics1 = sender1.get_metrics()
+            assert metrics1 is not None
 
-            response2 = sender2._http_client.get(f"http://localhost:{sender2.metrics_port}/metrics")
-            assert response2.status_code == 200
+            metrics2 = sender2.get_metrics()
+            assert metrics2 is not None

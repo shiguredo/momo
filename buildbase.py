@@ -145,7 +145,12 @@ def add_path(path: str, is_after=False):
         os.environ["PATH"] = path + PATH_SEPARATOR + os.environ["PATH"]
 
 
-def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None, expected_sha256: Optional[str] = None) -> str:
+def download(
+    url: str,
+    output_dir: Optional[str] = None,
+    filename: Optional[str] = None,
+    expected_sha256: Optional[str] = None,
+) -> str:
     if filename is None:
         output_path = urllib.parse.urlparse(url).path.split("/")[-1]
     else:
@@ -174,11 +179,11 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
             cmd(["curl", "-fLo", output_path, url])
         else:
             cmd(["wget", "-cO", output_path, url])
-        
+
         # ダウンロード後にハッシュチェック
         if expected_sha256 is not None:
             verify_sha256(output_path, expected_sha256)
-            
+
     except Exception as e:
         # ゴミを残さないようにする
         if os.path.exists(output_path):
@@ -201,7 +206,7 @@ def verify_sha256(file_path: str, expected_sha256: str):
         # メモリ効率のため、チャンクごとに読み込む
         for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
-    
+
     actual_sha256 = sha256_hash.hexdigest()
     if actual_sha256 != expected_sha256.lower():
         error_msg = (
@@ -628,7 +633,14 @@ def get_webrtc_info(
 
 
 @versioned
-def install_boost(version, source_dir, install_dir, sora_version, platform: str, expected_sha256: Optional[str] = None):
+def install_boost(
+    version,
+    source_dir,
+    install_dir,
+    sora_version,
+    platform: str,
+    expected_sha256: Optional[str] = None,
+):
     win = platform.startswith("windows_")
     filename = (
         f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
