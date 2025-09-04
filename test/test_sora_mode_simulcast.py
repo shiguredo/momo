@@ -229,7 +229,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             for reason, duration in outbound_rtp_r0["qualityLimitationDurations"].items():
                 print(f"  {reason}: {duration}")
 
-
         # r1 (中解像度) の検証
         outbound_rtp_r1 = video_outbound_rtp_by_rid["r1"]
         assert "ssrc" in outbound_rtp_r1
@@ -269,7 +268,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             for reason, duration in outbound_rtp_r1["qualityLimitationDurations"].items():
                 print(f"  {reason}: {duration}")
 
-
         # r2 (高解像度) の検証
         outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
         assert "ssrc" in outbound_rtp_r2
@@ -308,7 +306,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             print("r2 qualityLimitationDurations:")
             for reason, duration in outbound_rtp_r2["qualityLimitationDurations"].items():
                 print(f"  {reason}: {duration}")
-
 
         # パケット数とバイト数の関係を検証（r0 < r1 < r2）
         assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (

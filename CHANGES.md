@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2025.1.0
+
+**リリース日**: 2025-09-04
+
 - [CHANGE] リリースパッケージのディレクトリを展開した際 `momo-<version>_<platform>` となるように変更する
   - @voluntas
 - [CHANGE] VERSION ファイルから依存ライブラリ情報を DEPS ファイルに分離する
