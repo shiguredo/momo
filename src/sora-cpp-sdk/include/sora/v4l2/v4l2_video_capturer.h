@@ -13,16 +13,17 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#include <memory>
+#include <string>
 
 // WebRTC
-#include <modules/video_capture/video_capture_defines.h>
-#include <modules/video_capture/video_capture_impl.h>
+#include <api/scoped_refptr.h>
+#include <common_video/libyuv/include/webrtc_libyuv.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
+#include <rtc_base/thread_annotations.h>
 
 #include "sora/scalable_track_source.h"
+#include "sora/v4l2/v4l2_device.h"
 
 namespace sora {
 
@@ -32,22 +33,21 @@ struct V4L2VideoCapturerConfig : ScalableVideoTrackSourceConfig {
   int height = 480;
   int framerate = 30;
   bool force_i420 = false;
+  bool force_yuy2 = false;
+  bool force_nv12 = false;
   bool use_native = false;
 };
 
 class V4L2VideoCapturer : public ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
+  static webrtc::scoped_refptr<V4L2VideoCapturer> Create(
       const V4L2VideoCapturerConfig& config);
-  static void LogDeviceList(
-      webrtc::VideoCaptureModule::DeviceInfo* device_info);
   V4L2VideoCapturer(const V4L2VideoCapturerConfig& config);
   ~V4L2VideoCapturer();
 
-  int32_t Init(const char* deviceUniqueId);
-  virtual int32_t StartCapture(const V4L2VideoCapturerConfig& config);
-
  protected:
+  virtual int32_t Init();
+
   virtual int32_t StopCapture();
   virtual bool AllocateVideoBuffers();
   virtual bool DeAllocateVideoBuffers();
@@ -65,18 +65,18 @@ class V4L2VideoCapturer : public ScalableVideoTrackSource {
   Buffer* _pool;
 
  private:
-  static rtc::scoped_refptr<V4L2VideoCapturer> Create(
-      webrtc::VideoCaptureModule::DeviceInfo* device_info,
-      const V4L2VideoCapturerConfig& config,
-      size_t capture_device_index);
-  bool FindDevice(const char* deviceUniqueIdUTF8, const std::string& device);
+  virtual int32_t StartCapture();
 
   enum { kNoOfV4L2Bufffers = 4 };
 
   static void CaptureThread(void*);
   bool CaptureProcess();
 
-  rtc::PlatformThread _captureThread;
+ private:
+  V4L2VideoCapturerConfig config_;
+  V4L2Device device_;
+
+  webrtc::PlatformThread _captureThread;
   webrtc::Mutex capture_lock_;
   bool quit_ RTC_GUARDED_BY(capture_lock_);
   std::string _videoDevice;

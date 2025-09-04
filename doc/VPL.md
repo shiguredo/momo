@@ -4,12 +4,6 @@ VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で H
 
 このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
-## 既知の問題
-
-現在 VPL で VP9 と AV1 を送信するとき、受信に参加したクライアントが受信できない問題があります。
-`-vp9-encoder` と `--av1-encoder` で　`software` を指定することで回避できます。
-詳細については https://github.com/shiguredo/momo/issues/357 をご確認ください。
-
 ## Intel Media SDK について
 
 VPL の詳細については以下のリンクをご確認ください。
@@ -24,8 +18,8 @@ VPL の詳細については以下のリンクをご確認ください。
 ## 対応プラットフォーム
 
 - Windows 11 x86_64
-- Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
+- Ubuntu 24.04 x86_64
 
 ## Windows 11 での利用方法
 
@@ -41,7 +35,7 @@ Windows 11 では Intel の公式サイトからドライバーをインスト�
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
 
 PowerShell での実行コマンド例：
 
@@ -63,7 +57,7 @@ VP9:
   Encoder:
     - Software [software] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
     - Software [software]
 
 AV1:
@@ -74,32 +68,76 @@ AV1:
 
 H264:
   Encoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
 ```
 
-## Ubuntu 20.04、 Ubuntu 22.04 での利用方法
+## Ubuntu での利用方法
 
-### ドライバーのインストール
+Ubuntu の場合は 22.04 と 24.04 で利用方法が異なります。
 
-- Ubuntu の最新化を実行します
-  - `sudo apt-get update`
-  - `sudo apt-get upgrade`
-- ドライバー確認ツールをインストールします
-  - `sudo apt-get install vainfo`
-- ドライバーをインストールします。
-  - 以下のコマンドのいずれでも問題ありません。フル機能版は `intel-media-va-driver-non-free` でコア機能版は `intel-media-va-driver` になります。
-    - `sudo apt-get install intel-media-va-driver-non-free`
-    - `sudo apt-get install intel-media-va-driver`
-- 関連ライブラリをインストールします
-  - `sudo apt install libmfx1`
+### Ubuntu 22.04 での利用方法
+
+#### Intel の apt リポジトリを追加
+
+ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
+
+```bash
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
+  sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+sudo apt update
+```
+
+#### Intel 提供パッケージの最新化
+
+Intel の apt リポジトリを追加することでインストール済みのパッケージも Intel から提供されている最新のものに更新できます。依存問題を起こさないため、ここで最新化を行なってください。
+
+```bash
+sudo apt upgrade
+```
+
+#### ドライバとライブラリのインストール
+
+以下のように、ドライバとライブラリをインストールしてください。
+intel-media-va-driver には無印と `non-free` 版がありますが、 `non-free` 版でしか動作しません。
+
+```bash
+sudo apt install -y intel-media-va-driver-non-free libmfxgen1
+```
+
+以上でインストールが完了します。
+
+### Ubuntu 24.04 での利用方法
+
+#### Intel の apt リポジトリを追加
+
+ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
+
+```bash
+
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | \
+  sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
+sudo apt update
+```
+
+#### ライブラリのインストール
+
+以下の実行例のように、 libmfxgen1 をインストールしてください。
+
+```bash
+sudo apt install -y libmfxgen1
+```
 
 以上でインストールが完了します。
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `oneVPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
 
 実行コマンド例：
 
@@ -121,7 +159,7 @@ VP9:
   Encoder:
     - Software [software] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
     - Software [software]
 
 AV1:
@@ -132,9 +170,9 @@ AV1:
 
 H264:
   Encoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
   Decoder:
-    - oneVPL [vpl] (default)
+    - Intel VPL [vpl] (default)
 ```
 
 ## 動作確認ができたチップセット
@@ -152,7 +190,7 @@ H264:
 ## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで oneVPL を使用することができます。
+Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用することができます。
 
 ## VPL を認識できない場合
 

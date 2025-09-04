@@ -31,7 +31,7 @@ const int kHighH264QpThreshold = 40;
 
 }  // namespace
 
-V4L2H264Encoder::V4L2H264Encoder(const cricket::VideoCodec& codec)
+V4L2H264Encoder::V4L2H264Encoder(const webrtc::Codec& codec)
     : configured_width_(0),
       configured_height_(0),
       callback_(nullptr),
@@ -202,7 +202,7 @@ int32_t V4L2H264Encoder::Encode(
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
 
   RTC_LOG(LS_VERBOSE) << "V4L2H264Encoder::Encode: type="
@@ -248,7 +248,7 @@ int32_t V4L2H264Encoder::Encode(
       scaler_->Scale(
           frame_buffer, input_frame.timestamp_us(),
           [this, force_key_frame, input_frame](
-              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_us) {
             h264_encoder_->Encode(
                 buffer, timestamp_us, force_key_frame,
@@ -262,9 +262,9 @@ int32_t V4L2H264Encoder::Encode(
       auto native_buffer = static_cast<V4L2NativeBuffer*>(frame_buffer.get());
       jpeg_decoder_->Decode(
           native_buffer->data().get(), native_buffer->size(),
-          input_frame.timestamp(),
+          input_frame.rtp_timestamp(),
           [this, force_key_frame, input_frame](
-              rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+              webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
               int64_t timestamp_rtp) {
             RTC_LOG(LS_VERBOSE) << "Decoded JPEG frame: type=" << buffer->type()
                                 << " width=" << buffer->width()
@@ -272,7 +272,7 @@ int32_t V4L2H264Encoder::Encode(
             scaler_->Scale(
                 buffer, input_frame.timestamp_us(),
                 [this, force_key_frame, input_frame](
-                    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
+                    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
                     int64_t timestamp_us) {
                   h264_encoder_->Encode(
                       buffer, timestamp_us, force_key_frame,
@@ -309,7 +309,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
   encoded_image_._encodedHeight = frame.height();
   encoded_image_.capture_time_ms_ = frame.render_time_ms();
   encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
-  encoded_image_.SetRtpTimestamp(frame.timestamp());
+  encoded_image_.SetRtpTimestamp(frame.rtp_timestamp());
   encoded_image_.rotation_ = frame.rotation();
   encoded_image_.SetColorSpace(frame.color_space());
   encoded_image_._frameType = is_key_frame

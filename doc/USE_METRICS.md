@@ -21,7 +21,7 @@ MetricsServer はデフォルトでループバック (127.0.0.1 で listen) ア
 統計情報を取得するには HTTP の GET メソッドを利用して `/metrics` にアクセスしてください。例えば、次のオプションで Momo を起動した場合、
 
 ```bash
-./momo --metrics-port 8081 test
+./momo --metrics-port 8081 p2p
 ```
 
 <http://127.0.0.1:8081/metrics> にブラウザ、または `curl` などの HTTP クライアントでアクセスすることで統計情報を取得することができます。

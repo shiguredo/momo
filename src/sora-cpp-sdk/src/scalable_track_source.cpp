@@ -10,17 +10,21 @@
 
 #include "sora/scalable_track_source.h"
 
-#include <algorithm>
+#include <cstdint>
+#include <optional>
 
 // WebRTC
+#include <api/media_stream_interface.h>
 #include <api/scoped_refptr.h>
 #include <api/video/i420_buffer.h>
+#include <api/video/video_frame.h>
 #include <api/video/video_frame_buffer.h>
 #include <api/video/video_rotation.h>
-#include <rtc_base/logging.h>
+#include <media/base/adapted_video_track_source.h>
+#include <rtc_base/time_utils.h>
 
 // libyuv
-#include <libyuv.h>
+#include <libyuv/rotate.h>
 
 namespace sora {
 
@@ -33,7 +37,7 @@ bool ScalableVideoTrackSource::is_screencast() const {
   return false;
 }
 
-absl::optional<bool> ScalableVideoTrackSource::needs_denoising() const {
+std::optional<bool> ScalableVideoTrackSource::needs_denoising() const {
   return false;
 }
 
@@ -52,7 +56,7 @@ bool ScalableVideoTrackSource::OnCapturedFrame(
 
   const int64_t timestamp_us = frame.timestamp_us();
   const int64_t translated_timestamp_us =
-      timestamp_aligner_.TranslateTimestamp(timestamp_us, rtc::TimeMicros());
+      timestamp_aligner_.TranslateTimestamp(timestamp_us, webrtc::TimeMicros());
 
   // 回転が必要
   if (frame.rotation() != webrtc::kVideoRotation_0) {
@@ -78,9 +82,9 @@ bool ScalableVideoTrackSource::OnCapturedFrame(
         break;
     }
 
-    rtc::scoped_refptr<webrtc::I420Buffer> rotated =
+    webrtc::scoped_refptr<webrtc::I420Buffer> rotated =
         webrtc::I420Buffer::Create(width, height);
-    rtc::scoped_refptr<webrtc::I420BufferInterface> src =
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> src =
         frame.video_frame_buffer()->ToI420();
     libyuv::I420Rotate(src->DataY(), src->StrideY(), src->DataU(),
                        src->StrideU(), src->DataV(), src->StrideV(),
@@ -114,13 +118,13 @@ bool ScalableVideoTrackSource::OnCapturedFrame(
     return true;
   }
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
       frame.video_frame_buffer();
 
   if (adapted_width != frame.width() || adapted_height != frame.height()) {
     // Video adapter has requested a down-scale. Allocate a new buffer and
     // return scaled version.
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         webrtc::I420Buffer::Create(adapted_width, adapted_height);
     i420_buffer->ScaleFrom(*buffer->ToI420());
     buffer = i420_buffer;

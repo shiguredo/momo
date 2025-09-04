@@ -18,7 +18,13 @@ struct MomoArgs {
   bool no_google_stun = false;
   bool no_video_device = false;
   bool no_audio_device = false;
+  bool list_devices = false;
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  bool fake_capture_device = false;
+#endif
   bool force_i420 = false;
+  bool force_yuy2 = false;
+  bool force_nv12 = false;
   // Jetson の場合だけデフォルト true
 #if defined(USE_JETSON_ENCODER)
   bool hw_mjpeg_decoder = true;
@@ -30,6 +36,8 @@ struct MomoArgs {
   // use_libcamera == true の場合だけ使える。
   // sora_video_codec_type == "H264" かつ sora_simulcast == false の場合だけしか機能しない。
   bool use_libcamera_native = false;
+  // libcamera のコントロール設定。key value の形式で指定する。
+  std::vector<std::pair<std::string, std::string>> libcamera_controls;
   std::string video_device = "";
   std::string resolution = "VGA";
   int framerate = 30;
@@ -71,13 +79,18 @@ struct MomoArgs {
   boost::optional<bool> sora_ignore_disconnect_websocket;
   int sora_disconnect_wait_timeout = 5;
 
-  std::string test_document_root;
-  int test_port = 8080;
+  std::string p2p_document_root;
+  int p2p_port = 8080;
 
   std::string ayame_signaling_url;
   std::string ayame_room_id;
   std::string ayame_client_id = "";
   std::string ayame_signaling_key = "";
+  // sendrecv, sendonly, recvonly
+  std::string ayame_direction = "sendrecv";
+  // 空文字の場合コーデックは WebRTC デフォルトを使用
+  std::string ayame_video_codec_type = "";
+  std::string ayame_audio_codec_type = "";
 
   bool disable_echo_cancellation = false;
   bool disable_auto_gain_control = false;

@@ -11,10 +11,7 @@ class CudaContext {
   // CUDA コンテキスト生成する。
   // CUDA に対応していないプラットフォームでは nullptr を返す。
   static std::shared_ptr<CudaContext> Create();
-  void* Context() const;
-
- private:
-  std::shared_ptr<void> impl_;
+  static bool CanCreate();
 };
 
 enum class CudaVideoCodec {

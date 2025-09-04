@@ -22,6 +22,8 @@ struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
   // 前者の方が効率が良いけれども、kNative なフレームはサイマルキャスト時に自動で
   // リサイズしてくれないので、状況に応じて使い分けるのが良い。
   bool native_frame_output = false;
+  // libcamera のコントロール設定。key value の形式。
+  std::vector<std::pair<std::string, std::string>> controls;
 };
 
 // Raspberry Pi 専用のカメラからの映像を取得するクラス
@@ -30,7 +32,7 @@ struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
 // メモリ上にコピーする場合は webrtc::I420Buffer クラスになる。
 class LibcameraCapturer : public sora::ScalableVideoTrackSource {
  public:
-  static rtc::scoped_refptr<LibcameraCapturer> Create(
+  static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config);
   static void LogDeviceList();
   LibcameraCapturer();
@@ -41,7 +43,7 @@ class LibcameraCapturer : public sora::ScalableVideoTrackSource {
   int32_t StartCapture(LibcameraCapturerConfig config);
 
  private:
-  static rtc::scoped_refptr<LibcameraCapturer> Create(
+  static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config,
       size_t capture_device_index);
   int32_t StopCapture();

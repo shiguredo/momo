@@ -11,8 +11,8 @@ class RTCDataManagerDispatcher : public RTCDataManager {
     data_managers_.push_back(data_manager);
   }
 
-  void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     for (std::weak_ptr<RTCDataManager> wp : data_managers_) {
       auto data_manager = wp.lock();
       if (data_manager) {

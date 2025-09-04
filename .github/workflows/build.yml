@@ -10,6 +10,13 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
+      - "test/**"
+      - ".github/workflows/e2e-test.yml"
+      - ".github/workflows/claude.yml"
+  schedule:
+    # UTC の 01:00 は JST だと 10:00 。
+    # 1-5 で 月曜日から金曜日
+    - cron: "0 1 * * 1-5"
 
 jobs:
   build-windows:
@@ -21,11 +28,11 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: microsoft/setup-msbuild@v2
       - name: Get Versions
         run: |
-          Get-Content "VERSION" | Foreach-Object {
+          Get-Content "DEPS" | Foreach-Object {
             if (!$_) { continue }
             $var = $_.Split('=')
             New-Variable -Name $var[0] -Value $var[1] -Force
@@ -43,7 +50,7 @@ jobs:
           key: windows-cuda-${{ steps.versions.outputs.cuda_version }}.v1
       - run: echo "${CUDA_VERSION}" > _install\windows_x86_64\release\cuda.version
         if: steps.cache-cuda.outputs.cache-hit == 'true'
-      - run: python3 run.py --package ${{ matrix.name }}
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           Get-Content "_package\${{ matrix.name }}\release\momo.env" | Foreach-Object {
@@ -72,8 +79,8 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
-      - run: python3 run.py --package ${{ matrix.name }}
+      - uses: actions/checkout@v5
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env
@@ -101,7 +108,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Disk cleanup
         run: |
           set -x
@@ -148,8 +155,8 @@ jobs:
           EOF
       - name: Install deps for ${{ matrix.name }}
         run: |
-          source VERSION
-          # clang-18 と CUDA を入れる
+          source DEPS
+          # clang-20 と CUDA を入れる
           sudo apt-get update
           sudo apt-get install -y software-properties-common
 
@@ -166,13 +173,13 @@ jobs:
 
           wget https://apt.llvm.org/llvm.sh
           chmod a+x llvm.sh
-          sudo ./llvm.sh 18
+          sudo ./llvm.sh 20
 
           # Intel Media SDK のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
-      - run: python3 run.py --package ${{ matrix.name }}
+      - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env
@@ -191,14 +198,14 @@ jobs:
 
   create-release:
     name: Create Release
-    if: contains(github.ref, 'tags/202')
+    if: startsWith(github.ref, 'refs/tags/202')
     needs:
       - build-windows
       - build-macos
       - build-ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/download
         with:
           platform: windows_x86_64
@@ -219,18 +226,29 @@ jobs:
           platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
-          echo "package_paths<<EOF" >> $GITHUB_OUTPUT
-          cat package_paths.env >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 改行をスペースに変換してpackage_pathsに設定
+          echo "package_paths=$(cat package_paths.env | tr '\n' ' ')" >> $GITHUB_OUTPUT
         id: env
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.env.outputs.package_paths }}
-          prerelease: ${{ contains(github.ref, 'canary') }}
+      - name: Release (Prerelease)
+        if: contains(github.ref, 'canary')
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}" \
+            --prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release (Stable)
+        if: ${{ !contains(github.ref, 'canary') }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            ${{ steps.env.outputs.package_paths }} \
+            --title "${{ github.ref_name }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
@@ -238,7 +256,7 @@ jobs:
       - create-release
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: rtCamp/action-slack-notify@v2
         if: |
           needs.build-windows.result == 'failure' ||

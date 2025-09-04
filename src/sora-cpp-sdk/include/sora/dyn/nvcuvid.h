@@ -4,6 +4,7 @@
 #include "dyn.h"
 
 // defs
+#include <cuviddec.h>
 #include <nvcuvid.h>
 
 namespace dyn {

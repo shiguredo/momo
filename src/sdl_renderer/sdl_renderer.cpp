@@ -22,15 +22,13 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
       height_(height),
       rows_(1),
       cols_(1) {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_Init failed " << SDL_GetError();
     return;
   }
 
-  window_ =
-      SDL_CreateWindow("Momo WebRTC Native Client", SDL_WINDOWPOS_CENTERED,
-                       SDL_WINDOWPOS_CENTERED, width_, height_,
-                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  window_ = SDL_CreateWindow("Momo WebRTC Native Client", width_, height_,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (window_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed "
                       << SDL_GetError();
@@ -44,7 +42,7 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
 #if defined(__APPLE__)
   // Apple Silicon Mac + macOS 11.0 だと、
   // SDL_CreateRenderer をメインスレッドで呼ばないとエラーになる
-  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  renderer_ = SDL_CreateRenderer(window_, NULL);
   if (renderer_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
                       << SDL_GetError();
@@ -72,38 +70,40 @@ SDLRenderer::~SDLRenderer() {
 }
 
 bool SDLRenderer::IsFullScreen() {
-  return SDL_GetWindowFlags(window_) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+  return SDL_GetWindowFlags(window_) & SDL_WINDOW_FULLSCREEN;
 }
 
 void SDLRenderer::SetFullScreen(bool fullscreen) {
-  SDL_SetWindowFullscreen(window_,
-                          fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-  SDL_ShowCursor(fullscreen ? SDL_DISABLE : SDL_ENABLE);
+  SDL_SetWindowFullscreen(window_, fullscreen);
+  if (fullscreen) {
+    SDL_HideCursor();
+  } else {
+    SDL_ShowCursor();
+  }
 }
 
 void SDLRenderer::PollEvent() {
   SDL_Event e;
   // 必ずメインスレッドから呼び出す
   while (SDL_PollEvent(&e) > 0) {
-    if (e.type == SDL_WINDOWEVENT &&
-        e.window.event == SDL_WINDOWEVENT_RESIZED &&
+    if (e.type == SDL_EVENT_WINDOW_RESIZED &&
         e.window.windowID == SDL_GetWindowID(window_)) {
       webrtc::MutexLock lock(&sinks_lock_);
       width_ = e.window.data1;
       height_ = e.window.data2;
       SetOutlines();
     }
-    if (e.type == SDL_KEYUP) {
-      switch (e.key.keysym.sym) {
-        case SDLK_f:
+    if (e.type == SDL_EVENT_KEY_UP) {
+      switch (e.key.key) {
+        case SDLK_F:
           SetFullScreen(!IsFullScreen());
           break;
-        case SDLK_q:
+        case SDLK_Q:
           std::raise(SIGTERM);
           break;
       }
     }
-    if (e.type == SDL_QUIT) {
+    if (e.type == SDL_EVENT_QUIT) {
       std::raise(SIGTERM);
     }
   }
@@ -121,7 +121,7 @@ int SDLRenderer::RenderThreadExec(void* data) {
 
 int SDLRenderer::RenderThread() {
 #if !defined(__APPLE__)
-  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  renderer_ = SDL_CreateRenderer(window_, NULL);
   if (renderer_ == nullptr) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
                       << SDL_GetError();
@@ -151,18 +151,20 @@ int SDLRenderer::RenderThread() {
         if (width == 0 || height == 0)
           continue;
 
-        SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
-            sink->GetImage(), width, height, 32, width * 4, 0, 0, 0, 0);
+        SDL_Surface* surface =
+            SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ARGB8888,
+                                  sink->GetImage(), width * 4);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
 
-        SDL_Rect image_rect = {0, 0, width, height};
-        SDL_Rect draw_rect = {sink->GetOffsetX(), sink->GetOffsetY(),
-                              sink->GetWidth(), sink->GetHeight()};
+        SDL_FRect image_rect = {0, 0, (float)width, (float)height};
+        SDL_FRect draw_rect = {
+            (float)sink->GetOffsetX(), (float)sink->GetOffsetY(),
+            (float)sink->GetWidth(), (float)sink->GetHeight()};
 
         // flip (自画像とか？)
-        //SDL_RenderCopyEx(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
-        SDL_RenderCopy(renderer_, texture, &image_rect, &draw_rect);
+        //SDL_RenderTextureRotated(renderer_, texture, &image_rect, &draw_rect, 0, nullptr, SDL_FLIP_HORIZONTAL);
+        SDL_RenderTexture(renderer_, texture, &image_rect, &draw_rect);
 
         SDL_DestroyTexture(texture);
       }
@@ -196,7 +198,7 @@ SDLRenderer::Sink::Sink(SDLRenderer* renderer,
       scaled_(false),
       width_(0),
       height_(0) {
-  track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  track_->AddOrUpdateSink(this, webrtc::VideoSinkWants());
 }
 
 SDLRenderer::Sink::~Sink() {
@@ -239,9 +241,9 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": scaled_=" << scaled_;
     outline_changed_ = false;
   }
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer_if;
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer_if;
   if (scaled_) {
-    rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(width_, height_);
     buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
     if (frame.rotation() != webrtc::kVideoRotation_0) {

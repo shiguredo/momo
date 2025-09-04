@@ -76,7 +76,7 @@ static void save_to_file(const std::string& filename,
 
 namespace sora {
 
-JetsonVideoEncoder::JetsonVideoEncoder(const cricket::VideoCodec& codec)
+JetsonVideoEncoder::JetsonVideoEncoder(const webrtc::Codec& codec)
     : callback_(nullptr),
       encoder_(nullptr),
       configured_framerate_(30),
@@ -431,8 +431,9 @@ bool JetsonVideoEncoder::EncodeFinishedCallback(struct v4l2_buffer* v4l2_buf,
     return false;
   }
 
-  uint64_t timestamp = v4l2_buf->timestamp.tv_sec * rtc::kNumMicrosecsPerSec +
-                       v4l2_buf->timestamp.tv_usec;
+  uint64_t timestamp =
+      v4l2_buf->timestamp.tv_sec * webrtc::kNumMicrosecsPerSec +
+      v4l2_buf->timestamp.tv_usec;
 
   std::unique_ptr<FrameParams> params;
   {
@@ -582,7 +583,7 @@ int32_t JetsonVideoEncoder::Encode(
   int fd = 0;
   webrtc::VideoType video_type;
   uint8_t* native_data;
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       input_frame.video_frame_buffer();
   std::shared_ptr<JetsonJpegDecoder> decoder;
   if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
@@ -627,7 +628,7 @@ int32_t JetsonVideoEncoder::Encode(
     frame_params_.push(absl::make_unique<FrameParams>(
         frame_buffer->width(), frame_buffer->height(),
         input_frame.render_time_ms(), input_frame.ntp_time_ms(),
-        input_frame.timestamp_us(), input_frame.timestamp(),
+        input_frame.timestamp_us(), input_frame.rtp_timestamp(),
         input_frame.rotation(), input_frame.color_space(), decoder));
   }
 
@@ -720,9 +721,9 @@ int32_t JetsonVideoEncoder::Encode(
     v4l2_buf.memory = V4L2_MEMORY_DMABUF;
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
     v4l2_buf.timestamp.tv_sec =
-        input_frame.timestamp_us() / rtc::kNumMicrosecsPerSec;
+        input_frame.timestamp_us() / webrtc::kNumMicrosecsPerSec;
     v4l2_buf.timestamp.tv_usec =
-        input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
+        input_frame.timestamp_us() % webrtc::kNumMicrosecsPerSec;
 
     if (encoder_->output_plane.qBuffer(v4l2_buf, nullptr) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at converter output_plane";
@@ -748,7 +749,7 @@ int32_t JetsonVideoEncoder::Encode(
       v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
 
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer =
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> i420_buffer =
         frame_buffer->ToI420();
     for (uint32_t i = 0; i < buffer->n_planes; i++) {
       const uint8_t* source_data;
@@ -778,9 +779,9 @@ int32_t JetsonVideoEncoder::Encode(
 
     v4l2_buf.flags |= V4L2_BUF_FLAG_TIMESTAMP_COPY;
     v4l2_buf.timestamp.tv_sec =
-        input_frame.timestamp_us() / rtc::kNumMicrosecsPerSec;
+        input_frame.timestamp_us() / webrtc::kNumMicrosecsPerSec;
     v4l2_buf.timestamp.tv_usec =
-        input_frame.timestamp_us() % rtc::kNumMicrosecsPerSec;
+        input_frame.timestamp_us() % webrtc::kNumMicrosecsPerSec;
 
     for (int i = 0; i < MAX_PLANES; i++) {
       NvBufSurface* surf = 0;
@@ -860,7 +861,7 @@ int32_t JetsonVideoEncoder::SendFrame(
     buffer += 12;
     size -= 12;
 
-    rtc::scoped_refptr<webrtc::EncodedImageBuffer> encoded_image_buffer;
+    webrtc::scoped_refptr<webrtc::EncodedImageBuffer> encoded_image_buffer;
 
     if (codec_.codecType == webrtc::kVideoCodecAV1) {
       // JetPack 5.1.1 以降、AV1 のエンコードフレームにシーケンスヘッダー（OBU_SEQUENCE_HEADER）が含まれなくなってしまった。

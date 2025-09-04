@@ -1,9 +1,23 @@
 #include "sora/hwenc_nvcodec/nvcodec_decoder_cuda.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <sstream>
+#include <string>
+
+// CUDA
+#include <cuda.h>
+
+// NvCodec
 #include <NvDecoder/NvDecoder.h>
+#include <cuviddec.h>
 
 #include "../cuda_context_cuda.h"
+#include "sora/cuda_context.h"
 #include "sora/dyn/cuda.h"
+#include "sora/dyn/nvcuvid.h"
 
 namespace sora {
 

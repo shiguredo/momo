@@ -11,12 +11,13 @@
 #define SORA_SCALABLE_VIDEO_TRACK_SOURCE_H_
 
 #include <stddef.h>
-
-#include <memory>
+#include <functional>
+#include <optional>
 
 // WebRTC
+#include <api/media_stream_interface.h>
+#include <api/video/video_frame.h>
 #include <media/base/adapted_video_track_source.h>
-#include <media/base/video_adapter.h>
 #include <rtc_base/timestamp_aligner.h>
 
 namespace sora {
@@ -25,20 +26,20 @@ struct ScalableVideoTrackSourceConfig {
   std::function<void(const webrtc::VideoFrame&)> on_frame;
 };
 
-class ScalableVideoTrackSource : public rtc::AdaptedVideoTrackSource {
+class ScalableVideoTrackSource : public webrtc::AdaptedVideoTrackSource {
  public:
   ScalableVideoTrackSource(ScalableVideoTrackSourceConfig config);
   virtual ~ScalableVideoTrackSource();
 
   bool is_screencast() const override;
-  absl::optional<bool> needs_denoising() const override;
+  std::optional<bool> needs_denoising() const override;
   webrtc::MediaSourceInterface::SourceState state() const override;
   bool remote() const override;
   bool OnCapturedFrame(const webrtc::VideoFrame& frame);
 
  private:
   ScalableVideoTrackSourceConfig config_;
-  rtc::TimestampAligner timestamp_aligner_;
+  webrtc::TimestampAligner timestamp_aligner_;
 };
 
 }  // namespace sora

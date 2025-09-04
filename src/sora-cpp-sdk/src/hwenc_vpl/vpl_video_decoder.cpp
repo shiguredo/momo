@@ -1,25 +1,38 @@
 #include "sora/hwenc_vpl/vpl_video_decoder.h"
 
-#include <iostream>
-#include <queue>
+#include <algorithm>
+#include <chrono>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <utility>
+#include <vector>
 
 // WebRTC
+#include <api/scoped_refptr.h>
+#include <api/video/encoded_image.h>
+#include <api/video/i420_buffer.h>
+#include <api/video/video_codec_type.h>
+#include <api/video/video_frame.h>
 #include <api/video_codecs/video_decoder.h>
 #include <common_video/include/video_frame_buffer_pool.h>
 #include <modules/video_coding/include/video_error_codes.h>
-#include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/platform_thread.h>
-#include <rtc_base/time_utils.h>
-#include <third_party/libyuv/include/libyuv/convert.h>
+
+// libyuv
+#include <libyuv/convert.h>
 
 // Intel VPL
+#include <vpl/mfxcommon.h>
 #include <vpl/mfxdefs.h>
+#include <vpl/mfxstructures.h>
 #include <vpl/mfxvideo++.h>
-#include <vpl/mfxvp8.h>
+#include <vpl/mfxvideo.h>
 
-#include "vpl_session_impl.h"
+#include "../vpl_session_impl.h"
+#include "sora/vpl_session.h"
 #include "vpl_utils.h"
 
 namespace sora {
@@ -297,7 +310,7 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
 
     uint64_t pts = input_image.RtpTimestamp();
     // NV12 から I420 に変換
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         buffer_pool_.CreateI420Buffer(width_, height_);
     libyuv::NV12ToI420(out_surface->Data.Y, out_surface->Data.Pitch,
                        out_surface->Data.UV, out_surface->Data.Pitch,
@@ -310,8 +323,8 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
                                            .set_video_frame_buffer(i420_buffer)
                                            .set_timestamp_rtp(pts)
                                            .build();
-    decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
-                                       absl::nullopt);
+    decode_complete_callback_->Decoded(decoded_image, std::nullopt,
+                                       std::nullopt);
   }
 
   return WEBRTC_VIDEO_CODEC_OK;

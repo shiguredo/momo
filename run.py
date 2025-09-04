@@ -1,4 +1,5 @@
 import argparse
+import glob
 import hashlib
 import logging
 import multiprocessing
@@ -23,17 +24,19 @@ from buildbase import (
     get_webrtc_info,
     get_webrtc_platform,
     get_windows_osver,
+    install_blend2d_official,
     install_cli11,
     install_cmake,
     install_cuda_windows,
     install_llvm,
     install_openh264,
     install_rootfs,
-    install_sdl2,
+    install_sdl3,
     install_vpl,
     install_webrtc,
     mkdir_p,
     read_version_file,
+    read_version_string,
     rm_rf,
 )
 
@@ -51,9 +54,12 @@ def install_deps(
     debug: bool,
     local_webrtc_build_dir: Optional[str],
     local_webrtc_build_args: List[str],
+    disable_fake_capture_device: bool,
 ):
     with cd(BASE_DIR):
-        version = read_version_file("VERSION")
+        momo_version = read_version_string("VERSION")
+        deps = read_version_file("DEPS")
+        configuration = "Debug" if debug else "Release"
 
         # multistrap を使った sysroot の構築
         if platform.target.os == "jetson" or platform.target.os == "raspberry-pi-os":
@@ -74,7 +80,7 @@ def install_deps(
 
         if local_webrtc_build_dir is None:
             install_webrtc_args = {
-                "version": version["WEBRTC_BUILD_VERSION"],
+                "version": deps["WEBRTC_BUILD_VERSION"],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -123,11 +129,12 @@ def install_deps(
 
         # Boost
         install_boost_args = {
-            "version": version["BOOST_VERSION"],
+            "version": deps["BOOST_VERSION"],
             "version_file": os.path.join(install_dir, "boost.version"),
             "source_dir": source_dir,
             "build_dir": build_dir,
             "install_dir": install_dir,
+            "expected_sha256": deps["BOOST_SHA256_HASH"],
             "cxx": "",
             "cflags": [],
             "cxxflags": [],
@@ -217,7 +224,7 @@ def install_deps(
 
         # CMake
         install_cmake_args = {
-            "version": version["CMAKE_VERSION"],
+            "version": deps["CMAKE_VERSION"],
             "version_file": os.path.join(install_dir, "cmake.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -245,7 +252,7 @@ def install_deps(
         # CUDA
         if platform.target.os == "windows":
             install_cuda_args = {
-                "version": version["CUDA_VERSION"],
+                "version": deps["CUDA_VERSION"],
                 "version_file": os.path.join(install_dir, "cuda.version"),
                 "source_dir": source_dir,
                 "build_dir": build_dir,
@@ -253,10 +260,10 @@ def install_deps(
             }
             install_cuda_windows(**install_cuda_args)
 
-        # Intel oneVPL
+        # Intel VPL
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             install_vpl_args = {
-                "version": version["VPL_VERSION"],
+                "version": deps["VPL_VERSION"],
                 "version_file": os.path.join(install_dir, "vpl.version"),
                 "configuration": "Debug" if debug else "Release",
                 "source_dir": source_dir,
@@ -276,8 +283,8 @@ def install_deps(
                 install_vpl_args["cmake_args"].append(f"-DCMAKE_CXX_FLAGS={' '.join(cxxflags)}")
             if platform.target.os == "ubuntu":
                 cmake_args = []
-                cmake_args.append("-DCMAKE_C_COMPILER=clang-18")
-                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-18")
+                cmake_args.append("-DCMAKE_C_COMPILER=clang-20")
+                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-20")
                 path = cmake_path(os.path.join(webrtc_info.libcxx_dir, "include"))
                 cmake_args.append(f"-DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES={path}")
                 flags = [
@@ -294,10 +301,10 @@ def install_deps(
                 install_vpl_args["cmake_args"] += cmake_args
             install_vpl(**install_vpl_args)
 
-        # SDL2
-        install_sdl2_args = {
-            "version": version["SDL2_VERSION"],
-            "version_file": os.path.join(install_dir, "sdl2.version"),
+        # SDL3
+        install_sdl3_args = {
+            "version": deps["SDL3_VERSION"],
+            "version_file": os.path.join(install_dir, "sdl3.version"),
             "source_dir": source_dir,
             "build_dir": build_dir,
             "install_dir": install_dir,
@@ -306,17 +313,20 @@ def install_deps(
             "cmake_args": [],
         }
         if platform.target.os == "windows":
-            install_sdl2_args["platform"] = "windows"
+            install_sdl3_args["platform"] = "windows"
         elif platform.target.os == "macos":
-            install_sdl2_args["platform"] = "macos"
+            install_sdl3_args["platform"] = "macos"
+            install_sdl3_args["cmake_args"] = [
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+            ]
         elif platform.target.os == "ubuntu":
-            install_sdl2_args["platform"] = "linux"
+            install_sdl3_args["platform"] = "linux"
         elif platform.target.os in ("jetson", "raspberry-pi-os"):
-            install_sdl2_args["platform"] = "linux"
+            install_sdl3_args["platform"] = "linux"
             triplet = "aarch64-linux-gnu"
             arch = "aarch64"
             sysroot = os.path.join(install_dir, "rootfs")
-            install_sdl2_args["cmake_args"] = [
+            install_sdl3_args["cmake_args"] = [
                 "-DCMAKE_SYSTEM_NAME=Linux",
                 f"-DCMAKE_SYSTEM_PROCESSOR={arch}",
                 f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}",
@@ -333,23 +343,63 @@ def install_deps(
         else:
             raise Exception("Not supported platform")
 
-        install_sdl2(**install_sdl2_args)
+        install_sdl3(**install_sdl3_args)
 
         # CLI11
         install_cli11_args = {
-            "version": version["CLI11_VERSION"],
+            "version": deps["CLI11_VERSION"],
             "version_file": os.path.join(install_dir, "cli11.version"),
             "install_dir": install_dir,
         }
         install_cli11(**install_cli11_args)
 
+        # Blend2D (fake capture device用)
+        # macOS と Ubuntu x86_64 のみインストール
+        enable_fake_capture = platform.target.os == "macos" or platform.target.package_name in (
+            "ubuntu-22.04_x86_64",
+            "ubuntu-24.04_x86_64",
+        )
+        if not disable_fake_capture_device and enable_fake_capture:
+            install_blend2d_args = {
+                "version": deps["BLEND2D_VERSION"],
+                "version_file": os.path.join(install_dir, "blend2d.version"),
+                "configuration": configuration,
+                "source_dir": source_dir,
+                "build_dir": build_dir,
+                "install_dir": install_dir,
+                "ios": False,
+                "cmake_args": [],
+                "expected_sha256": deps["BLEND2D_SHA256_HASH"],
+            }
+
+            if platform.target.os == "macos":
+                sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
+                target = (
+                    "x86_64-apple-darwin"
+                    if platform.target.arch == "x86_64"
+                    else "aarch64-apple-darwin"
+                )
+                cmake_args = []
+                cmake_args.append(f"-DCMAKE_SYSTEM_PROCESSOR={platform.target.arch}")
+                cmake_args.append(f"-DCMAKE_OSX_ARCHITECTURES={platform.target.arch}")
+                cmake_args.append(
+                    f"-DCMAKE_OSX_DEPLOYMENT_TARGET={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}"
+                )
+                cmake_args.append(f"-DCMAKE_C_COMPILER_TARGET={target}")
+                cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
+                cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
+                cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+                install_blend2d_args["cmake_args"] = cmake_args
+
+            install_blend2d_official(**install_blend2d_args)
+
         # OpenH264
         install_openh264_args = {
-            "version": version["OPENH264_VERSION"],
+            "version": deps["OPENH264_VERSION"],
             "version_file": os.path.join(install_dir, "openh264.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
-            "is_windows": platform.target.os == 'windows',
+            "is_windows": platform.target.os == "windows",
         }
         install_openh264(**install_openh264_args)
 
@@ -366,31 +416,53 @@ AVAILABLE_TARGETS = [
 WINDOWS_SDK_VERSION = "10.0.20348.0"
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("target", choices=AVAILABLE_TARGETS)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--relwithdebinfo", action="store_true")
-    add_webrtc_build_arguments(parser)
-    parser.add_argument("--package", action="store_true")
-
-    args = parser.parse_args()
-    if args.target == "windows_x86_64":
-        platform = Platform("windows", get_windows_osver(), "x86_64")
-    elif args.target == "macos_x86_64":
-        platform = Platform("macos", get_macos_osver(), "x86_64")
-    elif args.target == "macos_arm64":
-        platform = Platform("macos", get_macos_osver(), "arm64")
-    elif args.target == "ubuntu-22.04_x86_64":
-        platform = Platform("ubuntu", "22.04", "x86_64")
-    elif args.target == "ubuntu-24.04_x86_64":
-        platform = Platform("ubuntu", "24.04", "x86_64")
-    elif args.target == "raspberry-pi-os_armv8":
-        platform = Platform("raspberry-pi-os", None, "armv8")
-    elif args.target == "ubuntu-22.04_armv8_jetson":
-        platform = Platform("jetson", None, "armv8", extra="ubuntu-22.04")
+def _find_clang_binary(name: str) -> Optional[str]:
+    if shutil.which(name) is not None:
+        return name
     else:
-        raise Exception(f"Unknown target {args.target}")
+        for n in range(50, 14, -1):
+            if shutil.which(f"{name}-{n}") is not None:
+                return f"{name}-{n}"
+    return None
+
+
+def _format(
+    clang_format_path: Optional[str] = None,
+):
+    if clang_format_path is None:
+        clang_format_path = _find_clang_binary("clang-format")
+    if clang_format_path is None:
+        raise Exception("clang-format not found. Please install it or specify the path.")
+    patterns = [
+        "src/**/*.h",
+        "src/**/*.cpp",
+        "src/**/*.mm",
+    ]
+    target_files = []
+    for pattern in patterns:
+        files = glob.glob(pattern, recursive=True)
+        target_files.extend(files)
+    cmd([clang_format_path, "-i"] + target_files)
+
+
+def _build(args):
+    target = args.target
+    if target == "windows_x86_64":
+        platform = Platform("windows", get_windows_osver(), "x86_64")
+    elif target == "macos_x86_64":
+        platform = Platform("macos", get_macos_osver(), "x86_64")
+    elif target == "macos_arm64":
+        platform = Platform("macos", get_macos_osver(), "arm64")
+    elif target == "ubuntu-22.04_x86_64":
+        platform = Platform("ubuntu", "22.04", "x86_64")
+    elif target == "ubuntu-24.04_x86_64":
+        platform = Platform("ubuntu", "24.04", "x86_64")
+    elif target == "raspberry-pi-os_armv8":
+        platform = Platform("raspberry-pi-os", None, "armv8")
+    elif target == "ubuntu-22.04_armv8_jetson":
+        platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
+    else:
+        raise Exception(f"Unknown target {target}")
 
     logging.info(f"Build platform: {platform.build.package_name}")
     logging.info(f"Target platform: {platform.target.package_name}")
@@ -413,6 +485,7 @@ def main():
         args.debug,
         local_webrtc_build_dir=args.local_webrtc_build_dir,
         local_webrtc_build_args=args.local_webrtc_build_args,
+        disable_fake_capture_device=args.disable_fake_capture_device,
     )
 
     configuration = "Release"
@@ -435,8 +508,7 @@ def main():
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_deps = read_version_file(webrtc_info.deps_file)
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            momo_version = version["MOMO_VERSION"]
+            momo_version = read_version_string("VERSION")
             momo_commit = cmdcap(["git", "rev-parse", "HEAD"])
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
@@ -450,8 +522,8 @@ def main():
             cmake_args.append(f"-DCMAKE_SYSTEM_VERSION={WINDOWS_SDK_VERSION}")
         if platform.target.os == "ubuntu":
             if platform.target.package_name in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
-                cmake_args.append("-DCMAKE_C_COMPILER=clang-18")
-                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-18")
+                cmake_args.append("-DCMAKE_C_COMPILER=clang-20")
+                cmake_args.append("-DCMAKE_CXX_COMPILER=clang++-20")
             else:
                 cmake_args.append(
                     f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}"
@@ -515,20 +587,31 @@ def main():
             cmake_args.append("-DUSE_SCREEN_CAPTURER=ON")
 
         # NvCodec
-        if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
-            cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
-            if platform.target.os == "windows":
-                cmake_args.append(
-                    f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
-                )
+        if not args.disable_cuda:
+            if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
+                cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
+                if platform.target.os == "windows":
+                    cmake_args.append(
+                        f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
+                    )
 
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")
             cmake_args.append(f"-DVPL_ROOT_DIR={cmake_path(os.path.join(install_dir, 'vpl'))}")
 
-        cmake_args.append(f"-DSDL2_ROOT_DIR={os.path.join(install_dir, 'sdl2')}")
+        cmake_args.append(f"-DSDL3_ROOT_DIR={os.path.join(install_dir, 'sdl3')}")
         cmake_args.append(f"-DCLI11_ROOT_DIR={os.path.join(install_dir, 'cli11')}")
         cmake_args.append(f"-DOPENH264_ROOT_DIR={os.path.join(install_dir, 'openh264')}")
+
+        # Fake capture device (Blend2D)
+        # macOS と Ubuntu x86_64 のみインストール
+        enable_fake_capture = platform.target.os == "macos" or platform.target.package_name in (
+            "ubuntu-22.04_x86_64",
+            "ubuntu-24.04_x86_64",
+        )
+        if not args.disable_fake_capture_device and enable_fake_capture:
+            cmake_args.append("-DUSE_FAKE_CAPTURE_DEVICE=ON")
+            cmake_args.append(f"-DBlend2D_ROOT={cmake_path(os.path.join(install_dir, 'blend2d'))}")
 
         cmd(["cmake", BASE_DIR] + cmake_args)
         cmd(
@@ -573,18 +656,27 @@ def main():
         rm_rf(os.path.join(package_dir, "momo.env"))
 
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            momo_version = version["MOMO_VERSION"]
+            momo_version = read_version_string("VERSION")
 
-        def archive(archive_path, files, is_windows):
+        def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:
                 with zipfile.ZipFile(archive_path, "w") as f:
                     for file in files:
-                        f.write(filename=file, arcname=file)
+                        arcname = (
+                            os.path.join(archive_dir_name, os.path.relpath(file, "momo"))
+                            if archive_dir_name
+                            else file
+                        )
+                        f.write(filename=file, arcname=arcname)
             else:
                 with tarfile.open(archive_path, "w:gz") as f:
                     for file in files:
-                        f.add(name=file, arcname=file)
+                        arcname = (
+                            os.path.join(archive_dir_name, os.path.relpath(file, "momo"))
+                            if archive_dir_name
+                            else file
+                        )
+                        f.add(name=file, arcname=arcname)
 
         ext = "zip" if platform.target.os == "windows" else "tar.gz"
         is_windows = platform.target.os == "windows"
@@ -593,11 +685,44 @@ def main():
         with cd(install_dir):
             archive_name = f"momo-{momo_version}_{platform.target.package_name}.{ext}"
             archive_path = os.path.join(package_dir, archive_name)
-            archive(archive_path, enum_all_files("momo", "."), is_windows)
+            archive_dir_name = f"momo-{momo_version}_{platform.target.package_name}"
+            archive(archive_path, enum_all_files("momo", "."), is_windows, archive_dir_name)
 
             with open(os.path.join(package_dir, "momo.env"), "w") as f:
                 f.write(f"CONTENT_TYPE={content_type}\n")
                 f.write(f"PACKAGE_NAME={archive_name}\n")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    sp = parser.add_subparsers(dest="command")
+
+    # build コマンド
+    bp = sp.add_parser("build")
+    bp.add_argument("target", choices=AVAILABLE_TARGETS)
+    bp.add_argument("--debug", action="store_true")
+    bp.add_argument("--relwithdebinfo", action="store_true")
+    add_webrtc_build_arguments(bp)
+    bp.add_argument("--package", action="store_true")
+    bp.add_argument("--disable-cuda", action="store_true")
+    bp.add_argument(
+        "--disable-fake-capture-device",
+        action="store_true",
+        help="Disable fake capture device support (requires Blend2D)",
+    )
+
+    # format コマンド
+    fp = sp.add_parser("format")
+    fp.add_argument("--clang-format-path", type=str, default=None)
+
+    args = parser.parse_args()
+
+    if args.command == "build":
+        _build(args)
+    elif args.command == "format":
+        _format(clang_format_path=args.clang_format_path)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

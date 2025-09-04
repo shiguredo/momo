@@ -2,33 +2,57 @@
 
 #include "sora/hwenc_nvcodec/nvcodec_video_encoder.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <vector>
+
 #ifdef _WIN32
 #include <d3d11.h>
 #include <wrl.h>
 #endif
 
-#include <chrono>
-#include <memory>
-#include <mutex>
-#include <queue>
-
 // WebRTC
+#include <api/scoped_refptr.h>
+#include <api/video/encoded_image.h>
 #include <api/video/nv12_buffer.h>
+#include <api/video/render_resolution.h>
+#include <api/video/video_codec_type.h>
+#include <api/video/video_content_type.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_frame_type.h>
+#include <api/video/video_timing.h>
+#include <api/video_codecs/scalability_mode.h>
+#include <api/video_codecs/video_codec.h>
+#include <api/video_codecs/video_encoder.h>
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
-#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h264/include/h264_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
+#include <modules/video_coding/svc/create_scalability_structure.h>
+#include <modules/video_coding/svc/scalable_video_controller.h>
+#include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
 
 // libyuv
-#include <libyuv.h>
+#include <libyuv/convert_from.h>      // IWYU pragma: keep
+#include <libyuv/planar_functions.h>  // IWYU pragma: keep
 
 // NvCodec
+#include <NvEncoder/NvEncoder.h>
+#include <nvEncodeAPI.h>
+
 #ifdef _WIN32
 #include <NvEncoder/NvEncoderD3D11.h>
 #endif
+
+#include "sora/cuda_context.h"
+#include "sora/dyn/dyn.h"
+
 #ifdef __linux__
 #include "nvcodec_video_encoder_cuda.h"
 #endif
@@ -123,8 +147,12 @@ class NvCodecVideoEncoderImpl : public NvCodecVideoEncoder {
   uint32_t framerate_ = 0;
   webrtc::VideoCodecMode mode_ = webrtc::VideoCodecMode::kRealtimeVideo;
   NV_ENC_INITIALIZE_PARAMS initialize_params_;
-  std::vector<std::vector<uint8_t>> v_packet_;
+  std::vector<NvEncOutputFrame> v_packet_;
   webrtc::EncodedImage encoded_image_;
+
+  // AV1 用
+  std::unique_ptr<webrtc::ScalableVideoController> svc_controller_;
+  webrtc::ScalabilityMode scalability_mode_;
 };
 
 NvCodecVideoEncoderImpl::NvCodecVideoEncoderImpl(
@@ -178,6 +206,18 @@ int32_t NvCodecVideoEncoderImpl::InitEncode(
   mode_ = codec_settings->mode;
 
   RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
+
+  if (codec_settings->codecType == webrtc::kVideoCodecAV1) {
+    auto scalability_mode = codec_settings->GetScalabilityMode();
+    if (!scalability_mode) {
+      RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
+      scalability_mode = webrtc::ScalabilityMode::kL1T1;
+    }
+    RTC_LOG(LS_INFO) << "InitEncode scalability_mode:"
+                     << (int)*scalability_mode;
+    svc_controller_ = webrtc::CreateScalabilityStructure(*scalability_mode);
+    scalability_mode_ = *scalability_mode;
+  }
 
   return InitNvEnc();
 }
@@ -292,7 +332,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
         ((uint8_t*)map.pData + height_ * map.RowPitch), map.RowPitch,
         frame_buffer->width(), frame_buffer->height());
   } else {
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         frame.video_frame_buffer()->ToI420();
     libyuv::I420ToNV12(
         frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
@@ -326,7 +366,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   } else {
-    rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
         frame.video_frame_buffer()->ToI420();
     cuda_->Copy(nv_encoder_.get(), frame_buffer->DataY(), frame_buffer->width(),
                 frame_buffer->height());
@@ -340,9 +380,21 @@ int32_t NvCodecVideoEncoderImpl::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  for (std::vector<uint8_t>& packet : v_packet_) {
-    auto encoded_image_buffer =
-        webrtc::EncodedImageBuffer::Create(packet.data(), packet.size());
+  for (NvEncOutputFrame& output : v_packet_) {
+    std::vector<uint8_t>& packet = output.frame;
+    uint8_t* p = packet.data();
+    size_t size = packet.size();
+    if (codec_ == CudaVideoCodec::AV1) {
+      // IVF ヘッダーが付いてるので取り除く
+      if ((p[0] == 'D') && (p[1] == 'K') && (p[2] == 'I') && (p[3] == 'F')) {
+        p += 32;
+        size -= 32;
+      }
+      p += 12;
+      size -= 12;
+    }
+    auto encoded_image_buffer = webrtc::EncodedImageBuffer::Create(p, size);
+
     encoded_image_.SetEncodedData(encoded_image_buffer);
     encoded_image_._encodedWidth = width_;
     encoded_image_._encodedHeight = height_;
@@ -351,30 +403,17 @@ int32_t NvCodecVideoEncoderImpl::Encode(
             ? webrtc::VideoContentType::SCREENSHARE
             : webrtc::VideoContentType::UNSPECIFIED;
     encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
-    encoded_image_.SetRtpTimestamp(frame.timestamp());
+    encoded_image_.SetRtpTimestamp(frame.rtp_timestamp());
     encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();
     encoded_image_.SetColorSpace(frame.color_space());
     encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
 
-    uint8_t zero_count = 0;
-    size_t nal_start_idx = 0;
-    for (size_t i = 0; i < packet.size(); i++) {
-      uint8_t data = packet.data()[i];
-      if ((i != 0) && (i == nal_start_idx)) {
-        if ((data & 0x1F) == 0x05) {
-          encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
-        }
-      }
-      if (data == 0x01 && zero_count >= 2) {
-        nal_start_idx = i + 1;
-      }
-      if (data == 0x00) {
-        zero_count++;
-      } else {
-        zero_count = 0;
-      }
+    // IDR フレームまたは I フレームはキーフレームとして扱う
+    if (output.pictureType == NV_ENC_PIC_TYPE_IDR ||
+        output.pictureType == NV_ENC_PIC_TYPE_I) {
+      encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
     }
 
     webrtc::CodecSpecificInfo codec_specific;
@@ -390,6 +429,25 @@ int32_t NvCodecVideoEncoderImpl::Encode(
 
       h265_bitstream_parser_.ParseBitstream(encoded_image_);
       encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    } else if (codec_ == CudaVideoCodec::AV1) {
+      codec_specific.codecType = webrtc::kVideoCodecAV1;
+
+      bool is_key =
+          encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+      std::vector<webrtc::ScalableVideoController::LayerFrameConfig>
+          layer_frames = svc_controller_->NextFrameConfig(is_key);
+      codec_specific.end_of_picture = true;
+      codec_specific.scalability_mode = scalability_mode_;
+      // layer_frames[0] が無効の場合、アクセス違反となるが、基本的に無効になることはない
+      codec_specific.generic_frame_info =
+          svc_controller_->OnEncodeDone(layer_frames[0]);
+      if (is_key && codec_specific.generic_frame_info) {
+        codec_specific.template_structure =
+            svc_controller_->DependencyStructure();
+        auto& resolutions = codec_specific.template_structure->resolutions;
+        resolutions = {webrtc::RenderResolution(encoded_image_._encodedWidth,
+                                                encoded_image_._encodedHeight)};
+      }
     }
 
     webrtc::EncodedImageCallback::Result result =
@@ -415,6 +473,11 @@ void NvCodecVideoEncoderImpl::SetRates(
   if (parameters.framerate_fps < 1.0) {
     RTC_LOG(LS_WARNING) << "Invalid frame rate: " << parameters.framerate_fps;
     return;
+  }
+
+  // bitrate が 0 の時レイヤーを無効にする
+  if (svc_controller_) {
+    svc_controller_->OnRatesUpdated(parameters.bitrate);
   }
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
@@ -544,6 +607,10 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
       encoder->CreateDefaultEncoderParams(
           &initialize_params, NV_ENC_CODEC_HEVC_GUID, NV_ENC_PRESET_P2_GUID,
           NV_ENC_TUNING_INFO_LOW_LATENCY);
+    } else if (codec == CudaVideoCodec::AV1) {
+      encoder->CreateDefaultEncoderParams(
+          &initialize_params, NV_ENC_CODEC_AV1_GUID, NV_ENC_PRESET_P2_GUID,
+          NV_ENC_TUNING_INFO_LOW_LATENCY);
     }
 
     //initialize_params.enablePTD = 1;
@@ -552,8 +619,6 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
     initialize_params.maxEncodeWidth = width;
     initialize_params.maxEncodeHeight = height;
 
-    //encode_config.profileGUID = NV_ENC_H264_PROFILE_BASELINE_GUID;
-    //encode_config.rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
     encode_config.rcParams.averageBitRate = target_bitrate_bps;
     encode_config.rcParams.maxBitRate = max_bitrate_bps;
 
@@ -582,6 +647,11 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
       encode_config.encodeCodecConfig.hevcConfig.repeatSPSPPS = 1;
       encode_config.encodeCodecConfig.hevcConfig.sliceMode = 0;
       encode_config.encodeCodecConfig.hevcConfig.sliceModeData = 0;
+    } else if (codec == CudaVideoCodec::AV1) {
+      encode_config.encodeCodecConfig.av1Config.idrPeriod =
+          NVENC_INFINITE_GOPLENGTH;
+      // キーフレームにサイズ情報が付与されていない状態になるのを防ぐ
+      encode_config.encodeCodecConfig.av1Config.repeatSeqHdr = 1;
     }
 
     encoder->CreateEncoder(&initialize_params);

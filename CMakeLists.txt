@@ -18,11 +18,12 @@ set(TARGET_ARCH "" CACHE STRING "ビルド対象の動作する CPU。\n有効�
 set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な CPU の情報。\n有効な値は armv8")
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
-set(USE_VPL_ENCODER OFF CACHE BOOL "oneVPL のハードウェアエンコーダを利用するかどうか")
+set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
+set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
-set(SDL2_ROOT_DIR "" CACHE PATH "SDL2 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL2 を利用する")
+set(SDL3_ROOT_DIR "" CACHE PATH "SDL3 のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの SDL3 を利用する")
 set(CLI11_ROOT_DIR "" CACHE PATH "CLI11 のインストール先ディレクトリ")
 set(OPENH264_ROOT_DIR "" CACHE PATH "OpenH264 のインストール先ディレクトリ")
 set(NVCODEC_ROOT_DIR "" CACHE PATH "NVIDIA VIDEO CODEC SDK のインストール先ディレクトリ")
@@ -72,7 +73,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 project(momo C CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${SDL2_ROOT_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${SDL3_ROOT_DIR})
 if (USE_VPL_ENCODER)
   list(APPEND CMAKE_PREFIX_PATH ${VPL_ROOT_DIR}/lib/cmake/vpl)
 endif()
@@ -82,14 +83,17 @@ if (WIN32)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem json)
 find_package(CLI11 REQUIRED)
-find_package(SDL2 REQUIRED)
+if (USE_FAKE_CAPTURE_DEVICE)
+  find_package(Blend2D REQUIRED)
+endif()
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -127,6 +131,7 @@ target_sources(momo
     src/serial_data_channel/serial_data_manager.cpp
     src/sora-cpp-sdk/src/open_h264_video_encoder.cpp
     src/sora-cpp-sdk/src/scalable_track_source.cpp
+    src/sora-cpp-sdk/src/vpl_session_impl.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
     src/sora/sora_session.cpp
@@ -160,11 +165,12 @@ target_compile_definitions(momo
     $<$<BOOL:${USE_VPL_ENCODER}>:USE_VPL_ENCODER>
     $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
     $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
+    $<$<BOOL:${USE_FAKE_CAPTURE_DEVICE}>:USE_FAKE_CAPTURE_DEVICE>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
     BOOST_NO_CXX98_FUNCTION_BASE
 )
 
-# SDL2 のための設定
+# SDL3 のための設定
 target_sources(momo
   PRIVATE
     src/sdl_renderer/sdl_renderer.cpp
@@ -176,19 +182,18 @@ target_compile_definitions(momo
 if ("${TARGET_OS}" STREQUAL "windows" OR "${TARGET_OS}" STREQUAL "macos")
   target_link_libraries(momo
     PRIVATE
-      SDL2::SDL2-static
-      SDL2::SDL2main
+      SDL3::SDL3-static
   )
 else()
-  if (TARGET SDL2::SDL2Config)
+  if (TARGET SDL3::SDL3)
     target_link_libraries(momo
       PRIVATE
-        SDL2::SDL2Config
+        SDL3::SDL3
     )
   else()
-    target_link_directories(momo PRIVATE ${SDL2_LIBDIR})
-    target_link_libraries(momo PRIVATE SDL2)
-    target_include_directories(momo PRIVATE "${SYSROOT}${SDL2_INCLUDE_DIRS}")
+    target_link_directories(momo PRIVATE ${SDL3_LIBDIR})
+    target_link_libraries(momo PRIVATE SDL3)
+    target_include_directories(momo PRIVATE "${SYSROOT}${SDL3_INCLUDE_DIRS}")
   endif()
 endif()
 
@@ -236,6 +241,15 @@ if (USE_SCREEN_CAPTURER)
   endif()
 endif()
 
+if (USE_FAKE_CAPTURE_DEVICE)
+  target_sources(momo
+    PRIVATE
+      src/rtc/fake_video_capturer.cpp
+      src/rtc/fake_audio_capturer.cpp
+  )
+  target_link_libraries(momo PRIVATE Blend2D::Blend2D)
+endif()
+
 if ("${TARGET_OS}" STREQUAL "windows")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(momo PRIVATE /utf-8 /bigobj)
@@ -270,6 +284,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       Shcore.lib
       wmcodecdspuuid.lib
       Dwmapi.lib
+      D3D11.lib
   )
 
   target_compile_definitions(momo
@@ -359,11 +374,10 @@ if ("${TARGET_OS}" STREQUAL "windows")
     )
   endif()
 
-  # oneVPL
+  # Intel VPL
   if (USE_VPL_ENCODER)
     target_sources(momo
       PRIVATE
-        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
     )
@@ -419,6 +433,7 @@ elseif (TARGET_OS STREQUAL "linux")
 
   target_sources(momo
     PRIVATE
+      src/sora-cpp-sdk/src/v4l2/v4l2_device.cpp
       src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp
   )
   target_compile_definitions(momo
@@ -488,18 +503,15 @@ elseif (TARGET_OS STREQUAL "linux")
     target_link_libraries(momo PRIVATE cudart_static dl rt)
   endif()
 
-  # oneVPL
+  # Intel VPL
   if (USE_VPL_ENCODER)
     find_package(Libdrm REQUIRED)
     find_package(Libva REQUIRED)
     find_package(VPL REQUIRED)
     target_sources(momo
       PRIVATE
-        src/sora-cpp-sdk/src/hwenc_vpl/vpl_session_impl.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp
         src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_encoder.cpp
-        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils_drm.cpp
-        src/sora-cpp-sdk/src/hwenc_vpl/vaapi_utils.cpp
     )
     target_link_libraries(momo
       PRIVATE

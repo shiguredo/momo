@@ -1,28 +1,55 @@
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
 #include <mutex>
+#include <vector>
 
 // WebRTC
+#include <api/scoped_refptr.h>
+#include <api/video/encoded_image.h>
+#include <api/video/render_resolution.h>
+#include <api/video/video_codec_type.h>
+#include <api/video/video_content_type.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_frame_type.h>
+#include <api/video/video_timing.h>
+#include <api/video_codecs/scalability_mode.h>
+#include <api/video_codecs/video_codec.h>
+#include <api/video_codecs/video_encoder.h>
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/h265/h265_bitstream_parser.h>
 #include <common_video/include/bitrate_adjuster.h>
-#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h264/include/h264_globals.h>
+#include <modules/video_coding/codecs/interface/common_constants.h>
 #include <modules/video_coding/codecs/vp9/include/vp9_globals.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
+#include <modules/video_coding/svc/create_scalability_structure.h>
+#include <modules/video_coding/svc/scalable_video_controller.h>
 #include <modules/video_coding/utility/vp9_uncompressed_header_parser.h>
+#include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/synchronization/mutex.h>
-
-// Intel VPL
-#include <vpl/mfxvideo++.h>
-#include <vpl/mfxvp8.h>
 
 // libyuv
-#include <libyuv.h>
+#include <libyuv/convert_from.h>
+#include <libyuv/planar_functions.h>
 
-#include "vpl_session_impl.h"
+// Intel VPL
+#include <vpl/mfxcommon.h>
+#include <vpl/mfxdefs.h>
+#include <vpl/mfxstructures.h>
+#include <vpl/mfxvideo++.h>
+#include <vpl/mfxvideo.h>
+#include <vpl/mfxvp8.h>
+
+#include "../vpl_session_impl.h"
+#include "sora/vpl_session.h"
 #include "vpl_utils.h"
 
 namespace sora {
@@ -91,6 +118,10 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   webrtc::GofInfoVP9 gof_;
   size_t gof_idx_;
 
+  // AV1 用
+  std::unique_ptr<webrtc::ScalableVideoController> svc_controller_;
+  webrtc::ScalabilityMode scalability_mode_;
+
   int32_t InitVpl();
   int32_t ReleaseVpl();
 
@@ -104,6 +135,8 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
   std::vector<uint8_t> bitstream_buffer_;
   mfxBitstream bitstream_;
   mfxFrameInfo frame_info_;
+
+  int key_frame_interval_ = 0;
 };
 
 const int kLowH264QpThreshold = 34;
@@ -129,13 +162,13 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
   std::unique_ptr<MFXVideoENCODE> encoder(
       new MFXVideoENCODE(GetVplSession(session)));
 
-  mfxPlatform platform;
-  memset(&platform, 0, sizeof(platform));
-  MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
-  RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
-                      << " CodeName=" << platform.CodeName
-                      << " DeviceId=" << platform.DeviceId
-                      << " MediaAdapterType=" << platform.MediaAdapterType;
+  // mfxPlatform platform;
+  // memset(&platform, 0, sizeof(platform));
+  // MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
+  // RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
+  //                     << " CodeName=" << platform.CodeName
+  //                     << " DeviceId=" << platform.DeviceId
+  //                     << " MediaAdapterType=" << platform.MediaAdapterType;
 
   mfxVideoParam param;
   ExtBuffer ext;
@@ -210,6 +243,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
   param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
 
+  // キーフレーム間隔を 20 秒に設定（120fps の場合 2400 フレーム）
+  // GopPicSize: GOP 内のピクチャ数
+  // IdrInterval: IDR フレームの間隔（I フレーム単位）
+  param.mfx.GopPicSize = framerate * 20;  // 20 秒分のフレーム数
+  param.mfx.IdrInterval = 0;  // すべての I フレームを IDR フレームにする
   param.mfx.GopRefDist = 1;
   param.AsyncDepth = 1;
   param.IOPattern =
@@ -397,6 +435,18 @@ int32_t VplVideoEncoderImpl::InitEncode(
     gof_idx_ = 0;
   }
 
+  if (codec_ == MFX_CODEC_AV1) {
+    auto scalability_mode = codec_settings->GetScalabilityMode();
+    if (!scalability_mode) {
+      RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
+      scalability_mode = webrtc::ScalabilityMode::kL1T1;
+    }
+    RTC_LOG(LS_INFO) << "InitEncode scalability_mode:"
+                     << (int)*scalability_mode;
+    svc_controller_ = webrtc::CreateScalabilityStructure(*scalability_mode);
+    scalability_mode_ = *scalability_mode;
+  }
+
   return InitVpl();
 }
 int32_t VplVideoEncoderImpl::RegisterEncodeCompleteCallback(
@@ -434,22 +484,41 @@ int32_t VplVideoEncoderImpl::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  // I420 から NV12 に変換
-  rtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
-      frame.video_frame_buffer()->ToI420();
-  libyuv::I420ToNV12(
-      frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
-      frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
-      surface->Data.Y, surface->Data.Pitch, surface->Data.U,
-      surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  // フレームバッファのタイプをチェック
+  auto video_frame_buffer = frame.video_frame_buffer();
+
+  if (video_frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
+    // NV12 の場合はそのまま利用する
+    auto nv12_buffer = video_frame_buffer->GetNV12();
+    libyuv::NV12Copy(nv12_buffer->DataY(), nv12_buffer->StrideY(),
+                     nv12_buffer->DataUV(), nv12_buffer->StrideUV(),
+                     surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+                     surface->Data.Pitch, frame.width(), frame.height());
+  } else {
+    // それ以外のフレームバッファは I420 経由で変換
+    webrtc::scoped_refptr<const webrtc::I420BufferInterface> frame_buffer =
+        video_frame_buffer->ToI420();
+    libyuv::I420ToNV12(
+        frame_buffer->DataY(), frame_buffer->StrideY(), frame_buffer->DataU(),
+        frame_buffer->StrideU(), frame_buffer->DataV(), frame_buffer->StrideV(),
+        surface->Data.Y, surface->Data.Pitch, surface->Data.U,
+        surface->Data.Pitch, frame_buffer->width(), frame_buffer->height());
+  }
 
   mfxStatus sts;
 
   mfxEncodeCtrl ctrl;
   memset(&ctrl, 0, sizeof(ctrl));
-  //send_key_frame = true;
   if (send_key_frame) {
-    ctrl.FrameType = MFX_FRAMETYPE_I | MFX_FRAMETYPE_IDR | MFX_FRAMETYPE_REF;
+    // VP9 では MFX_FRAMETYPE_I のみを設定する
+    // VP9 は MFX_FRAMETYPE_I か MFX_FRAMETYPE_P のみのフレームを想定しているようで、
+    // 他のフレームタイプを設定すると内部的に MFX_FRAMETYPE_P に変更されてしまう
+    // ref: https://github.com/intel/vpl-gpu-rt/blob/5d99334834aafc5448e7c799a7c176ee0832ec09/_studio/mfx_lib/encode_hw/vp9/src/mfx_vp9_encode_hw_par.cpp#L1853-L1857
+    if (codec_ == MFX_CODEC_VP9) {
+      ctrl.FrameType = MFX_FRAMETYPE_I;
+    } else {
+      ctrl.FrameType = MFX_FRAMETYPE_I | MFX_FRAMETYPE_IDR | MFX_FRAMETYPE_REF;
+    }
   } else {
     ctrl.FrameType = MFX_FRAMETYPE_UNKNOWN;
   }
@@ -518,6 +587,7 @@ int32_t VplVideoEncoderImpl::Encode(
     //FILE* fp = fopen("test.mp4", "a+");
     //fwrite(p, 1, size, fp);
     //fclose(fp);
+
     if (codec_ == MFX_CODEC_VP9) {
       // VP9 はIVFヘッダーがエンコードフレームについているので取り除く
       if ((p[0] == 'D') && (p[1] == 'K') && (p[2] == 'I') && (p[3] == 'F')) {
@@ -536,14 +606,18 @@ int32_t VplVideoEncoderImpl::Encode(
             ? webrtc::VideoContentType::SCREENSHARE
             : webrtc::VideoContentType::UNSPECIFIED;
     encoded_image_.timing_.flags = webrtc::VideoSendTiming::kInvalid;
-    encoded_image_.SetRtpTimestamp(frame.timestamp());
+    encoded_image_.SetRtpTimestamp(frame.rtp_timestamp());
     encoded_image_.ntp_time_ms_ = frame.ntp_time_ms();
     encoded_image_.capture_time_ms_ = frame.render_time_ms();
     encoded_image_.rotation_ = frame.rotation();
     encoded_image_.SetColorSpace(frame.color_space());
+    key_frame_interval_ += 1;
     if (bitstream_.FrameType & MFX_FRAMETYPE_I ||
         bitstream_.FrameType & MFX_FRAMETYPE_IDR) {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameKey;
+      RTC_LOG(LS_INFO) << "Key Frame Generated: key_frame_interval="
+                       << key_frame_interval_;
+      key_frame_interval_ = 0;
     } else {
       encoded_image_._frameType = webrtc::VideoFrameType::kVideoFrameDelta;
     }
@@ -589,6 +663,29 @@ int32_t VplVideoEncoderImpl::Encode(
 
       h265_bitstream_parser_.ParseBitstream(encoded_image_);
       encoded_image_.qp_ = h265_bitstream_parser_.GetLastSliceQp().value_or(-1);
+    } else if (codec_ == MFX_CODEC_AV1) {
+      codec_specific.codecType = webrtc::kVideoCodecAV1;
+
+      bool is_key =
+          encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
+      std::vector<webrtc::ScalableVideoController::LayerFrameConfig>
+          layer_frames = svc_controller_->NextFrameConfig(is_key);
+      // AV1 の SVC では、まれにエンコード対象のレイヤーフレームが存在しない場合がある。
+      // 次のフレームを待つことで正常に継続可能なケースであるため、エラーではなく正常終了で返してスキップする。
+      if (layer_frames.empty()) {
+        return WEBRTC_VIDEO_CODEC_OK;
+      }
+      codec_specific.end_of_picture = true;
+      codec_specific.scalability_mode = scalability_mode_;
+      codec_specific.generic_frame_info =
+          svc_controller_->OnEncodeDone(layer_frames[0]);
+      if (is_key && codec_specific.generic_frame_info) {
+        codec_specific.template_structure =
+            svc_controller_->DependencyStructure();
+        auto& resolutions = codec_specific.template_structure->resolutions;
+        resolutions = {webrtc::RenderResolution(encoded_image_._encodedWidth,
+                                                encoded_image_._encodedHeight)};
+      }
     }
 
     webrtc::EncodedImageCallback::Result result =
@@ -620,6 +717,11 @@ void VplVideoEncoderImpl::SetRates(const RateControlParameters& parameters) {
   target_bitrate_bps_ = new_bitrate;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
   reconfigure_needed_ = true;
+
+  // bitrate が 0 の時レイヤーを無効にする
+  if (svc_controller_) {
+    svc_controller_->OnRatesUpdated(parameters.bitrate);
+  }
 }
 webrtc::VideoEncoder::EncoderInfo VplVideoEncoderImpl::GetEncoderInfo() const {
   webrtc::VideoEncoder::EncoderInfo info;

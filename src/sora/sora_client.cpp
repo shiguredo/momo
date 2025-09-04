@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <thread>
 
 // boost
 #include <boost/beast/websocket/stream.hpp>
@@ -46,8 +47,8 @@ std::shared_ptr<RTCConnection> SoraClient::GetRTCConnection() const {
 }
 
 void SoraClient::GetStats(
-    std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
-        callback) {
+    std::function<void(
+        const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback) {
   std::shared_ptr<RTCConnection> rtc_conn = GetRTCConnection();
   if (rtc_conn) {
     rtc_conn->GetStats(std::move(callback));
@@ -282,8 +283,6 @@ void SoraClient::DoSendConnect(bool redirect) {
     json_message["redirect"] = true;
   }
 
-  json_message["multistream"] = true;
-
   if (config_.simulcast) {
     json_message["simulcast"] = true;
   }
@@ -349,7 +348,7 @@ void SoraClient::DoSendPong() {
   ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraClient::DoSendPong(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
   if (dc_ && using_datachannel_ && dc_->IsOpen("stats")) {
     // DataChannel が使える場合は type: stats で DataChannel に送る
@@ -456,7 +455,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
 
         // simulcast では offer の setRemoteDescription が終わった後に
         // トラックを追加する必要があるため、ここで初期化する
-        self->manager_->InitTracks(self->connection_.get());
+        self->manager_->InitTracks(self->connection_.get(), std::nullopt);
 
         if (self->config_.simulcast &&
             json_message.as_object().count("encodings") != 0) {
@@ -467,15 +466,15 @@ void SoraClient::OnRead(boost::system::error_code ec,
           for (auto v : encodings_json) {
             auto p = v.as_object();
             webrtc::RtpEncodingParameters params;
-            // absl::optional<uint32_t> ssrc;
+            // std::optional<uint32_t> ssrc;
             // double bitrate_priority = kDefaultBitratePriority;
             // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
             // Priority network_priority = Priority::kLow;
-            // absl::optional<int> max_bitrate_bps;
-            // absl::optional<int> min_bitrate_bps;
-            // absl::optional<double> max_framerate;
-            // absl::optional<int> num_temporal_layers;
-            // absl::optional<double> scale_resolution_down_by;
+            // std::optional<int> max_bitrate_bps;
+            // std::optional<int> min_bitrate_bps;
+            // std::optional<double> max_framerate;
+            // std::optional<int> num_temporal_layers;
+            // std::optional<double> scale_resolution_down_by;
             // bool active = true;
             // std::string rid;
             // bool adaptive_ptime = false;
@@ -599,9 +598,8 @@ void SoraClient::OnRead(boost::system::error_code ec,
     if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
           [self = shared_from_this()](
-              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            self->DoSendPong(report);
-          });
+              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                  report) { self->DoSendPong(report); });
     } else {
       DoSendPong();
     }
@@ -630,7 +628,7 @@ webrtc::DataBuffer SoraClient::ConvertToDataBuffer(const std::string& label,
   RTC_LOG(LS_INFO) << "Convert to DataBuffer: label=" << label
                    << " compressed=" << compressed << " input=" << input;
   const std::string& str = compressed ? ZlibHelper::Compress(input) : input;
-  return webrtc::DataBuffer(rtc::CopyOnWriteBuffer(str), compressed);
+  return webrtc::DataBuffer(webrtc::CopyOnWriteBuffer(str), compressed);
 }
 
 void SoraClient::SendDataChannel(const std::string& label,
@@ -640,10 +638,10 @@ void SoraClient::SendDataChannel(const std::string& label,
 }
 
 void SoraClient::OnStateChange(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
 
 void SoraClient::OnMessage(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+    webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
     const webrtc::DataBuffer& buffer) {
   if (!using_datachannel_ || !dc_) {
     return;
@@ -709,7 +707,7 @@ void SoraClient::OnMessage(
   if (label == "stats") {
     connection_->GetStats(
         [self = shared_from_this()](
-            const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
           self->DoSendPong(report);
         });
   }

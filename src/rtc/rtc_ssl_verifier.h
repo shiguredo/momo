@@ -4,10 +4,10 @@
 // WebRTC
 #include <rtc_base/ssl_certificate.h>
 
-class RTCSSLVerifier : public rtc::SSLCertificateVerifier {
+class RTCSSLVerifier : public webrtc::SSLCertificateVerifier {
  public:
   RTCSSLVerifier(bool insecure);
-  bool Verify(const rtc::SSLCertificate& certificate) override;
+  bool Verify(const webrtc::SSLCertificate& certificate) override;
 
  private:
   bool insecure_;

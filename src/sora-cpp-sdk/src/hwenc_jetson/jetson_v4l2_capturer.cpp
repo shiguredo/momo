@@ -37,9 +37,9 @@
 
 namespace sora {
 
-rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
+webrtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
     const V4L2VideoCapturerConfig& config) {
-  rtc::scoped_refptr<JetsonV4L2Capturer> capturer;
+  webrtc::scoped_refptr<JetsonV4L2Capturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> device_info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!device_info) {
@@ -77,7 +77,7 @@ void JetsonV4L2Capturer::LogDeviceList(
   }
 }
 
-rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
+webrtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
     webrtc::VideoCaptureModule::DeviceInfo* device_info,
     const V4L2VideoCapturerConfig& config,
     size_t capture_device_index) {
@@ -89,8 +89,8 @@ rtc::scoped_refptr<JetsonV4L2Capturer> JetsonV4L2Capturer::Create(
     RTC_LOG(LS_WARNING) << "Failed to GetDeviceName";
     return nullptr;
   }
-  rtc::scoped_refptr<JetsonV4L2Capturer> v4l2_capturer =
-      rtc::make_ref_counted<JetsonV4L2Capturer>(config);
+  webrtc::scoped_refptr<JetsonV4L2Capturer> v4l2_capturer =
+      webrtc::make_ref_counted<JetsonV4L2Capturer>(config);
   if (v4l2_capturer->Init((const char*)&unique_name, config.video_device) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create JetsonV4L2Capturer(" << unique_name
                         << ")";
@@ -198,19 +198,30 @@ int32_t JetsonV4L2Capturer::StartCapture(
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 6;
-  unsigned int fmts[nFormats] = {};
-  if (config.use_native) {
+  int nFormats = 0;
+  const int MaxFormats = 6;
+  unsigned int fmts[MaxFormats] = {};
+  if (config.force_yuy2) {
+    fmts[0] = V4L2_PIX_FMT_YUYV;
+    nFormats = 1;
+  } else if (config.force_i420) {
+    fmts[0] = V4L2_PIX_FMT_YUV420;
+    nFormats = 1;
+  } else if (config.force_nv12) {
+    fmts[0] = V4L2_PIX_FMT_NV12;
+    nFormats = 1;
+  } else if (config.use_native) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_JPEG;
-  } else if (!config.force_i420 &&
-             (config.width > 640 || config.height > 480)) {
+    nFormats = 2;
+  } else if (config.width > 640 || config.height > 480) {
     fmts[0] = V4L2_PIX_FMT_MJPEG;
     fmts[1] = V4L2_PIX_FMT_YUV420;
     fmts[2] = V4L2_PIX_FMT_YVU420;
     fmts[3] = V4L2_PIX_FMT_YUYV;
     fmts[4] = V4L2_PIX_FMT_UYVY;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   } else {
     fmts[0] = V4L2_PIX_FMT_YUV420;
     fmts[1] = V4L2_PIX_FMT_YVU420;
@@ -218,6 +229,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
     fmts[3] = V4L2_PIX_FMT_UYVY;
     fmts[4] = V4L2_PIX_FMT_MJPEG;
     fmts[5] = V4L2_PIX_FMT_JPEG;
+    nFormats = 6;
   }
 
   // Enumerate image formats.
@@ -229,7 +241,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
   RTC_LOG(LS_INFO) << "Video Capture enumerats supported image formats:";
   while (ioctl(_deviceFd, VIDIOC_ENUM_FMT, &fmt) == 0) {
     RTC_LOG(LS_INFO) << "  { pixelformat = "
-                     << cricket::GetFourccName(fmt.pixelformat)
+                     << webrtc::GetFourccName(fmt.pixelformat)
                      << ", description = '" << fmt.description << "' }";
     // Match the preferred order.
     for (int i = 0; i < nFormats; i++) {
@@ -245,7 +257,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
     return -1;
   } else {
     RTC_LOG(LS_INFO) << "We prefer format "
-                     << cricket::GetFourccName(fmts[fmtsIdx]);
+                     << webrtc::GetFourccName(fmts[fmtsIdx]);
   }
 
   struct v4l2_format video_fmt;
@@ -275,6 +287,8 @@ int32_t JetsonV4L2Capturer::StartCapture(
     _captureVideoType = webrtc::VideoType::kYV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
     _captureVideoType = webrtc::VideoType::kUYVY;
+  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+    _captureVideoType = webrtc::VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
@@ -323,9 +337,9 @@ int32_t JetsonV4L2Capturer::StartCapture(
   // start capture thread;
   if (_captureThread.empty()) {
     quit_ = false;
-    _captureThread = rtc::PlatformThread::SpawnJoinable(
+    _captureThread = webrtc::PlatformThread::SpawnJoinable(
         std::bind(JetsonV4L2Capturer::CaptureThread, this), "CaptureThread",
-        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
+        webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 
   // Needed to start UVC camera - from the uvcview application
@@ -398,6 +412,8 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
       params.colorFormat = NVBUF_COLOR_FORMAT_YVU420;
     else if (_captureVideoType == webrtc::VideoType::kUYVY)
       params.colorFormat = NVBUF_COLOR_FORMAT_UYVY;
+    else if (_captureVideoType == webrtc::VideoType::kNV12)
+      params.colorFormat = NVBUF_COLOR_FORMAT_NV12;
     params.memtag = NvBufSurfaceTag_CAMERA;
     if (NvBufSurf::NvAllocate(&params, rbuffer.count, fds.get())) {
       return false;
@@ -546,7 +562,7 @@ bool JetsonV4L2Capturer::CaptureProcess() {
 }
 
 void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
-  const int64_t timestamp_us = rtc::TimeMicros();
+  const int64_t timestamp_us = webrtc::TimeMicros();
   int adapted_width, adapted_height, crop_width, crop_height, crop_x, crop_y;
   if (!AdaptFrame(_currentWidth, _currentHeight, timestamp_us, &adapted_width,
                   &adapted_height, &crop_width, &crop_height, &crop_x,
@@ -587,25 +603,25 @@ void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
       RTC_LOG(LS_ERROR) << "decodeToFd Failed";
       return;
     }
-    rtc::scoped_refptr<JetsonBuffer> jetson_buffer(
+    webrtc::scoped_refptr<JetsonBuffer> jetson_buffer(
         JetsonBuffer::Create(_captureVideoType, width, height, adapted_width,
                              adapted_height, fd, pixfmt, std::move(decoder)));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
-                .set_timestamp_ms(rtc::TimeMillis())
-                .set_timestamp_us(rtc::TimeMicros())
+                .set_timestamp_ms(webrtc::TimeMillis())
+                .set_timestamp_us(webrtc::TimeMicros())
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build());
   } else {
-    rtc::scoped_refptr<JetsonBuffer> jetson_buffer(JetsonBuffer::Create(
+    webrtc::scoped_refptr<JetsonBuffer> jetson_buffer(JetsonBuffer::Create(
         _captureVideoType, _currentWidth, _currentHeight, adapted_width,
         adapted_height, _pool[buf->index].fd, _currentPixelFormat, nullptr));
     OnFrame(webrtc::VideoFrame::Builder()
                 .set_video_frame_buffer(jetson_buffer)
                 .set_timestamp_rtp(0)
-                .set_timestamp_ms(rtc::TimeMillis())
-                .set_timestamp_us(rtc::TimeMicros())
+                .set_timestamp_ms(webrtc::TimeMillis())
+                .set_timestamp_us(webrtc::TimeMicros())
                 .set_rotation(webrtc::kVideoRotation_0)
                 .build());
   }

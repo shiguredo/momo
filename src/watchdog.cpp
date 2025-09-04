@@ -8,7 +8,7 @@ WatchDog::WatchDog(boost::asio::io_context& ioc, std::function<void()> callback)
 void WatchDog::Enable(int timeout) {
   timeout_ = timeout;
   timer_.cancel();
-  timer_.expires_from_now(boost::posix_time::seconds(timeout));
+  timer_.expires_after(std::chrono::seconds(timeout));
   timer_.async_wait([this](const boost::system::error_code& ec) {
     if (ec == boost::asio::error::operation_aborted) {
       return;

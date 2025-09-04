@@ -6,8 +6,13 @@
 #include <thread>
 #include <vector>
 
+// SDL3
+#include <SDL3/SDL_main.h>
+
 // WebRTC
+#include <api/make_ref_counted.h>
 #include <rtc_base/log_sinks.h>
+#include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
 
 #if defined(USE_SCREEN_CAPTURER)
@@ -30,6 +35,11 @@
 #include "rtc/device_video_capturer.h"
 #endif
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#include "rtc/fake_video_capturer.h"
+#endif
+
 #include "serial_data_channel/serial_data_manager.h"
 
 #include "sdl_renderer/sdl_renderer.h"
@@ -42,6 +52,10 @@
 #include "sora/sora_server.h"
 #include "util.h"
 
+#if defined(__linux__)
+#include "sora/v4l2/v4l2_device.h"
+#endif
+
 #ifdef _WIN32
 #include <rtc_base/win/scoped_com_initializer.h>
 #endif
@@ -51,6 +65,22 @@
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
+
+#if defined(__linux__)
+
+static void ListVideoDevices() {
+  auto devices = sora::EnumV4L2CaptureDevices();
+  if (!devices) {
+    std::cerr << "Failed to enumerate video devices" << std::endl;
+    return;
+  }
+
+  std::cout << "=== Available video devices ===" << std::endl;
+  std::cout << std::endl;
+  std::cout << sora::FormatV4L2Devices(*devices);
+}
+
+#endif
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
@@ -64,26 +94,39 @@ int main(int argc, char* argv[]) {
 
   MomoArgs args;
 
-  bool use_test = false;
+  bool use_p2p = false;
   bool use_ayame = false;
   bool use_sora = false;
-  int log_level = rtc::LS_NONE;
+  int log_level = webrtc::LS_NONE;
 
-  Util::ParseArgs(argc, argv, use_test, use_ayame, use_sora, log_level, args);
+  Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
 
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)log_level);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
+#if defined(__linux__)
+  // --list-devices オプションの処理
+  if (args.list_devices) {
+    ListVideoDevices();
+    return 0;
+  }
+#else
+  if (args.list_devices) {
+    std::cerr << "--list-devices is only supported on Linux" << std::endl;
+    return 1;
+  }
+#endif
 
-  std::unique_ptr<rtc::FileRotatingLogSink> log_sink(
-      new rtc::FileRotatingLogSink("./", "webrtc_logs", kDefaultMaxLogFileSize,
-                                   10));
+  webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)log_level);
+  webrtc::LogMessage::LogTimestamps();
+  webrtc::LogMessage::LogThreads();
+
+  std::unique_ptr<webrtc::FileRotatingLogSink> log_sink(
+      new webrtc::FileRotatingLogSink("./", "webrtc_logs",
+                                      kDefaultMaxLogFileSize, 10));
   if (!log_sink->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to open log file";
     log_sink.reset();
     return 1;
   }
-  rtc::LogMessage::AddLogToStream(log_sink.get(), rtc::LS_INFO);
+  webrtc::LogMessage::AddLogToStream(log_sink.get(), webrtc::LS_INFO);
 
 #if defined(USE_NVCODEC_ENCODER)
   auto cuda_context = sora::CudaContext::Create();
@@ -96,73 +139,90 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  auto capturer = ([&]() -> rtc::scoped_refptr<sora::ScalableVideoTrackSource> {
-    if (args.no_video_device) {
-      return nullptr;
-    }
+  auto capturer =
+      ([&]() -> webrtc::scoped_refptr<sora::ScalableVideoTrackSource> {
+        if (args.no_video_device) {
+          return nullptr;
+        }
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+        // --fake-capture-device が指定された場合は FakeVideoCapturer を使用する
+        if (args.fake_capture_device) {
+          auto size = args.GetSize();
+          FakeVideoCapturer::Config video_config;
+          video_config.width = size.width;
+          video_config.height = size.height;
+          video_config.fps = args.framerate;
+          return FakeVideoCapturer::Create(video_config);
+        }
+#endif
 
 #if defined(USE_SCREEN_CAPTURER)
-    if (args.screen_capture) {
-      RTC_LOG(LS_INFO) << "Screen capturer source list: "
-                       << ScreenVideoCapturer::GetSourceListString();
-      webrtc::DesktopCapturer::SourceList sources;
-      if (!ScreenVideoCapturer::GetSourceList(&sources)) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
-        return nullptr;
-      }
-      auto size = args.GetSize();
-      return rtc::make_ref_counted<ScreenVideoCapturer>(
-          sources[0].id, size.width, size.height, args.framerate);
-    }
+        if (args.screen_capture) {
+          RTC_LOG(LS_INFO) << "Screen capturer source list: "
+                           << ScreenVideoCapturer::GetSourceListString();
+          webrtc::DesktopCapturer::SourceList sources;
+          if (!ScreenVideoCapturer::GetSourceList(&sources)) {
+            RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
+            return nullptr;
+          }
+          auto size = args.GetSize();
+          return webrtc::make_ref_counted<ScreenVideoCapturer>(
+              sources[0].id, size.width, size.height, args.framerate);
+        }
 #endif
 
-    auto size = args.GetSize();
+        auto size = args.GetSize();
 #if defined(__APPLE__)
-    return MacCapturer::Create(size.width, size.height, args.framerate,
-                               args.video_device);
+        return MacCapturer::Create(size.width, size.height, args.framerate,
+                                   args.video_device);
 #elif defined(__linux__)
-    sora::V4L2VideoCapturerConfig v4l2_config;
-    v4l2_config.video_device = args.video_device;
-    v4l2_config.width = size.width;
-    v4l2_config.height = size.height;
-    v4l2_config.framerate = args.framerate;
-    v4l2_config.force_i420 = args.force_i420;
-    v4l2_config.use_native = args.hw_mjpeg_decoder;
+        sora::V4L2VideoCapturerConfig v4l2_config;
+        v4l2_config.video_device = args.video_device;
+        v4l2_config.width = size.width;
+        v4l2_config.height = size.height;
+        v4l2_config.framerate = args.framerate;
+        v4l2_config.force_i420 = args.force_i420;
+        v4l2_config.force_yuy2 = args.force_yuy2;
+        v4l2_config.force_nv12 = args.force_nv12;
+        v4l2_config.use_native = args.hw_mjpeg_decoder;
 
 #if defined(USE_JETSON_ENCODER)
-    if (v4l2_config.use_native) {
-      return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (v4l2_config.use_native) {
+          return sora::JetsonV4L2Capturer::Create(std::move(v4l2_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #elif defined(USE_NVCODEC_ENCODER)
-    if (v4l2_config.use_native) {
-      sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
-      nvcodec_config.cuda_context = cuda_context;
-      return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (v4l2_config.use_native) {
+          sora::NvCodecV4L2CapturerConfig nvcodec_config = v4l2_config;
+          nvcodec_config.cuda_context = cuda_context;
+          return sora::NvCodecV4L2Capturer::Create(std::move(nvcodec_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #elif defined(USE_V4L2_ENCODER)
-    if (args.use_libcamera) {
-      LibcameraCapturerConfig libcamera_config = v4l2_config;
-      // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
-      libcamera_config.native_frame_output =
-          args.use_libcamera_native && !(use_sora && args.sora_simulcast);
-      return LibcameraCapturer::Create(libcamera_config);
-    } else if (v4l2_config.use_native && !(use_sora && args.sora_simulcast)) {
-      return V4L2Capturer::Create(std::move(v4l2_config));
-    } else {
-      return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
-    }
+        if (args.use_libcamera) {
+          LibcameraCapturerConfig libcamera_config = v4l2_config;
+          // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
+          libcamera_config.native_frame_output =
+              args.use_libcamera_native && !(use_sora && args.sora_simulcast);
+          libcamera_config.controls = args.libcamera_controls;
+          return LibcameraCapturer::Create(libcamera_config);
+        } else if (v4l2_config.use_native &&
+                   !(use_sora && args.sora_simulcast)) {
+          return V4L2Capturer::Create(std::move(v4l2_config));
+        } else {
+          return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        }
 #else
-    return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
+        return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
 #endif
 #else
-    return DeviceVideoCapturer::Create(size.width, size.height, args.framerate,
-                                       args.video_device);
+        return DeviceVideoCapturer::Create(size.width, size.height,
+                                           args.framerate, args.video_device);
 #endif
-  })();
+      })();
 
   if (!capturer && !args.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
@@ -210,6 +270,24 @@ int main(int argc, char* argv[]) {
   rtcm_config.proxy_url = args.proxy_url;
   rtcm_config.proxy_username = args.proxy_username;
   rtcm_config.proxy_password = args.proxy_password;
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  // --fake-capture-device が指定された場合、
+  // rtcm_config.create_adm で FakeAudioCapturer を作成する
+  if (args.fake_capture_device && !args.no_audio_device) {
+    FakeAudioCapturer::Config audio_config;
+    audio_config.sample_rate = 48000;
+    audio_config.channels = 1;
+    audio_config.fps = args.framerate;
+    rtcm_config.create_adm = [audio_config, capturer]() {
+      auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      // FakeVideoCapturer と連携するために fake_audio_capturer を設定する
+      static_cast<FakeVideoCapturer*>(capturer.get())
+          ->SetAudioCapturer(fake_audio_capturer);
+      return fake_audio_capturer;
+    };
+  }
+#endif
 
   std::unique_ptr<SDLRenderer> sdl_renderer = nullptr;
   if (args.use_sdl) {
@@ -298,14 +376,14 @@ int main(int argc, char* argv[]) {
       stats_collector = sora_client;
     }
 
-    if (use_test) {
+    if (use_p2p) {
       P2PServerConfig config;
       config.no_google_stun = args.no_google_stun;
-      config.doc_root = args.test_document_root;
+      config.doc_root = args.p2p_document_root;
 
       const boost::asio::ip::tcp::endpoint endpoint{
           boost::asio::ip::make_address("0.0.0.0"),
-          static_cast<unsigned short>(args.test_port)};
+          static_cast<unsigned short>(args.p2p_port)};
       p2p_server = P2PServer::Create(ioc, endpoint, rtc_manager.get(),
                                      std::move(config));
       p2p_server->Run();
@@ -323,6 +401,9 @@ int main(int argc, char* argv[]) {
       config.room_id = args.ayame_room_id;
       config.client_id = args.ayame_client_id;
       config.signaling_key = args.ayame_signaling_key;
+      config.direction = args.ayame_direction;
+      config.video_codec_type = args.ayame_video_codec_type;
+      config.audio_codec_type = args.ayame_audio_codec_type;
 
       ayame_client =
           AyameClient::Create(ioc, rtc_manager.get(), std::move(config));

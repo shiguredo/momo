@@ -12,7 +12,7 @@
 $ tree
 .
 ├── html
-│   ├── test.html
+│   ├── p2p.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -28,14 +28,22 @@ $ tree
 ```bash
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install libdrm2
+sudo apt-get install libdrm2 libva2 libva-drm2
 ```
 
-oneVPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+Intel VPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+
+## 実行権限の付与
+
+ダウンロードした momo の実行ファイルに実行権限を付与してください
+
+```bash
+chmod a+x ./momo
+```
 
 ## 動かしてみる
 
-動かし方については [USE_TEST.md](USE_TEST.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
 
 ## ビデオデバイスの指定
 

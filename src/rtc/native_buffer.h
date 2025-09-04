@@ -9,16 +9,15 @@
 
 class NativeBuffer : public webrtc::VideoFrameBuffer {
  public:
-  static rtc::scoped_refptr<NativeBuffer> Create(webrtc::VideoType video_type,
-                                                 int width,
-                                                 int height);
+  static webrtc::scoped_refptr<NativeBuffer>
+  Create(webrtc::VideoType video_type, int width, int height);
 
   void InitializeData();
 
   Type type() const override;
   int width() const override;
   int height() const override;
-  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
 
   int RawWidth() const;
   int RawHeight() const;

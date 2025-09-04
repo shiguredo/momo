@@ -16,7 +16,7 @@ namespace sora {
 
 class JetsonBuffer : public webrtc::VideoFrameBuffer {
  public:
-  static rtc::scoped_refptr<JetsonBuffer> Create(
+  static webrtc::scoped_refptr<JetsonBuffer> Create(
       webrtc::VideoType video_type,
       int raw_width,
       int raw_height,
@@ -26,17 +26,18 @@ class JetsonBuffer : public webrtc::VideoFrameBuffer {
       uint32_t pixfmt,
       std::shared_ptr<JetsonJpegDecoder> decoder);
 
-  static rtc::scoped_refptr<JetsonBuffer> Create(webrtc::VideoType video_type,
-                                                 int raw_width,
-                                                 int raw_height,
-                                                 int scaled_width,
-                                                 int scaled_height);
+  static webrtc::scoped_refptr<JetsonBuffer> Create(
+      webrtc::VideoType video_type,
+      int raw_width,
+      int raw_height,
+      int scaled_width,
+      int scaled_height);
 
   Type type() const override;
   webrtc::VideoType VideoType() const;
   int width() const override;
   int height() const override;
-  rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override;
 
   int RawWidth() const;
   int RawHeight() const;

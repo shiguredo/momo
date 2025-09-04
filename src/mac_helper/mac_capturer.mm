@@ -28,9 +28,10 @@
 
 - (void)capturer:(RTCVideoCapturer*)capturer
     didCaptureVideoFrame:(RTCVideoFrame*)frame {
-  const int64_t timestamp_us = frame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
-      rtc::make_ref_counted<webrtc::ObjCFrameBuffer>(frame.buffer);
+  const int64_t timestamp_us =
+      frame.timeStampNs / webrtc::kNumNanosecsPerMicrosec;
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
+      webrtc::make_ref_counted<webrtc::ObjCFrameBuffer>(frame.buffer);
   _capturer->OnFrame(webrtc::VideoFrame::Builder()
                          .set_video_frame_buffer(buffer)
                          .set_rotation(webrtc::kVideoRotation_0)
@@ -65,16 +66,22 @@ AVCaptureDeviceFormat* SelectClosestFormat(AVCaptureDevice* device,
 static NSArray<AVCaptureDevice*>* captureDevices() {
   if (@available(macOS 14, *)) {
     // macOS 14 以上では、新しい API を使用して外部カメラも取得する
-    AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
-      discoverySessionWithDeviceTypes:@[
-        AVCaptureDeviceTypeBuiltInWideAngleCamera,
-        AVCaptureDeviceTypeExternal ]
-                            mediaType:AVMediaTypeVideo
-                             position:AVCaptureDevicePositionUnspecified];
+    AVCaptureDeviceDiscoverySession* session = [AVCaptureDeviceDiscoverySession
+        discoverySessionWithDeviceTypes:@[
+          AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeExternal
+        ]
+                              mediaType:AVMediaTypeVideo
+                               position:AVCaptureDevicePositionUnspecified];
     return session.devices;
   } else {
-    // macOS 13 以下では、古い API を使用して内蔵カメラのみ取得する
-    return [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    // macOS 13 以下では、AVCaptureDeviceDiscoverySessionを使用して内蔵カメラのみ取得する
+    AVCaptureDeviceDiscoverySession* session = [AVCaptureDeviceDiscoverySession
+        discoverySessionWithDeviceTypes:@[
+          AVCaptureDeviceTypeBuiltInWideAngleCamera
+        ]
+                              mediaType:AVMediaTypeVideo
+                               position:AVCaptureDevicePositionUnspecified];
+    return session.devices;
   }
 }
 
@@ -96,7 +103,7 @@ MacCapturer::MacCapturer(size_t width,
   [capturer_ startCaptureWithDevice:device format:format fps:target_fps];
 }
 
-rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
+webrtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     size_t width,
     size_t height,
     size_t target_fps,
@@ -106,8 +113,8 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
     RTC_LOG(LS_ERROR) << "Failed to create MacCapture";
     return nullptr;
   }
-  return rtc::make_ref_counted<MacCapturer>(
-          width, height, target_fps, device);
+  return webrtc::make_ref_counted<MacCapturer>(width, height, target_fps,
+                                               device);
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(

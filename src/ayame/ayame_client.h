@@ -30,6 +30,10 @@ struct AyameClientConfig {
   std::string room_id;
   std::string client_id;
   std::string signaling_key;
+  // sendrecv, sendonly, recvonly
+  std::string direction;
+  std::string video_codec_type;
+  std::string audio_codec_type;
 };
 
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
@@ -52,14 +56,15 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void Connect();
   void Close();
 
-  void GetStats(std::function<
-                void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
+  void GetStats(std::function<void(
+                    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
                     callback) override;
 
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
   bool ParseURL(URLParts& parts) const;
+  void SetCodecPreferences();
 
  private:
   void DoRead();

@@ -1,4 +1,4 @@
-#include "sora/fix_cuda_noinline_macro_error.h"
+#include <memory>
 
 #include "sora/cuda_context.h"
 
@@ -9,21 +9,28 @@ namespace sora {
 std::shared_ptr<CudaContext> CudaContext::Create() {
   return nullptr;
 }
-
-void* CudaContext::Context() const {
-  return nullptr;
+bool CudaContext::CanCreate() {
+  return false;
 }
 
 }  // namespace sora
 
 #else
 
-#include "cuda_context_cuda.h"
+#include "sora/fix_cuda_noinline_macro_error.h"
+
+#include <exception>
+
+// CUDA
+#include <cuda.h>
 
 // NvCodec
-#include <NvDecoder/NvDecoder.h>
+#include "NvEncoder/../../Utils/Logger.h"
+#include "NvEncoder/../../Utils/NvCodecUtils.h"
 
+#include "cuda_context_cuda.h"
 #include "sora/dyn/cuda.h"
+#include "sora/dyn/dyn.h"
 
 // どこかにグローバルな logger の定義が必要
 simplelogger::Logger* logger =
@@ -31,11 +38,7 @@ simplelogger::Logger* logger =
 
 namespace sora {
 
-CUcontext GetCudaContext(std::shared_ptr<CudaContext> ctx) {
-  return static_cast<CUcontext>(ctx->Context());
-}
-
-struct CudaContextImpl {
+struct CudaContextImpl : CudaContext {
   CUdevice device;
   CUcontext context;
   ~CudaContextImpl() { dyn::cuCtxDestroy(context); }
@@ -46,7 +49,6 @@ struct CudaContextImpl {
   throw std::exception()
 
 std::shared_ptr<CudaContext> CudaContext::Create() {
-  std::shared_ptr<CudaContext> ctx;
   try {
     CUdevice device;
     CUcontext context;
@@ -62,21 +64,51 @@ std::shared_ptr<CudaContext> CudaContext::Create() {
     //RTC_LOG(LS_INFO) << "GPU in use: " << device_name;
     ckerror(dyn::cuCtxCreate(&context, 0, device));
 
-    std::shared_ptr<CudaContextImpl> impl(new CudaContextImpl());
+    auto impl = std::make_shared<CudaContextImpl>();
     impl->device = device;
     impl->context = context;
-
-    ctx.reset(new CudaContext());
-    ctx->impl_ = impl;
+    return impl;
   } catch (std::exception&) {
     return nullptr;
   }
-
-  return ctx;
 }
 
-void* CudaContext::Context() const {
-  return std::static_pointer_cast<CudaContextImpl>(impl_)->context;
+// Create() と同じことをするけど、エラーログを出さないようにする
+bool CudaContext::CanCreate() {
+  CUdevice device;
+  CUcontext context;
+
+  if (!dyn::DynModule::Instance().IsLoadable(dyn::CUDA_SO)) {
+    return false;
+  }
+
+  CUresult r;
+  r = dyn::cuInit(0);
+  if (r != CUDA_SUCCESS) {
+    return false;
+  }
+
+  r = dyn::cuDeviceGet(&device, 0);
+  if (r != CUDA_SUCCESS) {
+    return false;
+  }
+
+  r = dyn::cuCtxCreate(&context, 0, device);
+  if (r != CUDA_SUCCESS) {
+    return false;
+  }
+
+  dyn::cuCtxDestroy(context);
+
+  return true;
+}
+
+CUdevice GetCudaDevice(std::shared_ptr<CudaContext> ctx) {
+  return std::static_pointer_cast<CudaContextImpl>(ctx)->device;
+}
+
+CUcontext GetCudaContext(std::shared_ptr<CudaContext> ctx) {
+  return std::static_pointer_cast<CudaContextImpl>(ctx)->context;
 }
 
 }  // namespace sora

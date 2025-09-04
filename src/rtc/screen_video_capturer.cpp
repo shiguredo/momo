@@ -19,8 +19,8 @@
 #include <modules/desktop_capture/desktop_capture_options.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
+#include <rtc_base/thread.h>
 #include <rtc_base/time_utils.h>
-#include <system_wrappers/include/sleep.h>
 #include <third_party/libyuv/include/libyuv.h>
 
 #include "native_buffer.h"
@@ -72,10 +72,10 @@ ScreenVideoCapturer::ScreenVideoCapturer(
 
   capturer_->Start(this);
   if (capture_thread_.empty()) {
-    capture_thread_ = rtc::PlatformThread::SpawnJoinable(
+    capture_thread_ = webrtc::PlatformThread::SpawnJoinable(
         std::bind(ScreenVideoCapturer::CaptureThread, this),
         "ScreenCaptureThread",
-        rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
+        webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 }
 
@@ -114,15 +114,15 @@ bool ScreenVideoCapturer::CaptureProcess() {
     return false;
   }
 
-  int64_t started_time = rtc::TimeMillis();
+  int64_t started_time = webrtc::TimeMillis();
   capturer_->CaptureFrame();
-  int last_capture_duration = (int)(rtc::TimeMillis() - started_time);
+  int last_capture_duration = (int)(webrtc::TimeMillis() - started_time);
   int capture_period =
       std::max((last_capture_duration * 100) / max_cpu_consumption_percentage_,
                requested_frame_duration_);
   int delta_time = capture_period - last_capture_duration;
   if (delta_time > 0) {
-    webrtc::SleepMs(delta_time);
+    webrtc::Thread::SleepMs(delta_time);
   }
   return true;
 }
@@ -166,10 +166,10 @@ void ScreenVideoCapturer::OnCaptureResult(
   //  << " output_size.width():" << output_size.width()
   //  << " output_size.height():" << output_size.height();
 
-  //rtc::scoped_refptr<NativeBuffer> native_buffer(NativeBuffer::Create(
+  //webrtc::scoped_refptr<NativeBuffer> native_buffer(NativeBuffer::Create(
   //    webrtc::VideoType::kARGB, output_size.width(), output_size.height()));
   //native_buffer->InitializeData();
-  rtc::scoped_refptr<webrtc::I420Buffer> dst_buffer(
+  webrtc::scoped_refptr<webrtc::I420Buffer> dst_buffer(
       webrtc::I420Buffer::Create(output_size.width(), output_size.height()));
   dst_buffer->InitializeData();
 
@@ -243,7 +243,7 @@ void ScreenVideoCapturer::OnCaptureResult(
   webrtc::VideoFrame captureFrame = webrtc::VideoFrame::Builder()
                                         .set_video_frame_buffer(dst_buffer)
                                         .set_timestamp_rtp(0)
-                                        .set_timestamp_ms(rtc::TimeMillis())
+                                        .set_timestamp_ms(webrtc::TimeMillis())
                                         .set_rotation(webrtc::kVideoRotation_0)
                                         .build();
   ScalableVideoTrackSource::OnFrame(captureFrame);

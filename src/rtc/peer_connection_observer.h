@@ -21,18 +21,18 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
  private:
   void OnSignalingChange(
       webrtc::PeerConnectionInterface::SignalingState new_state) override {}
-  void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override;
   void OnRenegotiationNeeded() override {}
   void OnStandardizedIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
   void OnIceGatheringChange(
-      webrtc::PeerConnectionInterface::IceGatheringState new_state) override{};
+      webrtc::PeerConnectionInterface::IceGatheringState new_state) override {};
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
-  void OnTrack(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+  void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                   transceiver) override;
   void OnRemoveTrack(
-      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
+      webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
 
  private:
   void ClearAllRegisteredTracks();

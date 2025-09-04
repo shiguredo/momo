@@ -14,14 +14,14 @@ class SoraDataChannelOnAsio : public RTCDataManager {
         : ioc(ioc), observer(observer) {}
     boost::asio::io_context& ioc;
     SoraDataChannelObserver* observer;
-    void OnStateChange(rtc::scoped_refptr<webrtc::DataChannelInterface>
+    void OnStateChange(webrtc::scoped_refptr<webrtc::DataChannelInterface>
                            data_channel) override {
       boost::asio::post(ioc, [observer = observer, data_channel]() {
         observer->OnStateChange(data_channel);
       });
     }
     void OnMessage(
-        rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+        webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
         const webrtc::DataBuffer& buffer) override {
       boost::asio::post(ioc, [observer = observer, data_channel, buffer]() {
         observer->OnMessage(data_channel, buffer);
@@ -56,8 +56,8 @@ class SoraDataChannelOnAsio : public RTCDataManager {
     });
   }
 
-  void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     dc_.OnDataChannel(data_channel);
   }
 

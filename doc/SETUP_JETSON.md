@@ -24,7 +24,7 @@ Jetson 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定
 $ tree
 .
 ├── html
-│   ├── test.html
+│   ├── p2p.html
 │   └── webrtc.js
 ├── LICENSE
 ├── momo
@@ -33,7 +33,7 @@ $ tree
 
 ## 動かしてみる
 
-動かし方について、まずは [USE_TEST.md](USE_TEST.md) をご確認ください。
+動かし方について、まずは [USE_P2P.md](USE_P2P.md) をご確認ください。
 
 ## ビデオデバイスの指定
 
@@ -47,7 +47,7 @@ $ tree
 Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
 
 ```bash
-./momo --hw-mjpeg-decoder=true --no-audio-device test
+./momo --hw-mjpeg-decoder=true --no-audio-device p2p
 ```
 
 ## 4K@30fps を出すためにやること

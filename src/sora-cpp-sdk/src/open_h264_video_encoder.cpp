@@ -14,9 +14,15 @@
 
 #include "sora/open_h264_video_encoder.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -29,30 +35,42 @@
 
 // WebRTC
 #include <absl/container/inlined_vector.h>
-#include <absl/strings/match.h>
-#include <absl/types/optional.h>
+#include <absl/memory/memory.h>
+#include <api/environment/environment.h>
 #include <api/environment/environment_factory.h>
-#include <api/transport/rtp/dependency_descriptor.h>
+#include <api/scoped_refptr.h>
+#include <api/units/data_rate.h>
+#include <api/video/encoded_image.h>
 #include <api/video/i420_buffer.h>
+#include <api/video/video_bitrate_allocation.h>
+#include <api/video/video_bitrate_allocator.h>
 #include <api/video/video_codec_constants.h>
+#include <api/video/video_codec_type.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_frame_buffer.h>
+#include <api/video/video_frame_type.h>
 #include <api/video_codecs/scalability_mode.h>
+#include <api/video_codecs/sdp_video_format.h>
+#include <api/video_codecs/video_codec.h>
 #include <api/video_codecs/video_encoder.h>
 #include <common_video/h264/h264_bitstream_parser.h>
 #include <common_video/libyuv/include/webrtc_libyuv.h>
+#include <media/base/media_constants.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/h264/include/h264_globals.h>
+#include <modules/video_coding/codecs/interface/common_constants.h>
 #include <modules/video_coding/include/video_codec_interface.h>
 #include <modules/video_coding/include/video_error_codes.h>
 #include <modules/video_coding/svc/create_scalability_structure.h>
 #include <modules/video_coding/svc/scalable_video_controller.h>
-#include <modules/video_coding/utility/quality_scaler.h>
 #include <modules/video_coding/utility/simulcast_rate_allocator.h>
 #include <modules/video_coding/utility/simulcast_utility.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
-#include <rtc_base/time_utils.h>
 #include <system_wrappers/include/metrics.h>
-#include <third_party/libyuv/include/libyuv/convert.h>
-#include <third_party/libyuv/include/libyuv/scale.h>
+
+// libyuv
+#include <libyuv/scale.h>
 
 // OpenH264
 #include <wels/codec_api.h>
@@ -125,11 +143,11 @@ class OpenH264VideoEncoder : public VideoEncoder {
 
   std::vector<ISVCEncoder*> encoders_;
   std::vector<SSourcePicture> pictures_;
-  std::vector<rtc::scoped_refptr<I420Buffer>> downscaled_buffers_;
+  std::vector<webrtc::scoped_refptr<I420Buffer>> downscaled_buffers_;
   std::vector<LayerConfig> configurations_;
   std::vector<EncodedImage> encoded_images_;
   std::vector<std::unique_ptr<ScalableVideoController>> svc_controllers_;
-  absl::InlinedVector<absl::optional<ScalabilityMode>, kMaxSimulcastStreams>
+  absl::InlinedVector<std::optional<ScalabilityMode>, kMaxSimulcastStreams>
       scalability_modes_;
 
   const Environment env_;
@@ -137,7 +155,7 @@ class OpenH264VideoEncoder : public VideoEncoder {
   H264PacketizationMode packetization_mode_;
   size_t max_payload_size_;
   int32_t number_of_cores_;
-  absl::optional<int> encoder_thread_limit_;
+  std::optional<int> encoder_thread_limit_;
   EncodedImageCallback* encoded_image_callback_;
 
   bool has_reported_init_;
@@ -180,7 +198,7 @@ enum H264EncoderImplEvent {
   kH264EncoderEventMax = 16,
 };
 
-int NumberOfThreads(absl::optional<int> encoder_thread_limit,
+int NumberOfThreads(std::optional<int> encoder_thread_limit,
                     int width,
                     int height,
                     int number_of_cores) {
@@ -224,7 +242,7 @@ VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
   return VideoFrameType::kEmptyFrame;
 }
 
-absl::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
+std::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
     int num_temporal_layers) {
   switch (num_temporal_layers) {
     case 0:
@@ -238,7 +256,7 @@ absl::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
     default:
       RTC_DCHECK_NOTREACHED();
   }
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 }  // namespace
@@ -605,7 +623,7 @@ int32_t OpenH264VideoEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  rtc::scoped_refptr<I420BufferInterface> frame_buffer =
+  webrtc::scoped_refptr<I420BufferInterface> frame_buffer =
       input_frame.video_frame_buffer()->ToI420();
   if (!frame_buffer) {
     RTC_LOG(LS_ERROR) << "Failed to convert "
@@ -921,7 +939,7 @@ std::unique_ptr<webrtc::VideoEncoder> CreateOpenH264VideoEncoder(
     const webrtc::SdpVideoFormat& format,
     std::string openh264) {
   webrtc::H264EncoderSettings settings;
-  if (auto it = format.parameters.find(cricket::kH264FmtpPacketizationMode);
+  if (auto it = format.parameters.find(webrtc::kH264FmtpPacketizationMode);
       it != format.parameters.end()) {
     if (it->second == "0") {
       settings.packetization_mode =

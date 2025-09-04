@@ -18,6 +18,9 @@
 
 #include "momo_version.h"
 
+// 最大フレームレート定数
+constexpr int MAX_FRAMERATE = 120;
+
 static void add_optional_bool(CLI::App* app,
                               const std::string& option_name,
                               boost::optional<bool>& v,
@@ -40,7 +43,7 @@ static void add_optional_bool(CLI::App* app,
 
 void Util::ParseArgs(int argc,
                      char* argv[],
-                     bool& use_test,
+                     bool& use_p2p,
                      bool& use_ayame,
                      bool& use_sora,
                      int& log_level,
@@ -89,9 +92,21 @@ void Util::ParseArgs(int argc,
                "Do not use video device");
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
-  app.add_flag(
-      "--force-i420", args.force_i420,
-      "Prefer I420 format for video capture (only on supported devices)");
+  app.add_flag("--list-devices", args.list_devices,
+               "List available video devices and exit");
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  app.add_flag("--fake-capture-device", args.fake_capture_device,
+               "Use fake video capture device instead of real camera");
+#endif
+  app.add_flag("--force-i420", args.force_i420,
+               "Force I420 format for video capture (fails if not available)");
+  app.add_flag("--force-yuy2", args.force_yuy2,
+               "Force YUY2 format for video capture (fails if not available)")
+      ->excludes("--force-i420");  // force-* 系は同時指定不可
+  app.add_flag("--force-nv12", args.force_nv12,
+               "Force NV12 format for video capture (fails if not available)")
+      ->excludes("--force-i420")
+      ->excludes("--force-yuy2");  // force-* 系は同時指定不可
   app.add_option(
          "--hw-mjpeg-decoder", args.hw_mjpeg_decoder,
          "Perform MJPEG deoode and video resize by hardware acceleration "
@@ -101,6 +116,9 @@ void Util::ParseArgs(int argc,
                "Use libcamera for video capture (only on supported devices)");
   app.add_flag("--use-libcamera-native", args.use_libcamera_native,
                "Use native buffer for H.264 encoding");
+  app.add_option("--libcamera-control", args.libcamera_controls,
+                 "Set libcamera control (format: key value)")
+      ->allow_extra_args();
 
 #if defined(__APPLE__) || defined(_WIN32)
   app.add_option("--video-device", args.video_device,
@@ -116,7 +134,7 @@ void Util::ParseArgs(int argc,
                  "[WIDTH]x[HEIGHT])")
       ->check(is_valid_resolution);
   app.add_option("--framerate", args.framerate, "Video framerate")
-      ->check(CLI::Range(1, 60));
+      ->check(CLI::Range(1, MAX_FRAMERATE));
   app.add_flag("--fixed-resolution", args.fixed_resolution,
                "Maintain video resolution in degradation");
   app.add_option(
@@ -229,18 +247,18 @@ void Util::ParseArgs(int argc,
   app.add_option("--proxy-username", args.proxy_username, "Proxy username");
   app.add_option("--proxy-password", args.proxy_password, "Proxy password");
 
-  auto test_app = app.add_subcommand(
-      "test", "Mode for momo development with simple HTTP server");
+  auto p2p_app = app.add_subcommand(
+      "p2p", "P2P mode for momo development with simple HTTP server");
   auto ayame_app = app.add_subcommand(
       "ayame", "Mode for working with WebRTC Signaling Server Ayame");
   auto sora_app =
       app.add_subcommand("sora", "Mode for working with WebRTC SFU Sora");
 
-  test_app
-      ->add_option("--document-root", args.test_document_root,
+  p2p_app
+      ->add_option("--document-root", args.p2p_document_root,
                    "HTTP document root directory")
       ->check(CLI::ExistingDirectory);
-  test_app->add_option("--port", args.test_port, "Port number (default: 8080)")
+  p2p_app->add_option("--port", args.p2p_port, "Port number (default: 8080)")
       ->check(CLI::Range(0, 65535));
 
   ayame_app
@@ -250,6 +268,18 @@ void Util::ParseArgs(int argc,
   ayame_app->add_option("--client-id", args.ayame_client_id, "Client ID");
   ayame_app->add_option("--signaling-key", args.ayame_signaling_key,
                         "Signaling key");
+  ayame_app
+      ->add_option("--direction", args.ayame_direction,
+                   "Direction (default: sendrecv)")
+      ->check(CLI::IsMember({"sendrecv", "sendonly", "recvonly"}));
+  ayame_app
+      ->add_option("--video-codec-type", args.ayame_video_codec_type,
+                   "Video codec type (VP8, VP9, AV1, H264, H265)")
+      ->check(CLI::IsMember({"", "VP8", "VP9", "AV1", "H264", "H265"}));
+  ayame_app
+      ->add_option("--audio-codec-type", args.ayame_audio_codec_type,
+                   "Audio codec type (OPUS, PCMU, PCMA)")
+      ->check(CLI::IsMember({"", "OPUS", "PCMU", "PCMA"}));
 
   sora_app
       ->add_option("--signaling-urls", args.sora_signaling_urls,
@@ -351,8 +381,8 @@ void Util::ParseArgs(int argc,
     args.sora_metadata = boost::json::parse(sora_metadata);
   }
 
-  if (args.test_document_root.empty()) {
-    args.test_document_root = boost::filesystem::current_path().string();
+  if (args.p2p_document_root.empty()) {
+    args.p2p_document_root = boost::filesystem::current_path().string();
   }
 
   if (version) {
@@ -382,7 +412,13 @@ void Util::ParseArgs(int argc,
     exit(0);
   }
 
-  if (!test_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
+  // --list-devices が指定された場合は、サブコマンドチェックをスキップ
+  if (args.list_devices) {
+    // main.cpp で処理されるので、ここでは何もしない
+    return;
+  }
+
+  if (!p2p_app->parsed() && !sora_app->parsed() && !ayame_app->parsed()) {
     std::cout << app.help() << std::endl;
     exit(1);
   }
@@ -391,8 +427,8 @@ void Util::ParseArgs(int argc,
     use_sora = true;
   }
 
-  if (test_app->parsed()) {
-    use_test = true;
+  if (p2p_app->parsed()) {
+    use_p2p = true;
   }
 
   if (ayame_app->parsed()) {
@@ -467,7 +503,7 @@ std::string Util::GenerateRandomChars() {
 
 std::string Util::GenerateRandomChars(size_t length) {
   std::string result;
-  rtc::CreateRandomString(length, &result);
+  webrtc::CreateRandomString(length, &result);
   return result;
 }
 

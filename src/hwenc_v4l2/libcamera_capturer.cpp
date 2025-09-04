@@ -11,9 +11,9 @@
 
 #include "v4l2_native_buffer.h"
 
-rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
+webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
     LibcameraCapturerConfig config) {
-  rtc::scoped_refptr<LibcameraCapturer> capturer;
+  webrtc::scoped_refptr<LibcameraCapturer> capturer;
 
   LogDeviceList();
 
@@ -52,11 +52,11 @@ void LibcameraCapturer::LogDeviceList() {
   libcamerac_CameraManager_stop(camera_manager.get());
 }
 
-rtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
+webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
     LibcameraCapturerConfig config,
     size_t capture_device_index) {
-  rtc::scoped_refptr<LibcameraCapturer> capturer(
-      new rtc::RefCountedObject<LibcameraCapturer>());
+  webrtc::scoped_refptr<LibcameraCapturer> capturer(
+      new webrtc::RefCountedObject<LibcameraCapturer>());
   if (capturer->Init(capture_device_index) < 0) {
     RTC_LOG(LS_WARNING) << "Failed to create LibcameraCapturer("
                         << capture_device_index << ")";
@@ -218,6 +218,22 @@ int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
     }
   }
 
+  // コントロールを設定
+  for (const auto& [name, value] : config.controls) {
+    int result = libcamerac_ControlList_set_by_name(
+        camera_.get(), controls_.get(), name.c_str(), value.c_str());
+    if (result == -1) {
+      RTC_LOG(LS_WARNING) << "Unknown control: " << name;
+    } else if (result == -2) {
+      RTC_LOG(LS_WARNING) << "Unsupported control type for: " << name;
+    } else if (result == -3) {
+      RTC_LOG(LS_WARNING) << "Invalid control value for " << name << ": "
+                          << value;
+    } else {
+      RTC_LOG(LS_INFO) << "Set control " << name << " = " << value;
+    }
+  }
+
   if (libcamerac_Camera_start(camera_.get(), controls_.get())) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to start camera";
     return -1;
@@ -279,7 +295,7 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   int height = libcamerac_StreamConfiguration_get_size_height(cfg);
   int stride = libcamerac_StreamConfiguration_get_stride(cfg);
 
-  const int64_t timestamp_us = rtc::TimeMicros();
+  const int64_t timestamp_us = webrtc::TimeMicros();
   int adapted_width, adapted_height, crop_width, crop_height, crop_x, crop_y;
   if (!AdaptFrame(width, height, timestamp_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
@@ -296,10 +312,10 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   }
   const std::vector<Span>& buffers = item->second;
 
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer;
   if (buffers[0].buffer != nullptr) {
     // メモリ出力なので I420Buffer に格納する
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer(
         webrtc::I420Buffer::Create(adapted_width, adapted_height));
     auto chroma_stride = stride / 2;
     auto chroma_height = (height + 1) / 2;
@@ -320,14 +336,14 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(frame_buffer)
                                          .set_timestamp_rtp(0)
-                                         .set_timestamp_us(rtc::TimeMicros())
+                                         .set_timestamp_us(webrtc::TimeMicros())
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
     OnFrame(video_frame);
     queueRequest(request);
   } else {
     // DMA なので V4L2NativeBuffer に格納する
-    frame_buffer = rtc::make_ref_counted<V4L2NativeBuffer>(
+    frame_buffer = webrtc::make_ref_counted<V4L2NativeBuffer>(
         webrtc::VideoType::kI420, width, height, adapted_width, adapted_height,
         buffers[0].fd, nullptr, buffers[0].length, stride,
         [this, request]() { queueRequest(request); });
@@ -341,7 +357,7 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
     webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(frame_buffer)
                                          .set_timestamp_rtp(0)
-                                         .set_timestamp_us(rtc::TimeMicros())
+                                         .set_timestamp_us(webrtc::TimeMicros())
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
     OnFrame(video_frame);
