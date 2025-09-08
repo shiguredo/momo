@@ -153,6 +153,7 @@ int main(int argc, char* argv[]) {
           video_config.width = size.width;
           video_config.height = size.height;
           video_config.fps = args.framerate;
+          video_config.force_nv12 = args.force_nv12;
           return FakeVideoCapturer::Create(video_config);
         }
 #endif

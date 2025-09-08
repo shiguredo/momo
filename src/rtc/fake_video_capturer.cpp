@@ -10,6 +10,7 @@
 
 // WebRTC
 #include <rtc_base/logging.h>
+#include <api/video/nv12_buffer.h>
 #include <third_party/libyuv/include/libyuv.h>
 
 #include "rtc/fake_audio_capturer.h"
@@ -70,7 +71,7 @@ void FakeVideoCapturer::CaptureThread() {
     // 画像を更新
     UpdateImage(now);
 
-    // Blend2D イメージから I420 バッファへ変換
+    // Blend2D イメージから フレーム バッファへ変換
     BLImageData data;
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
@@ -79,14 +80,26 @@ void FakeVideoCapturer::CaptureThread() {
       break;
     }
 
-    webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
-        webrtc::I420Buffer::Create(config_.width, config_.height);
-
-    libyuv::ABGRToI420((const uint8_t*)data.pixelData, data.stride,
-                       buffer->MutableDataY(), buffer->StrideY(),
-                       buffer->MutableDataU(), buffer->StrideU(),
-                       buffer->MutableDataV(), buffer->StrideV(), config_.width,
-                       config_.height);
+    // 出力フォーマットを選択
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer;
+    if (config_.force_nv12) {
+      // I420 を経由せず ABGR から NV12 へ直接変換
+      auto nv12 = webrtc::NV12Buffer::Create(config_.width, config_.height);
+      libyuv::ABGRToNV12((const uint8_t*)data.pixelData, data.stride,
+                         nv12->MutableDataY(), nv12->StrideY(),
+                         nv12->MutableDataUV(), nv12->StrideUV(),
+                         config_.width, config_.height);
+      buffer = nv12;
+    } else {
+      // 既定は I420
+      auto i420 = webrtc::I420Buffer::Create(config_.width, config_.height);
+      libyuv::ABGRToI420((const uint8_t*)data.pixelData, data.stride,
+                         i420->MutableDataY(), i420->StrideY(),
+                         i420->MutableDataU(), i420->StrideU(),
+                         i420->MutableDataV(), i420->StrideV(),
+                         config_.width, config_.height);
+      buffer = i420;
+    }
 
     // タイムスタンプを計算
     int64_t timestamp_us =

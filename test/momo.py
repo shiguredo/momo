@@ -34,6 +34,8 @@ class Momo:
         no_audio_device: bool = False,
         fake_capture_device: bool = True,
         force_i420: bool = False,
+        force_yuy2: bool = False,
+        force_nv12: bool = False,
         hw_mjpeg_decoder: bool | None = None,
         use_libcamera: bool = False,
         use_libcamera_native: bool = False,
@@ -149,6 +151,8 @@ class Momo:
             "no_audio_device": no_audio_device,
             "fake_capture_device": fake_capture_device,
             "force_i420": force_i420,
+            "force_yuy2": force_yuy2,
+            "force_nv12": force_nv12,
             "hw_mjpeg_decoder": hw_mjpeg_decoder,
             "use_libcamera": use_libcamera,
             "use_libcamera_native": use_libcamera_native,
@@ -377,6 +381,10 @@ class Momo:
             args.append("--fake-capture-device")
         if kwargs.get("force_i420"):
             args.append("--force-i420")
+        if kwargs.get("force_yuy2"):
+            args.append("--force-yuy2")
+        if kwargs.get("force_nv12"):
+            args.append("--force-nv12")
         if kwargs.get("hw_mjpeg_decoder") is not None:
             args.extend(["--hw-mjpeg-decoder", str(int(kwargs["hw_mjpeg_decoder"]))])
         if kwargs.get("use_libcamera"):
