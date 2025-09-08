@@ -6,9 +6,7 @@ VERSION_FILE = "VERSION"
 
 
 def update_sdk_version(version_content):
-    version_match = re.match(
-        r"(\d{4}\.\d+\.\d+)(-canary\.(\d+))?", version_content.strip()
-    )
+    version_match = re.match(r"(\d{4}\.\d+\.\d+)(-canary\.(\d+))?", version_content.strip())
     if version_match:
         major_minor_patch = version_match.group(1)
         canary_suffix = version_match.group(2)
@@ -56,9 +54,7 @@ def git_operations(new_version, dry_run):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Update VERSION file and push changes with git."
-    )
+    parser = argparse.ArgumentParser(description="Update VERSION file and push changes with git.")
     parser.add_argument(
         "--dry-run", action="store_true", help="Perform a dry run without making any changes."
     )

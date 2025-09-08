@@ -11,3 +11,6 @@ dev = ["pytest", "httpx", "python-dotenv", "ruff", "ty", "pyjwt"]
 [tool.pytest.ini_options]
 testpaths = ["."]
 python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100

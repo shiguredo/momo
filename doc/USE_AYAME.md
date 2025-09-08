@@ -53,3 +53,37 @@ Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ
 Ayame SDK のオンラインサンプルを利用します。 URL の引数にルーム ID とシグナリングキーを指定してアクセスします。
 
 <https://openayame.github.io/ayame-web-sdk/devtools/index.html?roomId=shiguredo@open-momo&signalingUrl=wss://ayame-labo.shiguredo.app/signaling&signalingKey=xyz>
+
+## 送受信方向の制御
+
+Ayame モードでは `--direction` オプションを使用して、映像・音声の送受信方向を制御できます。
+
+### 利用可能な値
+
+- `sendrecv` - 送受信両方を行う（デフォルト）
+- `sendonly` - 送信のみを行う
+- `recvonly` - 受信のみを行う
+
+### 送信のみを行う場合
+
+配信用途などで、映像・音声を送信のみ行いたい場合は `--direction sendonly` を指定します。
+
+```bash
+./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction sendonly
+```
+
+### 受信のみを行う場合
+
+視聴用途などで、映像・音声を受信のみ行いたい場合は `--direction recvonly` を指定します。
+
+```bash
+./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction recvonly
+```
+
+### 送受信両方を行う場合
+
+双方向通信を行う場合は `--direction sendrecv` を指定するか、オプションを省略します。
+
+```bash
+./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction sendrecv
+```

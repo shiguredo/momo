@@ -302,26 +302,74 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
                                          connection.value());
 }
 
-void RTCManager::InitTracks(RTCConnection* conn) {
+void RTCManager::InitTracks(RTCConnection* conn,
+                            const std::optional<std::string>& direction) {
+  if (direction.has_value() && *direction != "sendrecv" &&
+      *direction != "sendonly" && *direction != "recvonly") {
+    RTC_LOG(LS_WARNING)
+        << __FUNCTION__
+        << ": direction must be nullopt, sendrecv, sendonly, or recvonly";
+    return;
+  }
+
   auto connection = conn->GetConnection();
 
   std::string stream_id = Util::GenerateRandomChars();
 
-  if (audio_track_) {
-    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
-        audio_sender = connection->AddTrack(audio_track_, {stream_id});
-    if (!audio_sender.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+  // 未設定か sendonly か sendrecv の場合はトラックを追加
+  if (!direction.has_value() || direction == "sendonly" ||
+      direction == "sendrecv") {
+    if (audio_track_) {
+      webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
+          audio_sender = connection->AddTrack(audio_track_, {stream_id});
+      if (!audio_sender.ok()) {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+      }
     }
-  }
 
-  if (video_track_) {
-    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
-        video_add_result = connection->AddTrack(video_track_, {stream_id});
-    if (video_add_result.ok()) {
-      video_sender_ = video_add_result.value();
-    } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+    if (video_track_) {
+      webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
+          video_add_result = connection->AddTrack(video_track_, {stream_id});
+      if (video_add_result.ok()) {
+        video_sender_ = video_add_result.value();
+      } else {
+        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+      }
+    }
+
+    if (direction.has_value()) {
+      webrtc::RtpTransceiverDirection transceiver_direction =
+          *direction == "sendonly" ? webrtc::RtpTransceiverDirection::kSendOnly
+                                   : webrtc::RtpTransceiverDirection::kSendRecv;
+      // すべてのトランシーバーに direction を設定
+      for (auto transceiver : connection->GetTransceivers()) {
+        auto error = transceiver->SetDirectionWithError(transceiver_direction);
+        if (!error.ok()) {
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__
+              << ": Failed to set transceiver direction: " << error.message();
+        }
+      }
+    }
+  } else {  // recvonly
+    // recvonly の場合はトラックなしでトランシーバーを作成
+    webrtc::RtpTransceiverInit init;
+    init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+
+    // Audio トランシーバーを作成
+    auto audio_result =
+        connection->AddTransceiver(webrtc::MediaType::AUDIO, init);
+    if (!audio_result.ok()) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__
+                          << ": Cannot add audio transceiver for recvonly";
+    }
+
+    // Video トランシーバーを作成
+    auto video_result =
+        connection->AddTransceiver(webrtc::MediaType::VIDEO, init);
+    if (!video_result.ok()) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__
+                          << ": Cannot add video transceiver for recvonly";
     }
   }
 }
@@ -334,4 +382,9 @@ void RTCManager::SetParameters() {
   webrtc::RtpParameters parameters = video_sender_->GetParameters();
   parameters.degradation_preference = config_.GetPriority();
   video_sender_->SetParameters(parameters);
+}
+
+webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+RTCManager::GetFactory() const {
+  return factory_;
 }

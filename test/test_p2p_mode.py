@@ -10,8 +10,8 @@ def test_with_custom_arguments(free_port, port_allocator):
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
-        resolution="HD",
-        framerate=30,
+        resolution="QVGA",
+        framerate=15,
         log_level="info",
     ) as m:
         data = m.get_metrics()
@@ -47,7 +47,7 @@ def test_multiple_instances_different_configs(port_allocator):
         metrics_port=next(port_allocator),
         port=next(port_allocator),
         fake_capture_device=True,
-        resolution="VGA",
+        resolution="QVGA",
         framerate=15,
     ) as m1:
         with Momo(
@@ -55,8 +55,8 @@ def test_multiple_instances_different_configs(port_allocator):
             metrics_port=next(port_allocator),
             port=next(port_allocator),
             fake_capture_device=True,
-            resolution="HD",
-            framerate=30,
+            resolution="QVGA",
+            framerate=15,
         ) as m2:
             # 両方のインスタンスにアクセス可能
             data1 = m1.get_metrics()

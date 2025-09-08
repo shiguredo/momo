@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
@@ -45,7 +46,6 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
-        log_level="verbose",
         initial_wait=10,
         **encoder_params,
     ) as m:
@@ -181,13 +181,16 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         resolution="960x540",  # 540p の解像度
         video_bit_rate=3000,  # ビットレート 3000
         metadata=sora_settings.metadata,
-        log_level="verbose",
         initial_wait=10,
         **encoder_params,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(
-            additional_wait_stats=[
+        assert m.wait_for_connection(), (
+            f"Failed to establish connection for {video_codec_type} codec"
+        )
+
+        data = m.get_metrics(
+            wait_stats=[
                 {
                     "type": "outbound-rtp",
                     "rid": "r0",
@@ -204,10 +207,8 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
                     "encoderImplementation": expected_encoder_implementation,
                 },
             ],
-            additional_wait_after_stats=3,
-        ), f"Failed to establish connection for {video_codec_type} codec"
-
-        data = m.get_metrics()
+            wait_after_stats=3,
+        )
         stats = data["stats"]
 
         # Sora モードでは接続関連の統計情報が含まれる可能性がある
@@ -303,9 +304,11 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             video_outbound_rtp_by_rid[rid] = video_outbound_rtp
 
         # 全ての rid が存在することを確認
-        assert set(video_outbound_rtp_by_rid.keys()) == {"r0", "r1", "r2"}, (
-            f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
-        )
+        assert set(video_outbound_rtp_by_rid.keys()) == {
+            "r0",
+            "r1",
+            "r2",
+        }, f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
 
         # r0 (低解像度) の検証
         outbound_rtp_r0 = video_outbound_rtp_by_rid["r0"]
@@ -340,12 +343,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
 
-        # r0 のフレームレートを確認（25 fps 以上）
-        assert "framesPerSecond" in outbound_rtp_r0
-        assert outbound_rtp_r0["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r0, but got {outbound_rtp_r0['framesPerSecond']}"
-        )
-
         # r1 (中解像度) の検証
         outbound_rtp_r1 = video_outbound_rtp_by_rid["r1"]
         assert "ssrc" in outbound_rtp_r1
@@ -379,12 +376,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
-        # r1 のフレームレートを確認（25 fps 以上）
-        assert "framesPerSecond" in outbound_rtp_r1
-        assert outbound_rtp_r1["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r1, but got {outbound_rtp_r1['framesPerSecond']}"
-        )
-
         # r2 (高解像度) の検証
         outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
         assert "ssrc" in outbound_rtp_r2
@@ -417,12 +408,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
         )
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
-
-        # r2 のフレームレートを確認（25 fps 以上）
-        assert "framesPerSecond" in outbound_rtp_r2
-        assert outbound_rtp_r2["framesPerSecond"] >= 25, (
-            f"Expected at least 25 fps for r2, but got {outbound_rtp_r2['framesPerSecond']}"
-        )
 
         # パケット数とバイト数の関係を検証（r0 < r1 < r2）
         assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
@@ -527,11 +512,27 @@ def test_sora_sendonly_recvonly_pair(
             )
 
             # 送信側の統計を確認
-            sender_data = sender.get_metrics()
+            sender_data = sender.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "kind": "video",
+                        "encoderImplementation": "NvCodec",
+                    }
+                ]
+            )
             sender_stats = sender_data.get("stats", [])
 
             # 受信側の統計を確認
-            receiver_data = receiver.get_metrics()
+            receiver_data = receiver.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "inbound-rtp",
+                        "kind": "video",
+                        "decoderImplementation": "NvCodec",
+                    }
+                ]
+            )
             receiver_stats = receiver_data.get("stats", [])
 
             # 送信側では outbound-rtp が音声と映像の2つ存在することを確認

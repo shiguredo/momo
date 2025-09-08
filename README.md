@@ -1,9 +1,9 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m128.6613-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6613)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m138.7204-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7204)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Actions Status](https://github.com/shiguredo/momo/workflows/daily-build-workflow/badge.svg)](https://github.com/shiguredo/momo/actions)
+[![Actions Status](https://github.com/shiguredo/momo/actions/workflows/build.yml/badge.svg)](https://github.com/shiguredo/momo/actions/workflows/build.yml)
 
 ## About Shiguredo's open source software
 
@@ -43,15 +43,23 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 Momo は Momo 自体がシグナリングサーバーを持っているため、完全な P2P モードでの利用ができます。
 
-ブラウザから Momo にアクセスするだけで利用する事ができます。
+ブラウザから Momo にアクセスするだけで利用することができます。
 
 ### Ayame モード
 
+[OpenAyame](https://github.com/OpenAyame)
+
 Momo は WebRTC Signaling サーバーである Ayame に対応したモードがあり、 Momo 同士での利用もできます。
 
-### 120fps 対応
+### Raspberry Pi の libcamera に対応
 
-Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用する事で 120fps の配信が利用できます。
+[raspberrypi/libcamera](https://github.com/raspberrypi/libcamera) に対応しています。
+
+詳細は [LIBCAMERA.md](doc/LIBCAMERA.md) をご確認ください。
+
+### 120 fps 対応
+
+Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用することで 120 fps の配信が利用できます。
 
 ### 4K の配信/視聴
 
@@ -128,17 +136,6 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - Raspberry Pi 2 Model B v1.2
   - Raspberry Pi Zero 2 W
 
-### 対応終了
-
-**優先実装にて対応することができます**
-
-- macOS x86_64
-- Ubuntu 20.04 ARMv8 (NVIDIA Jetson JetPack 5)
-  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-  - [NVIDIA Jetson AGX Xavier](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-agx-xavier/)
-  - [NVIDIA Jetson Xavier NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-xavier-nx/)
-- Raspberry Pi OS (32bit)
-
 ## 使ってみる
 
 Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
@@ -186,7 +183,7 @@ limitations under the License.
 
 - Windows 版 OSS 化
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- WebRTC's Statistics 対応
+- WebRTC の Statistics 対応
   - 現時点では企業名非公開
 - Windows 版 Momo NVIDIA Video Codec SDK 対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
@@ -204,7 +201,7 @@ limitations under the License.
 
 ## Momo についての電子書籍
 
-Momo の原作者である @tnoho が書いた Momo のノウハウが沢山詰まった本が販売されています。
+Momo の原作者である @tnoho が書いた Momo のノウハウがたくさん詰まった本が販売されています。
 
 [WebRTC をブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
 
@@ -231,7 +228,7 @@ WebRTC Native Client に対する有料でのテクニカルサポート契約�
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加
 
-## NVDIA Video Codec SDK
+## NVIDIA Video Codec SDK
 
 <https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
 
@@ -247,7 +244,7 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
 ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、
 配布時にライセンス費用を支払う必要はありません。
 
-詳細については [Via LA Licensing](https://www.via-la.com/) まで問い合わせる事をおすすめします。
+詳細については [Via LA Licensing](https://www.via-la.com/) まで問い合わせることをおすすめします。
 
 Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-LA) に連絡を取り、ロイヤリティの対象にならないことを確認しています。
 
@@ -273,10 +270,10 @@ H.265 ハードウェアエンコーダー **のみ** を利用している Momo
 ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
 
 Momo の H.265 対応は以下の二つの団体に連絡を取り、H.265 ハードウェアアクセラレーターのみを利用し、
-H.265 が利用可能なバイナリを配布する事は、ライセンスが不要であることを確認しています。
+H.265 が利用可能なバイナリを配布することは、ライセンスが不要であることを確認しています。
 
 また、H.265 のハードウェアアクセラレーターのみを利用した H.265 対応の Momo を OSS で公開し、
-ビルド済みバイナリを配布する事は、ライセンスが不要であることも確認しています。
+ビルド済みバイナリを配布することは、ライセンスが不要であることも確認しています。
 
 - [Access Advance](https://accessadvance.com/ja/)
 - [Via LA Licensing](https://www.via-la.com/)

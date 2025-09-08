@@ -117,9 +117,41 @@ def test_common_options_allowed_in_all_modes(free_port, port_allocator):
         metrics_port=free_port,
         port=next(port_allocator),
         fake_capture_device=True,
-        resolution="HD",  # 共通オプション
-        framerate=30,  # 共通オプション
+        resolution="QVGA",  # 共通オプション
+        framerate=15,  # 共通オプション
         log_level="info",  # 共通オプション
     ) as m:
         data = m.get_metrics()
         assert "version" in data
+
+
+def test_p2p_mode_with_ayame_direction_raises_error():
+    """P2P モードで Ayame の direction オプションを指定するとエラーになることを確認"""
+    with pytest.raises(ValueError) as exc_info:
+        with Momo(
+            mode=MomoMode.P2P,
+            # これは ayame モード専用のオプション
+            direction="sendonly",
+        ):
+            pass
+
+    assert "Invalid options specified for P2P mode" in str(exc_info.value)
+    assert "direction" in str(exc_info.value)
+    assert "ayame mode" in str(exc_info.value)
+
+
+def test_sora_mode_with_ayame_direction_raises_error():
+    """Sora モードで Ayame の direction オプションを指定するとエラーになることを確認"""
+    with pytest.raises(ValueError) as exc_info:
+        with Momo(
+            mode=MomoMode.SORA,
+            signaling_urls="wss://example.com/signaling",
+            channel_id="test-channel",
+            # これは ayame モード専用のオプション
+            direction="recvonly",
+        ):
+            pass
+
+    assert "Invalid options specified for Sora mode" in str(exc_info.value)
+    assert "direction" in str(exc_info.value)
+    assert "ayame mode" in str(exc_info.value)
