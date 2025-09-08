@@ -44,4 +44,3 @@ def test_sendonly_with_force_nv12_outbound_rtp(sora_settings, free_port):
         v = video_outbound[0]
         assert v.get("packetsSent", 0) > 0
         assert v.get("bytesSent", 0) > 0
-
