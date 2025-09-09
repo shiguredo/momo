@@ -12,7 +12,13 @@
 ## develop
 
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
-  - camelCase から snake_case に変更されたため API を修正
+  - blend2d の API 変更への追従 : camelCase から snake_case へ移行
+    - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
+    - 変更内容（旧 → 新）の一例 :
+      - `image_.getData(&data);` -> `image_.get_data(&data);`
+      - `ctx.setFillStyle(BLRgba32(0, 255, 255));` -> `ctx.set_fill_style(BLRgba32(0, 255, 255));`
+      - `path.moveTo(sx + gap, sy);` -> `path.move_to(sx + gap, sy);`
+      - `ctx.end()` など camelCase でないものは 変更なし
   - @voluntas @torikizi
 
 ## 2025.1.0
