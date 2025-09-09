@@ -12,7 +12,8 @@
 ## develop
 
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
-  - @voluntas
+  - camelCase から snake_case に変更されたため API を修正
+  - @voluntas @torikizi
 
 ## 2025.1.0
 
