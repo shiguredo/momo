@@ -18,7 +18,8 @@
       - `image_.getData(&data);` -> `image_.get_data(&data);`
       - `ctx.setFillStyle(BLRgba32(0, 255, 255));` -> `ctx.set_fill_style(BLRgba32(0, 255, 255));`
       - `path.moveTo(sx + gap, sy);` -> `path.move_to(sx + gap, sy);`
-      - `ctx.end()` など camelCase でないものは 変更なし
+    - 変更対象外の API
+      - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
 
 ## 2025.1.0
