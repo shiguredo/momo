@@ -72,7 +72,7 @@ void FakeVideoCapturer::CaptureThread() {
 
     // Blend2D イメージから I420 バッファへ変換
     BLImageData data;
-    BLResult result = image_.getData(&data);
+    BLResult result = image_.get_data(&data);
     if (result != BL_SUCCESS) {
       RTC_LOG(LS_ERROR) << "Failed to get image data from Blend2D: " << result;
       RTC_LOG(LS_ERROR) << "Stopping capture thread";
@@ -82,7 +82,7 @@ void FakeVideoCapturer::CaptureThread() {
     webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
         webrtc::I420Buffer::Create(config_.width, config_.height);
 
-    libyuv::ABGRToI420((const uint8_t*)data.pixelData, data.stride,
+    libyuv::ABGRToI420((const uint8_t*)data.pixel_data, data.stride,
                        buffer->MutableDataY(), buffer->StrideY(),
                        buffer->MutableDataU(), buffer->StrideU(),
                        buffer->MutableDataV(), buffer->StrideV(), config_.width,
@@ -116,8 +116,8 @@ void FakeVideoCapturer::UpdateImage(
     std::chrono::high_resolution_clock::time_point now) {
   BLContext ctx(image_);
 
-  ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-  ctx.fillAll();
+  ctx.set_comp_op(BL_COMP_OP_SRC_COPY);
+  ctx.fill_all();
 
   // デジタル時計を描画
   ctx.save();
@@ -144,12 +144,12 @@ void FakeVideoCapturer::DrawAnimations(
 
   ctx.translate(width * 0.5, height * 0.5);  // 画面中央に配置
   ctx.rotate(-M_PI / 2);
-  ctx.setFillStyle(BLRgba32(255, 255, 255));
-  ctx.fillPie(0, 0, width * 0.3, 0, 2 * M_PI);  // 大きくする
+  ctx.set_fill_style(BLRgba32(255, 255, 255));
+  ctx.fill_pie(0, 0, width * 0.3, 0, 2 * M_PI);  // 大きくする
 
-  ctx.setFillStyle(BLRgba32(160, 160, 160));
+  ctx.set_fill_style(BLRgba32(160, 160, 160));
   uint32_t current_frame = frame_counter_;
-  ctx.fillPie(0, 0, width * 0.3, 0,
+  ctx.fill_pie(0, 0, width * 0.3, 0,
               (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
 
   // 円が一周したときにビープ音を鳴らす
@@ -198,8 +198,8 @@ void FakeVideoCapturer::DrawBoxes(
         break;  // マゼンタ
     }
 
-    ctx.setFillStyle(BLRgba32(color));
-    ctx.fillRect(x, y, box_size, box_size);
+    ctx.set_fill_style(BLRgba32(color));
+    ctx.fill_rect(x, y, box_size, box_size);
   }
 }
 
@@ -223,7 +223,7 @@ void FakeVideoCapturer::DrawDigitalClock(
   double spacing = digit_width * 0.3;
   double colon_width = digit_width * 0.3;
 
-  ctx.setFillStyle(BLRgba32(0, 255, 255));  // シアン色
+  ctx.set_fill_style(BLRgba32(0, 255, 255));  // シアン色
 
   // HHHH:MM:SS.mmm の表示
   double x = clock_x;
@@ -259,7 +259,7 @@ void FakeVideoCapturer::DrawDigitalClock(
   x += digit_width + spacing;
 
   // ドット
-  ctx.fillCircle(x + colon_width * 0.3, clock_y + digit_height * 0.8,
+  ctx.fill_circle(x + colon_width * 0.3, clock_y + digit_height * 0.8,
                  digit_height * 0.05);
   x += colon_width + spacing;
 
@@ -267,7 +267,7 @@ void FakeVideoCapturer::DrawDigitalClock(
   double ms_digit_width = digit_width * 0.7;
   double ms_digit_height = digit_height * 0.7;
 
-  ctx.setFillStyle(BLRgba32(200, 200, 200));  // グレー色
+  ctx.set_fill_style(BLRgba32(200, 200, 200));  // グレー色
   Draw7Segment(ctx, (milliseconds / 100) % 10, x,
                clock_y + (digit_height - ms_digit_height) / 2, ms_digit_width,
                ms_digit_height);
@@ -317,27 +317,27 @@ void FakeVideoCapturer::Draw7Segment(BLContext& ctx,
   // 横セグメント（a, g, d）
   auto drawHorizontalSegment = [&](double sx, double sy) {
     BLPath path;
-    path.moveTo(sx + gap, sy);
-    path.lineTo(sx + width - gap, sy);
-    path.lineTo(sx + width - gap - thickness * 0.5, sy + thickness * 0.5);
-    path.lineTo(sx + width - gap, sy + thickness);
-    path.lineTo(sx + gap, sy + thickness);
-    path.lineTo(sx + gap + thickness * 0.5, sy + thickness * 0.5);
+    path.move_to(sx + gap, sy);
+    path.line_to(sx + width - gap, sy);
+    path.line_to(sx + width - gap - thickness * 0.5, sy + thickness * 0.5);
+    path.line_to(sx + width - gap, sy + thickness);
+    path.line_to(sx + gap, sy + thickness);
+    path.line_to(sx + gap + thickness * 0.5, sy + thickness * 0.5);
     path.close();
-    ctx.fillPath(path);
+    ctx.fill_path(path);
   };
 
   // 縦セグメント（f, b, e, c）
   auto drawVerticalSegment = [&](double sx, double sy, double sh) {
     BLPath path;
-    path.moveTo(sx, sy + gap);
-    path.lineTo(sx + thickness * 0.5, sy + gap + thickness * 0.5);
-    path.lineTo(sx + thickness, sy + gap);
-    path.lineTo(sx + thickness, sy + sh - gap);
-    path.lineTo(sx + thickness * 0.5, sy + sh - gap - thickness * 0.5);
-    path.lineTo(sx, sy + sh - gap);
+    path.move_to(sx, sy + gap);
+    path.line_to(sx + thickness * 0.5, sy + gap + thickness * 0.5);
+    path.line_to(sx + thickness, sy + gap);
+    path.line_to(sx + thickness, sy + sh - gap);
+    path.line_to(sx + thickness * 0.5, sy + sh - gap - thickness * 0.5);
+    path.line_to(sx, sy + sh - gap);
     path.close();
-    ctx.fillPath(path);
+    ctx.fill_path(path);
   };
 
   // セグメントa（上）
@@ -381,8 +381,8 @@ void FakeVideoCapturer::DrawColon(BLContext& ctx,
                                   double y,
                                   double height) {
   double dot_size = height * 0.1;
-  ctx.fillCircle(x + dot_size, y + height * 0.3, dot_size);
-  ctx.fillCircle(x + dot_size, y + height * 0.7, dot_size);
+  ctx.fill_circle(x + dot_size, y + height * 0.3, dot_size);
+  ctx.fill_circle(x + dot_size, y + height * 0.7, dot_size);
 }
 
 #endif  // USE_FAKE_CAPTURE_DEVICE
