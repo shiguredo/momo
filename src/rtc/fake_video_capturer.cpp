@@ -71,7 +71,7 @@ void FakeVideoCapturer::CaptureThread() {
     // 画像を更新
     UpdateImage(now);
 
-    // Blend2D イメージから フレーム バッファへ変換
+    // Blend2D イメージから VideoFrameBuffer へ変換
     BLImageData data;
     BLResult result = image_.getData(&data);
     if (result != BL_SUCCESS) {
@@ -83,7 +83,7 @@ void FakeVideoCapturer::CaptureThread() {
     // 出力フォーマットを選択
     webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer;
     if (config_.force_nv12) {
-      // I420 を経由せず ABGR から NV12 へ直接変換
+      // NV12 へ変換
       auto nv12 = webrtc::NV12Buffer::Create(config_.width, config_.height);
       libyuv::ABGRToNV12((const uint8_t*)data.pixelData, data.stride,
                          nv12->MutableDataY(), nv12->StrideY(),
