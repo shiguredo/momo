@@ -85,7 +85,7 @@ void FakeVideoCapturer::CaptureThread() {
     if (config_.force_nv12) {
       // NV12 へ変換
       auto nv12 = webrtc::NV12Buffer::Create(config_.width, config_.height);
-      libyuv::ABGRToNV12((const uint8_t*)data.pixelData, data.stride,
+      libyuv::ABGRToNV12((const uint8_t*)data.pixel_data, data.stride,
                          nv12->MutableDataY(), nv12->StrideY(),
                          nv12->MutableDataUV(), nv12->StrideUV(), config_.width,
                          config_.height);
@@ -94,7 +94,7 @@ void FakeVideoCapturer::CaptureThread() {
       // 既定は I420
       auto i420 = webrtc::I420Buffer::Create(config_.width, config_.height);
       libyuv::ABGRToI420(
-          (const uint8_t*)data.pixelData, data.stride, i420->MutableDataY(),
+          (const uint8_t*)data.pixel_data, data.stride, i420->MutableDataY(),
           i420->StrideY(), i420->MutableDataU(), i420->StrideU(),
           i420->MutableDataV(), i420->StrideV(), config_.width, config_.height);
       buffer = i420;
