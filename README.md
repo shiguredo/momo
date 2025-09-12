@@ -131,6 +131,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
 - Raspberry Pi OS bookworm (64bit)
+  - Raspberry Pi 5
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi 2 Model B v1.2
