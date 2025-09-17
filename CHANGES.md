@@ -21,6 +21,8 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
+  - @melpon
 
 ## 2025.1.0
 

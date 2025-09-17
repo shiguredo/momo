@@ -175,7 +175,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
   }
 
   std::optional<uint32_t> found_format;
-  for (int i = 0; i < nFormats; i++) {
+  for (int i = 0; i < nFormats && !found_format; i++) {
     for (int j = 0; j < device_.format_descriptions.size(); j++) {
       if (fmts[i] == device_.format_descriptions[j].pixel_format) {
         found_format = fmts[i];
