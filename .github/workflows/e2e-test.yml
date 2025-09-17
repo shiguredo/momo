@@ -55,14 +55,14 @@ jobs:
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
-          - name: NVIDIA Video Codec SDK
+          - name: NVIDIA Video Codec
             package: ubuntu-24.04_x86_64
             runs_on:
               group: Self
               labels: [self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]
-            test_target: test_sora_mode_nvidia_video_codec_sdk.py
+            test_target: test_sora_mode_nvidia_video_codec.py
             env_vars: |
-              NVIDIA_VIDEO_CODEC_SDK=true
+              NVIDIA_VIDEO_CODEC=true
     name: E2E Test ${{ matrix.name || matrix.package }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10

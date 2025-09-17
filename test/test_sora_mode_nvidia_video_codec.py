@@ -5,11 +5,10 @@ import pytest
 from momo import Momo, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
-# NVIDIA Video Codec SDK 環境が有効でない場合もスキップ
+# NVIDIA Video Codec 環境が有効でない場合もスキップ
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS")
-    or not os.environ.get("NVIDIA_VIDEO_CODEC_SDK"),
-    reason="TEST_SORA_MODE_SIGNALING_URLS or NVIDIA_VIDEO_CODEC_SDK not set in environment",
+    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS") or not os.environ.get("NVIDIA_VIDEO_CODEC"),
+    reason="TEST_SORA_MODE_SIGNALING_URLS or NVIDIA_VIDEO_CODEC not set in environment",
 )
 
 
@@ -105,7 +104,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
                             assert "frameHeight" in stat
                             assert stat["framesEncoded"] > 0
 
-                            # エンコーダー実装が NVIDIA Video Codec SDK であることを確認
+                            # エンコーダー実装が NVIDIA Video Codec であることを確認
                             assert "encoderImplementation" in stat
                             assert stat["encoderImplementation"] == "NvCodec"
                         case "audio":
@@ -157,7 +156,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
     ],
 )
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
-    """Sora モードで simulcast 接続時の統計情報を確認（NVIDIA Video Codec SDK 使用）"""
+    """Sora モードで simulcast 接続時の統計情報を確認（NVIDIA Video Codec 使用）"""
     # エンコーダー設定を準備
     encoder_params = {}
     if video_codec_type == "AV1":
@@ -453,7 +452,7 @@ def test_sora_sendonly_recvonly_pair(
     port_allocator,
     video_codec_type,
 ):
-    """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（NVIDIA Video Codec SDK 使用）"""
+    """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（NVIDIA Video Codec 使用）"""
 
     # expected_mime_type を生成
     expected_mime_type = f"video/{video_codec_type}"
