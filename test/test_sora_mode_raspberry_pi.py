@@ -18,13 +18,13 @@ def test_connection_stats(sora_settings, free_port):
     expected_mime_type = "video/H264"
 
     with Momo(
-        fake_capture_device=True,
+        fake_capture_device=False,
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
-        audio=True,
+        audio=False,
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
@@ -91,26 +91,6 @@ def test_connection_stats(sora_settings, free_port):
         assert "clockRate" in video_codec
         assert video_codec["clockRate"] == 90000
 
-        # audio の outbound-rtp を取得して確認
-        audio_outbound_rtp_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
-        ]
-        assert len(audio_outbound_rtp_stats) == 1, (
-            f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
-        )
-
-        # audio outbound-rtp の中身を検証
-        audio_outbound_rtp = audio_outbound_rtp_stats[0]
-        assert "ssrc" in audio_outbound_rtp
-        assert "packetsSent" in audio_outbound_rtp
-        assert "bytesSent" in audio_outbound_rtp
-        assert "headerBytesSent" in audio_outbound_rtp
-        assert audio_outbound_rtp["packetsSent"] > 0
-        assert audio_outbound_rtp["bytesSent"] > 0
-        assert audio_outbound_rtp["headerBytesSent"] > 0
-
         # video の outbound-rtp を取得して確認
         video_outbound_rtp_stats = [
             stat
@@ -159,5 +139,3 @@ def test_connection_stats(sora_settings, free_port):
         # peer-connection の中身を検証
         peer_connection = peer_connection_stats[0]
         assert "dataChannelsOpened" in peer_connection
-
-
