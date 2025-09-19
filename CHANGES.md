@@ -24,6 +24,14 @@
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 
+### misc
+
+- [ADD] Raspberry Pi 64 bit 環境での E2E テストを追加
+  - GitHub Actions の self-hosted runner を利用して Raspberry Pi OS armv8 環境での E2E テストを実行
+  - test_sora_mode_raspberry_pi.py テストファイルを追加
+  - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
+  - @voluntas
+
 ## 2025.1.0
 
 **リリース日**: 2025-09-04

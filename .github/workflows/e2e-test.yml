@@ -63,6 +63,14 @@ jobs:
             test_target: test_sora_mode_nvidia_video_codec.py
             env_vars: |
               NVIDIA_VIDEO_CODEC=true
+          - name: Raspberry Pi VideoCore
+            package: raspberry-pi-os_armv8
+            runs_on:
+              group: Self
+              labels: [self-hosted, linux, arm64, Raspberry-Pi]
+            test_target: test_sora_mode_raspberry_pi.py
+            env_vars: |
+              RASPBERRY_PI=true
     name: E2E Test ${{ matrix.name || matrix.package }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
