@@ -96,7 +96,8 @@ def test_connection_stats(sora_settings, free_port):
         assert video_outbound_rtp["packetsSent"] > 0
         assert video_outbound_rtp["bytesSent"] > 0
         assert video_outbound_rtp["framesEncoded"] > 0
-        # Raspberry Pi では V4L2 H264 エンコーダが使われる
+        # Raspberry Pi では V4L2 M2M エンコーダが使われる
+        # TODO: V4L2-M2M みたいな名前がよさそう
         assert video_outbound_rtp["encoderImplementation"] == "V4L2 H264"
 
         # transport を取得して確認
@@ -357,3 +358,140 @@ def test_simulcast(sora_settings, free_port):
         # peer-connection の中身を検証
         peer_connection = peer_connection_stats[0]
         assert "dataChannelsOpened" in peer_connection
+
+
+def test_sora_sendonly_recvonly_pair(
+    sora_settings,
+    port_allocator,
+):
+    """Sora モードで sendonly と recvonly のペアを作成して送受信を確認（Raspberry Pi H.264）"""
+
+    video_codec_type = "H264"
+    expected_mime_type = "video/H264"
+
+    # 送信専用クライアント（Raspberry Pi カメラを使用）
+    with Momo(
+        mode=MomoMode.SORA,
+        signaling_urls=sora_settings.signaling_urls,
+        channel_id=sora_settings.channel_id,
+        role="sendonly",
+        metrics_port=next(port_allocator),
+        fake_capture_device=False,
+        use_libcamera=True,
+        video=True,
+        video_codec_type=video_codec_type,
+        audio=False,
+        metadata=sora_settings.metadata,
+        initial_wait=10,
+    ) as sender:
+        # 受信専用クライアント（use_libcameraは指定しない）
+        with Momo(
+            mode=MomoMode.SORA,
+            signaling_urls=sora_settings.signaling_urls,
+            channel_id=sora_settings.channel_id,
+            role="recvonly",
+            metrics_port=next(port_allocator),
+            video=True,
+            audio=False,
+            metadata=sora_settings.metadata,
+        ) as receiver:
+            # 接続が確立するまで待機
+            assert sender.wait_for_connection(), (
+                f"Sender failed to establish connection for {video_codec_type}"
+            )
+            assert receiver.wait_for_connection(), (
+                f"Receiver failed to establish connection for {video_codec_type}"
+            )
+
+            # 送信側の統計を確認
+            sender_data = sender.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "outbound-rtp",
+                        "kind": "video",
+                        "encoderImplementation": "V4L2 H264",
+                    }
+                ]
+            )
+            sender_stats = sender_data.get("stats", [])
+
+            # 受信側の統計を確認
+            receiver_data = receiver.get_metrics(
+                wait_stats=[
+                    {
+                        "type": "inbound-rtp",
+                        "kind": "video",
+                        "decoderImplementation": "V4L2 H264",
+                    }
+                ]
+            )
+            receiver_stats = receiver_data.get("stats", [])
+
+            # 送信側では outbound-rtp が映像の1つ存在することを確認（音声なし）
+            sender_outbound_rtp = [
+                stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
+            ]
+            assert len(sender_outbound_rtp) == 1, (
+                "Sender should have exactly 1 outbound-rtp stats (video only)"
+            )
+
+            # 送信側の codec 情報を確認（映像のみ）
+            sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
+            assert len(sender_codecs) >= 1, "Should have at least 1 codec (video)"
+
+            # video codec の mimeType を確認
+            sender_video_codec = next(
+                (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert sender_video_codec is not None, "Video codec should be present"
+            assert sender_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
+            )
+
+            # 送信側の video outbound-rtp を取得して確認
+            sender_video_outbound = next(
+                (stat for stat in sender_outbound_rtp if stat.get("kind") == "video"), None
+            )
+            assert sender_video_outbound is not None, "Video outbound-rtp should be present"
+            assert "packetsSent" in sender_video_outbound
+            assert "bytesSent" in sender_video_outbound
+            assert "encoderImplementation" in sender_video_outbound
+            assert sender_video_outbound["packetsSent"] > 0
+            assert sender_video_outbound["bytesSent"] > 0
+            assert sender_video_outbound["encoderImplementation"] == "V4L2 H264"
+
+            # 受信側では inbound-rtp が映像の1つ存在することを確認（音声なし）
+            receiver_inbound_rtp = [
+                stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
+            ]
+            assert len(receiver_inbound_rtp) == 1, (
+                "Receiver should have exactly 1 inbound-rtp stats (video only)"
+            )
+
+            # 受信側の codec 情報を確認（映像のみ）
+            receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
+            assert len(receiver_codecs) >= 1, "Should have at least 1 codec (video) on receiver"
+
+            # video codec の mimeType を確認
+            receiver_video_codec = next(
+                (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("video/")),
+                None,
+            )
+            assert receiver_video_codec is not None, "Video codec should be present on receiver"
+            assert receiver_video_codec["mimeType"] == expected_mime_type, (
+                f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
+            )
+
+            # 受信側の video inbound-rtp を取得して確認
+            receiver_video_inbound = next(
+                (stat for stat in receiver_inbound_rtp if stat.get("kind") == "video"), None
+            )
+            assert receiver_video_inbound is not None, "Video inbound-rtp should be present"
+            assert "packetsReceived" in receiver_video_inbound
+            assert "bytesReceived" in receiver_video_inbound
+            assert "decoderImplementation" in receiver_video_inbound
+            assert receiver_video_inbound["packetsReceived"] > 0
+            assert receiver_video_inbound["bytesReceived"] > 0
+            # Raspberry Pi では V4L2 H264 デコーダが使われる（HWA）
+            assert receiver_video_inbound["decoderImplementation"] == "V4L2 H264"
