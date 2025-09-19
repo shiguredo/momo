@@ -9,6 +9,7 @@
 #include <sstream>
 
 // WebRTC
+#include <api/video/nv12_buffer.h>
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
@@ -70,7 +71,7 @@ void FakeVideoCapturer::CaptureThread() {
     // 画像を更新
     UpdateImage(now);
 
-    // Blend2D イメージから I420 バッファへ変換
+    // Blend2D イメージから VideoFrameBuffer へ変換
     BLImageData data;
     BLResult result = image_.get_data(&data);
     if (result != BL_SUCCESS) {
@@ -79,14 +80,25 @@ void FakeVideoCapturer::CaptureThread() {
       break;
     }
 
-    webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
-        webrtc::I420Buffer::Create(config_.width, config_.height);
-
-    libyuv::ABGRToI420((const uint8_t*)data.pixel_data, data.stride,
-                       buffer->MutableDataY(), buffer->StrideY(),
-                       buffer->MutableDataU(), buffer->StrideU(),
-                       buffer->MutableDataV(), buffer->StrideV(), config_.width,
-                       config_.height);
+    // 出力フォーマットを選択
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer;
+    if (config_.force_nv12) {
+      // NV12 へ変換
+      auto nv12 = webrtc::NV12Buffer::Create(config_.width, config_.height);
+      libyuv::ABGRToNV12((const uint8_t*)data.pixel_data, data.stride,
+                         nv12->MutableDataY(), nv12->StrideY(),
+                         nv12->MutableDataUV(), nv12->StrideUV(), config_.width,
+                         config_.height);
+      buffer = nv12;
+    } else {
+      // 既定は I420
+      auto i420 = webrtc::I420Buffer::Create(config_.width, config_.height);
+      libyuv::ABGRToI420(
+          (const uint8_t*)data.pixel_data, data.stride, i420->MutableDataY(),
+          i420->StrideY(), i420->MutableDataU(), i420->StrideU(),
+          i420->MutableDataV(), i420->StrideV(), config_.width, config_.height);
+      buffer = i420;
+    }
 
     // タイムスタンプを計算
     int64_t timestamp_us =
@@ -150,7 +162,7 @@ void FakeVideoCapturer::DrawAnimations(
   ctx.set_fill_style(BLRgba32(160, 160, 160));
   uint32_t current_frame = frame_counter_;
   ctx.fill_pie(0, 0, width * 0.3, 0,
-              (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
+               (current_frame % fps) / static_cast<float>(fps) * 2 * M_PI);
 
   // 円が一周したときにビープ音を鳴らす
   auto fake_audio_capturer = GetAudioCapturer();
@@ -260,7 +272,7 @@ void FakeVideoCapturer::DrawDigitalClock(
 
   // ドット
   ctx.fill_circle(x + colon_width * 0.3, clock_y + digit_height * 0.8,
-                 digit_height * 0.05);
+                  digit_height * 0.05);
   x += colon_width + spacing;
 
   // ミリ秒（3桁、少し小さめに表示）

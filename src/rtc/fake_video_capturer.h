@@ -27,6 +27,7 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
     int width = 640;
     int height = 480;
     int fps = 30;
+    bool force_nv12 = false;
   };
 
   static webrtc::scoped_refptr<FakeVideoCapturer> Create(Config config) {
