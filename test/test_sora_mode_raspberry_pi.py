@@ -19,6 +19,7 @@ def test_connection_stats(sora_settings, free_port):
 
     with Momo(
         fake_capture_device=False,
+        use_libcamera=True,
         metrics_port=free_port,
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
