@@ -96,7 +96,8 @@ def test_connection_stats(sora_settings, free_port):
         assert video_outbound_rtp["packetsSent"] > 0
         assert video_outbound_rtp["bytesSent"] > 0
         assert video_outbound_rtp["framesEncoded"] > 0
-        # Raspberry Pi では特定のエンコーダー実装名を確認しない
+        # Raspberry Pi では V4L2 H264 エンコーダが使われる
+        assert video_outbound_rtp["encoderImplementation"] == "V4L2 H264"
 
         # transport を取得して確認
         transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
