@@ -168,7 +168,7 @@ def test_simulcast(sora_settings, free_port):
                     "rid": "r2",
                 },
             ],
-            wait_after_stats=3,
+            wait_after_stats=10,
         )
         stats = data["stats"]
 
