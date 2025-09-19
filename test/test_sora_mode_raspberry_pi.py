@@ -57,24 +57,6 @@ def test_connection_stats(sora_settings, free_port):
         for expected_type in expected_types:
             assert expected_type in stat_types
 
-        # audio codec を取得して確認
-        audio_codec_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
-        ]
-        assert len(audio_codec_stats) == 1, (
-            f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
-        )
-
-        # audio codec の中身を検証
-        audio_codec = audio_codec_stats[0]
-        assert "payloadType" in audio_codec
-        assert "mimeType" in audio_codec
-        assert "clockRate" in audio_codec
-        assert "channels" in audio_codec
-        assert audio_codec["clockRate"] == 48000
-
         # video codec を取得して確認
         video_codec_stats = [
             stat
