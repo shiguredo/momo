@@ -654,7 +654,8 @@ def _build(args):
         rm_rf(os.path.join(package_dir, "momo.env"))
 
         with cd(BASE_DIR):
-            momo_version = read_version_string("VERSION")
+            with open("VERSION", "r", encoding="utf-8") as f:
+                momo_version = f.read().strip()
 
         def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:
