@@ -33,7 +33,7 @@
 #endif
 
 #if defined(USE_V4L2_ENCODER)
-#include "hwenc_v4l2/v4l2_h264_decoder.h"
+#include "sora/hwenc_v4l2/v4l2_h264_decoder.h"
 #endif
 
 namespace {
@@ -295,7 +295,7 @@ std::unique_ptr<webrtc::VideoDecoder> MomoVideoDecoderFactory::Create(
 #if defined(USE_V4L2_ENCODER)
   if (is_h264 && config_.h264_decoder == VideoCodecInfo::Type::V4L2) {
     return std::unique_ptr<webrtc::VideoDecoder>(
-        std::make_unique<V4L2H264Decoder>(webrtc::kVideoCodecH264));
+        std::make_unique<sora::V4L2H264Decoder>(webrtc::kVideoCodecH264));
   }
 #endif
 

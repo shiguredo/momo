@@ -1,5 +1,5 @@
-#ifndef V4L2_NATIVE_BUFFER_H_
-#define V4L2_NATIVE_BUFFER_H_
+#ifndef SORA_HWENC_V4L2_V4L2_NATIVE_BUFFER_H_
+#define SORA_HWENC_V4L2_V4L2_NATIVE_BUFFER_H_
 
 #include <functional>
 
@@ -8,6 +8,8 @@
 #include <api/video/video_frame_buffer.h>
 #include <common_video/include/video_frame_buffer.h>
 #include <common_video/libyuv/include/webrtc_libyuv.h>
+
+namespace sora {
 
 class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
  public:
@@ -67,5 +69,7 @@ class V4L2NativeBuffer : public webrtc::VideoFrameBuffer {
   int stride_;
   std::shared_ptr<void> shared_on_destruction_;
 };
+
+}  // namespace sora
 
 #endif

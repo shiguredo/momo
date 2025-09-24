@@ -36,7 +36,7 @@
 #include "sora/hwenc_vpl/vpl_video_encoder.h"
 #endif
 #if defined(USE_V4L2_ENCODER)
-#include "hwenc_v4l2/v4l2_h264_encoder.h"
+#include "sora/hwenc_v4l2/v4l2_h264_encoder.h"
 #endif
 
 #include "sora/open_h264_video_encoder.h"
@@ -329,7 +329,7 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::CreateInternal(
 #if defined(USE_V4L2_ENCODER)
   auto codec = webrtc::CreateVideoCodec(format);
   if (is_h264 && config_.h264_encoder == VideoCodecInfo::Type::V4L2) {
-    return std::make_unique<V4L2H264Encoder>(codec);
+    return std::make_unique<sora::V4L2H264Encoder>(webrtc::kVideoCodecH264);
   }
 #endif
 

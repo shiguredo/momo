@@ -1,4 +1,4 @@
-#include "v4l2_buffers.h"
+#include "sora/hwenc_v4l2/v4l2_buffers.h"
 
 #include <unistd.h>
 
@@ -9,6 +9,8 @@
 // WebRTC
 #include <modules/video_coding/include/video_error_codes.h>
 #include <rtc_base/logging.h>
+
+namespace sora {
 
 int V4L2Buffers::Allocate(int fd,
                           int type,
@@ -67,9 +69,9 @@ int V4L2Buffers::Allocate(int fd,
           expbuf.index = i;
           expbuf.plane = j;
           if (ioctl(fd, VIDIOC_EXPBUF, &expbuf) < 0) {
-            RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to export buffer"
-                              << " index=" << i << " plane=" << j
-                              << " error=" << strerror(errno);
+            RTC_LOG(LS_ERROR)
+                << __FUNCTION__ << "  Failed to export buffer" << " index=" << i
+                << " plane=" << j << " error=" << strerror(errno);
             return WEBRTC_VIDEO_CODEC_ERROR;
           }
           plane.fd = expbuf.fd;
@@ -95,8 +97,8 @@ void V4L2Buffers::Deallocate() {
       PlaneBuffer* plane = &buffer.planes[j];
       if (plane->start != nullptr) {
         if (munmap(plane->start, plane->length) < 0) {
-          RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to unmap buffer"
-                            << "  index: " << i;
+          RTC_LOG(LS_ERROR)
+              << __FUNCTION__ << "  Failed to unmap buffer" << "  index: " << i;
         }
       }
       if (plane->fd != 0) {
@@ -140,3 +142,5 @@ bool V4L2Buffers::dmafds_exported() const {
 V4L2Buffers::Buffer& V4L2Buffers::at(int index) {
   return buffers_.at(index);
 }
+
+}  // namespace sora
