@@ -1,5 +1,5 @@
-#ifndef V4L2_CONVERTER_H_
-#define V4L2_CONVERTER_H_
+#ifndef SORA_HWENC_V4L2_V4L2_CONVERTER_H_
+#define SORA_HWENC_V4L2_V4L2_CONVERTER_H_
 
 #include <functional>
 #include <memory>
@@ -13,6 +13,8 @@
 
 #include "v4l2_buffers.h"
 #include "v4l2_runner.h"
+
+namespace sora {
 
 class V4L2Helper {
  public:
@@ -159,5 +161,7 @@ class V4L2DecodeConverter {
 
   std::shared_ptr<V4L2Runner> runner_;
 };
+
+}  // namespace sora
 
 #endif

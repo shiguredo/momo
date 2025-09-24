@@ -1,7 +1,9 @@
-#include "v4l2_native_buffer.h"
+#include "sora/hwenc_v4l2/v4l2_native_buffer.h"
 
 // WebRTC
 #include <rtc_base/logging.h>
+
+namespace sora {
 
 V4L2NativeBuffer::V4L2NativeBuffer(webrtc::VideoType video_type,
                                    int raw_width,
@@ -100,3 +102,5 @@ int V4L2NativeBuffer::raw_width() const {
 int V4L2NativeBuffer::raw_height() const {
   return raw_height_;
 }
+
+}  // namespace sora

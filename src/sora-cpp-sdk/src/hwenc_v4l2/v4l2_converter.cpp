@@ -1,4 +1,4 @@
-#include "v4l2_converter.h"
+#include "sora/hwenc_v4l2/v4l2_converter.h"
 
 #include <unistd.h>
 
@@ -14,7 +14,9 @@
 #include <rtc_base/time_utils.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-#include "v4l2_native_buffer.h"
+#include "sora/hwenc_v4l2/v4l2_native_buffer.h"
+
+namespace sora {
 
 // V4L2Helper
 
@@ -49,7 +51,7 @@ int V4L2Helper::QueueBuffers(int fd, const V4L2Buffers& buffers) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to queue buffer"
                         << " type=" << buffers.type()
                         << " memory=" << buffers.memory() << " index=" << i
-                        << " error=" << strerror(errno);
+                        << " error=" << errno;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
@@ -77,7 +79,8 @@ int V4L2H264EncodeConverter::Init(int src_memory,
   const char device_name[] = "/dev/video11";
   fd_ = open(device_name, O_RDWR, 0);
   if (fd_ < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to create v4l2 encoder";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to create v4l2 encoder: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -85,28 +88,32 @@ int V4L2H264EncodeConverter::Init(int src_memory,
   ctrl.id = V4L2_CID_MPEG_VIDEO_H264_PROFILE;
   ctrl.value = V4L2_MPEG_VIDEO_H264_PROFILE_HIGH;
   if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set profile";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to set profile: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   ctrl.id = V4L2_CID_MPEG_VIDEO_H264_LEVEL;
   ctrl.value = V4L2_MPEG_VIDEO_H264_LEVEL_4_2;
   if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set level";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to set level: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   ctrl.id = V4L2_CID_MPEG_VIDEO_H264_I_PERIOD;
   ctrl.value = 500;
   if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set intra period";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to set intra period: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   ctrl.id = V4L2_CID_MPEG_VIDEO_REPEAT_SEQ_HEADER;
   ctrl.value = 1;
   if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to enable inline header";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to enable inline header: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -115,7 +122,7 @@ int V4L2H264EncodeConverter::Init(int src_memory,
                          src_height, V4L2_PIX_FMT_YUV420, src_stride, 0,
                          &src_fmt);
   if (ioctl(fd_, VIDIOC_S_FMT, &src_fmt) < 0) {
-    RTC_LOG(LS_ERROR) << "Failed to set output format";
+    RTC_LOG(LS_ERROR) << "Failed to set output format: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   RTC_LOG(LS_INFO) << __FUNCTION__ << "  Output buffer format"
@@ -128,7 +135,8 @@ int V4L2H264EncodeConverter::Init(int src_memory,
   V4L2Helper::InitFormat(V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, src_width,
                          src_height, V4L2_PIX_FMT_H264, 0, 512 << 10, &dst_fmt);
   if (ioctl(fd_, VIDIOC_S_FMT, &dst_fmt) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set capture format";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to set capture format: error=" << errno;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -170,19 +178,22 @@ int V4L2H264EncodeConverter::Encode(
     ctrl.id = V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME;
     ctrl.value = 1;
     if (ioctl(fd_, VIDIOC_S_CTRL, &ctrl) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to request I frame";
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << "  Failed to request I frame: error=" << errno;
     }
   }
 
   if (!runner_) {
     v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
     if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start output stream";
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << "  Failed to start output stream: error=" << errno;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
     if (ioctl(fd_, VIDIOC_STREAMON, &type) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to start capture stream";
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << "  Failed to start capture stream: error=" << errno;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
@@ -259,11 +270,13 @@ V4L2H264EncodeConverter::~V4L2H264EncodeConverter() {
 
   v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   if (ioctl(fd_, VIDIOC_STREAMOFF, &type) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to stop output stream";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to stop output stream: error=" << errno;
   }
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
   if (ioctl(fd_, VIDIOC_STREAMOFF, &type) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to stop capture stream";
+    RTC_LOG(LS_ERROR) << __FUNCTION__
+                      << "  Failed to stop capture stream: error=" << errno;
   }
 
   src_buffers_.Deallocate();
@@ -743,3 +756,5 @@ V4L2DecodeConverter::~V4L2DecodeConverter() {
 
   close(fd_);
 }
+
+}  // namespace sora

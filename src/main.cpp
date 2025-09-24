@@ -27,8 +27,8 @@
 #elif defined(USE_NVCODEC_ENCODER)
 #include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif defined(USE_V4L2_ENCODER)
-#include "hwenc_v4l2/libcamera_capturer.h"
-#include "hwenc_v4l2/v4l2_capturer.h"
+#include "sora/hwenc_v4l2/libcamera_capturer.h"
+#include "sora/hwenc_v4l2/v4l2_capturer.h"
 #endif
 #include "sora/v4l2/v4l2_video_capturer.h"
 #else
@@ -204,15 +204,15 @@ int main(int argc, char* argv[]) {
         }
 #elif defined(USE_V4L2_ENCODER)
         if (args.use_libcamera) {
-          LibcameraCapturerConfig libcamera_config = v4l2_config;
+          sora::LibcameraCapturerConfig libcamera_config = v4l2_config;
           // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
           libcamera_config.native_frame_output =
               args.use_libcamera_native && !(use_sora && args.sora_simulcast);
           libcamera_config.controls = args.libcamera_controls;
-          return LibcameraCapturer::Create(libcamera_config);
+          return sora::LibcameraCapturer::Create(libcamera_config);
         } else if (v4l2_config.use_native &&
                    !(use_sora && args.sora_simulcast)) {
-          return V4L2Capturer::Create(std::move(v4l2_config));
+          return sora::V4L2Capturer::Create(std::move(v4l2_config));
         } else {
           return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
         }

@@ -1,10 +1,12 @@
-#ifndef V4L2_BUFFERS_H_
-#define V4L2_BUFFERS_H_
+#ifndef SORA_HWENC_V4L2_V4L2_BUFFERS_H_
+#define SORA_HWENC_V4L2_V4L2_BUFFERS_H_
 
 #include <vector>
 
 // Linux
 #include <linux/videodev2.h>
+
+namespace sora {
 
 // MMAP なバッファと DMABUF なバッファを扱うためのクラス
 class V4L2Buffers {
@@ -45,5 +47,7 @@ class V4L2Buffers {
   bool export_dmafds_ = false;
   std::vector<Buffer> buffers_;
 };
+
+}  // namespace sora
 
 #endif

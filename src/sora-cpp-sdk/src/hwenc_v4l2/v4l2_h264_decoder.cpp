@@ -1,4 +1,4 @@
-#include "v4l2_h264_decoder.h"
+#include "sora/hwenc_v4l2/v4l2_h264_decoder.h"
 
 #include <unistd.h>
 
@@ -10,11 +10,29 @@
 #include <system_wrappers/include/metrics.h>
 #include <third_party/libyuv/include/libyuv/convert.h>
 
+namespace sora {
+
 V4L2H264Decoder::V4L2H264Decoder(webrtc::VideoCodecType codec)
     : decoder_(nullptr), decode_complete_callback_(nullptr) {}
 
 V4L2H264Decoder::~V4L2H264Decoder() {
   Release();
+}
+
+std::unique_ptr<V4L2H264Decoder> V4L2H264Decoder::Create(
+    webrtc::VideoCodecType type) {
+  return std::make_unique<V4L2H264Decoder>(type);
+}
+bool V4L2H264Decoder::IsSupported(webrtc::VideoCodecType type) {
+  if (type != webrtc::kVideoCodecH264) {
+    return false;
+  }
+
+  auto decoder = V4L2DecodeConverter::Create(V4L2_PIX_FMT_H264, false);
+  if (decoder == nullptr) {
+    return false;
+  }
+  return true;
 }
 
 bool V4L2H264Decoder::Configure(const Settings& settings) {
@@ -65,5 +83,7 @@ int32_t V4L2H264Decoder::Release() {
 }
 
 const char* V4L2H264Decoder::ImplementationName() const {
-  return "V4L2 Video";
+  return "V4L2M2M H264";
 }
+
+}  // namespace sora

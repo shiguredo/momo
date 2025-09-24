@@ -1,4 +1,4 @@
-#include "v4l2_h264_encoder.h"
+#include "sora/hwenc_v4l2/v4l2_h264_encoder.h"
 
 #include <iostream>
 #include <limits>
@@ -22,7 +22,9 @@
 #include <third_party/libyuv/include/libyuv/convert_from.h>
 #include <third_party/libyuv/include/libyuv/video_common.h>
 
-#include "v4l2_native_buffer.h"
+#include "sora/hwenc_v4l2/v4l2_native_buffer.h"
+
+namespace sora {
 
 namespace {
 
@@ -31,7 +33,7 @@ const int kHighH264QpThreshold = 40;
 
 }  // namespace
 
-V4L2H264Encoder::V4L2H264Encoder(const webrtc::Codec& codec)
+V4L2H264Encoder::V4L2H264Encoder(webrtc::VideoCodecType codec)
     : configured_width_(0),
       configured_height_(0),
       callback_(nullptr),
@@ -40,6 +42,22 @@ V4L2H264Encoder::V4L2H264Encoder(const webrtc::Codec& codec)
       configured_framerate_fps_(30) {}
 
 V4L2H264Encoder::~V4L2H264Encoder() {}
+
+std::unique_ptr<V4L2H264Encoder> V4L2H264Encoder::Create(
+    webrtc::VideoCodecType type) {
+  return std::make_unique<V4L2H264Encoder>(type);
+}
+bool V4L2H264Encoder::IsSupported(webrtc::VideoCodecType type) {
+  if (type != webrtc::kVideoCodecH264) {
+    return false;
+  }
+  auto encoder =
+      V4L2H264EncodeConverter::Create(V4L2_MEMORY_MMAP, 640, 480, 640);
+  if (encoder == nullptr) {
+    return false;
+  }
+  return true;
+}
 
 int32_t V4L2H264Encoder::InitEncode(
     const webrtc::VideoCodec* codec_settings,
@@ -173,7 +191,7 @@ void V4L2H264Encoder::SetFramerateFps(double framerate_fps) {
 webrtc::VideoEncoder::EncoderInfo V4L2H264Encoder::GetEncoderInfo() const {
   EncoderInfo info;
   info.supports_native_handle = true;
-  info.implementation_name = "V4L2 H264";
+  info.implementation_name = "V4L2M2M H264";
   info.scaling_settings =
       VideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
   return info;
@@ -335,3 +353,5 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
   bitrate_adjuster_.Update(size);
   return WEBRTC_VIDEO_CODEC_OK;
 }
+
+}  // namespace sora
