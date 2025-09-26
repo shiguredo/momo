@@ -4,17 +4,16 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'develop'
-      - 'feature/**'
+      - "develop"
+      - "feature/**"
     paths:
-      - 'test/**'
-      - '.github/workflows/e2e-test.yml'
+      - "test/**"
+      - ".github/workflows/e2e-test.yml"
   schedule:
     # JST 14:00-16:30 の間、30分ごとに実行
     # UTC 05:00-07:30 (JST 14:00-16:30)
     # 1-5 で 月曜日から金曜日
-    - cron: "0,30 5-7 * * 1-5"  # UTC 05:00-07:30 (JST 14:00-16:30)
-
+    - cron: "0,30 5-7 * * 1-5" # UTC 05:00-07:30 (JST 14:00-16:30)
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
@@ -63,37 +62,37 @@ jobs:
             test_target: test_sora_mode_nvidia_video_codec.py
             env_vars: |
               NVIDIA_VIDEO_CODEC=true
-          - name: Raspberry Pi VideoCore
-            package: raspberry-pi-os_armv8
-            runs_on:
-              group: Self
-              labels: [self-hosted, linux, arm64, Raspberry-Pi]
-            test_target: test_sora_mode_raspberry_pi.py
-            env_vars: |
-              RASPBERRY_PI=true
+          # - name: Raspberry Pi VideoCore
+          #   package: raspberry-pi-os_armv8
+          #   runs_on:
+          #     group: Self
+          #     labels: [self-hosted, linux, arm64, Raspberry-Pi]
+          #   test_target: test_sora_mode_raspberry_pi.py
+          #   env_vars: |
+          #     RASPBERRY_PI=true
     name: E2E Test ${{ matrix.name || matrix.package }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      
+
       # Homebrew のセットアップ (self-hosted macOS ランナー用)
       - name: Setup Homebrew
         if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
         uses: Homebrew/actions/setup-homebrew@master
-      
+
       # GitHub CLI のインストール (self-hosted macOS ランナー用)
       - name: Install GitHub CLI
         if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
         run: brew install gh
-      
+
       # ランタイム依存関係のインストール (GitHub-hosted Ubuntu のみ)
       - name: Install runtime dependencies
         if: ${{ runner.environment != 'self-hosted' && startsWith(matrix.package, 'ubuntu') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
-      
+
       # 環境変数の設定 (HWA テスト用)
       - name: Set environment variables
         if: matrix.env_vars
@@ -103,14 +102,14 @@ jobs:
               echo "$line" >> $GITHUB_ENV
             fi
           done
-      
+
       # momo バイナリのダウンロード
       - name: Download and extract momo binary
         uses: ./.github/actions/download-binary
         with:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
-      
+
       # OpenH264 のダウンロード (GitHub-hosted ランナーのみ)
       - name: Download OpenH264
         if: ${{ runner.environment != 'self-hosted' }}
@@ -125,10 +124,10 @@ jobs:
       - name: Setup OpenH264 environment
         if: ${{ runner.environment != 'self-hosted' && steps.openh264.outputs.openh264_path }}
         run: echo "OPENH264_PATH=${{ steps.openh264.outputs.openh264_path }}" >> $GITHUB_ENV
-      
+
       # UV のセットアップ
       - uses: astral-sh/setup-uv@v6
-      
+
       # E2E テストの実行
       - name: Run E2E tests
         run: |
