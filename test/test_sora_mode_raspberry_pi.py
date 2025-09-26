@@ -98,7 +98,7 @@ def test_connection_stats(sora_settings, free_port):
         assert video_outbound_rtp["framesEncoded"] > 0
         # Raspberry Pi では V4L2 M2M エンコーダが使われる
         # TODO: V4L2-M2M みたいな名前がよさそう
-        assert video_outbound_rtp["encoderImplementation"] == "V4L2 H264"
+        assert video_outbound_rtp["encoderImplementation"] == "V4L2M2M H264"
 
         # transport を取得して確認
         transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
@@ -248,9 +248,9 @@ def test_simulcast(sora_settings, free_port):
 
         # r0 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r0
-        # Raspberry Pi では SimulcastEncoderAdapter と V4L2 H264 の組み合わせ
+        # Raspberry Pi では SimulcastEncoderAdapter と V4L2M2M H264 の組み合わせ
         assert "SimulcastEncoderAdapter" in outbound_rtp_r0["encoderImplementation"]
-        assert "V4L2 H264" in outbound_rtp_r0["encoderImplementation"]
+        assert "V4L2M2M H264" in outbound_rtp_r0["encoderImplementation"]
 
         # r0 の解像度を確認
         # 元の解像度 960x540 の 1/4 スケール (240x135)
@@ -281,7 +281,7 @@ def test_simulcast(sora_settings, free_port):
         # r1 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r1
         assert "SimulcastEncoderAdapter" in outbound_rtp_r1["encoderImplementation"]
-        assert "V4L2 H264" in outbound_rtp_r1["encoderImplementation"]
+        assert "V4L2M2M H264" in outbound_rtp_r1["encoderImplementation"]
 
         # r1 の解像度を確認
         # 元の解像度 960x540 の 1/2 スケール (480x270)
@@ -312,7 +312,7 @@ def test_simulcast(sora_settings, free_port):
         # r2 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r2
         assert "SimulcastEncoderAdapter" in outbound_rtp_r2["encoderImplementation"]
-        assert "V4L2 H264" in outbound_rtp_r2["encoderImplementation"]
+        assert "V4L2M2M H264" in outbound_rtp_r2["encoderImplementation"]
 
         # r2 の解像度を確認
         # 元の解像度 960x540 そのまま
@@ -410,7 +410,7 @@ def test_sora_sendonly_recvonly_pair(
                     {
                         "type": "outbound-rtp",
                         "kind": "video",
-                        "encoderImplementation": "V4L2 H264",
+                        "encoderImplementation": "V4L2M2M H264",
                     }
                 ]
             )
@@ -422,7 +422,7 @@ def test_sora_sendonly_recvonly_pair(
                     {
                         "type": "inbound-rtp",
                         "kind": "video",
-                        "decoderImplementation": "V4L2 H264",
+                        "decoderImplementation": "V4L2M2M H264",
                     }
                 ]
             )
@@ -460,7 +460,7 @@ def test_sora_sendonly_recvonly_pair(
             assert "encoderImplementation" in sender_video_outbound
             assert sender_video_outbound["packetsSent"] > 0
             assert sender_video_outbound["bytesSent"] > 0
-            assert sender_video_outbound["encoderImplementation"] == "V4L2 H264"
+            assert sender_video_outbound["encoderImplementation"] == "V4L2M2M H264"
 
             # 受信側では inbound-rtp が映像の1つ存在することを確認（音声なし）
             receiver_inbound_rtp = [
@@ -494,5 +494,5 @@ def test_sora_sendonly_recvonly_pair(
             assert "decoderImplementation" in receiver_video_inbound
             assert receiver_video_inbound["packetsReceived"] > 0
             assert receiver_video_inbound["bytesReceived"] > 0
-            # Raspberry Pi では V4L2 H264 デコーダが使われる（HWA）
-            assert receiver_video_inbound["decoderImplementation"] == "V4L2 H264"
+            # Raspberry Pi では V4L2M2M H264 デコーダが使われる（HWA）
+            assert receiver_video_inbound["decoderImplementation"] == "V4L2M2M H264"
