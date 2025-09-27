@@ -238,10 +238,6 @@ def test_simulcast(sora_settings, free_port):
             "r2",
         }, f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
 
-        import json
-
-        print(json.dumps(stats, indent=2))
-
         # r0 (低解像度) の検証
         outbound_rtp_r0 = video_outbound_rtp_by_rid["r0"]
         assert "ssrc" in outbound_rtp_r0
@@ -289,36 +285,28 @@ def test_simulcast(sora_settings, free_port):
         assert outbound_rtp_r1["frameHeight"] == 256
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
-        # # r2 (高解像度) の検証
-        # outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
-        # assert "ssrc" in outbound_rtp_r2
-        # assert "rid" in outbound_rtp_r2
-        # assert outbound_rtp_r2["rid"] == "r2"
-        # assert "packetsSent" in outbound_rtp_r2
-        # assert "bytesSent" in outbound_rtp_r2
-        # assert "framesEncoded" in outbound_rtp_r2
-        # assert "frameWidth" in outbound_rtp_r2
-        # assert "frameHeight" in outbound_rtp_r2
-        # assert outbound_rtp_r2["packetsSent"] > 0
-        # assert outbound_rtp_r2["bytesSent"] > 0
-        # assert outbound_rtp_r2["framesEncoded"] > 0
+        # r2 (高解像度) の検証
+        outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
+        assert "ssrc" in outbound_rtp_r2
+        assert "rid" in outbound_rtp_r2
+        assert outbound_rtp_r2["rid"] == "r2"
+        assert "packetsSent" in outbound_rtp_r2
+        assert "bytesSent" in outbound_rtp_r2
+        assert "framesEncoded" in outbound_rtp_r2
+        assert "frameWidth" in outbound_rtp_r2
+        assert "frameHeight" in outbound_rtp_r2
+        assert outbound_rtp_r2["packetsSent"] > 0
+        assert outbound_rtp_r2["bytesSent"] > 0
+        assert outbound_rtp_r2["framesEncoded"] > 0
 
-        # # r2 の encoder implementation を確認
-        # assert "encoderImplementation" in outbound_rtp_r2
-        # assert "SimulcastEncoderAdapter" in outbound_rtp_r2["encoderImplementation"]
-        # assert "V4L2M2M H264" in outbound_rtp_r2["encoderImplementation"]
+        # r2 の encoder implementation を確認
+        assert "encoderImplementation" in outbound_rtp_r2
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r2["encoderImplementation"]
+        assert "V4L2M2M H264" in outbound_rtp_r2["encoderImplementation"]
 
-        # # r2 の解像度を確認
-        # # 元の解像度 960x540 そのまま
-        # # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # # 528 (16×33) から 540 (元の値) の範囲を許容
-        # assert outbound_rtp_r2["frameWidth"] == 960, (
-        #     f"Expected width 960 for r2, but got {outbound_rtp_r2['frameWidth']}"
-        # )
-        # assert 528 <= outbound_rtp_r2["frameHeight"] <= 540, (
-        #     f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
-        # )
-        # print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
+        assert outbound_rtp_r2["frameWidth"] == 960
+        assert outbound_rtp_r2["frameHeight"] == 528
+        print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
 
         # # パケット数とバイト数の関係を検証（r0 < r1 < r2）
         # assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
