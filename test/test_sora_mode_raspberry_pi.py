@@ -308,14 +308,6 @@ def test_simulcast(sora_settings, free_port):
         assert outbound_rtp_r2["frameHeight"] == 528
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
 
-        # # パケット数とバイト数の関係を検証（r0 < r1 < r2）
-        # assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
-        #     f"Expected r0 bytesSent ({outbound_rtp_r0['bytesSent']}) < r1 bytesSent ({outbound_rtp_r1['bytesSent']})"
-        # )
-        # assert outbound_rtp_r1["bytesSent"] < outbound_rtp_r2["bytesSent"], (
-        #     f"Expected r1 bytesSent ({outbound_rtp_r1['bytesSent']}) < r2 bytesSent ({outbound_rtp_r2['bytesSent']})"
-        # )
-
         # transport を取得して確認
         transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
         assert len(transport_stats) == 1, f"Expected 1 transport, but got {len(transport_stats)}"

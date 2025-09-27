@@ -127,10 +127,9 @@ jobs:
 
       # UV のセットアップ
       - uses: astral-sh/setup-uv@v6
+      - run: uv sync
 
       # E2E テストの実行
       - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest ${{ matrix.test_target || '.' }} -v -s
+        run: uv run pytest ${{ matrix.test_target || '.' }} -v --count=20
         working-directory: ./test
