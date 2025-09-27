@@ -132,5 +132,5 @@ jobs:
       - name: Run E2E tests
         run: |
           uv sync
-          uv run pytest ${{ matrix.test_target || '.' }} -v --count=5
+          uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test
