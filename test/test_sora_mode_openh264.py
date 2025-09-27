@@ -144,7 +144,6 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
         resolution="960x540",
         metadata=sora_settings.metadata,
     ) as m:
-        expected_encoder_implementation = "SimulcastEncoderAdapter (OpenH264, OpenH264, OpenH264)"
         # 接続が確立されるまで待つ（サイマルキャストの場合は複数の rid を待つ）
         assert m.wait_for_connection(), "Failed to establish simulcast connection with OpenH264"
 
@@ -154,19 +153,17 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
                 {
                     "type": "outbound-rtp",
                     "rid": "r0",
-                    "encoderImplementation": expected_encoder_implementation,
                 },
                 {
                     "type": "outbound-rtp",
                     "rid": "r1",
-                    "encoderImplementation": expected_encoder_implementation,
                 },
                 {
                     "type": "outbound-rtp",
                     "rid": "r2",
-                    "encoderImplementation": expected_encoder_implementation,
                 },
             ],
+            wait_after_stats=3,
         )
         stats = data["stats"]
 
@@ -177,21 +174,73 @@ def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
             if stat.get("type") == "outbound-rtp"
             and stat.get("kind") == "video"
             and stat.get("rid") in ["r0", "r1", "r2"]
-            and stat.get("encoderImplementation") == expected_encoder_implementation
         ]
         assert len(simulcast_stats) == 3, (
             f"Expected 3 simulcast streams with OpenH264, but got {len(simulcast_stats)}"
         )
 
-        # 各 rid の統計情報を確認
-        rids = {stat.get("rid") for stat in simulcast_stats}
-        print(f"Simulcast RIDs with OpenH264: {rids}")
+        # rid ごとに分類
+        video_outbound_rtp_by_rid = {}
+        for video_outbound_rtp in simulcast_stats:
+            rid = video_outbound_rtp.get("rid")
+            assert rid in ["r0", "r1", "r2"], f"Unexpected rid: {rid}"
+            video_outbound_rtp_by_rid[rid] = video_outbound_rtp
 
-        for simulcast_stat in simulcast_stats:
-            assert simulcast_stat["encoderImplementation"] == expected_encoder_implementation
-            assert "rid" in simulcast_stat
-            assert "ssrc" in simulcast_stat
-            assert "packetsSent" in simulcast_stat
-            assert "bytesSent" in simulcast_stat
-            assert simulcast_stat["packetsSent"] > 0
-            assert simulcast_stat["bytesSent"] > 0
+        # 全ての rid が存在することを確認
+        assert set(video_outbound_rtp_by_rid.keys()) == {
+            "r0",
+            "r1",
+            "r2",
+        }, f"Expected rid r0, r1, r2, but got {set(video_outbound_rtp_by_rid.keys())}"
+
+        # r0 (低解像度) の検証
+        outbound_rtp_r0 = video_outbound_rtp_by_rid["r0"]
+        assert "encoderImplementation" in outbound_rtp_r0
+        # OpenH264 では SimulcastEncoderAdapter と OpenH264 の組み合わせ
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r0["encoderImplementation"]
+        assert "OpenH264" in outbound_rtp_r0["encoderImplementation"]
+        assert "rid" in outbound_rtp_r0
+        assert "ssrc" in outbound_rtp_r0
+        assert "packetsSent" in outbound_rtp_r0
+        assert "bytesSent" in outbound_rtp_r0
+        assert "frameWidth" in outbound_rtp_r0
+        assert "frameHeight" in outbound_rtp_r0
+        assert outbound_rtp_r0["packetsSent"] > 0
+        assert outbound_rtp_r0["bytesSent"] > 0
+        assert outbound_rtp_r0["frameWidth"] == 240
+        assert outbound_rtp_r0["frameHeight"] == 128
+        print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
+
+        # r1 (中解像度) の検証
+        outbound_rtp_r1 = video_outbound_rtp_by_rid["r1"]
+        assert "encoderImplementation" in outbound_rtp_r1
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r1["encoderImplementation"]
+        assert "OpenH264" in outbound_rtp_r1["encoderImplementation"]
+        assert "rid" in outbound_rtp_r1
+        assert "ssrc" in outbound_rtp_r1
+        assert "packetsSent" in outbound_rtp_r1
+        assert "bytesSent" in outbound_rtp_r1
+        assert "frameWidth" in outbound_rtp_r1
+        assert "frameHeight" in outbound_rtp_r1
+        assert outbound_rtp_r1["packetsSent"] > 0
+        assert outbound_rtp_r1["bytesSent"] > 0
+        assert outbound_rtp_r1["frameWidth"] == 480
+        assert outbound_rtp_r1["frameHeight"] == 256
+        print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
+
+        # r2 (高解像度) の検証
+        outbound_rtp_r2 = video_outbound_rtp_by_rid["r2"]
+        assert "encoderImplementation" in outbound_rtp_r2
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r2["encoderImplementation"]
+        assert "OpenH264" in outbound_rtp_r2["encoderImplementation"]
+        assert "rid" in outbound_rtp_r2
+        assert "ssrc" in outbound_rtp_r2
+        assert "packetsSent" in outbound_rtp_r2
+        assert "bytesSent" in outbound_rtp_r2
+        assert "frameWidth" in outbound_rtp_r2
+        assert "frameHeight" in outbound_rtp_r2
+        assert outbound_rtp_r2["packetsSent"] > 0
+        assert outbound_rtp_r2["bytesSent"] > 0
+        assert outbound_rtp_r2["frameWidth"] == 960
+        assert outbound_rtp_r2["frameHeight"] == 528
+        print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
