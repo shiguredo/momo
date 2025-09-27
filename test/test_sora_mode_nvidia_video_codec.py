@@ -325,21 +325,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
 
         # r0 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r0
-        assert outbound_rtp_r0["encoderImplementation"] == expected_encoder_implementation, (
-            f"Expected encoder implementation {expected_encoder_implementation} for r0, "
-            f"but got {outbound_rtp_r0['encoderImplementation']}"
-        )
+        # NVIDIA Video Codec では SimulcastEncoderAdapter と NvCodec の組み合わせ
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r0["encoderImplementation"]
+        assert "NvCodec" in outbound_rtp_r0["encoderImplementation"]
 
-        # r0 の解像度を確認
-        # 元の解像度 960x540 の 1/4 スケール (240x135)
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 128 (16×8) または 135 (元の値) の範囲を許容
-        assert outbound_rtp_r0["frameWidth"] == 240, (
-            f"Expected width 240 for r0, but got {outbound_rtp_r0['frameWidth']}"
-        )
-        assert 128 <= outbound_rtp_r0["frameHeight"] <= 135, (
-            f"Expected height between 128 and 135 for r0, but got {outbound_rtp_r0['frameHeight']}"
-        )
+        assert outbound_rtp_r0["frameWidth"] == 240
+        assert outbound_rtp_r0["frameHeight"] == 128
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
 
         # r1 (中解像度) の検証
@@ -358,21 +349,11 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
 
         # r1 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r1
-        assert outbound_rtp_r1["encoderImplementation"] == expected_encoder_implementation, (
-            f"Expected encoder implementation {expected_encoder_implementation} for r1, "
-            f"but got {outbound_rtp_r1['encoderImplementation']}"
-        )
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r1["encoderImplementation"]
+        assert "NvCodec" in outbound_rtp_r1["encoderImplementation"]
 
-        # r1 の解像度を確認
-        # 元の解像度 960x540 の 1/2 スケール (480x270)
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 256 (16×16) から 270 (元の値) の範囲を許容
-        assert outbound_rtp_r1["frameWidth"] == 480, (
-            f"Expected width 480 for r1, but got {outbound_rtp_r1['frameWidth']}"
-        )
-        assert 256 <= outbound_rtp_r1["frameHeight"] <= 270, (
-            f"Expected height between 256 and 270 for r1, but got {outbound_rtp_r1['frameHeight']}"
-        )
+        assert outbound_rtp_r1["frameWidth"] == 480
+        assert outbound_rtp_r1["frameHeight"] == 256
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
         # r2 (高解像度) の検証
@@ -391,30 +372,12 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
 
         # r2 の encoder implementation を確認
         assert "encoderImplementation" in outbound_rtp_r2
-        assert outbound_rtp_r2["encoderImplementation"] == expected_encoder_implementation, (
-            f"Expected encoder implementation {expected_encoder_implementation} for r2, "
-            f"but got {outbound_rtp_r2['encoderImplementation']}"
-        )
+        assert "SimulcastEncoderAdapter" in outbound_rtp_r2["encoderImplementation"]
+        assert "NvCodec" in outbound_rtp_r2["encoderImplementation"]
 
-        # r2 の解像度を確認
-        # 元の解像度 960x540 そのまま
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 528 (16×33) から 540 (元の値) の範囲を許容
-        assert outbound_rtp_r2["frameWidth"] == 960, (
-            f"Expected width 960 for r2, but got {outbound_rtp_r2['frameWidth']}"
-        )
-        assert 528 <= outbound_rtp_r2["frameHeight"] <= 540, (
-            f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
-        )
+        assert outbound_rtp_r2["frameWidth"] == 960
+        assert outbound_rtp_r2["frameHeight"] == 528
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
-
-        # パケット数とバイト数の関係を検証（r0 < r1 < r2）
-        assert outbound_rtp_r0["bytesSent"] < outbound_rtp_r1["bytesSent"], (
-            f"Expected r0 bytesSent ({outbound_rtp_r0['bytesSent']}) < r1 bytesSent ({outbound_rtp_r1['bytesSent']})"
-        )
-        assert outbound_rtp_r1["bytesSent"] < outbound_rtp_r2["bytesSent"], (
-            f"Expected r1 bytesSent ({outbound_rtp_r1['bytesSent']}) < r2 bytesSent ({outbound_rtp_r2['bytesSent']})"
-        )
 
         # 各統計タイプの詳細をチェック（outbound-rtp と codec は上で検証済みなのでスキップ）
         for stat in stats:

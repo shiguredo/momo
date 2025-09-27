@@ -1,4 +1,4 @@
-name: e2e-test-workflow
+name: e2e-test
 
 on:
   workflow_dispatch:
@@ -34,8 +34,8 @@ jobs:
           - package: macos_arm64
             runs_on: macos-15
           # Windows サポート予定
-          #- package: windows_x86_64
-          #  runs_on: windows-2025
+          # - package: windows_x86_64
+          #   runs_on: windows-2025
           # Self-hosted runners for HWA tests
           - name: Apple Video Toolbox
             package: macos_arm64
@@ -62,14 +62,14 @@ jobs:
             test_target: test_sora_mode_nvidia_video_codec.py
             env_vars: |
               NVIDIA_VIDEO_CODEC=true
-          # - name: Raspberry Pi VideoCore
-          #   package: raspberry-pi-os_armv8
-          #   runs_on:
-          #     group: Self
-          #     labels: [self-hosted, linux, arm64, Raspberry-Pi]
-          #   test_target: test_sora_mode_raspberry_pi.py
-          #   env_vars: |
-          #     RASPBERRY_PI=true
+          - name: Raspberry Pi VideoCore
+            package: raspberry-pi-os_armv8
+            runs_on:
+              group: Self
+              labels: [self-hosted, linux, arm64, Raspberry-Pi]
+            test_target: test_sora_mode_raspberry_pi.py
+            env_vars: |
+              RASPBERRY_PI=true
     name: E2E Test ${{ matrix.name || matrix.package }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
@@ -127,10 +127,10 @@ jobs:
 
       # UV のセットアップ
       - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+        working-directory: ./test
 
       # E2E テストの実行
       - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest ${{ matrix.test_target || '.' }} -v
+        run: uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test
