@@ -128,6 +128,7 @@ jobs:
       # UV のセットアップ
       - uses: astral-sh/setup-uv@v6
       - run: uv sync
+        working-directory: ./test
 
       # E2E テストの実行
       - name: Run E2E tests
