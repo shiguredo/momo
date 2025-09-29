@@ -85,11 +85,6 @@ def test_connection_stats(sora_settings, free_port):
             f"Expected 1 video outbound-rtp, but got {len(video_outbound_rtp_stats)}"
         )
 
-        # ここで stats をキレイナインデントで表示したい場合は以下をアンコメント
-        import json
-
-        print(json.dumps(stats, indent=2))
-
         # video outbound-rtp の中身を検証
         video_outbound_rtp = video_outbound_rtp_stats[0]
         assert "ssrc" in video_outbound_rtp
@@ -295,7 +290,6 @@ def test_simulcast(sora_settings, free_port):
         assert "framesEncoded" in outbound_rtp_r2
         
         # r2 はフレーキーで frameWidth, frameHeight が出ないことがある
-        
         if "frameWidth" in outbound_rtp_r2:
             assert "frameWidth" in outbound_rtp_r2
             print("frameWidth is present")
