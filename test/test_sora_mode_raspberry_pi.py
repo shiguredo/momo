@@ -297,7 +297,7 @@ def test_simulcast(sora_settings, free_port):
         # r2 はフレーキーで frameWidth, frameHeight が出ないことがある
         
         if "frameWidth" in outbound_rtp_r2:
-            assert "framewidth" in outbound_rtp_r2
+            assert "frameWidth" in outbound_rtp_r2
             print("frameWidth is present")
         if "frameHeight" in outbound_rtp_r2:
             assert "frameHeight" in outbound_rtp_r2
