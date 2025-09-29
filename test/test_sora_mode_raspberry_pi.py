@@ -295,8 +295,14 @@ def test_simulcast(sora_settings, free_port):
         assert "framesEncoded" in outbound_rtp_r2
         
         # r2 はフレーキーで frameWidth, frameHeight が出ないことがある
-        # assert "framewidth" in outbound_rtp_r2
-        # assert "frameHeight" in outbound_rtp_r2
+        
+        if "frameWidth" in outbound_rtp_r2:
+            assert "framewidth" in outbound_rtp_r2
+            print("frameWidth is present")
+        if "frameHeight" in outbound_rtp_r2:
+            assert "frameHeight" in outbound_rtp_r2
+            print("frameHeight is present")
+
         assert outbound_rtp_r2["packetsSent"] > 0
         assert outbound_rtp_r2["bytesSent"] > 0
         assert outbound_rtp_r2["framesEncoded"] > 0
@@ -307,9 +313,14 @@ def test_simulcast(sora_settings, free_port):
         assert "V4L2M2M H264" in outbound_rtp_r2["encoderImplementation"]
 
         # r2 はフレーキーで frameWidth, frameHeight が出ないことがある
-        # assert outbound_rtp_r2["frameWidth"] == 960
-        # assert outbound_rtp_r2["frameHeight"] == 528
-        # print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
+        if "frameWidth" in outbound_rtp_r2:
+            assert outbound_rtp_r2["frameWidth"] == 960
+            print("frameWidth is checked")
+        if "frameHeight" in outbound_rtp_r2:
+            assert outbound_rtp_r2["frameHeight"] == 528
+            print("frameHeight is checked")
+        if "frameWidth" in outbound_rtp_r2 and "frameHeight" in outbound_rtp_r2:
+            print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
 
         # transport を取得して確認
         transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
