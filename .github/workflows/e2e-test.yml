@@ -22,7 +22,7 @@ env:
   OPENH264_VERSION: 2.6.0
 
 jobs:
-  e2e-test:
+  e2e_test:
     strategy:
       matrix:
         include:
@@ -134,3 +134,17 @@ jobs:
       - name: Run E2E tests
         run: uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test
+
+  slack_notify_failed:
+    needs: [e2e_test]
+    runs-on: ubuntu-24.04
+    if: failure()
+    steps:
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: momo
+          SLACK_COLOR: danger
+          SLACK_TITLE: "FAILED"
+          SLACK_ICON_EMOJI: ":japanese_ogre:"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
