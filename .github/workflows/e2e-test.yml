@@ -143,7 +143,7 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: momo
+          SLACK_CHANNEL: open-momo
           SLACK_COLOR: danger
           SLACK_TITLE: "FAILED"
           SLACK_ICON_EMOJI: ":japanese_ogre:"
