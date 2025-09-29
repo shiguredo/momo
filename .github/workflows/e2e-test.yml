@@ -67,7 +67,7 @@ jobs:
             runs_on:
               group: Self
               labels: [self-hosted, linux, arm64, Raspberry-Pi]
-            test_target: test_sora_mode_raspberry_pi.py
+            test_target: test_sora_mode_raspberry_pi.py -s
             env_vars: |
               RASPBERRY_PI=true
     name: E2E Test ${{ matrix.name || matrix.package }}
