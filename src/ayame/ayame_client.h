@@ -36,6 +36,15 @@ struct AyameClientConfig {
   std::string audio_codec_type;
 };
 
+// AyameClient はシングルスレッド実行を前提として設計されています。
+// io_context は単一スレッドで駆動され、全てのイベント処理は
+// この io_context 上で直列実行されます。
+// WebRTC からのコールバックは boost::asio::post で io_context に
+// 移送されるため、メンバ変数へのアクセスは同期化不要です。
+//
+// 注意: 将来的に io_context を複数スレッドで実行する場合は、
+// retry_count_, is_send_offer_, has_is_exist_user_flag_ などの
+// 状態変数を std::atomic 化するか、適切な同期機構で保護する必要があります。
 class AyameClient : public std::enable_shared_from_this<AyameClient>,
                     public RTCMessageSender,
                     public StatsCollector {
@@ -71,7 +80,7 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void DoRegister();
   void DoSendPong();
   void SetIceServersFromConfig(boost::json::value json_message);
-  void CreatePeerConnection();
+  bool CreatePeerConnection();
 
  private:
   void OnConnect(boost::system::error_code ec);
@@ -103,13 +112,14 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   std::shared_ptr<RTCConnection> connection_;
   AyameClientConfig config_;
 
-  int retry_count_;
-  webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
+  int retry_count_ = 0;
+  webrtc::PeerConnectionInterface::IceConnectionState rtc_state_ =
+      webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionNew;
 
   WatchDog watchdog_;
 
-  bool is_send_offer_;
-  bool has_is_exist_user_flag_;
+  bool is_send_offer_ = false;
+  bool has_is_exist_user_flag_ = false;
 
   webrtc::PeerConnectionInterface::IceServers ice_servers_;
 };
