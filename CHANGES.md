@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
+  - @voluntas
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
     - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
@@ -30,6 +32,8 @@
   - GitHub Actions の self-hosted runner を利用して Raspberry Pi OS armv8 環境での E2E テストを実行
   - test_sora_mode_raspberry_pi.py テストファイルを追加
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
+  - @voluntas
+- [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
   - @voluntas
 
 ## 2025.1.0
