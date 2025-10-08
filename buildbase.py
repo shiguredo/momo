@@ -1429,7 +1429,7 @@ def install_cuda_windows(version, source_dir, build_dir, install_dir):
         url = "https://developer.download.nvidia.com/compute/cuda/12.6.3/local_installers/cuda_12.6.3_561.17_windows.exe"  # noqa: E501
     elif version == "12.9.1-1":
         url = "https://developer.download.nvidia.com/compute/cuda/12.9.1/local_installers/cuda_12.9.1_576.57_windows.exe"  # noqa: E501
-    elif version == "13.1.0-1":
+    elif version == "13.0.1-1":
         url = "https://developer.download.nvidia.com/compute/cuda/13.0.1/local_installers/cuda_13.0.1_windows.exe"  # noqa: E501
     else:
         raise Exception(f"Unknown CUDA version {version}")
