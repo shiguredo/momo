@@ -168,7 +168,7 @@ jobs:
       - name: Install deps for ${{ matrix.name }}
         if: ${{ matrix.name }} == 'ubuntu-24.04_x86_64' || ${{ matrix.name }} == 'ubuntu-22.04_x86_64'
         run: |
-          # Intel Media SDK のために libva-dev, libdrm-dev を入れる
+          # Intel VPL のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
