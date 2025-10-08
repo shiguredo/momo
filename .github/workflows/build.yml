@@ -129,23 +129,23 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           df -h
       - name: Install deps for Jetson and Raspberry Pi OS series
-        if: ${{ matrix.name }} == 'ubuntu-22.04_armv8_jetson' || ${{ matrix.name }} == 'raspberry-pi-os_armv8'
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
         run: |
           sudo apt-get update
           sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
           # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
           sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
       - name: Download CUDA keyring for ${{ matrix.name }}
-        if: ${{ matrix.name }} == 'ubuntu-24.04_x86_64'
+        if: matrix.name == 'ubuntu-24.04_x86_64'
         run: |
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
       - name: Download CUDA keyring for ${{ matrix.name }}
-        if: ${{ matrix.name }} == 'ubuntu-22.04_x86_64'
+        if: matrix.name == 'ubuntu-22.04_x86_64'
         run: |
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 
       - name: Install CUDA for ${{ matrix.name }}
-        if: ${{ matrix.name }} == 'ubuntu-24.04_x86_64' || ${{ matrix.name }} == 'ubuntu-22.04_x86_64'
+        if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
         run: |
           source DEPS
           # CUDA_VERSION (例: 12.8.1-1) から cuda-12-8=12.8.1-1 のような形式を生成
@@ -166,7 +166,7 @@ jobs:
           sudo ./llvm.sh 20
 
       - name: Install deps for ${{ matrix.name }}
-        if: ${{ matrix.name }} == 'ubuntu-24.04_x86_64' || ${{ matrix.name }} == 'ubuntu-22.04_x86_64'
+        if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
         run: |
           # Intel VPL のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
