@@ -138,8 +138,9 @@ jobs:
   slack_notify_failed:
     needs: [e2e_test]
     runs-on: ubuntu-24.04
-    # タイムアウトによるキャンセルも拾う
-    if: failure() || cancelled()
+    # always() で常に実行し、needs.e2e_test.result で親ジョブの結果を確認
+    # タイムアウトは 'failure' として扱われる
+    if: always() && (needs.e2e_test.result == 'failure' || needs.e2e_test.result == 'cancelled')
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
