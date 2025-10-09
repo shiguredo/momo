@@ -496,7 +496,7 @@ elseif (TARGET_OS STREQUAL "linux")
         src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_60;-std=gnu++17;-Wno-tautological-constant-out-of-range-compare;-D_ALLOW_UNSUPPORTED_LIBCPP"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)

@@ -135,50 +135,44 @@ jobs:
           sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
           # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
           sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
-      # Ubuntu 24.04 だと libtinfo5 が見つからない問題があるので、その修正
-      # ref: https://qiita.com/gengen16k/items/88cf3c18a40a94205fab
-      - name: Fix CUDA issues for Ubuntu 24.04
+      - name: Download CUDA keyring for ${{ matrix.name }}
         if: matrix.name == 'ubuntu-24.04_x86_64'
         run: |
-          sudo tee /etc/apt/sources.list.d/jammy.list << EOF
-          deb http://archive.ubuntu.com/ubuntu/ jammy universe
-          EOF
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+      - name: Download CUDA keyring for ${{ matrix.name }}
+        if: matrix.name == 'ubuntu-22.04_x86_64'
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 
-          sudo tee /etc/apt/preferences.d/pin-jammy <<EOF
-          Package: *
-          Pin: release n=jammy
-          Pin-Priority: -10
-
-          Package: libtinfo5
-          Pin: release n=jammy
-          Pin-Priority: 990
-          EOF
-      - name: Install deps for ${{ matrix.name }}
+      - name: Install CUDA for ${{ matrix.name }}
+        if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
         run: |
           source DEPS
-          # clang-20 と CUDA を入れる
+          # CUDA_VERSION (例: 12.8.1-1) から cuda-12-8=12.8.1-1 のような形式を生成
+          CUDA_MAJOR=$(echo $CUDA_VERSION | cut -d. -f1)
+          CUDA_MINOR=$(echo $CUDA_VERSION | cut -d. -f2)
+          CUDA_PKG="cuda-${CUDA_MAJOR}-${CUDA_MINOR}=${CUDA_VERSION}"
+          sudo dpkg -i cuda-keyring_*all.deb
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install ${CUDA_PKG}
+      - name: Install deps for ${{ matrix.name }}
+        run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
 
-          source /etc/os-release
-          # 20.04 は自前の libssl1.1 があるので不要
-          if [ "$VERSION_ID" != "20.04" ]; then
-            wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-            sudo dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-          fi
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
-          sudo dpkg -i cuda-keyring_*all.deb
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install cuda=$CUDA_VERSION
-
+          # clang-20
           wget https://apt.llvm.org/llvm.sh
           chmod a+x llvm.sh
           sudo ./llvm.sh 20
 
-          # Intel Media SDK のために libva-dev, libdrm-dev を入れる
+      - name: Install deps for ${{ matrix.name }}
+        if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
+        run: |
+          # Intel VPL のために libva-dev, libdrm-dev を入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libva-dev libdrm-dev
           # スクリーンキャプチャあたりのためのパッケージを入れる
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
+
       - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
