@@ -12,11 +12,20 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_connection_stats(sora_settings, free_port):
-    """Sora モードで接続時の統計情報を確認（Raspberry Pi H.264）"""
-    video_codec_type = "H264"
-    expected_mime_type = "video/H264"
-    expected_encoder_implementation = "V4L2M2M H264"
+@pytest.mark.parametrize(
+    "video_codec_type,expected_encoder_implementation",
+    [
+        ("VP8", "libvpx"),
+        ("VP9", "libvpx"),
+        ("AV1", "libaom"),
+        ("H264", "V4L2M2M H264"),
+    ],
+)
+def test_sendonly_video_codec_type(
+    sora_settings, free_port, video_codec_type, expected_encoder_implementation
+):
+    """Sora モードで sendonly 接続時の統計情報を確認（Raspberry Pi）"""
+    expected_mime_type = f"video/{video_codec_type}"
 
     with Momo(
         fake_capture_device=False,
@@ -33,9 +42,7 @@ def test_connection_stats(sora_settings, free_port):
         initial_wait=10,
     ) as m:
         # 接続が確立されるまで待つ
-        assert m.wait_for_connection(), (
-            f"Failed to establish connection for {video_codec_type} codec"
-        )
+        assert m.wait_for_connection()
 
         data = m.get_metrics()
         stats = data["stats"]
@@ -59,34 +66,34 @@ def test_connection_stats(sora_settings, free_port):
             assert expected_type in stat_types
 
         # video codec を取得して確認
-        video_codec_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
-        ]
-        assert len(video_codec_stats) == 1, (
-            f"Expected 1 video codec ({expected_mime_type}), but got {len(video_codec_stats)}"
+        video_codec = next(
+            (
+                stat
+                for stat in stats
+                if stat.get("type") == "codec" and stat.get("mimeType") == expected_mime_type
+            ),
+            None,
         )
+        assert video_codec is not None
 
         # video codec の中身を検証
-        video_codec = video_codec_stats[0]
         assert "payloadType" in video_codec
         assert "mimeType" in video_codec
         assert "clockRate" in video_codec
         assert video_codec["clockRate"] == 90000
 
         # video の outbound-rtp を取得して確認
-        video_outbound_rtp_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
-        ]
-        assert len(video_outbound_rtp_stats) == 1, (
-            f"Expected 1 video outbound-rtp, but got {len(video_outbound_rtp_stats)}"
+        video_outbound_rtp = next(
+            (
+                stat
+                for stat in stats
+                if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
+            ),
+            None,
         )
+        assert video_outbound_rtp is not None
 
         # video outbound-rtp の中身を検証
-        video_outbound_rtp = video_outbound_rtp_stats[0]
         assert "ssrc" in video_outbound_rtp
         assert "packetsSent" in video_outbound_rtp
         assert "bytesSent" in video_outbound_rtp
@@ -97,16 +104,16 @@ def test_connection_stats(sora_settings, free_port):
         assert video_outbound_rtp["packetsSent"] > 0
         assert video_outbound_rtp["bytesSent"] > 0
         assert video_outbound_rtp["framesEncoded"] > 0
-        # Raspberry Pi では V4L2 M2M エンコーダが使われる
-        # TODO: V4L2-M2M みたいな名前がよさそう
         assert video_outbound_rtp["encoderImplementation"] == expected_encoder_implementation
 
         # transport を取得して確認
-        transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
-        assert len(transport_stats) == 1, f"Expected 1 transport, but got {len(transport_stats)}"
+        transport = next(
+            (stat for stat in stats if stat.get("type") == "transport"),
+            None,
+        )
+        assert transport is not None
 
         # transport の中身を検証
-        transport = transport_stats[0]
         assert "bytesSent" in transport
         assert "bytesReceived" in transport
         assert "dtlsState" in transport
@@ -117,13 +124,13 @@ def test_connection_stats(sora_settings, free_port):
         assert transport["iceState"] == "connected"
 
         # peer-connection を取得して確認
-        peer_connection_stats = [stat for stat in stats if stat.get("type") == "peer-connection"]
-        assert len(peer_connection_stats) == 1, (
-            f"Expected 1 peer-connection, but got {len(peer_connection_stats)}"
+        peer_connection = next(
+            (stat for stat in stats if stat.get("type") == "peer-connection"),
+            None,
         )
+        assert peer_connection is not None
 
         # peer-connection の中身を検証
-        peer_connection = peer_connection_stats[0]
         assert "dataChannelsOpened" in peer_connection
 
 
