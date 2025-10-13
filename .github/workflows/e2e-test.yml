@@ -116,7 +116,6 @@ jobs:
         uses: shiguredo/github-actions/.github/actions/download-openh264@main
         id: openh264
         with:
-          platform_name: ${{ matrix.package }}
           openh264_version: ${{ env.OPENH264_VERSION }}
           use-cache: true
 
