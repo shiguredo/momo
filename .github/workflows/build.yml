@@ -100,13 +100,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name:
-          - raspberry-pi-os_armv8
-          - ubuntu-22.04_x86_64
-          - ubuntu-24.04_x86_64
-          - ubuntu-22.04_armv8_jetson
+        include:
+          - name: ubuntu-24.04_x86_64
+            os: ubuntu-24.04
+          - name: ubuntu-22.04_x86_64
+            os: ubuntu-22.04
+          - name: raspberry-pi-os_armv8
+            os: ubuntu-22.04
+          - name: ubuntu-22.04_armv8_jetson
+            os: ubuntu-22.04
     name: Build momo for ${{ matrix.name }}
-    runs-on: ${{ matrix.name == 'ubuntu-24.04_x86_64' && 'ubuntu-24.04' || 'ubuntu-22.04' }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
       - name: Disk cleanup
@@ -135,26 +139,12 @@ jobs:
           sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
           # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
           sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
-      - name: Download CUDA keyring for ${{ matrix.name }}
-        if: matrix.name == 'ubuntu-24.04_x86_64'
-        run: |
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-      - name: Download CUDA keyring for ${{ matrix.name }}
-        if: matrix.name == 'ubuntu-22.04_x86_64'
-        run: |
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-
-      - name: Install CUDA for ${{ matrix.name }}
+      - uses: shiguredo/github-actions/.github/actions/setup-cuda-toolkit@main
         if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
-        run: |
-          source DEPS
-          # CUDA_VERSION (例: 12.8.1-1) から cuda-12-8=12.8.1-1 のような形式を生成
-          CUDA_MAJOR=$(echo $CUDA_VERSION | cut -d. -f1)
-          CUDA_MINOR=$(echo $CUDA_VERSION | cut -d. -f2)
-          CUDA_PKG="cuda-${CUDA_MAJOR}-${CUDA_MINOR}=${CUDA_VERSION}"
-          sudo dpkg -i cuda-keyring_*all.deb
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install ${CUDA_PKG}
+        id: cuda
+        with:
+          platform: ${{ matrix.os }}
+          cuda_version: 12.9.1
       - name: Install deps for ${{ matrix.name }}
         run: |
           sudo apt-get update
