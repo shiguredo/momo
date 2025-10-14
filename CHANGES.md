@@ -28,6 +28,14 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [ADD] macOS でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（部分一致、大文字小文字を区別しない）で指定可能
+  - @voluntas
+- [ADD] macOS で `--list-devices` オプションを追加
+  - 利用可能なオーディオデバイスの一覧を表示する機能
+  - @voluntas
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 

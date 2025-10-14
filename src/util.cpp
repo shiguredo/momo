@@ -129,6 +129,14 @@ void Util::ParseArgs(int argc,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)");
 #endif
+#if defined(__APPLE__)
+  app.add_option("--audio-input-device", args.audio_input_device,
+                 "Use the audio input device specified by an index or a name "
+                 "(use the system default if not specified)");
+  app.add_option("--audio-output-device", args.audio_output_device,
+                 "Use the audio output device specified by an index or a name "
+                 "(use the system default if not specified)");
+#endif
   app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
                  "[WIDTH]x[HEIGHT])")
