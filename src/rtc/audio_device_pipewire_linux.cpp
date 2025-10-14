@@ -339,11 +339,6 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
     return 0;
   }
 
-  if (!audio_buffer_) {
-    RTC_LOG(LS_ERROR) << "AudioDeviceBuffer not attached";
-    return -1;
-  }
-
   pw_thread_loop_lock(pw_main_loop_);
 
   // Get target device ID
