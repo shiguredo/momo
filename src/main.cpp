@@ -10,7 +10,7 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 #include <api/audio/create_audio_device_module.h>
 #include <api/environment/environment_factory.h>
 #include <modules/audio_device/include/audio_device.h>
@@ -73,7 +73,57 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 #if defined(__linux__)
 
-static void ListVideoDevices() {
+static void ListDevices() {
+  // オーディオデバイス一覧
+  auto adm = webrtc::CreateAudioDeviceModule(
+      webrtc::CreateEnvironment(),
+      webrtc::AudioDeviceModule::kPlatformDefaultAudio);
+  if (!adm) {
+    std::cerr << "Failed to create AudioDeviceModule" << std::endl;
+    return;
+  }
+
+  if (adm->Init() != 0) {
+    std::cerr << "AudioDeviceModule::Init failed" << std::endl;
+    return;
+  }
+
+  auto print_audio_devices = [&](bool is_input) {
+    const char* title =
+        is_input ? "=== Available audio input devices ==="
+                 : "=== Available audio output devices ===";
+    std::cout << title << std::endl;
+    std::cout << std::endl;
+
+    int16_t device_count =
+        is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
+    if (device_count <= 0) {
+      std::cout << "  (none)" << std::endl << std::endl;
+      return;
+    }
+
+    for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
+      char name[webrtc::kAdmMaxDeviceNameSize] = {0};
+      char guid[webrtc::kAdmMaxGuidSize] = {0};
+      int32_t result = is_input ? adm->RecordingDeviceName(i, name, guid)
+                                : adm->PlayoutDeviceName(i, name, guid);
+      if (result != 0) {
+        std::cout << "  [" << i << "] <failed to read device name>" << std::endl;
+        continue;
+      }
+      std::cout << "  [" << i << "] " << name;
+      if (guid[0] != '\0') {
+        std::cout << " (" << guid << ")";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  };
+
+  print_audio_devices(true);
+  print_audio_devices(false);
+
+  // ビデオデバイス一覧
   auto devices = sora::EnumV4L2CaptureDevices();
   if (!devices) {
     std::cerr << "Failed to enumerate video devices" << std::endl;
@@ -165,13 +215,8 @@ int main(int argc, char* argv[]) {
 
   Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
   // --list-devices オプションの処理
-  if (args.list_devices) {
-    ListVideoDevices();
-    return 0;
-  }
-#elif defined(__APPLE__)
   if (args.list_devices) {
     ListDevices();
     return 0;
