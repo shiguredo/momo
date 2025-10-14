@@ -79,49 +79,53 @@ static void ListDevices() {
       webrtc::CreateEnvironment(),
       webrtc::AudioDeviceModule::kPlatformDefaultAudio);
   if (!adm) {
-    std::cerr << "Failed to create AudioDeviceModule" << std::endl;
-    return;
-  }
+    std::cerr << "Warning: Failed to create AudioDeviceModule" << std::endl;
+  } else {
+    int32_t init_result = adm->Init();
+    if (init_result != 0) {
+      std::cerr << "Warning: AudioDeviceModule::Init failed (error code: "
+                << init_result
+                << "). Audio device enumeration is not available." << std::endl;
+      std::cerr << "Note: This may occur if PulseAudio or ALSA is not running."
+                << std::endl;
+    } else {
+      auto print_audio_devices = [&](bool is_input) {
+        const char* title =
+            is_input ? "=== Available audio input devices ==="
+                     : "=== Available audio output devices ===";
+        std::cout << title << std::endl;
+        std::cout << std::endl;
 
-  if (adm->Init() != 0) {
-    std::cerr << "AudioDeviceModule::Init failed" << std::endl;
-    return;
-  }
+        int16_t device_count =
+            is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
+        if (device_count <= 0) {
+          std::cout << "  (none)" << std::endl << std::endl;
+          return;
+        }
 
-  auto print_audio_devices = [&](bool is_input) {
-    const char* title =
-        is_input ? "=== Available audio input devices ==="
-                 : "=== Available audio output devices ===";
-    std::cout << title << std::endl;
-    std::cout << std::endl;
+        for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
+          char name[webrtc::kAdmMaxDeviceNameSize] = {0};
+          char guid[webrtc::kAdmMaxGuidSize] = {0};
+          int32_t result = is_input ? adm->RecordingDeviceName(i, name, guid)
+                                    : adm->PlayoutDeviceName(i, name, guid);
+          if (result != 0) {
+            std::cout << "  [" << i << "] <failed to read device name>"
+                      << std::endl;
+            continue;
+          }
+          std::cout << "  [" << i << "] " << name;
+          if (guid[0] != '\0') {
+            std::cout << " (" << guid << ")";
+          }
+          std::cout << std::endl;
+        }
+        std::cout << std::endl;
+      };
 
-    int16_t device_count =
-        is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
-    if (device_count <= 0) {
-      std::cout << "  (none)" << std::endl << std::endl;
-      return;
+      print_audio_devices(true);
+      print_audio_devices(false);
     }
-
-    for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
-      char name[webrtc::kAdmMaxDeviceNameSize] = {0};
-      char guid[webrtc::kAdmMaxGuidSize] = {0};
-      int32_t result = is_input ? adm->RecordingDeviceName(i, name, guid)
-                                : adm->PlayoutDeviceName(i, name, guid);
-      if (result != 0) {
-        std::cout << "  [" << i << "] <failed to read device name>" << std::endl;
-        continue;
-      }
-      std::cout << "  [" << i << "] " << name;
-      if (guid[0] != '\0') {
-        std::cout << " (" << guid << ")";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  };
-
-  print_audio_devices(true);
-  print_audio_devices(false);
+  }
 
   // ビデオデバイス一覧
   auto devices = sora::EnumV4L2CaptureDevices();
