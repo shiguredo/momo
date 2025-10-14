@@ -155,6 +155,13 @@ class AudioDeviceLinuxPipeWire : public AudioDeviceGeneric {
                                       const char* error);
   static void OnRecStreamProcess(void* data);
 
+  // Playout stream callbacks
+  static void OnPlayStreamStateChanged(void* data,
+                                       enum pw_stream_state old,
+                                       enum pw_stream_state state,
+                                       const char* error);
+  static void OnPlayStreamProcess(void* data);
+
   AudioDeviceBuffer* audio_buffer_;
   AudioTransport* audio_transport_;
   mutable Mutex mutex_;
@@ -196,6 +203,11 @@ class AudioDeviceLinuxPipeWire : public AudioDeviceGeneric {
   std::unique_ptr<int16_t[]> recording_buffer_;
   size_t recording_buffer_size_;  // in samples (frames * channels)
   size_t recording_frames_in_buffer_;  // current frames stored in buffer
+
+  // Playout buffer for accumulating samples to 10ms boundary
+  std::unique_ptr<int16_t[]> playout_buffer_;
+  size_t playout_buffer_size_;  // in samples (frames * channels)
+  size_t playout_frames_in_buffer_;  // current frames stored in buffer
 };
 
 }  // namespace webrtc

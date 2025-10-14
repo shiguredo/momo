@@ -28,6 +28,16 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [ADD] Linux で PipeWire オーディオデバイスモジュールを実装
+  - Ubuntu 24.04 以降で採用されている PipeWire をネイティブサポート
+  - 録音 (recording) と再生 (playout) に対応
+  - `PW_KEY_NODE_FORCE_QUANTUM` による 10ms ネイティブ配信
+  - リングバッファによる 10ms 境界の維持
+  - CMake ビルド設定 `USE_LINUX_PIPEWIRE_AUDIO` (デフォルトで ON)
+  - @voluntas
+- [ADD] Linux で `--audio-input-device` と `--audio-output-device` オプションを追加
+  - デバイスはインデックス番号またはデバイス名で指定可能
+  - @voluntas
 - [ADD] macOS でオーディオデバイス選択機能を追加
   - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
   - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする

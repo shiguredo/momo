@@ -6,20 +6,60 @@ Ubuntu 24.04 以降で採用されている PipeWire をネイティブサポー
 
 ## 重要: audio グループへの追加が必要
 
-PipeWire で USB オーディオデバイスにアクセスするには、ユーザーを `audio` グループに追加する必要があります。
+### なぜ audio グループが必要なのか
+
+**PipeWire でも audio グループへの参加が必須です。**
+
+PipeWire は「ユーザー権限で動作する」と言われていますが、これは **PipeWire サーバー自体が root 権限不要** という意味であり、**ハードウェアへのアクセスには audio グループが必要**です。
+
+理由:
+1. **PipeWire のアーキテクチャ**:
+   - PipeWire サーバーはユーザーセッションで動作 (`/run/user/1000/pipewire-0`)
+   - しかし実際のハードウェアアクセスは ALSA デバイス経由
+
+2. **Linux のデバイスパーミッション**:
+   - オーディオハードウェアは `/dev/snd/*` デバイスファイルとして公開される
+   - これらのファイルのパーミッションは `crw-rw---- root audio` (例: `/dev/snd/controlC3`)
+   - audio グループに属していないとアクセス不可
+
+3. **実際の動作**:
+   ```bash
+   $ ls -l /dev/snd/controlC3
+   crw-rw---- 1 root audio 116, 21 Oct 14 14:33 /dev/snd/controlC3
+
+   $ cat /proc/asound/cards
+   3 [YVC200]: USB-Audio - Yamaha YVC-200  # カーネルは認識している
+
+   # audio グループなしの場合
+   $ wpctl status
+   Audio
+    ├─ Devices:
+    │                                           # デバイスが空
+
+   # audio グループありの場合
+   $ wpctl status
+   Audio
+    ├─ Devices:
+    │      47. Yamaha YVC-200 [alsa]           # デバイスが見える
+   ```
+
+**結論**: PulseAudio と同様、PipeWire も底辺では Linux カーネルのデバイスパーミッションモデルに従うため、audio グループが必要です。
+
+### audio グループへの追加方法
 
 ```bash
 # ユーザーを audio グループに追加
-sudo usermod -a -G audio $USER
+sudo gpasswd -a $USER audio
 
 # ログアウト/ログインまたはシステム再起動
+# (グループ変更は新しいログインセッションでのみ反映される)
 
 # グループメンバーシップを確認
 groups
 # 出力に "audio" が含まれていることを確認
 ```
 
-`audio` グループに所属していない場合、`/dev/snd/controlC*` デバイスファイルにアクセスできず、PipeWire の ALSA モニターがデバイスを認識できません。
+**注意**: グループ変更後は必ずログアウト→再ログイン、または再起動してください。systemd ユーザーセッション全体を再起動する必要があります。
 
 ## 実装状況
 
@@ -37,15 +77,20 @@ groups
   - [x] オーディオデータの取得と AudioDeviceBuffer への転送
   - [x] サンプルレート (48kHz)、チャンネル数 (2ch ステレオ) の設定
   - [x] AudioDeviceBuffer の作成と attach
+  - [x] 10ms ネイティブ配信 (`PW_KEY_NODE_FORCE_QUANTUM`)
+  - [x] リングバッファによる 10ms 境界の維持
   - [x] Sora への録音データ送信 (動作確認済み)
+- [x] 再生 (playout) の実装
+  - [x] PipeWire 再生ストリームの作成
+  - [x] AudioDeviceBuffer からのオーディオデータ取得
+  - [x] PipeWire へのデータ転送
+  - [x] 10ms ネイティブ配信 (`PW_KEY_NODE_FORCE_QUANTUM`)
+  - [x] リングバッファによる 10ms 境界の維持
+  - [x] Sora からのオーディオ再生 (動作確認済み)
 - [x] audio グループ権限の問題を解決
 
 ### 未実装の機能
 
-- [ ] 再生 (playout) の実装
-  - [ ] PipeWire 再生ストリームの作成
-  - [ ] AudioDeviceBuffer からのオーディオデータ取得
-  - [ ] PipeWire へのデータ転送
 - [ ] エラーハンドリング
   - [ ] PipeWire 接続エラー時の処理
   - [ ] ストリーム作成失敗時の処理
@@ -85,8 +130,8 @@ pw_thread_loop (メインループ)
     └── pw_context (コンテキスト)
             ├── pw_core (コア接続)
             │       └── pw_registry (デバイスレジストリ)
-            ├── pw_stream (録音ストリーム) ← 未実装
-            └── pw_stream (再生ストリーム) ← 未実装
+            ├── pw_stream (録音ストリーム)
+            └── pw_stream (再生ストリーム)
 ```
 
 ## 実装の詳細
@@ -146,37 +191,18 @@ WebRTC は 10ms (480 フレーム @ 48kHz) 単位でオーディオデータを�
 
 ### 優先度: 高
 
-1. **録音ストリームの実装**
-   - `InitRecording()` で PipeWire ストリームを作成
-   - `pw_stream_new()` でストリームを作成
-   - `pw_stream_add_listener()` でイベントリスナーを追加
-   - `pw_stream_connect()` で録音デバイスに接続
-   - データコールバックで AudioDeviceBuffer にデータを転送
-
-2. **再生ストリームの実装**
-   - `InitPlayout()` で PipeWire ストリームを作成
-   - AudioDeviceBuffer からデータを取得
-   - PipeWire ストリームにデータを書き込み
-
-3. **オーディオフォーマットの設定**
-   - サンプルレート (48000 Hz が一般的)
-   - チャンネル数 (1: モノラル, 2: ステレオ)
-   - バッファサイズの設定
-
-### 優先度: 中
-
-4. **エラーハンドリング**
+1. **エラーハンドリング**
    - PipeWire 接続エラーの検出と再接続
    - ストリーム作成失敗時のフォールバック
    - デバイス切断時の通知
 
-5. **遅延の計測**
+2. **遅延の計測**
    - `PlayoutDelay()` の実装
    - PipeWire の遅延情報を取得
 
 ### 優先度: 低
 
-6. **音量・ミュート制御**
+3. **音量・ミュート制御**
    - PipeWire の音量制御 API を使用
    - スピーカー/マイクの音量とミュート状態の取得・設定
 
@@ -265,12 +291,12 @@ sudo usermod -a -G audio $USER
 ## 実装見積もり
 
 ### 完了済み
-- 録音ストリーム実装: 約 250 行 (完了)
-- デバイス列挙と選択: 約 200 行 (完了)
+- デバイス列挙と選択: 約 200 行
+- 録音ストリーム実装: 約 250 行
+- 再生ストリーム実装: 約 300 行
+- 合計: 約 750 行
 
 ### 残作業
-- 再生ストリーム実装: 300-500 行 (録音ストリームと同様の実装パターン)
 - エラーハンドリング: 100-200 行
-- 残り合計: 400-700 行程度
-
-実装期間: 残り 1-2 週間程度
+- 遅延計測: 50-100 行
+- 音量・ミュート制御: 100-200 行

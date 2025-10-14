@@ -327,8 +327,111 @@ int32_t AudioDeviceLinuxPipeWire::InitPlayout() {
   if (play_is_initialized_) {
     return 0;
   }
-  // TODO: Create playout stream
+
+  if (!pw_main_loop_ || !pw_core_) {
+    RTC_LOG(LS_ERROR) << "PipeWire not initialized";
+    return -1;
+  }
+
+  pw_thread_loop_lock(pw_main_loop_);
+
+  // Get target device ID
+  uint32_t target_node_id = 0;
+  if (output_device_is_specified_ && output_device_index_ < output_devices_.size()) {
+    target_node_id = output_devices_[output_device_index_].id;
+    RTC_LOG(LS_INFO) << "Using specified output device: "
+                     << output_devices_[output_device_index_].description
+                     << " (id=" << target_node_id << ")";
+  } else if (!output_devices_.empty()) {
+    target_node_id = output_devices_[0].id;
+    RTC_LOG(LS_INFO) << "Using default output device: "
+                     << output_devices_[0].description << " (id=" << target_node_id
+                     << ")";
+  } else {
+    RTC_LOG(LS_ERROR) << "No output devices available";
+    pw_thread_loop_unlock(pw_main_loop_);
+    return -1;
+  }
+
+  // Create playout stream
+  static const struct pw_stream_events play_stream_events = {
+      .version = PW_VERSION_STREAM_EVENTS,
+      .state_changed = OnPlayStreamStateChanged,
+      .process = OnPlayStreamProcess,
+  };
+
+  // 10ms バッファを強制 (480 frames at 48kHz)
+  // PW_KEY_NODE_FORCE_QUANTUM でシステム quantum を上書きする
+  play_stream_ = pw_stream_new(pw_core_, "momo-playout",
+                               pw_properties_new(PW_KEY_MEDIA_TYPE, "Audio",
+                                                 PW_KEY_MEDIA_CATEGORY, "Playback",
+                                                 PW_KEY_MEDIA_ROLE, "Communication",
+                                                 PW_KEY_NODE_FORCE_QUANTUM, "480",
+                                                 nullptr));
+  if (!play_stream_) {
+    RTC_LOG(LS_ERROR) << "Failed to create playout stream";
+    pw_thread_loop_unlock(pw_main_loop_);
+    return -1;
+  }
+
+  pw_stream_add_listener(play_stream_, &play_stream_listener_, &play_stream_events,
+                         this);
+
+  // Set up audio format and latency
+  uint8_t buffer[1024];
+  struct spa_pod_builder b = SPA_POD_BUILDER_INIT(buffer, sizeof(buffer));
+
+  struct spa_audio_info_raw audio_info =
+      SPA_AUDIO_INFO_RAW_INIT(.format = SPA_AUDIO_FORMAT_S16,
+                               .rate = AudioDeviceLinuxPipeWire::kSampleRate,
+                               .channels = AudioDeviceLinuxPipeWire::kChannels);
+
+  const struct spa_pod* params[2];
+  params[0] =
+      spa_format_audio_raw_build(&b, SPA_PARAM_EnumFormat, &audio_info);
+
+  // Latency を明示 (min/max を 480 フレームに固定して 10ms を強制)
+  struct spa_latency_info latency_info = SPA_LATENCY_INFO(
+      SPA_DIRECTION_OUTPUT,
+      .min_quantum = kFramesPerBuffer,
+      .max_quantum = kFramesPerBuffer);
+  params[1] = spa_latency_build(&b, SPA_PARAM_Latency, &latency_info);
+
+  // Connect to specific node
+  char target_id[32];
+  snprintf(target_id, sizeof(target_id), "%u", target_node_id);
+
+  if (pw_stream_connect(play_stream_, PW_DIRECTION_OUTPUT, target_node_id,
+                        static_cast<enum pw_stream_flags>(
+                            PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_MAP_BUFFERS |
+                            PW_STREAM_FLAG_RT_PROCESS),
+                        params, 2) < 0) {
+    RTC_LOG(LS_ERROR) << "Failed to connect playout stream";
+    pw_stream_destroy(play_stream_);
+    play_stream_ = nullptr;
+    pw_thread_loop_unlock(pw_main_loop_);
+    return -1;
+  }
+
+  pw_thread_loop_unlock(pw_main_loop_);
+
+  // AudioDeviceBuffer の初期化
+  if (audio_buffer_) {
+    audio_buffer_->SetPlayoutSampleRate(kSampleRate);
+    audio_buffer_->SetPlayoutChannels(kChannels);
+    RTC_LOG(LS_INFO) << "AudioDeviceBuffer configured: rate=" << kSampleRate
+                     << " channels=" << kChannels;
+  }
+
+  // Playout buffer を初期化 (480 フレーム分)
+  playout_buffer_size_ = kFramesPerBuffer * kChannels;
+  playout_buffer_ = std::make_unique<int16_t[]>(playout_buffer_size_);
+  playout_frames_in_buffer_ = 0;
+  RTC_LOG(LS_INFO) << "Playout buffer initialized: " << kFramesPerBuffer
+                   << " frames (" << playout_buffer_size_ << " samples)";
+
   play_is_initialized_ = true;
+  RTC_LOG(LS_INFO) << "Playout stream initialized";
   return 0;
 }
 
@@ -461,7 +564,14 @@ int32_t AudioDeviceLinuxPipeWire::StartPlayout() {
   if (playing_) {
     return 0;
   }
-  // TODO: Start playout stream
+
+  pw_thread_loop_lock(pw_main_loop_);
+  if (play_stream_) {
+    pw_stream_set_active(play_stream_, true);
+    RTC_LOG(LS_INFO) << "Playout stream activated";
+  }
+  pw_thread_loop_unlock(pw_main_loop_);
+
   playing_ = true;
   return 0;
 }
@@ -471,7 +581,17 @@ int32_t AudioDeviceLinuxPipeWire::StopPlayout() {
   if (!playing_) {
     return 0;
   }
-  // TODO: Stop playout stream
+
+  pw_thread_loop_lock(pw_main_loop_);
+  if (play_stream_) {
+    pw_stream_set_active(play_stream_, false);
+    RTC_LOG(LS_INFO) << "Playout stream deactivated";
+  }
+  pw_thread_loop_unlock(pw_main_loop_);
+
+  // バッファをリセットして、次回の再生開始時に前回の端数が混入しないようにする
+  playout_frames_in_buffer_ = 0;
+
   playing_ = false;
   return 0;
 }
@@ -645,6 +765,99 @@ void AudioDeviceLinuxPipeWire::OnRecStreamProcess(void* data) {
   }
 
   pw_stream_queue_buffer(self->rec_stream_, buf);
+}
+
+void AudioDeviceLinuxPipeWire::OnPlayStreamStateChanged(
+    void* data,
+    enum pw_stream_state old,
+    enum pw_stream_state state,
+    const char* error) {
+  auto* self = static_cast<AudioDeviceLinuxPipeWire*>(data);
+  RTC_LOG(LS_INFO) << "Playout stream state changed: " << old << " -> " << state;
+  if (error) {
+    RTC_LOG(LS_ERROR) << "Playout stream error: " << error;
+  }
+}
+
+void AudioDeviceLinuxPipeWire::OnPlayStreamProcess(void* data) {
+  auto* self = static_cast<AudioDeviceLinuxPipeWire*>(data);
+
+  static int callback_count = 0;
+  static int frame_480_count = 0;
+  static int frame_other_count = 0;
+
+  if (callback_count++ % 500 == 0) {
+    RTC_LOG(LS_INFO) << "OnPlayStreamProcess stats: callbacks=" << callback_count
+                     << " frame_480=" << frame_480_count
+                     << " frame_other=" << frame_other_count;
+  }
+
+  if (!self->audio_buffer_ || !self->playing_) {
+    return;
+  }
+
+  struct pw_buffer* buf = pw_stream_dequeue_buffer(self->play_stream_);
+  if (!buf) {
+    RTC_LOG(LS_WARNING) << "No buffer available in OnPlayStreamProcess";
+    return;
+  }
+
+  struct spa_buffer* spa_buf = buf->buffer;
+  uint8_t* base_data = static_cast<uint8_t*>(spa_buf->datas[0].data);
+  if (!base_data) {
+    RTC_LOG(LS_WARNING) << "No sample data in buffer";
+    pw_stream_queue_buffer(self->play_stream_, buf);
+    return;
+  }
+
+  // chunk の offset を考慮してサンプルポインタを計算
+  uint32_t offset = spa_buf->datas[0].chunk->offset;
+  uint32_t max_size = spa_buf->datas[0].maxsize;
+  int16_t* samples = reinterpret_cast<int16_t*>(base_data + offset);
+  uint32_t max_frames = (max_size - offset) / (sizeof(int16_t) * kChannels);
+
+  // WebRTC から 10ms 単位でデータを取得してバッファに蓄積
+  uint32_t frames_to_fill = std::min(max_frames, static_cast<uint32_t>(kFramesPerBuffer));
+
+  // 統計を更新
+  if (frames_to_fill == kFramesPerBuffer) {
+    frame_480_count++;
+  } else {
+    frame_other_count++;
+  }
+
+  // playout_buffer から PipeWire バッファにコピー
+  uint32_t frames_written = 0;
+  int16_t* dst_ptr = samples;
+
+  while (frames_written < frames_to_fill) {
+    // バッファに残っているフレーム数を確認
+    if (self->playout_frames_in_buffer_ == 0) {
+      // バッファが空なら WebRTC からデータを取得
+      self->audio_buffer_->RequestPlayoutData(kFramesPerBuffer);
+      self->audio_buffer_->GetPlayoutData(self->playout_buffer_.get());
+      self->playout_frames_in_buffer_ = kFramesPerBuffer;
+    }
+
+    // バッファから PipeWire にコピー
+    uint32_t frames_available = self->playout_frames_in_buffer_;
+    uint32_t frames_to_copy = std::min(frames_to_fill - frames_written, frames_available);
+
+    size_t src_offset = (kFramesPerBuffer - self->playout_frames_in_buffer_) * kChannels;
+    size_t samples_to_copy = frames_to_copy * kChannels;
+    memcpy(dst_ptr, &self->playout_buffer_[src_offset],
+           samples_to_copy * sizeof(int16_t));
+
+    dst_ptr += samples_to_copy;
+    frames_written += frames_to_copy;
+    self->playout_frames_in_buffer_ -= frames_to_copy;
+  }
+
+  // chunk size を設定
+  spa_buf->datas[0].chunk->size = frames_written * kChannels * sizeof(int16_t);
+  spa_buf->datas[0].chunk->stride = kChannels * sizeof(int16_t);
+
+  pw_stream_queue_buffer(self->play_stream_, buf);
 }
 
 }  // namespace webrtc
