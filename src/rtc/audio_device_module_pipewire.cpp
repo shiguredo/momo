@@ -2,8 +2,11 @@
 
 #include "audio_device_pipewire_linux.h"
 
+#include <memory>
 #include <optional>
 
+#include <api/task_queue/default_task_queue_factory.h>
+#include <modules/audio_device/audio_device_buffer.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ref_count.h>
 #include <rtc_base/ref_counted_object.h>
@@ -42,6 +45,13 @@ class AudioDeviceModulePipeWire : public AudioDeviceModule {
 
   int32_t Init() override {
     RTC_LOG(LS_INFO) << "AudioDeviceModulePipeWire::Init() called";
+
+    // AudioDeviceBuffer を作成して attach
+    if (AttachAudioBuffer() != 0) {
+      RTC_LOG(LS_ERROR) << "Failed to attach AudioDeviceBuffer";
+      return -1;
+    }
+
     AudioDeviceGeneric::InitStatus status = impl_->Init();
     RTC_LOG(LS_INFO) << "AudioDeviceLinuxPipeWire::Init() returned status: "
                      << static_cast<int>(status);
@@ -247,8 +257,27 @@ class AudioDeviceModulePipeWire : public AudioDeviceModule {
   }
 
  private:
+  // AudioDeviceBuffer を作成して impl に attach する
+  int32_t AttachAudioBuffer() {
+    RTC_LOG(LS_INFO) << "AudioDeviceModulePipeWire::AttachAudioBuffer() called";
+
+    // TaskQueueFactory を作成
+    task_queue_factory_ = CreateDefaultTaskQueueFactory();
+
+    // AudioDeviceBuffer を作成
+    audio_device_buffer_ = std::make_unique<AudioDeviceBuffer>(task_queue_factory_.get());
+
+    // 実装に attach
+    impl_->AttachAudioBuffer(audio_device_buffer_.get());
+
+    RTC_LOG(LS_INFO) << "AudioDeviceBuffer attached: " << audio_device_buffer_.get();
+    return 0;
+  }
+
   mutable webrtc::webrtc_impl::RefCounter ref_count_{0};
   AudioDeviceLinuxPipeWire* impl_;
+  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
+  std::unique_ptr<AudioDeviceBuffer> audio_device_buffer_;
 };
 
 webrtc::scoped_refptr<AudioDeviceModule> CreatePipeWireAudioDeviceModule() {

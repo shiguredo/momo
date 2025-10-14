@@ -494,9 +494,11 @@ int32_t AudioDeviceLinuxPipeWire::PlayoutDelay(uint16_t& delayMS) const {
 }
 
 void AudioDeviceLinuxPipeWire::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
+  RTC_LOG(LS_INFO) << "AttachAudioBuffer: " << audioBuffer;
   audio_buffer_ = audioBuffer;
   if (audio_buffer_ && audio_transport_) {
     audio_buffer_->RegisterAudioCallback(audio_transport_);
+    RTC_LOG(LS_INFO) << "AudioCallback registered with audio_buffer_";
   }
 }
 
@@ -515,23 +517,36 @@ void AudioDeviceLinuxPipeWire::OnRecStreamStateChanged(
 void AudioDeviceLinuxPipeWire::OnRecStreamProcess(void* data) {
   auto* self = static_cast<AudioDeviceLinuxPipeWire*>(data);
 
+  static int callback_count = 0;
+  if (callback_count++ % 100 == 0) {
+    RTC_LOG(LS_INFO) << "OnRecStreamProcess called: audio_buffer_="
+                     << self->audio_buffer_ << " recording_=" << self->recording_;
+  }
+
   if (!self->audio_buffer_ || !self->recording_) {
     return;
   }
 
   struct pw_buffer* buf = pw_stream_dequeue_buffer(self->rec_stream_);
   if (!buf) {
+    RTC_LOG(LS_WARNING) << "No buffer available in OnRecStreamProcess";
     return;
   }
 
   struct spa_buffer* spa_buf = buf->buffer;
   int16_t* samples = static_cast<int16_t*>(spa_buf->datas[0].data);
   if (!samples) {
+    RTC_LOG(LS_WARNING) << "No sample data in buffer";
     pw_stream_queue_buffer(self->rec_stream_, buf);
     return;
   }
 
   uint32_t n_frames = spa_buf->datas[0].chunk->size / (sizeof(int16_t) * AudioDeviceLinuxPipeWire::kChannels);
+
+  static int frame_count = 0;
+  if (frame_count++ % 100 == 0) {
+    RTC_LOG(LS_INFO) << "OnRecStreamProcess: delivered " << n_frames << " frames";
+  }
 
   // Deliver audio data to WebRTC
   self->audio_buffer_->SetRecordedBuffer(samples, n_frames);

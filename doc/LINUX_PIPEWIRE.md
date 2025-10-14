@@ -36,6 +36,8 @@ groups
   - [x] PipeWire 録音ストリームの作成
   - [x] オーディオデータの取得と AudioDeviceBuffer への転送
   - [x] サンプルレート (48kHz)、チャンネル数 (2ch ステレオ) の設定
+  - [x] AudioDeviceBuffer の作成と attach
+  - [x] Sora への録音データ送信 (動作確認済み)
 - [x] audio グループ権限の問題を解決
 
 ### 未実装の機能
@@ -182,10 +184,16 @@ timeout 3 ./momo --no-video-device --list-devices
 #   [0] HyperX QuadCast S Analog Stereo (alsa_output.usb-HP__Inc_HyperX_QuadCast_S-00.analog-stereo)
 #   [1] Yamaha YVC-200 Mono (alsa_output.usb-Yamaha_Corporation_Yamaha_YVC-200-00.mono-fallback)
 
-# 4. デバイスを指定して Sora モードで実行 (録音機能実装済み)
+# 4. デバイスを指定して Sora モードで実行 (録音機能実装済み、動作確認済み)
 timeout 30 ./momo --no-video-device --audio-input-device 1 sora \
   --signaling-urls wss://example.com/signaling \
   --role sendonly --channel-id test --video false --audio true
+
+# 動作確認結果:
+# - AudioDeviceBuffer が正しく作成・attach される
+# - 録音ストリームが STREAMING 状態 (状態 3) に遷移
+# - OnRecStreamProcess コールバックが呼ばれ、audio_buffer_ が正しく設定されている
+# - ICE 接続が確立され、オーディオデータが Sora に送信される
 ```
 
 **注意**:
@@ -214,8 +222,9 @@ sudo usermod -a -G audio $USER
    - 動作には影響なし (警告レベル)
 
 2. AudioDeviceBuffer not attached エラー (解決済み)
-   - `RegisterAudioCallback()` が `AttachAudioBuffer()` より先に呼ばれる
-   - `audio_transport_` を保存して後で登録する方式に変更済み
+   - 問題: WebRTC は `AudioDeviceModuleImpl` 内部で AudioDeviceBuffer を作成するが、カスタム wrapper では自分で作成・attach する必要がある
+   - 解決方法: `AudioDeviceModulePipeWire::Init()` で TaskQueueFactory と AudioDeviceBuffer を作成し、`AudioDeviceLinuxPipeWire::AttachAudioBuffer()` で設定
+   - `audio_transport_` も保存して後で AudioDeviceBuffer に登録する方式に変更済み
 
 ## 実装見積もり
 
