@@ -87,7 +87,8 @@ static void ListVideoDevices() {
 
 #elif defined(__APPLE__)
 
-static void ListAudioDevices() {
+static void ListDevices() {
+  // オーディオデバイス一覧
   auto adm = webrtc::CreateAudioDeviceModule(
       webrtc::CreateEnvironment(),
       webrtc::AudioDeviceModule::kPlatformDefaultAudio);
@@ -101,7 +102,7 @@ static void ListAudioDevices() {
     return;
   }
 
-  auto print_devices = [&](bool is_input) {
+  auto print_audio_devices = [&](bool is_input) {
     const char* title =
         is_input ? "=== Available audio input devices ==="
                  : "=== Available audio output devices ===";
@@ -133,8 +134,14 @@ static void ListAudioDevices() {
     std::cout << std::endl;
   };
 
-  print_devices(true);
-  print_devices(false);
+  print_audio_devices(true);
+  print_audio_devices(false);
+
+  // ビデオデバイス一覧
+  std::cout << "=== Available video devices ===" << std::endl;
+  std::cout << std::endl;
+  MacCapturer::ListDevices();
+  std::cout << std::endl;
 }
 
 #endif
@@ -166,7 +173,7 @@ int main(int argc, char* argv[]) {
   }
 #elif defined(__APPLE__)
   if (args.list_devices) {
-    ListAudioDevices();
+    ListDevices();
     return 0;
   }
 #else

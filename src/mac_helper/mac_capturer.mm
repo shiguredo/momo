@@ -10,6 +10,8 @@
 
 #include "mac_capturer.h"
 
+#include <iostream>
+
 // WebRTC
 #include <rtc_base/logging.h>
 
@@ -115,6 +117,15 @@ webrtc::scoped_refptr<MacCapturer> MacCapturer::Create(
   }
   return webrtc::make_ref_counted<MacCapturer>(width, height, target_fps,
                                                device);
+}
+
+void MacCapturer::ListDevices() {
+  NSArray<AVCaptureDevice*>* devices = captureDevices();
+  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
+                                        BOOL* stop) {
+    std::cout << "  [" << i << "] " << [device.localizedName UTF8String]
+              << std::endl;
+  }];
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(

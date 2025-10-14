@@ -42,6 +42,9 @@ class MacCapturer : public sora::ScalableVideoTrackSource,
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
+  // デバイス一覧を表示
+  static void ListDevices();
+
  private:
   void Destroy();
 
