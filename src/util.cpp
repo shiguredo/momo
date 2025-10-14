@@ -136,6 +136,13 @@ void Util::ParseArgs(int argc,
   app.add_option("--audio-output-device", args.audio_output_device,
                  "Use the audio output device specified by an index or a name "
                  "(use the system default if not specified)");
+#elif defined(__linux__)
+  app.add_option("--audio-input-device", args.audio_input_device,
+                 "Use the audio input device specified by an index or a name "
+                 "(use the system default if not specified, PipeWire only)");
+  app.add_option("--audio-output-device", args.audio_output_device,
+                 "Use the audio output device specified by an index or a name "
+                 "(use the system default if not specified, PipeWire only)");
 #endif
   app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "

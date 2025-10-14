@@ -59,6 +59,9 @@
 
 #if defined(__linux__)
 #include "sora/v4l2/v4l2_device.h"
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+#include "rtc/audio_device_module_pipewire.h"
+#endif
 #endif
 
 #ifdef _WIN32
@@ -75,9 +78,13 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
 static void ListDevices() {
   // オーディオデバイス一覧
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+  auto adm = webrtc::CreatePipeWireAudioDeviceModule();
+#else
   auto adm = webrtc::CreateAudioDeviceModule(
       webrtc::CreateEnvironment(),
       webrtc::AudioDeviceModule::kPlatformDefaultAudio);
+#endif
   if (!adm) {
     std::cerr << "Warning: Failed to create AudioDeviceModule" << std::endl;
   } else {
@@ -354,7 +361,7 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.no_video_device = args.no_video_device;
   rtcm_config.no_audio_device = args.no_audio_device;
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   rtcm_config.audio_input_device = args.audio_input_device;
   rtcm_config.audio_output_device = args.audio_output_device;
 #endif

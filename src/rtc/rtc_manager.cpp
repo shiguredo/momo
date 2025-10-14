@@ -42,7 +42,11 @@
 #include "url_parts.h"
 #include "util.h"
 
-#if defined(__APPLE__)
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+#include "audio_device_module_pipewire.h"
+#endif
+
+#if defined(__APPLE__) || defined(__linux__)
 namespace {
 bool IsNumber(const std::string& value) {
   if (value.empty()) {
@@ -180,10 +184,17 @@ bool ResolveDeviceIndex(webrtc::AudioDeviceModule* adm,
       return false;
     }
   } else {
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+    // PipeWire ではデバイス名からのインデックス解決は未実装
+    RTC_LOG(LS_WARNING) << __FUNCTION__
+                        << ": Device name resolution not supported with PipeWire. Use numeric index instead.";
+    return false;
+#else
     // デバイス名が指定された場合、一時的な ADM でインデックスを解決
     if (!ResolveAudioDeviceIndex(device_spec, is_input, resolved_index)) {
       return false;
     }
+#endif
   }
   return true;
 }
@@ -250,7 +261,11 @@ RTCManager::RTCManager(
 
 #if defined(__linux__)
 
-#if defined(USE_LINUX_PULSE_AUDIO)
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+  // PipeWire は独自実装なので、ここでは使わない
+  webrtc::AudioDeviceModule::AudioLayer audio_layer =
+      webrtc::AudioDeviceModule::kDummyAudio;
+#elif defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
 #else
@@ -285,10 +300,14 @@ RTCManager::RTCManager(
         if (config_.create_adm) {
           adm = config_.create_adm();
         } else {
-#if defined(_WIN32)
+#if defined(USE_LINUX_PIPEWIRE_AUDIO)
+          RTC_LOG(LS_INFO) << "Using PipeWire audio device module";
+          adm = webrtc::CreatePipeWireAudioDeviceModule();
+#elif defined(_WIN32)
           adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
               &env.task_queue_factory());
 #else
+          RTC_LOG(LS_INFO) << "Using default audio device module (ALSA/PulseAudio)";
           adm = webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                 audio_layer);
 #endif
@@ -375,7 +394,7 @@ RTCManager::RTCManager(
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   // PeerConnectionFactory の初期化後、デバイスを再設定
   // WebRtcVoiceEngine::Init() がデフォルトデバイスに戻してしまうため
   if (adm_for_device_selection) {

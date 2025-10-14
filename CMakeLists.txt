@@ -20,6 +20,7 @@ set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウ�
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコーダを利用するかどうか")
 set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
+set(USE_LINUX_PIPEWIRE_AUDIO ON CACHE BOOL "Linux で ALSA/PulseAudio の代わりに PipeWire を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
@@ -248,6 +249,21 @@ if (USE_FAKE_CAPTURE_DEVICE)
       src/rtc/fake_audio_capturer.cpp
   )
   target_link_libraries(momo PRIVATE Blend2D::Blend2D)
+endif()
+
+if (USE_LINUX_PIPEWIRE_AUDIO)
+  target_sources(momo
+    PRIVATE
+      src/rtc/audio_device_pipewire_linux.cpp
+      src/rtc/audio_device_module_pipewire.cpp
+  )
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(PIPEWIRE REQUIRED IMPORTED_TARGET libpipewire-0.3)
+  target_link_libraries(momo PRIVATE PkgConfig::PIPEWIRE)
+  target_compile_definitions(momo
+    PRIVATE
+      USE_LINUX_PIPEWIRE_AUDIO
+  )
 endif()
 
 if ("${TARGET_OS}" STREQUAL "windows")
