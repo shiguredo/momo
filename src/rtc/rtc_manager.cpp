@@ -52,6 +52,7 @@ bool IsNumber(const std::string& value) {
                      [](unsigned char ch) { return std::isdigit(ch) != 0; });
 }
 
+// 大文字小文字を区別しない完全一致判定
 bool CaseInsensitiveEqual(const std::string& lhs, const std::string& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
@@ -65,6 +66,7 @@ bool CaseInsensitiveEqual(const std::string& lhs, const std::string& rhs) {
   return true;
 }
 
+// デバイス識別子の完全一致判定（大文字小文字を区別しない）
 bool MatchDeviceIdentifier(const std::string& target,
                            const char* name,
                            const char* guid) {
@@ -183,51 +185,6 @@ bool ResolveDeviceIndex(webrtc::AudioDeviceModule* adm,
       return false;
     }
   }
-  return true;
-}
-
-// 本番の ADM に対してデバイスを設定する
-// CoreAudio では Init() した後に SetDevice を呼ぶ必要がある
-bool SelectAudioDevice(webrtc::AudioDeviceModule* adm,
-                       const std::string& device_spec,
-                       bool is_input) {
-  if (device_spec.empty()) {
-    RTC_LOG(LS_INFO) << __FUNCTION__
-                     << ": No device specified, using default. is_input="
-                     << is_input;
-    return true;
-  }
-
-  // まず Init() を呼んでデバイスを初期化
-  if (adm->Init() != 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Failed to initialize ADM for device selection";
-    return false;
-  }
-
-  uint16_t resolved_index = 0;
-  if (!ResolveDeviceIndex(adm, device_spec, is_input, resolved_index)) {
-    return false;
-  }
-
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << ": Using device index=" << resolved_index
-                   << " is_input=" << is_input;
-
-  // Init() の後に SetDevice を呼ぶ
-  int32_t set_result = is_input ? adm->SetRecordingDevice(resolved_index)
-                                : adm->SetPlayoutDevice(resolved_index);
-  if (set_result != 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Failed to set audio device. index="
-                        << resolved_index << " is_input=" << is_input
-                        << " result=" << set_result;
-    return false;
-  }
-
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << ": Successfully set audio device. index=" << resolved_index
-                   << " is_input=" << is_input;
   return true;
 }
 
