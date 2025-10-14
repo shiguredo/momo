@@ -106,6 +106,7 @@ static void ListAudioDevices() {
         is_input ? "=== Available audio input devices ==="
                  : "=== Available audio output devices ===";
     std::cout << title << std::endl;
+    std::cout << std::endl;
 
     int16_t device_count =
         is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
