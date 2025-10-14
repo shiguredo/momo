@@ -1,5 +1,6 @@
 #include "audio_device_pipewire_linux.h"
 
+#include <algorithm>
 #include <chrono>
 #include <thread>
 
@@ -43,6 +44,13 @@ int32_t AudioDeviceLinuxPipeWire::RegisterAudioCallback(
     AudioTransport* audioCallback) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
   audio_transport_ = audioCallback;
+
+  // audio_buffer_ が既に attach されている場合は登録
+  if (audio_buffer_ && audio_transport_) {
+    audio_buffer_->RegisterAudioCallback(audio_transport_);
+    RTC_LOG(LS_INFO) << "AudioCallback registered with audio_buffer_";
+  }
+
   return 0;
 }
 
@@ -366,10 +374,13 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
       .process = OnRecStreamProcess,
   };
 
+  // 10ms バッファを強制 (480 frames at 48kHz)
+  // PW_KEY_NODE_FORCE_QUANTUM でシステム quantum を上書きする
   rec_stream_ = pw_stream_new(pw_core_, "momo-recording",
                                pw_properties_new(PW_KEY_MEDIA_TYPE, "Audio",
                                                  PW_KEY_MEDIA_CATEGORY, "Capture",
                                                  PW_KEY_MEDIA_ROLE, "Communication",
+                                                 PW_KEY_NODE_FORCE_QUANTUM, "480",
                                                  nullptr));
   if (!rec_stream_) {
     RTC_LOG(LS_ERROR) << "Failed to create recording stream";
@@ -380,7 +391,7 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
   pw_stream_add_listener(rec_stream_, &rec_stream_listener_, &rec_stream_events,
                          this);
 
-  // Set up audio format
+  // Set up audio format and latency
   uint8_t buffer[1024];
   struct spa_pod_builder b = SPA_POD_BUILDER_INIT(buffer, sizeof(buffer));
 
@@ -389,9 +400,16 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
                                .rate = AudioDeviceLinuxPipeWire::kSampleRate,
                                .channels = AudioDeviceLinuxPipeWire::kChannels);
 
-  const struct spa_pod* params[1];
+  const struct spa_pod* params[2];
   params[0] =
       spa_format_audio_raw_build(&b, SPA_PARAM_EnumFormat, &audio_info);
+
+  // Latency を明示 (min/max を 480 フレームに固定して 10ms を強制)
+  struct spa_latency_info latency_info = SPA_LATENCY_INFO(
+      SPA_DIRECTION_INPUT,
+      .min_quantum = kFramesPerBuffer,
+      .max_quantum = kFramesPerBuffer);
+  params[1] = spa_latency_build(&b, SPA_PARAM_Latency, &latency_info);
 
   // Connect to specific node
   char target_id[32];
@@ -401,7 +419,7 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
                         static_cast<enum pw_stream_flags>(
                             PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_MAP_BUFFERS |
                             PW_STREAM_FLAG_RT_PROCESS),
-                        params, 1) < 0) {
+                        params, 2) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to connect recording stream";
     pw_stream_destroy(rec_stream_);
     rec_stream_ = nullptr;
@@ -410,6 +428,21 @@ int32_t AudioDeviceLinuxPipeWire::InitRecording() {
   }
 
   pw_thread_loop_unlock(pw_main_loop_);
+
+  // AudioDeviceBuffer の初期化
+  if (audio_buffer_) {
+    audio_buffer_->SetRecordingSampleRate(kSampleRate);
+    audio_buffer_->SetRecordingChannels(kChannels);
+    RTC_LOG(LS_INFO) << "AudioDeviceBuffer configured: rate=" << kSampleRate
+                     << " channels=" << kChannels;
+  }
+
+  // Recording buffer を初期化 (480 フレーム分)
+  recording_buffer_size_ = kFramesPerBuffer * kChannels;
+  recording_buffer_ = std::make_unique<int16_t[]>(recording_buffer_size_);
+  recording_frames_in_buffer_ = 0;
+  RTC_LOG(LS_INFO) << "Recording buffer initialized: " << kFramesPerBuffer
+                   << " frames (" << recording_buffer_size_ << " samples)";
 
   rec_is_initialized_ = true;
   RTC_LOG(LS_INFO) << "Recording stream initialized";
@@ -480,6 +513,9 @@ int32_t AudioDeviceLinuxPipeWire::StopRecording() {
   }
   pw_thread_loop_unlock(pw_main_loop_);
 
+  // バッファをリセットして、次回の録音開始時に前回の端数が混入しないようにする
+  recording_frames_in_buffer_ = 0;
+
   recording_ = false;
   return 0;
 }
@@ -518,9 +554,15 @@ void AudioDeviceLinuxPipeWire::OnRecStreamProcess(void* data) {
   auto* self = static_cast<AudioDeviceLinuxPipeWire*>(data);
 
   static int callback_count = 0;
-  if (callback_count++ % 100 == 0) {
-    RTC_LOG(LS_INFO) << "OnRecStreamProcess called: audio_buffer_="
-                     << self->audio_buffer_ << " recording_=" << self->recording_;
+  static int frame_480_count = 0;
+  static int frame_other_count = 0;
+  static int frames_discarded = 0;
+
+  if (callback_count++ % 500 == 0) {
+    RTC_LOG(LS_INFO) << "OnRecStreamProcess stats: callbacks=" << callback_count
+                     << " frame_480=" << frame_480_count
+                     << " frame_other=" << frame_other_count
+                     << " discarded=" << frames_discarded;
   }
 
   if (!self->audio_buffer_ || !self->recording_) {
@@ -534,24 +576,73 @@ void AudioDeviceLinuxPipeWire::OnRecStreamProcess(void* data) {
   }
 
   struct spa_buffer* spa_buf = buf->buffer;
-  int16_t* samples = static_cast<int16_t*>(spa_buf->datas[0].data);
-  if (!samples) {
+  uint8_t* base_data = static_cast<uint8_t*>(spa_buf->datas[0].data);
+  if (!base_data) {
     RTC_LOG(LS_WARNING) << "No sample data in buffer";
     pw_stream_queue_buffer(self->rec_stream_, buf);
     return;
   }
 
-  uint32_t n_frames = spa_buf->datas[0].chunk->size / (sizeof(int16_t) * AudioDeviceLinuxPipeWire::kChannels);
+  // chunk の offset を考慮してサンプルポインタを計算
+  uint32_t offset = spa_buf->datas[0].chunk->offset;
+  uint32_t buffer_size = spa_buf->datas[0].chunk->size;
+  int16_t* samples = reinterpret_cast<int16_t*>(base_data + offset);
+  uint32_t n_frames = buffer_size / (sizeof(int16_t) * AudioDeviceLinuxPipeWire::kChannels);
 
-  static int frame_count = 0;
-  if (frame_count++ % 100 == 0) {
-    RTC_LOG(LS_INFO) << "OnRecStreamProcess: delivered " << n_frames << " frames";
+  if (n_frames == 0) {
+    RTC_LOG(LS_WARNING) << "Zero frames calculated from buffer_size=" << buffer_size;
+    pw_stream_queue_buffer(self->rec_stream_, buf);
+    return;
   }
 
-  // Deliver audio data to WebRTC
-  self->audio_buffer_->SetRecordedBuffer(samples, n_frames);
-  self->audio_buffer_->SetVQEData(0, 0);  // No delay, no clock drift
-  self->audio_buffer_->DeliverRecordedData();
+  // 統計を更新
+  if (n_frames == kFramesPerBuffer) {
+    frame_480_count++;
+  } else {
+    frame_other_count++;
+  }
+
+  // PipeWire から受け取ったサンプルを recording_buffer に蓄積
+  // 480 フレーム溜まったら WebRTC に配信
+  uint32_t frames_to_process = n_frames;
+  const int16_t* src_ptr = samples;
+
+  while (frames_to_process > 0) {
+    // バッファに入れられるフレーム数を計算
+    uint32_t frames_available = kFramesPerBuffer - self->recording_frames_in_buffer_;
+    uint32_t frames_to_copy = std::min(frames_to_process, frames_available);
+
+    // バッファにコピー
+    size_t dst_offset = self->recording_frames_in_buffer_ * kChannels;
+    size_t samples_to_copy = frames_to_copy * kChannels;
+    memcpy(&self->recording_buffer_[dst_offset], src_ptr,
+           samples_to_copy * sizeof(int16_t));
+
+    self->recording_frames_in_buffer_ += frames_to_copy;
+    src_ptr += samples_to_copy;
+    frames_to_process -= frames_to_copy;
+
+    // バッファが 480 フレーム溜まったら WebRTC に配信
+    if (self->recording_frames_in_buffer_ == kFramesPerBuffer) {
+      // PipeWire のタイミング情報を取得 (配信直前に取得)
+      struct pw_time time = {};
+      int rec_delay_ms = 0;
+      int play_delay_ms = 0;
+
+      if (pw_stream_get_time_n(self->rec_stream_, &time, sizeof(time)) == 0) {
+        if (time.rate.denom > 0 && time.rate.num > 0) {
+          rec_delay_ms = static_cast<int>((time.delay * 1000LL * time.rate.num) / time.rate.denom);
+        }
+      }
+
+      self->audio_buffer_->SetRecordedBuffer(self->recording_buffer_.get(),
+                                            kFramesPerBuffer);
+      self->audio_buffer_->SetVQEData(play_delay_ms, rec_delay_ms);
+      self->audio_buffer_->DeliverRecordedData();
+
+      self->recording_frames_in_buffer_ = 0;
+    }
+  }
 
   pw_stream_queue_buffer(self->rec_stream_, buf);
 }

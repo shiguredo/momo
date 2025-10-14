@@ -19,6 +19,7 @@
 // PipeWire
 #include <pipewire/pipewire.h>
 #include <spa/param/audio/format-utils.h>
+#include <spa/param/latency-utils.h>
 
 namespace webrtc {
 
@@ -190,6 +191,11 @@ class AudioDeviceLinuxPipeWire : public AudioDeviceGeneric {
   static constexpr int kSampleRate = 48000;
   static constexpr int kChannels = 2;
   static constexpr int kFramesPerBuffer = 480;  // 10ms at 48kHz
+
+  // Recording buffer for accumulating samples to 10ms boundary
+  std::unique_ptr<int16_t[]> recording_buffer_;
+  size_t recording_buffer_size_;  // in samples (frames * channels)
+  size_t recording_frames_in_buffer_;  // current frames stored in buffer
 };
 
 }  // namespace webrtc

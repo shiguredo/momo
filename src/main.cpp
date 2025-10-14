@@ -120,11 +120,7 @@ static void ListDevices() {
                       << std::endl;
             continue;
           }
-          std::cout << "  [" << i << "] " << name;
-          if (guid[0] != '\0') {
-            std::cout << " (" << guid << ")";
-          }
-          std::cout << std::endl;
+          std::cout << "  [" << i << "] " << name << std::endl;
         }
         std::cout << std::endl;
       };
@@ -186,11 +182,7 @@ static void ListDevices() {
         std::cout << "  [" << i << "] <failed to read device name>" << std::endl;
         continue;
       }
-      std::cout << "  [" << i << "] " << name;
-      if (guid[0] != '\0') {
-        std::cout << " (" << guid << ")";
-      }
-      std::cout << std::endl;
+      std::cout << "  [" << i << "] " << name << std::endl;
     }
     std::cout << std::endl;
   };

@@ -104,7 +104,43 @@ PipeWire registry を使ってデバイス情報を取得:
 
 - インデックスまたは名前でデバイスを指定可能
 - `SetPlayoutDevice()` / `SetRecordingDevice()` で選択したデバイスのインデックスを保存
-- 実際のストリーム作成時に選択したデバイスを使用 (未実装)
+- 実際のストリーム作成時に選択したデバイスを使用
+
+### 10ms ネイティブ配信の実装
+
+WebRTC は 10ms (480 フレーム @ 48kHz) 単位でオーディオデータを処理します。PipeWire でこれを実現するため:
+
+1. **`PW_KEY_NODE_FORCE_QUANTUM` プロパティ**: ストリーム作成時に quantum を 480 フレームに強制
+   ```cpp
+   pw_stream_new(pw_core_, "momo-recording",
+                 pw_properties_new(
+                     PW_KEY_MEDIA_TYPE, "Audio",
+                     PW_KEY_MEDIA_CATEGORY, "Capture",
+                     PW_KEY_MEDIA_ROLE, "Communication",
+                     PW_KEY_NODE_FORCE_QUANTUM, "480",
+                     nullptr));
+   ```
+
+2. **`SPA_PARAM_Latency` パラメータ**: pw_stream_connect で latency を明示
+   ```cpp
+   struct spa_latency_info latency_info = SPA_LATENCY_INFO(
+       SPA_DIRECTION_INPUT,
+       .min_quantum = 480,
+       .max_quantum = 480);
+   params[1] = spa_latency_build(&b, SPA_PARAM_Latency, &latency_info);
+   ```
+
+3. **リングバッファによる 10ms 境界の維持**: `OnRecStreamProcess` で受け取ったフレームをリングバッファに蓄積
+   - 480 フレーム溜まったら WebRTC に配信
+   - 480 フレーム未満の余剰フレームは次回へ繰り越し (データ欠落を防止)
+   - chunk offset を考慮してサンプルポインタを正しく計算
+   - 録音停止時にバッファをリセット (次回開始時に前回の端数が混入しないようにする)
+
+この実装により:
+- `PW_KEY_NODE_FORCE_QUANTUM` で 480 フレームのネイティブ配信を要求
+- 万が一 480 以外のフレームが来てもリングバッファで 10ms 境界を維持
+- データ欠落なし
+- PulseAudio より低レイテンシを実現
 
 ## 今後の実装課題
 
