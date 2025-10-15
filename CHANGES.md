@@ -24,20 +24,19 @@
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 - [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
-  - `NormalizeCodecName()` を導入し、指定したコーデック名と WebRTC 側の `RtpCodecCapability::name` を小文字比較で突き合わせるように変更
-  - 補助コーデック一覧を小文字に揃えつつ、`IsAuxiliaryCodec()` の判定も小文字比較に統一して RTX / RED / (U|F)LPFEC を常に残すように改善
+  - 指定したコーデック名と WebRTC 側の `RtpCodecCapability::name` を大文字・小文字を無視して比較するように変更
+  - 補助コーデック一覧を小文字にして、`IsAuxiliaryCodec()` の判定では大文字・小文字を無視して比較するように変更
   - primary コーデックと補助コーデックを明示的にグルーピングし、`SetCodecPreferences()` へ渡す順序を保証
   - @voluntas
 - [FIX] Ayame クライアントの実装を改善
   - URL パース失敗時に適切な例外メッセージを出力するよう修正
-  - WebSocket インスタンス作成前に URL 検証を実施するよう変更
-  - ICE サーバー設定の JSON パース時のエラー処理を強化
   - PeerConnection 作成失敗時の適切なエラーハンドリングを追加
   - 非同期コールバックで shared_from_this() を適切に使用するよう修正
-  - 定数名を `Sec` から `Seconds` に変更して可読性を向上
   - `boost::ignore_unused` を C++17 の `[[maybe_unused]]` 属性に置き換え
   - `should_create_answer` の条件式に詳細なコメントを追加
   - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
+  - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
+    - これによってこの関数が何の値に依存しているのか分かりやすくなる
   - @voluntas
 
 ### misc
