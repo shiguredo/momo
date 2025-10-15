@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
+  - @voluntas
+- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
+  - @voluntas
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する

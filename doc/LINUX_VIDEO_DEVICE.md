@@ -65,7 +65,7 @@ groups
 ### momo でのデバイス確認
 
 ```bash
-./momo --list-devices
+./_build/ubuntu-24.04_x86_64/release/momo/momo --list-devices
 ```
 
 正常に動作している場合の出力例:
@@ -116,13 +116,13 @@ ls /dev/video*
 ビデオデバイスを指定できます:
 
 ```bash
-./momo --video-device "Logitech StreamCam" p2p
+./_build/ubuntu-24.04_x86_64/release/momo/momo --video-input-device "Logitech StreamCam" p2p
 ```
 
 デバイスは以下の方法で指定できます:
 
-- デバイス名: `--video-device "Logitech StreamCam"`
-- Bus info: `--video-device "usb-0000:05:00.3-1"`
+- デバイス名: `--video-input-device "Logitech StreamCam"`
+- Bus info: `--video-input-device "usb-0000:05:00.3-1"`
 
 ### 同一カメラデバイスを複数接続している場合
 
@@ -132,7 +132,7 @@ ls /dev/video*
 `--list-devices` オプションで表示される `Bus info`（括弧内の `usb-...` の部分）を使って指定できます。
 
 ```bash
-./momo --video-device "usb-0000:05:00.4-2.4" p2p
+./_build/ubuntu-24.04_x86_64/release/momo/momo --video-input-device "usb-0000:05:00.4-2.4" p2p
 ```
 
 ## トラブルシューティング
