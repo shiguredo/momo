@@ -72,13 +72,11 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
-  void SetCodecPreferences();
 
  private:
   void DoRead();
   void DoRegister();
   void DoSendPong();
-  bool CreatePeerConnection();
 
  private:
   void OnConnect(boost::system::error_code ec);
