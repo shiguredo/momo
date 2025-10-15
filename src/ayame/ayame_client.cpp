@@ -70,6 +70,38 @@ bool ParseURL(const std::string& url, URLParts& parts, bool& ssl) {
   }
 }
 
+webrtc::PeerConnectionInterface::IceServers CreateIceServersFromConfig(
+    boost::json::value json_message,
+    bool no_google_stun) {
+  webrtc::PeerConnectionInterface::IceServers ice_servers;
+
+  // 返却されてきた iceServers を セットする
+  for (const auto& j_ice_server_value :
+       json_message.at("iceServers").as_array()) {
+    const auto& j_ice_server = j_ice_server_value.as_object();
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    if (j_ice_server.contains("username")) {
+      ice_server.username = j_ice_server.at("username").as_string().c_str();
+    }
+    if (j_ice_server.contains("credential")) {
+      ice_server.password = j_ice_server.at("credential").as_string().c_str();
+    }
+    for (const auto& j_url_value : j_ice_server.at("urls").as_array()) {
+      ice_server.urls.push_back(j_url_value.as_string().c_str());
+    }
+    ice_servers.push_back(ice_server);
+  }
+
+  if (ice_servers.empty() && !no_google_stun) {
+    // iceServers が返却されてこなかった場合、google の stun server を利用する
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.urls.push_back("stun:stun.l.google.com:19302");
+    ice_servers.push_back(ice_server);
+  }
+
+  return ice_servers;
+}
+
 }  // namespace
 
 void AyameClient::GetStats(
@@ -199,76 +231,6 @@ void AyameClient::DoRegister() {
 void AyameClient::DoSendPong() {
   boost::json::value json_message = {{"type", "pong"}};
   ws_->WriteText(boost::json::serialize(json_message));
-}
-
-void AyameClient::SetIceServersFromConfig(boost::json::value json_message) {
-  // 返却されてきた iceServers を セットする
-  if (json_message.as_object().count("iceServers") != 0) {
-    auto jservers = json_message.at("iceServers");
-    if (jservers.is_array()) {
-      for (const auto& jserver : jservers.as_array()) {
-        const auto* jserver_obj = jserver.if_object();
-        if (jserver_obj == nullptr) {
-          RTC_LOG(LS_WARNING)
-              << __FUNCTION__ << ": skip invalid iceServers entry";
-          continue;
-        }
-
-        webrtc::PeerConnectionInterface::IceServer ice_server;
-        if (const auto* username = jserver_obj->if_contains("username");
-            username != nullptr && username->is_string()) {
-          ice_server.username = username->as_string().c_str();
-        }
-        if (const auto* credential = jserver_obj->if_contains("credential");
-            credential != nullptr && credential->is_string()) {
-          ice_server.password = credential->as_string().c_str();
-        }
-
-        const auto* urls_value = jserver_obj->if_contains("urls");
-        if (urls_value == nullptr) {
-          RTC_LOG(LS_WARNING)
-              << __FUNCTION__ << ": iceServers entry has no urls field";
-          continue;
-        }
-
-        auto add_url = [&](const boost::json::string& json_url) {
-          std::string url_text = json_url.c_str();
-          ice_server.urls.push_back(url_text);
-          RTC_LOG(LS_INFO) << __FUNCTION__ << ": iceserver.url=" << url_text;
-        };
-
-        if (urls_value->is_array()) {
-          for (const auto& url : urls_value->as_array()) {
-            if (!url.is_string()) {
-              RTC_LOG(LS_WARNING)
-                  << __FUNCTION__
-                  << ": skip non string url entry in iceServers";
-              continue;
-            }
-            add_url(url.as_string());
-          }
-        } else if (urls_value->is_string()) {
-          add_url(urls_value->as_string());
-        } else {
-          RTC_LOG(LS_WARNING)
-              << __FUNCTION__
-              << ": urls field must be string or array of strings";
-        }
-
-        if (ice_server.urls.empty()) {
-          continue;
-        }
-
-        ice_servers_.push_back(ice_server);
-      }
-    }
-  }
-  if (ice_servers_.empty() && !config_.no_google_stun) {
-    // accept 時に iceServers が返却されてこなかった場合 google の stun server を追加する
-    webrtc::PeerConnectionInterface::IceServer ice_server;
-    ice_server.urls.push_back("stun:stun.l.google.com:19302");
-    ice_servers_.push_back(ice_server);
-  }
 }
 
 bool AyameClient::CreatePeerConnection() {
@@ -460,7 +422,8 @@ void AyameClient::OnRead(boost::system::error_code ec,
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "accept") {
-    SetIceServersFromConfig(json_message);
+    ice_servers_ =
+        CreateIceServersFromConfig(json_message, config_.no_google_stun);
     if (!CreatePeerConnection()) {
       RTC_LOG(LS_ERROR) << __FUNCTION__
                         << ": peer connection setup failed at accept";
@@ -469,7 +432,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     }
     // isExistUser フラグが存在するか確認する
     auto is_exist_user = false;
-    if (json_message.as_object().count("isExistUser") != 0) {
+    if (json_message.as_object().contains("isExistUser")) {
       has_is_exist_user_flag_ = true;
       is_exist_user = json_message.at("isExistUser").as_bool();
     }

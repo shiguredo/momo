@@ -78,7 +78,6 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
   void DoRead();
   void DoRegister();
   void DoSendPong();
-  void SetIceServersFromConfig(boost::json::value json_message);
   bool CreatePeerConnection();
 
  private:
