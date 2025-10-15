@@ -31,10 +31,10 @@ const std::vector<std::string> kAudioAuxiliaryCodecs = {"telephone-event",
 
 std::string NormalizeCodecName(const std::string& codec_name) {
   std::string normalized = codec_name;
-  std::transform(
-      normalized.begin(), normalized.end(), normalized.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
+  std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                 [](char c) {
+                   return static_cast<char>(std::tolower(static_cast<int>(c)));
+                 });
   return normalized;
 }
 
@@ -53,23 +53,24 @@ bool IsAuxiliaryCodec(const std::string& codec_name,
   return std::find(auxiliary_codecs.begin(), auxiliary_codecs.end(),
                    normalized) != auxiliary_codecs.end();
 }
-}  // namespace
 
-bool AyameClient::ParseURL(URLParts& parts) const {
-  const std::string& url = config_.signaling_url;
-
+bool ParseURL(const std::string& url, URLParts& parts, bool& ssl) {
   if (!URLParts::Parse(url, parts)) {
-    throw std::runtime_error("failed to parse signaling url: " + url);
+    return false;
   }
 
   if (parts.scheme == "wss") {
+    ssl = true;
     return true;
   } else if (parts.scheme == "ws") {
-    return false;
+    ssl = false;
+    return true;
   } else {
-    throw std::runtime_error("unsupported signaling scheme: " + parts.scheme);
+    return false;
   }
 }
+
+}  // namespace
 
 void AyameClient::GetStats(
     std::function<void(
@@ -111,13 +112,12 @@ void AyameClient::Reset() {
   ws_.reset();
 
   URLParts parts;
-  bool use_tls = false;
-  try {
-    use_tls = ParseURL(parts);
-  } catch (const std::exception& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << ": failed to prepare signaling url: " << e.what();
-    throw;
+  bool use_tls;
+  if (!ParseURL(config_.signaling_url, parts, use_tls)) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": failed to prepare signaling url: "
+                      << config_.signaling_url;
+    throw std::runtime_error("Failed to parse signaling url: " +
+                             config_.signaling_url);
   }
 
   if (use_tls) {
@@ -150,9 +150,7 @@ void AyameClient::ReconnectAfter() {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.Enable(interval);
-  if (retry_count_ < std::numeric_limits<int>::max()) {
-    retry_count_++;
-  }
+  retry_count_++;
 }
 
 void AyameClient::OnWatchdogExpired() {
@@ -166,8 +164,7 @@ void AyameClient::OnWatchdogExpired() {
 void AyameClient::OnConnect(boost::system::error_code ec) {
   if (ec) {
     ReconnectAfter();
-    MOMO_BOOST_ERROR(ec, "Handshake");
-    return;
+    return MOMO_BOOST_ERROR(ec, "Handshake");
   }
 
   DoRead();
@@ -423,8 +420,9 @@ void AyameClient::Close() {
 
 // WebSocket が閉じられたときのコールバック
 void AyameClient::OnClose(boost::system::error_code ec) {
-  if (ec)
+  if (ec) {
     MOMO_BOOST_ERROR(ec, "Close");
+  }
   // retry_count_ は ReconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
   // WebSocket につないでいない時間をなるべく短くしたいので、
   // WebSocket を閉じたときは一度インクリメントされている可能性のある retry_count_ を0 にして
@@ -454,8 +452,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
   }
 
   if (ec) {
-    MOMO_BOOST_ERROR(ec, "Read");
-    return;
+    return MOMO_BOOST_ERROR(ec, "Read");
   }
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;

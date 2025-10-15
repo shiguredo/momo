@@ -72,7 +72,6 @@ class AyameClient : public std::enable_shared_from_this<AyameClient>,
  private:
   void ReconnectAfter();
   void OnWatchdogExpired();
-  bool ParseURL(URLParts& parts) const;
   void SetCodecPreferences();
 
  private:
