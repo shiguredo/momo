@@ -30,7 +30,7 @@ ls -l /dev/video*
 
 典型的な出力例:
 
-```
+```console
 crw-rw---- 1 root video 81, 0 Oct 15 10:00 /dev/video0
 crw-rw---- 1 root video 81, 1 Oct 15 10:00 /dev/video1
 ```
