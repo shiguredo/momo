@@ -1,4 +1,4 @@
-#include "v4l2_runner.h"
+#include "sora/hwenc_v4l2/v4l2_runner.h"
 
 // Linux
 #include <poll.h>
@@ -7,6 +7,8 @@
 // WebRTC
 #include <modules/video_coding/include/video_error_codes.h>
 #include <rtc_base/logging.h>
+
+namespace sora {
 
 V4L2Runner::~V4L2Runner() {
   abort_poll_ = true;
@@ -145,3 +147,5 @@ void V4L2Runner::PollProcess() {
     }
   }
 }
+
+}  // namespace sora

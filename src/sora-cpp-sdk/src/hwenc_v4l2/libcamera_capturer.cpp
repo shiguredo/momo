@@ -1,4 +1,4 @@
-#include "libcamera_capturer.h"
+#include "sora/hwenc_v4l2/libcamera_capturer.h"
 
 #include <stdint.h>
 #include <sys/mman.h>
@@ -9,7 +9,9 @@
 #include <rtc_base/logging.h>
 #include <third_party/libyuv/include/libyuv.h>
 
-#include "v4l2_native_buffer.h"
+#include "sora/hwenc_v4l2/v4l2_native_buffer.h"
+
+namespace sora {
 
 webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
     LibcameraCapturerConfig config) {
@@ -72,7 +74,7 @@ webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
 }
 
 LibcameraCapturer::LibcameraCapturer()
-    : sora::ScalableVideoTrackSource(sora::ScalableVideoTrackSourceConfig()),
+    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
       acquired_(false),
       controls_(libcameracpp_ControlList_controls()),
       camera_started_(false) {}
@@ -120,11 +122,15 @@ int32_t LibcameraCapturer::Init(int camera_id) {
 }
 
 void LibcameraCapturer::Release() {
+  StopCapture();
   if (acquired_)
     libcamerac_Camera_release(camera_.get());
   acquired_ = false;
 
   camera_.reset();
+  configuration_.reset();
+  controls_.reset();
+  allocator_.reset();
 
   camera_manager_.reset();
 }
@@ -398,3 +404,5 @@ void LibcameraCapturer::queueRequest(libcamerac_Request* request) {
     return;
   }
 }
+
+}  // namespace sora

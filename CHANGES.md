@@ -11,6 +11,51 @@
 
 ## develop
 
+- [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
+  - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
+  - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
+    - sm_60 は Pascal 世代の GPU からサポートされている
+    - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
+    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
+  - @voluntas
+- [UPDATE] blend2d のバージョンを 0.20.0 に上げる
+  - blend2d の API 変更への追従 : camelCase から snake_case へ移行
+    - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
+    - 変更内容（旧 → 新）の一例 :
+      - `image_.getData(&data);` -> `image_.get_data(&data);`
+      - `ctx.setFillStyle(BLRgba32(0, 255, 255));` -> `ctx.set_fill_style(BLRgba32(0, 255, 255));`
+      - `path.moveTo(sx + gap, sy);` -> `path.move_to(sx + gap, sy);`
+    - 変更対象外の API
+      - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
+  - @voluntas @torikizi
+- [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
+  - @melpon
+- [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
+  - 指定したコーデック名と WebRTC 側の `RtpCodecCapability::name` を大文字・小文字を無視して比較するように変更
+  - 補助コーデック一覧を小文字にして、`IsAuxiliaryCodec()` の判定では大文字・小文字を無視して比較するように変更
+  - primary コーデックと補助コーデックを明示的にグルーピングし、`SetCodecPreferences()` へ渡す順序を保証
+  - @voluntas
+- [FIX] Ayame クライアントの実装を改善
+  - URL パース失敗時に適切な例外メッセージを出力するよう修正
+  - PeerConnection 作成失敗時の適切なエラーハンドリングを追加
+  - 非同期コールバックで shared_from_this() を適切に使用するよう修正
+  - `boost::ignore_unused` を C++17 の `[[maybe_unused]]` 属性に置き換え
+  - `should_create_answer` の条件式に詳細なコメントを追加
+  - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
+  - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
+    - これによってこの関数が何の値に依存しているのか分かりやすくなる
+  - @voluntas
+
+### misc
+
+- [ADD] Raspberry Pi 64 bit 環境での E2E テストを追加
+  - GitHub Actions の self-hosted runner を利用して Raspberry Pi OS armv8 環境での E2E テストを実行
+  - test_sora_mode_raspberry_pi.py テストファイルを追加
+  - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
+  - @voluntas
+- [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
+  - @voluntas
+
 ## 2025.1.0
 
 **リリース日**: 2025-09-04

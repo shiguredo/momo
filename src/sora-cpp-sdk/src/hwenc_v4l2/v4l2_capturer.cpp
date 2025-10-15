@@ -1,4 +1,4 @@
-#include "v4l2_capturer.h"
+#include "sora/hwenc_v4l2/v4l2_capturer.h"
 
 // Linux
 #include <sys/ioctl.h>
@@ -8,15 +8,17 @@
 #include <modules/video_capture/video_capture_factory.h>
 #include <rtc_base/logging.h>
 
-#include "v4l2_native_buffer.h"
+#include "sora/hwenc_v4l2/v4l2_native_buffer.h"
+
+namespace sora {
 
 webrtc::scoped_refptr<V4L2Capturer> V4L2Capturer::Create(
-    sora::V4L2VideoCapturerConfig config) {
+    V4L2VideoCapturerConfig config) {
   return webrtc::make_ref_counted<V4L2Capturer>(config);
 }
 
-V4L2Capturer::V4L2Capturer(const sora::V4L2VideoCapturerConfig& config)
-    : sora::V4L2VideoCapturer(config) {}
+V4L2Capturer::V4L2Capturer(const V4L2VideoCapturerConfig& config)
+    : V4L2VideoCapturer(config) {}
 
 void V4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
   const int64_t timestamp_us = webrtc::TimeMicros();
@@ -40,3 +42,5 @@ void V4L2Capturer::OnCaptured(uint8_t* data, uint32_t bytesused) {
                                        .build();
   OnFrame(video_frame);
 }
+
+}  // namespace sora

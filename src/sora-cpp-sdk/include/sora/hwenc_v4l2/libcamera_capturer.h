@@ -1,18 +1,21 @@
-#ifndef LIBCAMERA_CAPTURER_H_
-#define LIBCAMERA_CAPTURER_H_
+#ifndef SORA_HWENC_V4L2_LIBCAMERA_CAPTURER_H_
+#define SORA_HWENC_V4L2_LIBCAMERA_CAPTURER_H_
 
 #include <memory>
 #include <mutex>
 #include <queue>
 
-#include "libcamerac/libcameracpp.h"
+#include "libcameracpp.h"
+
 #include "sora/scalable_track_source.h"
 #include "sora/v4l2/v4l2_video_capturer.h"
 
-struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
+namespace sora {
+
+struct LibcameraCapturerConfig : V4L2VideoCapturerConfig {
   LibcameraCapturerConfig() {}
-  LibcameraCapturerConfig(const sora::V4L2VideoCapturerConfig& config) {
-    *static_cast<sora::V4L2VideoCapturerConfig*>(this) = config;
+  LibcameraCapturerConfig(const V4L2VideoCapturerConfig& config) {
+    *static_cast<V4L2VideoCapturerConfig*>(this) = config;
   }
   LibcameraCapturerConfig(const LibcameraCapturerConfig& config) {
     *this = config;
@@ -30,7 +33,7 @@ struct LibcameraCapturerConfig : sora::V4L2VideoCapturerConfig {
 // 出力の形式として、fd そのままで取得する形式と、メモリ上にコピーして取得する形式がある
 // 渡されるフレームバッファは、fd そのままで取得する場合は V4L2NativeBuffer クラスになり、
 // メモリ上にコピーする場合は webrtc::I420Buffer クラスになる。
-class LibcameraCapturer : public sora::ScalableVideoTrackSource {
+class LibcameraCapturer : public ScalableVideoTrackSource {
  public:
   static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config);
@@ -70,5 +73,7 @@ class LibcameraCapturer : public sora::ScalableVideoTrackSource {
   bool camera_started_;
   std::mutex camera_stop_mutex_;
 };
+
+}  // namespace sora
 
 #endif  // LIBCAMERA_CAPTURER_H_

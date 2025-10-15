@@ -1,5 +1,5 @@
-#ifndef V4L2_RUNNER_H_
-#define V4L2_RUNNER_H_
+#ifndef SORA_HWENC_V4L2_V4L2_RUNNER_H_
+#define SORA_HWENC_V4L2_V4L2_RUNNER_H_
 
 #include <atomic>
 #include <functional>
@@ -13,6 +13,8 @@
 
 // WebRTC
 #include <rtc_base/platform_thread.h>
+
+namespace sora {
 
 template <class T>
 class ConcurrentQueue {
@@ -83,5 +85,7 @@ class V4L2Runner {
   std::atomic<bool> abort_poll_;
   webrtc::PlatformThread thread_;
 };
+
+}  // namespace sora
 
 #endif

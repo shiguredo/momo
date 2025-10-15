@@ -17,9 +17,9 @@ VPL の詳細については以下のリンクをご確認ください。
 
 ## 対応プラットフォーム
 
-- Windows 11 x86_64
-- Ubuntu 22.04 x86_64
 - Ubuntu 24.04 x86_64
+- Ubuntu 22.04 x86_64
+- Windows 11 x86_64
 
 ## Windows 11 での利用方法
 
@@ -75,65 +75,67 @@ H264:
 
 ## Ubuntu での利用方法
 
-Ubuntu の場合は 22.04 と 24.04 で利用方法が異なります。
+### Ubuntu 24.04 での利用方法
+
+ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
+
+```bash
+sudo apt update
+sudo apt -y install wget gpg
+
+# Intel の GPG キーをインストールする
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+# Intel のリポジトリを追加する
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
+
+sudo apt update
+# Sora Python SDK に必要なライブラリをインストールする
+sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
+# Intel VPL に必要なライブラリをインストールする
+sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
+
+# sudo で vainfo が実行できるか確認する
+sudo vainfo --display drm --device /dev/dri/renderD128
+
+# udev のルールを追加する
+sudo echo 'KERNEL=="render*" GROUP="render", MODE="0666"' > /etc/udev/rules.d/99-vpl.rules
+# 再起動する
+sudo reboot
+
+# vainfo が sudo なしで実行できるか確認する
+vainfo --display drm --device /dev/dri/renderD128
+```
 
 ### Ubuntu 22.04 での利用方法
 
-#### Intel の apt リポジトリを追加
-
 ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
 
 ```bash
-wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
-  sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
 sudo apt update
-```
+sudo apt -y install wget gpg
 
-#### Intel 提供パッケージの最新化
+# Intel の GPG キーをインストールする
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+# Intel のリポジトリを追加する
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
 
-Intel の apt リポジトリを追加することでインストール済みのパッケージも Intel から提供されている最新のものに更新できます。依存問題を起こさないため、ここで最新化を行なってください。
-
-```bash
-sudo apt upgrade
-```
-
-#### ドライバとライブラリのインストール
-
-以下のように、ドライバとライブラリをインストールしてください。
-intel-media-va-driver には無印と `non-free` 版がありますが、 `non-free` 版でしか動作しません。
-
-```bash
-sudo apt install -y intel-media-va-driver-non-free libmfxgen1
-```
-
-以上でインストールが完了します。
-
-### Ubuntu 24.04 での利用方法
-
-#### Intel の apt リポジトリを追加
-
-ランタイムのインストールには Intel の apt リポジトリを追加する必要があります。
-
-```bash
-
-wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-  sudo gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | \
-  sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
 sudo apt update
+# Sora Python SDK に必要なライブラリをインストールする
+sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
+# Intel VPL に必要なライブラリをインストールする
+sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
+
+# sudo で vainfo が実行できるか確認する
+sudo vainfo --display drm --device /dev/dri/renderD128
+
+# udev のルールを追加する
+sudo echo 'KERNEL=="render*" GROUP="render", MODE="0666"' > /etc/udev/rules.d/99-vpl.rules
+# 再起動する
+sudo reboot
+
+# vainfo が sudo なしで実行できるか確認する
+vainfo --display drm --device /dev/dri/renderD128
 ```
-
-#### ライブラリのインストール
-
-以下の実行例のように、 libmfxgen1 をインストールしてください。
-
-```bash
-sudo apt install -y libmfxgen1
-```
-
-以上でインストールが完了します。
 
 ### VPL が認識できているか確認
 
@@ -186,6 +188,10 @@ H264:
 - Intel(R) Processor N97
 - Intel(R) Processor N100
 - Intel(R) Processor N95
+
+## 動作が未確認のチップセット
+
+- Intel(R) Processor N150
 
 ## エンコーダーが複数ある場合
 

@@ -1,5 +1,5 @@
-#ifndef V4L2_H264_ENCODER_H_
-#define V4L2_H264_ENCODER_H_
+#ifndef SORA_HWENC_V4L2_V4L2_H264_ENCODER_H_
+#define SORA_HWENC_V4L2_V4L2_H264_ENCODER_H_
 
 #include <chrono>
 #include <memory>
@@ -20,10 +20,15 @@
 
 #include "v4l2_converter.h"
 
+namespace sora {
+
 class V4L2H264Encoder : public webrtc::VideoEncoder {
  public:
-  explicit V4L2H264Encoder(const webrtc::Codec& codec);
+  explicit V4L2H264Encoder(webrtc::VideoCodecType type);
   ~V4L2H264Encoder() override;
+
+  static std::unique_ptr<V4L2H264Encoder> Create(webrtc::VideoCodecType type);
+  static bool IsSupported(webrtc::VideoCodecType type);
 
   int32_t InitEncode(const webrtc::VideoCodec* codec_settings,
                      const webrtc::VideoEncoder::Settings& settings) override;
@@ -74,4 +79,6 @@ class V4L2H264Encoder : public webrtc::VideoEncoder {
   webrtc::EncodedImage encoded_image_;
 };
 
-#endif  // V4L2_H264_ENCODER_H_
+}  // namespace sora
+
+#endif

@@ -2,24 +2,37 @@
 
 ## 商用利用はできますか？
 
-Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しております。
+Momo のライセンスは [Apache License, Version 2\.0](http://www.apache.org/licenses/LICENSE-2.0) で公開しており、商用利用もできます。
 
-## コーデックの指定やビットレートを利用できますか？
+## コーデックの指定はできますか？
 
-Momo 側からの指定は WebRTC SFU Sora を利用したときだけ利用できます。
+コーデックの指定は Ayame モードと Sora モードで利用できます。
+
+## ビットレートは指定できますか？
+
+ビットレートの指定は Sora モードでのみ利用できます。
 
 ## サイマルキャストは利用できますか？
 
-Sora モードでのみ利用できます。利用できる映像コーデックは VP8 / VP9 / AV1 / H.264 / H.265 です。
+Sora モードでのみ利用できます。
+
+サイマルキャストで利用できる映像コーデックは VP8 / VP9 / AV1 / H.264 / H.265 です。
 利用する場合は `--simulcast` を指定してください。
 
 ## AV1 は利用できますか？
 
-利用できます。
+AV1 は全てのモードで利用できます。
+
+## H.266 は利用できますか？
+
+H.265 はハードウェアアクセラレーターが必須になります。
+
+- Linux と Windows では NVIDIA GPU、または Intel GPU (内蔵でも可) が必要
+- macOS では Apple VideoToolbox を利用
 
 ## データチャネルは利用できますか？
 
-シリアル経由でのみデータチャネルが利用できます。
+P2P モードと Ayame モードでシリアル経由でのみ、データチャネルが利用できます。
 
 [USE_SERIAL.md](USE_SERIAL.md)
 
@@ -40,7 +53,7 @@ export SSL_CERT_FILE=/path/to/cert.pem
 ./momo --insecure sora ...
 ```
 
-## NVIDIA ビデオカードに搭載されている NVENC を利用できますか？
+## NVIDIA ビデオカードに搭載されている NVIDIA Video Codec を利用できますか？
 
 Windows と Ubuntu で利用できます。
 NVIDIA ビデオカードドライバーは最新版にしてください。
@@ -73,12 +86,21 @@ NVENC が利用できるビデオカードは以下で確認してください�
   - @shirokunet
 - GeForce RTX 3080
   - @torikizi
+- GeForce RTX 4060
+  - 時雨堂
 
 ## 4K カメラのオススメはありますか？
 
-以下の記事を参考にしてみてください。
+- Logicool MX Brio
+  - <https://www.logicool.co.jp/ja-jp/products/webcams/mx-brio.html>
+- Insta360 Link 2 yあ Link 2C
+  - <https://www.insta360.com/jp/product/insta360-link2>
 
-[4K webcam について \- Qiita](https://qiita.com/tetsu_koba/items/8b4921f257a46a15d2a7)
+## 120fps のカメラのオススメはありますか？
+
+elgato FACECAM MK.2 が今のところ 720p で 120fps に対応しています。
+
+<https://www.elgato.com/us/en/p/facecam-mk2>
 
 ## Momo はカメラからの映像以外を入力できますか？
 
@@ -92,17 +114,23 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 [ラズパイ\+momo で WebRTC で送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 
-## Mac で 60fps を利用できますか？
+## macOS で 60fps を利用できますか？
 
-利用できません。60fps を使ってみたい場合は Momo が対応する Jetson シリーズ などをご利用ください。
+Momo は macOS で H.264 または H.265 のハードウェアアクセラレータを利用して 60fps 
 
 ## Sora モードで DataChannel メッセージングは利用できますか？
 
 Momo では Sora の DataChannel メッセージングに対応する予定はありません。 Sora C++ SDK にて対応予定です。
 
+## Raspberry Pi Camera を利用することはできますか？
+
+Momo は Raspberry Pi Camera を利用できます。libcamera-control にも対応しているため、オートフォーカスの設定なども利用できます。
+
+詳細は [LIBCAMERA.md](LIBCAMERA.md) をご確認ください。
+
 ## Raspberry Pi OS のレガシー版には対応していますか？
 
-レガシー版には対応せず、最新版にのみ対応していきます。
+Momo はレガシー版には対応せず、最新版かつ 64 ビットにのみ対応していきます。
 
 ## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
@@ -110,9 +138,9 @@ RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラ�
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
 
-## Mac (arm64) から H.264 の FHD でスクリーンキャプチャを配信したい
+## macOS arm64 から H.264 の FHD でスクリーンキャプチャを配信したい
 
-Mac (arm64) から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。
+macOS arm64 から FHD でスクリーンキャプチャを配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。
 
 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。
 
@@ -131,7 +159,7 @@ NVIDIA のビデオカードの NVENC を利用することで H.264 が利用�
 
 Momo は Sora の TURN 機能を無効にして利用することはできません。
 
-## Sora モードで マルチストリーム機能を無効にすることはできますか？
+## Sora モードでマルチストリーム機能を無効にすることはできますか？
 
 Momo の Sora モードではマルチストリーム機能を無効にして利用することはできません。
 
@@ -181,7 +209,3 @@ Release 2023.1.0 以降から利用できます。
 JetPack 5.1.1 のみで利用できます。
 
 JetPack 5.1.1 以外のバージョンでは利用できません。
-
-## Momo は Sora C++ SDK や Sora C SDK をベースにしないのですか？
-
-現在はその予定はありません。

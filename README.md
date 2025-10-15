@@ -23,13 +23,14 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアアクセラレーターへの対応
 
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を利用することができます
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を V4L2 M2M 経由で利用することができます
   - ハードウェアエンコーダー: H.264
   - ハードウェアデコーダー: H.264
+  - Raspberry Pi 5 では H.264 ハードウェアアクセラレーターが搭載されていないため利用できません
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
   - ハードウェアエンコーダー: H.264 / H.265
   - ハードウェアデコーダー: H.264 / H.265
-- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
+- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
@@ -131,6 +132,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
 - Raspberry Pi OS bookworm (64bit)
+  - Raspberry Pi 5
   - Raspberry Pi 4
   - Raspberry Pi 3
   - Raspberry Pi 2 Model B v1.2
@@ -185,9 +187,9 @@ limitations under the License.
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC の Statistics 対応
   - 現時点では企業名非公開
-- Windows 版 Momo NVIDIA Video Codec SDK 対応
+- Windows 版 Momo NVIDIA Video Codec 対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- Linux 版 Momo NVIDIA Video Codec SDK 対応
+- Linux 版 Momo NVIDIA Video Codec 対応
   - [株式会社オプティム](https://www.optim.co.jp/) 様
 - Windows / Linux 版 スクリーンキャプチャ対応
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
@@ -228,9 +230,9 @@ WebRTC Native Client に対する有料でのテクニカルサポート契約�
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加
 
-## NVIDIA Video Codec SDK
+## NVIDIA Video Codec
 
-<https://docs.nvidia.com/video-technologies/video-codec-sdk/12.0/index.html>
+<https://docs.nvidia.com/video-technologies/video-codec-sdk/13.0/index.html>
 
 ```text
 “This software contains source code provided by NVIDIA Corporation.”

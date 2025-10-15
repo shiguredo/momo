@@ -36,7 +36,6 @@ from buildbase import (
     install_webrtc,
     mkdir_p,
     read_version_file,
-    read_version_string,
     rm_rf,
 )
 
@@ -57,7 +56,6 @@ def install_deps(
     disable_fake_capture_device: bool,
 ):
     with cd(BASE_DIR):
-        momo_version = read_version_string("VERSION")
         deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
 
@@ -367,7 +365,6 @@ def install_deps(
                 "source_dir": source_dir,
                 "build_dir": build_dir,
                 "install_dir": install_dir,
-                "ios": False,
                 "cmake_args": [],
                 "expected_sha256": deps["BLEND2D_SHA256_HASH"],
             }
@@ -508,7 +505,8 @@ def _build(args):
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_deps = read_version_file(webrtc_info.deps_file)
         with cd(BASE_DIR):
-            momo_version = read_version_string("VERSION")
+            with open("VERSION", "r", encoding="utf-8") as f:
+                momo_version = f.read().strip()
             momo_commit = cmdcap(["git", "rev-parse", "HEAD"])
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
@@ -656,7 +654,8 @@ def _build(args):
         rm_rf(os.path.join(package_dir, "momo.env"))
 
         with cd(BASE_DIR):
-            momo_version = read_version_string("VERSION")
+            with open("VERSION", "r", encoding="utf-8") as f:
+                momo_version = f.read().strip()
 
         def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:

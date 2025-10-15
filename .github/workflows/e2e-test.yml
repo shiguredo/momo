@@ -1,20 +1,19 @@
-name: e2e-test-workflow
+name: e2e-test
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - 'develop'
-      - 'feature/**'
+      - "develop"
+      - "feature/**"
     paths:
-      - 'test/**'
-      - '.github/workflows/e2e-test.yml'
+      - "test/**"
+      - ".github/workflows/e2e-test.yml"
   schedule:
     # JST 14:00-16:30 の間、30分ごとに実行
     # UTC 05:00-07:30 (JST 14:00-16:30)
     # 1-5 で 月曜日から金曜日
-    - cron: "0,30 5-7 * * 1-5"  # UTC 05:00-07:30 (JST 14:00-16:30)
-
+    - cron: "0,30 5-7 * * 1-5" # UTC 05:00-07:30 (JST 14:00-16:30)
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
@@ -23,7 +22,7 @@ env:
   OPENH264_VERSION: 2.6.0
 
 jobs:
-  e2e-test:
+  e2e_test:
     strategy:
       matrix:
         include:
@@ -35,8 +34,8 @@ jobs:
           - package: macos_arm64
             runs_on: macos-15
           # Windows サポート予定
-          #- package: windows_x86_64
-          #  runs_on: windows-2025
+          # - package: windows_x86_64
+          #   runs_on: windows-2025
           # Self-hosted runners for HWA tests
           - name: Apple Video Toolbox
             package: macos_arm64
@@ -55,37 +54,45 @@ jobs:
             env_vars: |
               INTEL_VPL=true
               LIBVA_MESSAGING_LEVEL=0
-          - name: NVIDIA Video Codec SDK
+          - name: NVIDIA Video Codec
             package: ubuntu-24.04_x86_64
             runs_on:
               group: Self
               labels: [self-hosted, linux, x64, NVIDIA-Video-Codec-SDK]
-            test_target: test_sora_mode_nvidia_video_codec_sdk.py
+            test_target: test_sora_mode_nvidia_video_codec.py
             env_vars: |
-              NVIDIA_VIDEO_CODEC_SDK=true
+              NVIDIA_VIDEO_CODEC=true
+          - name: Raspberry Pi VideoCore
+            package: raspberry-pi-os_armv8
+            runs_on:
+              group: Self
+              labels: [self-hosted, linux, arm64, Raspberry-Pi]
+            test_target: test_sora_mode_raspberry_pi.py -s
+            env_vars: |
+              RASPBERRY_PI=true
     name: E2E Test ${{ matrix.name || matrix.package }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      
+
       # Homebrew のセットアップ (self-hosted macOS ランナー用)
       - name: Setup Homebrew
         if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
         uses: Homebrew/actions/setup-homebrew@master
-      
+
       # GitHub CLI のインストール (self-hosted macOS ランナー用)
       - name: Install GitHub CLI
         if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
         run: brew install gh
-      
+
       # ランタイム依存関係のインストール (GitHub-hosted Ubuntu のみ)
       - name: Install runtime dependencies
         if: ${{ runner.environment != 'self-hosted' && startsWith(matrix.package, 'ubuntu') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates libdrm2 libva2 libva-drm2
-      
+
       # 環境変数の設定 (HWA テスト用)
       - name: Set environment variables
         if: matrix.env_vars
@@ -95,21 +102,20 @@ jobs:
               echo "$line" >> $GITHUB_ENV
             fi
           done
-      
+
       # momo バイナリのダウンロード
       - name: Download and extract momo binary
         uses: ./.github/actions/download-binary
         with:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
-      
+
       # OpenH264 のダウンロード (GitHub-hosted ランナーのみ)
       - name: Download OpenH264
         if: ${{ runner.environment != 'self-hosted' }}
         uses: shiguredo/github-actions/.github/actions/download-openh264@main
         id: openh264
         with:
-          platform_name: ${{ matrix.package }}
           openh264_version: ${{ env.OPENH264_VERSION }}
           use-cache: true
 
@@ -117,13 +123,29 @@ jobs:
       - name: Setup OpenH264 environment
         if: ${{ runner.environment != 'self-hosted' && steps.openh264.outputs.openh264_path }}
         run: echo "OPENH264_PATH=${{ steps.openh264.outputs.openh264_path }}" >> $GITHUB_ENV
-      
+
       # UV のセットアップ
-      - uses: astral-sh/setup-uv@v6
-      
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+        working-directory: ./test
+
       # E2E テストの実行
       - name: Run E2E tests
-        run: |
-          uv sync
-          uv run pytest ${{ matrix.test_target || '.' }} -v
+        run: uv run pytest ${{ matrix.test_target || '.' }} -v
         working-directory: ./test
+
+  slack_notify_failed:
+    needs: [e2e_test]
+    runs-on: ubuntu-24.04
+    # always() で常に実行し、needs.e2e_test.result で親ジョブの結果を確認
+    # タイムアウトは 'failure' として扱われる
+    if: always() && (needs.e2e_test.result == 'failure' || needs.e2e_test.result == 'cancelled')
+    steps:
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: open-momo
+          SLACK_COLOR: danger
+          SLACK_TITLE: "FAILED"
+          SLACK_ICON_EMOJI: ":japanese_ogre:"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
