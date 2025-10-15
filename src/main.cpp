@@ -77,7 +77,7 @@ static void ListDevices() {
   // オーディオデバイス一覧
   auto adm = webrtc::CreateAudioDeviceModule(
       webrtc::CreateEnvironment(),
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio);
+      webrtc::AudioDeviceModule::kLinuxPulseAudio);
   if (!adm) {
     std::cerr << "Warning: Failed to create AudioDeviceModule" << std::endl;
   } else {
@@ -86,7 +86,7 @@ static void ListDevices() {
       std::cerr << "Warning: AudioDeviceModule::Init failed (error code: "
                 << init_result
                 << "). Audio device enumeration is not available." << std::endl;
-      std::cerr << "Note: This may occur if PulseAudio or ALSA is not running."
+      std::cerr << "Note: This may occur if PulseAudio is not running."
                 << std::endl;
     } else {
       auto print_audio_devices = [&](bool is_input) {
@@ -354,7 +354,7 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.no_video_device = args.no_video_device;
   rtcm_config.no_audio_device = args.no_audio_device;
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   rtcm_config.audio_input_device = args.audio_input_device;
   rtcm_config.audio_output_device = args.audio_output_device;
 #endif

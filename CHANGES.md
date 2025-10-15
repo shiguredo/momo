@@ -36,6 +36,21 @@
 - [ADD] macOS で `--list-devices` オプションを追加
   - 利用可能なオーディオデバイスとビデオデバイスの一覧を表示する機能
   - @voluntas
+- [ADD] Linux で `--list-devices` オプションにオーディオデバイス一覧表示を追加
+  - 既存のビデオデバイス一覧に加えて、オーディオ入力デバイスとオーディオ出力デバイスの一覧も表示するようにする
+  - @voluntas
+- [ADD] Linux でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
+  - PulseAudio API を使用
+    - pipewire-pulse 経由を想定
+  - @voluntas
+- [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
+  - ALSA 専用のデバイス選択コードを削除
+  - Ubuntu ビルドで `-DUSE_LINUX_PULSE_AUDIO=ON` を有効化
+  - AudioLayer を明示的に `kLinuxPulseAudio` に指定
+  - @voluntas
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 
