@@ -202,6 +202,9 @@ limitations under the License.
 
 **こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
+- Windows 11 x86_64 での `--list-devices` オプション対応
+- Windows 11 x86_64 での `--audio-input-device` オプション対応
+- Windows 11 x86_64 での `--audio-output-device` オプション対応
 - Windows 11 arm64
 - Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
 

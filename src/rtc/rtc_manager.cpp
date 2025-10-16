@@ -42,7 +42,7 @@
 #include "url_parts.h"
 #include "util.h"
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 namespace {
 bool IsNumber(const std::string& value) {
   if (value.empty()) {
@@ -249,15 +249,8 @@ RTCManager::RTCManager(
   signaling_thread_->Start();
 
 #if defined(__linux__)
-
-#if defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
-#else
-  webrtc::AudioDeviceModule::AudioLayer audio_layer =
-      webrtc::AudioDeviceModule::kLinuxAlsaAudio;
-#endif
-
 #else
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kPlatformDefaultAudio;
@@ -294,7 +287,7 @@ RTCManager::RTCManager(
 #endif
         }
         // ADM への参照を保存（PeerConnectionFactory 作成後に再設定するため）
-        // macOS では WebRtcVoiceEngine::Init() でデバイスがデフォルトに戻されるため、
+        // macOS と Linux では WebRtcVoiceEngine::Init() でデバイスがデフォルトに戻されるため、
         // ここではデバイス設定を行わず、PeerConnectionFactory 作成後に設定する
         adm_for_device_selection = adm;
         return adm;
@@ -375,7 +368,7 @@ RTCManager::RTCManager(
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   // PeerConnectionFactory の初期化後、デバイスを再設定
   // WebRtcVoiceEngine::Init() がデフォルトデバイスに戻してしまうため
   if (adm_for_device_selection) {
