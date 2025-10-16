@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
+  - @voluntas
+- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
+  - @voluntas
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
@@ -38,6 +42,21 @@
   - @voluntas
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
+- [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
+  - 指定したコーデック名と WebRTC 側の `RtpCodecCapability::name` を大文字・小文字を無視して比較するように変更
+  - 補助コーデック一覧を小文字にして、`IsAuxiliaryCodec()` の判定では大文字・小文字を無視して比較するように変更
+  - primary コーデックと補助コーデックを明示的にグルーピングし、`SetCodecPreferences()` へ渡す順序を保証
+  - @voluntas
+- [FIX] Ayame クライアントの実装を改善
+  - URL パース失敗時に適切な例外メッセージを出力するよう修正
+  - PeerConnection 作成失敗時の適切なエラーハンドリングを追加
+  - 非同期コールバックで shared_from_this() を適切に使用するよう修正
+  - `boost::ignore_unused` を C++17 の `[[maybe_unused]]` 属性に置き換え
+  - `should_create_answer` の条件式に詳細なコメントを追加
+  - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
+  - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
+    - これによってこの関数が何の値に依存しているのか分かりやすくなる
+  - @voluntas
 
 ### misc
 

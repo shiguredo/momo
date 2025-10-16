@@ -92,14 +92,14 @@ Options:
   -h,--help                   Print this help message and exit
   --help-all                  Print help message for all modes and exit
   --no-google-stun            Do not use google stun
-  --no-video-device           Do not use video device
+  --no-video-input-device     Do not use video input device
   --no-audio-device           Do not use audio device
   --force-i420                Prefer I420 format for video capture (only on supported devices)
   --hw-mjpeg-decoder BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
   --use-libcamera             Use libcamera for video capture (only on supported devices)
   --use-libcamera-native      Use native buffer for H.264 encoding
-  --video-device TEXT         Use the video device specified by an index or a name (use the first one if not specified)
+  --video-input-device TEXT   Use the video device specified by an index or a name (use the first one if not specified)
   --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
   --framerate INT:INT in [1 - 60]
                               Video framerate

@@ -1,8 +1,8 @@
-# Raspberry Pi (Raspberry-Pi-OS) で Momo を使ってみる
+# Raspberry Pi (Raspberry Pi OS) で Momo を使ってみる
 
 ## 注意
 
-Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS を利用してください
+Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS (64bit) を利用してください
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 

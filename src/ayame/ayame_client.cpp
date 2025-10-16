@@ -9,6 +9,9 @@
 #include <api/rtp_transceiver_interface.h>
 
 #include <algorithm>
+#include <cctype>
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -19,12 +22,17 @@
 
 namespace {
 // 映像補助コーデック
-const std::vector<std::string> kVideoAuxiliaryCodecs = {"RTX", "RED", "ULPFEC",
-                                                        "FLEXFEC-03"};
+const std::vector<std::string> kVideoAuxiliaryCodecs = {"rtx", "red", "ulpfec",
+                                                        "flexfec-03"};
 
 // 音声補助コーデック
-const std::vector<std::string> kAudioAuxiliaryCodecs = {"TELEPHONE-EVENT",
-                                                        "CN"};
+const std::vector<std::string> kAudioAuxiliaryCodecs = {"telephone-event",
+                                                        "cn"};
+
+constexpr int kInitialWatchdogTimeoutSeconds = 30;
+constexpr int kConnectedWatchdogTimeoutSeconds = 60;
+constexpr int kReconnectIntervalStepSeconds = 10;
+constexpr int kReconnectIntervalMaxSeconds = 30;
 
 // コーデックが補助コーデックかどうかを判定
 bool IsAuxiliaryCodec(const std::string& codec_name,
@@ -32,27 +40,208 @@ bool IsAuxiliaryCodec(const std::string& codec_name,
   const auto& auxiliary_codecs = media_type == webrtc::MediaType::VIDEO
                                      ? kVideoAuxiliaryCodecs
                                      : kAudioAuxiliaryCodecs;
-  return std::find(auxiliary_codecs.begin(), auxiliary_codecs.end(),
-                   codec_name) != auxiliary_codecs.end();
+  return std::find_if(auxiliary_codecs.begin(), auxiliary_codecs.end(),
+                      [&codec_name](const std::string& codec) {
+                        return absl::EqualsIgnoreCase(codec, codec_name);
+                      }) != auxiliary_codecs.end();
 }
-}  // namespace
 
-bool AyameClient::ParseURL(URLParts& parts) const {
-  std::string url = config_.signaling_url;
-
+bool ParseURL(const std::string& url, URLParts& parts, bool& ssl) {
   if (!URLParts::Parse(url, parts)) {
-    throw std::exception();
+    return false;
   }
 
-  std::string default_port;
   if (parts.scheme == "wss") {
+    ssl = true;
     return true;
   } else if (parts.scheme == "ws") {
-    return false;
+    ssl = false;
+    return true;
   } else {
-    throw std::exception();
+    return false;
   }
 }
+
+webrtc::PeerConnectionInterface::IceServers CreateIceServersFromConfig(
+    boost::json::value json_message,
+    bool no_google_stun) {
+  webrtc::PeerConnectionInterface::IceServers ice_servers;
+
+  // 返却されてきた iceServers を セットする
+  for (const auto& j_ice_server_value :
+       json_message.at("iceServers").as_array()) {
+    const auto& j_ice_server = j_ice_server_value.as_object();
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    if (j_ice_server.contains("username")) {
+      ice_server.username = j_ice_server.at("username").as_string().c_str();
+    }
+    if (j_ice_server.contains("credential")) {
+      ice_server.password = j_ice_server.at("credential").as_string().c_str();
+    }
+    for (const auto& j_url_value : j_ice_server.at("urls").as_array()) {
+      ice_server.urls.push_back(j_url_value.as_string().c_str());
+    }
+    ice_servers.push_back(ice_server);
+  }
+
+  if (ice_servers.empty() && !no_google_stun) {
+    // iceServers が返却されてこなかった場合、google の stun server を利用する
+    webrtc::PeerConnectionInterface::IceServer ice_server;
+    ice_server.urls.push_back("stun:stun.l.google.com:19302");
+    ice_servers.push_back(ice_server);
+  }
+
+  return ice_servers;
+}
+
+void SetCodecPreferences(
+    std::shared_ptr<RTCConnection> connection,
+    const std::string& video_codec_type,
+    const std::string& audio_codec_type,
+    webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory) {
+  if (video_codec_type.empty() && audio_codec_type.empty()) {
+    return;
+  }
+
+  auto pc = connection->GetConnection();
+  if (pc == nullptr) {
+    RTC_LOG(LS_ERROR) << "PeerConnection is null";
+    return;
+  }
+
+  auto transceivers = pc->GetTransceivers();
+
+  // Transceiver が存在しない場合はエラーを出して何もしない
+  if (transceivers.empty()) {
+    RTC_LOG(LS_ERROR)
+        << "No transceivers found when trying to set codec preferences";
+    return;
+  }
+
+  for (auto transceiver : transceivers) {
+    const auto media_type = transceiver->media_type();
+    const bool is_video = media_type == webrtc::MediaType::VIDEO;
+    const bool is_audio = media_type == webrtc::MediaType::AUDIO;
+
+    // VIDEO でも AUDIO でもない Transceiver はスキップ
+    if (!is_video && !is_audio) {
+      continue;
+    }
+
+    // 指定されたコーデックが空の場合はスキップ
+    const bool codec_not_specified = (is_video && video_codec_type.empty()) ||
+                                     (is_audio && audio_codec_type.empty());
+    if (codec_not_specified) {
+      continue;
+    }
+
+    const std::string& target_codec =
+        is_video ? video_codec_type : audio_codec_type;
+
+    // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
+    webrtc::RtpCapabilities sender_capabilities =
+        factory->GetRtpSenderCapabilities(transceiver->media_type());
+    webrtc::RtpCapabilities receiver_capabilities =
+        factory->GetRtpReceiverCapabilities(transceiver->media_type());
+
+    // 送信側と受信側の両方でサポートされているコーデックを見つける
+    std::vector<webrtc::RtpCodecCapability> common_codecs;
+    for (const auto& sender_codec : sender_capabilities.codecs) {
+      for (const auto& receiver_codec : receiver_capabilities.codecs) {
+        // MIMEタイプが一致する場合に共通コーデックとみなす
+        if (sender_codec.mime_type() == receiver_codec.mime_type()) {
+          common_codecs.push_back(sender_codec);
+          break;
+        }
+      }
+    }
+
+    // 共通コーデックが空の場合はスキップ
+    if (common_codecs.empty()) {
+      RTC_LOG(LS_WARNING)
+          << "No common codec capabilities available for transceiver";
+      continue;
+    }
+
+    RTC_LOG(LS_INFO) << "Found " << common_codecs.size()
+                     << " common codecs for "
+                     << webrtc::MediaTypeToString(media_type);
+
+    // コーデックのフィルタリング
+    std::vector<webrtc::RtpCodecCapability> primary_codecs;
+    std::vector<webrtc::RtpCodecCapability> auxiliary_codecs;
+    for (const auto& codec : common_codecs) {
+      if (absl::EqualsIgnoreCase(codec.name, target_codec)) {
+        primary_codecs.push_back(codec);
+        continue;
+      }
+      if (IsAuxiliaryCodec(codec.name, media_type)) {
+        auxiliary_codecs.push_back(codec);
+      }
+    }
+
+    // 指定されたコーデックが見つからなかった場合はエラー
+    if (primary_codecs.empty()) {
+      RTC_LOG(LS_ERROR) << "Specified codec '" << target_codec << "' for "
+                        << webrtc::MediaTypeToString(transceiver->media_type())
+                        << " is not available. Available codecs:";
+      for (const auto& codec : common_codecs) {
+        RTC_LOG(LS_ERROR) << "  - " << codec.name;
+      }
+      continue;
+    }
+
+    std::vector<webrtc::RtpCodecCapability> filtered_codecs;
+    filtered_codecs.insert(filtered_codecs.end(), primary_codecs.begin(),
+                           primary_codecs.end());
+    filtered_codecs.insert(filtered_codecs.end(), auxiliary_codecs.begin(),
+                           auxiliary_codecs.end());
+
+    auto error = transceiver->SetCodecPreferences(filtered_codecs);
+    if (!error.ok()) {
+      RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
+                        << error.message();
+      continue;
+    }
+
+    RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
+                     << webrtc::MediaTypeToString(transceiver->media_type());
+  }
+}
+
+std::shared_ptr<RTCConnection> CreateRTCConnection(
+    RTCManager* manager,
+    RTCMessageSender* sender,
+    const webrtc::PeerConnectionInterface::IceServers& ice_servers,
+    const std::optional<std::string>& direction,
+    const std::string& video_codec_type,
+    const std::string& audio_codec_type) {
+  webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
+
+  rtc_config.servers = ice_servers;
+  std::shared_ptr<RTCConnection> connection =
+      manager->CreateConnection(rtc_config, sender);
+  if (!connection) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": failed to create RTC connection";
+    return nullptr;
+  }
+  manager->InitTracks(connection.get(), direction);
+
+  // PeerConnectionFactory::GetRtpSenderCapabilities() を使ってコーデック一覧を取得するために
+  // PeerConnectionFactory を取得する
+  auto factory = manager->GetFactory();
+  if (factory == nullptr) {
+    RTC_LOG(LS_ERROR) << "PeerConnectionFactory is null";
+    return nullptr;
+  }
+
+  // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
+  SetCodecPreferences(connection, video_codec_type, audio_codec_type, factory);
+
+  return connection;
+}
+
+}  // namespace
 
 void AyameClient::GetStats(
     std::function<void(
@@ -73,7 +262,6 @@ AyameClient::AyameClient(boost::asio::io_context& ioc,
                          AyameClientConfig config)
     : ioc_(ioc),
       manager_(manager),
-      retry_count_(0),
       config_(std::move(config)),
       watchdog_(ioc, std::bind(&AyameClient::OnWatchdogExpired, this)) {
   Reset();
@@ -91,19 +279,31 @@ void AyameClient::Reset() {
   has_is_exist_user_flag_ = false;
   ice_servers_.clear();
 
+  // WebSocket を作り直す前に明示的に破棄してから URL を検証する
+  ws_.reset();
+
   URLParts parts;
-  if (ParseURL(parts)) {
-    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure,
-                            config_.client_cert, config_.client_key));
+  bool use_tls;
+  if (!ParseURL(config_.signaling_url, parts, use_tls)) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": failed to prepare signaling url: "
+                      << config_.signaling_url;
+    throw std::runtime_error("Failed to parse signaling url: " +
+                             config_.signaling_url);
+  }
+
+  if (use_tls) {
+    ws_ = std::make_unique<Websocket>(Websocket::ssl_tag(), ioc_,
+                                      config_.insecure, config_.client_cert,
+                                      config_.client_key);
   } else {
-    ws_.reset(new Websocket(ioc_));
+    ws_ = std::make_unique<Websocket>(ioc_);
   }
 }
 
 void AyameClient::Connect() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
-  watchdog_.Enable(30);
+  watchdog_.Enable(kInitialWatchdogTimeoutSeconds);
 
   ws_->Connect(config_.signaling_url,
                std::bind(&AyameClient::OnConnect, shared_from_this(),
@@ -111,10 +311,13 @@ void AyameClient::Connect() {
 }
 
 void AyameClient::ReconnectAfter() {
-  int interval = 5 * (2 * retry_count_);
-  if (interval > 30) {
-    interval = 30;
-  }
+  // retry_count_ に応じて遅延時間を伸ばしつつ、上限とオーバーフローを避ける
+  const int64_t interval_raw =
+      static_cast<int64_t>(retry_count_) * kReconnectIntervalStepSeconds;
+  const int64_t clamped_interval =
+      std::min<int64_t>(interval_raw, kReconnectIntervalMaxSeconds);
+  const int interval = static_cast<int>(clamped_interval);
+
   RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
 
   watchdog_.Enable(interval);
@@ -169,157 +372,6 @@ void AyameClient::DoSendPong() {
   ws_->WriteText(boost::json::serialize(json_message));
 }
 
-void AyameClient::SetIceServersFromConfig(boost::json::value json_message) {
-  // 返却されてきた iceServers を セットする
-  if (json_message.as_object().count("iceServers") != 0) {
-    auto jservers = json_message.at("iceServers");
-    if (jservers.is_array()) {
-      for (auto jserver : jservers.as_array()) {
-        webrtc::PeerConnectionInterface::IceServer ice_server;
-        if (jserver.as_object().count("username") != 0) {
-          ice_server.username = jserver.at("username").as_string().c_str();
-        }
-        if (jserver.as_object().count("credential") != 0) {
-          ice_server.password = jserver.at("credential").as_string().c_str();
-        }
-        auto jurls = jserver.at("urls");
-        for (const auto url : jurls.as_array()) {
-          ice_server.urls.push_back(url.as_string().c_str());
-          RTC_LOG(LS_INFO) << __FUNCTION__
-                           << ": iceserver.url=" << url.as_string();
-        }
-        ice_servers_.push_back(ice_server);
-      }
-    }
-  }
-  if (ice_servers_.empty() && !config_.no_google_stun) {
-    // accept 時に iceServers が返却されてこなかった場合 google の stun server を用いる
-    webrtc::PeerConnectionInterface::IceServer ice_server;
-    ice_server.uri = "stun:stun.l.google.com:19302";
-    ice_servers_.push_back(ice_server);
-  }
-}
-
-void AyameClient::CreatePeerConnection() {
-  webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
-
-  rtc_config.servers = ice_servers_;
-  connection_ = manager_->CreateConnection(rtc_config, this);
-  manager_->InitTracks(connection_.get(), config_.direction);
-
-  // InitTracks で Transceiver が作成された後に SetCodecPreferences を呼ぶ
-  SetCodecPreferences();
-}
-
-void AyameClient::SetCodecPreferences() {
-  if (config_.video_codec_type.empty() && config_.audio_codec_type.empty()) {
-    return;
-  }
-
-  auto pc = connection_->GetConnection();
-  if (pc == nullptr) {
-    RTC_LOG(LS_ERROR) << "PeerConnection is null";
-    return;
-  }
-
-  // PeerConnectionFactory から GetRtpSenderCapabilities を使ってコーデック一覧を取得
-  auto factory = manager_->GetFactory();
-  if (factory == nullptr) {
-    RTC_LOG(LS_ERROR) << "PeerConnectionFactory is null";
-    return;
-  }
-
-  auto transceivers = pc->GetTransceivers();
-
-  // Transceiver が存在しない場合はエラーを出して何もしない
-  if (transceivers.empty()) {
-    RTC_LOG(LS_ERROR)
-        << "No transceivers found when trying to set codec preferences";
-    return;
-  }
-
-  for (auto transceiver : transceivers) {
-    // VIDEO でも AUDIO でもない Transceiver はスキップ
-    if (transceiver->media_type() != webrtc::MediaType::VIDEO &&
-        transceiver->media_type() != webrtc::MediaType::AUDIO) {
-      continue;
-    }
-
-    // 指定されたコーデックが空の場合はスキップ
-    if (transceiver->media_type() == webrtc::MediaType::VIDEO &&
-            config_.video_codec_type.empty() ||
-        transceiver->media_type() == webrtc::MediaType::AUDIO &&
-            config_.audio_codec_type.empty()) {
-      continue;
-    }
-
-    std::string target_codec =
-        transceiver->media_type() == webrtc::MediaType::VIDEO
-            ? config_.video_codec_type
-            : config_.audio_codec_type;
-
-    // PeerConnectionFactory から送信側と受信側の両方の capabilities を取得
-    webrtc::RtpCapabilities sender_capabilities =
-        factory->GetRtpSenderCapabilities(transceiver->media_type());
-    webrtc::RtpCapabilities receiver_capabilities =
-        factory->GetRtpReceiverCapabilities(transceiver->media_type());
-
-    // 送信側と受信側の両方でサポートされているコーデックを見つける
-    std::vector<webrtc::RtpCodecCapability> common_codecs;
-    for (const auto& sender_codec : sender_capabilities.codecs) {
-      for (const auto& receiver_codec : receiver_capabilities.codecs) {
-        // MIMEタイプが一致する場合に共通コーデックとみなす
-        if (sender_codec.mime_type() == receiver_codec.mime_type()) {
-          common_codecs.push_back(sender_codec);
-          break;
-        }
-      }
-    }
-
-    // 共通コーデックが空の場合はスキップ
-    if (common_codecs.empty()) {
-      RTC_LOG(LS_WARNING)
-          << "No common codec capabilities available for transceiver";
-      continue;
-    }
-
-    RTC_LOG(LS_INFO) << "Found " << common_codecs.size()
-                     << " common codecs for "
-                     << webrtc::MediaTypeToString(transceiver->media_type());
-
-    // コーデックのフィルタリング
-    std::vector<webrtc::RtpCodecCapability> filtered_codecs;
-    for (const auto& codec : common_codecs) {
-      // 指定されたコーデックまたは補助的なコーデックは残す
-      if (codec.name == target_codec ||
-          IsAuxiliaryCodec(codec.name, transceiver->media_type())) {
-        filtered_codecs.push_back(codec);
-      }
-    }
-
-    // 指定されたコーデックが見つからなかった場合はエラー
-    if (filtered_codecs.empty()) {
-      RTC_LOG(LS_ERROR) << "Specified codec '" << target_codec << "' for "
-                        << webrtc::MediaTypeToString(transceiver->media_type())
-                        << " is not available. Available codecs:";
-      for (const auto& codec : common_codecs) {
-        RTC_LOG(LS_ERROR) << "  - " << codec.name;
-      }
-      continue;
-    }
-
-    auto error = transceiver->SetCodecPreferences(filtered_codecs);
-    if (!error.ok()) {
-      RTC_LOG(LS_ERROR) << "Failed to set codec preferences: "
-                        << error.message();
-      continue;
-    }
-
-    RTC_LOG(LS_INFO) << "Successfully set codec preferences for "
-                     << webrtc::MediaTypeToString(transceiver->media_type());
-  }
-}
-
 void AyameClient::Close() {
   ws_->Close(std::bind(&AyameClient::OnClose, shared_from_this(),
                        std::placeholders::_1));
@@ -327,8 +379,9 @@ void AyameClient::Close() {
 
 // WebSocket が閉じられたときのコールバック
 void AyameClient::OnClose(boost::system::error_code ec) {
-  if (ec)
+  if (ec) {
     MOMO_BOOST_ERROR(ec, "Close");
+  }
   // retry_count_ は ReconnectAfter(); が以前に呼ばれている場合はインクリメントされている可能性がある。
   // WebSocket につないでいない時間をなるべく短くしたいので、
   // WebSocket を閉じたときは一度インクリメントされている可能性のある retry_count_ を0 にして
@@ -341,11 +394,9 @@ void AyameClient::OnClose(boost::system::error_code ec) {
 }
 
 void AyameClient::OnRead(boost::system::error_code ec,
-                         std::size_t bytes_transferred,
+                         [[maybe_unused]] std::size_t bytes_transferred,
                          std::string text) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
-
-  boost::ignore_unused(bytes_transferred);
 
   // 書き込みのために読み込み処理がキャンセルされた時にこのエラーになるので、これはエラーとして扱わない
   if (ec == boost::asio::error::operation_aborted)
@@ -359,19 +410,29 @@ void AyameClient::OnRead(boost::system::error_code ec,
     return;
   }
 
-  if (ec)
+  if (ec) {
     return MOMO_BOOST_ERROR(ec, "Read");
+  }
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
   if (type == "accept") {
-    SetIceServersFromConfig(json_message);
-    CreatePeerConnection();
+    ice_servers_ =
+        CreateIceServersFromConfig(json_message, config_.no_google_stun);
+    connection_ =
+        CreateRTCConnection(manager_, this, ice_servers_, config_.direction,
+                            config_.video_codec_type, config_.audio_codec_type);
+    if (!connection_) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << ": peer connection setup failed at accept";
+      Close();
+      return;
+    }
     // isExistUser フラグが存在するか確認する
     auto is_exist_user = false;
-    if (json_message.as_object().count("isExistUser") != 0) {
+    if (json_message.as_object().contains("isExistUser")) {
       has_is_exist_user_flag_ = true;
       is_exist_user = json_message.at("isExistUser").as_bool();
     }
@@ -394,25 +455,41 @@ void AyameClient::OnRead(boost::system::error_code ec,
       connection_->CreateOffer(on_create_offer);
     }
   } else if (type == "offer") {
-    // isExistUser フラグがなかった場合二回 peer connection を生成する
+    // isExistUser フラグがなかった場合もう一度 peer connection を生成する
     if (!has_is_exist_user_flag_) {
-      CreatePeerConnection();
+      connection_ = CreateRTCConnection(
+          manager_, this, ice_servers_, config_.direction,
+          config_.video_codec_type, config_.audio_codec_type);
+    }
+    if (!connection_) {
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << ": peer connection is not ready for offer";
+      Close();
+      return;
     }
     const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [this]() {
-      boost::asio::post(ioc_, [this, self = shared_from_this()]() {
-        if (!is_send_offer_ || !has_is_exist_user_flag_) {
-          connection_->CreateAnswer(
-              [this](webrtc::SessionDescriptionInterface* desc) {
+    auto self = shared_from_this();
+    connection_->SetOffer(sdp, [self]() {
+      boost::asio::post(self->ioc_, [self]() {
+        // Answer を作成する条件:
+        // 1. 自分から Offer を送信していない場合 (!is_send_offer_)
+        // 2. isExistUser フラグがなかった場合 (!has_is_exist_user_flag_)
+        // isExistUser フラグがある場合は既存ユーザーがいることを示すため、
+        // 2回目の Offer を受信した時にのみ Answer を作成する
+        const bool should_create_answer =
+            !self->is_send_offer_ || !self->has_is_exist_user_flag_;
+        if (should_create_answer) {
+          self->connection_->CreateAnswer(
+              [self](webrtc::SessionDescriptionInterface* desc) {
                 std::string sdp;
                 desc->ToString(&sdp);
-                manager_->SetParameters();
+                self->manager_->SetParameters();
                 boost::json::value json_message = {{"type", "answer"},
                                                    {"sdp", sdp}};
-                ws_->WriteText(boost::json::serialize(json_message));
+                self->ws_->WriteText(boost::json::serialize(json_message));
               });
         }
-        is_send_offer_ = false;
+        self->is_send_offer_ = false;
       });
     });
   } else if (type == "answer") {
@@ -470,7 +547,7 @@ void AyameClient::DoIceConnectionStateChange(
     case webrtc::PeerConnectionInterface::IceConnectionState::
         kIceConnectionConnected:
       retry_count_ = 0;
-      watchdog_.Enable(60);
+      watchdog_.Enable(kConnectedWatchdogTimeoutSeconds);
       break;
     // ice connection state が failed になったら Close(); を呼んで、WebSocket 接続を閉じる
     case webrtc::PeerConnectionInterface::IceConnectionState::
