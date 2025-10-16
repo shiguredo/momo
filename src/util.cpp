@@ -93,7 +93,7 @@ void Util::ParseArgs(int argc,
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag("--list-devices", args.list_devices,
-               "List available video devices and exit");
+               "List available audio and video devices and exit");
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   app.add_flag("--fake-capture-device", args.fake_capture_device,
                "Use fake video capture device instead of real camera");
