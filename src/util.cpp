@@ -88,8 +88,8 @@ void Util::ParseArgs(int argc,
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
-  app.add_flag("--no-video-device", args.no_video_device,
-               "Do not use video device");
+  app.add_flag("--no-video-input-device", args.no_video_device,
+               "Do not use video input device");
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag("--list-devices", args.list_devices,
@@ -121,11 +121,11 @@ void Util::ParseArgs(int argc,
       ->allow_extra_args();
 
 #if defined(__APPLE__) || defined(_WIN32)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");
 #elif defined(__linux__)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)");
 #endif
