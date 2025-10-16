@@ -13,46 +13,17 @@ permissions:
   actions: read
 
 env:
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
+  CLAUDE_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
+  CLAUDE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
 
 jobs:
-  claude-opus-response-voluntas:
-    if: github.event.comment.user.login == 'voluntas'
+  claude-response:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: anthropics/claude-code-action@v1
+      - uses: shiguredo/github-actions/.github/actions/claude-code-action@main
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trigger_phrase: "!opus"
-          claude_args: |
-            --model claude-opus-4-1-20250805
-
-  check-permission:
-    if: github.event.comment.user.login != 'voluntas'
-    runs-on: ubuntu-24.04
-    outputs:
-      has_permission: ${{ steps.check.outputs.has-permission }}
-    steps:
-      - uses: actions/checkout@v5
-      - id: check
-        uses: shiguredo/github-actions/.github/actions/check-write-permission@main
-        with:
-          username: ${{ github.event.comment.user.login }}
-
-  claude-sonnet-response-others:
-    needs: check-permission
-    if: needs.check-permission.outputs.has_permission == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v5
-      - uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ env.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          trigger_phrase: "!sonnet"
-          claude_args: |
-            --model claude-sonnet-4-5-20250929
+          api_key: ${{ env.CLAUDE_API_KEY }}
+          oauth_user: voluntas
+          oauth_token: ${{ env.CLAUDE_OAUTH_TOKEN }}
