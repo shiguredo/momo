@@ -48,6 +48,7 @@
   - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
   - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
     - これによってこの関数が何の値に依存しているのか分かりやすくなる
+  - `iceServers` はオプションなので項目がなければ無視するようにする
   - @voluntas
 
 ### misc
