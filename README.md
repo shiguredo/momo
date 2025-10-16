@@ -98,6 +98,12 @@ Momo は Sora モード利用時にクライアント証明書に対応してい
 
 Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードを行うことができます。
 
+### 音声デバイス指定
+
+Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定することができます。
+
+Linux については [doc/LINUX_AUDIO_DEVICES.md](doc/LINUX_AUDIO_DEVICES.md) をご確認ください。
+
 ## 動画
 
 [WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
