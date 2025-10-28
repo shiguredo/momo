@@ -32,6 +32,12 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [UPDATE] CMake のバージョンを 4.1.2 に上げる
+  - @torikizi
+- [UPDATE] SDL3 のバージョンを 3.2.24 に上げる
+  - @torikizi
+- [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
+  - @torikizi
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 - [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
