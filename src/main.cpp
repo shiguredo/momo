@@ -88,13 +88,10 @@ static void ListVideoDevices() {
 
 static void ListDevices() {
   // オーディオデバイス一覧
-  auto audio_input_devices = GetAudioDeviceInfos(
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio, true);
-  auto audio_output_devices = GetAudioDeviceInfos(
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio, false);
+  auto print_audio_devices = [&](bool is_input) {
+    auto infos = GetAudioDeviceInfos(
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio, is_input);
 
-  auto print_audio_devices = [&](const std::vector<AudioDeviceInfo>& infos,
-                                 bool is_input) {
     const char* title = is_input ? "=== Available audio input devices ==="
                                  : "=== Available audio output devices ===";
     std::cout << title << std::endl;
@@ -115,13 +112,16 @@ static void ListDevices() {
     std::cout << std::endl;
   };
 
-  print_audio_devices(audio_input_devices, true);
-  print_audio_devices(audio_output_devices, false);
+  print_audio_devices(true);
+  print_audio_devices(false);
 
   // ビデオデバイス一覧
   std::cout << "=== Available video devices ===" << std::endl;
   std::cout << std::endl;
   auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
+  for (const auto& info : video_device_infos) {
+    std::cout << "  [" << info.index << "] " << info.name << std::endl;
+  }
   std::cout << std::endl;
 }
 
