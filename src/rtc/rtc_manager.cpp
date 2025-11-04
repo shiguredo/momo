@@ -65,9 +65,10 @@ bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
     if (*resolved_index >= infos.size()) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
                           << ": Device index out of range. index="
-                          << resolved_index << " available=" << infos.size();
+                          << *resolved_index << " available=" << infos.size();
       return false;
     }
+    return true;
   } else {
     for (const auto& info : infos) {
       if (MatchDeviceIdentifier(device_spec, info.name.c_str(),
@@ -76,8 +77,8 @@ bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
         return true;
       }
     }
+    return false;
   }
-  return true;
 }
 
 // デバイス名/インデックスからデバイスを設定する
