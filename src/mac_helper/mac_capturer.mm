@@ -10,8 +10,6 @@
 
 #include "mac_capturer.h"
 
-#include <iostream>
-
 // WebRTC
 #include <rtc_base/logging.h>
 
@@ -119,13 +117,18 @@ webrtc::scoped_refptr<MacCapturer> MacCapturer::Create(
                                                device);
 }
 
-void MacCapturer::ListDevices() {
+std::vector<VideoDeviceInfo> MacCapturer::GetVideoDeviceInfos() {
   NSArray<AVCaptureDevice*>* devices = captureDevices();
+  std::vector<VideoDeviceInfo> infos;
+  auto* infos_ptr = &infos;
   [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
                                         BOOL* stop) {
-    std::cout << "  [" << i << "] " << [device.localizedName UTF8String]
-              << std::endl;
+    VideoDeviceInfo info;
+    info.index = static_cast<int>(i);
+    info.name = [device.localizedName UTF8String];
+    infos_ptr->push_back(info);
   }];
+  return infos;
 }
 
 AVCaptureDevice* MacCapturer::FindVideoDevice(

@@ -10,12 +10,10 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
-#if defined(__APPLE__)
 #include <api/audio/create_audio_device_module.h>
 #include <api/environment/environment_factory.h>
-#include <modules/audio_device/include/audio_device.h>
-#endif
 #include <api/make_ref_counted.h>
+#include <modules/audio_device/include/audio_device.h>
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
@@ -50,6 +48,7 @@
 #include "sdl_renderer/sdl_renderer.h"
 
 #include "ayame/ayame_client.h"
+#include "device_info.h"
 #include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
@@ -89,58 +88,40 @@ static void ListVideoDevices() {
 
 static void ListDevices() {
   // オーディオデバイス一覧
-  auto adm = webrtc::CreateAudioDeviceModule(
-      webrtc::CreateEnvironment(),
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio);
-  if (!adm) {
-    std::cerr << "Failed to create AudioDeviceModule" << std::endl;
-    return;
-  }
+  auto audio_input_devices = GetAudioDeviceInfos(
+      webrtc::AudioDeviceModule::kPlatformDefaultAudio, true);
+  auto audio_output_devices = GetAudioDeviceInfos(
+      webrtc::AudioDeviceModule::kPlatformDefaultAudio, false);
 
-  if (adm->Init() != 0) {
-    std::cerr << "AudioDeviceModule::Init failed" << std::endl;
-    return;
-  }
-
-  auto print_audio_devices = [&](bool is_input) {
-    const char* title =
-        is_input ? "=== Available audio input devices ==="
-                 : "=== Available audio output devices ===";
+  auto print_audio_devices = [&](const std::vector<AudioDeviceInfo>& infos,
+                                 bool is_input) {
+    const char* title = is_input ? "=== Available audio input devices ==="
+                                 : "=== Available audio output devices ===";
     std::cout << title << std::endl;
     std::cout << std::endl;
 
-    int16_t device_count =
-        is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
-    if (device_count <= 0) {
+    if (infos.empty()) {
       std::cout << "  (none)" << std::endl << std::endl;
       return;
     }
 
-    for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
-      char name[webrtc::kAdmMaxDeviceNameSize] = {0};
-      char guid[webrtc::kAdmMaxGuidSize] = {0};
-      int32_t result = is_input ? adm->RecordingDeviceName(i, name, guid)
-                                : adm->PlayoutDeviceName(i, name, guid);
-      if (result != 0) {
-        std::cout << "  [" << i << "] <failed to read device name>" << std::endl;
-        continue;
-      }
-      std::cout << "  [" << i << "] " << name;
-      if (guid[0] != '\0') {
-        std::cout << " (" << guid << ")";
+    for (const auto& info : infos) {
+      std::cout << "  [" << info.index << "] " << info.name;
+      if (!info.guid.empty()) {
+        std::cout << " (" << info.guid << ")";
       }
       std::cout << std::endl;
     }
     std::cout << std::endl;
   };
 
-  print_audio_devices(true);
-  print_audio_devices(false);
+  print_audio_devices(audio_input_devices, true);
+  print_audio_devices(audio_output_devices, false);
 
   // ビデオデバイス一覧
   std::cout << "=== Available video devices ===" << std::endl;
   std::cout << std::endl;
-  MacCapturer::ListDevices();
+  auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
   std::cout << std::endl;
 }
 

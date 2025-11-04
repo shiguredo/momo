@@ -10,15 +10,13 @@
 
 // WebRTC
 #include <absl/memory/memory.h>
+#include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
 #include <api/audio/builtin_audio_processing_builder.h>
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
-
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-#include "rtc/fake_audio_capturer.h"
-#endif
 #include <api/enable_media.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
@@ -34,6 +32,7 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
+#include "device_info.h"
 #include "momo_video_decoder_factory.h"
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
@@ -42,168 +41,62 @@
 #include "url_parts.h"
 #include "util.h"
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#endif
+
 #if defined(__APPLE__)
 namespace {
-bool IsNumber(const std::string& value) {
-  if (value.empty()) {
-    return false;
-  }
-  return std::all_of(value.begin(), value.end(),
-                     [](unsigned char ch) { return std::isdigit(ch) != 0; });
-}
-
-// 大文字小文字を区別しない完全一致判定
-bool CaseInsensitiveEqual(const std::string& lhs, const std::string& rhs) {
-  if (lhs.size() != rhs.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    if (std::tolower(static_cast<unsigned char>(lhs[i])) !=
-        std::tolower(static_cast<unsigned char>(rhs[i]))) {
-      return false;
-    }
-  }
-  return true;
-}
 
 // デバイス識別子の完全一致判定（大文字小文字を区別しない）
 bool MatchDeviceIdentifier(const std::string& target,
                            const char* name,
                            const char* guid) {
-  if (target == name || target == guid) {
-    return true;
-  }
-  return CaseInsensitiveEqual(target, name) ||
-         CaseInsensitiveEqual(target, guid);
+  return absl::EqualsIgnoreCase(target, name) ||
+         absl::EqualsIgnoreCase(target, guid);
 }
 
-// デバイス一覧取得用の一時的な ADM を作成し、デバイス名からインデックスを解決する
-bool ResolveAudioDeviceIndex(const std::string& device_spec,
-                             bool is_input,
-                             uint16_t& index_out) {
-  // デバイス一覧を取得するために一時的な ADM を作成
-  auto temp_adm = webrtc::CreateAudioDeviceModule(
-      webrtc::CreateEnvironment(),
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio);
-  if (!temp_adm) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Failed to create temporary ADM for device enumeration";
-    return false;
-  }
-
-  if (temp_adm->Init() != 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Failed to initialize temporary ADM";
-    return false;
-  }
-
-  int16_t device_count =
-      is_input ? temp_adm->RecordingDevices() : temp_adm->PlayoutDevices();
-  if (device_count <= 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": No audio devices available for enumeration";
-    temp_adm->Terminate();
-    return false;
-  }
-
-  std::vector<std::string> available_devices;
-  bool found = false;
-  for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
-    char name[webrtc::kAdmMaxDeviceNameSize] = {0};
-    char guid[webrtc::kAdmMaxGuidSize] = {0};
-    int32_t result = is_input ? temp_adm->RecordingDeviceName(i, name, guid)
-                              : temp_adm->PlayoutDeviceName(i, name, guid);
-    if (result != 0) {
-      continue;
-    }
-
-    std::string entry(name);
-    if (guid[0] != '\0') {
-      entry.append(" (");
-      entry.append(guid);
-      entry.push_back(')');
-    }
-    available_devices.emplace_back(entry);
-
-    if (MatchDeviceIdentifier(device_spec, name, guid)) {
-      index_out = i;
-      found = true;
-    }
-  }
-
-  temp_adm->Terminate();
-
-  if (!found) {
-    std::string available_str;
-    for (size_t i = 0; i < available_devices.size(); ++i) {
-      if (i > 0) {
-        available_str.append(", ");
-      }
-      available_str.append(available_devices[i]);
-    }
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Device not found. requested=" << device_spec
-                        << " available=[" << available_str << "]";
-    return false;
-  }
-
-  return true;
-}
-
-// デバイス名/インデックスからインデックスを解決（Init済みADM用）
-bool ResolveDeviceIndex(webrtc::AudioDeviceModule* adm,
-                       const std::string& device_spec,
-                       bool is_input,
-                       uint16_t& resolved_index) {
-  if (IsNumber(device_spec)) {
-    try {
-      unsigned long parsed = std::stoul(device_spec);
-      if (parsed > std::numeric_limits<uint16_t>::max()) {
-        RTC_LOG(LS_WARNING) << __FUNCTION__
-                            << ": Device index overflow: " << device_spec;
-        return false;
-      }
-      resolved_index = static_cast<uint16_t>(parsed);
-
-      // 範囲チェック
-      int16_t device_count =
-          is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
-      if (device_count <= 0 || resolved_index >= static_cast<uint16_t>(device_count)) {
-        RTC_LOG(LS_WARNING) << __FUNCTION__
-                            << ": Device index out of range. index="
-                            << resolved_index << " available=" << device_count;
-        return false;
-      }
-    } catch (const std::exception&) {
+// デバイス名/インデックスからインデックスを解決
+bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
+                        const std::string& device_spec,
+                        bool is_input,
+                        uint16_t* resolved_index) {
+  if (absl::SimpleAtoi(device_spec, resolved_index)) {
+    if (*resolved_index >= infos.size()) {
       RTC_LOG(LS_WARNING) << __FUNCTION__
-                          << ": Invalid device index: " << device_spec;
+                          << ": Device index out of range. index="
+                          << resolved_index << " available=" << infos.size();
       return false;
     }
   } else {
-    // デバイス名が指定された場合、一時的な ADM でインデックスを解決
-    if (!ResolveAudioDeviceIndex(device_spec, is_input, resolved_index)) {
-      return false;
+    for (const auto& info : infos) {
+      if (MatchDeviceIdentifier(device_spec, info.name.c_str(),
+                                info.guid.c_str())) {
+        *resolved_index = info.index;
+        return true;
+      }
     }
   }
   return true;
 }
 
-// PeerConnectionFactory 作成後に、デバイスを再設定する
-// WebRtcVoiceEngine::Init() がデフォルトデバイスに戻してしまうため
-bool ReapplyAudioDevice(webrtc::AudioDeviceModule* adm,
-                       const std::string& device_spec,
-                       bool is_input) {
+// デバイス名/インデックスからデバイスを設定する
+bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                    const std::string& device_spec,
+                    bool is_input) {
   if (device_spec.empty()) {
     return true;
   }
 
+  auto infos = GetAudioDeviceInfos(adm, is_input);
+
   uint16_t resolved_index = 0;
-  if (!ResolveDeviceIndex(adm, device_spec, is_input, resolved_index)) {
+  if (!ResolveDeviceIndex(infos, device_spec, is_input, &resolved_index)) {
     return false;
   }
 
   RTC_LOG(LS_INFO) << __FUNCTION__
-                   << ": Reapplying device index=" << resolved_index
+                   << ": Applying device index=" << resolved_index
                    << " is_input=" << is_input;
 
   // デバイスを設定
@@ -217,21 +110,11 @@ bool ReapplyAudioDevice(webrtc::AudioDeviceModule* adm,
     return false;
   }
 
-  // デバイスを再初期化
-  int32_t init_result = is_input ? adm->InitMicrophone() : adm->InitSpeaker();
-  if (init_result != 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << ": Failed to reinitialize device. index="
-                        << resolved_index << " is_input=" << is_input;
-    return false;
-  }
-
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << ": Successfully reapplied audio device. index="
-                   << resolved_index << " is_input=" << is_input;
   return true;
 }
+
 }  // namespace
+
 #endif
 
 RTCManager::RTCManager(
@@ -275,29 +158,21 @@ RTCManager::RTCManager(
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
 
-  // ADM への参照を保持（PeerConnectionFactory 作成後に再設定するため）
-  webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm_for_device_selection;
-
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
         // create_adm が設定されている場合は、それを使って ADM を作成する
         webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
         if (config_.create_adm) {
-          adm = config_.create_adm();
+          return config_.create_adm();
         } else {
 #if defined(_WIN32)
-          adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
               &env.task_queue_factory());
 #else
-          adm = webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
-                                                audio_layer);
+          return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
+                                                 audio_layer);
 #endif
         }
-        // ADM への参照を保存（PeerConnectionFactory 作成後に再設定するため）
-        // macOS では WebRtcVoiceEngine::Init() でデバイスがデフォルトに戻されるため、
-        // ここではデバイス設定を行わず、PeerConnectionFactory 作成後に設定する
-        adm_for_device_selection = adm;
-        return adm;
       });
   dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
@@ -344,6 +219,9 @@ RTCManager::RTCManager(
 
   webrtc::EnableMedia(dependencies);
 
+  // あとでデバイス選択に使うため保存しておく
+  auto adm = dependencies.adm;
+
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   using result_type =
@@ -376,31 +254,23 @@ RTCManager::RTCManager(
   factory_->SetOptions(factory_options);
 
 #if defined(__APPLE__)
-  // PeerConnectionFactory の初期化後、デバイスを再設定
-  // WebRtcVoiceEngine::Init() がデフォルトデバイスに戻してしまうため
-  if (adm_for_device_selection) {
-    bool requested_input = !config_.audio_input_device.empty();
-    bool requested_output = !config_.audio_output_device.empty();
-    if (requested_input || requested_output) {
-      worker_thread_->BlockingCall([&]() {
-        if (requested_input) {
-          if (!ReapplyAudioDevice(adm_for_device_selection.get(),
-                                 config_.audio_input_device, true)) {
-            RTC_LOG(LS_WARNING)
-                << __FUNCTION__
-                << ": Failed to reapply audio input device. Using default.";
-          }
+  if (adm) {
+    worker_thread_->BlockingCall([&]() {
+      if (!config_.audio_input_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_input_device, true)) {
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__
+              << ": Failed to reapply audio input device. Using default.";
         }
-        if (requested_output) {
-          if (!ReapplyAudioDevice(adm_for_device_selection.get(),
-                                 config_.audio_output_device, false)) {
-            RTC_LOG(LS_WARNING)
-                << __FUNCTION__
-                << ": Failed to reapply audio output device. Using default.";
-          }
+      }
+      if (!config_.audio_output_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_output_device, false)) {
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__
+              << ": Failed to reapply audio output device. Using default.";
         }
-      });
-    }
+      }
+    });
   }
 #endif
 

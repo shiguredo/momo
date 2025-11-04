@@ -111,6 +111,7 @@ target_include_directories(momo PRIVATE ${OPENH264_ROOT_DIR}/include)
 target_sources(momo
   PRIVATE
     src/ayame/ayame_client.cpp
+    src/device_info.cpp
     src/main.cpp
     src/metrics/metrics_server.cpp
     src/metrics/metrics_session.cpp
