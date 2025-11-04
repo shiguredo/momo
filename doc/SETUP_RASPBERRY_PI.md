@@ -79,7 +79,7 @@ USB カメラでは逆にフレームレートが落ちるため使わないで�
 ./momo --force-i420 --no-audio-device p2p
 ```
 
-## Raspberry Pi 専用カメラでが利用できない
+## Raspberry Pi 専用カメラが利用できない
 
 Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラ（CSI 接続のカメラ）が利用できるようになりました。
 
