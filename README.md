@@ -102,7 +102,7 @@ Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/
 
 Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定することができます。
 
-Linux については [doc/LINUX_AUDIO_DEVICES.md](doc/LINUX_AUDIO_DEVICES.md) をご確認ください。
+Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
 
 ## 動画
 
