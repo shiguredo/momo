@@ -68,20 +68,22 @@ webrtc::PeerConnectionInterface::IceServers CreateIceServersFromConfig(
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
   // 返却されてきた iceServers を セットする
-  for (const auto& j_ice_server_value :
-       json_message.at("iceServers").as_array()) {
-    const auto& j_ice_server = j_ice_server_value.as_object();
-    webrtc::PeerConnectionInterface::IceServer ice_server;
-    if (j_ice_server.contains("username")) {
-      ice_server.username = j_ice_server.at("username").as_string().c_str();
+  if (json_message.as_object().contains("iceServers")) {
+    for (const auto& j_ice_server_value :
+         json_message.at("iceServers").as_array()) {
+      const auto& j_ice_server = j_ice_server_value.as_object();
+      webrtc::PeerConnectionInterface::IceServer ice_server;
+      if (j_ice_server.contains("username")) {
+        ice_server.username = j_ice_server.at("username").as_string().c_str();
+      }
+      if (j_ice_server.contains("credential")) {
+        ice_server.password = j_ice_server.at("credential").as_string().c_str();
+      }
+      for (const auto& j_url_value : j_ice_server.at("urls").as_array()) {
+        ice_server.urls.push_back(j_url_value.as_string().c_str());
+      }
+      ice_servers.push_back(ice_server);
     }
-    if (j_ice_server.contains("credential")) {
-      ice_server.password = j_ice_server.at("credential").as_string().c_str();
-    }
-    for (const auto& j_url_value : j_ice_server.at("urls").as_array()) {
-      ice_server.urls.push_back(j_url_value.as_string().c_str());
-    }
-    ice_servers.push_back(ice_server);
   }
 
   if (ice_servers.empty() && !no_google_stun) {
