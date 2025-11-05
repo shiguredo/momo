@@ -96,6 +96,11 @@ struct RTCManagerConfig {
   std::string proxy_password;
 
   std::function<webrtc::scoped_refptr<webrtc::AudioDeviceModule>()> create_adm;
+
+#if defined(__APPLE__)
+  std::string audio_input_device;
+  std::string audio_output_device;
+#endif
 };
 
 class RTCManager {

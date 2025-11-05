@@ -1,18 +1,22 @@
 #include "rtc_manager.h"
 
+#include <algorithm>
+#include <cctype>
+#include <exception>
 #include <iostream>
+#include <limits>
+#include <string>
+#include <vector>
 
 // WebRTC
 #include <absl/memory/memory.h>
+#include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
 #include <api/audio/builtin_audio_processing_builder.h>
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
-
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-#include "rtc/fake_audio_capturer.h"
-#endif
 #include <api/enable_media.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
@@ -28,6 +32,7 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
+#include "device_info.h"
 #include "momo_video_decoder_factory.h"
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
@@ -35,6 +40,83 @@
 #include "sora/scalable_track_source.h"
 #include "url_parts.h"
 #include "util.h"
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#endif
+
+#if defined(__APPLE__)
+namespace {
+
+// デバイス識別子の完全一致判定（大文字小文字を区別しない）
+bool MatchDeviceIdentifier(const std::string& target,
+                           const char* name,
+                           const char* guid) {
+  return absl::EqualsIgnoreCase(target, name) ||
+         absl::EqualsIgnoreCase(target, guid);
+}
+
+// デバイス名/インデックスからインデックスを解決
+bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
+                        const std::string& device_spec,
+                        bool is_input,
+                        uint16_t* resolved_index) {
+  if (absl::SimpleAtoi(device_spec, resolved_index)) {
+    if (*resolved_index >= infos.size()) {
+      RTC_LOG(LS_WARNING) << __FUNCTION__
+                          << ": Device index out of range. index="
+                          << *resolved_index << " available=" << infos.size();
+      return false;
+    }
+    return true;
+  } else {
+    for (const auto& info : infos) {
+      if (MatchDeviceIdentifier(device_spec, info.name.c_str(),
+                                info.guid.c_str())) {
+        *resolved_index = info.index;
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+// デバイス名/インデックスからデバイスを設定する
+bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                    const std::string& device_spec,
+                    bool is_input) {
+  if (device_spec.empty()) {
+    return true;
+  }
+
+  auto infos = GetAudioDeviceInfos(adm, is_input);
+
+  uint16_t resolved_index = 0;
+  if (!ResolveDeviceIndex(infos, device_spec, is_input, &resolved_index)) {
+    return false;
+  }
+
+  RTC_LOG(LS_INFO) << __FUNCTION__
+                   << ": Applying device index=" << resolved_index
+                   << " is_input=" << is_input;
+
+  // デバイスを設定
+  int32_t set_result = is_input ? adm->SetRecordingDevice(resolved_index)
+                                : adm->SetPlayoutDevice(resolved_index);
+  if (set_result != 0) {
+    RTC_LOG(LS_WARNING) << __FUNCTION__
+                        << ": Failed to set audio device. index="
+                        << resolved_index << " is_input=" << is_input
+                        << " result=" << set_result;
+    return false;
+  }
+
+  return true;
+}
+
+}  // namespace
+
+#endif
 
 RTCManager::RTCManager(
     RTCManagerConfig config,
@@ -80,6 +162,7 @@ RTCManager::RTCManager(
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
         // create_adm が設定されている場合は、それを使って ADM を作成する
+        webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
         if (config_.create_adm) {
           return config_.create_adm();
         } else {
@@ -137,6 +220,9 @@ RTCManager::RTCManager(
 
   webrtc::EnableMedia(dependencies);
 
+  // あとでデバイス選択に使うため保存しておく
+  auto adm = dependencies.adm;
+
   //factory_ =
   //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   using result_type =
@@ -167,6 +253,27 @@ RTCManager::RTCManager(
   factory_options.ssl_max_version = webrtc::SSL_PROTOCOL_DTLS_12;
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
+
+#if defined(__APPLE__)
+  if (adm) {
+    worker_thread_->BlockingCall([&]() {
+      if (!config_.audio_input_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_input_device, true)) {
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__
+              << ": Failed to reapply audio input device. Using default.";
+        }
+      }
+      if (!config_.audio_output_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_output_device, false)) {
+          RTC_LOG(LS_WARNING)
+              << __FUNCTION__
+              << ": Failed to reapply audio output device. Using default.";
+        }
+      }
+    });
+  }
+#endif
 
   if (!config_.no_audio_device) {
     webrtc::AudioOptions ao;

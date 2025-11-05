@@ -117,6 +117,20 @@ webrtc::scoped_refptr<MacCapturer> MacCapturer::Create(
                                                device);
 }
 
+std::vector<VideoDeviceInfo> MacCapturer::GetVideoDeviceInfos() {
+  NSArray<AVCaptureDevice*>* devices = captureDevices();
+  std::vector<VideoDeviceInfo> infos;
+  auto* infos_ptr = &infos;
+  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
+                                        BOOL* stop) {
+    VideoDeviceInfo info;
+    info.index = static_cast<int>(i);
+    info.name = [device.localizedName UTF8String];
+    infos_ptr->push_back(info);
+  }];
+  return infos;
+}
+
 AVCaptureDevice* MacCapturer::FindVideoDevice(
     const std::string& specifiedVideoDevice) {
   // Device の決定ロジックは ffmpeg の avfoundation と同じ仕様にする

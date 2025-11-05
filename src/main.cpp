@@ -10,7 +10,10 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
+#include <api/audio/create_audio_device_module.h>
+#include <api/environment/environment_factory.h>
 #include <api/make_ref_counted.h>
+#include <modules/audio_device/include/audio_device.h>
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
@@ -45,6 +48,7 @@
 #include "sdl_renderer/sdl_renderer.h"
 
 #include "ayame/ayame_client.h"
+#include "device_info.h"
 #include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
@@ -80,6 +84,47 @@ static void ListVideoDevices() {
   std::cout << sora::FormatV4L2Devices(*devices);
 }
 
+#elif defined(__APPLE__)
+
+static void ListDevices() {
+  // オーディオデバイス一覧
+  auto print_audio_devices = [&](bool is_input) {
+    auto infos = GetAudioDeviceInfos(
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio, is_input);
+
+    const char* title = is_input ? "=== Available audio input devices ==="
+                                 : "=== Available audio output devices ===";
+    std::cout << title << std::endl;
+    std::cout << std::endl;
+
+    if (infos.empty()) {
+      std::cout << "  (none)" << std::endl << std::endl;
+      return;
+    }
+
+    for (const auto& info : infos) {
+      std::cout << "  [" << info.index << "] " << info.name;
+      if (!info.guid.empty()) {
+        std::cout << " (" << info.guid << ")";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  };
+
+  print_audio_devices(true);
+  print_audio_devices(false);
+
+  // ビデオデバイス一覧
+  std::cout << "=== Available video devices ===" << std::endl;
+  std::cout << std::endl;
+  auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
+  for (const auto& info : video_device_infos) {
+    std::cout << "  [" << info.index << "] " << info.name << std::endl;
+  }
+  std::cout << std::endl;
+}
+
 #endif
 
 int main(int argc, char* argv[]) {
@@ -107,9 +152,15 @@ int main(int argc, char* argv[]) {
     ListVideoDevices();
     return 0;
   }
+#elif defined(__APPLE__)
+  if (args.list_devices) {
+    ListDevices();
+    return 0;
+  }
 #else
   if (args.list_devices) {
-    std::cerr << "--list-devices is only supported on Linux" << std::endl;
+    std::cerr << "--list-devices is not supported on this platform"
+              << std::endl;
     return 1;
   }
 #endif
@@ -235,6 +286,10 @@ int main(int argc, char* argv[]) {
 
   rtcm_config.no_video_device = args.no_video_device;
   rtcm_config.no_audio_device = args.no_audio_device;
+#if defined(__APPLE__)
+  rtcm_config.audio_input_device = args.audio_input_device;
+  rtcm_config.audio_output_device = args.audio_output_device;
+#endif
 
   rtcm_config.fixed_resolution = args.fixed_resolution;
   rtcm_config.simulcast = args.sora_simulcast;
