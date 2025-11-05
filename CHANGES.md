@@ -57,9 +57,7 @@
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
 - [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
-  - ALSA 専用のデバイス選択コードを削除
-  - Ubuntu ビルドで `-DUSE_LINUX_PULSE_AUDIO=ON` を有効化
-  - AudioLayer を明示的に `kLinuxPulseAudio` に指定
+  - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
   - @voluntas @melpon
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon

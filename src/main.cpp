@@ -70,79 +70,18 @@
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
-#if defined(__linux__)
-
-static void ListDevices() {
-  // オーディオデバイス一覧
-  auto adm = webrtc::CreateAudioDeviceModule(
-      webrtc::CreateEnvironment(), webrtc::AudioDeviceModule::kLinuxPulseAudio);
-  if (!adm) {
-    std::cerr << "Warning: Failed to create AudioDeviceModule" << std::endl;
-  } else {
-    int32_t init_result = adm->Init();
-    if (init_result != 0) {
-      std::cerr << "Warning: AudioDeviceModule::Init failed (error code: "
-                << init_result
-                << "). Audio device enumeration is not available." << std::endl;
-      std::cerr << "Note: This may occur if PulseAudio is not running."
-                << std::endl;
-    } else {
-      auto print_audio_devices = [&](bool is_input) {
-        const char* title = is_input ? "=== Available audio input devices ==="
-                                     : "=== Available audio output devices ===";
-        std::cout << title << std::endl;
-        std::cout << std::endl;
-
-        int16_t device_count =
-            is_input ? adm->RecordingDevices() : adm->PlayoutDevices();
-        if (device_count <= 0) {
-          std::cout << "  (none)" << std::endl << std::endl;
-          return;
-        }
-
-        for (uint16_t i = 0; i < static_cast<uint16_t>(device_count); ++i) {
-          char name[webrtc::kAdmMaxDeviceNameSize] = {0};
-          char guid[webrtc::kAdmMaxGuidSize] = {0};
-          int32_t result = is_input ? adm->RecordingDeviceName(i, name, guid)
-                                    : adm->PlayoutDeviceName(i, name, guid);
-          if (result != 0) {
-            std::cout << "  [" << i << "] <failed to read device name>"
-                      << std::endl;
-            continue;
-          }
-          std::cout << "  [" << i << "] " << name;
-          if (guid[0] != '\0') {
-            std::cout << " (" << guid << ")";
-          }
-          std::cout << std::endl;
-        }
-        std::cout << std::endl;
-      };
-
-      print_audio_devices(true);
-      print_audio_devices(false);
-    }
-  }
-
-  // ビデオデバイス一覧
-  auto devices = sora::EnumV4L2CaptureDevices();
-  if (!devices) {
-    std::cerr << "Failed to enumerate video devices" << std::endl;
-    return;
-  }
-
-  std::cout << "=== Available video devices ===" << std::endl;
-  std::cout << std::endl;
-  std::cout << sora::FormatV4L2Devices(*devices);
-}
-
-#elif defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 
 static void ListDevices() {
   // オーディオデバイス一覧
   auto print_audio_devices = [&](bool is_input) {
     auto infos = GetAudioDeviceInfos(
-        webrtc::AudioDeviceModule::kPlatformDefaultAudio, is_input);
+#if defined(__linux__)
+        webrtc::AudioDeviceModule::kLinuxPulseAudio,
+#else
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio,
+#endif
+        is_input);
 
     const char* title = is_input ? "=== Available audio input devices ==="
                                  : "=== Available audio output devices ===";
@@ -168,13 +107,25 @@ static void ListDevices() {
   print_audio_devices(false);
 
   // ビデオデバイス一覧
+#if defined(__linux__)
+  auto devices = sora::EnumV4L2CaptureDevices();
+  if (!devices) {
+    std::cerr << "Failed to enumerate video devices" << std::endl;
+    return;
+  }
+#endif
+
   std::cout << "=== Available video devices ===" << std::endl;
   std::cout << std::endl;
+#if defined(__linux__)
+  std::cout << sora::FormatV4L2Devices(*devices);
+#else
   auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
   for (const auto& info : video_device_infos) {
     std::cout << "  [" << info.index << "] " << info.name << std::endl;
   }
   std::cout << std::endl;
+#endif
 }
 
 #endif

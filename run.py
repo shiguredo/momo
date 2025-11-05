@@ -611,13 +611,6 @@ def _build(args):
             cmake_args.append("-DUSE_FAKE_CAPTURE_DEVICE=ON")
             cmake_args.append(f"-DBlend2D_ROOT={cmake_path(os.path.join(install_dir, 'blend2d'))}")
 
-        # PulseAudio (Ubuntu のみ)
-        if platform.target.package_name in (
-            "ubuntu-22.04_x86_64",
-            "ubuntu-24.04_x86_64",
-        ):
-            cmake_args.append("-DUSE_LINUX_PULSE_AUDIO=ON")
-
         cmd(["cmake", BASE_DIR] + cmake_args)
         cmd(
             [

@@ -19,7 +19,6 @@ set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な C
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコーダを利用するかどうか")
-set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
@@ -164,7 +163,6 @@ target_compile_definitions(momo
     $<$<BOOL:${USE_V4L2_ENCODER}>:USE_V4L2_ENCODER>
     $<$<BOOL:${USE_JETSON_ENCODER}>:USE_JETSON_ENCODER>
     $<$<BOOL:${USE_VPL_ENCODER}>:USE_VPL_ENCODER>
-    $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
     $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
     $<$<BOOL:${USE_FAKE_CAPTURE_DEVICE}>:USE_FAKE_CAPTURE_DEVICE>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
