@@ -180,6 +180,14 @@ jobs:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
 
+  # E2E テストの実行
+  e2e_test:
+    needs: [build-windows, build-macos, build-ubuntu]
+    uses: ./.github/workflows/e2e-test.yml
+    with:
+      from_build: true
+    secrets: inherit
+
   create-release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/202')
@@ -237,6 +245,7 @@ jobs:
       - build-windows
       - build-macos
       - build-ubuntu
+      - e2e_test
       - create-release
     if: always()
     steps:
@@ -246,6 +255,7 @@ jobs:
           needs.build-windows.result == 'failure' ||
           needs.build-macos.result == 'failure' ||
           needs.build-ubuntu.result == 'failure' ||
+          needs.e2e_test.result == 'failure' ||
           needs.create-release.result == 'failure'
         env:
           SLACK_CHANNEL: open-momo
