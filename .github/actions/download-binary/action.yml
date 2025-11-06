@@ -9,13 +9,13 @@ inputs:
     description: 'GitHub token for API access'
     required: true
   from-build:
-    description: 'Whether called from build.yml (use current run artifacts)'
+    description: 'Whether called from build.yml (use current workflow run artifacts)'
     required: false
     default: 'false'
 
 outputs:
   source:
-    description: 'Source of the binary (artifact or release)'
+    description: 'Source of the binary (current_artifact, previous_artifact, or release)'
     value: ${{ steps.determine_source.outputs.source }}
   version:
     description: 'Version of the downloaded binary'
@@ -45,9 +45,9 @@ runs:
     - name: Determine download source
       id: determine_source
       run: |
-        # build.yml から呼び出された場合は current_artifact を使用
+        # build.yml から呼び出された場合は現在のワークフロー実行の artifact を使用
         if [ "${{ inputs.from-build }}" == "true" ]; then
-          echo "Called from build.yml, will use current run artifacts"
+          echo "Called from build.yml, will use current workflow run artifacts"
           echo "source=current_artifact" >> $GITHUB_OUTPUT
         else
           BRANCH="${{ steps.get_version.outputs.branch }}"
@@ -84,14 +84,14 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
       shell: bash
     
-    - name: Download artifact from current run
+    - name: Download env artifact from current workflow run
       if: steps.determine_source.outputs.source == 'current_artifact'
       uses: actions/download-artifact@v6
       with:
         name: ${{ inputs.platform }}.env
         path: ./
 
-    - name: Get package name from current run
+    - name: Get package name from current workflow run
       if: steps.determine_source.outputs.source == 'current_artifact'
       id: current_run_package
       run: |
@@ -106,14 +106,14 @@ runs:
         fi
       shell: bash
 
-    - name: Download package from current run
+    - name: Download package artifact from current workflow run
       if: steps.determine_source.outputs.source == 'current_artifact'
       uses: actions/download-artifact@v6
       with:
         name: ${{ steps.current_run_package.outputs.package_name }}
         path: ./
 
-    - name: Download artifact from workflow run
+    - name: Download artifacts from previous workflow run
       if: steps.determine_source.outputs.source == 'previous_artifact'
       run: |
         RUN_ID="${{ steps.determine_source.outputs.run_id }}"
@@ -176,8 +176,8 @@ runs:
         PLATFORM="${{ inputs.platform }}"
 
         # tar.gz ファイルを探す
-        if [ "$SOURCE" == "current_run" ] || [ "$SOURCE" == "artifact" ]; then
-          # artifact からダウンロードした場合 (current_run または artifact)
+        if [ "$SOURCE" == "current_artifact" ] || [ "$SOURCE" == "previous_artifact" ]; then
+          # artifact からダウンロードした場合 (current_artifact または previous_artifact)
           PACKAGE_FILE=$(find . -name "momo-*.tar.gz" -type f | head -1)
         else
           # release からダウンロードした場合
