@@ -129,7 +129,7 @@ void Util::ParseArgs(int argc,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)");
 #endif
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   app.add_option("--audio-input-device", args.audio_input_device,
                  "Use the audio input device specified by an index or a name "
                  "(use the system default if not specified)");

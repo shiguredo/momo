@@ -45,7 +45,7 @@
 #include "rtc/fake_audio_capturer.h"
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 namespace {
 
 // デバイス識別子の完全一致判定（大文字小文字を区別しない）
@@ -133,15 +133,8 @@ RTCManager::RTCManager(
   signaling_thread_->Start();
 
 #if defined(__linux__)
-
-#if defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
-#else
-  webrtc::AudioDeviceModule::AudioLayer audio_layer =
-      webrtc::AudioDeviceModule::kLinuxAlsaAudio;
-#endif
-
 #else
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kPlatformDefaultAudio;
@@ -254,7 +247,7 @@ RTCManager::RTCManager(
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
   if (adm) {
     worker_thread_->BlockingCall([&]() {
       if (!config_.audio_input_device.empty()) {
