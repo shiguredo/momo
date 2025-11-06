@@ -108,6 +108,12 @@ Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出�
 
 Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
 
+### 映像入力デバイスの指定
+
+Momo は映像入力デバイスを指定することができます。
+
+Linux については [doc/LINUX_VIDEO_DEVICE.md](doc/LINUX_VIDEO_DEVICE.md) をご確認ください。
+
 ## 動画
 
 [WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
@@ -215,8 +221,7 @@ limitations under the License.
 - Windows 11 x86_64 での `--list-devices` オプション対応
 - Windows 11 x86_64 での `--audio-input-device` オプション対応
 - Windows 11 x86_64 での `--audio-output-device` オプション対応
-- Windows 11 arm64
-- Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
+- NVIDIA Jetson JetPack のアップデート対応
 
 ## Momo についての電子書籍
 
