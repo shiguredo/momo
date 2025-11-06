@@ -80,7 +80,10 @@
 
 ### misc
 
-- [ADD] Raspberry Pi 64 bit 環境での E2E テストを追加
+- [ADD] build.yml から e2e-test.yml を呼ぶように変更する
+  - build.yml のジョブ完了後に e2e-test.yml のジョブを呼び出すように変更
+  - @voluntas
+- [ADD] Raspberry Pi 64 bit 環境での E2E テストを追加する
   - GitHub Actions の self-hosted runner を利用して Raspberry Pi OS armv8 環境での E2E テストを実行
   - test_sora_mode_raspberry_pi.py テストファイルを追加
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加

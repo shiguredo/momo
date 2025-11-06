@@ -2,6 +2,12 @@ name: e2e-test
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      from_build:
+        type: boolean
+        default: false
+        description: "build.yml から呼び出されたかどうか"
   push:
     branches:
       - "develop"
@@ -109,6 +115,7 @@ jobs:
         with:
           platform: ${{ matrix.package }}
           github-token: ${{ github.token }}
+          from-build: ${{ inputs.from_build }}
 
       # OpenH264 のダウンロード (GitHub-hosted ランナーのみ)
       - name: Download OpenH264
@@ -139,7 +146,8 @@ jobs:
     runs-on: ubuntu-24.04
     # always() で常に実行し、needs.e2e_test.result で親ジョブの結果を確認
     # タイムアウトは 'failure' として扱われる
-    if: always() && (needs.e2e_test.result == 'failure' || needs.e2e_test.result == 'cancelled')
+    # build.yml から呼び出された場合は通知しない
+    if: always() && (needs.e2e_test.result == 'failure' || needs.e2e_test.result == 'cancelled') && inputs.from_build != true
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
