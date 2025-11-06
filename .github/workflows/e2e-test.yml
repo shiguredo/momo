@@ -9,11 +9,11 @@ on:
     paths:
       - "test/**"
       - ".github/workflows/e2e-test.yml"
-  # schedule:
-  #   # JST 14:00-16:30 の間、30分ごとに実行
-  #   # UTC 05:00-07:30 (JST 14:00-16:30)
-  #   # 1-5 で 月曜日から金曜日
-  #   - cron: "0,30 5-7 * * 1-5" # UTC 05:00-07:30 (JST 14:00-16:30)
+  schedule:
+    # JST 14:00-16:30 の間、30分ごとに実行
+    # UTC 05:00-07:30 (JST 14:00-16:30)
+    # 1-5 で 月曜日から金曜日
+    - cron: "0,30 5-7 * * 1-5" # UTC 05:00-07:30 (JST 14:00-16:30)
 
 env:
   TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SIGNALING_URLS }}
