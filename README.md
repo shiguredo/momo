@@ -78,6 +78,10 @@ Momo はデータチャネルを利用しシリアルに直接読み書きが可
 
 Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
 
+### H.265 (HEVC) への対応
+
+ハードウェアアクセラレーターを利用した H.265 の送受信に対応済みです。
+
 ### AV1 への対応
 
 AV1 の送受信に対応済みです。
@@ -93,6 +97,16 @@ Momo は Sora モード利用時にクライアント証明書に対応してい
 ### OpenH264 の利用
 
 Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードを行うことができます。
+
+### デバイス一覧の取得
+
+Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力、映像入力デバイスの一覧を取得することができます。
+
+### 音声入出力デバイスの指定
+
+Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定することができます。
+
+Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
 
 ## 動画
 
@@ -198,6 +212,9 @@ limitations under the License.
 
 **こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
+- Windows 11 x86_64 での `--list-devices` オプション対応
+- Windows 11 x86_64 での `--audio-input-device` オプション対応
+- Windows 11 x86_64 での `--audio-output-device` オプション対応
 - Windows 11 arm64
 - Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
 

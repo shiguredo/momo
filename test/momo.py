@@ -374,7 +374,7 @@ class Momo:
         if kwargs.get("no_google_stun"):
             args.append("--no-google-stun")
         if kwargs.get("no_video_device"):
-            args.append("--no-video-device")
+            args.append("--no-video-input-device")
         if kwargs.get("no_audio_device"):
             args.append("--no-audio-device")
         if kwargs.get("fake_capture_device"):
@@ -399,7 +399,7 @@ class Momo:
 
         # ビデオ設定
         if kwargs.get("video_device"):
-            args.extend(["--video-device", kwargs["video_device"]])
+            args.extend(["--video-input-device", kwargs["video_device"]])
         if kwargs.get("resolution"):
             args.extend(["--resolution", kwargs["resolution"]])
         if kwargs.get("framerate") is not None:

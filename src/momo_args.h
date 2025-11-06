@@ -39,6 +39,10 @@ struct MomoArgs {
   // libcamera のコントロール設定。key value の形式で指定する。
   std::vector<std::pair<std::string, std::string>> libcamera_controls;
   std::string video_device = "";
+#if defined(__APPLE__) || defined(__linux__)
+  std::string audio_input_device = "";
+  std::string audio_output_device = "";
+#endif
   std::string resolution = "VGA";
   int framerate = 30;
   bool fixed_resolution = false;

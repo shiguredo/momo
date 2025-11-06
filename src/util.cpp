@@ -88,12 +88,12 @@ void Util::ParseArgs(int argc,
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
-  app.add_flag("--no-video-device", args.no_video_device,
-               "Do not use video device");
+  app.add_flag("--no-video-input-device", args.no_video_device,
+               "Do not use video input device");
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag("--list-devices", args.list_devices,
-               "List available video devices and exit");
+               "List available audio and video devices and exit");
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   app.add_flag("--fake-capture-device", args.fake_capture_device,
                "Use fake video capture device instead of real camera");
@@ -121,13 +121,21 @@ void Util::ParseArgs(int argc,
       ->allow_extra_args();
 
 #if defined(__APPLE__) || defined(_WIN32)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");
 #elif defined(__linux__)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)");
+#endif
+#if defined(__APPLE__) || defined(__linux__)
+  app.add_option("--audio-input-device", args.audio_input_device,
+                 "Use the audio input device specified by an index or a name "
+                 "(use the system default if not specified)");
+  app.add_option("--audio-output-device", args.audio_output_device,
+                 "Use the audio output device specified by an index or a name "
+                 "(use the system default if not specified)");
 #endif
   app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "

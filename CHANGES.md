@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
+  - @voluntas
+- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
+  - @voluntas
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
@@ -28,6 +32,33 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [UPDATE] CMake のバージョンを 4.1.2 に上げる
+  - @torikizi
+- [UPDATE] SDL3 のバージョンを 3.2.24 に上げる
+  - @torikizi
+- [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
+  - @torikizi
+- [ADD] macOS でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
+  - @voluntas @melpon
+- [ADD] macOS で `--list-devices` オプションを追加
+  - 利用可能なオーディオデバイスとビデオデバイスの一覧を表示する機能
+  - @voluntas @melpon
+- [ADD] Linux で `--list-devices` オプションにオーディオデバイス一覧表示を追加
+  - 既存のビデオデバイス一覧に加えて、オーディオ入力デバイスとオーディオ出力デバイスの一覧も表示するようにする
+  - @voluntas @melpon
+- [ADD] Linux でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
+  - PulseAudio API を使用
+    - pipewire-pulse 経由を想定
+  - @voluntas @melpon
+- [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
+  - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
+  - @voluntas @melpon
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 - [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
@@ -44,6 +75,7 @@
   - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
   - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
     - これによってこの関数が何の値に依存しているのか分かりやすくなる
+  - `iceServers` はオプションなので項目がなければ無視するようにする
   - @voluntas
 
 ### misc
@@ -233,7 +265,7 @@
 
 **リリース日**: 2025-06-10
 
-- [FIX] libcamera 4.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+- [FIX] libcamera 0.4 が最新の Raspberry Pi OS 環境で動作しない問題を修正
   - momo 2024.1.1 のリリースバイナリが依存する libcamera.so は 0.4 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.5 にあげる必要がある
   - 最新の環境で再ビルドすることで事象が解消した
   - @torikizi
@@ -244,7 +276,7 @@
 
 **2025-02-17 のリリースにてリリースミスがあったためバイナリの作り直しと再リリースを行っています**
 
-- [FIX] libcamera 3.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+- [FIX] libcamera 0.3 が最新の Raspberry Pi OS 環境で動作しない問題を修正
   - momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
   - 最新の環境で再ビルドすることで事象が解消した
   - @melpon, @torikizi
