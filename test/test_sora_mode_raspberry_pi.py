@@ -36,6 +36,7 @@ def test_sendonly_video_codec_type(
         channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=False,
+        no_audio_device=True,
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
@@ -148,6 +149,7 @@ def test_simulcast(sora_settings, free_port):
         channel_id=sora_settings.channel_id,
         role="sendonly",
         audio=False,
+        no_audio_device=True,
         video=True,
         video_codec_type=video_codec_type,
         simulcast=True,
@@ -371,6 +373,7 @@ def test_sora_sendonly_recvonly_pair(
         video=True,
         video_codec_type=video_codec_type,
         audio=False,
+        no_audio_device=True,
         metadata=sora_settings.metadata,
         initial_wait=10,
     ) as sender:
@@ -383,6 +386,7 @@ def test_sora_sendonly_recvonly_pair(
             metrics_port=next(port_allocator),
             video=True,
             audio=False,
+            no_audio_device=True,
             metadata=sora_settings.metadata,
         ) as receiver:
             # 接続が確立するまで待機
