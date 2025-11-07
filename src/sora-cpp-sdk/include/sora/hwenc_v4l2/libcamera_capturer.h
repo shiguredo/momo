@@ -5,8 +5,6 @@
 #include <mutex>
 #include <queue>
 
-#include "libcameracpp.h"
-
 #include "sora/scalable_track_source.h"
 #include "sora/v4l2/v4l2_video_capturer.h"
 
@@ -35,43 +33,9 @@ struct LibcameraCapturerConfig : V4L2VideoCapturerConfig {
 // メモリ上にコピーする場合は webrtc::I420Buffer クラスになる。
 class LibcameraCapturer : public ScalableVideoTrackSource {
  public:
+  using ScalableVideoTrackSource::ScalableVideoTrackSource;
   static webrtc::scoped_refptr<LibcameraCapturer> Create(
       LibcameraCapturerConfig config);
-  static void LogDeviceList();
-  LibcameraCapturer();
-  ~LibcameraCapturer();
-
-  int32_t Init(int camera_id);
-  void Release();
-  int32_t StartCapture(LibcameraCapturerConfig config);
-
- private:
-  static webrtc::scoped_refptr<LibcameraCapturer> Create(
-      LibcameraCapturerConfig config,
-      size_t capture_device_index);
-  int32_t StopCapture();
-  static void requestCompleteStatic(libcamerac_Request* request,
-                                    void* user_data);
-  void requestComplete(libcamerac_Request* request);
-  void queueRequest(libcamerac_Request* request);
-
-  std::shared_ptr<libcamerac_CameraManager> camera_manager_;
-  std::shared_ptr<libcamerac_Camera> camera_;
-  bool acquired_;
-  std::shared_ptr<libcamerac_CameraConfiguration> configuration_;
-  libcamerac_Stream* stream_;
-  std::shared_ptr<libcamerac_FrameBufferAllocator> allocator_ = nullptr;
-  struct Span {
-    uint8_t* buffer;
-    int length;
-    int fd;
-  };
-  std::map<const libcamerac_FrameBuffer*, std::vector<Span>> mapped_buffers_;
-  std::queue<libcamerac_FrameBuffer*> frame_buffer_;
-  std::vector<std::shared_ptr<libcamerac_Request>> requests_;
-  std::shared_ptr<libcamerac_ControlList> controls_;
-  bool camera_started_;
-  std::mutex camera_stop_mutex_;
 };
 
 }  // namespace sora

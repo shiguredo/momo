@@ -11,26 +11,68 @@
 
 #include "sora/hwenc_v4l2/v4l2_native_buffer.h"
 
+#include "libcameracpp.h"
+
 namespace sora {
+
+class LibcameraCapturerImpl : public LibcameraCapturer {
+ public:
+  LibcameraCapturerImpl();
+  ~LibcameraCapturerImpl();
+
+  static webrtc::scoped_refptr<LibcameraCapturerImpl> Create(
+      LibcameraCapturerConfig config,
+      size_t capture_device_index);
+  static void LogDeviceList();
+
+ private:
+  int32_t InitLibcamera(int camera_id);
+  void ReleaseLibcamera();
+  int32_t StartCapture(LibcameraCapturerConfig config);
+
+  int32_t StopCapture();
+  static void requestCompleteStatic(libcamerac_Request* request,
+                                    void* user_data);
+  void requestComplete(libcamerac_Request* request);
+  void queueRequest(libcamerac_Request* request);
+
+  std::shared_ptr<libcamerac_CameraManager> camera_manager_;
+  std::shared_ptr<libcamerac_Camera> camera_;
+  bool acquired_;
+  std::shared_ptr<libcamerac_CameraConfiguration> configuration_;
+  libcamerac_Stream* stream_;
+  std::shared_ptr<libcamerac_FrameBufferAllocator> allocator_ = nullptr;
+  struct Span {
+    uint8_t* buffer;
+    int length;
+    int fd;
+  };
+  std::map<const libcamerac_FrameBuffer*, std::vector<Span>> mapped_buffers_;
+  std::queue<libcamerac_FrameBuffer*> frame_buffer_;
+  std::vector<std::shared_ptr<libcamerac_Request>> requests_;
+  std::shared_ptr<libcamerac_ControlList> controls_;
+  bool camera_started_;
+  std::mutex camera_stop_mutex_;
+};
 
 webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
     LibcameraCapturerConfig config) {
-  webrtc::scoped_refptr<LibcameraCapturer> capturer;
+  webrtc::scoped_refptr<LibcameraCapturerImpl> capturer;
 
-  LogDeviceList();
+  LibcameraCapturerImpl::LogDeviceList();
 
   for (int i = 0; i < 1; ++i) {
-    capturer = Create(config, i);
+    capturer = LibcameraCapturerImpl::Create(config, i);
     if (capturer) {
       RTC_LOG(LS_INFO) << "Get Capture";
       return capturer;
     }
   }
-  RTC_LOG(LS_ERROR) << "Failed to create LibcameraCapturer";
+  RTC_LOG(LS_ERROR) << "Failed to create LibcameraCapturerImpl";
   return nullptr;
 }
 
-void LibcameraCapturer::LogDeviceList() {
+void LibcameraCapturerImpl::LogDeviceList() {
   auto camera_manager = libcameracpp_CameraManager_new();
   int ret = libcamerac_CameraManager_start(camera_manager.get());
   if (ret) {
@@ -54,18 +96,18 @@ void LibcameraCapturer::LogDeviceList() {
   libcamerac_CameraManager_stop(camera_manager.get());
 }
 
-webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
+webrtc::scoped_refptr<LibcameraCapturerImpl> LibcameraCapturerImpl::Create(
     LibcameraCapturerConfig config,
     size_t capture_device_index) {
-  webrtc::scoped_refptr<LibcameraCapturer> capturer(
-      new webrtc::RefCountedObject<LibcameraCapturer>());
-  if (capturer->Init(capture_device_index) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to create LibcameraCapturer("
+  webrtc::scoped_refptr<LibcameraCapturerImpl> capturer(
+      new webrtc::RefCountedObject<LibcameraCapturerImpl>());
+  if (capturer->InitLibcamera(capture_device_index) < 0) {
+    RTC_LOG(LS_WARNING) << "Failed to create LibcameraCapturerImpl("
                         << capture_device_index << ")";
     return nullptr;
   }
   if (capturer->StartCapture(config) < 0) {
-    RTC_LOG(LS_WARNING) << "Failed to start LibcameraCapturer(w = "
+    RTC_LOG(LS_WARNING) << "Failed to start LibcameraCapturerImpl(w = "
                         << config.width << ", h = " << config.height
                         << ", fps = " << config.framerate << ")";
     return nullptr;
@@ -73,17 +115,17 @@ webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
   return capturer;
 }
 
-LibcameraCapturer::LibcameraCapturer()
-    : ScalableVideoTrackSource(ScalableVideoTrackSourceConfig()),
+LibcameraCapturerImpl::LibcameraCapturerImpl()
+    : LibcameraCapturer(ScalableVideoTrackSourceConfig()),
       acquired_(false),
       controls_(libcameracpp_ControlList_controls()),
       camera_started_(false) {}
 
-LibcameraCapturer::~LibcameraCapturer() {
-  Release();
+LibcameraCapturerImpl::~LibcameraCapturerImpl() {
+  ReleaseLibcamera();
 }
 
-int32_t LibcameraCapturer::Init(int camera_id) {
+int32_t LibcameraCapturerImpl::InitLibcamera(int camera_id) {
   auto camera_manager = libcameracpp_CameraManager_new();
   int ret = libcamerac_CameraManager_start(camera_manager.get());
   if (ret) {
@@ -121,7 +163,7 @@ int32_t LibcameraCapturer::Init(int camera_id) {
   return 0;
 }
 
-void LibcameraCapturer::Release() {
+void LibcameraCapturerImpl::ReleaseLibcamera() {
   StopCapture();
   if (acquired_)
     libcamerac_Camera_release(camera_.get());
@@ -135,7 +177,7 @@ void LibcameraCapturer::Release() {
   camera_manager_.reset();
 }
 
-int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
+int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
   auto stream_roles = libcameracpp_vector_StreamRole_new();
   libcamerac_vector_StreamRole_push_back(stream_roles.get(),
                                          libcamerac_StreamRole_VideoRecording);
@@ -249,7 +291,7 @@ int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
 
   auto signal = libcamerac_Camera_requestCompleted(camera_.get());
   libcamerac_Signal_Request_connect(
-      signal, &LibcameraCapturer::requestCompleteStatic, this);
+      signal, &LibcameraCapturerImpl::requestCompleteStatic, this);
 
   for (auto& request : requests_) {
     if (libcamerac_Camera_queueRequest(camera_.get(), request.get()) < 0) {
@@ -260,7 +302,7 @@ int32_t LibcameraCapturer::StartCapture(LibcameraCapturerConfig config) {
   return 0;
 }
 
-int32_t LibcameraCapturer::StopCapture() {
+int32_t LibcameraCapturerImpl::StopCapture() {
   {
     std::lock_guard<std::mutex> lock(camera_stop_mutex_);
     if (camera_started_) {
@@ -275,7 +317,7 @@ int32_t LibcameraCapturer::StopCapture() {
   if (camera_) {
     auto signal = libcamerac_Camera_requestCompleted(camera_.get());
     libcamerac_Signal_Request_disconnect(
-        signal, &LibcameraCapturer::requestCompleteStatic, this);
+        signal, &LibcameraCapturerImpl::requestCompleteStatic, this);
   }
 
   requests_.clear();
@@ -283,13 +325,13 @@ int32_t LibcameraCapturer::StopCapture() {
   return 0;
 }
 
-void LibcameraCapturer::requestCompleteStatic(libcamerac_Request* request,
-                                              void* user_data) {
-  auto self = static_cast<LibcameraCapturer*>(user_data);
+void LibcameraCapturerImpl::requestCompleteStatic(libcamerac_Request* request,
+                                                  void* user_data) {
+  auto self = static_cast<LibcameraCapturerImpl*>(user_data);
   self->requestComplete(request);
 }
 
-void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
+void LibcameraCapturerImpl::requestComplete(libcamerac_Request* request) {
   if (libcamerac_Request_status(request) ==
       libcamerac_Request_Status_RequestCancelled) {
     return;
@@ -370,7 +412,7 @@ void LibcameraCapturer::requestComplete(libcamerac_Request* request) {
   }
 }
 
-void LibcameraCapturer::queueRequest(libcamerac_Request* request) {
+void LibcameraCapturerImpl::queueRequest(libcamerac_Request* request) {
   std::map<const libcamerac_Stream*, libcamerac_FrameBuffer*> buffers;
   auto map = libcamerac_Request_buffers(request);
   libcamerac_Request_BufferMap_foreach(

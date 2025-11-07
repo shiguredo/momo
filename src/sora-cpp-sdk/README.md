@@ -25,8 +25,8 @@ LAST_UPDATED に記載されている LAST_UPDATED_MOMO と LAST_UPDATED_SORA_CP
     2. コンフリクトが起きたら修正する
     3. `./copy-to-sora-cpp-sdk.sh ../../../sora-cpp-sdk` を実行して Sora C++ SDK にもソースを反映する
 3. 仮に `diff-momo.sh` の結果の方が小さい場合:
-    1. Sora C++ SDK に移動して `../momo/sora-cpp-sdk/diff-sora-cpp-sdk.sh | patch -p1` でパッチを適用する
+    1. Sora C++ SDK に移動して `../momo/sora-cpp-sdk/diff-sora-cpp-sdk.sh . | patch -p1` でパッチを適用する
     2. コンフリクトが起きたら修正する
-    3. `../momo/sora-cpp-sdk/copy-to-sora-cpp-sdk.sh .` を実行して Momo にもソースを反映する
+    3. `../momo/sora-cpp-sdk/copy-from-sora-cpp-sdk.sh .` を実行して Momo にもソースを反映する
 4. Momo と Sora C++ SDK をコミットする
 5. `./update-last-updated.sh` を実行して `LAST_UPDATED` のコミットハッシュを更新し、再度コミットする
