@@ -29,4 +29,4 @@ LAST_UPDATED に記載されている LAST_UPDATED_MOMO と LAST_UPDATED_SORA_CP
     2. コンフリクトが起きたら修正する
     3. `../momo/sora-cpp-sdk/copy-from-sora-cpp-sdk.sh .` を実行して Momo にもソースを反映する
 4. Momo と Sora C++ SDK をコミットする
-5. `./update-last-updated.sh` を実行して `LAST_UPDATED` のコミットハッシュを更新し、再度コミットする
+5. `./update-last-updated.sh ../../../sora-cpp-sdk` を実行して `LAST_UPDATED` のコミットハッシュを更新し、再度コミットする
