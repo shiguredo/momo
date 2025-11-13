@@ -6,6 +6,9 @@
 #include <thread>
 #include <vector>
 
+// Boost
+#include <boost/json.hpp>
+
 // SDL3
 #include <SDL3/SDL_main.h>
 
@@ -73,8 +76,10 @@ const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 #if defined(__APPLE__) || defined(__linux__)
 
 static void ListDevices() {
-  // オーディオデバイス一覧
-  auto print_audio_devices = [&](bool is_input) {
+  boost::json::object root;
+
+  // オーディオデバイス一覧を JSON 化
+  auto audio_device_to_json = [&](bool is_input) -> boost::json::array {
     auto infos = GetAudioDeviceInfos(
 #if defined(__linux__)
         webrtc::AudioDeviceModule::kLinuxPulseAudio,
@@ -83,49 +88,101 @@ static void ListDevices() {
 #endif
         is_input);
 
-    const char* title = is_input ? "=== Available audio input devices ==="
-                                 : "=== Available audio output devices ===";
-    std::cout << title << std::endl;
-    std::cout << std::endl;
-
-    if (infos.empty()) {
-      std::cout << "  (none)" << std::endl << std::endl;
-      return;
-    }
-
+    boost::json::array devices;
     for (const auto& info : infos) {
-      std::cout << "  [" << info.index << "] " << info.name;
+      boost::json::object device;
+      device["index"] = info.index;
+      device["name"] = info.name;
       if (!info.guid.empty()) {
-        std::cout << " (" << info.guid << ")";
+        device["guid"] = info.guid;
       }
-      std::cout << std::endl;
+      devices.push_back(device);
     }
-    std::cout << std::endl;
+    return devices;
   };
 
-  print_audio_devices(true);
-  print_audio_devices(false);
+  root["audio_input_devices"] = audio_device_to_json(true);
+  root["audio_output_devices"] = audio_device_to_json(false);
 
-  // ビデオデバイス一覧
+  // ビデオデバイス一覧を JSON 化
 #if defined(__linux__)
   auto devices = sora::EnumV4L2CaptureDevices();
   if (!devices) {
     std::cerr << "Failed to enumerate video devices" << std::endl;
     return;
   }
-#endif
 
-  std::cout << "=== Available video devices ===" << std::endl;
-  std::cout << std::endl;
-#if defined(__linux__)
-  std::cout << sora::FormatV4L2Devices(*devices);
+  boost::json::array video_devices;
+  for (const auto& dev : *devices) {
+    boost::json::object device;
+    device["index"] = dev.index;
+    device["path"] = dev.path;
+    device["card"] = dev.card;
+    device["bus_info"] = dev.bus_info;
+
+    boost::json::array formats;
+    for (const auto& fmt : dev.format_descriptions) {
+      boost::json::object format;
+      format["index"] = fmt.index;
+      format["pixel_format"] = fmt.pixel_format;
+      format["description"] = fmt.description;
+
+      boost::json::array frame_sizes;
+      for (const auto& fs : fmt.frame_sizes) {
+        boost::json::object frame_size;
+        frame_size["index"] = fs.index;
+        frame_size["width"] = fs.width;
+        frame_size["height"] = fs.height;
+
+        boost::json::array intervals;
+        for (const auto& interval : fs.intervals) {
+          boost::json::object interval_obj;
+          interval_obj["index"] = interval.index;
+          interval_obj["numerator"] = interval.numerator;
+          interval_obj["denominator"] = interval.denominator;
+          intervals.push_back(interval_obj);
+        }
+        frame_size["intervals"] = intervals;
+        frame_sizes.push_back(frame_size);
+      }
+      format["frame_sizes"] = frame_sizes;
+      formats.push_back(format);
+    }
+    device["formats"] = formats;
+    video_devices.push_back(device);
+  }
+  root["video_devices"] = video_devices;
 #else
   auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
+  boost::json::array video_devices;
   for (const auto& info : video_device_infos) {
-    std::cout << "  [" << info.index << "] " << info.name << std::endl;
+    boost::json::object device;
+    device["index"] = info.index;
+    device["name"] = info.name;
+
+    // フォーマット情報を追加
+    boost::json::array formats;
+    for (const auto& fmt : info.formats) {
+      boost::json::object format;
+      format["width"] = fmt.width;
+      format["height"] = fmt.height;
+
+      boost::json::array framerates;
+      for (int fps : fmt.framerates) {
+        framerates.push_back(fps);
+      }
+      format["framerates"] = framerates;
+      formats.push_back(format);
+    }
+    device["formats"] = formats;
+
+    video_devices.push_back(device);
   }
-  std::cout << std::endl;
+  root["video_devices"] = video_devices;
 #endif
+
+  // JSON を出力
+  std::cout << boost::json::serialize(root) << std::endl;
 }
 
 #endif

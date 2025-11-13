@@ -10,6 +10,9 @@
 
 #include "mac_capturer.h"
 
+#include <map>
+#include <set>
+
 // WebRTC
 #include <rtc_base/logging.h>
 
@@ -126,6 +129,37 @@ std::vector<VideoDeviceInfo> MacCapturer::GetVideoDeviceInfos() {
     VideoDeviceInfo info;
     info.index = static_cast<int>(i);
     info.name = [device.localizedName UTF8String];
+
+    // サポートされているフォーマットを取得
+    NSArray<AVCaptureDeviceFormat*>* formats =
+        [RTCCameraVideoCapturer supportedFormatsForDevice:device];
+
+    // 解像度ごとにグループ化して、フレームレートをまとめる
+    std::map<std::pair<int, int>, std::set<int>> resolution_fps_map;
+
+    for (AVCaptureDeviceFormat* format in formats) {
+      CMVideoDimensions dimension =
+          CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+      int width = dimension.width;
+      int height = dimension.height;
+
+      // フレームレート範囲を取得
+      for (AVFrameRateRange* range in
+           format.videoSupportedFrameRateRanges) {
+        int max_fps = static_cast<int>(range.maxFrameRate);
+        resolution_fps_map[{width, height}].insert(max_fps);
+      }
+    }
+
+    // VideoDeviceFormat に変換
+    for (const auto& [resolution, fps_set] : resolution_fps_map) {
+      VideoDeviceFormat format;
+      format.width = resolution.first;
+      format.height = resolution.second;
+      format.framerates.assign(fps_set.begin(), fps_set.end());
+      info.formats.push_back(format);
+    }
+
     infos_ptr->push_back(info);
   }];
   return infos;
