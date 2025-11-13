@@ -151,7 +151,7 @@ static void ListDevices() {
     device["formats"] = formats;
     video_devices.push_back(device);
   }
-  root["video_devices"] = video_devices;
+  root["video_input_devices"] = video_devices;
 #else
   auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
   boost::json::array video_devices;
@@ -178,7 +178,7 @@ static void ListDevices() {
 
     video_devices.push_back(device);
   }
-  root["video_devices"] = video_devices;
+  root["video_input_devices"] = video_devices;
 #endif
 
   // JSON を出力

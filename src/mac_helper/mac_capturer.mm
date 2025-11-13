@@ -144,8 +144,7 @@ std::vector<VideoDeviceInfo> MacCapturer::GetVideoDeviceInfos() {
       int height = dimension.height;
 
       // フレームレート範囲を取得
-      for (AVFrameRateRange* range in
-           format.videoSupportedFrameRateRanges) {
+      for (AVFrameRateRange* range in format.videoSupportedFrameRateRanges) {
         int max_fps = static_cast<int>(range.maxFrameRate);
         resolution_fps_map[{width, height}].insert(max_fps);
       }
