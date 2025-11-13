@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] `--list-devices` の戻り値を JSON に変更する
+  - @voluntas
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
