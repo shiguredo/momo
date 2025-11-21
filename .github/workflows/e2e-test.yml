@@ -80,7 +80,7 @@ jobs:
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Homebrew のセットアップ (self-hosted macOS ランナー用)
       - name: Setup Homebrew
