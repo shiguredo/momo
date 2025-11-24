@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: shiguredo/github-actions/.github/actions/claude-code-action@main
         with:
           api_key: ${{ env.CLAUDE_API_KEY }}
