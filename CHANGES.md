@@ -13,10 +13,14 @@
 
 ## 2025.1.1
 
-**リリース日**: 2025-12-05
+**リリース日**: 2025-12-24
 
+- [CHANGE] NVIDIA Jetson 向けビルドが GitHub Actions で通らないため一時的にコメントアウトする
+  - @voluntas
 - [FIX] 最新の Raspberry Pi OS 環境で libcamera が動作しない問題を修正
   - momo 2025.1.0 のリリースバイナリが依存する libcamera.so は 0.5 だが最新の Raspberry Pi OS 環境では libcamera.so 0.6 にあげる必要がある
+  - libstdc++-14-dev をインストールするように multistrap の設定を修正する
+  - suite を trixie に変更する
   - @voluntas
 
 ## 2025.1.0
