@@ -253,8 +253,7 @@ const libcamerac_FrameBuffer_Plane* libcamerac_FrameBuffer_planes_at(
     int i) {
   return (const libcamerac_FrameBuffer_Plane*)&(
              (const libcamera::FrameBuffer*)p)
-      ->planes()
-      .at(i);
+      ->planes()[i];
 }
 
 // libcamerac_FrameBuffer_Plane

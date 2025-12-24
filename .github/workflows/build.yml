@@ -213,9 +213,9 @@ jobs:
       - uses: ./.github/actions/download
         with:
           platform: ubuntu-24.04_x86_64
-      - uses: ./.github/actions/download
-        with:
-          platform: ubuntu-22.04_armv8_jetson
+      # - uses: ./.github/actions/download
+      #   with:
+      #     platform: ubuntu-22.04_armv8_jetson
       - name: Env to output
         run: |
           # 改行をスペースに変換してpackage_pathsに設定

@@ -91,6 +91,18 @@
 - [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
   - @voluntas
 
+## 2025.1.1
+
+**リリース日**: 2025-12-24
+
+- [CHANGE] NVIDIA Jetson 向けビルドが GitHub Actions で通らないため一時的にコメントアウトする
+  - @voluntas
+- [FIX] 最新の Raspberry Pi OS 環境で libcamera が動作しない問題を修正
+  - momo 2025.1.0 のリリースバイナリが依存する libcamera.so は 0.5 だが最新の Raspberry Pi OS 環境では libcamera.so 0.6 にあげる必要がある
+  - libstdc++-14-dev をインストールするように multistrap の設定を修正する
+  - suite を trixie に変更する
+  - @voluntas
+
 ## 2025.1.0
 
 **リリース日**: 2025-09-04
@@ -269,9 +281,10 @@
 **リリース日**: 2025-06-10
 
 - [FIX] libcamera 0.4 が最新の Raspberry Pi OS 環境で動作しない問題を修正
-  - momo 2024.1.1 のリリースバイナリが依存する libcamera.so は 0.4 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.5 にあげる必要がある
-  - 最新の環境で再ビルドすることで事象が解消した
-  - @torikizi
+
+- momo 2024.1.1 のリリースバイナリが依存する libcamera.so は 0.4 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.5 にあげる必要がある
+- 最新の環境で再ビルドすることで事象が解消した
+- @torikizi
 
 ## 2024.1.1
 
@@ -280,9 +293,10 @@
 **2025-02-17 のリリースにてリリースミスがあったためバイナリの作り直しと再リリースを行っています**
 
 - [FIX] libcamera 0.3 が最新の Raspberry Pi OS 環境で動作しない問題を修正
-  - momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
-  - 最新の環境で再ビルドすることで事象が解消した
-  - @melpon, @torikizi
+
+- momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
+- 最新の環境で再ビルドすることで事象が解消した
+- @melpon, @torikizi
 
 ### misc
 
