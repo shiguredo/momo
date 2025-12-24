@@ -15,9 +15,16 @@ struct AudioDeviceInfo {
   bool is_input;
 };
 
+struct VideoDeviceFormat {
+  int width;
+  int height;
+  std::vector<int> framerates;  // FPS のリスト
+};
+
 struct VideoDeviceInfo {
   int index;
   std::string name;
+  std::vector<VideoDeviceFormat> formats;
 };
 
 std::vector<VideoDeviceInfo> GetVideoDeviceInfos();
