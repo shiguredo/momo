@@ -80,6 +80,10 @@
 
 ### misc
 
+- [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
+  - pytest-rerunfailures プラグインを追加
+  - 失敗したテストを最大 3 回までリトライする設定を追加
+  - @voluntas
 - [ADD] build.yml から e2e-test.yml を呼ぶように変更する
   - build.yml のジョブ完了後に e2e-test.yml のジョブを呼び出すように変更
   - @voluntas

@@ -9,6 +9,7 @@ dependencies = []
 dev = [
     "pytest",
     "pytest-repeat",
+    "pytest-rerunfailures",
     "pytest-timeout",
     "httpx",
     "python-dotenv",
@@ -20,6 +21,8 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["."]
 python_files = ["test_*.py"]
+reruns = 3
+reruns_delay = 1
 
 [tool.ruff]
 line-length = 100
