@@ -93,6 +93,13 @@
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
   - @voluntas
 - [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
+
+## 2025.1.2
+
+**リリース日**: 2026-02-10
+
+- [FIX] 最新の Raspberry Pi OS 環境で libcamera が動作しない問題を修正
+  - momo 2025.1.1 のリリースバイナリが依存する libcamera.so は 0.6 だが最新の Raspberry Pi OS 環境では libcamera.so 0.7 にあげる必要がある
   - @voluntas
 
 ## 2025.1.1
