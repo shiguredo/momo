@@ -40,7 +40,7 @@ def test_sendonly_video_codec_type(
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
-        initial_wait=10,
+        initial_wait=20,
     ) as m:
         # 接続が確立されるまで待つ
         assert m.wait_for_connection()
@@ -156,7 +156,7 @@ def test_simulcast(sora_settings, free_port):
         resolution="960x540",  # 540p の解像度
         video_bit_rate=3000,  # ビットレート 3000
         metadata=sora_settings.metadata,
-        initial_wait=10,
+        initial_wait=20,
     ) as m:
         # 接続が確立されるまで待つ
         assert m.wait_for_connection(), (
@@ -178,7 +178,7 @@ def test_simulcast(sora_settings, free_port):
                     "rid": "r2",
                 },
             ],
-            wait_after_stats=10,
+            wait_after_stats=20,
         )
         stats = data["stats"]
 
@@ -375,7 +375,7 @@ def test_sora_sendonly_recvonly_pair(
         audio=False,
         no_audio_device=True,
         metadata=sora_settings.metadata,
-        initial_wait=10,
+        initial_wait=20,
     ) as sender:
         # 受信専用クライアント（use_libcameraは指定しない）
         with Momo(
