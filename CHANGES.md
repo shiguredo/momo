@@ -11,6 +11,14 @@
 
 ## develop
 
+## 2025.1.2
+
+**リリース日**: 2026-02-10
+
+- [FIX] 最新の Raspberry Pi OS 環境で libcamera が動作しない問題を修正
+  - momo 2025.1.1 のリリースバイナリが依存する libcamera.so は 0.6 だが最新の Raspberry Pi OS 環境では libcamera.so 0.7 にあげる必要がある
+  - @voluntas
+
 ## 2025.1.1
 
 **リリース日**: 2025-12-24
