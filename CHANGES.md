@@ -94,6 +94,15 @@
   - @voluntas
 - [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
 
+## 2025.1.3
+
+**リリース日**: 2026-02-12
+
+- [FIX] libcamera 0.7 で `Overwriting Request::controls() is not allowed` エラーが発生する問題を修正する
+  - `libcamerac_ControlList_copy` が `operator=` で ControlList を丸ごと上書きしていたため、Request の `infoMap` が置き換わり libcamera 0.7 の検証チェックに引っかかっていた
+  - `operator=` の代わりに `ControlList::merge()` を使い、Request の `infoMap` を保持したまま個別のコントロール値だけをコピーするように修正
+  - @voluntas
+
 ## 2025.1.2
 
 **リリース日**: 2026-02-10
