@@ -279,7 +279,9 @@ void libcamerac_ControlList_clear(libcamerac_ControlList* p) {
 }
 void libcamerac_ControlList_copy(const libcamerac_ControlList* p,
                                  libcamerac_ControlList* control_list) {
-  *((libcamera::ControlList*)control_list) = *(const libcamera::ControlList*)p;
+  ((libcamera::ControlList*)control_list)
+      ->merge(*(const libcamera::ControlList*)p,
+              libcamera::ControlList::MergePolicy::OverwriteExisting);
 }
 
 // 文字列をカンマで分割するヘルパー関数
