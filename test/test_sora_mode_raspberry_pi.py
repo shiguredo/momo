@@ -297,7 +297,7 @@ def test_simulcast(sora_settings, free_port):
         assert "packetsSent" in outbound_rtp_r2
         assert "bytesSent" in outbound_rtp_r2
         assert "framesEncoded" in outbound_rtp_r2
-        
+
         # r2 はフレーキーで frameWidth, frameHeight が出ないことがある
         if "frameWidth" in outbound_rtp_r2:
             assert "frameWidth" in outbound_rtp_r2

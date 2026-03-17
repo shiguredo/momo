@@ -1,0 +1,26 @@
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.14.14"
+hooks = [
+  { id = "ruff-check", files = "^test/" },
+  { id = "ruff-format", files = "^test/" },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "ty-check"
+name = "ty check"
+entry = "bash -c 'cd test && uv run ty check .'"
+language = "system"
+types = ["python"]
+files = "^test/"
+pass_filenames = false
+
+[[repos.hooks]]
+id = "clang-format"
+name = "clang-format"
+entry = "clang-format -i"
+language = "system"
+types_or = ["c", "c++", "objective-c"]
