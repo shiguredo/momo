@@ -179,24 +179,27 @@ pub fn start_serial_bridge(config: &SerialConfig, mut dc: DataChannel) {
                 // シリアルポート → DataChannel
                 readable = serial_fd.readable() => {
                     match readable {
-                        Ok(mut guard) => {
-                            match guard.get_inner_mut().read(&mut read_buf) {
-                                Ok(0) => {
+                        Ok(guard) => {
+                            match guard.try_io(|inner| {
+                                let mut file_ref = inner.get_ref();
+                                file_ref.read(&mut read_buf)
+                            }) {
+                                Ok(Ok(0)) => {
                                     info!(target: "serial", "serial port EOF");
                                     break;
                                 }
-                                Ok(n) => {
+                                Ok(Ok(n)) => {
                                     if !dc.send(&read_buf[..n], true) {
                                         warn!(target: "serial", "DataChannel send failed");
                                         break;
                                     }
                                 }
-                                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                                    guard.clear_ready();
-                                }
-                                Err(e) => {
+                                Ok(Err(e)) => {
                                     error!(target: "serial", error = %e, "serial read error");
                                     break;
+                                }
+                                Err(_would_block) => {
+                                    // try_io が readiness をクリア済み
                                 }
                             }
                         }
@@ -237,15 +240,18 @@ pub fn start_serial_bridge(config: &SerialConfig, mut dc: DataChannel) {
 /// AsyncFd を使って全データを非同期に書き込む
 async fn write_all_async(fd: &AsyncFd<File>, mut data: &[u8]) -> io::Result<()> {
     while !data.is_empty() {
-        let mut guard = fd.writable().await?;
-        match guard.get_inner_mut().write(data) {
-            Ok(n) => {
+        let guard = fd.writable().await?;
+        match guard.try_io(|inner| {
+            let mut file_ref = inner.get_ref();
+            file_ref.write(data)
+        }) {
+            Ok(Ok(n)) => {
                 data = &data[n..];
             }
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                guard.clear_ready();
+            Ok(Err(e)) => return Err(e),
+            Err(_would_block) => {
+                // try_io が readiness をクリア済み
             }
-            Err(e) => return Err(e),
         }
     }
     Ok(())
