@@ -1,0 +1,18 @@
+{
+  "name": "ubuntu-22.04_arm64",
+  "arch": "arm64",
+  "rust_target": "aarch64-unknown-linux-gnu",
+  "linker": "aarch64-linux-gnu-gcc",
+  "cc": "aarch64-linux-gnu-gcc",
+  "cxx": "aarch64-linux-gnu-g++",
+  "cflags": ["-isystem", "$SYSROOT/usr/include/aarch64-linux-gnu", "-isystem", "$SYSROOT/usr/include"],
+  "cxxflags": [],
+  "packages": ["libc6-dev", "libstdc++-11-dev", "libpulse-dev", "libx11-dev"],
+  "repos": [
+    {
+      "url": "http://ports.ubuntu.com/ubuntu-ports",
+      "suites": ["jammy", "jammy-updates", "jammy-security"],
+      "components": ["main", "universe"]
+    }
+  ]
+}

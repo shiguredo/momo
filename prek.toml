@@ -1,26 +1,53 @@
-[[repos]]
-repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.14.14"
-hooks = [
-  { id = "ruff-check", files = "^test/" },
-  { id = "ruff-format", files = "^test/" },
-]
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
 
 [[repos]]
 repo = "local"
-
-[[repos.hooks]]
-id = "ty-check"
-name = "ty check"
-entry = "bash -c 'cd test && uv run ty check .'"
-language = "system"
-types = ["python"]
-files = "^test/"
-pass_filenames = false
-
-[[repos.hooks]]
-id = "clang-format"
-name = "clang-format"
-entry = "clang-format -i"
-language = "system"
-types_or = ["c", "c++", "objective-c"]
+hooks = [
+  {
+    id = "cargo-fmt",
+    name = "cargo fmt",
+    entry = "cargo fmt --all -- --check",
+    language = "system",
+    types = ["rust"],
+    pass_filenames = false,
+    priority = 0,
+  },
+  {
+    id = "ruff-format",
+    name = "ruff format",
+    entry = "uv run --directory e2e-tests ruff format --check",
+    language = "system",
+    files = '^e2e-tests/.*\.py$',
+    pass_filenames = false,
+    priority = 0,
+  },
+  {
+    id = "cargo-clippy",
+    name = "cargo clippy",
+    entry = "cargo clippy --workspace --all-targets -- -D warnings",
+    language = "system",
+    types = ["rust"],
+    pass_filenames = false,
+    priority = 10,
+  },
+  {
+    id = "ruff-check",
+    name = "ruff check",
+    entry = "uv run --directory e2e-tests ruff check",
+    language = "system",
+    files = '^e2e-tests/.*\.py$',
+    pass_filenames = false,
+    priority = 10,
+  },
+  {
+    id = "ty-check",
+    name = "ty check",
+    entry = "uv run --directory e2e-tests ty check .",
+    language = "system",
+    files = '^e2e-tests/.*\.py$',
+    pass_filenames = false,
+    priority = 10,
+  },
+]

@@ -1,51 +1,9 @@
-# Prerequisites
-*.d
+target/
+.cargo/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Agents
+.claude/
+.codex/
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-momo
-core
-*.tar.gz
-webrtc_logs_*
+# macOS
 .DS_Store
-*.swp
-
-/__pycache__
-/_build
-/_source
-/_install
-/_package
-
-# Claude Code
-CLAUDE.local.md
-
-# Serena
-.serena
