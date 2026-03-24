@@ -1,0 +1,161 @@
+name: ci
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "sysroot/**"
+      - "e2e-tests/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Makefile"
+      - ".github/workflows/ci.yml"
+  schedule:
+    # JST 11:00 (UTC 02:00), 月-金
+    - cron: "0 2 * * 1-5"
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - run: cargo fmt --all --check
+
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse-dev libx11-dev
+      - name: Clippy
+        run: cargo clippy --workspace --features ayame,sora -- -D warnings
+      - name: Build
+        run: cargo build --workspace --features ayame,sora
+      - name: Test
+        run: cargo test --workspace --features ayame,sora
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: momo-linux-x86_64
+          path: target/debug/momo
+          retention-days: 1
+
+  e2e-test:
+    name: E2E Test
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: momo-linux-x86_64
+          path: target/debug
+      - name: Make binary executable
+        run: chmod +x target/debug/momo
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0 libx11-6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Run E2E tests
+        working-directory: e2e-tests
+        run: uv run pytest -v
+
+  raspberrypi-arm64-build:
+    name: Raspberry Pi ARM64 Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - name: Add Rust target
+        run: rustup target add aarch64-unknown-linux-gnu
+      - name: Install cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install -y build-essential clang dpkg-dev \
+            debian-archive-keyring
+          sudo install -Dm644 /usr/share/keyrings/debian-archive-keyring.gpg \
+            /etc/apt/trusted.gpg.d/debian-archive-keyring.gpg
+      - name: Install Raspberry Pi archive keyring
+        run: |
+          curl -fsSL http://archive.raspberrypi.com/debian/pool/main/r/raspberrypi-archive-keyring/raspberrypi-archive-keyring_2021.1.1+rpt1_all.deb \
+            -o /tmp/rpi-keyring.deb && sudo dpkg -i /tmp/rpi-keyring.deb && rm /tmp/rpi-keyring.deb
+          sudo install -Dm644 /usr/share/keyrings/raspberrypi-archive-keyring.gpg \
+            /etc/apt/trusted.gpg.d/raspberrypi-archive-keyring.gpg
+      - name: Install cargo-shiguredo-sysroot
+        run: cargo install shiguredo_sysroot
+      - name: Install sysroot
+        run: make sysroot-raspberry-pi
+      - name: Clippy
+        run: make sysroot-clippy-raspberry-pi
+      - name: Build
+        run: make sysroot-build-raspberry-pi-release
+
+  ubuntu-arm64-build:
+    name: Ubuntu ${{ matrix.version }} ARM64 Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - "24.04"
+          - "22.04"
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - name: Add Rust target
+        run: rustup target add aarch64-unknown-linux-gnu
+      - name: Install cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install -y build-essential clang dpkg-dev \
+            debian-archive-keyring
+          sudo install -Dm644 /usr/share/keyrings/debian-archive-keyring.gpg \
+            /etc/apt/trusted.gpg.d/debian-archive-keyring.gpg
+          if [ -f /usr/share/keyrings/ubuntu-archive-keyring.gpg ]; then
+            sudo install -Dm644 /usr/share/keyrings/ubuntu-archive-keyring.gpg \
+              /etc/apt/trusted.gpg.d/ubuntu-archive-keyring.gpg
+          fi
+      - name: Install cargo-shiguredo-sysroot
+        run: cargo install shiguredo_sysroot
+      - name: Install sysroot
+        run: make sysroot-ubuntu-${{ matrix.version }}_arm64
+      - name: Clippy
+        run: make sysroot-clippy-ubuntu-${{ matrix.version }}_arm64
+      - name: Build
+        run: make sysroot-build-ubuntu-${{ matrix.version }}_arm64-release
+
+  slack_notify:
+    needs: [fmt, build, e2e-test, raspberrypi-arm64-build, ubuntu-arm64-build]
+    timeout-minutes: 5
+    runs-on: ubuntu-slim
+    if: ${{ always() }}
+    permissions:
+      actions: read
+    steps:
+      - name: Slack Notification
+        uses: shiguredo/github-actions/.github/actions/slack-notify@main
+        with:
+          status: ${{ job.status }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          slack_channel: momo
+          notify_mode: failure_and_fixed

@@ -1,0 +1,28 @@
+{
+  "name": "raspberry-pi-os-trixie_arm64",
+  "arch": "arm64",
+  "rust_target": "aarch64-unknown-linux-gnu",
+  "linker": "aarch64-linux-gnu-gcc",
+  "cc": "aarch64-linux-gnu-gcc",
+  "cxx": "aarch64-linux-gnu-g++",
+  "cflags": ["-isystem", "$SYSROOT/usr/include/aarch64-linux-gnu", "-isystem", "$SYSROOT/usr/include"],
+  "cxxflags": [],
+  "packages": ["libc6-dev", "libstdc++-14-dev", "libcamera-dev", "libv4l-dev", "libpulse-dev", "libx11-dev"],
+  "repos": [
+    {
+      "url": "http://deb.debian.org/debian",
+      "suites": ["trixie", "trixie-updates"],
+      "components": ["main"]
+    },
+    {
+      "url": "https://security.debian.org/debian-security",
+      "suites": ["trixie-security"],
+      "components": ["main"]
+    },
+    {
+      "url": "http://archive.raspberrypi.com/debian",
+      "suites": ["trixie"],
+      "components": ["main"]
+    }
+  ]
+}

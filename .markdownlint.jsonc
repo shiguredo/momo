@@ -1,13 +1,13 @@
 {
-	"MD004": {
-		"style": "dash"
-	},
-	"MD013": {
-		"line_length": 200,
-		"code_blocks": false
-	},
-	"MD024": {
-		"siblings_only": true
-	},
-	"MD036": false
+  "MD004": {
+    "style": "dash",
+  },
+  "MD013": {
+    "line_length": 200,
+    "code_blocks": false,
+  },
+  "MD024": {
+    "siblings_only": true,
+  },
+  "MD036": false,
 }

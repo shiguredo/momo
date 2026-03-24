@@ -1,176 +1,256 @@
-# WebRTC Native Client Momo
+# WebRTC Native Client Momo (Rust)
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m138.7204-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7204)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo-rs.svg)](https://github.com/shiguredo/momo-rs)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Actions Status](https://github.com/shiguredo/momo/actions/workflows/build.yml/badge.svg)](https://github.com/shiguredo/momo/actions/workflows/build.yml)
 
 ## About Shiguredo's open source software
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before use.
+Please read <https://github.com/shiguredo/oss> before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
 利用前に <https://github.com/shiguredo/oss> をお読みください。
 
-## WebRTC Native Client Momo について
+## 概要
 
-WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
+WebRTC Native Client Momo の Rust 実装です。libwebrtc を利用し、ブラウザなしで動作する WebRTC ネイティブクライアントです。
 
-<https://momo.shiguredo.jp/>
-
-### ハードウェアアクセラレーターへの対応
-
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を V4L2 M2M 経由で利用することができます
-  - ハードウェアエンコーダー: H.264
-  - ハードウェアデコーダー: H.264
-  - Raspberry Pi 5 では H.264 ハードウェアアクセラレーターが搭載されていないため利用できません
-- Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
-  - ハードウェアエンコーダー: H.264 / H.265
-  - ハードウェアデコーダー: H.264 / H.265
-- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
-  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
-  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
-  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
-  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [Jetson JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
-  - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
-  - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
+## モード
 
 ### P2P モード
 
-Momo は Momo 自体がシグナリングサーバーを持っているため、完全な P2P モードでの利用ができます。
-
-ブラウザから Momo にアクセスするだけで利用することができます。
+Momo 自体がシグナリングサーバーと HTTP サーバーを持っているため、完全な P2P モードでの利用ができます。
+ブラウザから Momo にアクセスするだけで利用できます。
 
 ### Ayame モード
 
-[OpenAyame](https://github.com/OpenAyame)
+WebRTC シグナリングサーバー [Ayame](https://github.com/OpenAyame/ayame) に対応したモードです。
 
-Momo は WebRTC Signaling サーバーである Ayame に対応したモードがあり、 Momo 同士での利用もできます。
+### Sora モード
 
-### Raspberry Pi の libcamera に対応
-
-[raspberrypi/libcamera](https://github.com/raspberrypi/libcamera) に対応しています。
-
-詳細は [LIBCAMERA.md](doc/LIBCAMERA.md) をご確認ください。
-
-### 120 fps 対応
-
-Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用することで 120 fps の配信が利用できます。
-
-### 4K の配信/視聴
-
-Momo はハードウェアアクセラレーターを利用することで WebRTC で 4K の配信/視聴を利用できます。
-
-### サイマルキャストへの対応
-
-Momo は Sora モード利用時にサイマルキャスト（複数画質の同時配信）に対応しています。
-
-### データチャネル経由でのシリアルの読み書き
-
-Momo はデータチャネルを利用しシリアルに直接読み書きが可能です。信頼性より低遅延を優先したい場合の利用を想定しています。
-
-### SDL を利用した音声や映像の受信
-
-Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
-
-### H.265 (HEVC) への対応
-
-ハードウェアアクセラレーターを利用した H.265 の送受信に対応済みです。
-
-### AV1 への対応
-
-AV1 の送受信に対応済みです。
-
-### YUY2 や NV12 への対応
-
-Momo は YUY2 や NV12 といった無圧縮のフォーマットに対応しています。
-
-### クライアント証明書への対応
-
-Momo は Sora モード利用時にクライアント証明書に対応しています。
-
-### OpenH264 の利用
-
-Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードを行うことができます。
-
-### デバイス一覧の取得
-
-Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力、映像入力デバイスの一覧を取得することができます。
-
-### 音声入出力デバイスの指定
-
-Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定することができます。
-
-Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
-
-## 動画
-
-[WebRTC Native Client Momo と Jetson Nano で 4K@30 配信](https://www.youtube.com/watch?v=z05bWtsgDPY)
-
-## OpenMomo プロジェクトについて
-
-OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
-ブラウザやスマートフォン以外からの WebRTC をいろいろな用途で使ってもらえればと思っています。
-
-詳細については下記をご確認ください。
-
-[OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
-
-また Momo についてのつぶやきは以下にまとめてあります。
-
-<https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253#twitter>
-
-## 既知の問題について
-
-[既知の問題に対する解決方針](https://github.com/shiguredo/momo/issues/89)
-
-## バイナリ提供について
-
-以下からダウンロードが可能です。
-
-<https://github.com/shiguredo/momo/releases>
+WebRTC SFU [Sora](https://sora.shiguredo.jp) に対応したモードです。
 
 ## 動作環境
 
-- Windows 11 x86_64
 - macOS 15 arm64
 - macOS 14 arm64
 - Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
-- Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
-  - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-  - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-- Raspberry Pi OS bookworm (64bit)
-  - Raspberry Pi 5
-  - Raspberry Pi 4
-  - Raspberry Pi 3
-  - Raspberry Pi 2 Model B v1.2
-  - Raspberry Pi Zero 2 W
 
-## 使ってみる
+## ビルド
 
-Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
+Rust 1.88 以上が必要です。
 
-## ビルドする
+```bash
+cargo build --release
+```
 
-- Momo をビルドしたい、またはパッケージ作成したい人は [BUILD.md](doc/BUILD.md) をお読みください
+## クロスコンパイル
 
-## FAQ
+Dev Container (Debian Trixie) 内でクロスコンパイルを行います。
 
-[FAQ.md](doc/FAQ.md) をお読みください。
+### 前提条件
+
+- Docker
+- VS Code + Dev Containers 拡張
+
+### 対応ターゲット
+
+| ターゲット | sysroot 生成 | ビルド |
+|---|---|---|
+| Raspberry Pi (arm64) | `make sysroot-raspberry-pi` | `make sysroot-build-raspberry-pi` |
+| Ubuntu 24.04 (arm64) | `make sysroot-ubuntu-24.04_arm64` | `make sysroot-build-ubuntu-24.04_arm64` |
+| Ubuntu 22.04 (arm64) | `make sysroot-ubuntu-22.04_arm64` | `make sysroot-build-ubuntu-22.04_arm64` |
+
+リリースビルドは各ターゲットに `-release` を付けてください（例: `make sysroot-build-raspberry-pi-release`）。
+
+### 手順
+
+1. VS Code でリポジトリを開き、コマンドパレットから **Dev Containers: Reopen in Container** を選択する
+2. sysroot を生成する（初回のみ）
+
+```bash
+make sysroot-raspberry-pi
+```
+
+3. ビルドする
+
+```bash
+make sysroot-build-raspberry-pi
+```
+
+4. macOS に戻る場合はコマンドパレットから **Dev Containers: Reopen Folder Locally** を選択する
+
+## 使い方
+
+### デバイス一覧の取得
+
+利用可能な映像入力・音声入力デバイスを JSON 形式で表示します。
+
+```bash
+./momo --list-devices
+```
+
+### P2P モード
+
+```bash
+./momo p2p --port 8080 --document-root html
+```
+
+ブラウザで `http://localhost:8080` にアクセスしてください。
+
+**オプション:**
+
+- `--port PORT`: リッスンポート（デフォルト: 8080）
+- `--document-root PATH`: HTTP ドキュメントルートディレクトリ（デフォルト: html）
+
+### Ayame モード
+
+```bash
+./momo ayame \
+  --signaling-url wss://example.com/signaling \
+  --room-id your-room-id
+```
+
+**オプション:**
+
+- `--signaling-url URL`: シグナリング URL
+- `--room-id ID`: ルーム ID
+- `--client-id ID`: クライアント ID（任意）
+- `--signaling-key KEY`: シグナリングキー（任意）
+- `--direction DIRECTION`: 送受信方向（sendrecv / sendonly / recvonly、デフォルト: sendrecv）
+
+### Sora モード
+
+```bash
+./momo sora \
+  --signaling-urls wss://example.com/signaling \
+  --channel-id your-channel-id \
+  --role sendonly
+```
+
+**オプション:**
+
+- `--signaling-urls URLS`: シグナリング URL（カンマ区切りで複数指定可）
+- `--channel-id ID`: チャネル ID
+- `--role ROLE`: ロール（sendonly / recvonly / sendrecv、デフォルト: sendonly）
+- `--video BOOL`: 映像送信（デフォルト: true）
+- `--audio BOOL`: 音声送信（デフォルト: true）
+- `--video-codec-type TYPE`: 映像コーデック（VP8 / VP9 / AV1 / H264 / H265）
+- `--audio-codec-type TYPE`: 音声コーデック（OPUS）
+- `--video-bit-rate RATE`: 映像ビットレート（デフォルト: 0）
+- `--audio-bit-rate RATE`: 音声ビットレート（デフォルト: 0）
+- `--spotlight BOOL`: スポットライト（デフォルト: false）
+- `--simulcast BOOL`: サイマルキャスト（デフォルト: false）
+- `--metadata JSON`: connect メッセージに含めるメタデータ
+
+### プレビュー機能
+
+sendonly 時にキャプチャ映像を SDL3 ウィンドウでリアルタイム表示します。
+
+**ビルド:**
+
+```bash
+cargo build --release --features sora,preview
+```
+
+**使い方:**
+
+```bash
+# フェイク映像でプレビュー
+./momo --use-raw-player --fake-capture-device sora \
+  --signaling-urls wss://example.com/signaling \
+  --channel-id your-channel-id \
+  --role sendonly
+
+# 実デバイスでプレビュー
+./momo --use-raw-player sora \
+  --signaling-urls wss://example.com/signaling \
+  --channel-id your-channel-id \
+  --role sendonly
+```
+
+**プレビュー関連オプション:**
+
+- `--use-raw-player`: プレビューウィンドウを表示する（`preview` feature が必要）
+- `--window-width WIDTH`: プレビューウィンドウ幅（デフォルト: 640）
+- `--window-height HEIGHT`: プレビューウィンドウ高さ（デフォルト: 480）
+
+プレビューウィンドウを閉じても Sora 接続は継続します。
+
+### グローバルオプション
+
+| オプション | 説明 |
+|---|---|
+| `--no-video-input-device` | 映像入力デバイスを使用しない |
+| `--no-audio-device` | 音声デバイスを使用しない |
+| `--fake-capture-device` | フェイク映像/音声キャプチャデバイスを使用する |
+| `--no-google-stun` | Google STUN サーバーを使用しない |
+| `--video-input-device DEVICE` | 映像デバイスを名前またはインデックスで指定 |
+| `--audio-input-device DEVICE` | 音声入力デバイスを名前またはインデックスで指定 |
+| `--list-devices` | 利用可能なデバイス一覧を JSON 形式で出力して終了 |
+
+## momo (C++ 版) との違い
+
+詳細は [docs/MOMO.md](docs/MOMO.md) を参照してください。
+
+### momo-rs 独自機能
+
+| 機能 | 説明 |
+|---|---|
+| `--cacert` | CA 証明書ファイルを PEM 形式で指定。momo にはないオプション |
+
+### 仕様の違い
+
+| 機能 | momo | momo-rs |
+|---|---|---|
+| `--libcamera-control` の形式 | `KEY VALUE` (2 引数) | `KEY=VALUE` (1 引数) |
+| プロキシ対応 | 全モード (HTTP CONNECT) | Sora モードのみ (sora_sdk ProxyInfo)。P2P / Ayame は非対応 |
+| TLS 証明書検証 | OpenSSL | rustls + OS ネイティブ証明書ストア (rustls_platform_verifier) |
+| フェイクキャプチャ | WebRTC FakeVideoTrackSource | raden によるアニメーションフレーム生成 |
+| ログ出力 | Boost.Beast + FileRotatingLogSink | tracing_subscriber (stdout のみ) |
+| WebRTC 実装 | libwebrtc (C++) を直接使用 | shiguredo_webrtc (Rust バインディング) 経由で使用 |
+| OpenH264 エンコーダー優先順位 | HW > OpenH264 > ビルトイン | `--use-v4l2-encoder` (HW) > `--openh264` (SW) > ビルトイン |
+
+### 未実装機能
+
+自動再接続:
+
+- Sora モード自動再接続 (sora_sdk 内部の対応が必要)
+- Ayame モード自動再接続 (momo は watchdog 機構付き)
+
+音声処理 (shiguredo_webrtc API 不足のため pending):
+
+- `--audio-output-device`
+- `--disable-echo-cancellation` / `--disable-auto-gain-control` / `--disable-noise-suppression` / `--disable-highpass-filter`
+
+コーデック選択:
+
+- `--{codec}-encoder` / `--{codec}-decoder` (HW バックエンド未実装のため pending)
+- `--video-codec-engines`
+- `--hw-mjpeg-decoder`
+
+HW エンコード:
+
+- Jetson (H.264/H.265)
+- NVIDIA NvCodec/CUDA (H.264/H.265)
+- Intel oneVPL (H.264/H.265)
+
+その他:
+
+- スクリーンキャプチャ (`--screen-capture`)
+- ログファイル出力 (ローテーション)
+- SoraServer (`--port` / `--auto` による Sora モードの HTTP サーバー)
+- `--data-channel-signaling-timeout` (sora_sdk に API なし)
 
 ## ライセンス
 
 Apache License 2.0
 
 ```text
-Copyright 2015-2025, tnoho (Original Author)
-Copyright 2018-2025, Shiguredo Inc.
+Copyright 2026-2026, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -184,115 +264,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-## OpenH264
-
-<https://www.openh264.org/BINARY_LICENSE.txt>
-
-```text
-"OpenH264 Video Codec provided by Cisco Systems, Inc."
-```
-
-## 優先実装
-
-優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
-
-- Windows 版 OSS 化
-  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- WebRTC の Statistics 対応
-  - 現時点では企業名非公開
-- Windows 版 Momo NVIDIA Video Codec 対応
-  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-- Linux 版 Momo NVIDIA Video Codec 対応
-  - [株式会社オプティム](https://www.optim.co.jp/) 様
-- Windows / Linux 版 スクリーンキャプチャ対応
-  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
-
-### 優先実装が可能な機能一覧
-
-**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
-
-- Windows 11 x86_64 での `--list-devices` オプション対応
-- Windows 11 x86_64 での `--audio-input-device` オプション対応
-- Windows 11 x86_64 での `--audio-output-device` オプション対応
-- Windows 11 arm64
-- Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
-
-## Momo についての電子書籍
-
-Momo の原作者である @tnoho が書いた Momo のノウハウがたくさん詰まった本が販売されています。
-
-[WebRTC をブラウザ外で使ってブラウザでできることを増やしてみませんか?\(電子版\) \- でんでんらぼ \- BOOTH](https://tnoho.booth.pm/items/1572872)
-
-## サポートについて
-
-### Discord
-
-- **サポートしません**
-- アドバイスします
-- フィードバック歓迎します
-
-最新の状況などは Discord で共有しています。質問や相談も Discord でのみ受け付けています。
-
-<https://discord.gg/shiguredo>
-
-### バグ報告
-
-Discord へお願いします。
-
-### 有料でのテクニカルサポートについて
-
-WebRTC Native Client に対する有料でのテクニカルサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
-
-- Momo のテクニカルサポート
-- OSS 公開前提での Momo への機能追加
-
-## NVIDIA Video Codec
-
-<https://docs.nvidia.com/video-technologies/video-codec-sdk/13.0/index.html>
-
-```text
-“This software contains source code provided by NVIDIA Corporation.”
-```
-
-## H.264 のライセンス費用について
-
-H.264 ハードウェアエンコーダー **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
-ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
-
-ただし、 Raspberry Pi においては H.264 のライセンスがハードウェア費用に含まれているため、
-配布時にライセンス費用を支払う必要はありません。
-
-詳細については [Via LA Licensing](https://www.via-la.com/) まで問い合わせることをおすすめします。
-
-Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-LA) に連絡を取り、ロイヤリティの対象にならないことを確認しています。
-
-> 時雨堂がエンドユーザーの PC /デバイスに既に存在する AVC / H.264 エンコーダー/デコーダーに依存する製品を提供する場合は、
-> ソフトウェア製品は AVC ライセンスの対象外となり、ロイヤリティの対象にもなりません。
-
-- Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
-  - <https://www.raspberrypi.org/forums/viewtopic.php?t=200855>
-- Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
-  - <https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html>
-- AMD ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-  - <https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_API_Reference.pdf>
-- NVIDIA ビデオカードのハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-  - <https://developer.download.nvidia.com/designworks/DesignWorks_SDKs_Samples_Tools_License_distrib_use_rights_2017_06_13.pdf>
-- NVIDIA Jetson Nano のハードウェアエンコーダーのライセンス費用は別途、団体との契約が必要
-  - [NVIDIA Jetson Nano 搭載の H\.264/H\.265 ハードウェアエンコーダーのライセンスについて](https://medium.com/@voluntas/nvidia-jetson-nano-%E6%90%AD%E8%BC%89%E3%81%AE-h-264-h-265-%E3%83%8F%E3%83%BC%E3%83%89%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E3%81%AE%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6-ca207af302ee)
-- Intel Quick Sync Video のハードウェアエンコーダーライセンス費用は別途、団体との契約が必要
-  - [QuickSync \- H\.264 patent licensing fees \- Intel Community](https://community.intel.com/t5/Media-Intel-oneAPI-Video/QuickSync-H-264-patent-licensing-fees/td-p/921396)
-
-## H.265 のライセンス費用について
-
-H.265 ハードウェアエンコーダー **のみ** を利用している Momo 単体の配布においてはライセンス費用は不要ですが、
-ハードウェアとセットで配布する場合はライセンス費用を支払う必要があります。
-
-Momo の H.265 対応は以下の二つの団体に連絡を取り、H.265 ハードウェアアクセラレーターのみを利用し、
-H.265 が利用可能なバイナリを配布することは、ライセンスが不要であることを確認しています。
-
-また、H.265 のハードウェアアクセラレーターのみを利用した H.265 対応の Momo を OSS で公開し、
-ビルド済みバイナリを配布することは、ライセンスが不要であることも確認しています。
-
-- [Access Advance](https://accessadvance.com/ja/)
-- [Via LA Licensing](https://www.via-la.com/)
