@@ -179,7 +179,7 @@ pub fn start_serial_bridge(config: &SerialConfig, mut dc: DataChannel) {
                 // シリアルポート → DataChannel
                 readable = serial_fd.readable() => {
                     match readable {
-                        Ok(guard) => {
+                        Ok(mut guard) => {
                             match guard.try_io(|inner| {
                                 let mut file_ref = inner.get_ref();
                                 file_ref.read(&mut read_buf)
@@ -240,7 +240,7 @@ pub fn start_serial_bridge(config: &SerialConfig, mut dc: DataChannel) {
 /// AsyncFd を使って全データを非同期に書き込む
 async fn write_all_async(fd: &AsyncFd<File>, mut data: &[u8]) -> io::Result<()> {
     while !data.is_empty() {
-        let guard = fd.writable().await?;
+        let mut guard = fd.writable().await?;
         match guard.try_io(|inner| {
             let mut file_ref = inner.get_ref();
             file_ref.write(data)
