@@ -14,8 +14,8 @@ use shiguredo_webrtc::{
     PeerConnectionRtcConfiguration, PeerConnectionState, RtcError, RtpCodecCapabilityVector,
     RtpTransceiverDirection, RtpTransceiverInit, SdpType, SessionDescription,
     SetLocalDescriptionObserver, SetLocalDescriptionObserverHandler, SetRemoteDescriptionObserver,
-    SetRemoteDescriptionObserverHandler, Thread, TimestampAligner, VideoDecoderFactory,
-    VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
+    SetRemoteDescriptionObserverHandler, StringVector, Thread, TimestampAligner,
+    VideoDecoderFactory, VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
 };
 use tracing::info;
 
@@ -659,6 +659,10 @@ pub(super) fn handle_offer(
     pc: &PeerConnection,
     sdp: &str,
     cmd_tx: &tokio::sync::mpsc::Sender<SignalingCommand>,
+    factory: &shiguredo_webrtc::PeerConnectionFactory,
+    direction: &Direction,
+    video_source: Option<VideoTrackSource>,
+    degradation_preference: shiguredo_webrtc::DegradationPreference,
 ) -> Result<(), BoxError> {
     // SetRemoteDescription (offer)
     let desc = SessionDescription::new(SdpType::Offer, sdp).map_err(wrtc_err)?;
@@ -689,6 +693,23 @@ pub(super) fn handle_offer(
         .blocking_recv()
         .map_err(|_| -> BoxError { "SetRemoteDescription チャンネルクローズ".into() })?
         .map_err(|e| -> BoxError { e.into() })?;
+
+    // アンサー側: 映像送信がある場合は add_track で追加する
+    // コーデック指定は Offer 側の set_codec_preferences に委ねる
+    if sends_video(direction)
+        && let Some(ref source) = video_source
+    {
+        let video_track = factory
+            .create_video_track(source, "video0")
+            .map_err(wrtc_err)?;
+        let media_track = video_track.cast_to_media_stream_track();
+        let stream_ids = StringVector::new(0);
+        let mut sender = pc.add_track(&media_track, &stream_ids).map_err(wrtc_err)?;
+        let mut params = sender.get_parameters();
+        params.set_degradation_preference(Some(degradation_preference));
+        sender.set_parameters(&params).map_err(wrtc_err)?;
+        tracing::info!(target: "ayame", degradation = ?degradation_preference, "video track added with degradation preference (answer)");
+    }
 
     // CreateAnswer
     let (sdp_tx, sdp_rx) = tokio::sync::oneshot::channel::<Result<String, String>>();

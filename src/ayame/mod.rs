@@ -176,19 +176,14 @@ pub async fn run(
                         ReceivedMessage::Offer { sdp } => {
                             let vs = pending_video_source.take();
                             tokio::task::block_in_place(|| {
-                                add_transceivers(
-                                    &peer.pc,
-                                    &engine.factory,
-                                    &config.direction,
-                                    vs.as_ref(),
-                                    config.degradation_preference,
-                                    config.video_codec_type.as_deref(),
-                                    config.audio_codec_type.as_deref(),
-                                )?;
                                 handle_offer(
                                     &peer.pc,
                                     &sdp,
                                     &cmd_tx,
+                                    &engine.factory,
+                                    &config.direction,
+                                    vs,
+                                    config.degradation_preference,
                                 )
                             })?;
                         }
