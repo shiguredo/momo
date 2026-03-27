@@ -666,8 +666,6 @@ pub(super) fn handle_offer(
     direction: &Direction,
     video_source: Option<VideoTrackSource>,
     degradation_preference: shiguredo_webrtc::DegradationPreference,
-    _video_codec_type: Option<&str>,
-    _audio_codec_type: Option<&str>,
 ) -> Result<(), BoxError> {
     // SetRemoteDescription (offer)
     let desc = SessionDescription::new(SdpType::Offer, sdp).map_err(wrtc_err)?;

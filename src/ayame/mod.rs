@@ -184,8 +184,6 @@ pub async fn run(
                                     &config.direction,
                                     vs,
                                     config.degradation_preference,
-                                    config.video_codec_type.as_deref(),
-                                    config.audio_codec_type.as_deref(),
                                 )
                             })?;
                         }

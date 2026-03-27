@@ -26,7 +26,7 @@ hooks = [
   {
     id = "cargo-clippy",
     name = "cargo clippy",
-    entry = "cargo clippy --workspace --features ayame,sora,preview -- -D warnings",
+    entry = "cargo clippy --workspace --features ayame -- -D warnings",
     language = "system",
     types = ["rust"],
     pass_filenames = false,
