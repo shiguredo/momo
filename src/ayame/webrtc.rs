@@ -454,7 +454,7 @@ pub(super) fn add_transceivers(
 }
 
 /// 補助コーデックかどうかを判定する
-fn is_auxiliary_codec(name: &str, media_type: MediaType) -> bool {
+fn is_auxiliary_codec(name: &str, media_type: &MediaType) -> bool {
     let name_lower = name.to_lowercase();
     match media_type {
         MediaType::Video => matches!(name_lower.as_str(), "rtx" | "red" | "ulpfec" | "flexfec-03"),
@@ -559,7 +559,7 @@ fn filter_codecs(
             continue;
         };
         let Ok(name) = cap.name() else { continue };
-        if is_auxiliary_codec(&name, media_type) {
+        if is_auxiliary_codec(&name, &media_type) {
             filtered.push(&cap);
         }
     }
