@@ -53,6 +53,8 @@ pub struct AyameConfig {
     /// CA 証明書 (PEM)
     pub ca_cert: Option<String>,
     pub degradation_preference: shiguredo_webrtc::DegradationPreference,
+    pub video_codec_type: Option<String>,
+    pub audio_codec_type: Option<String>,
     #[cfg(target_os = "linux")]
     pub serial: Option<crate::serial::SerialConfig>,
 }
@@ -156,6 +158,8 @@ pub async fn run(
                 &config.direction,
                 engine.video_track_source.as_ref(),
                 config.degradation_preference,
+                config.video_codec_type.as_deref(),
+                config.audio_codec_type.as_deref(),
             )?;
             create_and_send_offer(&peer.pc, &cmd_tx)
         })?;
@@ -180,6 +184,8 @@ pub async fn run(
                                     &config.direction,
                                     vs,
                                     config.degradation_preference,
+                                    config.video_codec_type.as_deref(),
+                                    config.audio_codec_type.as_deref(),
                                 )
                             })?;
                         }

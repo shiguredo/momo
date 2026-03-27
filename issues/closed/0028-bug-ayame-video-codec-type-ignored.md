@@ -69,3 +69,13 @@ C++ 版の実装 (`src/ayame/ayame_client.cpp`):
 ## CI への影響
 
 E2E テスト `test_ayame_mode_with_codec[VP9]` と `test_ayame_mode_with_codec[AV1]` が失敗する。
+
+## 解決方法
+
+Completed: 2026-03-27
+
+`shiguredo_webrtc` 0.146.2-canary.5 で `get_rtp_receiver_capabilities` が追加されたため、C++ 版と同等の実装が可能になった。
+
+1. `AyameConfig` に `video_codec_type: Option<String>` と `audio_codec_type: Option<String>` を追加
+2. `main.rs` でパースした `video_codec_type` / `audio_codec_type` を `AyameConfig` に渡す
+3. `add_transceivers` で Transceiver 作成後、`get_rtp_sender_capabilities` と `get_rtp_receiver_capabilities` から共通コーデックを抽出し、指定コーデックを primary、補助コーデック (rtx, red, ulpfec, flexfec, telephone-event, cn) を secondary として `set_codec_preferences` に渡す

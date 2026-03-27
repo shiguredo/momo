@@ -817,6 +817,8 @@ async fn run_ayame(
         client_cert: common.client_cert.clone(),
         ca_cert: common.ca_cert.clone(),
         degradation_preference: common.degradation_preference,
+        video_codec_type,
+        audio_codec_type,
         #[cfg(target_os = "linux")]
         serial: common.serial,
     };
