@@ -14,8 +14,8 @@ use shiguredo_webrtc::{
     PeerConnectionRtcConfiguration, PeerConnectionState, RtcError, RtpCodecCapabilityVector,
     RtpTransceiverDirection, RtpTransceiverInit, SdpType, SessionDescription,
     SetLocalDescriptionObserver, SetLocalDescriptionObserverHandler, SetRemoteDescriptionObserver,
-    SetRemoteDescriptionObserverHandler, StringVector, Thread, TimestampAligner,
-    VideoDecoderFactory, VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
+    SetRemoteDescriptionObserverHandler, Thread, TimestampAligner, VideoDecoderFactory,
+    VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
 };
 use tracing::info;
 
@@ -412,16 +412,13 @@ pub(super) fn add_transceivers(
             let video_track = factory
                 .create_video_track(source, "video0")
                 .map_err(wrtc_err)?;
-            let media_track = video_track.cast_to_media_stream_track();
-            let stream_ids = StringVector::new(0);
-            let mut sender = pc.add_track(&media_track, &stream_ids).map_err(wrtc_err)?;
-            // DegradationPreference を設定
-            let mut params = sender.get_parameters();
-            params.set_degradation_preference(Some(degradation_preference));
-            sender.set_parameters(&params).map_err(wrtc_err)?;
+            let mut init = RtpTransceiverInit::new();
+            init.set_direction(rtp_direction(direction));
+            let transceiver = pc
+                .add_transceiver_with_track(&video_track, &mut init)
+                .map_err(wrtc_err)?;
             tracing::info!(target: "ayame", degradation = ?degradation_preference, "video track added with degradation preference");
-            // add_track は RtpTransceiver を返さないため、None にしておく
-            None
+            Some(transceiver)
         } else {
             let mut init = RtpTransceiverInit::new();
             init.set_direction(rtp_direction(direction));
