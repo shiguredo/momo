@@ -48,15 +48,23 @@ C++ 版の実装 (`src/ayame/ayame_client.cpp`):
 
 1. `AyameConfig` に `video_codec_type: Option<String>` と `audio_codec_type: Option<String>` を追加する
 2. `main.rs` でパースした値を `AyameConfig` に渡す
-3. `add_transceivers` の後に `SetCodecPreferences` 相当の処理を追加する
+3. `add_transceivers` で Transceiver 作成後に `set_codec_preferences` を呼ぶ
 
 ### shiguredo_webrtc の API 状況
 
-- FFI レベル: `webrtc_RtpTransceiverInterface_SetCodecPreferences` は存在する
-- Rust ラッパー: `RtpTransceiver` に `set_codec_preferences` メソッドが**公開されていない**
-- `PeerConnectionFactory` にも `get_rtp_sender_capabilities` / `get_rtp_receiver_capabilities` の Rust ラッパーが**公開されていない**
+以下の API は全て実装済み・公開済みで、すぐに利用可能:
 
-shiguredo_webrtc 側で Rust ラッパーの追加が必要な可能性がある。
+- `PeerConnectionFactory::get_rtp_sender_capabilities(media_type)` - 送信側コーデック一覧取得
+- `RtpTransceiver::set_codec_preferences(codecs)` - コーデックプリファレンス設定
+- `PeerConnection::add_transceiver()` - `Result<RtpTransceiver>` を返す
+
+唯一の未対応: `PeerConnectionFactory::get_rtp_receiver_capabilities` の C API が存在しない。ただし、`get_rtp_sender_capabilities` のみでフィルタリングすれば実用上問題ない。
+
+### 実装の流れ
+
+1. `get_rtp_sender_capabilities` で利用可能なコーデック一覧を取得する
+2. 指定コーデックを primary、補助コーデック (rtx, red, ulpfec, flexfec) を secondary としてフィルタリングする
+3. `add_transceiver` の戻り値 `RtpTransceiver` に対して `set_codec_preferences` を呼ぶ
 
 ## CI への影響
 
