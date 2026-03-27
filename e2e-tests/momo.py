@@ -1,5 +1,6 @@
 """Momo プロセスを管理するためのクラス"""
 
+import json
 import os
 import shlex
 import subprocess
@@ -17,6 +18,7 @@ class MomoMode(StrEnum):
 
     P2P = "p2p"
     AYAME = "ayame"
+    SORA = "sora"
 
 
 class Momo:
@@ -31,16 +33,31 @@ class Momo:
         no_video_input_device: bool = False,
         no_audio_device: bool = False,
         fake_capture_device: bool = True,
+        force_i420: bool = False,
+        force_yuy2: bool = False,
+        force_nv12: bool = False,
+        hw_mjpeg_decoder: bool | None = None,
+        use_libcamera: bool = False,
+        use_libcamera_native: bool = False,
+        libcamera_control: list[tuple[str, str]] | None = None,
+        video_device: str | None = None,
         resolution: str | None = None,
         framerate: int | None = None,
         fixed_resolution: bool = False,
         priority: Literal["BALANCE", "FRAMERATE", "RESOLUTION"] | None = None,
+        use_sdl: bool = False,
+        window_width: int | None = None,
+        window_height: int | None = None,
+        fullscreen: bool = False,
+        version: bool = False,
         insecure: bool = False,
         log_level: Literal["verbose", "info", "warning", "error", "none"] | None = None,
+        screen_capture: bool = False,
         disable_echo_cancellation: bool = False,
         disable_auto_gain_control: bool = False,
         disable_noise_suppression: bool = False,
         disable_highpass_filter: bool = False,
+        video_codec_engines: bool = False,
         # コーデック設定
         vp8_encoder: str | None = None,
         vp8_decoder: str | None = None,
@@ -52,9 +69,16 @@ class Momo:
         h264_decoder: str | None = None,
         h265_encoder: str | None = None,
         h265_decoder: str | None = None,
+        openh264: str | None = None,
         # その他の共通設定
+        serial: str | None = None,
         metrics_port: int = 9090,
         metrics_allow_external_ip: bool = False,
+        client_cert: str | None = None,
+        client_key: str | None = None,
+        proxy_url: str | None = None,
+        proxy_username: str | None = None,
+        proxy_password: str | None = None,
         # === p2p モード固有 ===
         document_root: str | None = None,
         port: int | None = None,
@@ -66,10 +90,31 @@ class Momo:
         direction: Literal["sendrecv", "sendonly", "recvonly"] | None = None,
         ayame_video_codec_type: Literal["VP8", "VP9", "AV1", "H264", "H265"] | None = None,
         ayame_audio_codec_type: Literal["OPUS", "PCMU", "PCMA"] | None = None,
+        # === sora モード固有 ===
+        signaling_urls: str | None = None,
+        channel_id: str | None = None,
+        auto: bool | None = None,
+        video: bool | None = None,
+        audio: bool | None = None,
+        video_codec_type: Literal["VP8", "VP9", "AV1", "H264", "H265"] | None = None,
+        audio_codec_type: Literal["OPUS"] | None = None,
+        video_bit_rate: int | None = None,
+        audio_bit_rate: int | None = None,
+        role: Literal["sendonly", "recvonly", "sendrecv"] | None = None,
+        spotlight: bool | None = None,
+        spotlight_number: int | None = None,
+        sora_port: int | None = None,
+        simulcast: bool | None = None,
+        data_channel_signaling: Literal["true", "false", "none"] | None = None,
+        data_channel_signaling_timeout: int | None = None,
+        ignore_disconnect_websocket: Literal["true", "false", "none"] | None = None,
+        disconnect_wait_timeout: int | None = None,
+        metadata: dict[str, Any] | None = None,
+        # その他のカスタム引数
+        extra_args: list[str] | None = None,
         # 起動待機時間
         initial_wait: int | None = None,
     ) -> None:
-        self.executable_path = self._get_momo_executable_path()
         self.process: subprocess.Popen[Any] | None = None
         self.metrics_port = metrics_port
         self.initial_wait = initial_wait if initial_wait is not None else 2
@@ -80,16 +125,31 @@ class Momo:
             "no_video_input_device": no_video_input_device,
             "no_audio_device": no_audio_device,
             "fake_capture_device": fake_capture_device,
+            "force_i420": force_i420,
+            "force_yuy2": force_yuy2,
+            "force_nv12": force_nv12,
+            "hw_mjpeg_decoder": hw_mjpeg_decoder,
+            "use_libcamera": use_libcamera,
+            "use_libcamera_native": use_libcamera_native,
+            "libcamera_control": libcamera_control,
+            "video_device": video_device,
             "resolution": resolution,
             "framerate": framerate,
             "fixed_resolution": fixed_resolution,
             "priority": priority,
+            "use_sdl": use_sdl,
+            "window_width": window_width,
+            "window_height": window_height,
+            "fullscreen": fullscreen,
+            "version": version,
             "insecure": insecure,
             "log_level": log_level,
+            "screen_capture": screen_capture,
             "disable_echo_cancellation": disable_echo_cancellation,
             "disable_auto_gain_control": disable_auto_gain_control,
             "disable_noise_suppression": disable_noise_suppression,
             "disable_highpass_filter": disable_highpass_filter,
+            "video_codec_engines": video_codec_engines,
             "vp8_encoder": vp8_encoder,
             "vp8_decoder": vp8_decoder,
             "vp9_encoder": vp9_encoder,
@@ -100,8 +160,15 @@ class Momo:
             "h264_decoder": h264_decoder,
             "h265_encoder": h265_encoder,
             "h265_decoder": h265_decoder,
+            "openh264": openh264,
+            "serial": serial,
             "metrics_port": metrics_port,
             "metrics_allow_external_ip": metrics_allow_external_ip,
+            "client_cert": client_cert,
+            "client_key": client_key,
+            "proxy_url": proxy_url,
+            "proxy_username": proxy_username,
+            "proxy_password": proxy_password,
             "document_root": document_root,
             "port": port,
             "ayame_signaling_url": ayame_signaling_url,
@@ -111,10 +178,33 @@ class Momo:
             "direction": direction,
             "ayame_video_codec_type": ayame_video_codec_type,
             "ayame_audio_codec_type": ayame_audio_codec_type,
+            "signaling_urls": signaling_urls,
+            "channel_id": channel_id,
+            "auto": auto,
+            "video": video,
+            "audio": audio,
+            "video_codec_type": video_codec_type,
+            "audio_codec_type": audio_codec_type,
+            "video_bit_rate": video_bit_rate,
+            "audio_bit_rate": audio_bit_rate,
+            "role": role,
+            "spotlight": spotlight,
+            "spotlight_number": spotlight_number,
+            "sora_port": sora_port,
+            "simulcast": simulcast,
+            "data_channel_signaling": data_channel_signaling,
+            "data_channel_signaling_timeout": data_channel_signaling_timeout,
+            "ignore_disconnect_websocket": ignore_disconnect_websocket,
+            "disconnect_wait_timeout": disconnect_wait_timeout,
+            "metadata": metadata,
+            "extra_args": extra_args,
         }
 
-        # モード固有オプションの検証を実行
+        # モード固有オプションの検証を実行（バイナリ検出より先に行う）
         self._validate_mode_options(mode, self.kwargs)
+
+        # 実行ファイルのパスを自動検出
+        self.executable_path = self._get_momo_executable_path()
 
         # HTTP クライアントの初期化（None で初期化）
         self._http_client: httpx.Client | None = None
@@ -203,7 +293,25 @@ class Momo:
             args.append("--no-audio-device")
         if kwargs.get("fake_capture_device"):
             args.append("--fake-capture-device")
+        if kwargs.get("force_i420"):
+            args.append("--force-i420")
+        if kwargs.get("force_yuy2"):
+            args.append("--force-yuy2")
+        if kwargs.get("force_nv12"):
+            args.append("--force-nv12")
+        if kwargs.get("hw_mjpeg_decoder") is not None:
+            args.extend(["--hw-mjpeg-decoder", str(int(kwargs["hw_mjpeg_decoder"]))])
+        if kwargs.get("use_libcamera"):
+            args.append("--use-libcamera")
+        if kwargs.get("use_libcamera_native"):
+            args.append("--use-libcamera-native")
 
+        if kwargs.get("libcamera_control"):
+            for key, value in kwargs["libcamera_control"]:
+                args.extend(["--libcamera-control", key, value])
+
+        if kwargs.get("video_device"):
+            args.extend(["--video-input-device", kwargs["video_device"]])
         if kwargs.get("resolution"):
             args.extend(["--resolution", kwargs["resolution"]])
         if kwargs.get("framerate") is not None:
@@ -213,10 +321,23 @@ class Momo:
         if kwargs.get("priority"):
             args.extend(["--priority", kwargs["priority"]])
 
+        if kwargs.get("use_sdl"):
+            args.append("--use-sdl")
+        if kwargs.get("window_width") is not None:
+            args.extend(["--window-width", str(kwargs["window_width"])])
+        if kwargs.get("window_height") is not None:
+            args.extend(["--window-height", str(kwargs["window_height"])])
+        if kwargs.get("fullscreen"):
+            args.append("--fullscreen")
+
+        if kwargs.get("version"):
+            args.append("--version")
         if kwargs.get("insecure"):
             args.append("--insecure")
         if kwargs.get("log_level"):
             args.extend(["--log-level", kwargs["log_level"]])
+        if kwargs.get("screen_capture"):
+            args.append("--screen-capture")
 
         if kwargs.get("disable_echo_cancellation"):
             args.append("--disable-echo-cancellation")
@@ -228,17 +349,33 @@ class Momo:
             args.append("--disable-highpass-filter")
 
         # コーデック設定
+        if kwargs.get("video_codec_engines"):
+            args.append("--video-codec-engines")
         for codec in ["vp8", "vp9", "av1", "h264", "h265"]:
             for role in ["encoder", "decoder"]:
                 key = f"{codec}_{role}"
                 if kwargs.get(key):
                     args.extend([f"--{codec}-{role}", kwargs[key]])
+        if kwargs.get("openh264"):
+            args.extend(["--openh264", kwargs["openh264"]])
 
-        # メトリクス
+        # その他の共通設定
+        if kwargs.get("serial"):
+            args.extend(["--serial", kwargs["serial"]])
         if kwargs.get("metrics_port") is not None and kwargs["metrics_port"] != -1:
             args.extend(["--metrics-port", str(kwargs["metrics_port"])])
         if kwargs.get("metrics_allow_external_ip"):
             args.append("--metrics-allow-external-ip")
+        if kwargs.get("client_cert"):
+            args.extend(["--client-cert", kwargs["client_cert"]])
+        if kwargs.get("client_key"):
+            args.extend(["--client-key", kwargs["client_key"]])
+        if kwargs.get("proxy_url"):
+            args.extend(["--proxy-url", kwargs["proxy_url"]])
+        if kwargs.get("proxy_username"):
+            args.extend(["--proxy-username", kwargs["proxy_username"]])
+        if kwargs.get("proxy_password"):
+            args.extend(["--proxy-password", kwargs["proxy_password"]])
 
         # === モード指定とモード固有オプション ===
         if mode == MomoMode.P2P:
@@ -265,6 +402,62 @@ class Momo:
             if kwargs.get("ayame_audio_codec_type"):
                 args.extend(["--audio-codec-type", kwargs["ayame_audio_codec_type"]])
 
+        elif mode == MomoMode.SORA:
+            args.append(mode.value)
+            if kwargs.get("signaling_urls"):
+                if isinstance(kwargs["signaling_urls"], list):
+                    args.extend(["--signaling-urls"] + kwargs["signaling_urls"])
+                else:
+                    urls = kwargs["signaling_urls"].split()
+                    args.extend(["--signaling-urls"] + urls)
+            if kwargs.get("channel_id"):
+                args.extend(["--channel-id", kwargs["channel_id"]])
+            if kwargs.get("auto"):
+                args.append("--auto")
+            video = kwargs.get("video") if kwargs.get("video") is not None else True
+            audio = kwargs.get("audio") if kwargs.get("audio") is not None else True
+            args.extend(["--video", str(video).lower()])
+            args.extend(["--audio", str(audio).lower()])
+            if kwargs.get("video_codec_type"):
+                args.extend(["--video-codec-type", kwargs["video_codec_type"]])
+            if kwargs.get("audio_codec_type"):
+                args.extend(["--audio-codec-type", kwargs["audio_codec_type"]])
+            if kwargs.get("video_bit_rate") is not None:
+                args.extend(["--video-bit-rate", str(kwargs["video_bit_rate"])])
+            if kwargs.get("audio_bit_rate") is not None:
+                args.extend(["--audio-bit-rate", str(kwargs["audio_bit_rate"])])
+            if kwargs.get("role"):
+                args.extend(["--role", kwargs["role"]])
+            if kwargs.get("spotlight") is not None:
+                args.extend(["--spotlight", str(int(kwargs["spotlight"]))])
+            if kwargs.get("spotlight_number") is not None:
+                args.extend(["--spotlight-number", str(kwargs["spotlight_number"])])
+            if kwargs.get("sora_port") is not None:
+                args.extend(["--port", str(kwargs["sora_port"])])
+            if kwargs.get("simulcast") is not None:
+                args.extend(["--simulcast", str(kwargs["simulcast"]).lower()])
+            if kwargs.get("data_channel_signaling"):
+                args.extend(["--data-channel-signaling", kwargs["data_channel_signaling"]])
+            if kwargs.get("data_channel_signaling_timeout") is not None:
+                args.extend(
+                    [
+                        "--data-channel-signaling-timeout",
+                        str(kwargs["data_channel_signaling_timeout"]),
+                    ]
+                )
+            if kwargs.get("ignore_disconnect_websocket"):
+                args.extend(
+                    ["--ignore-disconnect-websocket", kwargs["ignore_disconnect_websocket"]]
+                )
+            if kwargs.get("disconnect_wait_timeout") is not None:
+                args.extend(["--disconnect-wait-timeout", str(kwargs["disconnect_wait_timeout"])])
+            if kwargs.get("metadata"):
+                args.extend(["--metadata", json.dumps(kwargs["metadata"])])
+
+        # その他のカスタム引数
+        if kwargs.get("extra_args"):
+            args.extend(kwargs["extra_args"])
+
         return args
 
     def _validate_mode_options(self, mode: MomoMode, kwargs: dict[str, Any]) -> None:
@@ -281,23 +474,69 @@ class Momo:
             "ayame_audio_codec_type",
         }
 
+        sora_only_options = {
+            "signaling_urls",
+            "channel_id",
+            "auto",
+            "video",
+            "audio",
+            "video_codec_type",
+            "audio_codec_type",
+            "video_bit_rate",
+            "audio_bit_rate",
+            "role",
+            "spotlight",
+            "spotlight_number",
+            "sora_port",
+            "simulcast",
+            "data_channel_signaling",
+            "data_channel_signaling_timeout",
+            "ignore_disconnect_websocket",
+            "disconnect_wait_timeout",
+            "metadata",
+        }
+
         specified_options = {k for k, v in kwargs.items() if v is not None}
 
         if mode == MomoMode.P2P:
-            invalid_options = specified_options & ayame_only_options
+            invalid_options = specified_options & (ayame_only_options | sora_only_options)
             if invalid_options:
+                modes = []
+                if invalid_options & ayame_only_options:
+                    modes.append("ayame")
+                if invalid_options & sora_only_options:
+                    modes.append("sora")
                 raise ValueError(
                     f"Invalid options specified for P2P mode: {', '.join(sorted(invalid_options))}\n"
-                    f"These options are only for ayame mode"
+                    f"These options are only for {'/'.join(modes)} mode"
                 )
 
         elif mode == MomoMode.AYAME:
-            invalid_options = specified_options & p2p_only_options
+            invalid_options = specified_options & (p2p_only_options | sora_only_options)
             if invalid_options:
+                modes = []
+                if invalid_options & p2p_only_options:
+                    modes.append("p2p")
+                if invalid_options & sora_only_options:
+                    modes.append("sora")
                 raise ValueError(
                     f"Invalid options specified for Ayame mode: "
                     f"{', '.join(sorted(invalid_options))}\n"
-                    f"These options are only for p2p mode"
+                    f"These options are only for {'/'.join(modes)} mode"
+                )
+
+        elif mode == MomoMode.SORA:
+            invalid_options = specified_options & (p2p_only_options | ayame_only_options)
+            if invalid_options:
+                modes = []
+                if invalid_options & p2p_only_options:
+                    modes.append("p2p")
+                if invalid_options & ayame_only_options:
+                    modes.append("ayame")
+                raise ValueError(
+                    f"Invalid options specified for Sora mode: "
+                    f"{', '.join(sorted(invalid_options))}\n"
+                    f"These options are only for {'/'.join(modes)} mode"
                 )
 
     def _wait_for_startup(
@@ -331,8 +570,24 @@ class Momo:
                     url = f"http://localhost:{metrics_port}/metrics"
                     response = client.get(url, timeout=5)
                     if response.status_code == 200:
-                        print(f"Momo started successfully after {time.time() - start_time:.1f}s")
-                        return
+                        if self.kwargs["mode"] == MomoMode.SORA:
+                            data = response.json()
+                            stats = data.get("stats", [])
+                            if stats and len(stats) > 0:
+                                print(
+                                    f"Momo started successfully after {time.time() - start_time:.1f}s (stats count: {len(stats)})"
+                                )
+                                return
+                            else:
+                                elapsed = time.time() - start_time
+                                print(
+                                    f"  Metrics endpoint is up but stats is empty, waiting for connection... ({elapsed:.1f}s elapsed)"
+                                )
+                        else:
+                            print(
+                                f"Momo started successfully after {time.time() - start_time:.1f}s"
+                            )
+                            return
                     else:
                         print(f"  Got status code: {response.status_code}")
                 except httpx.ConnectError:

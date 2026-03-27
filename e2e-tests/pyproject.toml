@@ -12,6 +12,8 @@ dev = [
     "pytest-rerunfailures",
     "pytest-timeout",
     "httpx",
+    "pyjwt",
+    "python-dotenv",
     "ruff",
     "ty",
 ]
