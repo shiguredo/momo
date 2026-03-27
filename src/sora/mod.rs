@@ -87,40 +87,44 @@ pub async fn run(
         None
     };
 
-    #[allow(unused_mut)]
-    let mut ctx_config = SoraClientContextConfig {
-        adm_config,
-        ..Default::default()
-    };
+    // ctx_config は Send を実装しないため、await をまたがないようブロックで囲む
+    let context = {
+        #[allow(unused_mut)]
+        let mut ctx_config = SoraClientContextConfig {
+            adm_config,
+            ..Default::default()
+        };
 
-    // V4L2 ハードウェアエンコーダーの追加
-    if config.use_v4l2_encoder {
-        #[cfg(feature = "raspberrypi")]
-        {
-            use crate::v4l2_encoder::sora_capability::V4l2VideoCodecCapability;
-            info!(target: "sora", "using V4L2 H.264 hardware encoder capability");
+        // V4L2 ハードウェアエンコーダーの追加
+        if config.use_v4l2_encoder {
+            #[cfg(feature = "raspberrypi")]
+            {
+                use crate::v4l2_encoder::sora_capability::V4l2VideoCodecCapability;
+                info!(target: "sora", "using V4L2 H.264 hardware encoder capability");
+                ctx_config
+                    .video_codec_capabilities
+                    .push(Box::new(V4l2VideoCodecCapability {
+                        dmabuf_map: dmabuf_map.clone(),
+                    }));
+            }
+            #[cfg(not(feature = "raspberrypi"))]
+            {
+                tracing::warn!(target: "sora", "--use-v4l2-encoder requires raspberrypi feature");
+            }
+        }
+        // OpenH264 エンコーダー/デコーダーの追加
+        if let Some(ref lib) = config.openh264_lib {
+            use crate::openh264::sora_capability::Openh264VideoCodecCapability;
+            info!(target: "sora", "using OpenH264 codec capability");
             ctx_config
                 .video_codec_capabilities
-                .push(Box::new(V4l2VideoCodecCapability {
-                    dmabuf_map: dmabuf_map.clone(),
-                }));
+                .push(Box::new(Openh264VideoCodecCapability { lib: lib.clone() }));
         }
-        #[cfg(not(feature = "raspberrypi"))]
-        {
-            tracing::warn!(target: "sora", "--use-v4l2-encoder requires raspberrypi feature");
-        }
-    }
-    // OpenH264 エンコーダー/デコーダーの追加
-    if let Some(ref lib) = config.openh264_lib {
-        use crate::openh264::sora_capability::Openh264VideoCodecCapability;
-        info!(target: "sora", "using OpenH264 codec capability");
-        ctx_config
-            .video_codec_capabilities
-            .push(Box::new(Openh264VideoCodecCapability { lib: lib.clone() }));
-    }
 
-    let context = SoraClientContext::new_with_config(ctx_config)
-        .map_err(|e| -> BoxError { format!("SoraClientContext の生成に失敗: {e}").into() })?;
+        SoraClientContext::new_with_config(ctx_config).map_err(|e| -> BoxError {
+            format!("SoraClientContext の生成に失敗: {e}").into()
+        })?
+    };
 
     // ── 映像キャプチャ・トラック ──────────────────────────────────────────
     #[cfg(feature = "raspberrypi")]
