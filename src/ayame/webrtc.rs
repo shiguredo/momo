@@ -504,8 +504,8 @@ fn filter_codecs(
     media_type: MediaType,
     target_codec: &str,
 ) -> Result<RtpCodecCapabilityVector, BoxError> {
-    let sender_caps = factory.get_rtp_sender_capabilities(media_type);
-    let receiver_caps = factory.get_rtp_receiver_capabilities(media_type);
+    let sender_caps = factory.get_rtp_sender_capabilities(media_type.clone());
+    let receiver_caps = factory.get_rtp_receiver_capabilities(media_type.clone());
     let sender_codecs = sender_caps.codecs();
     let receiver_codecs = receiver_caps.codecs();
 
