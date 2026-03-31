@@ -37,10 +37,9 @@ pub(super) async fn handle_signaling(
             info!(target: "sdp", "offer received");
             *peer = None;
             #[cfg(target_os = "linux")]
-            let new_peer =
-                create_peer(engine, sig_tx.clone(), config.serial.clone()).map_err(wrtc_err)?;
+            let new_peer = create_peer(engine, sig_tx.clone(), config.serial.clone())?;
             #[cfg(not(target_os = "linux"))]
-            let new_peer = create_peer(engine, sig_tx.clone()).map_err(wrtc_err)?;
+            let new_peer = create_peer(engine, sig_tx.clone())?;
             process_offer(&new_peer.pc, sdp, sig_tx).await?;
             *peer = Some(new_peer);
         }

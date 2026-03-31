@@ -39,6 +39,8 @@ pub struct P2PConfig {
     pub framerate: u32,
     pub force_pixel_format: Option<shiguredo_video_device::PixelFormat>,
     pub degradation_preference: shiguredo_webrtc::DegradationPreference,
+    pub video_codec_type: Option<String>,
+    pub audio_codec_type: Option<String>,
     #[cfg(target_os = "linux")]
     pub serial: Option<crate::serial::SerialConfig>,
     pub metrics_state: Option<Arc<MetricsState>>,

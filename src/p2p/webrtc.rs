@@ -9,11 +9,11 @@ use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDecoderFactory, AudioDeviceModule,
     AudioEncoderFactory, AudioProcessingBuilder, CreateSessionDescriptionObserver,
     CreateSessionDescriptionObserverHandler, DataChannel, Environment, I420Buffer, IceServer,
-    PeerConnection, PeerConnectionDependencies, PeerConnectionFactoryDependencies,
+    MediaType, PeerConnection, PeerConnectionDependencies, PeerConnectionFactoryDependencies,
     PeerConnectionObserver, PeerConnectionObserverHandler, PeerConnectionOfferAnswerOptions,
-    PeerConnectionRtcConfiguration, PeerConnectionState, RtcError, SdpType, SessionDescription,
-    SetLocalDescriptionObserver, SetLocalDescriptionObserverHandler, SetRemoteDescriptionObserver,
-    SetRemoteDescriptionObserverHandler, StringVector, Thread, TimestampAligner,
+    PeerConnectionRtcConfiguration, PeerConnectionState, RtcError, RtpTransceiverInit, SdpType,
+    SessionDescription, SetLocalDescriptionObserver, SetLocalDescriptionObserverHandler,
+    SetRemoteDescriptionObserver, SetRemoteDescriptionObserverHandler, Thread, TimestampAligner,
     VideoDecoderFactory, VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
 };
 use tokio::sync::{mpsc, oneshot};
@@ -42,6 +42,8 @@ pub(super) struct WebRtcEngine {
     // 3. factory と設定
     pub(super) factory: shiguredo_webrtc::PeerConnectionFactory,
     pub(super) degradation_preference: shiguredo_webrtc::DegradationPreference,
+    pub(super) video_codec_type: Option<String>,
+    pub(super) audio_codec_type: Option<String>,
     // 4. スレッド群（factory より後に drop）
     _env: Environment,
     _network_thread: Thread,
@@ -262,6 +264,8 @@ impl WebRtcEngine {
             _adm_state: adm_state,
             factory,
             degradation_preference: config.degradation_preference,
+            video_codec_type: config.video_codec_type.clone(),
+            audio_codec_type: config.audio_codec_type.clone(),
             _env: env,
             _network_thread: network_thread,
             _worker_thread: worker_thread,
@@ -293,7 +297,7 @@ pub(super) fn create_peer(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
     serial_config: Option<crate::serial::SerialConfig>,
-) -> shiguredo_webrtc::Result<Peer> {
+) -> Result<Peer, BoxError> {
     create_peer_inner(engine, sig_tx, serial_config)
 }
 
@@ -304,7 +308,7 @@ pub(super) fn create_peer(
 pub(super) fn create_peer(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
-) -> shiguredo_webrtc::Result<Peer> {
+) -> Result<Peer, BoxError> {
     create_peer_inner(engine, sig_tx)
 }
 
@@ -312,7 +316,7 @@ fn create_peer_inner(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
     #[cfg(target_os = "linux")] serial_config: Option<crate::serial::SerialConfig>,
-) -> shiguredo_webrtc::Result<Peer> {
+) -> Result<Peer, BoxError> {
     struct PcObserver {
         sig_tx: mpsc::UnboundedSender<String>,
         #[cfg(target_os = "linux")]
@@ -363,19 +367,41 @@ fn create_peer_inner(
     }
 
     let mut deps = PeerConnectionDependencies::new(&observer);
-    let pc = PeerConnection::create(&engine.factory, &mut rtc_config, &mut deps)?;
+    let pc =
+        PeerConnection::create(&engine.factory, &mut rtc_config, &mut deps).map_err(wrtc_err)?;
+
+    // 音声トランシーバーを追加
+    let mut audio_transceiver = {
+        let mut init = RtpTransceiverInit::new();
+        pc.add_transceiver(MediaType::Audio, &mut init)
+            .map_err(wrtc_err)?
+    };
 
     // 映像トラックを追加（ブラウザが recvonly で受信する側）
-    if let Some(ref vts) = engine.video_track_source {
-        let video_track = engine.factory.create_video_track(vts, "video0")?;
-        let media_track = video_track.cast_to_media_stream_track();
-        let stream_ids = StringVector::new(0);
-        let mut sender = pc.add_track(&media_track, &stream_ids)?;
-        // DegradationPreference を設定
-        let mut params = sender.get_parameters();
-        params.set_degradation_preference(Some(engine.degradation_preference));
-        sender.set_parameters(&params)?;
+    let mut video_transceiver = if let Some(ref vts) = engine.video_track_source {
+        let video_track = engine
+            .factory
+            .create_video_track(vts, "video0")
+            .map_err(wrtc_err)?;
+        let mut init = RtpTransceiverInit::new();
+        let transceiver = pc
+            .add_transceiver_with_track(&video_track, &mut init)
+            .map_err(wrtc_err)?;
         info!(target: "pc", degradation = ?engine.degradation_preference, "video track added");
+        Some(transceiver)
+    } else {
+        None
+    };
+
+    // コーデックプリファレンスを設定
+    if engine.video_codec_type.is_some() || engine.audio_codec_type.is_some() {
+        crate::codec::set_codec_preferences(
+            &engine.factory,
+            &mut audio_transceiver,
+            video_transceiver.as_mut(),
+            engine.video_codec_type.as_deref(),
+            engine.audio_codec_type.as_deref(),
+        )?;
     }
 
     Ok(Peer {

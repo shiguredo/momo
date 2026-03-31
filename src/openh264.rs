@@ -3,9 +3,7 @@
 //! shiguredo_openh264 の Encoder/Decoder を WebRTC の VideoEncoderFactory/VideoDecoderFactory で
 //! ラップし、OpenH264 による H.264 エンコーディング/デコーディングを提供する。
 
-use shiguredo_openh264::{
-    DecodedFrame, EncodeOptions, Encoder, EncoderConfig, Openh264Library, Profile,
-};
+use shiguredo_openh264::{DecodedFrame, EncodeOptions, Encoder, EncoderConfig, Openh264Library};
 use shiguredo_webrtc::{
     CodecSpecificInfo, EncodedImage, EncodedImageBuffer, EncodedImageRef, EnvironmentRef,
     H264PacketizationMode, I420Buffer, SdpVideoFormat, SdpVideoFormatRef, VideoCodecRef,
@@ -132,8 +130,7 @@ impl VideoEncoderHandler for Openh264H264Encoder {
             "initializing OpenH264 encoder"
         );
 
-        let mut config = EncoderConfig::new(width, height, bitrate_bps, fps, 1);
-        config.profile = Some(Profile::ConstrainedBaseline);
+        let config = EncoderConfig::new(width, height, bitrate_bps, fps, 1);
 
         match Encoder::new(self.lib.clone(), config) {
             Ok(encoder) => {

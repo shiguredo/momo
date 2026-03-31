@@ -1,6 +1,7 @@
 mod adm;
 #[cfg(feature = "ayame")]
 mod ayame;
+mod codec;
 mod error;
 mod fake;
 #[cfg(feature = "raspberrypi")]
@@ -660,10 +661,48 @@ async fn run_p2p(
             }
             Ok(path)
         })?;
+    let video_codec_type: Option<String> = noargs::opt("video-codec-type")
+        .ty("TYPE")
+        .doc("Video codec type (VP8, VP9, AV1, H264, H265)")
+        .take(&mut args)
+        .present_and_then(|o| o.value().parse())?;
+    let audio_codec_type: Option<String> = noargs::opt("audio-codec-type")
+        .ty("TYPE")
+        .doc("Audio codec type (OPUS, PCMU, PCMA)")
+        .take(&mut args)
+        .present_and_then(|o| o.value().parse())?;
 
     if let Some(help) = args.finish()? {
         print!("{}", help);
         return Ok(());
+    }
+
+    // コーデックのバリデーション
+    if let Some(ref codec) = video_codec_type {
+        match codec.as_str() {
+            "VP8" | "VP9" | "AV1" | "H264" | "H265" => {}
+            other => {
+                return Err(noargs::Error::other(
+                    &noargs::raw_args(),
+                    format!(
+                        "不正な video-codec-type: {other} (VP8, VP9, AV1, H264, H265 のいずれかを指定してください)"
+                    ),
+                ));
+            }
+        }
+    }
+    if let Some(ref codec) = audio_codec_type {
+        match codec.as_str() {
+            "OPUS" | "PCMU" | "PCMA" => {}
+            other => {
+                return Err(noargs::Error::other(
+                    &noargs::raw_args(),
+                    format!(
+                        "不正な audio-codec-type: {other} (OPUS, PCMU, PCMA のいずれかを指定してください)"
+                    ),
+                ));
+            }
+        }
     }
 
     let config = p2p::P2PConfig {
@@ -686,6 +725,8 @@ async fn run_p2p(
             .force_pixel_format
             .map(ForcePixelFormat::to_pixel_format),
         degradation_preference: common.degradation_preference,
+        video_codec_type,
+        audio_codec_type,
         #[cfg(target_os = "linux")]
         serial: common.serial,
         metrics_state,
