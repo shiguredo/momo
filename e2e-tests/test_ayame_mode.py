@@ -391,7 +391,7 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type] 存在しないコーデック
+            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # 存在しないコーデック
         ):
             pytest.fail("momo process should have exited with invalid codec")
 
@@ -403,6 +403,6 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type] 存在しないコーデック
+            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type]  # 存在しないコーデック
         ):
             pytest.fail("momo process should have exited with invalid audio codec")
