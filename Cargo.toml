@@ -28,7 +28,7 @@ rustls-platform-verifier = { version = "0.6", optional = true }
 raden = "2026.1.0-canary.2"
 shiguredo_http11 = "2026.1.1"
 shiguredo_webrtc = "=0.146.2-canary.5"
-shiguredo_openh264 = "2026.1.0-canary.4"
+shiguredo_openh264 = "2026.1.0"
 shiguredo_websocket = "2026.1.0"
 shiguredo_audio_device = "2026.1.0-canary.0"
 shiguredo_video_device = "2026.1.0-canary.3"
