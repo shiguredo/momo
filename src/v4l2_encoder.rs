@@ -185,17 +185,21 @@ impl VideoEncoderHandler for V4l2H264Encoder {
         } else {
             // ── 通常モード: I420 データをコピーして渡す ──
             let buffer = frame.buffer();
-            let y = buffer.y_data();
-            let u = buffer.u_data();
-            let v = buffer.v_data();
+            let Some(i420) = buffer.as_i420() else {
+                warn!(target: "v4l2", "encode: frame buffer is not I420");
+                return VideoCodecStatus::Error;
+            };
+            let y = i420.y_data();
+            let u = i420.u_data();
+            let v = i420.v_data();
             let width = self.width as usize;
             let height = self.height as usize;
 
             let yuv_size = width * height * 3 / 2;
             let mut i420_data = Vec::with_capacity(yuv_size);
-            let stride_y = buffer.stride_y() as usize;
-            let stride_u = buffer.stride_u() as usize;
-            let stride_v = buffer.stride_v() as usize;
+            let stride_y = i420.stride_y() as usize;
+            let stride_u = i420.stride_u() as usize;
+            let stride_v = i420.stride_v() as usize;
 
             // Y plane
             for row in 0..height {
