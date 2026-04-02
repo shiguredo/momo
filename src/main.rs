@@ -17,6 +17,7 @@ mod serial;
 mod sora;
 #[cfg(feature = "raspberrypi")]
 mod v4l2_encoder;
+mod webrtc_video;
 
 #[tokio::main]
 async fn main() -> noargs::Result<()> {

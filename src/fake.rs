@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use shiguredo_webrtc::{
     AdaptedVideoTrackSource, AudioDeviceModule, AudioDeviceModuleAudioLayer, Environment,
-    I420Buffer, VideoFrame as WebrtcVideoFrame,
+    I420Buffer,
 };
 
 use crate::error::{BoxError, wrtc_err};
@@ -146,7 +146,7 @@ pub(crate) fn start_fake_video_thread(
                         let _ = tx.try_send(preview_frame);
                     }
 
-                    let frame = WebrtcVideoFrame::from_i420(
+                    let frame = crate::webrtc_video::video_frame_from_i420(
                         &i420,
                         timestamp_us,
                         (timestamp_us * 90 / 1000) as u32,

@@ -10,9 +10,7 @@ use shiguredo_libcamera::{
     FrameStatus, PixelFormat, Rectangle, RequestStatus, Size, StreamRole, core, draft, rpi,
 };
 use shiguredo_webrtc::ffi::*;
-use shiguredo_webrtc::{
-    AdaptedVideoTrackSource, I420Buffer, TimestampAligner, VideoFrame as WebrtcVideoFrame,
-};
+use shiguredo_webrtc::{AdaptedVideoTrackSource, I420Buffer, TimestampAligner};
 use tracing::{error, info, warn};
 
 use crate::error::BoxError;
@@ -263,8 +261,11 @@ fn run_libcamera_loop(
                         let ts = aligner
                             .translate(timestamp_us as i64, shiguredo_webrtc::time_millis() * 1000);
                         let dummy = I420Buffer::new(w, h);
-                        let video_frame =
-                            WebrtcVideoFrame::from_i420(&dummy, ts, (ts * 90 / 1000) as u32);
+                        let video_frame = crate::webrtc_video::video_frame_from_i420(
+                            &dummy,
+                            ts,
+                            (ts * 90 / 1000) as u32,
+                        );
                         source.on_frame(&video_frame);
                     } else {
                         // フレームがドロップされた場合はエントリを除去して即 requeue
@@ -323,9 +324,17 @@ fn run_libcamera_loop(
                                 adapt_result.size.adapted_height,
                             );
                             scaled.scale_from(&i420_buf);
-                            WebrtcVideoFrame::from_i420(&scaled, ts, (ts * 90 / 1000) as u32)
+                            crate::webrtc_video::video_frame_from_i420(
+                                &scaled,
+                                ts,
+                                (ts * 90 / 1000) as u32,
+                            )
                         } else {
-                            WebrtcVideoFrame::from_i420(&i420_buf, ts, (ts * 90 / 1000) as u32)
+                            crate::webrtc_video::video_frame_from_i420(
+                                &i420_buf,
+                                ts,
+                                (ts * 90 / 1000) as u32,
+                            )
                         };
                         source.on_frame(&video_frame);
                     }

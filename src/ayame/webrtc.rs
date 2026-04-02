@@ -4,7 +4,7 @@ use shiguredo_audio_device::{AudioCapture, AudioCaptureConfig};
 
 /// oneshot チャンネルの送信側を保護するための型エイリアス
 type SharedSender<T> = Arc<Mutex<Option<tokio::sync::oneshot::Sender<T>>>>;
-use shiguredo_video_device::{PixelFormat, VideoCapture, VideoCaptureConfig};
+use shiguredo_video_device::{VideoCapture, VideoCaptureConfig};
 use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDecoderFactory, AudioDeviceModule,
     AudioEncoderFactory, AudioProcessingBuilder, CreateSessionDescriptionObserver,
@@ -15,7 +15,7 @@ use shiguredo_webrtc::{
     RtpTransceiverInit, SdpType, SessionDescription, SetLocalDescriptionObserver,
     SetLocalDescriptionObserverHandler, SetRemoteDescriptionObserver,
     SetRemoteDescriptionObserverHandler, StringVector, Thread, TimestampAligner,
-    VideoDecoderFactory, VideoEncoderFactory, VideoFrame as WebrtcVideoFrame, VideoTrackSource,
+    VideoDecoderFactory, VideoEncoderFactory, VideoTrackSource,
 };
 use tracing::info;
 
@@ -122,27 +122,17 @@ impl AyameEngine {
                     pixel_format: config.force_pixel_format,
                 };
                 let mut capture = VideoCapture::new(video_cfg, move |frame| {
-                    let i420 = match frame.pixel_format {
-                        PixelFormat::Nv12 => {
-                            let uv = frame.uv_data.unwrap_or(&[]);
-                            shiguredo_webrtc::nv12_to_i420(
-                                frame.data,
-                                frame.stride,
-                                uv,
-                                frame.stride_uv,
-                                frame.width,
-                                frame.height,
-                            )
-                        }
-                        PixelFormat::Yuy2 => shiguredo_webrtc::yuy2_to_i420(
-                            frame.data,
-                            frame.stride,
-                            frame.width,
-                            frame.height,
-                        ),
-                        _ => None,
+                    let Some(buffer) = crate::webrtc_video::capture_frame_to_i420(
+                        frame.pixel_format,
+                        frame.data,
+                        frame.stride,
+                        frame.stride_uv,
+                        frame.uv_data,
+                        frame.width,
+                        frame.height,
+                    ) else {
+                        return;
                     };
-                    let Some(buffer) = i420 else { return };
                     let Ok(mut guard) = shared.lock() else { return };
                     let (ref mut source, ref mut aligner) = *guard;
 
@@ -159,9 +149,17 @@ impl AyameEngine {
                     {
                         let mut scaled = I420Buffer::new(size.adapted_width, size.adapted_height);
                         scaled.scale_from(&buffer);
-                        WebrtcVideoFrame::from_i420(&scaled, ts, (ts * 90 / 1000) as u32)
+                        crate::webrtc_video::video_frame_from_i420(
+                            &scaled,
+                            ts,
+                            (ts * 90 / 1000) as u32,
+                        )
                     } else {
-                        WebrtcVideoFrame::from_i420(&buffer, ts, (ts * 90 / 1000) as u32)
+                        crate::webrtc_video::video_frame_from_i420(
+                            &buffer,
+                            ts,
+                            (ts * 90 / 1000) as u32,
+                        )
                     };
                     source.on_frame(&video_frame);
                 })

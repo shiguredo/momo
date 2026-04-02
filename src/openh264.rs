@@ -11,8 +11,8 @@ use shiguredo_webrtc::{
     VideoDecoderFactory, VideoDecoderFactoryHandler, VideoDecoderHandler, VideoDecoderSettingsRef,
     VideoEncoderEncodedImageCallbackPtr, VideoEncoderEncodedImageCallbackRef,
     VideoEncoderEncoderInfo, VideoEncoderFactory, VideoEncoderFactoryHandler, VideoEncoderHandler,
-    VideoEncoderRateControlParametersRef, VideoEncoderSettingsRef, VideoFrame as WebrtcVideoFrame,
-    VideoFrameRef, VideoFrameType, VideoFrameTypeVectorRef,
+    VideoEncoderRateControlParametersRef, VideoEncoderSettingsRef, VideoFrameRef, VideoFrameType,
+    VideoFrameTypeVectorRef,
 };
 use std::path::Path;
 use tracing::{error, info, warn};
@@ -165,14 +165,18 @@ impl VideoEncoderHandler for Openh264H264Encoder {
 
         // I420 バッファからプレーンデータを取得
         let buffer = frame.buffer();
-        let y_raw = buffer.y_data();
-        let u_raw = buffer.u_data();
-        let v_raw = buffer.v_data();
+        let Some(i420) = buffer.as_i420() else {
+            warn!(target: "openh264", "encode: frame buffer is not I420");
+            return VideoCodecStatus::Error;
+        };
+        let y_raw = i420.y_data();
+        let u_raw = i420.u_data();
+        let v_raw = i420.v_data();
         let width = self.width as usize;
         let height = self.height as usize;
-        let stride_y = buffer.stride_y() as usize;
-        let stride_u = buffer.stride_u() as usize;
-        let stride_v = buffer.stride_v() as usize;
+        let stride_y = i420.stride_y() as usize;
+        let stride_u = i420.stride_u() as usize;
+        let stride_v = i420.stride_v() as usize;
 
         // OpenH264 はストライド = 幅を前提とするため、必要に応じてパック
         let (y, u, v) = if stride_y == width && stride_u == width / 2 && stride_v == width / 2 {
@@ -502,7 +506,7 @@ fn deliver_decoded_frame(
     }
 
     let timestamp_us = rtp_timestamp as i64 * 1000 / 90;
-    let frame = WebrtcVideoFrame::from_i420(&i420, timestamp_us, rtp_timestamp);
+    let frame = crate::webrtc_video::video_frame_from_i420(&i420, timestamp_us, rtp_timestamp);
 
     // SAFETY: callback ポインタは register_decode_complete_callback で渡されたもので、
     // release が呼ばれるまで有効である。

@@ -5,10 +5,9 @@
 use std::sync::Arc;
 
 use shiguredo_audio_device::{AudioCapture, AudioCaptureConfig};
-use shiguredo_video_device::{PixelFormat, VideoCapture, VideoCaptureConfig};
+use shiguredo_video_device::{VideoCapture, VideoCaptureConfig};
 use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDeviceModule, I420Buffer, TimestampAligner,
-    VideoFrame as WebrtcVideoFrame,
 };
 use sora_sdk::{
     AdmConfig, Audio, JsonString, Role, SoraClient, SoraClientContext, SoraClientContextConfig,
@@ -189,27 +188,17 @@ pub async fn run(
                 pixel_format: config.force_pixel_format,
             };
             let mut capture = VideoCapture::new(video_cfg, move |frame| {
-                let i420 = match frame.pixel_format {
-                    PixelFormat::Nv12 => {
-                        let uv = frame.uv_data.unwrap_or(&[]);
-                        shiguredo_webrtc::nv12_to_i420(
-                            frame.data,
-                            frame.stride,
-                            uv,
-                            frame.stride_uv,
-                            frame.width,
-                            frame.height,
-                        )
-                    }
-                    PixelFormat::Yuy2 => shiguredo_webrtc::yuy2_to_i420(
-                        frame.data,
-                        frame.stride,
-                        frame.width,
-                        frame.height,
-                    ),
-                    _ => None,
+                let Some(buffer) = crate::webrtc_video::capture_frame_to_i420(
+                    frame.pixel_format,
+                    frame.data,
+                    frame.stride,
+                    frame.stride_uv,
+                    frame.uv_data,
+                    frame.width,
+                    frame.height,
+                ) else {
+                    return;
                 };
-                let Some(buffer) = i420 else { return };
                 let Ok(mut guard) = shared.lock() else { return };
                 let (ref mut source, ref mut aligner) = *guard;
 
@@ -237,8 +226,11 @@ pub async fn run(
                         let _ = tx.try_send(pf);
                     }
 
-                    let video_frame =
-                        WebrtcVideoFrame::from_i420(&scaled, ts, (ts * 90 / 1000) as u32);
+                    let video_frame = crate::webrtc_video::video_frame_from_i420(
+                        &scaled,
+                        ts,
+                        (ts * 90 / 1000) as u32,
+                    );
                     source.on_frame(&video_frame);
                 } else {
                     // プレビューウィンドウへフレームを送信 (ベストエフォート)
@@ -253,8 +245,11 @@ pub async fn run(
                         let _ = tx.try_send(pf);
                     }
 
-                    let video_frame =
-                        WebrtcVideoFrame::from_i420(&buffer, ts, (ts * 90 / 1000) as u32);
+                    let video_frame = crate::webrtc_video::video_frame_from_i420(
+                        &buffer,
+                        ts,
+                        (ts * 90 / 1000) as u32,
+                    );
                     source.on_frame(&video_frame);
                 }
             })
