@@ -445,7 +445,9 @@ fn apply_video_toolbox_preference(
 
     #[cfg(not(any(target_os = "macos", target_os = "ios")))]
     {
-        return Err("videotoolbox is only available on Apple platforms".into());
+        // Apple プラットフォーム以外では利用不可
+        let _ = (preference, direction, codec_type);
+        Err("videotoolbox is only available on Apple platforms".into())
     }
 
     #[cfg(any(target_os = "macos", target_os = "ios"))]

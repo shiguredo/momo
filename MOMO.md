@@ -254,22 +254,27 @@ TODO:
 | `--vp8-encoder` / `--vp8-decoder` | 実装済み (default/software/jetson/nvidia/vpl/videotoolbox/v4l2) | CLI のみ | pending #0010 | パース後未使用 |
 | `--vp9-encoder` / `--vp9-decoder` | 実装済み | CLI のみ | pending #0010 | パース後未使用 |
 | `--av1-encoder` / `--av1-decoder` | 実装済み | CLI のみ | pending #0010 | パース後未使用 |
-| `--h264-encoder` / `--h264-decoder` | 実装済み | CLI のみ | pending #0010 | パース後未使用 |
-| `--h265-encoder` / `--h265-decoder` | 実装済み | CLI のみ | pending #0010 | パース後未使用 |
-| `--video-codec-engines` | 実装済み (利用可能コーデック一覧表示) | CLI のみ | pending #0010 | パース後未使用 |
+| `--h264-encoder` / `--h264-decoder` | 実装済み | 実装済み | - | videotoolbox 指定に対応 (macOS/iOS)。Sora モードで VideoCodecPreference に設定 |
+| `--h265-encoder` / `--h265-decoder` | 実装済み | 実装済み | - | videotoolbox 指定に対応 (macOS/iOS)。Sora モードで VideoCodecPreference に設定 |
+| `--video-codec-engines` | 実装済み (利用可能コーデック一覧表示) | 実装済み | - | sora_sdk の VideoCodecCapability を使用して一覧表示 |
 | `--openh264` | 実装済み | 実装済み | - | OpenH264 ソフトウェア H.264 エンコーダー/デコーダー。動的ライブラリパスを指定して利用 |
 | `--hw-mjpeg-decoder` | 実装済み | CLI のみ | pending #0010 | パース後未使用 |
 | H.264 HW エンコード (V4L2) | 実装済み | 実装済み | - | `--use-v4l2-encoder` (raspberrypi feature) |
 | H.264 HW エンコード (Jetson) | 実装済み (USE_JETSON_ENCODER) | 未実装 | #0011 | |
 | H.264 HW エンコード (NVIDIA) | 実装済み (USE_NVCODEC_ENCODER/CUDA) | 未実装 | #0012 | |
 | H.264/H.265 HW エンコード (Intel) | 実装済み (USE_VPL_ENCODER/oneVPL) | 未実装 | #0012 | |
-| H.264/H.265 HW エンコード (VideoToolbox) | 実装済み (macOS) | 実装済み | - | shiguredo_webrtc が標準で VideoToolbox を使用 |
+| H.264/H.265 HW エンコード (VideoToolbox) | 実装済み (macOS) | 実装済み | - | `--h264-encoder videotoolbox` / `--h265-encoder videotoolbox` で明示指定。sora_sdk の VideoCodecPreference で設定 |
 
 ### TODO
 
-- [ ] コーデック選択オプション全般 (pending #0010)
+- [x] `--h264-encoder` / `--h264-decoder` の実装 (videotoolbox 指定)
+- [x] `--h265-encoder` / `--h265-decoder` の実装 (videotoolbox 指定)
+- [x] `--video-codec-engines` の実装
+  - sora_sdk の InternalVideoCodecCapability / InternalHwaVideoCodecCapability を使用
+  - 各コーデック (VP8/VP9/AV1/H264/H265) のエンコーダー/デコーダー対応状況を表示
+- [ ] `--vp8-encoder/decoder`, `--vp9-encoder/decoder`, `--av1-encoder/decoder` の実装 (pending #0010)
   - HW バックエンド (#0011/#0012) が未実装のため pending
-  - 対象: `--{codec}-encoder/decoder`, `--video-codec-engines`, `--hw-mjpeg-decoder`
+- [ ] `--hw-mjpeg-decoder` の実装 (pending #0010)
 - [x] `--openh264` の実装 (ソフトウェア H.264 エンコーダー/デコーダー)
   - shiguredo_openh264 crate による Cisco OpenH264 ソフトウェアコーデックの統合
   - HW エンコーダーが利用できない環境での H.264 対応手段
@@ -369,7 +374,7 @@ TODO:
 
 | 機能 | momo | momo-rs | issue | 備考 |
 |------|------|---------|-------|------|
-| `--no-google-stun` | 実装済み | 実装済み | - | CommonConfig に含まれる |
+| `--no-google-stun` | 実装済み | CLI のみ | - | パース後未使用 (`_no_google_stun`) |
 | `--insecure` | 実装済み | 実装済み | #0021 | Ayame: rustls NoVerifier、Sora: sora_sdk insecure + turn_tls_insecure |
 | `--cacert` | **なし** | 実装済み | #0026 | CA 証明書指定 (PEM)。momo にはない momo-rs 独自機能 |
 | `--proxy-url` | 実装済み (CONNECT トンネリング + Basic Auth) | CLI のみ | #0014 | Sora モードのみ対応予定。sora_sdk の ProxyInfo API を使用。P2P / Ayame は非対応 |
@@ -423,9 +428,9 @@ shiguredo_webrtc の `SSLCertificateVerifier` コールバック経由で `TurnT
 
 - PEM ファイルを読み込み、`(cert_pem, key_pem)` タプルとして各モードに伝搬
 - `--client-cert` と `--client-key` は同時指定必須 (片方のみはエラー)
-- **Ayame モード**: `rustls_pemfile` で PEM をパースし、`with_client_auth_cert()` または `SingleCertResolver` で rustls に設定
+- **Ayame モード**: `rustls_pki_types` で PEM をパースし、`with_client_auth_cert()` または `SingleCertResolver` で rustls に設定
 - **Sora モード**: `sora_sdk::SoraClientBuilder::client_cert(cert_pem, key_pem)` で設定
-- `rustls-pemfile` v2 を依存に追加 (ayame feature で有効化)
+- `rustls-pki-types` v1 を依存に追加 (ayame feature で有効化)
 
 #### `--cacert` の実装
 
@@ -473,21 +478,17 @@ shiguredo_webrtc の `SSLCertificateVerifier` コールバック経由で `TurnT
 
 | 機能 | momo | momo-rs | issue | 備考 |
 |------|------|---------|-------|------|
-| SDL レンダラー | 実装済み (`--use-sdl`, SDL3) | 未実装 | #0020 | momo-rs は raw-player-rs (raw_player crate, SDL3 ベース) を使用予定 |
-| `--use-raw-player` | 実装済み | CLI のみ | #0020 | パース後未使用 |
+| SDL レンダラー | 実装済み (`--use-sdl`, SDL3, 受信映像表示) | 実装済み (送信プレビューのみ) | #0020 | momo-rs は raw_player crate (SDL3 ベース) で Sora sendonly 時のプレビュー表示。受信映像表示は未実装 |
+| `--player` | なし (momo は `--use-sdl`) | 実装済み | - | player feature (デフォルト有効)。Sora sendonly 時にキャプチャ映像を SDL3 プレビュー表示 |
 | `--fullscreen` | 実装済み | CLI のみ | #0020 | パース後未使用 |
-| `--window-width` / `--window-height` | 実装済み | CLI のみ | #0020 | パース後未使用 |
+| `--window-width` / `--window-height` | 実装済み | 実装済み | - | プレビューウィンドウサイズ指定 (デフォルト 640x480) |
 
 ### TODO
 
-- [ ] 映像表示 (raw-player-rs) の実装 (#0020)
-  - 現状: 未実装。momo は SDL3 で受信映像表示
-  - raw-player-rs (raw_player crate, SDL3 ベース) を使用
-- [ ] `--use-raw-player` の実装 (#0020)
-  - 現状: CLI のみ。パース後未使用
+- [ ] 受信映像表示の実装 (#0020)
+  - 現状: 送信プレビュー (Sora sendonly) のみ対応
+  - momo は `--use-sdl` で recvonly/sendrecv 時に受信映像を表示可能
 - [ ] `--fullscreen` の実装 (#0020)
-  - 現状: CLI のみ。パース後未使用
-- [ ] `--window-width` / `--window-height` の実装 (#0020)
   - 現状: CLI のみ。パース後未使用
 
 ### momo の表示実装詳細
@@ -497,10 +498,14 @@ shiguredo_webrtc の `SSLCertificateVerifier` コールバック経由で `TurnT
 - `--fullscreen`: フルスクリーン表示
 - `--use-raw-player`: Raw プレイヤーでの映像表示 (SDL の代替)
 
-### momo-rs の表示方針
+### momo-rs の表示実装詳細
 
-- raw-player-rs (raw_player crate) を使用 (SDL3 ベース)
-- momo と同じく SDL3 ベース
+- raw_player crate (SDL3 ベース) を使用。player feature (デフォルト有効)
+- `--player`: Sora sendonly 時にキャプチャ映像を SDL3 プレビューウィンドウで表示
+  - メインスレッドで SDL3 イベントループを実行、Sora 接続は別タスクで起動
+  - I420 フレームを bounded channel (容量 2) でベストエフォート転送
+  - `--window-width` / `--window-height` でウィンドウサイズ指定 (デフォルト 640x480)
+- 受信映像表示 (recvonly/sendrecv) は未実装
 
 ## ログ・デバッグ
 
@@ -546,7 +551,7 @@ shiguredo_webrtc の `SSLCertificateVerifier` コールバック経由で `TurnT
 | コミットハッシュ | 実装済み (MOMO_COMMIT_SHORT) | 実装済み | #0018 | build.rs で `git rev-parse --short HEAD` |
 | libwebrtc バージョン | 実装済み (WEBRTC_READABLE_VERSION + BUILD_VERSION) | 実装済み | #0018 | `Shiguredo-Build {shiguredo_webrtc::version()}` |
 | 環境情報 | 実装済み (OS 名/バージョン/アーキテクチャ、Jetson L4T バージョン) | 実装済み | #0018 | `[ARCH] OS_DETAIL` 形式 |
-| ビルドフラグ | 実装済み (USE_JETSON_ENCODER, USE_NVCODEC_ENCODER, USE_V4L2_ENCODER, USE_VPL_ENCODER) | 実装済み | #0018 | Cargo features (ayame, sora, raspberrypi, preview) を表示 |
+| ビルドフラグ | 実装済み (USE_JETSON_ENCODER, USE_NVCODEC_ENCODER, USE_V4L2_ENCODER, USE_VPL_ENCODER) | 実装済み | #0018 | Cargo features (ayame, sora, raspberrypi, player) を表示 |
 
 ### TODO
 
@@ -579,14 +584,14 @@ shiguredo_momo 2026.0.0 (abc1234)
 WebRTC: Shiguredo-Build 0.146.0-canary.4
 OpenH264: v2.6.0 (build)
 Environment: [aarch64] macOS 15.3
-Build Flags: ayame, sora, raspberrypi
+Build Flags: ayame, sora, player
 ```
 
 - 1 行目: パッケージ名 + バージョン + コミットハッシュ (build.rs で埋め込み)
 - 2 行目: shiguredo_webrtc のクレートバージョン
 - 3 行目: shiguredo_openh264 のビルド時 OpenH264 バージョン
 - 4 行目: `[ARCH] OS_DETAIL` 形式の環境情報
-- 5 行目: 有効な Cargo features (build.rs で `CARGO_FEATURE_*` 環境変数から判定)
+- 5 行目: 有効な Cargo features (build.rs で `CARGO_FEATURE_*` 環境変数から判定)。デフォルト: ayame, sora, player
 
 ## E2E テスト
 
@@ -595,6 +600,7 @@ Build Flags: ayame, sora, raspberrypi
 | `test_p2p_mode.py` | 4 | P2P モード起動、カスタム引数、マルチインスタンス並行動作、動的生成・削除 |
 | `test_ayame_mode.py` | 5 | Ayame モード起動、client_id、ビデオ/オーディオ設定、無効コーデックエラー |
 | `test_momo_validation.py` | 4 | モード間オプション混在エラー、共通オプション |
+| `test_sora_mode_apple_video_toolbox.py` | 6 | Apple VideoToolbox H264/H265 エンコーダー/デコーダー、sendonly/recvonly ペア、simulcast (skip) |
 
 ### TODO
 
@@ -603,6 +609,11 @@ Build Flags: ayame, sora, raspberrypi
 - [x] Ayame モード起動・設定バリエーション・不正コーデック検証 (test_ayame_mode.py)
 - [x] モード固有オプションの検証 (test_momo_validation.py)
 - [x] momo.py: Momo クラス、get_metrics()、wait_for_connection()、wait_stats 対応
+- [x] Apple Video Toolbox E2E テスト (test_sora_mode_apple_video_toolbox.py)
+  - H264/H265 VideoToolbox エンコーダーで sendonly 接続、encoderImplementation 確認
+  - sendonly/recvonly ペアで encoderImplementation/decoderImplementation が VideoToolbox であることを確認
+  - simulcast テストは webrtc-rs が HWA での simulcast 未対応のためスキップ
+  - GitHub Actions の self-hosted runner (macOS ARM64) で CI 実行
 
 未実装:
 - [ ] Sora モード E2E テスト (#0001)
@@ -674,6 +685,7 @@ Build Flags: ayame, sora, raspberrypi
 - libcamera / V4L2 エンコーダー (Raspberry Pi 専用)
 - 音声処理オプション (エコーキャンセレーション等) の実動作 (CLI に渡しているが momo-rs 側で未使用)
 - スクリーンキャプチャ
-- HW エンコーダー (Jetson / NVIDIA / Intel / VideoToolbox)
+- HW エンコーダー (Jetson / NVIDIA / Intel)
+- VideoToolbox simulcast (webrtc-rs が HWA での simulcast 未対応)
 - `--metrics-allow-external-ip` の動作検証
 - `--insecure` の動作検証
