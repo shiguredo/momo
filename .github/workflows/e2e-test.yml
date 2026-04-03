@@ -36,9 +36,8 @@ jobs:
       APPLE_VIDEO_TOOLBOX: true
     steps:
       - uses: actions/checkout@v6
-      - run: rustup update stable
       - name: Build
-        run: cargo build --features sora
+        run: cargo build
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Run Apple Video Toolbox E2E tests
