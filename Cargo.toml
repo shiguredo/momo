@@ -31,7 +31,7 @@ shiguredo_webrtc = "=0.146.3"
 shiguredo_openh264 = "2026.1.0"
 shiguredo_websocket = "2026.1.0"
 shiguredo_audio_device = "2026.1.0-canary.0"
-shiguredo_video_device = "2026.1.0-canary.3"
+shiguredo_video_device = "2026.1.0-canary.5"
 tokio = { version = "1", features = [
     "rt-multi-thread",
     "net",

@@ -1185,9 +1185,9 @@ dependencies = [
 
 [[package]]
 name = "shiguredo_video_device"
-version = "2026.1.0-canary.3"
+version = "2026.1.0-canary.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f36c1e6940b6f72753d0cd869af28603a121c4f9666074acc396531b8c66a4"
+checksum = "04b33ff719586f43a2d1b3ebf8eb2baf18cca21552b4f7236c666c714dce5ea6"
 dependencies = [
  "bindgen",
  "cc",
