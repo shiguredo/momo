@@ -36,6 +36,11 @@ jobs:
       APPLE_VIDEO_TOOLBOX: true
     steps:
       - uses: actions/checkout@v6
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Update PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Build
         run: cargo build
       - name: Install uv
