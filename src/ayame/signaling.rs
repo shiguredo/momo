@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use rustls::pki_types::ServerName;
+use rustls_pki_types::pem::PemObject;
 use rustls_platform_verifier::ConfigVerifierExt;
 use shiguredo_websocket::{
     ClientConnectionOptions, ConnectionEvent, ConnectionOutput, ConnectionState, TimerId,
@@ -132,8 +133,8 @@ fn create_tls_config(
     Ok(Arc::new(config))
 }
 
-fn load_pem_certs(pem: &str) -> Result<Vec<rustls::pki_types::CertificateDer<'static>>, BoxError> {
-    let certs: Vec<_> = rustls_pemfile::certs(&mut pem.as_bytes())
+fn load_pem_certs(pem: &str) -> Result<Vec<rustls_pki_types::CertificateDer<'static>>, BoxError> {
+    let certs: Vec<_> = rustls_pki_types::CertificateDer::pem_slice_iter(pem.as_bytes())
         .collect::<Result<_, _>>()
         .map_err(|e| -> BoxError { format!("PEM cert parse error: {e}").into() })?;
     if certs.is_empty() {
@@ -142,10 +143,9 @@ fn load_pem_certs(pem: &str) -> Result<Vec<rustls::pki_types::CertificateDer<'st
     Ok(certs)
 }
 
-fn load_pem_private_key(pem: &str) -> Result<rustls::pki_types::PrivateKeyDer<'static>, BoxError> {
-    rustls_pemfile::private_key(&mut pem.as_bytes())
-        .map_err(|e| -> BoxError { format!("PEM key parse error: {e}").into() })?
-        .ok_or_else(|| "no private key found in PEM file".into())
+fn load_pem_private_key(pem: &str) -> Result<rustls_pki_types::PrivateKeyDer<'static>, BoxError> {
+    rustls_pki_types::PrivateKeyDer::from_pem_slice(pem.as_bytes())
+        .map_err(|e| -> BoxError { format!("PEM key parse error: {e}").into() })
 }
 
 /// platform_verifier で構築済みの ClientConfig にクライアント証明書を設定するための Resolver

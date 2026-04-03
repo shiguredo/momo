@@ -530,9 +530,9 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "indexmap"
-version = "2.13.0"
+version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017"
+checksum = "45a8a2b9cb3e0b0c1803dbb0758ffac5de2f425b23c28f518faabd9d805342ff"
 dependencies = [
  "equivalent",
  "hashbrown 0.16.1",
@@ -694,9 +694,9 @@ checksum = "9e5dc223a8d69eaeb19c31218a69a55112fe79965764430f092532aed848f1b8"
 
 [[package]]
 name = "nojson"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e05a781658cd8e367ec63f9a41cb3768827fd8560025b704ffc4ae4aa92ea66"
+checksum = "2a90a4644cecb7a8b61107b516e815559a7b973ff90541a9481b7f15fd880bff"
 
 [[package]]
 name = "nom"
@@ -828,9 +828,9 @@ dependencies = [
 
 [[package]]
 name = "raw_player"
-version = "2026.1.0-canary.2"
+version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7b9900430366c5d19abfb7da82f9d36b65c659c96d15235ca7a95184db1fba1"
+checksum = "c46d1156fc20fedf7b29df24f89b3ae7cdf220d4b5f9c4ee359fed0ee125b5bb"
 dependencies = [
  "bindgen",
  "shiguredo_cmake",
@@ -936,15 +936,6 @@ dependencies = [
  "rustls-pki-types",
  "schannel",
  "security-framework",
-]
-
-[[package]]
-name = "rustls-pemfile"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
-dependencies = [
- "rustls-pki-types",
 ]
 
 [[package]]
@@ -1135,7 +1126,7 @@ dependencies = [
  "raden",
  "raw_player",
  "rustls",
- "rustls-pemfile",
+ "rustls-pki-types",
  "rustls-platform-verifier",
  "shiguredo_audio_device",
  "shiguredo_http11",
@@ -1154,9 +1145,9 @@ dependencies = [
 
 [[package]]
 name = "shiguredo_mp4"
-version = "2026.2.0"
+version = "2026.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "029f44879b590e0b5e50add084b436a7b740e08b2cc4fee662ed93f1cffddc63"
+checksum = "b135058874815f8f13edae644ceedb659f7238fe4a9e2b1bdceecc72dc659b35"
 
 [[package]]
 name = "shiguredo_openh264"
@@ -1185,9 +1176,9 @@ dependencies = [
 
 [[package]]
 name = "shiguredo_video_device"
-version = "2026.1.0-canary.5"
+version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04b33ff719586f43a2d1b3ebf8eb2baf18cca21552b4f7236c666c714dce5ea6"
+checksum = "79fc6bed758f11d7413d108650edf83aa8345de7f578eca7fca4750add71f4f2"
 dependencies = [
  "bindgen",
  "cc",

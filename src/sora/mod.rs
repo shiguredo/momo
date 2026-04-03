@@ -10,8 +10,8 @@ use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDeviceModule, I420Buffer, TimestampAligner,
 };
 use sora_sdk::{
-    AdmConfig, Audio, JsonString, Role, SoraClient, SoraClientContext, SoraClientContextConfig,
-    Video,
+    AdmConfig, Audio, CodecDirection, JsonString, Role, SoraClient, SoraClientContext,
+    SoraClientContextConfig, Video, VideoCodecImplementation, VideoCodecPreference,
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
@@ -34,6 +34,10 @@ pub struct SoraConfig {
     pub audio_codec_type: Option<String>,
     pub video_bit_rate: u32,
     pub audio_bit_rate: u32,
+    pub h264_encoder: Option<String>,
+    pub h264_decoder: Option<String>,
+    pub h265_encoder: Option<String>,
+    pub h265_decoder: Option<String>,
     pub spotlight: bool,
     pub simulcast: bool,
     pub data_channel_signaling: Option<bool>,
@@ -60,7 +64,7 @@ pub struct SoraConfig {
     /// CA 証明書 (PEM)
     pub ca_cert: Option<String>,
     /// プレビューフレーム送信チャネル
-    #[cfg(feature = "preview")]
+    #[cfg(feature = "player")]
     pub preview_tx: Option<std::sync::mpsc::SyncSender<crate::preview::PreviewFrame>>,
 }
 
@@ -93,6 +97,31 @@ pub async fn run(
             adm_config,
             ..Default::default()
         };
+
+        apply_video_toolbox_preference(
+            &mut ctx_config.video_codec_preference,
+            CodecDirection::Encoder,
+            shiguredo_webrtc::VideoCodecType::H264,
+            config.h264_encoder.as_deref(),
+        )?;
+        apply_video_toolbox_preference(
+            &mut ctx_config.video_codec_preference,
+            CodecDirection::Decoder,
+            shiguredo_webrtc::VideoCodecType::H264,
+            config.h264_decoder.as_deref(),
+        )?;
+        apply_video_toolbox_preference(
+            &mut ctx_config.video_codec_preference,
+            CodecDirection::Encoder,
+            shiguredo_webrtc::VideoCodecType::H265,
+            config.h265_encoder.as_deref(),
+        )?;
+        apply_video_toolbox_preference(
+            &mut ctx_config.video_codec_preference,
+            CodecDirection::Decoder,
+            shiguredo_webrtc::VideoCodecType::H265,
+            config.h265_decoder.as_deref(),
+        )?;
 
         // V4L2 ハードウェアエンコーダーの追加
         if config.use_v4l2_encoder {
@@ -166,7 +195,7 @@ pub async fn run(
                 config.video_width,
                 config.video_height,
                 config.framerate,
-                #[cfg(feature = "preview")]
+                #[cfg(feature = "player")]
                 config.preview_tx.clone(),
             );
             info!(target: "sora", width = config.video_width, height = config.video_height, fps = config.framerate, "fake video started");
@@ -177,7 +206,7 @@ pub async fn run(
         } else {
             let shared = Arc::new(std::sync::Mutex::new((source, TimestampAligner::new())));
 
-            #[cfg(feature = "preview")]
+            #[cfg(feature = "player")]
             let preview_tx = config.preview_tx.clone();
 
             let video_cfg = VideoCaptureConfig {
@@ -215,7 +244,7 @@ pub async fn run(
                     scaled.scale_from(&buffer);
 
                     // プレビューウィンドウへフレームを送信 (ベストエフォート)
-                    #[cfg(feature = "preview")]
+                    #[cfg(feature = "player")]
                     if let Some(ref tx) = preview_tx {
                         let pf = crate::preview::extract_preview_frame(
                             &scaled,
@@ -234,7 +263,7 @@ pub async fn run(
                     source.on_frame(&video_frame);
                 } else {
                     // プレビューウィンドウへフレームを送信 (ベストエフォート)
-                    #[cfg(feature = "preview")]
+                    #[cfg(feature = "player")]
                     if let Some(ref tx) = preview_tx {
                         let pf = crate::preview::extract_preview_frame(
                             &buffer,
@@ -399,6 +428,40 @@ pub async fn run(
     drop(adm_state);
 
     Ok(())
+}
+
+fn apply_video_toolbox_preference(
+    preference: &mut VideoCodecPreference,
+    direction: CodecDirection,
+    codec_type: shiguredo_webrtc::VideoCodecType,
+    value: Option<&str>,
+) -> Result<(), BoxError> {
+    let Some(value) = value else {
+        return Ok(());
+    };
+    if value != "videotoolbox" {
+        return Ok(());
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+    {
+        return Err("videotoolbox is only available on Apple platforms".into());
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    {
+        let Some(codec) = preference.find_mut(direction, codec_type) else {
+            return Err(format!(
+                "video codec preference not found: direction={direction:?}, codec_type={codec_type:?}"
+            )
+            .into());
+        };
+        codec.set_implementation(VideoCodecImplementation::new(
+            "internal-hwa",
+            "WebRTC ObjC default VideoCodecFactory",
+        ));
+        Ok(())
+    }
 }
 
 // ─── ADM 構築 ─────────────────────────────────────────────────────────────────

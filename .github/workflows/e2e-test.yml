@@ -1,0 +1,60 @@
+name: e2e-test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - "feature/**"
+    paths:
+      - ".github/workflows/e2e-test.yml"
+      - "e2e-tests/**"
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+  schedule:
+    # JST 11:00 (UTC 02:00), 月-金
+    - cron: "0 2 * * 1-5"
+
+env:
+  TEST_SORA_MODE_SIGNALING_URLS: ${{ secrets.TEST_SORA_MODE_SIGNALING_URLS }}
+  TEST_SORA_MODE_CHANNEL_ID_PREFIX: ${{ secrets.TEST_SORA_MODE_CHANNEL_ID_PREFIX }}
+  TEST_SORA_MODE_SECRET_KEY: ${{ secrets.TEST_SORA_MODE_SECRET_KEY }}
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  e2e-test-apple-video-toolbox:
+    name: E2E Test (Apple Video Toolbox)
+    runs-on:
+      group: Self
+      labels: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30
+    env:
+      APPLE_VIDEO_TOOLBOX: true
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - name: Build
+        run: cargo build --features sora
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Run Apple Video Toolbox E2E tests
+        working-directory: e2e-tests
+        run: uv run pytest -v test_sora_mode_apple_video_toolbox.py
+
+  slack_notify:
+    needs: [e2e-test-apple-video-toolbox]
+    timeout-minutes: 5
+    runs-on: ubuntu-slim
+    if: ${{ always() }}
+    steps:
+      - name: Slack Notification
+        uses: shiguredo/github-actions/.github/actions/slack-notify@main
+        with:
+          status: ${{ job.status }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          slack_channel: momo
+          notify_mode: failure_and_fixed

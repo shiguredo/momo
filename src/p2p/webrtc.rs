@@ -105,7 +105,7 @@ impl WebRtcEngine {
                     config.video_width,
                     config.video_height,
                     config.framerate,
-                    #[cfg(feature = "preview")]
+                    #[cfg(feature = "player")]
                     None,
                 );
                 info!(target: "dev", width = config.video_width, height = config.video_height, fps = config.framerate, "fake video started");

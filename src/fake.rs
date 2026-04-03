@@ -91,7 +91,7 @@ pub(crate) fn start_fake_video_thread(
     width: i32,
     height: i32,
     fps: u32,
-    #[cfg(feature = "preview")] preview_tx: Option<
+    #[cfg(feature = "player")] preview_tx: Option<
         std::sync::mpsc::SyncSender<crate::preview::PreviewFrame>,
     >,
 ) {
@@ -135,7 +135,7 @@ pub(crate) fn start_fake_video_thread(
                     let i420 = bgra_to_i420(image.data(), width, height);
 
                     // プレビューウィンドウへフレームを送信 (ベストエフォート)
-                    #[cfg(feature = "preview")]
+                    #[cfg(feature = "player")]
                     if let Some(ref tx) = preview_tx {
                         let preview_frame = crate::preview::extract_preview_frame(
                             &i420,

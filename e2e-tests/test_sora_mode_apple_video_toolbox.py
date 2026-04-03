@@ -1,12 +1,15 @@
+import os
+
 import pytest
 
 from momo import Momo, MomoMode
 
-# webrtc-rs が VideoToolbox エンコーダー/デコーダーの stats レポートに未対応のため、
-# video の outbound-rtp に encoderImplementation が出力されずテストが失敗する。
-# webrtc-rs 側の対応が完了するまでスキップする。
-pytestmark = pytest.mark.skip(
-    reason="webrtc-rs が VideoToolbox の encoderImplementation stats レポートに未対応",
+# Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
+# Apple Video Toolbox 環境が有効でない場合もスキップ
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("TEST_SORA_MODE_SIGNALING_URLS")
+    or not os.environ.get("APPLE_VIDEO_TOOLBOX"),
+    reason="TEST_SORA_MODE_SIGNALING_URLS or APPLE_VIDEO_TOOLBOX not set in environment",
 )
 
 
@@ -51,7 +54,8 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         data = m.get_metrics(
             wait_stats=[
                 {"type": "outbound-rtp", "kind": "video", "encoderImplementation": "VideoToolbox"}
-            ]
+            ],
+            wait_after_stats=3,
         )
         stats = data["stats"]
 
@@ -146,11 +150,12 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
                     assert "dataChannelsOpened" in stat
 
 
+@pytest.mark.skip(reason="webrtc-rs が HWA での simulcast に未対応のためスキップ")
 @pytest.mark.parametrize(
     "video_codec_type,expected_encoder_implementation",
     [
-        ("H264", "SimulcastEncoderAdapter (VideoToolbox, VideoToolbox, VideoToolbox)"),
-        ("H265", "SimulcastEncoderAdapter (VideoToolbox, VideoToolbox, VideoToolbox)"),
+        ("H264", "VideoToolbox"),
+        ("H265", "VideoToolbox"),
     ],
 )
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):

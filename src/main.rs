@@ -9,7 +9,7 @@ mod libcamera;
 mod metrics;
 mod openh264;
 mod p2p;
-#[cfg(feature = "preview")]
+#[cfg(feature = "player")]
 mod preview;
 #[cfg(target_os = "linux")]
 mod serial;
@@ -73,8 +73,8 @@ async fn main() -> noargs::Result<()> {
         .doc("Maintain video resolution in degradation")
         .take(&mut args)
         .is_present();
-    let use_raw_player = noargs::flag("use-raw-player")
-        .doc("Show video using raw player (if raw player is available)")
+    let use_player = noargs::flag("player")
+        .doc("Show video using player (if player feature is available)")
         .take(&mut args)
         .is_present();
     let _fullscreen = noargs::flag("fullscreen")
@@ -300,22 +300,22 @@ async fn main() -> noargs::Result<()> {
         .doc("AV1 Decoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _h264_encoder: Option<String> = noargs::opt("h264-encoder")
+    let h264_encoder_value: Option<String> = noargs::opt("h264-encoder")
         .ty("TYPE")
         .doc("H.264 Encoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _h264_decoder: Option<String> = noargs::opt("h264-decoder")
+    let h264_decoder_value: Option<String> = noargs::opt("h264-decoder")
         .ty("TYPE")
         .doc("H.264 Decoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _h265_encoder: Option<String> = noargs::opt("h265-encoder")
+    let h265_encoder_value: Option<String> = noargs::opt("h265-encoder")
         .ty("TYPE")
         .doc("H.265 Encoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _h265_decoder: Option<String> = noargs::opt("h265-decoder")
+    let h265_decoder_value: Option<String> = noargs::opt("h265-decoder")
         .ty("TYPE")
         .doc("H.265 Decoder")
         .take(&mut args)
@@ -456,6 +456,10 @@ async fn main() -> noargs::Result<()> {
         libcamera_controls,
         use_v4l2_encoder,
         openh264_lib,
+        h264_encoder: h264_encoder_value,
+        h264_decoder: h264_decoder_value,
+        h265_encoder: h265_encoder_value,
+        h265_decoder: h265_decoder_value,
         video_input_device,
         audio_input_device,
         video_width,
@@ -468,7 +472,7 @@ async fn main() -> noargs::Result<()> {
         degradation_preference,
         #[cfg(target_os = "linux")]
         serial,
-        use_raw_player,
+        use_player,
         window_width,
         window_height,
     };
@@ -541,6 +545,10 @@ struct CommonConfig {
     libcamera_controls: Vec<(String, String)>,
     use_v4l2_encoder: bool,
     openh264_lib: Option<shiguredo_openh264::Openh264Library>,
+    h264_encoder: Option<String>,
+    h264_decoder: Option<String>,
+    h265_encoder: Option<String>,
+    h265_decoder: Option<String>,
     video_input_device: Option<String>,
     audio_input_device: Option<String>,
     video_width: i32,
@@ -555,7 +563,7 @@ struct CommonConfig {
     degradation_preference: shiguredo_webrtc::DegradationPreference,
     #[cfg(target_os = "linux")]
     serial: Option<serial::SerialConfig>,
-    use_raw_player: bool,
+    use_player: bool,
     window_width: u32,
     window_height: u32,
 }
@@ -1212,6 +1220,10 @@ async fn run_sora(
             audio_codec_type,
             video_bit_rate,
             audio_bit_rate,
+            h264_encoder: common.h264_encoder,
+            h264_decoder: common.h264_decoder,
+            h265_encoder: common.h265_encoder,
+            h265_decoder: common.h265_decoder,
             spotlight,
             simulcast,
             data_channel_signaling,
@@ -1237,22 +1249,22 @@ async fn run_sora(
                 .map(ForcePixelFormat::to_pixel_format),
             client_cert: common.client_cert,
             ca_cert: common.ca_cert,
-            #[cfg(feature = "preview")]
+            #[cfg(feature = "player")]
             preview_tx: None,
         };
 
-        // preview feature なしで --use-raw-player を指定した場合の警告
-        #[cfg(not(feature = "preview"))]
-        if common.use_raw_player {
+        // player feature なしで --player を指定した場合の警告
+        #[cfg(not(feature = "player"))]
+        if common.use_player {
             return Err(noargs::Error::other(
                 &noargs::raw_args(),
-                "--use-raw-player requires the 'preview' feature to be enabled",
+                "--player requires the 'player' feature to be enabled",
             ));
         }
 
         // プレビュー有効時: Sora 接続を別タスクで起動し、メインスレッドで SDL3 ループを回す
-        #[cfg(feature = "preview")]
-        if common.use_raw_player && role.wants_send() {
+        #[cfg(feature = "player")]
+        if common.use_player && role.wants_send() {
             let (preview_tx, preview_rx) = preview::create_preview_channel();
             let (shutdown_tx, shutdown_rx) = std::sync::mpsc::sync_channel::<()>(1);
             config.preview_tx = Some(preview_tx);

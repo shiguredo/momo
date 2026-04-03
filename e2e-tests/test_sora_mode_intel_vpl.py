@@ -183,6 +183,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         assert "dataChannelsOpened" in peer_connection
 
 
+@pytest.mark.skip(reason="webrtc-rs が HWA での simulcast に未対応のためスキップ")
 @pytest.mark.parametrize(
     "video_codec_type,expected_encoder_implementation",
     [

@@ -135,6 +135,7 @@ def test_sendonly_video_codec_type(
         assert "dataChannelsOpened" in peer_connection
 
 
+@pytest.mark.skip(reason="webrtc-rs が HWA での simulcast に未対応のためスキップ")
 def test_simulcast(sora_settings, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（Raspberry Pi H.264）"""
     video_codec_type = "H264"

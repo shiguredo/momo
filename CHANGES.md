@@ -82,6 +82,10 @@
 
 ### misc
 
+- [ADD] GitHub Actions の self-hosted runner で Apple Video Toolbox の E2E テストを追加する
+  - `e2e-test.yml` を追加する
+  - Apple Video Toolbox のテストを追加する
+  - @openai
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加

@@ -23,7 +23,7 @@ rustls = { version = "0.23", default-features = false, features = [
     "tls12",
     "aws-lc-rs",
 ], optional = true }
-rustls-pemfile = { version = "2", optional = true }
+rustls-pki-types = { version = "1", features = ["std"], optional = true }
 rustls-platform-verifier = { version = "0.6", optional = true }
 raden = "2026.1.0-canary.5"
 shiguredo_http11 = "2026.1.1"
@@ -31,7 +31,7 @@ shiguredo_webrtc = "=0.146.3"
 shiguredo_openh264 = "2026.1.0"
 shiguredo_websocket = "2026.1.0"
 shiguredo_audio_device = "2026.1.0-canary.0"
-shiguredo_video_device = "2026.1.0-canary.5"
+shiguredo_video_device = "2026.1.0"
 tokio = { version = "1", features = [
     "rt-multi-thread",
     "net",
@@ -48,17 +48,18 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [features]
-ayame = ["dep:rustls", "dep:rustls-pemfile", "dep:rustls-platform-verifier", "dep:tokio-rustls"]
+default = ["ayame", "sora", "player"]
+ayame = ["dep:rustls", "dep:rustls-pki-types", "dep:rustls-platform-verifier", "dep:tokio-rustls"]
 sora = ["dep:sora_sdk"]
 raspberrypi = ["shiguredo_libcamera", "shiguredo_v4l2"]
-preview = ["dep:raw_player"]
+player = ["dep:raw_player"]
 
 [dependencies.sora_sdk]
 version = "2026.1.0-canary.5"
 optional = true
 
 [dependencies.raw_player]
-version = "2026.1.0-canary.2"
+version = "2026.1.0"
 optional = true
 
 [target.'cfg(target_os = "linux")'.dependencies]

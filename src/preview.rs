@@ -1,4 +1,4 @@
-//! プレビューウィンドウ (raw_player) の共通モジュール
+//! プレビューウィンドウ (player) の共通モジュール
 //!
 //! キャプチャ映像を SDL3 ウィンドウでリアルタイム表示する。
 
@@ -146,6 +146,8 @@ pub fn run_preview_loop(
         std::thread::sleep(Duration::from_millis(1));
     }
 
-    raw_player::quit();
+    // SAFETY: SDL3 の初期化・終了はこの関数内で対になっており、
+    // ループ終了後に呼ぶので安全である。
+    unsafe { raw_player::quit() };
     Ok(())
 }

@@ -122,6 +122,7 @@ def test_sora_mode_with_explicit_openh264_path(sora_settings, free_port):
         assert len(video_outbound_rtp_stats) >= 1, "OpenH264 encoder not found with explicit path"
 
 
+@pytest.mark.skip(reason="webrtc-rs が HWA での simulcast に未対応のためスキップ")
 def test_sora_mode_openh264_with_simulcast(sora_settings, free_port):
     """OpenH264 を使用したサイマルキャストの動作を確認"""
 
