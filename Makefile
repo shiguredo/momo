@@ -122,38 +122,38 @@ sysroot-ubuntu-22.04_arm64:
 
 # Raspberry Pi 向け sysroot clippy する
 sysroot-clippy-raspberry-pi:
-	$(RASPBERRYPI_ENV) cargo clippy --target aarch64-unknown-linux-gnu --features raspberrypi -- -D warnings
+	$(RASPBERRYPI_ENV) cargo clippy --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora,raspberrypi -- -D warnings
 
 # Ubuntu 24.04 arm64 向け sysroot clippy する
 sysroot-clippy-ubuntu-24.04_arm64:
-	$(UBUNTU_2404_ARM64_ENV) cargo clippy --target aarch64-unknown-linux-gnu -- -D warnings
+	$(UBUNTU_2404_ARM64_ENV) cargo clippy --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora -- -D warnings
 
 # Ubuntu 22.04 arm64 向け sysroot clippy する
 sysroot-clippy-ubuntu-22.04_arm64:
-	$(UBUNTU_2204_ARM64_ENV) cargo clippy --target aarch64-unknown-linux-gnu -- -D warnings
+	$(UBUNTU_2204_ARM64_ENV) cargo clippy --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora -- -D warnings
 
 # --- sysroot ビルド ---
 
 # Raspberry Pi 向け sysroot ビルドする
 sysroot-build-raspberry-pi:
-	$(RASPBERRYPI_ENV) cargo build --target aarch64-unknown-linux-gnu --features raspberrypi
+	$(RASPBERRYPI_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora,raspberrypi
 
 # Raspberry Pi 向け sysroot リリースビルドする
 sysroot-build-raspberry-pi-release:
-	$(RASPBERRYPI_ENV) cargo build --target aarch64-unknown-linux-gnu --features raspberrypi --release
+	$(RASPBERRYPI_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora,raspberrypi --release
 
 # Ubuntu 24.04 arm64 向け sysroot ビルドする
 sysroot-build-ubuntu-24.04_arm64:
-	$(UBUNTU_2404_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu
+	$(UBUNTU_2404_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora
 
 # Ubuntu 24.04 arm64 向け sysroot リリースビルドする
 sysroot-build-ubuntu-24.04_arm64-release:
-	$(UBUNTU_2404_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --release
+	$(UBUNTU_2404_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora --release
 
 # Ubuntu 22.04 arm64 向け sysroot ビルドする
 sysroot-build-ubuntu-22.04_arm64:
-	$(UBUNTU_2204_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu
+	$(UBUNTU_2204_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora
 
 # Ubuntu 22.04 arm64 向け sysroot リリースビルドする
 sysroot-build-ubuntu-22.04_arm64-release:
-	$(UBUNTU_2204_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --release
+	$(UBUNTU_2204_ARM64_ENV) cargo build --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora --release
