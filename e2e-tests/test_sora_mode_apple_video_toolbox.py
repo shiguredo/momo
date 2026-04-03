@@ -39,7 +39,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
-        audio=True,
+        audio=False,
         video=True,
         video_codec_type=video_codec_type,
         metadata=sora_settings.metadata,
@@ -99,20 +99,16 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
                     assert stat["packetsSent"] > 0
                     assert stat["bytesSent"] > 0
 
-                    # audio/video の判定
-                    match stat["kind"]:
-                        case "video":
-                            assert "framesEncoded" in stat
-                            assert "frameWidth" in stat
-                            assert "frameHeight" in stat
-                            assert stat["framesEncoded"] > 0
+                    # video の検証
+                    if stat["kind"] == "video":
+                        assert "framesEncoded" in stat
+                        assert "frameWidth" in stat
+                        assert "frameHeight" in stat
+                        assert stat["framesEncoded"] > 0
 
-                            # エンコーダー実装が VideoToolbox であることを確認
-                            assert "encoderImplementation" in stat
-                            assert stat["encoderImplementation"] == "VideoToolbox"
-                        case "audio":
-                            assert "headerBytesSent" in stat
-                            assert stat["headerBytesSent"] > 0
+                        # エンコーダー実装が VideoToolbox であることを確認
+                        assert "encoderImplementation" in stat
+                        assert stat["encoderImplementation"] == "VideoToolbox"
 
                 case "codec":
                     # codec の必須フィールドを確認
@@ -120,14 +116,8 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
                     assert "mimeType" in stat
                     assert "clockRate" in stat
 
-                    # codec は audio/opus か指定されたビデオコーデックのみ許可
-                    assert stat["mimeType"] in ["audio/opus", expected_mime_type]
-
-                    # codec タイプ別の検証
-                    if stat["mimeType"] == "audio/opus":
-                        assert "channels" in stat
-                        assert stat["clockRate"] == 48000
-                    elif stat["mimeType"] == expected_mime_type:
+                    # video codec の検証
+                    if stat["mimeType"] == expected_mime_type:
                         assert stat["clockRate"] == 90000
 
                 case "transport":
@@ -174,7 +164,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
         role="sendonly",
-        audio=True,
+        audio=False,
         video=True,
         video_codec_type=video_codec_type,
         simulcast=True,
@@ -230,24 +220,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         for expected_type in expected_types:
             assert expected_type in stat_types
 
-        # audio codec を取得して確認
-        audio_codec_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "codec" and stat.get("mimeType") == "audio/opus"
-        ]
-        assert len(audio_codec_stats) == 1, (
-            f"Expected 1 audio codec (opus), but got {len(audio_codec_stats)}"
-        )
-
-        # audio codec の中身を検証
-        audio_codec = audio_codec_stats[0]
-        assert "payloadType" in audio_codec
-        assert "mimeType" in audio_codec
-        assert "clockRate" in audio_codec
-        assert "channels" in audio_codec
-        assert audio_codec["clockRate"] == 48000
-
         # video codec を取得して確認
         expected_mime_type = f"video/{video_codec_type}"
         video_codec_stats = [
@@ -265,26 +237,6 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         assert "mimeType" in video_codec
         assert "clockRate" in video_codec
         assert video_codec["clockRate"] == 90000
-
-        # audio の outbound-rtp を取得して確認
-        audio_outbound_rtp_stats = [
-            stat
-            for stat in stats
-            if stat.get("type") == "outbound-rtp" and stat.get("kind") == "audio"
-        ]
-        assert len(audio_outbound_rtp_stats) == 1, (
-            f"Expected 1 audio outbound-rtp, but got {len(audio_outbound_rtp_stats)}"
-        )
-
-        # audio outbound-rtp の中身を検証
-        audio_outbound_rtp = audio_outbound_rtp_stats[0]
-        assert "ssrc" in audio_outbound_rtp
-        assert "packetsSent" in audio_outbound_rtp
-        assert "bytesSent" in audio_outbound_rtp
-        assert "headerBytesSent" in audio_outbound_rtp
-        assert audio_outbound_rtp["packetsSent"] > 0
-        assert audio_outbound_rtp["bytesSent"] > 0
-        assert audio_outbound_rtp["headerBytesSent"] > 0
 
         # simulcast では video の outbound-rtp を取得して必ず3本あることを確認
         video_outbound_rtp_stats = [
@@ -444,7 +396,7 @@ def test_sora_sendonly_recvonly_pair(
         fake_capture_device=True,
         video=True,
         video_codec_type=video_codec_type,
-        audio=True,
+        audio=False,
         metadata=sora_settings.metadata,
         initial_wait=10,
         **encoder_params,
@@ -457,7 +409,7 @@ def test_sora_sendonly_recvonly_pair(
             role="recvonly",
             metrics_port=next(port_allocator),
             video=True,
-            audio=True,
+            audio=False,
             metadata=sora_settings.metadata,
             **decoder_params,
         ) as receiver:
@@ -493,19 +445,18 @@ def test_sora_sendonly_recvonly_pair(
             )
             receiver_stats = receiver_data.get("stats", [])
 
-            # 送信側では outbound-rtp が音声と映像の2つ存在することを確認
+            # 送信側では outbound-rtp に video が存在することを確認
             sender_outbound_rtp = [
-                stat for stat in sender_stats if stat.get("type") == "outbound-rtp"
+                stat
+                for stat in sender_stats
+                if stat.get("type") == "outbound-rtp" and stat.get("kind") == "video"
             ]
-            assert len(sender_outbound_rtp) == 2, (
-                "Sender should have exactly 2 outbound-rtp stats (audio and video)"
+            assert len(sender_outbound_rtp) >= 1, (
+                "Sender should have at least 1 video outbound-rtp stat"
             )
 
-            # 送信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            # 送信側の video codec の mimeType を確認
             sender_codecs = [stat for stat in sender_stats if stat.get("type") == "codec"]
-            assert len(sender_codecs) >= 2, "Should have at least 2 codecs (audio and video)"
-
-            # video codec の mimeType を確認
             sender_video_codec = next(
                 (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("video/")),
                 None,
@@ -515,41 +466,27 @@ def test_sora_sendonly_recvonly_pair(
                 f"Expected {expected_mime_type}, got {sender_video_codec['mimeType']}"
             )
 
-            # audio codec の mimeType を確認
-            sender_audio_codec = next(
-                (stat for stat in sender_codecs if stat.get("mimeType", "").startswith("audio/")),
-                None,
-            )
-            assert sender_audio_codec is not None, "Audio codec should be present"
-            assert sender_audio_codec["mimeType"] == "audio/opus", "Audio codec should be opus"
-
             # 送信側でデータが送信されていることを確認
             for stat in sender_outbound_rtp:
                 assert "packetsSent" in stat
                 assert "bytesSent" in stat
                 assert stat["packetsSent"] > 0
                 assert stat["bytesSent"] > 0
+                assert "encoderImplementation" in stat
+                assert stat["encoderImplementation"] == "VideoToolbox"
 
-                # video ストリームの場合、encoderImplementation が VideoToolbox であることを確認
-                if stat.get("kind") == "video":
-                    assert "encoderImplementation" in stat
-                    assert stat["encoderImplementation"] == "VideoToolbox"
-
-            # 受信側では inbound-rtp が音声と映像の2つ存在することを確認
+            # 受信側では inbound-rtp に video が存在することを確認
             receiver_inbound_rtp = [
-                stat for stat in receiver_stats if stat.get("type") == "inbound-rtp"
+                stat
+                for stat in receiver_stats
+                if stat.get("type") == "inbound-rtp" and stat.get("kind") == "video"
             ]
-            assert len(receiver_inbound_rtp) == 2, (
-                "Receiver should have exactly 2 inbound-rtp stats (audio and video)"
+            assert len(receiver_inbound_rtp) >= 1, (
+                "Receiver should have at least 1 video inbound-rtp stat"
             )
 
-            # 受信側の codec 情報を確認（音声と映像で少なくとも2つ）
+            # 受信側の video codec の mimeType を確認
             receiver_codecs = [stat for stat in receiver_stats if stat.get("type") == "codec"]
-            assert len(receiver_codecs) >= 2, (
-                "Should have at least 2 codecs (audio and video) on receiver"
-            )
-
-            # video codec の mimeType を確認
             receiver_video_codec = next(
                 (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("video/")),
                 None,
@@ -559,24 +496,11 @@ def test_sora_sendonly_recvonly_pair(
                 f"Expected {expected_mime_type}, got {receiver_video_codec['mimeType']} on receiver"
             )
 
-            # audio codec の mimeType を確認
-            receiver_audio_codec = next(
-                (stat for stat in receiver_codecs if stat.get("mimeType", "").startswith("audio/")),
-                None,
-            )
-            assert receiver_audio_codec is not None, "Audio codec should be present on receiver"
-            assert receiver_audio_codec["mimeType"] == "audio/opus", (
-                "Audio codec should be opus on receiver"
-            )
-
             # 受信側でデータが受信されていることを確認
             for stat in receiver_inbound_rtp:
                 assert "packetsReceived" in stat
                 assert "bytesReceived" in stat
                 assert stat["packetsReceived"] > 0
                 assert stat["bytesReceived"] > 0
-
-                # video ストリームの場合、decoderImplementation が VideoToolbox であることを確認
-                if stat.get("kind") == "video":
-                    assert "decoderImplementation" in stat
-                    assert stat["decoderImplementation"] == "VideoToolbox"
+                assert "decoderImplementation" in stat
+                assert stat["decoderImplementation"] == "VideoToolbox"

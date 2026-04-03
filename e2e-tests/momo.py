@@ -680,6 +680,12 @@ class Momo:
                     if all_conditions_met:
                         if wait_after_stats > 0:
                             time.sleep(wait_after_stats)
+                            # スリープ後に最新のメトリクスを再取得する
+                            response = self._http_client.get(
+                                f"http://localhost:{self.metrics_port}/metrics"
+                            )
+                            if response.status_code == 200:
+                                data = response.json()
                         return data
 
             except (httpx.ConnectError, httpx.HTTPStatusError):
