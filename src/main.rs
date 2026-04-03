@@ -152,7 +152,7 @@ async fn main() -> noargs::Result<()> {
         .doc("Force NV12 pixel format for video capture")
         .take(&mut args)
         .is_present();
-    let _video_codec_engines = noargs::flag("video-codec-engines")
+    let video_codec_engines = noargs::flag("video-codec-engines")
         .doc("List available video encoders/decoders")
         .take(&mut args)
         .is_present();
@@ -423,6 +423,12 @@ async fn main() -> noargs::Result<()> {
     // ── デバイス一覧 ──
     if list_devices {
         print_devices_json().map_err(|e| noargs::Error::other(&noargs::raw_args(), e))?;
+        return Ok(());
+    }
+
+    // ── ビデオコーデックエンジン一覧 ──
+    if video_codec_engines {
+        print_video_codec_engines();
         return Ok(());
     }
 
@@ -876,6 +882,74 @@ async fn run_ayame(
     ayame::run(config, metrics_state)
         .await
         .map_err(|e| noargs::Error::other(&noargs::raw_args(), e))
+}
+
+// ─── ビデオコーデックエンジン一覧 ────────────────────────────────────────────
+
+fn print_video_codec_engines() {
+    use shiguredo_webrtc::VideoCodecType;
+
+    let codec_types = [
+        VideoCodecType::Vp8,
+        VideoCodecType::Vp9,
+        VideoCodecType::Av1,
+        VideoCodecType::H264,
+        VideoCodecType::H265,
+    ];
+
+    #[cfg(feature = "sora")]
+    {
+        use sora_sdk::{CodecDirection, InternalVideoCodecCapability, VideoCodecCapability};
+
+        let mut capabilities: Vec<Box<dyn VideoCodecCapability>> = vec![];
+
+        // ソフトウェアコーデック (全プラットフォーム)
+        capabilities.push(Box::new(InternalVideoCodecCapability::new()));
+
+        // Apple VideoToolbox (macOS/iOS)
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        {
+            use sora_sdk::InternalHwaVideoCodecCapability;
+            if let Some(hwa) = InternalHwaVideoCodecCapability::new() {
+                capabilities.push(Box::new(hwa));
+            }
+        }
+
+        for capability in &capabilities {
+            let impl_info = capability.get_implementation();
+            println!("{}:", impl_info.name());
+            println!("  {}", impl_info.description());
+            for &codec_type in &codec_types {
+                let codec_name = codec_type.as_str().unwrap_or("Unknown");
+                let enc = capability.is_supported(CodecDirection::Encoder, codec_type);
+                let dec = capability.is_supported(CodecDirection::Decoder, codec_type);
+                if enc || dec {
+                    let mut parts = Vec::new();
+                    if enc {
+                        parts.push("Encoder");
+                    }
+                    if dec {
+                        parts.push("Decoder");
+                    }
+                    println!("  {codec_name}: {}", parts.join(", "));
+                }
+            }
+            println!();
+        }
+    }
+
+    #[cfg(not(feature = "sora"))]
+    {
+        // sora feature が無効の場合はソフトウェアコーデックの情報のみ表示する
+        println!("internal:");
+        println!("  WebRTC built-in VideoCodecFactory");
+        for &codec_type in &codec_types {
+            if let Some(name) = codec_type.as_str() {
+                println!("  {name}: Encoder, Decoder");
+            }
+        }
+        println!();
+    }
 }
 
 // ─── デバイス一覧 ───────────────────────────────────────────────────────────
