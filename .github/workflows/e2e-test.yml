@@ -41,6 +41,7 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       - name: Update PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - run: rustup update stable
       - name: Build
         run: cargo build
       - name: Install uv
