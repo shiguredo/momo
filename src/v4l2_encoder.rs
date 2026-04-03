@@ -279,9 +279,7 @@ pub(crate) mod sora_capability {
     use shiguredo_webrtc::{
         SdpVideoFormat, VideoCodecType, VideoDecoderHandler, VideoEncoderHandler,
     };
-    use sora_sdk::video_codec_capability::{
-        CodecDirection, VideoCodecCapability, VideoCodecImplementation,
-    };
+    use sora_sdk::{CodecDirection, VideoCodecCapability, VideoCodecImplementation};
 
     use super::V4l2H264Encoder;
 

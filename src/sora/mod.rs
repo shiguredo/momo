@@ -11,7 +11,7 @@ use shiguredo_webrtc::{
 };
 use sora_sdk::{
     AdmConfig, Audio, CodecDirection, JsonString, Role, SoraClient, SoraClientContext,
-    SoraClientContextConfig, Video, VideoCodecImplementation, VideoCodecPreference,
+    SoraClientContextConfig, Video, VideoCodecPreference,
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
@@ -467,7 +467,7 @@ fn apply_video_toolbox_preference(
             )
             .into());
         };
-        codec.set_implementation(VideoCodecImplementation::new(
+        codec.set_implementation(sora_sdk::VideoCodecImplementation::new(
             "internal-hwa",
             "WebRTC ObjC default VideoCodecFactory",
         ));
