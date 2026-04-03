@@ -106,6 +106,7 @@ impl AyameEngine {
                     config.video_width,
                     config.video_height,
                     config.framerate,
+                    None,
                     #[cfg(feature = "player")]
                     None,
                 );

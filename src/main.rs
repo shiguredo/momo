@@ -1323,9 +1323,22 @@ async fn run_sora(
                 .map(ForcePixelFormat::to_pixel_format),
             client_cert: common.client_cert,
             ca_cert: common.ca_cert,
+            beep_trigger: None,
             #[cfg(feature = "player")]
             preview_tx: None,
         };
+
+        // fake capture 時は FakeAudioCapturer を起動してビープ音を生成する
+        let mut _fake_audio_capturer = None;
+        let mut fake_adm = None;
+        if common.fake_capture_device && !common.no_audio_device {
+            let trigger = crate::fake::BeepTrigger::new();
+            let mut capturer = crate::fake::FakeAudioCapturer::new(trigger.clone());
+            capturer.start();
+            config.beep_trigger = Some(trigger);
+            fake_adm = Some(capturer.audio_device_module());
+            _fake_audio_capturer = Some(capturer);
+        }
 
         // player feature なしで --player を指定した場合の警告
         #[cfg(not(feature = "player"))]
@@ -1346,8 +1359,9 @@ async fn run_sora(
             let window_width = common.window_width as i32;
             let window_height = common.window_height as i32;
 
+            let fake_adm_for_spawn = fake_adm.take().map(crate::fake::SendableAdm);
             let sora_handle = tokio::spawn(async move {
-                let result = sora::run(config, metrics_state).await;
+                let result = sora::run(config, metrics_state, fake_adm_for_spawn).await;
                 // Sora 接続が終了したらプレビューループに通知する
                 let _ = shutdown_tx.try_send(());
                 result
@@ -1368,8 +1382,12 @@ async fn run_sora(
                 .map_err(|e| noargs::Error::other(&noargs::raw_args(), e));
         }
 
-        sora::run(config, metrics_state)
-            .await
-            .map_err(|e| noargs::Error::other(&noargs::raw_args(), e))
+        sora::run(
+            config,
+            metrics_state,
+            fake_adm.map(crate::fake::SendableAdm),
+        )
+        .await
+        .map_err(|e| noargs::Error::other(&noargs::raw_args(), e))
     }
 }

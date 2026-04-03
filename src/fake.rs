@@ -1,11 +1,12 @@
+use std::f64::consts::PI;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use shiguredo_webrtc::{
-    AdaptedVideoTrackSource, AudioDeviceModule, AudioDeviceModuleAudioLayer, Environment,
+    AdaptedVideoTrackSource, AudioDeviceModule, AudioDeviceModuleHandler, AudioTransportRef,
     I420Buffer,
 };
-
-use crate::error::{BoxError, wrtc_err};
 
 // ─── BGRA → I420 変換 ─────────────────────────────────────────────────────────
 
@@ -79,18 +80,288 @@ fn hue_to_rgb(hue: f32) -> (u8, u8, u8) {
 // ─── ダミー音声デバイス ────────────────────────────────────────────────────────
 
 /// WebRTC 組み込みのダミー ADM を作成する (無音を生成)
-pub(crate) fn create_dummy_adm(env: &Environment) -> Result<AudioDeviceModule, BoxError> {
-    AudioDeviceModule::new(env, AudioDeviceModuleAudioLayer::Dummy).map_err(wrtc_err)
+pub(crate) fn create_dummy_adm(
+    env: &shiguredo_webrtc::Environment,
+) -> Result<AudioDeviceModule, crate::error::BoxError> {
+    AudioDeviceModule::new(env, shiguredo_webrtc::AudioDeviceModuleAudioLayer::Dummy)
+        .map_err(crate::error::wrtc_err)
 }
+
+// ─── フェイク音声 ─────────────────────────────────────────────────────────────
+
+/// ビープ音の周波数 (Hz)
+const BEEP_FREQUENCY: f64 = 1000.0;
+/// ビープ音の長さ (ミリ秒)
+const BEEP_DURATION_MS: u32 = 100;
+/// ビープ音の振幅 (最大 32767 の約半分)
+const BEEP_AMPLITUDE: f64 = 16000.0;
+/// サンプルレート (Hz)
+const SAMPLE_RATE: u32 = 48000;
+/// チャンネル数
+const CHANNELS: usize = 1;
+
+/// フェイク音声のビープトリガー
+///
+/// 映像スレッドから色相サイクル一周時に `trigger()` を呼び出す。
+/// 音声スレッドが `take()` でトリガーを消費してビープ音を生成する。
+#[derive(Clone)]
+pub(crate) struct BeepTrigger {
+    flag: Arc<AtomicBool>,
+}
+
+impl BeepTrigger {
+    pub(crate) fn new() -> Self {
+        Self {
+            flag: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    /// ビープ音をトリガーする (映像スレッドから呼ぶ)
+    pub(crate) fn trigger(&self) {
+        self.flag.store(true, Ordering::Release);
+    }
+
+    /// トリガーを消費する (音声スレッドから呼ぶ)
+    fn take(&self) -> bool {
+        self.flag.swap(false, Ordering::AcqRel)
+    }
+}
+
+/// フェイク音声キャプチャの内部状態
+#[derive(Clone)]
+struct FakeAudioState {
+    recording: Arc<AtomicBool>,
+    audio_transport: Arc<std::sync::Mutex<Option<AudioTransportRef>>>,
+    beep_trigger: BeepTrigger,
+    stop: Arc<AtomicBool>,
+}
+
+/// フェイク音声キャプチャ
+///
+/// カスタム AudioDeviceModule を使って 10ms ごとに PCM データを WebRTC に送信する。
+/// 通常は無音を送信し、`BeepTrigger::trigger()` が呼ばれると
+/// 1000Hz のビープ音を 100ms 間生成する。
+pub(crate) struct FakeAudioCapturer {
+    adm: AudioDeviceModule,
+    state: FakeAudioState,
+    handle: Option<std::thread::JoinHandle<()>>,
+}
+
+struct FakeAudioHandler {
+    recording: Arc<AtomicBool>,
+    audio_transport: Arc<std::sync::Mutex<Option<AudioTransportRef>>>,
+}
+
+impl AudioDeviceModuleHandler for FakeAudioHandler {
+    fn register_audio_callback(&self, transport: Option<AudioTransportRef>) -> i32 {
+        let mut stored = self.audio_transport.lock().unwrap();
+        *stored = transport;
+        0
+    }
+
+    fn init(&self) -> i32 {
+        0
+    }
+
+    fn terminate(&self) -> i32 {
+        0
+    }
+
+    fn initialized(&self) -> bool {
+        true
+    }
+
+    fn recording_devices(&self) -> i16 {
+        1
+    }
+
+    fn recording_device_name(&self, index: u16) -> Option<(String, String)> {
+        if index == 0 {
+            Some(("Fake Recording".to_string(), "fake-recording".to_string()))
+        } else {
+            None
+        }
+    }
+
+    fn recording_is_available(&self, available: &mut bool) -> i32 {
+        *available = true;
+        0
+    }
+
+    fn init_recording(&self) -> i32 {
+        0
+    }
+
+    fn recording_is_initialized(&self) -> bool {
+        true
+    }
+
+    fn start_recording(&self) -> i32 {
+        self.recording.store(true, Ordering::SeqCst);
+        0
+    }
+
+    fn stop_recording(&self) -> i32 {
+        self.recording.store(false, Ordering::SeqCst);
+        0
+    }
+
+    fn recording(&self) -> bool {
+        self.recording.load(Ordering::SeqCst)
+    }
+}
+
+impl FakeAudioCapturer {
+    pub(crate) fn new(beep_trigger: BeepTrigger) -> Self {
+        let recording = Arc::new(AtomicBool::new(false));
+        let audio_transport = Arc::new(std::sync::Mutex::new(None));
+        let stop = Arc::new(AtomicBool::new(false));
+
+        let adm = AudioDeviceModule::new_with_handler(Box::new(FakeAudioHandler {
+            recording: Arc::clone(&recording),
+            audio_transport: Arc::clone(&audio_transport),
+        }));
+
+        let state = FakeAudioState {
+            recording,
+            audio_transport,
+            beep_trigger,
+            stop,
+        };
+
+        Self {
+            adm,
+            state,
+            handle: None,
+        }
+    }
+
+    pub(crate) fn audio_device_module(&self) -> AudioDeviceModule {
+        self.adm.clone()
+    }
+
+    pub(crate) fn start(&mut self) {
+        if self.handle.is_some() {
+            return;
+        }
+
+        let state = self.state.clone();
+        let handle = std::thread::Builder::new()
+            .name("fake-audio".to_string())
+            .spawn(move || {
+                audio_thread(state);
+            })
+            .expect("fake audio thread spawn failed");
+
+        self.handle = Some(handle);
+    }
+}
+
+impl Drop for FakeAudioCapturer {
+    fn drop(&mut self) {
+        self.state.stop.store(true, Ordering::Release);
+        if let Some(handle) = self.handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
+/// 10ms ごとに PCM データを生成して WebRTC に送信するスレッド
+fn audio_thread(state: FakeAudioState) {
+    let samples_per_10ms = (SAMPLE_RATE / 100) as usize;
+    let mut buffer = vec![0i16; samples_per_10ms * CHANNELS];
+
+    let mut beep_samples_remaining: i32 = 0;
+    let mut beep_phase: f64 = 0.0;
+    let phase_increment = 2.0 * PI * BEEP_FREQUENCY / SAMPLE_RATE as f64;
+
+    let interval = Duration::from_millis(10);
+    let mut next_time = std::time::Instant::now();
+
+    while !state.stop.load(Ordering::Acquire) {
+        // ビープトリガーをチェック
+        if state.beep_trigger.take() {
+            beep_samples_remaining = (BEEP_DURATION_MS * SAMPLE_RATE / 1000) as i32;
+            beep_phase = 0.0;
+        }
+
+        // ビープ音またはサイレンスを生成
+        if beep_samples_remaining > 0 {
+            for sample in buffer.iter_mut() {
+                *sample = (BEEP_AMPLITUDE * beep_phase.sin()) as i16;
+                beep_phase += phase_increment;
+                if beep_phase >= 2.0 * PI {
+                    beep_phase -= 2.0 * PI;
+                }
+            }
+            beep_samples_remaining -= samples_per_10ms as i32;
+            if beep_samples_remaining < 0 {
+                beep_samples_remaining = 0;
+            }
+        } else {
+            buffer.fill(0);
+        }
+
+        // WebRTC に送信
+        if state.recording.load(Ordering::SeqCst) {
+            let transport = {
+                let stored = state.audio_transport.lock().unwrap();
+                *stored
+            };
+            if let Some(transport) = transport {
+                let mut new_mic_level = 0;
+                // SAFETY: buffer は有効な i16 スライスであり、WebRTC の AudioTransport に
+                // 10ms 分の PCM データを渡すだけなのでメモリ安全。
+                let _ = unsafe {
+                    transport.recorded_data_is_available(
+                        buffer.as_ptr() as *const u8,
+                        samples_per_10ms,
+                        2 * CHANNELS,
+                        CHANNELS,
+                        SAMPLE_RATE,
+                        0,
+                        0,
+                        0,
+                        false,
+                        &mut new_mic_level,
+                        None,
+                    )
+                };
+            }
+        }
+
+        // 10ms 間隔を維持
+        next_time += interval;
+        let now = std::time::Instant::now();
+        if next_time > now {
+            std::thread::sleep(next_time - now);
+        }
+    }
+}
+
+// ─── Send ラッパー ────────────────────────────────────────────────────────────
+
+/// AudioDeviceModule を Send にするためのラッパー。
+///
+/// WebRTC の AudioDeviceModule は内部的にスレッドセーフな参照カウントオブジェクトだが、
+/// NonNull を含むため自動で Send を実装しない。tokio::spawn を跨ぐために必要。
+pub(crate) struct SendableAdm(pub(crate) AudioDeviceModule);
+
+// SAFETY: AudioDeviceModule は C++ の参照カウント付きオブジェクトであり、
+// スレッド間で安全に移動できる。
+unsafe impl Send for SendableAdm {}
 
 // ─── フェイク映像スレッド ─────────────────────────────────────────────────────
 
 /// raden でアニメーションフレームを生成し AdaptedVideoTrackSource に供給するスレッドを起動する
+///
+/// `beep_trigger` が Some の場合、色相サイクル一周ごとにビープ音をトリガーする。
 pub(crate) fn start_fake_video_thread(
     source: AdaptedVideoTrackSource,
     width: i32,
     height: i32,
     fps: u32,
+    beep_trigger: Option<BeepTrigger>,
     #[cfg(feature = "player")] preview_tx: Option<
         std::sync::mpsc::SyncSender<crate::preview::PreviewFrame>,
     >,
@@ -98,7 +369,6 @@ pub(crate) fn start_fake_video_thread(
     std::thread::Builder::new()
         .name("fake-video".to_string())
         .spawn(move || {
-            // adapt_frame / on_frame は &mut self を必要とする
             let mut source = source;
             let mut image =
                 raden::Image::new(width as u32, height as u32, raden::PixelFormat::Prgb32);
@@ -126,6 +396,14 @@ pub(crate) fn start_fake_video_thread(
                     };
                     ctx.set_fill_style(raden::Rgba32::rgb(255, 255, 255));
                     ctx.fill_rect(&raden::Rect::new(rect_x, 10.0, 64.0, 64.0));
+                }
+
+                // 色相サイクル一周でビープ音をトリガー
+                if frame_idx > 0
+                    && frame_idx.is_multiple_of(360)
+                    && let Some(ref trigger) = beep_trigger
+                {
+                    trigger.trigger();
                 }
 
                 // BGRA → I420 変換してフレームを供給
@@ -158,5 +436,5 @@ pub(crate) fn start_fake_video_thread(
                 std::thread::sleep(frame_duration);
             }
         })
-        .expect("フェイク映像スレッドの起動に失敗");
+        .expect("fake video thread spawn failed");
 }

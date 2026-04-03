@@ -63,6 +63,8 @@ pub struct SoraConfig {
     pub client_cert: Option<(String, String)>,
     /// CA 証明書 (PEM)
     pub ca_cert: Option<String>,
+    /// フェイク音声のビープトリガー
+    pub beep_trigger: Option<crate::fake::BeepTrigger>,
     /// プレビューフレーム送信チャネル
     #[cfg(feature = "player")]
     pub preview_tx: Option<std::sync::mpsc::SyncSender<crate::preview::PreviewFrame>>,
@@ -73,9 +75,15 @@ pub struct SoraConfig {
 pub async fn run(
     config: SoraConfig,
     metrics_state: Option<Arc<MetricsState>>,
+    fake_adm: Option<crate::fake::SendableAdm>,
 ) -> Result<(), BoxError> {
     // ── ADM 構築 ──────────────────────────────────────────────────────────
-    let (adm_config, adm_state, audio_capture) = build_adm(&config)?;
+    let (adm_config, adm_state, audio_capture) = if let Some(sendable) = fake_adm {
+        info!(target: "sora", "fake audio (--fake-capture-device)");
+        (AdmConfig::UseExternal(sendable.0), None, None)
+    } else {
+        build_adm(&config)?
+    };
 
     // ── SoraClientContext 生成 ────────────────────────────────────────────
     // サイマルキャスト時はネイティブバッファを使用しない
@@ -195,6 +203,7 @@ pub async fn run(
                 config.video_width,
                 config.video_height,
                 config.framerate,
+                config.beep_trigger.clone(),
                 #[cfg(feature = "player")]
                 config.preview_tx.clone(),
             );
@@ -473,7 +482,7 @@ fn build_adm(
 ) -> Result<(AdmConfig, Option<AdmState>, Option<AudioCapture>), BoxError> {
     if config.no_audio_device || config.fake_capture_device {
         if config.fake_capture_device {
-            info!(target: "sora", "fake audio (--fake-capture-device)");
+            info!(target: "sora", "fake audio handled by FakeAudioCapturer");
         } else {
             info!(target: "sora", "音声を無効化しました (--no-audio-device)");
         }
