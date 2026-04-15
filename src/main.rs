@@ -909,8 +909,8 @@ fn print_video_codec_engines() {
         // Apple VideoToolbox (macOS/iOS)
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         {
-            use sora_sdk::InternalHwaVideoCodecCapability;
-            if let Some(hwa) = InternalHwaVideoCodecCapability::new() {
+            use sora_sdk::InternalAppleVideoCodecCapability;
+            if let Some(hwa) = InternalAppleVideoCodecCapability::new() {
                 capabilities.push(Box::new(hwa));
             }
         }

@@ -792,9 +792,9 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 
 [[package]]
 name = "raden"
-version = "2026.1.0"
+version = "2026.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6937359ddbacdc25aa0580b384063f99ddfe2612cf8f2686460fe522115de895"
+checksum = "e90ed8f4db8fc7277795abf7507feea4bd5b6c1916b5913d9883e0d10428e063"
 dependencies = [
  "cranelift-codegen",
  "cranelift-frontend",

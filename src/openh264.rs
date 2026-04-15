@@ -7,9 +7,9 @@ use shiguredo_openh264::{DecodedFrame, EncodeOptions, Encoder, EncoderConfig, Op
 use shiguredo_webrtc::{
     CodecSpecificInfo, EncodedImage, EncodedImageBuffer, EncodedImageRef, EnvironmentRef,
     H264PacketizationMode, I420Buffer, SdpVideoFormat, SdpVideoFormatRef, VideoCodecRef,
-    VideoCodecStatus, VideoDecoderDecodedImageCallbackPtr, VideoDecoderDecoderInfo,
+    VideoCodecStatus, VideoDecoder, VideoDecoderDecodedImageCallbackPtr, VideoDecoderDecoderInfo,
     VideoDecoderFactory, VideoDecoderFactoryHandler, VideoDecoderHandler, VideoDecoderSettingsRef,
-    VideoEncoderEncodedImageCallbackPtr, VideoEncoderEncodedImageCallbackRef,
+    VideoEncoder, VideoEncoderEncodedImageCallbackPtr, VideoEncoderEncodedImageCallbackRef,
     VideoEncoderEncoderInfo, VideoEncoderFactory, VideoEncoderFactoryHandler, VideoEncoderHandler,
     VideoEncoderRateControlParametersRef, VideoEncoderSettingsRef, VideoFrameRef, VideoFrameType,
     VideoFrameTypeVectorRef,
@@ -72,20 +72,22 @@ impl VideoEncoderFactoryHandler for Openh264EncoderFactory {
         &mut self,
         _env: EnvironmentRef<'_>,
         format: SdpVideoFormatRef<'_>,
-    ) -> Option<Box<dyn VideoEncoderHandler>> {
+    ) -> Option<VideoEncoder> {
         let name = format.name().unwrap_or_default();
         if name != "H264" {
             return None;
         }
 
         info!(target: "openh264", "creating OpenH264 encoder");
-        Some(Box::new(Openh264H264Encoder {
-            lib: self.lib.clone(),
-            encoder: None,
-            callback: None,
-            width: 0,
-            height: 0,
-        }))
+        Some(VideoEncoder::new_with_handler(Box::new(
+            Openh264H264Encoder {
+                lib: self.lib.clone(),
+                encoder: None,
+                callback: None,
+                width: 0,
+                height: 0,
+            },
+        )))
     }
 }
 
@@ -347,18 +349,20 @@ impl VideoDecoderFactoryHandler for Openh264DecoderFactory {
         &mut self,
         _env: EnvironmentRef<'_>,
         format: SdpVideoFormatRef<'_>,
-    ) -> Option<Box<dyn VideoDecoderHandler>> {
+    ) -> Option<VideoDecoder> {
         let name = format.name().unwrap_or_default();
         if name != "H264" {
             return None;
         }
 
         info!(target: "openh264", "creating OpenH264 decoder");
-        Some(Box::new(Openh264H264Decoder {
-            lib: self.lib.clone(),
-            decoder: None,
-            callback: None,
-        }))
+        Some(VideoDecoder::new_with_handler(Box::new(
+            Openh264H264Decoder {
+                lib: self.lib.clone(),
+                decoder: None,
+                callback: None,
+            },
+        )))
     }
 }
 
@@ -519,11 +523,9 @@ fn deliver_decoded_frame(
 
 #[cfg(feature = "sora")]
 pub(crate) mod sora_capability {
-    use std::collections::HashMap;
-
     use shiguredo_openh264::Openh264Library;
     use shiguredo_webrtc::{
-        SdpVideoFormat, VideoCodecType, VideoDecoderHandler, VideoEncoderHandler,
+        EnvironmentRef, SdpVideoFormat, SdpVideoFormatRef, VideoDecoder, VideoEncoder,
     };
     use sora_sdk::{CodecDirection, VideoCodecCapability, VideoCodecImplementation};
 
@@ -534,26 +536,8 @@ pub(crate) mod sora_capability {
         pub lib: Openh264Library,
     }
 
-    impl VideoCodecCapability for Openh264VideoCodecCapability {
-        fn get_implementation(&self) -> VideoCodecImplementation {
-            VideoCodecImplementation::new("openh264", "Cisco OpenH264")
-        }
-
-        fn is_supported(&self, _direction: CodecDirection, codec_type: VideoCodecType) -> bool {
-            // H.264 のエンコード/デコード両方に対応
-            codec_type == VideoCodecType::H264
-        }
-
-        fn resolve_sdp_format(
-            &self,
-            direction: CodecDirection,
-            codec_type: VideoCodecType,
-            _parameters: &HashMap<String, String>,
-            _scalability_mode: Option<&str>,
-        ) -> Option<SdpVideoFormat> {
-            if !self.is_supported(direction, codec_type) {
-                return None;
-            }
+    impl Openh264VideoCodecCapability {
+        fn supported_format() -> SdpVideoFormat {
             // Constrained Baseline Profile
             let mut format = SdpVideoFormat::new("H264");
             {
@@ -562,39 +546,55 @@ pub(crate) mod sora_capability {
                 params.set("level-asymmetry-allowed", "1");
                 params.set("packetization-mode", "1");
             }
-            Some(format)
+            format
+        }
+    }
+
+    impl VideoCodecCapability for Openh264VideoCodecCapability {
+        fn get_implementation(&self) -> VideoCodecImplementation {
+            VideoCodecImplementation::new("openh264", "Cisco OpenH264")
+        }
+
+        fn get_supported_formats(&self, _direction: CodecDirection) -> Vec<SdpVideoFormat> {
+            vec![Self::supported_format()]
         }
 
         fn create_video_encoder(
             &self,
-            format: &SdpVideoFormat,
-        ) -> Option<Box<dyn VideoEncoderHandler>> {
+            _env: EnvironmentRef<'_>,
+            format: SdpVideoFormatRef<'_>,
+        ) -> Option<VideoEncoder> {
             let name = format.name().ok()?;
             if name != "H264" {
                 return None;
             }
-            Some(Box::new(Openh264H264Encoder {
-                lib: self.lib.clone(),
-                encoder: None,
-                callback: None,
-                width: 0,
-                height: 0,
-            }))
+            Some(VideoEncoder::new_with_handler(Box::new(
+                Openh264H264Encoder {
+                    lib: self.lib.clone(),
+                    encoder: None,
+                    callback: None,
+                    width: 0,
+                    height: 0,
+                },
+            )))
         }
 
         fn create_video_decoder(
             &self,
-            format: &SdpVideoFormat,
-        ) -> Option<Box<dyn VideoDecoderHandler>> {
+            _env: EnvironmentRef<'_>,
+            format: SdpVideoFormatRef<'_>,
+        ) -> Option<VideoDecoder> {
             let name = format.name().ok()?;
             if name != "H264" {
                 return None;
             }
-            Some(Box::new(Openh264H264Decoder {
-                lib: self.lib.clone(),
-                decoder: None,
-                callback: None,
-            }))
+            Some(VideoDecoder::new_with_handler(Box::new(
+                Openh264H264Decoder {
+                    lib: self.lib.clone(),
+                    decoder: None,
+                    callback: None,
+                },
+            )))
         }
     }
 }
