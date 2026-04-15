@@ -3,68 +3,66 @@ name = "shiguredo_momo"
 version = "2026.0.0"
 edition = "2024"
 rust-version = "1.94"
-authors = ["Shiguredo Inc."]
-license = "Apache-2.0"
 description = "WebRTC Native Client Momo"
+readme = "README.md"
 homepage = "https://github.com/shiguredo/momo-rs"
 repository = "https://github.com/shiguredo/momo-rs"
-readme = "README.md"
+license = "Apache-2.0"
 
 [[bin]]
 name = "momo"
 path = "src/main.rs"
 
 [dependencies]
-aws-lc-rs = "1"
+aws-lc-rs = "1.16"
 noargs = "0.4"
 nojson = "0.3"
-rustls = { version = "0.23", default-features = false, features = [
-    "std",
-    "tls12",
-    "aws-lc-rs",
-], optional = true }
-rustls-pki-types = { version = "1", features = ["std"], optional = true }
-rustls-platform-verifier = { version = "0.6", optional = true }
 raden = "2026.1"
-shiguredo_http11 = "2026.1"
-shiguredo_webrtc = "=0.147.1-canary.2"
-shiguredo_openh264 = "2026.1"
-shiguredo_websocket = "2026.1"
+raw_player = { version = "2026.1", optional = true }
+rustls = { version = "0.23", default-features = false, features = [
+  "aws-lc-rs",
+  "std",
+  "tls12",
+], optional = true }
+rustls-pki-types = { version = "1.14", features = ["std"], optional = true }
+rustls-platform-verifier = { version = "0.6", optional = true }
 shiguredo_audio_device = "2026.1"
+shiguredo_http11 = "2026.1"
+shiguredo_openh264 = "2026.1"
 shiguredo_video_device = "2026.1"
+shiguredo_webrtc = "=0.147.1-canary.2"
+shiguredo_websocket = "2026.1"
+sora_sdk = { version = "2026.1.0-canary.6", optional = true }
 tokio = { version = "1", features = [
-    "rt-multi-thread",
-    "net",
-    "io-util",
-    "macros",
-    "sync",
-    "time",
-    "fs",
+  "fs",
+  "io-util",
+  "macros",
+  "net",
+  "rt-multi-thread",
+  "sync",
+  "time",
 ] }
 tokio-rustls = { version = "0.26", default-features = false, features = [
-    "aws-lc-rs",
+  "aws-lc-rs",
 ], optional = true }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-[features]
-default = ["ayame", "sora", "player"]
-ayame = ["dep:rustls", "dep:rustls-pki-types", "dep:rustls-platform-verifier", "dep:tokio-rustls"]
-sora = ["dep:sora_sdk"]
-raspberrypi = ["shiguredo_libcamera", "shiguredo_v4l2"]
-player = ["dep:raw_player"]
-
-[dependencies.sora_sdk]
-version = "2026.1.0-canary.6"
-optional = true
-
-[dependencies.raw_player]
-version = "2026.1"
-optional = true
+[target.'cfg(all(target_os = "linux", target_arch = "aarch64"))'.dependencies]
+shiguredo_libcamera = { version = "2026.1.0-canary.1", optional = true }
+shiguredo_v4l2 = { version = "2026.1.0-canary.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
 
-[target.'cfg(all(target_os = "linux", target_arch = "aarch64"))'.dependencies]
-shiguredo_libcamera = { version = "2026.1.0-canary.1", optional = true }
-shiguredo_v4l2 = { version = "2026.1.0-canary.1", optional = true }
+[features]
+default = ["ayame", "player", "sora"]
+ayame = [
+  "dep:rustls",
+  "dep:rustls-pki-types",
+  "dep:rustls-platform-verifier",
+  "dep:tokio-rustls"
+]
+player = ["dep:raw_player"]
+raspberrypi = ["shiguredo_libcamera", "shiguredo_v4l2"]
+sora = ["dep:sora_sdk"]
