@@ -4,6 +4,10 @@ target/
 # Agents
 .claude/
 .codex/
+.cursor/
 
 # macOS
 .DS_Store
+
+# openh264
+libopenh264*
