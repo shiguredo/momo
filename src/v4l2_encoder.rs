@@ -9,7 +9,7 @@ use shiguredo_v4l2::v4l2_m2m::{EncodedFrame, EncoderConfig, H264Encoder, InputFr
 use crate::libcamera::DmaBufMap;
 use shiguredo_webrtc::{
     CodecSpecificInfo, EncodedImage, EncodedImageBuffer, EnvironmentRef, H264PacketizationMode,
-    SdpVideoFormat, SdpVideoFormatRef, VideoCodecRef, VideoCodecStatus,
+    SdpVideoFormat, SdpVideoFormatRef, VideoCodecRef, VideoCodecStatus, VideoEncoder,
     VideoEncoderEncodedImageCallbackPtr, VideoEncoderEncodedImageCallbackRef,
     VideoEncoderEncoderInfo, VideoEncoderFactory, VideoEncoderFactoryHandler, VideoEncoderHandler,
     VideoEncoderRateControlParametersRef, VideoEncoderSettingsRef, VideoFrameRef, VideoFrameType,
@@ -55,7 +55,7 @@ impl VideoEncoderFactoryHandler for V4l2EncoderFactory {
         &mut self,
         _env: EnvironmentRef<'_>,
         format: SdpVideoFormatRef<'_>,
-    ) -> Option<Box<dyn VideoEncoderHandler>> {
+    ) -> Option<VideoEncoder> {
         let name = format.name().unwrap_or_default();
         if name != "H264" {
             // H.264 以外はビルトインに委譲
@@ -65,13 +65,13 @@ impl VideoEncoderFactoryHandler for V4l2EncoderFactory {
         }
 
         info!(target: "v4l2", "creating V4L2 H.264 encoder");
-        Some(Box::new(V4l2H264Encoder {
+        Some(VideoEncoder::new_with_handler(Box::new(V4l2H264Encoder {
             encoder: None,
             callback: None,
             width: 0,
             height: 0,
             dmabuf_map: self.dmabuf_map.clone(),
-        }))
+        })))
     }
 }
 
@@ -274,10 +274,8 @@ impl VideoEncoderHandler for V4l2H264Encoder {
 
 #[cfg(feature = "sora")]
 pub(crate) mod sora_capability {
-    use std::collections::HashMap;
-
     use shiguredo_webrtc::{
-        SdpVideoFormat, VideoCodecType, VideoDecoderHandler, VideoEncoderHandler,
+        EnvironmentRef, SdpVideoFormat, SdpVideoFormatRef, VideoDecoder, VideoEncoder,
     };
     use sora_sdk::{CodecDirection, VideoCodecCapability, VideoCodecImplementation};
 
@@ -288,26 +286,8 @@ pub(crate) mod sora_capability {
         pub dmabuf_map: Option<super::DmaBufMap>,
     }
 
-    impl VideoCodecCapability for V4l2VideoCodecCapability {
-        fn get_implementation(&self) -> VideoCodecImplementation {
-            VideoCodecImplementation::new("v4l2", "V4L2 M2M H.264 Hardware Encoder")
-        }
-
-        fn is_supported(&self, direction: CodecDirection, codec_type: VideoCodecType) -> bool {
-            // H.264 エンコードのみ対応
-            direction == CodecDirection::Encoder && codec_type == VideoCodecType::H264
-        }
-
-        fn resolve_sdp_format(
-            &self,
-            direction: CodecDirection,
-            codec_type: VideoCodecType,
-            _parameters: &HashMap<String, String>,
-            _scalability_mode: Option<&str>,
-        ) -> Option<SdpVideoFormat> {
-            if !self.is_supported(direction, codec_type) {
-                return None;
-            }
+    impl V4l2VideoCodecCapability {
+        fn supported_format() -> SdpVideoFormat {
             // Constrained Baseline Profile
             let mut format = SdpVideoFormat::new("H264");
             {
@@ -316,30 +296,47 @@ pub(crate) mod sora_capability {
                 params.set("level-asymmetry-allowed", "1");
                 params.set("packetization-mode", "1");
             }
-            Some(format)
+            format
+        }
+    }
+
+    impl VideoCodecCapability for V4l2VideoCodecCapability {
+        fn get_implementation(&self) -> VideoCodecImplementation {
+            VideoCodecImplementation::new("v4l2", "V4L2 M2M H.264 Hardware Encoder")
+        }
+
+        fn get_supported_formats(&self, direction: CodecDirection) -> Vec<SdpVideoFormat> {
+            // エンコードのみ対応
+            if direction == CodecDirection::Encoder {
+                vec![Self::supported_format()]
+            } else {
+                Vec::new()
+            }
         }
 
         fn create_video_encoder(
             &self,
-            format: &SdpVideoFormat,
-        ) -> Option<Box<dyn VideoEncoderHandler>> {
+            _env: EnvironmentRef<'_>,
+            format: SdpVideoFormatRef<'_>,
+        ) -> Option<VideoEncoder> {
             let name = format.name().ok()?;
             if name != "H264" {
                 return None;
             }
-            Some(Box::new(V4l2H264Encoder {
+            Some(VideoEncoder::new_with_handler(Box::new(V4l2H264Encoder {
                 encoder: None,
                 callback: None,
                 width: 0,
                 height: 0,
                 dmabuf_map: self.dmabuf_map.clone(),
-            }))
+            })))
         }
 
         fn create_video_decoder(
             &self,
-            _format: &SdpVideoFormat,
-        ) -> Option<Box<dyn VideoDecoderHandler>> {
+            _env: EnvironmentRef<'_>,
+            _format: SdpVideoFormatRef<'_>,
+        ) -> Option<VideoDecoder> {
             // V4L2 デコーダーは未対応
             None
         }
