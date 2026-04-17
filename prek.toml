@@ -2,52 +2,66 @@
 # See https://prek.j178.dev for more information.
 #:schema https://www.schemastore.org/prek.json
 
+minimum_prek_version = "0.3.9"
+
+# ─── builtin: 基本チェック ────────────────────────────────────────
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer" },
+  { id = "mixed-line-ending" },
+  { id = "check-toml" },
+  { id = "check-yaml" },
+  { id = "check-merge-conflict" },
+  { id = "detect-private-key" },
+]
+
+# ─── local: cargo / e2e-tests ─────────────────────────────────────
 [[repos]]
 repo = "local"
-hooks = [
-  {
-    id = "cargo-fmt",
-    name = "cargo fmt",
-    entry = "cargo fmt --all -- --check",
-    language = "system",
-    types = ["rust"],
-    pass_filenames = false,
-    priority = 0,
-  },
-  {
-    id = "ruff-format",
-    name = "ruff format",
-    entry = "uv run --directory e2e-tests ruff format --check",
-    language = "system",
-    files = '^e2e-tests/.*\.py$',
-    pass_filenames = false,
-    priority = 0,
-  },
-  {
-    id = "cargo-clippy",
-    name = "cargo clippy",
-    entry = "cargo clippy --workspace --features ayame,sora,player -- -D warnings",
-    language = "system",
-    types = ["rust"],
-    pass_filenames = false,
-    priority = 10,
-  },
-  {
-    id = "ruff-check",
-    name = "ruff check",
-    entry = "uv run --directory e2e-tests ruff check",
-    language = "system",
-    files = '^e2e-tests/.*\.py$',
-    pass_filenames = false,
-    priority = 10,
-  },
-  {
-    id = "ty-check",
-    name = "ty check",
-    entry = "uv run --directory e2e-tests ty check .",
-    language = "system",
-    files = '^e2e-tests/.*\.py$',
-    pass_filenames = false,
-    priority = 10,
-  },
-]
+
+[[repos.hooks]]
+id = "cargo-fmt"
+name = "cargo fmt"
+entry = "cargo fmt --all -- --check"
+language = "system"
+types = ["rust"]
+pass_filenames = false
+priority = 0
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "ruff format"
+entry = "uv run --directory e2e-tests ruff format --check"
+language = "system"
+files = { glob = "e2e-tests/**/*.py" }
+pass_filenames = false
+priority = 0
+
+[[repos.hooks]]
+id = "cargo-clippy"
+name = "cargo clippy"
+entry = "cargo clippy --workspace --features ayame,sora,player -- -D warnings"
+language = "system"
+types = ["rust"]
+pass_filenames = false
+priority = 10
+
+[[repos.hooks]]
+id = "ruff-check"
+name = "ruff check"
+entry = "uv run --directory e2e-tests ruff check"
+language = "system"
+files = { glob = "e2e-tests/**/*.py" }
+pass_filenames = false
+priority = 10
+
+[[repos.hooks]]
+id = "ty-check"
+name = "ty check"
+entry = "uv run --directory e2e-tests ty check ."
+language = "system"
+files = { glob = "e2e-tests/**/*.py" }
+pass_filenames = false
+priority = 10

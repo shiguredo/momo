@@ -50,7 +50,7 @@ Momo 2:
 ./momo  --no-google-stun --use-sdl ayame --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id p2p
 ```
 
-配信がうまくいくとそれぞれのマシンにお互いの映像と音声が出力されます。  
+配信がうまくいくとそれぞれのマシンにお互いの映像と音声が出力されます。
 
 ## P2P モードで確認ができたら
 

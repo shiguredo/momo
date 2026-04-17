@@ -116,7 +116,7 @@ elgato FACECAM MK.2 が今のところ 720p で 120fps に対応しています�
 
 ## macOS で 60fps を利用できますか？
 
-Momo は macOS で H.264 または H.265 のハードウェアアクセラレータを利用して 60fps 
+Momo は macOS で H.264 または H.265 のハードウェアアクセラレータを利用して 60fps
 
 ## Sora モードで DataChannel メッセージングは利用できますか？
 
