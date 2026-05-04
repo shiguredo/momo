@@ -2,12 +2,13 @@
 name = "shiguredo_momo"
 version = "2026.0.0"
 edition = "2024"
-rust-version = "1.94"
+rust-version = "1.95"
 description = "WebRTC Native Client Momo"
 readme = "README.md"
 homepage = "https://github.com/shiguredo/momo-rs"
 repository = "https://github.com/shiguredo/momo-rs"
 license = "Apache-2.0"
+include = ["/LICENSE", "/README.md", "/src/**"]
 
 [[bin]]
 name = "momo"
@@ -52,7 +53,7 @@ rustls-pki-types = { version = "1.14", features = ["std"], optional = true }
 # OS の証明書ストアを使ったサーバー証明書検証 (Ayame シグナリング)
 rustls-platform-verifier = { version = "0.6", optional = true }
 # 非同期ランタイム
-tokio = { version = "1", features = [
+tokio = { version = "1.52", features = [
   "fs",
   "io-util",
   "macros",
