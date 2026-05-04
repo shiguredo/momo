@@ -1,6 +1,7 @@
 # AGENTS
 
 - Premature Optimization is the Root of All Evil
+- 一切妥協をしないこと
 - 一切忖度しないこと
 - 常に日本語を利用すること
 - 全角と半角の間には半角スペースを入れること
@@ -43,12 +44,24 @@
   - 例: `0002-fmt-enhance-support-for-joins.md`
 - 仕様的に対応が難しい場合は issues/pending/ へ移動すること
 - issue を作成したらコミットすること
+- issue をコミットするときはコミットメッセージに issue の番号とタイトルを記載すること
 - 1 issue 完了ごとに 1 コミットすること
 - Issue の作成日はファイルのタイトルの後に `Created: YYYY-MM-DD` として記載すること
 - Issue の完了日はファイルのタイトルの後に `Completed: YYYY-MM-DD` として記載すること
 - Issue を作成した LLM の Model と Version をファイルのタイトルの後に `Model: <model-name> <version>` として記載すること
-  - Opus 4.6 や GPT-5.4 など
+  - Opus 4.7 や GPT-5.5 など
 - Issue はなぜこの対応が必要なのかの根拠を明確にすること
+- Issue には必ず AWS S3 API Reference の URL を追加すること
+  - URL に加えて、該当箇所の原文を引用（`>` を使った引用ブロック）として記載すること
+  - 複数の API が関係する場合はそれぞれの URL と引用を記載すること
+
+### git ブランチの命名規則
+
+- Git Flow を使うこと
+- バグ修正は prefix を `feature/fix-` でブランチを切って対応すること
+- 機能追加は prefix を `feature/add-` でブランチを切って対応すること
+- 後方互換のない変更は prefix を `feature/change-` でブランチを切って対応すること
+- ブランチ名に issue の番号を含めないこと
 
 ### issue が実は解決してなかった場合
 
