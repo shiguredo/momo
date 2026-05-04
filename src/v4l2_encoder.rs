@@ -3,19 +3,23 @@
 //! shiguredo_v4l2 の H264Encoder を WebRTC の VideoEncoderFactory で
 //! ラップし、ハードウェアアクセラレーションによる H.264 エンコーディングを提供する。
 
-use shiguredo_v4l2::v4l2_m2m::{EncodedFrame, EncoderConfig, H264Encoder, InputFrame, InputMemory};
+use std::sync::{Arc, Mutex};
 
-#[cfg(feature = "raspberrypi")]
-use crate::libcamera::DmaBufMap;
+use shiguredo_v4l2::v4l2_m2m::{
+    EncodeCallbackOutput, EncodeInput, EncoderConfig, Error as V4l2Error, H264Encoder, Memory,
+    Resolution,
+};
 use shiguredo_webrtc::{
     CodecSpecificInfo, EncodedImage, EncodedImageBuffer, EnvironmentRef, H264PacketizationMode,
     SdpVideoFormat, SdpVideoFormatRef, VideoCodecRef, VideoCodecStatus, VideoEncoder,
     VideoEncoderEncodedImageCallbackPtr, VideoEncoderEncodedImageCallbackRef,
-    VideoEncoderEncoderInfo, VideoEncoderFactory, VideoEncoderFactoryHandler, VideoEncoderHandler,
-    VideoEncoderRateControlParametersRef, VideoEncoderSettingsRef, VideoFrameRef, VideoFrameType,
-    VideoFrameTypeVectorRef,
+    VideoEncoderEncodedImageCallbackResultError, VideoEncoderEncoderInfo, VideoEncoderFactory,
+    VideoEncoderFactoryHandler, VideoEncoderHandler, VideoEncoderRateControlParametersRef,
+    VideoEncoderSettingsRef, VideoFrameRef, VideoFrameType, VideoFrameTypeVectorRef, i420_copy,
 };
 use tracing::{error, info, warn};
+
+use crate::libcamera::{DmaBufEntry, DmaBufMap};
 
 /// V4L2 H.264 エンコーダーファクトリ
 struct V4l2EncoderFactory {
@@ -65,13 +69,9 @@ impl VideoEncoderFactoryHandler for V4l2EncoderFactory {
         }
 
         info!(target: "v4l2", "creating V4L2 H.264 encoder");
-        Some(VideoEncoder::new_with_handler(Box::new(V4l2H264Encoder {
-            encoder: None,
-            callback: None,
-            width: 0,
-            height: 0,
-            dmabuf_map: self.dmabuf_map.clone(),
-        })))
+        Some(VideoEncoder::new_with_handler(Box::new(
+            V4l2H264Encoder::new(self.dmabuf_map.clone()),
+        )))
     }
 }
 
@@ -88,17 +88,110 @@ pub(crate) fn create_v4l2_encoder_factory(dmabuf_map: Option<DmaBufMap>) -> Vide
     VideoEncoderFactory::new_with_handler(Box::new(factory))
 }
 
-/// V4L2 H.264 エンコーダーの内部状態
-struct V4l2H264Encoder {
-    encoder: Option<H264Encoder>,
-    callback: Option<VideoEncoderEncodedImageCallbackPtr>,
+/// エンコーダーコールバックに渡す値
+///
+/// CAPTURE バッファが dequeue されるタイミングで V4L2 から戻ってくる。
+/// dmabuf エントリは V4L2 が消費しきるまで生かしておくためここに保持する。
+struct EncoderCallbackValue {
+    rtp_timestamp: u32,
     width: u32,
     height: u32,
+    /// dmabuf 入力時のみ Some。Drop されると libcamera への done 通知 (done_tx) が走る。
+    _dmabuf_entry: Option<DmaBufEntry>,
+}
+
+/// V4L2 エンコーダーの共有状態
+///
+/// V4L2 のコールバックは別スレッドから呼ばれるため、WebRTC 側のコールバックと
+/// エンコーダー本体は Mutex で保護した共有状態に置く。
+#[derive(Default)]
+struct V4l2EncoderSharedState {
+    encoder: Option<H264Encoder<EncoderCallbackValue>>,
+    callback: Option<VideoEncoderEncodedImageCallbackPtr>,
+}
+
+/// V4L2 のコールバックスレッドからエンコード結果を受け取って WebRTC に転送する
+fn handle_v4l2_encode_callback(
+    shared_state: &Arc<Mutex<V4l2EncoderSharedState>>,
+    result: shiguredo_v4l2::v4l2_m2m::Result<EncodeCallbackOutput<EncoderCallbackValue>>,
+) {
+    let (encoded, value) = match result {
+        Ok(EncodeCallbackOutput::Frame { frame, value }) => (frame, value),
+        Err(err) => {
+            warn!(target: "v4l2", error = %err, "encode callback error");
+            return;
+        }
+    };
+
+    let Some(encoded_data) = encoded.data() else {
+        warn!(target: "v4l2", "encoded frame has no MMAP data");
+        return;
+    };
+
+    let buffer = EncodedImageBuffer::from_bytes(encoded_data);
+    let mut image = EncodedImage::new();
+    image.set_encoded_data(&buffer);
+    image.set_rtp_timestamp(value.rtp_timestamp);
+    image.set_encoded_width(value.width);
+    image.set_encoded_height(value.height);
+    image.set_frame_type(if encoded.is_keyframe() {
+        VideoFrameType::Key
+    } else {
+        VideoFrameType::Delta
+    });
+
+    let mut codec_info = CodecSpecificInfo::new();
+    codec_info.set_codec_type(shiguredo_webrtc::VideoCodecType::H264);
+    codec_info.set_h264_packetization_mode(H264PacketizationMode::NonInterleaved);
+    codec_info.set_h264_idr_frame(encoded.is_keyframe());
+
+    let callback = {
+        let guard = shared_state.lock().unwrap();
+        guard.callback
+    };
+    let Some(callback) = callback else {
+        return;
+    };
+
+    // SAFETY: callback ポインタは register_encode_complete_callback で渡されたもので、
+    // release が呼ばれるまで有効である。
+    let result = unsafe { callback.on_encoded_image(image.as_ref(), Some(codec_info.as_ref())) };
+    if result.error() != VideoEncoderEncodedImageCallbackResultError::Ok {
+        warn!(target: "v4l2", "on_encoded_image returned non-Ok status");
+    }
+}
+
+/// V4L2 H.264 エンコーダーの内部状態
+struct V4l2H264Encoder {
+    shared_state: Arc<Mutex<V4l2EncoderSharedState>>,
+    width: u32,
+    height: u32,
+    bitrate_bps: u32,
     dmabuf_map: Option<DmaBufMap>,
 }
 
-// SAFETY: H264Encoder は単一スレッドから使用される (WebRTC エンコーダスレッド)
-unsafe impl Send for V4l2H264Encoder {}
+impl V4l2H264Encoder {
+    fn new(dmabuf_map: Option<DmaBufMap>) -> Self {
+        Self {
+            shared_state: Arc::new(Mutex::new(V4l2EncoderSharedState::default())),
+            width: 0,
+            height: 0,
+            bitrate_bps: 0,
+            dmabuf_map,
+        }
+    }
+
+    fn build_encoder(&self) -> Result<H264Encoder<EncoderCallbackValue>, V4l2Error> {
+        let mut config = EncoderConfig::new(self.width, self.height, self.bitrate_bps.max(1));
+        if self.dmabuf_map.is_some() {
+            config.input_memory = Memory::DmaBuf;
+        }
+        let shared_state = self.shared_state.clone();
+        H264Encoder::new(config, move |result| {
+            handle_v4l2_encode_callback(&shared_state, result);
+        })
+    }
+}
 
 impl VideoEncoderHandler for V4l2H264Encoder {
     fn init_encode(
@@ -106,27 +199,22 @@ impl VideoEncoderHandler for V4l2H264Encoder {
         codec_settings: VideoCodecRef<'_>,
         _settings: VideoEncoderSettingsRef<'_>,
     ) -> VideoCodecStatus {
-        let width = codec_settings.width() as u32;
-        let height = codec_settings.height() as u32;
-        let bitrate_bps = codec_settings.start_bitrate_kbps() * 1000;
+        self.width = codec_settings.width().max(0) as u32;
+        self.height = codec_settings.height().max(0) as u32;
+        self.bitrate_bps = codec_settings.start_bitrate_kbps().saturating_mul(1000);
 
         info!(
             target: "v4l2",
-            width,
-            height,
-            bitrate_bps,
+            width = self.width,
+            height = self.height,
+            bitrate_bps = self.bitrate_bps,
             "initializing V4L2 H.264 encoder"
         );
 
-        let mut config = EncoderConfig::new(width, height, bitrate_bps);
-        if self.dmabuf_map.is_some() {
-            config.input_memory = InputMemory::DmaBuf;
-        }
-        match H264Encoder::new(config) {
+        match self.build_encoder() {
             Ok(encoder) => {
-                self.encoder = Some(encoder);
-                self.width = width;
-                self.height = height;
+                let mut guard = self.shared_state.lock().unwrap();
+                guard.encoder = Some(encoder);
                 info!(target: "v4l2", "V4L2 H.264 encoder initialized");
                 VideoCodecStatus::Ok
             }
@@ -142,10 +230,6 @@ impl VideoEncoderHandler for V4l2H264Encoder {
         frame: VideoFrameRef<'_>,
         frame_types: Option<VideoFrameTypeVectorRef<'_>>,
     ) -> VideoCodecStatus {
-        let Some(ref mut encoder) = self.encoder else {
-            return VideoCodecStatus::Uninitialized;
-        };
-
         // キーフレーム要求の確認
         let force_keyframe = frame_types
             .as_ref()
@@ -161,104 +245,137 @@ impl VideoEncoderHandler for V4l2H264Encoder {
             guard.remove(&timestamp_us)
         });
 
-        // V4L2 エンコード
-        let encoded = if let Some(entry) = dmabuf_entry {
+        if let Some(entry) = dmabuf_entry {
             // ── ネイティブモード: DMA-BUF fd をゼロコピーで渡す ──
-            let result = encoder.encode(
-                InputFrame::DmaBuf {
-                    fd: entry.fd,
-                    bytesused: entry.bytesused,
-                    length: entry.length,
+            // entry は V4L2 が消費しきるまで EncoderCallbackValue で生かしておく。
+            // ここで fd/bytesused/length を取り出してから entry を value に move する。
+            let fd = entry.fd;
+            let bytesused = entry.bytesused;
+            let length = entry.length;
+            let value = EncoderCallbackValue {
+                rtp_timestamp,
+                width: self.width,
+                height: self.height,
+                _dmabuf_entry: Some(entry),
+            };
+            let mut guard = self.shared_state.lock().unwrap();
+            let Some(encoder) = guard.encoder.as_mut() else {
+                return VideoCodecStatus::Uninitialized;
+            };
+            return match encoder.encode(
+                EncodeInput::DmaBuf {
+                    fd,
+                    bytesused,
+                    length,
                 },
                 timestamp_us,
                 force_keyframe,
-            );
-            // エンコード完了を libcamera に通知 (requeue を許可)
-            let _ = entry.done_tx.send(());
-            match result {
-                Ok(f) => f,
+                value,
+            ) {
+                Ok(()) => VideoCodecStatus::Ok,
+                Err(V4l2Error::NoAvailableBuffer) => VideoCodecStatus::NoOutput,
                 Err(e) => {
                     warn!(target: "v4l2", error = %e, "encode error (dmabuf)");
-                    return VideoCodecStatus::Error;
+                    VideoCodecStatus::Error
                 }
-            }
-        } else {
-            // ── 通常モード: I420 データをコピーして渡す ──
-            let buffer = frame.buffer();
-            let Some(i420) = buffer.as_i420() else {
-                warn!(target: "v4l2", "encode: frame buffer is not I420");
-                return VideoCodecStatus::Error;
             };
-            let y = i420.y_data();
-            let u = i420.u_data();
-            let v = i420.v_data();
-            let width = self.width as usize;
-            let height = self.height as usize;
-
-            let yuv_size = width * height * 3 / 2;
-            let mut i420_data = Vec::with_capacity(yuv_size);
-            let stride_y = i420.stride_y() as usize;
-            let stride_u = i420.stride_u() as usize;
-            let stride_v = i420.stride_v() as usize;
-
-            // Y plane
-            for row in 0..height {
-                let start = row * stride_y;
-                let end = start + width;
-                i420_data.extend_from_slice(&y[start..end]);
-            }
-            // U plane
-            for row in 0..height / 2 {
-                let start = row * stride_u;
-                let end = start + width / 2;
-                i420_data.extend_from_slice(&u[start..end]);
-            }
-            // V plane
-            for row in 0..height / 2 {
-                let start = row * stride_v;
-                let end = start + width / 2;
-                i420_data.extend_from_slice(&v[start..end]);
-            }
-
-            match encoder.encode(InputFrame::I420(&i420_data), timestamp_us, force_keyframe) {
-                Ok(f) => f,
-                Err(e) => {
-                    warn!(target: "v4l2", error = %e, "encode error");
-                    return VideoCodecStatus::Error;
-                }
-            }
-        };
-
-        // WebRTC に通知
-        if let Some(ref callback) = self.callback {
-            report_encoded_frame(callback, &encoded, rtp_timestamp, self.width, self.height);
         }
 
-        VideoCodecStatus::Ok
+        // ── 通常モード: I420 データを MMAP バッファへコピー ──
+        let buffer = frame.buffer();
+        let Some(i420) = buffer.as_i420() else {
+            warn!(target: "v4l2", "encode: frame buffer is not I420");
+            return VideoCodecStatus::Error;
+        };
+
+        let mut fill = |dst: &mut [u8],
+                        resolution: &Resolution,
+                        _value: &EncoderCallbackValue|
+         -> Option<usize> {
+            let chroma_stride = resolution.stride.div_ceil(2);
+            let chroma_height = resolution.height.div_ceil(2);
+            let yuv_size = resolution.yuv420_size();
+            if dst.len() < yuv_size {
+                return None;
+            }
+            let y_size = (resolution.stride as usize) * (resolution.height as usize);
+            let uv_size = (chroma_stride as usize) * (chroma_height as usize);
+            let dst_stride_y = i32::try_from(resolution.stride).ok()?;
+            let dst_stride_uv = i32::try_from(chroma_stride).ok()?;
+            let (dst_y, dst_uv) = dst.split_at_mut(y_size);
+            let (dst_u, dst_v) = dst_uv.split_at_mut(uv_size);
+            if !i420_copy(
+                i420.y_data(),
+                i420.stride_y(),
+                i420.u_data(),
+                i420.stride_u(),
+                i420.v_data(),
+                i420.stride_v(),
+                dst_y,
+                dst_stride_y,
+                dst_u,
+                dst_stride_uv,
+                dst_v,
+                dst_stride_uv,
+                i420.width(),
+                i420.height(),
+            ) {
+                return None;
+            }
+            Some(yuv_size)
+        };
+
+        let value = EncoderCallbackValue {
+            rtp_timestamp,
+            width: self.width,
+            height: self.height,
+            _dmabuf_entry: None,
+        };
+        let mut guard = self.shared_state.lock().unwrap();
+        let Some(encoder) = guard.encoder.as_mut() else {
+            return VideoCodecStatus::Uninitialized;
+        };
+        match encoder.encode(
+            EncodeInput::Mmap(&mut fill),
+            timestamp_us,
+            force_keyframe,
+            value,
+        ) {
+            Ok(()) => VideoCodecStatus::Ok,
+            Err(V4l2Error::NoAvailableBuffer) => VideoCodecStatus::NoOutput,
+            Err(e) => {
+                warn!(target: "v4l2", error = %e, "encode error");
+                VideoCodecStatus::Error
+            }
+        }
     }
 
     fn register_encode_complete_callback(
         &mut self,
         callback: Option<VideoEncoderEncodedImageCallbackRef<'_>>,
     ) -> VideoCodecStatus {
-        self.callback =
+        let mut guard = self.shared_state.lock().unwrap();
+        guard.callback =
             callback.map(|cb| unsafe { VideoEncoderEncodedImageCallbackPtr::from_ref(cb) });
         VideoCodecStatus::Ok
     }
 
     fn release(&mut self) -> VideoCodecStatus {
-        self.encoder = None;
-        self.callback = None;
+        let mut guard = self.shared_state.lock().unwrap();
+        guard.encoder = None;
+        guard.callback = None;
         info!(target: "v4l2", "V4L2 H.264 encoder released");
         VideoCodecStatus::Ok
     }
 
     fn set_rates(&mut self, parameters: VideoEncoderRateControlParametersRef<'_>) {
-        if let Some(ref mut encoder) = self.encoder {
-            let bitrate_bps = parameters.target_bitrate_sum_bps();
-            if let Err(e) = encoder.set_bitrate(bitrate_bps) {
-                warn!(target: "v4l2", error = %e, "set_bitrate failed");
-            }
+        let bitrate_bps = parameters.target_bitrate_sum_bps();
+        self.bitrate_bps = bitrate_bps;
+        let mut guard = self.shared_state.lock().unwrap();
+        if let Some(ref mut encoder) = guard.encoder
+            && let Err(e) = encoder.set_bitrate(bitrate_bps)
+        {
+            warn!(target: "v4l2", error = %e, "set_bitrate failed");
         }
     }
 
@@ -323,13 +440,9 @@ pub(crate) mod sora_capability {
             if name != "H264" {
                 return None;
             }
-            Some(VideoEncoder::new_with_handler(Box::new(V4l2H264Encoder {
-                encoder: None,
-                callback: None,
-                width: 0,
-                height: 0,
-                dmabuf_map: self.dmabuf_map.clone(),
-            })))
+            Some(VideoEncoder::new_with_handler(Box::new(
+                V4l2H264Encoder::new(self.dmabuf_map.clone()),
+            )))
         }
 
         fn create_video_decoder(
@@ -340,37 +453,5 @@ pub(crate) mod sora_capability {
             // V4L2 デコーダーは未対応
             None
         }
-    }
-}
-
-/// エンコード結果を WebRTC コールバックに報告する
-fn report_encoded_frame(
-    callback: &VideoEncoderEncodedImageCallbackPtr,
-    encoded: &EncodedFrame,
-    rtp_timestamp: u32,
-    width: u32,
-    height: u32,
-) {
-    let buffer = EncodedImageBuffer::from_bytes(&encoded.data);
-    let mut image = EncodedImage::new();
-    image.set_encoded_data(&buffer);
-    image.set_rtp_timestamp(rtp_timestamp);
-    image.set_encoded_width(width);
-    image.set_encoded_height(height);
-    image.set_frame_type(if encoded.is_keyframe {
-        VideoFrameType::Key
-    } else {
-        VideoFrameType::Delta
-    });
-
-    let mut codec_info = CodecSpecificInfo::new();
-    codec_info.set_codec_type(shiguredo_webrtc::VideoCodecType::H264);
-    codec_info.set_h264_packetization_mode(H264PacketizationMode::NonInterleaved);
-    codec_info.set_h264_idr_frame(encoded.is_keyframe);
-
-    // SAFETY: callback ポインタは register_encode_complete_callback で渡されたもので、
-    // release が呼ばれるまで有効である。
-    unsafe {
-        callback.on_encoded_image(image.as_ref(), Some(codec_info.as_ref()));
     }
 }
