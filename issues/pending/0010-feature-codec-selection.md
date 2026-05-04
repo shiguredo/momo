@@ -14,7 +14,6 @@
   - `_h265_encoder` / `_h265_decoder`
   - `_video_codec_engines`
   - `_openh264`
-  - `_hw_mjpeg_decoder`
 
 ## 必要な実装
 
@@ -22,10 +21,13 @@
   - momo の選択肢: default / software / jetson / nvidia / vpl / videotoolbox / v4l2
 - `--video-codec-engines`: 利用可能なエンコーダ/デコーダの一覧表示
 - `--openh264`: OpenH264 動的ライブラリパスの指定
-- `--hw-mjpeg-decoder`: MJPEG ハードウェアデコーダの有効化
 
 ## pending 理由
 
 V4L2 以外の HW バックエンド (Jetson #0011 / NVIDIA・Intel・VideoToolbox #0012) が未実装のため、
 現状ではソフトウェアエンコーダしか選択肢がなく `default` = `software` となり選択する意味がない。
 HW バックエンドの実装が完了してから対応する。
+
+## 関連
+
+- #0031 (active) `--hw-mjpeg-decoder` が無視される — 元々この issue に含まれていたが、libv4l2 の MJPEG HW デコードはコーデックエンジン選択とは独立して実装可能なため分離した
