@@ -10,8 +10,8 @@ use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDeviceModule, I420Buffer, TimestampAligner,
 };
 use sora_sdk::{
-    AdmConfig, Audio, CodecDirection, JsonString, Role, SoraClient, SoraClientContext,
-    SoraClientContextConfig, Video, VideoCodecPreference,
+    AdmConfig, Audio, CodecDirection, JsonString, Role, SoraConnection, SoraConnectionContext,
+    SoraConnectionContextConfig, Video, VideoCodecPreference,
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
@@ -85,7 +85,7 @@ pub async fn run(
         build_adm(&config)?
     };
 
-    // ── SoraClientContext 生成 ────────────────────────────────────────────
+    // ── SoraConnectionContext 生成 ────────────────────────────────────────
     // サイマルキャスト時はネイティブバッファを使用しない
     #[cfg(feature = "raspberrypi")]
     let dmabuf_map = if config.use_libcamera_native
@@ -101,7 +101,7 @@ pub async fn run(
     // ctx_config は Send を実装しないため、await をまたがないようブロックで囲む
     let context = {
         #[allow(unused_mut)]
-        let mut ctx_config = SoraClientContextConfig {
+        let mut ctx_config = SoraConnectionContextConfig {
             adm_config,
             ..Default::default()
         };
@@ -157,8 +157,8 @@ pub async fn run(
                 .push(Box::new(Openh264VideoCodecCapability { lib: lib.clone() }));
         }
 
-        SoraClientContext::new_with_config(ctx_config).map_err(|e| -> BoxError {
-            format!("SoraClientContext の生成に失敗: {e}").into()
+        SoraConnectionContext::new_with_config(ctx_config).map_err(|e| -> BoxError {
+            format!("SoraConnectionContext の生成に失敗: {e}").into()
         })?
     };
 
@@ -325,8 +325,8 @@ pub async fn run(
         None
     };
 
-    // ── SoraClient ビルド ────────────────────────────────────────────────
-    let mut builder = SoraClient::builder(
+    // ── SoraConnection ビルド ────────────────────────────────────────────
+    let mut builder = SoraConnection::builder(
         context,
         config.signaling_urls.clone(),
         config.channel_id.clone(),
@@ -394,7 +394,7 @@ pub async fn run(
 
     let (client, handle) = builder
         .build()
-        .map_err(|e| -> BoxError { format!("SoraClient のビルドに失敗: {e}").into() })?;
+        .map_err(|e| -> BoxError { format!("SoraConnection のビルドに失敗: {e}").into() })?;
 
     // ── メトリクス stats プロバイダー登録 ─────────────────────────────────
     if let Some(ref ms) = metrics_state {
