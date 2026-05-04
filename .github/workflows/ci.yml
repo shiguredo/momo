@@ -144,8 +144,36 @@ jobs:
       - name: Build
         run: make sysroot-build-ubuntu-${{ matrix.version }}_arm64-release
 
+  windows-build:
+    name: Windows x86_64 Build
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - run: rustup update stable
+      - name: Add Rust target
+        run: rustup target add x86_64-pc-windows-msvc
+      - name: Clippy
+        run: cargo clippy --workspace --features ayame,sora -- -D warnings
+      - name: Build
+        run: cargo build --workspace --features ayame,sora
+      - name: Test
+        run: cargo test --workspace --features ayame,sora
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: momo-windows-x86_64
+          path: target/debug/momo.exe
+          retention-days: 1
+
   slack_notify:
-    needs: [fmt, build, e2e-test, raspberrypi-arm64-build, ubuntu-arm64-build]
+    needs:
+      - fmt
+      - build
+      - e2e-test
+      - raspberrypi-arm64-build
+      - ubuntu-arm64-build
+      - windows-build
     timeout-minutes: 5
     runs-on: ubuntu-slim
     if: ${{ always() }}

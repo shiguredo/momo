@@ -25,6 +25,11 @@
 - [UPDATE] `CommonConfig` 構造体を `MomoConfig` にリネームする
   - 同時に変数名 `common` も `momo_config` にリネームする
   - @voluntas
+- [ADD] CI に Windows x86_64 ビルドジョブを追加する
+  - `windows-2025` 上で `cargo clippy / build / test` を実行する
+  - feature は `ayame,sora` を有効化する
+  - issue 0033 の一部として実施 (実機動作確認は未実施)
+  - @voluntas
 
 ## develop
 
