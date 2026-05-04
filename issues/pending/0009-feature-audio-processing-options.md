@@ -12,7 +12,7 @@
   - `_disable_noise_suppression`
   - `_disable_highpass_filter`
   - `_audio_output_device`
-- CommonConfig に含まれず、WebRTC AudioProcessing に渡されていない
+- MomoConfig に含まれず、WebRTC AudioProcessing に渡されていない
 
 ## 必要な実装
 
@@ -21,7 +21,7 @@
 - `--disable-noise-suppression`: ノイズ抑制無効化
 - `--disable-highpass-filter`: ハイパスフィルター無効化
 - `--audio-output-device`: 音声出力デバイス指定
-- CommonConfig に追加し各モードに渡す
+- MomoConfig に追加し各モードに渡す
 
 ## pending
 

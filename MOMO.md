@@ -163,8 +163,8 @@ TODO:
 |------|------|---------|-------|------|
 | V4L2 キャプチャ | 実装済み | 実装済み | - | |
 | フェイクキャプチャ | 実装済み | 実装済み | - | `--fake-capture-device` |
-| `--video-input-device` | 実装済み | 実装済み | - | CommonConfig に含まれる |
-| `--no-video-input-device` | 実装済み | 実装済み | - | CommonConfig に含まれる |
+| `--video-input-device` | 実装済み | 実装済み | - | MomoConfig に含まれる |
+| `--no-video-input-device` | 実装済み | 実装済み | - | MomoConfig に含まれる |
 | `--resolution` | 実装済み (QVGA/VGA/HD/FHD/4K/WxH) | 実装済み | #0006 | QVGA/VGA/HD/FHD/4K/WxH 対応 |
 | `--framerate` | 実装済み (1-120) | 実装済み | #0006 | |
 | `--force-i420` | 実装済み | 実装済み | #0007 | VideoCaptureConfig.pixel_format に I420 を強制 |
@@ -211,9 +211,9 @@ TODO:
 
 | 機能 | momo | momo-rs | issue | 備考 |
 |------|------|---------|-------|------|
-| `--audio-input-device` | 実装済み | 実装済み | - | CommonConfig に含まれる |
+| `--audio-input-device` | 実装済み | 実装済み | - | MomoConfig に含まれる |
 | `--audio-output-device` | 実装済み | CLI のみ | pending #0009 | パース後未使用 |
-| `--no-audio-device` | 実装済み | 実装済み | - | CommonConfig に含まれる |
+| `--no-audio-device` | 実装済み | 実装済み | - | MomoConfig に含まれる |
 | `--disable-echo-cancellation` | 実装済み (WebRTC BuiltinAudioProcessing) | CLI のみ | pending #0009 | パース後未使用 |
 | `--disable-auto-gain-control` | 実装済み (WebRTC BuiltinAudioProcessing) | CLI のみ | pending #0009 | パース後未使用 |
 | `--disable-noise-suppression` | 実装済み (WebRTC BuiltinAudioProcessing) | CLI のみ | pending #0009 | パース後未使用 |
@@ -238,8 +238,8 @@ TODO:
 ### momo-rs の音声実装詳細
 
 - shiguredo_audio_device による音声デバイス列挙・選択
-- `--audio-input-device`: インデックス番号またはデバイス名で指定 (CommonConfig に含まれる)
-- `--no-audio-device`: 音声を無効化 (CommonConfig に含まれる)
+- `--audio-input-device`: インデックス番号またはデバイス名で指定 (MomoConfig に含まれる)
+- `--no-audio-device`: 音声を無効化 (MomoConfig に含まれる)
 - 音声処理オプション (AEC/AGC/NS/ハイパスフィルター) は CLI でパースされるが実処理に渡されていない
 
 ## コーデック

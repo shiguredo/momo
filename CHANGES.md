@@ -11,6 +11,12 @@
 
 ## feature/momo-rs
 
+### misc
+
+- [UPDATE] `CommonConfig` 構造体を `MomoConfig` にリネームする
+  - 同時に変数名 `common` も `momo_config` にリネームする
+  - @voluntas
+
 ## develop
 
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する

@@ -451,7 +451,7 @@ async fn main() -> noargs::Result<()> {
     };
 
     // ── サブコマンド ──
-    let common = CommonConfig {
+    let momo_config = MomoConfig {
         no_audio_device,
         no_video_input_device,
         #[cfg(feature = "ayame")]
@@ -488,7 +488,7 @@ async fn main() -> noargs::Result<()> {
         .take(&mut args)
         .is_present()
     {
-        run_p2p(sub_args(&args), common, metrics_state).await?;
+        run_p2p(sub_args(&args), momo_config, metrics_state).await?;
     } else if noargs::cmd("ayame")
         .doc("Mode for working with WebRTC Signaling Server Ayame")
         .take(&mut args)
@@ -496,11 +496,11 @@ async fn main() -> noargs::Result<()> {
     {
         #[cfg(feature = "ayame")]
         {
-            run_ayame(sub_args(&args), common, metrics_state).await?;
+            run_ayame(sub_args(&args), momo_config, metrics_state).await?;
         }
         #[cfg(not(feature = "ayame"))]
         {
-            let _ = (&common, &metrics_state);
+            let _ = (&momo_config, &metrics_state);
             return Err(noargs::Error::other(
                 &noargs::raw_args(),
                 "ayame mode requires the 'ayame' feature to be enabled",
@@ -511,7 +511,7 @@ async fn main() -> noargs::Result<()> {
         .take(&mut args)
         .is_present()
     {
-        run_sora(sub_args(&args), common, metrics_state).await?;
+        run_sora(sub_args(&args), momo_config, metrics_state).await?;
     } else if let Some(help) = args.finish()? {
         print!("{}", help);
     }
@@ -540,7 +540,7 @@ impl ForcePixelFormat {
 }
 
 #[allow(dead_code)]
-struct CommonConfig {
+struct MomoConfig {
     no_audio_device: bool,
     no_video_input_device: bool,
     #[cfg(feature = "ayame")]
@@ -649,7 +649,7 @@ fn sub_args(args: &noargs::RawArgs) -> noargs::RawArgs {
 
 async fn run_p2p(
     mut args: noargs::RawArgs,
-    common: CommonConfig,
+    momo_config: MomoConfig,
     metrics_state: Option<std::sync::Arc<metrics::MetricsState>>,
 ) -> noargs::Result<()> {
     noargs::HELP_FLAG.take_help(&mut args);
@@ -723,27 +723,27 @@ async fn run_p2p(
     let config = p2p::P2PConfig {
         port,
         document_root,
-        no_audio_device: common.no_audio_device,
-        no_video_input_device: common.no_video_input_device,
-        fake_capture_device: common.fake_capture_device,
-        use_libcamera: common.use_libcamera,
-        use_libcamera_native: common.use_libcamera_native,
-        libcamera_controls: common.libcamera_controls,
-        use_v4l2_encoder: common.use_v4l2_encoder,
-        openh264_lib: common.openh264_lib,
-        video_input_device: common.video_input_device,
-        audio_input_device: common.audio_input_device,
-        video_width: common.video_width,
-        video_height: common.video_height,
-        framerate: common.framerate,
-        force_pixel_format: common
+        no_audio_device: momo_config.no_audio_device,
+        no_video_input_device: momo_config.no_video_input_device,
+        fake_capture_device: momo_config.fake_capture_device,
+        use_libcamera: momo_config.use_libcamera,
+        use_libcamera_native: momo_config.use_libcamera_native,
+        libcamera_controls: momo_config.libcamera_controls,
+        use_v4l2_encoder: momo_config.use_v4l2_encoder,
+        openh264_lib: momo_config.openh264_lib,
+        video_input_device: momo_config.video_input_device,
+        audio_input_device: momo_config.audio_input_device,
+        video_width: momo_config.video_width,
+        video_height: momo_config.video_height,
+        framerate: momo_config.framerate,
+        force_pixel_format: momo_config
             .force_pixel_format
             .map(ForcePixelFormat::to_pixel_format),
-        degradation_preference: common.degradation_preference,
+        degradation_preference: momo_config.degradation_preference,
         video_codec_type,
         audio_codec_type,
         #[cfg(target_os = "linux")]
-        serial: common.serial,
+        serial: momo_config.serial,
         metrics_state,
     };
 
@@ -757,7 +757,7 @@ async fn run_p2p(
 #[cfg(feature = "ayame")]
 async fn run_ayame(
     mut args: noargs::RawArgs,
-    common: CommonConfig,
+    momo_config: MomoConfig,
     metrics_state: Option<std::sync::Arc<metrics::MetricsState>>,
 ) -> noargs::Result<()> {
     noargs::HELP_FLAG.take_help(&mut args);
@@ -852,31 +852,31 @@ async fn run_ayame(
         client_id,
         signaling_key,
         direction,
-        no_google_stun: common.no_google_stun,
-        no_audio_device: common.no_audio_device,
-        no_video_input_device: common.no_video_input_device,
-        fake_capture_device: common.fake_capture_device,
-        use_libcamera: common.use_libcamera,
-        use_libcamera_native: common.use_libcamera_native,
-        libcamera_controls: common.libcamera_controls,
-        use_v4l2_encoder: common.use_v4l2_encoder,
-        openh264_lib: common.openh264_lib,
-        video_input_device: common.video_input_device,
-        audio_input_device: common.audio_input_device,
-        video_width: common.video_width,
-        video_height: common.video_height,
-        framerate: common.framerate,
-        insecure: common.insecure,
-        force_pixel_format: common
+        no_google_stun: momo_config.no_google_stun,
+        no_audio_device: momo_config.no_audio_device,
+        no_video_input_device: momo_config.no_video_input_device,
+        fake_capture_device: momo_config.fake_capture_device,
+        use_libcamera: momo_config.use_libcamera,
+        use_libcamera_native: momo_config.use_libcamera_native,
+        libcamera_controls: momo_config.libcamera_controls,
+        use_v4l2_encoder: momo_config.use_v4l2_encoder,
+        openh264_lib: momo_config.openh264_lib,
+        video_input_device: momo_config.video_input_device,
+        audio_input_device: momo_config.audio_input_device,
+        video_width: momo_config.video_width,
+        video_height: momo_config.video_height,
+        framerate: momo_config.framerate,
+        insecure: momo_config.insecure,
+        force_pixel_format: momo_config
             .force_pixel_format
             .map(ForcePixelFormat::to_pixel_format),
-        client_cert: common.client_cert.clone(),
-        ca_cert: common.ca_cert.clone(),
-        degradation_preference: common.degradation_preference,
+        client_cert: momo_config.client_cert.clone(),
+        ca_cert: momo_config.ca_cert.clone(),
+        degradation_preference: momo_config.degradation_preference,
         video_codec_type,
         audio_codec_type,
         #[cfg(target_os = "linux")]
-        serial: common.serial,
+        serial: momo_config.serial,
     };
 
     ayame::run(config, metrics_state)
@@ -1070,7 +1070,7 @@ fn print_devices_json() -> Result<(), crate::error::BoxError> {
 
 async fn run_sora(
     mut args: noargs::RawArgs,
-    common: CommonConfig,
+    momo_config: MomoConfig,
     metrics_state: Option<std::sync::Arc<metrics::MetricsState>>,
 ) -> noargs::Result<()> {
     noargs::HELP_FLAG.take_help(&mut args);
@@ -1207,7 +1207,7 @@ async fn run_sora(
             &ignore_disconnect_websocket,
             &disconnect_wait_timeout,
             &metadata,
-            &common,
+            &momo_config,
             &metrics_state,
         );
         Err(noargs::Error::other(
@@ -1294,35 +1294,35 @@ async fn run_sora(
             audio_codec_type,
             video_bit_rate,
             audio_bit_rate,
-            h264_encoder: common.h264_encoder,
-            h264_decoder: common.h264_decoder,
-            h265_encoder: common.h265_encoder,
-            h265_decoder: common.h265_decoder,
+            h264_encoder: momo_config.h264_encoder,
+            h264_decoder: momo_config.h264_decoder,
+            h265_encoder: momo_config.h265_encoder,
+            h265_decoder: momo_config.h265_decoder,
             spotlight,
             simulcast,
             data_channel_signaling,
             ignore_disconnect_websocket,
             metadata,
-            no_audio_device: common.no_audio_device,
-            no_video_input_device: common.no_video_input_device,
-            fake_capture_device: common.fake_capture_device,
-            use_v4l2_encoder: common.use_v4l2_encoder,
-            openh264_lib: common.openh264_lib,
-            use_libcamera: common.use_libcamera,
-            use_libcamera_native: common.use_libcamera_native,
-            libcamera_controls: common.libcamera_controls,
-            video_input_device: common.video_input_device,
-            audio_input_device: common.audio_input_device,
-            video_width: common.video_width,
-            video_height: common.video_height,
-            framerate: common.framerate,
+            no_audio_device: momo_config.no_audio_device,
+            no_video_input_device: momo_config.no_video_input_device,
+            fake_capture_device: momo_config.fake_capture_device,
+            use_v4l2_encoder: momo_config.use_v4l2_encoder,
+            openh264_lib: momo_config.openh264_lib,
+            use_libcamera: momo_config.use_libcamera,
+            use_libcamera_native: momo_config.use_libcamera_native,
+            libcamera_controls: momo_config.libcamera_controls,
+            video_input_device: momo_config.video_input_device,
+            audio_input_device: momo_config.audio_input_device,
+            video_width: momo_config.video_width,
+            video_height: momo_config.video_height,
+            framerate: momo_config.framerate,
             disconnect_wait_timeout,
-            insecure: common.insecure,
-            force_pixel_format: common
+            insecure: momo_config.insecure,
+            force_pixel_format: momo_config
                 .force_pixel_format
                 .map(ForcePixelFormat::to_pixel_format),
-            client_cert: common.client_cert,
-            ca_cert: common.ca_cert,
+            client_cert: momo_config.client_cert,
+            ca_cert: momo_config.ca_cert,
             beep_trigger: None,
             #[cfg(feature = "player")]
             preview_tx: None,
@@ -1331,7 +1331,7 @@ async fn run_sora(
         // fake capture 時は FakeAudioCapturer を起動してビープ音を生成する
         let mut _fake_audio_capturer = None;
         let mut fake_adm = None;
-        if common.fake_capture_device && !common.no_audio_device {
+        if momo_config.fake_capture_device && !momo_config.no_audio_device {
             let trigger = crate::fake::BeepTrigger::new();
             let mut capturer = crate::fake::FakeAudioCapturer::new(trigger.clone());
             capturer.start();
@@ -1342,7 +1342,7 @@ async fn run_sora(
 
         // player feature なしで --player を指定した場合の警告
         #[cfg(not(feature = "player"))]
-        if common.use_player {
+        if momo_config.use_player {
             return Err(noargs::Error::other(
                 &noargs::raw_args(),
                 "--player requires the 'player' feature to be enabled",
@@ -1351,13 +1351,13 @@ async fn run_sora(
 
         // プレビュー有効時: Sora 接続を別タスクで起動し、メインスレッドで SDL3 ループを回す
         #[cfg(feature = "player")]
-        if common.use_player && role.wants_send() {
+        if momo_config.use_player && role.wants_send() {
             let (preview_tx, preview_rx) = preview::create_preview_channel();
             let (shutdown_tx, shutdown_rx) = std::sync::mpsc::sync_channel::<()>(1);
             config.preview_tx = Some(preview_tx);
 
-            let window_width = common.window_width as i32;
-            let window_height = common.window_height as i32;
+            let window_width = momo_config.window_width as i32;
+            let window_height = momo_config.window_height as i32;
 
             let fake_adm_for_spawn = fake_adm.take().map(crate::fake::SendableAdm);
             let sora_handle = tokio::spawn(async move {

@@ -7,7 +7,7 @@
 ## 現状
 
 - `src/main.rs` で `_proxy_url`, `_proxy_username`, `_proxy_password` に束縛されるだけ
-- CommonConfig に含まれず、WebSocket 接続処理に渡されていない
+- MomoConfig に含まれず、WebSocket 接続処理に渡されていない
 
 ## 対応方針
 

@@ -28,7 +28,7 @@ momo-rs では `--cacert` を新規追加し、curl と同じ命名に合わせ�
 
 - `src/main.rs` で `_client_cert`, `_client_key` に束縛されるだけ
 - `--cacert` の CLI オプション自体が存在しない
-- CommonConfig に含まれず、TLS 接続処理に渡されていない
+- MomoConfig に含まれず、TLS 接続処理に渡されていない
 
 ## 必要な実装
 
@@ -48,5 +48,5 @@ rustls の ClientConfig:
 
 - `--cacert` CLI オプションの追加 (PEM 形式ファイルパス)
 - `_client_cert` / `_client_key` のアンダースコア除去
-- CommonConfig に `client_cert`, `client_key`, `cacert` を追加
+- MomoConfig に `client_cert`, `client_key`, `cacert` を追加
 - ファイル読み込みとバリデーション
