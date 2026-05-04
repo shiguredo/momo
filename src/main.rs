@@ -236,19 +236,19 @@ async fn main() -> noargs::Result<()> {
         .doc("CA certificate file path (PEM format)")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _proxy_url: Option<String> = noargs::opt("proxy-url")
+    let proxy_url: Option<String> = noargs::opt("proxy-url")
         .ty("URL")
-        .doc("Proxy URL")
+        .doc("Proxy URL (Sora mode only)")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _proxy_username: Option<String> = noargs::opt("proxy-username")
+    let proxy_username: Option<String> = noargs::opt("proxy-username")
         .ty("USER")
-        .doc("Proxy username")
+        .doc("Proxy username (Sora mode only)")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _proxy_password: Option<String> = noargs::opt("proxy-password")
+    let proxy_password: Option<String> = noargs::opt("proxy-password")
         .ty("PASS")
-        .doc("Proxy password")
+        .doc("Proxy password (Sora mode only)")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
     #[cfg(target_os = "linux")]
@@ -475,6 +475,9 @@ async fn main() -> noargs::Result<()> {
         client_cert: client_cert_pem,
         ca_cert: ca_cert_pem,
         degradation_preference,
+        proxy_url,
+        proxy_username,
+        proxy_password,
         #[cfg(target_os = "linux")]
         serial,
         use_player,
@@ -565,6 +568,12 @@ struct MomoConfig {
     /// CA 証明書 (PEM)
     ca_cert: Option<String>,
     degradation_preference: shiguredo_webrtc::DegradationPreference,
+    /// プロキシ URL (Sora モードのみ利用)
+    proxy_url: Option<String>,
+    /// プロキシ認証ユーザー名 (Sora モードのみ利用)
+    proxy_username: Option<String>,
+    /// プロキシ認証パスワード (Sora モードのみ利用)
+    proxy_password: Option<String>,
     #[cfg(target_os = "linux")]
     serial: Option<serial::SerialConfig>,
     use_player: bool,
@@ -1322,6 +1331,9 @@ async fn run_sora(
                 .map(ForcePixelFormat::to_pixel_format),
             client_cert: momo_config.client_cert,
             ca_cert: momo_config.ca_cert,
+            proxy_url: momo_config.proxy_url,
+            proxy_username: momo_config.proxy_username,
+            proxy_password: momo_config.proxy_password,
             beep_trigger: None,
             #[cfg(feature = "player")]
             preview_tx: None,

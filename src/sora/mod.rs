@@ -10,8 +10,8 @@ use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDeviceModule, I420Buffer, TimestampAligner,
 };
 use sora_sdk::{
-    AdmConfig, Audio, CodecDirection, JsonString, Role, SoraConnection, SoraConnectionContext,
-    SoraConnectionContextConfig, Video, VideoCodecPreference,
+    AdmConfig, Audio, CodecDirection, JsonString, ProxyInfo, Role, SoraConnection,
+    SoraConnectionContext, SoraConnectionContextConfig, Video, VideoCodecPreference,
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
@@ -63,6 +63,12 @@ pub struct SoraConfig {
     pub client_cert: Option<(String, String)>,
     /// CA 証明書 (PEM)
     pub ca_cert: Option<String>,
+    /// プロキシ URL
+    pub proxy_url: Option<String>,
+    /// プロキシ認証ユーザー名
+    pub proxy_username: Option<String>,
+    /// プロキシ認証パスワード
+    pub proxy_password: Option<String>,
     /// フェイク音声のビープトリガー
     pub beep_trigger: Option<crate::fake::BeepTrigger>,
     /// プレビューフレーム送信チャネル
@@ -382,6 +388,14 @@ pub async fn run(
     }
     if let Some((cert_pem, key_pem)) = config.client_cert {
         builder = builder.client_cert(cert_pem, key_pem);
+    }
+    if let Some(proxy_url) = config.proxy_url {
+        builder = builder.proxy(ProxyInfo {
+            url: proxy_url,
+            username: config.proxy_username,
+            password: config.proxy_password,
+            user_agent: None,
+        });
     }
 
     builder = builder

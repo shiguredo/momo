@@ -377,9 +377,9 @@ TODO:
 | `--no-google-stun` | 実装済み | 実装済み | #0029 | P2P / Ayame モードで Google STUN サーバー追加をスキップ。Sora モードは sora_sdk 内部で ICE 管理のため対象外 |
 | `--insecure` | 実装済み | 実装済み | #0021 | Ayame: rustls NoVerifier、Sora: sora_sdk insecure + turn_tls_insecure |
 | `--cacert` | **なし** | 実装済み | #0026 | CA 証明書指定 (PEM)。momo にはない momo-rs 独自機能 |
-| `--proxy-url` | 実装済み (CONNECT トンネリング + Basic Auth) | CLI のみ | #0014 | Sora モードのみ対応予定。sora_sdk の ProxyInfo API を使用。P2P / Ayame は非対応 |
-| `--proxy-username` | 実装済み | CLI のみ | #0014 | Sora モードのみ対応予定。P2P / Ayame は非対応 |
-| `--proxy-password` | 実装済み | CLI のみ | #0014 | Sora モードのみ対応予定。P2P / Ayame は非対応 |
+| `--proxy-url` | 実装済み (CONNECT トンネリング + Basic Auth) | 実装済み (Sora のみ) | #0014 | sora_sdk の ProxyInfo API に渡す。P2P / Ayame は非対応 |
+| `--proxy-username` | 実装済み | 実装済み (Sora のみ) | #0014 | P2P / Ayame は非対応 |
+| `--proxy-password` | 実装済み | 実装済み (Sora のみ) | #0014 | P2P / Ayame は非対応 |
 | `--client-cert` | 実装済み (PEM, TLS 1.2/1.3) | 実装済み | #0015 | Ayame: rustls + rustls-pemfile、Sora: sora_sdk |
 | `--client-key` | 実装済み (PEM) | 実装済み | #0015 | --client-cert と同時指定必須 |
 
@@ -387,7 +387,7 @@ TODO:
 
 - [x] `--insecure` の実装 (#0021)
 - [x] `--cacert` の実装 (#0026)
-- [ ] `--proxy-url` / `--proxy-username` / `--proxy-password` の実装 (#0014)
+- [x] `--proxy-url` / `--proxy-username` / `--proxy-password` の実装 (#0014)
   - Sora モードのみ対応。sora_sdk の `ProxyInfo` API に渡す
   - P2P / Ayame モードは非対応
 - [x] `--client-cert` の実装 (#0015)
