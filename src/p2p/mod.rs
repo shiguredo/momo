@@ -24,6 +24,7 @@ use crate::metrics::MetricsState;
 pub struct P2PConfig {
     pub port: u16,
     pub document_root: PathBuf,
+    pub no_google_stun: bool,
     pub no_audio_device: bool,
     pub no_video_input_device: bool,
     pub fake_capture_device: bool,

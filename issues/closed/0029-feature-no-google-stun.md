@@ -1,6 +1,7 @@
 # --no-google-stun の P2P モード対応
 
 Created: 2026-05-04
+Completed: 2026-05-04
 Model: Opus 4.7
 
 ## 概要
@@ -24,3 +25,11 @@ Model: Opus 4.7
 ## 参考
 
 - momo の `--no-google-stun` 実装: 全モードで Google STUN サーバー追加をスキップ
+
+## 解決方法
+
+- `src/main.rs` で `_no_google_stun` を `no_google_stun` にリネームして実利用する
+- `MomoConfig.no_google_stun` の `#[cfg(feature = "ayame")]` gate を外して常設フィールドにする
+- `P2PConfig` に `pub no_google_stun: bool` を追加する
+- `src/p2p/webrtc.rs::create_peer` / `create_peer_inner` に `no_google_stun` 引数を追加し、`true` のときは `IceServer` への `stun:stun.l.google.com:19302` 追加をスキップする
+- `src/p2p/signaling.rs` で `config.no_google_stun` を `create_peer` に渡す

@@ -295,9 +295,10 @@ pub(super) struct Peer {
 pub(super) fn create_peer(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
+    no_google_stun: bool,
     serial_config: Option<crate::serial::SerialConfig>,
 ) -> Result<Peer, BoxError> {
-    create_peer_inner(engine, sig_tx, serial_config)
+    create_peer_inner(engine, sig_tx, no_google_stun, serial_config)
 }
 
 /// PeerConnection と Observer を作成して Peer を返す
@@ -307,13 +308,15 @@ pub(super) fn create_peer(
 pub(super) fn create_peer(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
+    no_google_stun: bool,
 ) -> Result<Peer, BoxError> {
-    create_peer_inner(engine, sig_tx)
+    create_peer_inner(engine, sig_tx, no_google_stun)
 }
 
 fn create_peer_inner(
     engine: &WebRtcEngine,
     sig_tx: mpsc::UnboundedSender<String>,
+    no_google_stun: bool,
     #[cfg(target_os = "linux")] serial_config: Option<crate::serial::SerialConfig>,
 ) -> Result<Peer, BoxError> {
     struct PcObserver {
@@ -359,7 +362,7 @@ fn create_peer_inner(
     }));
 
     let mut rtc_config = PeerConnectionRtcConfiguration::new();
-    {
+    if !no_google_stun {
         let mut ice_server = IceServer::new();
         ice_server.add_url("stun:stun.l.google.com:19302");
         rtc_config.servers().push(&ice_server);

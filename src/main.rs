@@ -45,7 +45,7 @@ async fn main() -> noargs::Result<()> {
     noargs::HELP_FLAG.take_help(&mut args);
 
     // ── グローバルフラグ ──
-    let _no_google_stun = noargs::flag("no-google-stun")
+    let no_google_stun = noargs::flag("no-google-stun")
         .doc("Do not use google stun")
         .take(&mut args)
         .is_present();
@@ -454,8 +454,7 @@ async fn main() -> noargs::Result<()> {
     let momo_config = MomoConfig {
         no_audio_device,
         no_video_input_device,
-        #[cfg(feature = "ayame")]
-        no_google_stun: _no_google_stun,
+        no_google_stun,
         fake_capture_device,
         use_libcamera,
         use_libcamera_native,
@@ -543,7 +542,6 @@ impl ForcePixelFormat {
 struct MomoConfig {
     no_audio_device: bool,
     no_video_input_device: bool,
-    #[cfg(feature = "ayame")]
     no_google_stun: bool,
     fake_capture_device: bool,
     use_libcamera: bool,
@@ -723,6 +721,7 @@ async fn run_p2p(
     let config = p2p::P2PConfig {
         port,
         document_root,
+        no_google_stun: momo_config.no_google_stun,
         no_audio_device: momo_config.no_audio_device,
         no_video_input_device: momo_config.no_video_input_device,
         fake_capture_device: momo_config.fake_capture_device,

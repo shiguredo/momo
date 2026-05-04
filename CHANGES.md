@@ -11,6 +11,11 @@
 
 ## feature/momo-rs
 
+- [UPDATE] `--no-google-stun` を P2P モードでも有効にする
+  - 従来は Ayame モードのみ反映されていた
+  - Sora モードは sora_sdk 内部で ICE 管理するため対象外
+  - @voluntas
+
 ### misc
 
 - [UPDATE] `CommonConfig` 構造体を `MomoConfig` にリネームする
