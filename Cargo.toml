@@ -14,25 +14,44 @@ name = "momo"
 path = "src/main.rs"
 
 [dependencies]
-aws-lc-rs = "1.16"
-noargs = "0.4"
-nojson = "0.3"
+## 時雨堂クレート
+# 2D グラフィックス描画 (フェイク映像生成: fake.rs)
 raden = "2026.1"
+# ローカルのプレビュー映像表示 (preview.rs)
 raw_player = { version = "2026.1", optional = true }
+# 音声入出力デバイス (AudioCapture / ADM)
+shiguredo_audio_device = "2026.1"
+# HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
+shiguredo_http11 = "2026.1"
+# OpenH264 エンコーダー・デコーダー (openh264.rs)
+shiguredo_openh264 = "2026.1"
+# 映像入力デバイス (VideoCapture)
+shiguredo_video_device = "2026.1"
+# WebRTC 本体 (PeerConnection / トラック / RTP コーデック等)
+shiguredo_webrtc = "=0.147.2"
+# WebSocket クライアント (Ayame / P2P シグナリング)
+shiguredo_websocket = "2026.1"
+# Sora 接続 SDK (sora モジュール)
+sora_sdk = { version = "2026.1.0-canary.9", optional = true }
+
+## 外部クレート
+# 暗号ライブラリ (乱数生成と rustls の暗号プロバイダで利用)
+aws-lc-rs = "1.16"
+# CLI 引数のパース (main.rs)
+noargs = "0.4"
+# JSON のパース・生成 (Ayame / P2P のシグナリングメッセージ)
+nojson = "0.3"
+# TLS 実装 (Ayame の wss 接続)
 rustls = { version = "0.23", default-features = false, features = [
   "aws-lc-rs",
   "std",
   "tls12",
 ], optional = true }
+# PEM など PKI 関連の型定義 (Ayame シグナリング)
 rustls-pki-types = { version = "1.14", features = ["std"], optional = true }
+# OS の証明書ストアを使ったサーバー証明書検証 (Ayame シグナリング)
 rustls-platform-verifier = { version = "0.6", optional = true }
-shiguredo_audio_device = "2026.1"
-shiguredo_http11 = "2026.1"
-shiguredo_openh264 = "2026.1"
-shiguredo_video_device = "2026.1"
-shiguredo_webrtc = "=0.147.1-canary.2"
-shiguredo_websocket = "2026.1"
-sora_sdk = { version = "2026.1.0-canary.6", optional = true }
+# 非同期ランタイム
 tokio = { version = "1", features = [
   "fs",
   "io-util",
@@ -42,17 +61,24 @@ tokio = { version = "1", features = [
   "sync",
   "time",
 ] }
+# tokio 上で動く TLS ストリーム (Ayame の wss)
 tokio-rustls = { version = "0.26", default-features = false, features = [
   "aws-lc-rs",
 ], optional = true }
+# 構造化ログ出力
 tracing = "0.1"
+# tracing のサブスクライバ初期化と環境変数フィルタ (main.rs)
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(all(target_os = "linux", target_arch = "aarch64"))'.dependencies]
+## 時雨堂クレート
+# libcamera 経由の映像キャプチャ (Raspberry Pi: libcamera.rs)
 shiguredo_libcamera = { version = "2026.1.0-canary.1", optional = true }
+# V4L2 M2M ハードウェア H.264 エンコーダー (Raspberry Pi: v4l2_encoder.rs)
 shiguredo_v4l2 = { version = "2026.1.0-canary.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+# termios / fcntl などの低レベルシステムコール (serial.rs)
 libc = "0.2"
 
 [features]
