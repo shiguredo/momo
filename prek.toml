@@ -11,11 +11,26 @@ hooks = [
   { id = "trailing-whitespace" },
   { id = "end-of-file-fixer" },
   { id = "mixed-line-ending" },
+  { id = "fix-byte-order-marker" },
+  { id = "check-merge-conflict" },
+  { id = "check-case-conflict" },
+  { id = "check-symlinks" },
+  { id = "destroyed-symlinks" },
+  { id = "check-added-large-files" },
+  { id = "check-shebang-scripts-are-executable" },
+  { id = "check-executables-have-shebangs" },
+  { id = "detect-private-key" },
   { id = "check-toml" },
   { id = "check-yaml" },
-  { id = "check-merge-conflict" },
-  { id = "detect-private-key" },
 ]
+
+# ─── builtin: JSON チェック (devcontainer.json は JSONC のため除外) ──
+[[repos]]
+repo = "builtin"
+
+[[repos.hooks]]
+id = "check-json"
+exclude = { glob = [".devcontainer/devcontainer.json"] }
 
 # ─── local: cargo / e2e-tests ─────────────────────────────────────
 [[repos]]
