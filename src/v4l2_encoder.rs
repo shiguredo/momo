@@ -96,8 +96,9 @@ struct EncoderCallbackValue {
     rtp_timestamp: u32,
     width: u32,
     height: u32,
-    /// dmabuf 入力時のみ Some。Drop されると libcamera への done 通知 (done_tx) が走る。
-    _dmabuf_entry: Option<DmaBufEntry>,
+    /// dmabuf 入力時のみ Some。コールバックで `done_tx.send(())` を呼んで
+    /// libcamera 側の requeue を解除する。
+    dmabuf_entry: Option<DmaBufEntry>,
 }
 
 /// V4L2 エンコーダーの共有状態
@@ -115,13 +116,20 @@ fn handle_v4l2_encode_callback(
     shared_state: &Arc<Mutex<V4l2EncoderSharedState>>,
     result: shiguredo_v4l2::v4l2_m2m::Result<EncodeCallbackOutput<EncoderCallbackValue>>,
 ) {
-    let (encoded, value) = match result {
+    let (encoded, mut value) = match result {
         Ok(EncodeCallbackOutput::Frame { frame, value }) => (frame, value),
         Err(err) => {
             warn!(target: "v4l2", error = %err, "encode callback error");
             return;
         }
     };
+
+    // dmabuf 入力ならここで libcamera 側の requeue を解放する。
+    // V4L2 コールバックが呼ばれた時点で V4L2 ハードウェアは入力 fd を
+    // 消費しきっているため、libcamera にバッファを返して問題ない。
+    if let Some(entry) = value.dmabuf_entry.take() {
+        let _ = entry.done_tx.send(());
+    }
 
     let Some(encoded_data) = encoded.data() else {
         warn!(target: "v4l2", "encoded frame has no MMAP data");
@@ -256,7 +264,7 @@ impl VideoEncoderHandler for V4l2H264Encoder {
                 rtp_timestamp,
                 width: self.width,
                 height: self.height,
-                _dmabuf_entry: Some(entry),
+                dmabuf_entry: Some(entry),
             };
             let mut guard = self.shared_state.lock().unwrap();
             let Some(encoder) = guard.encoder.as_mut() else {
@@ -329,7 +337,7 @@ impl VideoEncoderHandler for V4l2H264Encoder {
             rtp_timestamp,
             width: self.width,
             height: self.height,
-            _dmabuf_entry: None,
+            dmabuf_entry: None,
         };
         let mut guard = self.shared_state.lock().unwrap();
         let Some(encoder) = guard.encoder.as_mut() else {
