@@ -21,6 +21,37 @@ class MomoMode(StrEnum):
     SORA = "sora"
 
 
+def find_stats(metrics_data: dict[str, Any], **filters: Any) -> dict[str, Any] | None:
+    """メトリクスデータから指定した条件に合う最初の統計情報を検索
+
+    Args:
+        metrics_data: get_metrics() で取得したメトリクスデータ
+        **filters: 検索条件（例: type="outbound-rtp", kind="video"）
+
+    Returns:
+        条件に合う統計情報、見つからない場合は None
+    """
+    stats = metrics_data.get("stats", [])
+    return next(
+        (stat for stat in stats if all(stat.get(key) == value for key, value in filters.items())),
+        None,
+    )
+
+
+def find_all_stats(metrics_data: dict[str, Any], **filters: Any) -> list[dict[str, Any]]:
+    """メトリクスデータから指定した条件に合う全ての統計情報を検索
+
+    Args:
+        metrics_data: get_metrics() で取得したメトリクスデータ
+        **filters: 検索条件（例: type="codec"）
+
+    Returns:
+        条件に合う統計情報のリスト
+    """
+    stats = metrics_data.get("stats", [])
+    return [stat for stat in stats if all(stat.get(key) == value for key, value in filters.items())]
+
+
 class Momo:
     """Momo プロセスを管理するクラス"""
 

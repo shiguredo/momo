@@ -35,6 +35,13 @@
   - feature は `ayame,sora` を有効化する
   - issue 0033 の一部として実施 (実機動作確認は未実施)
   - @voluntas
+- [ADD] メトリクス API レスポンスの詳細検証 E2E テストを追加する
+  - `version` / `libwebrtc` / `environment` の文字列フォーマット検証
+  - `--metrics-allow-external-ip` の有無による bind アドレスの動作差検証
+  - WebRTC 接続後の stats 構造（transport / candidate-pair / outbound-rtp / inbound-rtp / codec / local-candidate / remote-candidate）検証
+  - `find_stats()` / `find_all_stats()` を `momo.py` に共通化する
+  - issue 0023
+  - @voluntas
 
 ## develop
 
