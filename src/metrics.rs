@@ -20,20 +20,21 @@ pub type StatsRequestTx = mpsc::Sender<oneshot::Sender<String>>;
 /// メトリクスに必要な共有状態
 pub struct MetricsState {
     version: String,
-    environment: String,
     libwebrtc: String,
+    environment: String,
     /// 複数の PeerConnection からの stats 取得チャンネル
     providers: Mutex<Vec<StatsRequestTx>>,
 }
 
 impl MetricsState {
     pub fn new() -> Arc<Self> {
+        let version = format!("WebRTC Native Client Momo {}", env!("CARGO_PKG_VERSION"));
+        let libwebrtc = format!("webrtc-rs {}", shiguredo_webrtc::version());
         let environment = build_environment_string();
-        let libwebrtc = format!("Shiguredo-Build {}", shiguredo_webrtc::version());
         Arc::new(Self {
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            environment,
+            version,
             libwebrtc,
+            environment,
             providers: Mutex::new(Vec::new()),
         })
     }
@@ -96,8 +97,8 @@ impl MetricsState {
 
         let body = nojson::object(|f| {
             f.member("version", self.version.as_str())?;
-            f.member("environment", self.environment.as_str())?;
             f.member("libwebrtc", self.libwebrtc.as_str())?;
+            f.member("environment", self.environment.as_str())?;
             f.member("stats", PreEncodedJson(&merged))
         });
         body.to_string()

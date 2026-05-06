@@ -19,6 +19,11 @@
   - 従来は Ayame モードのみ反映されていた
   - Sora モードは sora_sdk 内部で ICE 管理するため対象外
   - @voluntas
+- [CHANGE] `/metrics` の `version` / `libwebrtc` の文字列フォーマットと JSON フィールド順を C++ 版 momo に揃える
+  - `version` を `WebRTC Native Client Momo {pkg_version}` 形式にする
+  - `libwebrtc` を `webrtc-rs {webrtc_rs_version}` 形式にする
+  - JSON フィールド順を `version` → `libwebrtc` → `environment` → `stats` に揃える
+  - @voluntas
 
 ### misc
 
