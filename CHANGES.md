@@ -42,6 +42,15 @@
   - `find_stats()` / `find_all_stats()` を `momo.py` に共通化する
   - issue 0023
   - @voluntas
+- [ADD] Sora モード `--data-channel-signaling` の E2E テストを追加する
+  - `true` / `false` 両ケースで sendonly / recvonly ペアの接続確立と RTP 送受信を検証する
+  - issue 0037
+  - @voluntas
+- [ADD] Sora モード `--ignore-disconnect-websocket` の E2E テストを追加する
+  - `--data-channel-signaling true` を併用し、`true` / `false` 両ケースで sendonly / recvonly ペアの接続確立と RTP 送受信を検証する
+  - `true` ケースは sora-rust-sdk 側のバグ (close_notify なしの WebSocket 切断を致命的エラー扱いする) により現状失敗するため `pytest.mark.xfail(strict=True)` を付与する
+  - issue 0038
+  - @voluntas
 
 ## develop
 
