@@ -23,7 +23,7 @@ raw_player = { version = "2026.1", optional = true }
 # 音声入出力デバイス (AudioCapture / ADM)
 shiguredo_audio_device = "2026.1"
 # HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
-shiguredo_http11 = "2026.1"
+shiguredo_http11 = "2026.3"
 # OpenH264 エンコーダー・デコーダー (openh264.rs)
 shiguredo_openh264 = "2026.1"
 # 映像入力デバイス (VideoCapture)

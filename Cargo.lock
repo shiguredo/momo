@@ -1068,9 +1068,9 @@ dependencies = [
 
 [[package]]
 name = "shiguredo_http11"
-version = "2026.2.0"
+version = "2026.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d00d22eb0bda466ce2aefea2eaba7f4ba016d3abc7f203a2bf9a640e3e0df4d3"
+checksum = "88665fdb5b844e03e845c5e3d06ec321a0e204513b7f6600661e2a779d47bc01"
 
 [[package]]
 name = "shiguredo_libcamera"
