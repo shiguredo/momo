@@ -15,7 +15,8 @@ name = "momo"
 path = "src/main.rs"
 
 [dependencies]
-## 時雨堂クレート
+# 時雨堂クレート
+
 # 2D グラフィックス描画 (フェイク映像生成: fake.rs)
 raden = "2026.1"
 # ローカルのプレビュー映像表示 (preview.rs)
@@ -35,13 +36,15 @@ shiguredo_websocket = "2026.1"
 # Sora 接続 SDK (sora モジュール)
 sora_sdk = { version = "2026.1.0-canary.9", optional = true }
 
-## 外部クレート
-# 暗号ライブラリ (乱数生成と rustls の暗号プロバイダで利用)
-aws-lc-rs = "1.16"
+# 外部クレート
+
 # CLI 引数のパース (main.rs)
 noargs = "0.4"
 # JSON のパース・生成 (Ayame / P2P のシグナリングメッセージ)
 nojson = "0.3"
+
+# 暗号ライブラリ (乱数生成と rustls の暗号プロバイダで利用)
+aws-lc-rs = "1.16"
 # TLS 実装 (Ayame の wss 接続)
 rustls = { version = "0.23", default-features = false, features = [
   "aws-lc-rs",
@@ -51,7 +54,7 @@ rustls = { version = "0.23", default-features = false, features = [
 # PEM など PKI 関連の型定義 (Ayame シグナリング)
 rustls-pki-types = { version = "1.14", features = ["std"], optional = true }
 # OS の証明書ストアを使ったサーバー証明書検証 (Ayame シグナリング)
-rustls-platform-verifier = { version = "0.6", optional = true }
+rustls-platform-verifier = { version = "0.7", optional = true }
 # 非同期ランタイム
 tokio = { version = "1.52", features = [
   "fs",
@@ -72,7 +75,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(all(target_os = "linux", target_arch = "aarch64"))'.dependencies]
-## 時雨堂クレート
+# 時雨堂クレート
+
 # libcamera 経由の映像キャプチャ (Raspberry Pi: libcamera.rs)
 shiguredo_libcamera = { version = "2026.1.0-canary.1", optional = true }
 # V4L2 M2M ハードウェア H.264 エンコーダー (Raspberry Pi: v4l2_encoder.rs)
