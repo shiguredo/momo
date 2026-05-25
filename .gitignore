@@ -11,3 +11,7 @@ target/
 
 # openh264
 libopenh264*
+
+# Python (uv)
+.venv/
+uv.lock

@@ -9,6 +9,8 @@ on:
     paths:
       - ".github/workflows/e2e-test.yml"
       - "e2e-tests/**"
+      - "pyproject.toml"
+      - ".python-version"
       - "src/**"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -47,8 +49,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Run Apple Video Toolbox E2E tests
-        working-directory: e2e-tests
-        run: uv run pytest -v test_sora_mode_apple_video_toolbox.py
+        run: uv run pytest -v e2e-tests/test_sora_mode_apple_video_toolbox.py
 
   slack_notify:
     needs: [e2e-test-apple-video-toolbox]

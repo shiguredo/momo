@@ -19,7 +19,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["."]
+testpaths = ["e2e-tests"]
 python_files = ["test_*.py"]
 reruns = 3
 reruns_delay = 1

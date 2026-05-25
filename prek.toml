@@ -48,7 +48,7 @@ priority = 0
 [[repos.hooks]]
 id = "ruff-format"
 name = "ruff format"
-entry = "uv run --directory e2e-tests ruff format --check"
+entry = "uv run ruff format --check e2e-tests"
 language = "system"
 files = { glob = "e2e-tests/**/*.py" }
 pass_filenames = false
@@ -66,7 +66,7 @@ priority = 10
 [[repos.hooks]]
 id = "ruff-check"
 name = "ruff check"
-entry = "uv run --directory e2e-tests ruff check"
+entry = "uv run ruff check e2e-tests"
 language = "system"
 files = { glob = "e2e-tests/**/*.py" }
 pass_filenames = false
@@ -75,7 +75,7 @@ priority = 10
 [[repos.hooks]]
 id = "ty-check"
 name = "ty check"
-entry = "uv run --directory e2e-tests ty check ."
+entry = "uv run ty check e2e-tests"
 language = "system"
 files = { glob = "e2e-tests/**/*.py" }
 pass_filenames = false
