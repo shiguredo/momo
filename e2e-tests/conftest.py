@@ -3,13 +3,14 @@ import os
 import time
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 
 import jwt
 import pytest
 from dotenv import load_dotenv
 
-# .env ファイルを読み込む
-load_dotenv()
+# e2e-tests/.env を読み込む（pytest の cwd がリポジトリルートでも動作する）
+load_dotenv(Path(__file__).parent / ".env")
 
 
 @dataclass
