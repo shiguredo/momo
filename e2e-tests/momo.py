@@ -719,7 +719,7 @@ class Momo:
                                 data = response.json()
                         return data
 
-            except (httpx.ConnectError, httpx.HTTPStatusError):
+            except httpx.ConnectError, httpx.HTTPStatusError:
                 pass
 
             time.sleep(interval)
@@ -772,7 +772,7 @@ class Momo:
                     if all_conditions_met:
                         return True
 
-            except (httpx.ConnectError, httpx.HTTPStatusError):
+            except httpx.ConnectError, httpx.HTTPStatusError:
                 pass
 
             time.sleep(interval)
