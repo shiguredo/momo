@@ -8,7 +8,7 @@ import time
 from enum import StrEnum
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, TypedDict
 
 import httpx
 
@@ -19,6 +19,22 @@ class MomoMode(StrEnum):
     P2P = "p2p"
     AYAME = "ayame"
     SORA = "sora"
+
+
+class MomoCodecParams(TypedDict, total=False):
+    """Momo のコーデック関連 CLI オプション"""
+
+    vp8_encoder: str
+    vp8_decoder: str
+    vp9_encoder: str
+    vp9_decoder: str
+    av1_encoder: str
+    av1_decoder: str
+    h264_encoder: str
+    h264_decoder: str
+    h265_encoder: str
+    h265_decoder: str
+    openh264: str
 
 
 def find_stats(metrics_data: dict[str, Any], **filters: Any) -> dict[str, Any] | None:

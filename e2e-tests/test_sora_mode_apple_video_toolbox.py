@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoCodecParams, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # Apple Video Toolbox 環境が有効でない場合もスキップ
@@ -26,7 +26,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: MomoCodecParams = {}
     if video_codec_type == "H264":
         encoder_params["h264_encoder"] = "videotoolbox"
     elif video_codec_type == "H265":
@@ -151,7 +151,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（Apple Video Toolbox 使用）"""
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: MomoCodecParams = {}
     if video_codec_type == "H264":
         encoder_params["h264_encoder"] = "videotoolbox"
     elif video_codec_type == "H265":
@@ -373,14 +373,14 @@ def test_sora_sendonly_recvonly_pair(
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: MomoCodecParams = {}
     if video_codec_type == "H264":
         encoder_params["h264_encoder"] = "videotoolbox"
     elif video_codec_type == "H265":
         encoder_params["h265_encoder"] = "videotoolbox"
 
     # デコーダー設定を準備
-    decoder_params = {}
+    decoder_params: MomoCodecParams = {}
     if video_codec_type == "H264":
         decoder_params["h264_decoder"] = "videotoolbox"
     elif video_codec_type == "H265":

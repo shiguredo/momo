@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoCodecParams, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 pytestmark = pytest.mark.skipif(
@@ -32,18 +32,17 @@ def test_sendrecv(
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー・デコーダー設定を準備
-    encoder_params = {}
-    decoder_params = {}
+    codec_params: MomoCodecParams = {}
     match video_codec_type:
         case "VP8":
-            encoder_params["vp8_encoder"] = "software"
-            decoder_params["vp8_decoder"] = "software"
+            codec_params["vp8_encoder"] = "software"
+            codec_params["vp8_decoder"] = "software"
         case "VP9":
-            encoder_params["vp9_encoder"] = "software"
-            decoder_params["vp9_decoder"] = "software"
+            codec_params["vp9_encoder"] = "software"
+            codec_params["vp9_decoder"] = "software"
         case "AV1":
-            encoder_params["av1_encoder"] = "software"
-            decoder_params["av1_decoder"] = "software"
+            codec_params["av1_encoder"] = "software"
+            codec_params["av1_decoder"] = "software"
 
     # クライアント1（sendrecv）
     with Momo(
@@ -57,8 +56,7 @@ def test_sendrecv(
         video_codec_type=video_codec_type,
         audio=True,
         metadata=sora_settings.metadata,
-        **encoder_params,
-        **decoder_params,
+        **codec_params,
     ) as client1:
         # クライアント2（sendrecv）
         with Momo(
@@ -72,8 +70,7 @@ def test_sendrecv(
             video_codec_type=video_codec_type,
             audio=True,
             metadata=sora_settings.metadata,
-            **encoder_params,
-            **decoder_params,
+            **codec_params,
         ) as client2:
             # 接続が確立するまで待機
             assert client1.wait_for_connection(), (

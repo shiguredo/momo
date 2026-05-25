@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoCodecParams, MomoMode
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 pytestmark = pytest.mark.skipif(
@@ -34,7 +34,7 @@ def test_sendonly_recvonly_pair(
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: MomoCodecParams = {}
     if video_codec_type == "VP8":
         encoder_params["vp8_encoder"] = "software"
     elif video_codec_type == "VP9":
@@ -43,7 +43,7 @@ def test_sendonly_recvonly_pair(
         encoder_params["av1_encoder"] = "software"
 
     # デコーダー設定を準備
-    decoder_params = {}
+    decoder_params: MomoCodecParams = {}
     if video_codec_type == "VP8":
         decoder_params["vp8_decoder"] = "software"
     elif video_codec_type == "VP9":

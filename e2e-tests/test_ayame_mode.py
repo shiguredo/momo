@@ -1,11 +1,11 @@
 """Ayame モードの E2E テスト"""
 
 import uuid
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
-from momo import Momo, MomoMode, find_stats
+from momo import Momo, MomoCodecParams, MomoMode, find_stats
 
 AYAME_SIGNALING_URL = "wss://ayame-labo.shiguredo.app/signaling"
 
@@ -71,7 +71,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
     room_id = str(uuid.uuid4())
 
     # コーデックごとのエンコーダー/デコーダー設定
-    codec_settings: dict[str, Any] = {}
+    codec_settings: MomoCodecParams = {}
     match codec:
         case "VP8":
             codec_settings = {
@@ -360,7 +360,7 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type]  # 存在しないコーデック
+            ayame_video_codec_type=cast(Any, "INVALID_CODEC"),  # 存在しないコーデック
         ):
             pytest.fail("momo process should have exited with invalid codec")
 
@@ -372,6 +372,6 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type]  # 存在しないコーデック
+            ayame_audio_codec_type=cast(Any, "INVALID_AUDIO"),  # 存在しないコーデック
         ):
             pytest.fail("momo process should have exited with invalid audio codec")
