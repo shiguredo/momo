@@ -25,3 +25,16 @@ reruns_delay = 1
 
 [tool.ruff]
 line-length = 100
+
+[tool.ty.rules]
+# ルールごとの診断レベル設定
+# https://docs.astral.sh/ty/reference/configuration/#rules
+# dict リテラルの型が SoraConf と完全一致しない場合のエラーを無視する
+# https://docs.astral.sh/ty/reference/rules/#invalid-argument-type
+invalid-argument-type = "ignore"
+# pyroute2 の型スタブが不完全なため無視する
+# https://docs.astral.sh/ty/reference/rules/#unresolved-attribute
+unresolved-attribute = "ignore"
+# type: ignore コメントの警告を無視する
+# https://docs.astral.sh/ty/reference/rules/#unused-type-ignore-comment
+unused-type-ignore-comment = "ignore"
