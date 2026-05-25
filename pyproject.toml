@@ -19,23 +19,39 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+# リポジトリルートから pytest を実行し、テスト本体は e2e-tests/ に置く
 testpaths = ["e2e-tests"]
+# test_*.py のみを pytest の収集対象とする
 python_files = ["test_*.py"]
+# CI / ローカルでのフレーク対策 (pytest-rerunfailures)
 reruns = 3
 reruns_delay = 1
 
 [tool.ruff]
+# 自動修正や lint が想定する Python の最小バージョン
+# https://docs.astral.sh/ruff/settings/#target-version
+target-version = "py314"
+# 行長 (E501 と formatter の折り返し基準)
+# https://docs.astral.sh/ruff/settings/#line-length
 line-length = 100
 
-[tool.ty.rules]
-# ルールごとの診断レベル設定
-# https://docs.astral.sh/ty/reference/configuration/#rules
-# dict リテラルの型が SoraConf と完全一致しない場合のエラーを無視する
-# https://docs.astral.sh/ty/reference/rules/#invalid-argument-type
-invalid-argument-type = "ignore"
-# pyroute2 の型スタブが不完全なため無視する
-# https://docs.astral.sh/ty/reference/rules/#unresolved-attribute
-unresolved-attribute = "ignore"
-# type: ignore コメントの警告を無視する
-# https://docs.astral.sh/ty/reference/rules/#unused-type-ignore-comment
-unused-type-ignore-comment = "ignore"
+[tool.ty.src]
+# 型チェック対象のファイル・ディレクトリ
+# https://docs.astral.sh/ty/reference/configuration/#src-include
+include = ["e2e-tests"]
+
+[tool.ty.environment]
+# モジュール解決で最優先する追加パス (e2e-tests 内の first-party import 用)
+# https://docs.astral.sh/ty/reference/configuration/#environment-extra-paths
+extra-paths = ["e2e-tests"]
+
+[tool.uv]
+# 依存管理専用プロジェクトとして扱い、自身はビルド・インストールしない
+# https://docs.astral.sh/uv/reference/settings/#package
+package = false
+# uv run / uv sync でこのプロジェクトを uv 管理下として扱う
+# https://docs.astral.sh/uv/reference/settings/#managed
+managed = true
+# システム Python ではなく uv 管理の Python のみを使用する
+# https://docs.astral.sh/uv/reference/settings/#python-preference
+python-preference = "only-managed"
