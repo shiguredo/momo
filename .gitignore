@@ -44,8 +44,8 @@ webrtc_logs_*
 /_install
 /_package
 
-# Claude Code
-CLAUDE.local.md
-
-# Serena
-.serena
+# Agents
+.claude/
+.cursor/
+.opencode/
+.agents/
