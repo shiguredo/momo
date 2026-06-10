@@ -14,7 +14,7 @@
 - [CHANGE] libwebrtc のバージョンを m140.7339.2.2 に上げる
   - macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変えたので破壊的変更となります。
   - @torikizi
-- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を削除する
+- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas

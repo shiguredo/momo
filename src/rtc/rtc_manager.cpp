@@ -346,6 +346,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+  rtc_config.crypto_options.emplace().srtp.enable_gcm_crypto_suites = true;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
