@@ -22,7 +22,7 @@
   - VPL のバージョンを v2.16.0 に上げる
   - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
   - @torikizi
-- [UPDATE] libwebrtc m148 への追従対応
+- [UPDATE] libwebrtc m148 の API 変更に追従する
   - SSLCertificateVerifier の API が Verify から VerifyChain に変更
   - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
   - CryptoOptions が optional ではなくなった
