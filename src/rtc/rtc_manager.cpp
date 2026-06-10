@@ -150,7 +150,7 @@ RTCManager::RTCManager(
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.event_log_factory =
-      absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
+      absl::make_unique<webrtc::RtcEventLogFactory>();
 
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
@@ -161,7 +161,7 @@ RTCManager::RTCManager(
         } else {
 #if defined(_WIN32)
           return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-              &env.task_queue_factory());
+              env);
 #else
           return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                  audio_layer);
