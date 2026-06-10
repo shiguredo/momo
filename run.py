@@ -101,8 +101,7 @@ def install_deps(
         webrtc_deps = read_version_file(webrtc_info.deps_file)
 
         # Windows は MSVC を使うので不要
-        # macOS は Apple Clang を使うので不要
-        if platform.target.os not in ("windows", "macos") and local_webrtc_build_dir is None:
+        if platform.target.os != "windows" and local_webrtc_build_dir is None:
             # LLVM
             tools_url = webrtc_version["WEBRTC_SRC_TOOLS_URL"]
             tools_commit = webrtc_version["WEBRTC_SRC_TOOLS_COMMIT"]
@@ -154,7 +153,7 @@ def install_deps(
             sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
             install_boost_args["target_os"] = "darwin"
             install_boost_args["toolset"] = "clang"
-            install_boost_args["cxx"] = "clang++"
+            install_boost_args["cxx"] = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
             install_boost_args["cflags"] = [
                 f"--sysroot={sysroot}",
                 f"-mmacosx-version-min={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
@@ -164,6 +163,12 @@ def install_deps(
                 f"--sysroot={sysroot}",
                 "-std=gnu++17",
                 f"-mmacosx-version-min={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+                "-D_LIBCPP_ABI_NAMESPACE=Cr",
+                "-D_LIBCPP_ABI_VERSION=2",
+                "-D_LIBCPP_DISABLE_AVAILABILITY",
+                "-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
+                "-nostdinc++",
+                f"-isystem{os.path.join(webrtc_info.libcxx_dir, 'include')}",
             ]
             install_boost_args["visibility"] = "hidden"
             if platform.target.arch == "x86_64":
@@ -540,6 +545,12 @@ def _build(args):
                 if platform.target.arch == "x86_64"
                 else "aarch64-apple-darwin"
             )
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}"
+            )
             cmake_args.append(f"-DCMAKE_SYSTEM_PROCESSOR={platform.target.arch}")
             cmake_args.append(f"-DCMAKE_OSX_ARCHITECTURES={platform.target.arch}")
             cmake_args.append(
@@ -549,6 +560,10 @@ def _build(args):
             cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+            cmake_args.append("-DUSE_LIBCXX=ON")
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
         if platform.target.os in ("jetson", "raspberry-pi-os"):
             triplet = "aarch64-linux-gnu"
             arch = "aarch64"
