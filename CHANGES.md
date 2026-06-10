@@ -99,8 +99,6 @@
 
 ### misc
 
-- [UPDATE] actions/download-artifact を v7 に上げる
-  - @torikizi
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加
