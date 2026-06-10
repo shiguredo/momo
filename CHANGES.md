@@ -16,6 +16,17 @@
   - @torikizi
 - [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
+- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
+  - @voluntas
+- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
+  - @voluntas
+- [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
+  - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
+  - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
+    - sm_60 は Pascal 世代の GPU からサポートされている
+    - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
+    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
+  - @voluntas
 - [UPDATE] libwebrtc のバージョンを m148.7778.4.0 に上げる
   - Boost のバージョンを 1.91.0 に上げる
   - CMake のバージョンを 4.3.2 に上げる
@@ -30,17 +41,6 @@
   - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
   - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
   - @torikizi
-- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
-  - @voluntas
-- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
-  - @voluntas
-- [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
-  - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
-  - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
-    - sm_60 は Pascal 世代の GPU からサポートされている
-    - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
-    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
-  - @voluntas
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
     - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
@@ -51,8 +51,6 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
-- [UPDATE] CMake のバージョンを 4.1.2 に上げる
-  - @torikizi
 - [UPDATE] SDL3 のバージョンを 3.2.24 に上げる
   - @torikizi
 - [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
