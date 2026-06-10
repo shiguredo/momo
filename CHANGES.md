@@ -11,8 +11,19 @@
 
 ## develop
 
-- [CHANGE] libwebrtc のバージョンを m140.7339.2.2 に上げる
-  - macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変えたので破壊的変更となります。
+- [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
+  - @torikizi
+- [CHANGE] - [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - @torikizi
+- [UPDATE] libwebrtc のバージョンを m146.7680.3.1 に上げる
+  - @torikizi
+- [UPDATE] libwebrtc m146 への追従対応
+  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
+  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
+  - CryptoOptions が optional ではなくなった
+  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
+  - 各種ハードウェアエンコーダーのエラーハンドリングを修正
   - @torikizi
 - [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
