@@ -80,6 +80,13 @@
 
 ### misc
 
+- [UPDATE] actions/download-artifact を v7 に上げる
+  - @torikizi
+- [UPDATE] Homebrew/actions/setup-homebrew を @master から @main に変更する
+  - 2026 年 6 月 10 日以降のリリースで Homebrew/actions/setup-homebrew の master ブランチは無効化されるため、main ブランチを使用するように変更する
+  - 参考 : Homebrew/actions/setup-homebrew の main ブランチへの移行コミット
+    - https://github.com/Homebrew/actions/commit/675fcd27b59e54d310c5484c8c27c01d03da660c
+  - @torikizi
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加
@@ -93,13 +100,6 @@
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
   - @voluntas
 - [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
-- [UPDATE] actions/download-artifact を v7 に上げる
-  - @voluntas
-- [UPDATE] Homebrew/actions/setup-homebrew@master を Homebrew/actions/setup-homebrew@main に変更する
-  - 2026 年 6 月 10 日以降のリリースで Homebrew/actions/setup-homebrew の master ブランチは無効化されるため、main ブランチを使用するように変更する
-  - 参考: Homebrew/actions/setup-homebrew の main ブランチへの移行コミット
-    - https://github.com/Homebrew/actions/commit/675fcd27b59e54d310c5484c8c27c01d03da660c
-  - @torikizi
 
 ## 2025.1.3
 
