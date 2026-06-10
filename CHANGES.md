@@ -93,6 +93,8 @@
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
   - @voluntas
 - [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
+- [UPDATE] actions/download-artifact を v7 にアップデートする
+  - @voluntas
 
 ## 2025.1.3
 
