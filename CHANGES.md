@@ -14,18 +14,21 @@
 - [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
   - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
   - @torikizi
-- [CHANGE] - [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
-- [UPDATE] libwebrtc のバージョンを m146.7680.3.1 に上げる
+- [UPDATE] libwebrtc のバージョンを m148.7778.4.0 に上げる
+  - Boost のバージョンを 1.91.0 に上げる
+  - CMake のバージョンを 4.3.2 に上げる
+  - VPL のバージョンを v2.16.0 に上げる
+  - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
   - @torikizi
-- [UPDATE] libwebrtc m146 への追従対応
+- [UPDATE] libwebrtc m148 への追従対応
   - SSLCertificateVerifier の API が Verify から VerifyChain に変更
   - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
   - CryptoOptions が optional ではなくなった
   - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
-  - 各種ハードウェアエンコーダーのエラーハンドリングを修正
-  - @torikizi
-- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
+  - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
   - @torikizi
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas
@@ -96,6 +99,8 @@
 
 ### misc
 
+- [UPDATE] actions/download-artifact を v7 に上げる
+  - @torikizi
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加

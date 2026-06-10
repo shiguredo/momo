@@ -412,6 +412,12 @@ elseif (TARGET_OS STREQUAL "macos")
       _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
       _LIBCPP_ENABLE_NODISCARD
       _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
+      # boost 1.91.0 で asio の kqueue_reactor 内部 mutex が
+      # atomic_slim_mutex (std::atomic::wait / notify_one) に切り替わったが、
+      # webrtc-build 同梱の libc++ + macOS の組み合わせで async_connect が
+      # ハングするため pthread ベースに戻す。
+      # run.py 側にも同じ定義が必要。
+      BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
 
   target_link_libraries(momo
