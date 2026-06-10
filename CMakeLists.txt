@@ -416,7 +416,6 @@ elseif (TARGET_OS STREQUAL "macos")
       # atomic_slim_mutex (std::atomic::wait / notify_one) に切り替わったが、
       # webrtc-build 同梱の libc++ + macOS の組み合わせで async_connect が
       # ハングするため pthread ベースに戻す。
-      # run.py 側にも同じ定義が必要。
       BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
 
