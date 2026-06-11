@@ -63,7 +63,7 @@ bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
                         uint16_t* resolved_index) {
   if (absl::SimpleAtoi(device_spec, resolved_index)) {
     if (*resolved_index >= infos.size()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << ": Device index out of range. index="
                           << *resolved_index << " available=" << infos.size();
       return false;
@@ -96,7 +96,7 @@ bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
     return false;
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__
+  RTC_LOG(LS_INFO) << __func__
                    << ": Applying device index=" << resolved_index
                    << " is_input=" << is_input;
 
@@ -104,7 +104,7 @@ bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   int32_t set_result = is_input ? adm->SetRecordingDevice(resolved_index)
                                 : adm->SetPlayoutDevice(resolved_index);
   if (set_result != 0) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
+    RTC_LOG(LS_WARNING) << __func__
                         << ": Failed to set audio device. index="
                         << resolved_index << " is_input=" << is_input
                         << " result=" << set_result;
@@ -236,7 +236,7 @@ RTCManager::RTCManager(
   factory_ = p.first;
   context_ = p.second;
   if (!factory_.get()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << ": Failed to initialize PeerConnectionFactory";
     exit(1);
   }
@@ -252,14 +252,14 @@ RTCManager::RTCManager(
       if (!config_.audio_input_device.empty()) {
         if (!SetAudioDevice(adm, config_.audio_input_device, true)) {
           RTC_LOG(LS_WARNING)
-              << __FUNCTION__
+              << __func__
               << ": Failed to reapply audio input device. Using default.";
         }
       }
       if (!config_.audio_output_device.empty()) {
         if (!SetAudioDevice(adm, config_.audio_output_device, false)) {
           RTC_LOG(LS_WARNING)
-              << __FUNCTION__
+              << __func__
               << ": Failed to reapply audio output device. Using default.";
         }
       }
@@ -277,11 +277,11 @@ RTCManager::RTCManager(
       ao.noise_suppression = false;
     if (config_.disable_highpass_filter)
       ao.highpass_filter = false;
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
+    RTC_LOG(LS_INFO) << __func__ << ": " << ao.ToString();
     audio_track_ = factory_->CreateAudioTrack(
         Util::GenerateRandomChars(), factory_->CreateAudioSource(ao).get());
     if (!audio_track_) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
+      RTC_LOG(LS_WARNING) << __func__ << ": Cannot create audio_track";
     }
   }
 
@@ -297,7 +297,7 @@ RTCManager::RTCManager(
             webrtc::VideoTrackInterface::ContentHint::kText);
       }
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
+      RTC_LOG(LS_WARNING) << __func__ << ": Cannot create video_track";
     }
   }
 }
@@ -394,7 +394,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       connection = factory_->CreatePeerConnectionOrError(
           rtc_config, std::move(dependencies));
   if (!connection.ok()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
+    RTC_LOG(LS_ERROR) << __func__ << ": CreatePeerConnection failed";
     return nullptr;
   }
 
@@ -407,7 +407,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
   if (direction.has_value() && *direction != "sendrecv" &&
       *direction != "sendonly" && *direction != "recvonly") {
     RTC_LOG(LS_WARNING)
-        << __FUNCTION__
+        << __func__
         << ": direction must be nullopt, sendrecv, sendonly, or recvonly";
     return;
   }
@@ -423,7 +423,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
       webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
           audio_sender = connection->AddTrack(audio_track_, {stream_id});
       if (!audio_sender.ok()) {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+        RTC_LOG(LS_WARNING) << __func__ << ": Cannot add audio_track_";
       }
     }
 
@@ -433,7 +433,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
       if (video_add_result.ok()) {
         video_sender_ = video_add_result.value();
       } else {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+        RTC_LOG(LS_WARNING) << __func__ << ": Cannot add video_track_";
       }
     }
 
@@ -446,7 +446,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
         auto error = transceiver->SetDirectionWithError(transceiver_direction);
         if (!error.ok()) {
           RTC_LOG(LS_WARNING)
-              << __FUNCTION__
+              << __func__
               << ": Failed to set transceiver direction: " << error.message();
         }
       }
@@ -460,7 +460,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
     auto audio_result =
         connection->AddTransceiver(webrtc::MediaType::AUDIO, init);
     if (!audio_result.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << ": Cannot add audio transceiver for recvonly";
     }
 
@@ -468,7 +468,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
     auto video_result =
         connection->AddTransceiver(webrtc::MediaType::VIDEO, init);
     if (!video_result.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << ": Cannot add video transceiver for recvonly";
     }
   }

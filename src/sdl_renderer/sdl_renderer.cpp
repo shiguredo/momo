@@ -23,14 +23,14 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
       rows_(1),
       cols_(1) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_Init failed " << SDL_GetError();
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL_Init failed " << SDL_GetError();
     return;
   }
 
   window_ = SDL_CreateWindow("Momo WebRTC Native Client", width_, height_,
                              SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (window_ == nullptr) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateWindow failed "
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL_CreateWindow failed "
                       << SDL_GetError();
     return;
   }
@@ -44,7 +44,7 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
   // SDL_CreateRenderer をメインスレッドで呼ばないとエラーになる
   renderer_ = SDL_CreateRenderer(window_, NULL);
   if (renderer_ == nullptr) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL_CreateRenderer failed "
                       << SDL_GetError();
     return;
   }
@@ -58,7 +58,7 @@ SDLRenderer::~SDLRenderer() {
   int ret = 0;
   SDL_WaitThread(thread_, &ret);
   if (ret != 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL Thread error:" << ret;
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL Thread error:" << ret;
   }
   if (renderer_) {
     SDL_DestroyRenderer(renderer_);
@@ -123,7 +123,7 @@ int SDLRenderer::RenderThread() {
 #if !defined(__APPLE__)
   renderer_ = SDL_CreateRenderer(window_, NULL);
   if (renderer_ == nullptr) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": SDL_CreateRenderer failed "
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL_CreateRenderer failed "
                       << SDL_GetError();
     return 1;
   }
@@ -238,7 +238,7 @@ void SDLRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
     } else {
       image_.reset(new uint8_t[input_width_ * input_height_ * 4]);
     }
-    RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": scaled_=" << scaled_;
+    RTC_LOG(LS_VERBOSE) << __func__ << ": scaled_=" << scaled_;
     outline_changed_ = false;
   }
   webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer_if;
@@ -340,7 +340,7 @@ void SDLRenderer::SetOutlines() {
       }
     }
   }
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " rows:" << rows << " cols:" << cols;
+  RTC_LOG(LS_VERBOSE) << __func__ << " rows:" << rows << " cols:" << cols;
   int outline_width = std::floor(width_ / cols);
   int outline_height = std::floor(height_ / rows);
   int sinks_count = sinks_.size();
@@ -349,7 +349,7 @@ void SDLRenderer::SetOutlines() {
     int offset_x = outline_width * (i % cols);
     int offset_y = outline_height * std::floor(i / cols);
     sink->SetOutlineRect(offset_x, offset_y, outline_width, outline_height);
-    RTC_LOG(LS_VERBOSE) << __FUNCTION__ << " offset_x:" << offset_x
+    RTC_LOG(LS_VERBOSE) << __func__ << " offset_x:" << offset_x
                         << " offset_y:" << offset_y
                         << " outline_width:" << outline_width
                         << " outline_height:" << outline_height;

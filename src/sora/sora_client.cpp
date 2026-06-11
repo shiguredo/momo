@@ -129,7 +129,7 @@ void SoraClient::Reset() {
 }
 
 void SoraClient::Connect() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 
   watchdog_.Enable(30);
 
@@ -166,16 +166,16 @@ void SoraClient::Connect() {
 
 void SoraClient::ReconnectAfter() {
   int interval = 5 * (2 * retry_count_ + 1);
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
+  RTC_LOG(LS_INFO) << __func__ << " reconnect after " << interval << " sec";
 
   watchdog_.Enable(interval);
   retry_count_++;
 }
 
 void SoraClient::OnWatchdogExpired() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " closing...";
+  RTC_LOG(LS_INFO) << __func__ << " closing...";
   Close([this]() {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " closed and reconnecting...";
+    RTC_LOG(LS_INFO) << __func__ << " closed and reconnecting...";
     Reset();
     Connect();
   });
@@ -405,7 +405,7 @@ std::shared_ptr<RTCConnection> SoraClient::CreateRTCConnection(
 void SoraClient::OnRead(boost::system::error_code ec,
                         std::size_t bytes_transferred,
                         std::string text) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   boost::ignore_unused(bytes_transferred);
 
@@ -420,7 +420,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
     return MOMO_BOOST_ERROR(ec, "Read");
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
+  RTC_LOG(LS_INFO) << __func__ << ": text=" << text;
 
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
@@ -577,15 +577,19 @@ void SoraClient::OnRead(boost::system::error_code ec,
         json_message.at("event_type").as_string().c_str();
     if (event_type == "connection.created" ||
         event_type == "connection.destroyed") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
-                       << ": client_id=" << json_message.at("client_id")
-                       << ": connection_id="
-                       << json_message.at("connection_id");
+      RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
+                        << ": client_id="
+                        << json_message.at("client_id").as_string().c_str()
+                        << ": connection_id="
+                        << json_message.at("connection_id").as_string().c_str();
     } else if (event_type == "spotlight.changed") {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": event_type=" << event_type
-                       << ": client_id=" << json_message.at("client_id")
-                       << ": connection_id=" << json_message.at("connection_id")
-                       << ": spotlight_id=" << json_message.at("spotlight_id");
+      RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
+                        << ": client_id="
+                        << json_message.at("client_id").as_string().c_str()
+                        << ": connection_id="
+                        << json_message.at("connection_id").as_string().c_str()
+                        << ": spotlight_id="
+                        << json_message.at("spotlight_id").as_string().c_str();
     }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
@@ -717,7 +721,7 @@ void SoraClient::OnMessage(
 // これらは別スレッドからやってくるので取り扱い注意
 void SoraClient::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
+  RTC_LOG(LS_INFO) << __func__ << " state:" << new_state;
   // デストラクタだと shared_from_this が機能しないので無視する
   if (destructed_) {
     return;
@@ -734,7 +738,7 @@ void SoraClient::OnIceCandidate(const std::string sdp_mid,
 
 void SoraClient::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
+  RTC_LOG(LS_INFO) << __func__ << ": newState="
                    << Util::IceConnectionStateToString(new_state);
 
   switch (new_state) {

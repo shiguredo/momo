@@ -163,7 +163,7 @@ void RTCConnection::SetOffer(const std::string sdp,
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, sdp, &error);
   if (!session_description) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << "Failed to create session description: "
                       << error.description.c_str()
                       << "\nline: " << error.line.c_str();
@@ -203,7 +203,7 @@ void RTCConnection::SetAnswer(const std::string sdp,
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kAnswer, sdp, &error);
   if (!session_description) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << "Failed to create session description: "
                       << error.description.c_str()
                       << "\nline: " << error.line.c_str();
@@ -231,7 +231,7 @@ void RTCConnection::AddIceCandidate(const std::string sdp_mid,
   connection_->AddIceCandidate(
       std::move(candidate), [sdp](webrtc::RTCError error) {
         RTC_LOG(LS_WARNING)
-            << __FUNCTION__ << " Failed to apply the received candidate. type="
+            << __func__ << " Failed to apply the received candidate. type="
             << webrtc::ToString(error.type()) << " message=" << error.message()
             << " sdp=" << sdp;
       });

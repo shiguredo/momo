@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 // WebRTC
 #include <api/video/i420_buffer.h>
@@ -130,11 +131,11 @@ bool ScreenVideoCapturer::CaptureProcess() {
 void ScreenVideoCapturer::OnCaptureResult(
     webrtc::DesktopCapturer::Result result,
     std::unique_ptr<webrtc::DesktopFrame> frame) {
-  //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
+  //RTC_LOG(LS_ERROR) << __func__ << " Start";
   bool success = result == webrtc::DesktopCapturer::Result::SUCCESS;
 
   if (!success) {
-    //RTC_LOG(LS_ERROR) << __FUNCTION__ << " !success";
+    //RTC_LOG(LS_ERROR) << __func__ << " !success";
     return;
   }
 
@@ -160,7 +161,7 @@ void ScreenVideoCapturer::OnCaptureResult(
     output_size.set(2, 2);
   }
 
-  //RTC_LOG(LS_ERROR) << __FUNCTION__
+  //RTC_LOG(LS_ERROR) << __func__
   //  << " frame->size().width():" << frame->size().width()
   //  << " frame->size().height():" << frame->size().height()
   //  << " output_size.width():" << output_size.width()
@@ -198,7 +199,7 @@ void ScreenVideoCapturer::OnCaptureResult(
         if (output_height > output_size.height())
           output_height = output_size.height();
         const int32_t margin_y = (output_size.height() - output_height) / 2;
-        //RTC_LOG(LS_ERROR) << __FUNCTION__ << "output_size.width():" << output_size.width() << " output_height:" << output_height;
+        //RTC_LOG(LS_ERROR) << __func__ << "output_size.width():" << output_size.width() << " output_height:" << output_height;
         output_rect = webrtc::DesktopRect::MakeLTRB(
             0, margin_y, output_size.width(), output_height + margin_y);
       } else {
@@ -207,7 +208,7 @@ void ScreenVideoCapturer::OnCaptureResult(
         if (output_width > output_size.width())
           output_width = output_size.width();
         const int32_t margin_x = (output_size.width() - output_width) / 2;
-        //RTC_LOG(LS_ERROR) << __FUNCTION__ << "output_width:" << output_width << " output_size.height():" << output_size.height();
+        //RTC_LOG(LS_ERROR) << __func__ << "output_width:" << output_width << " output_size.height():" << output_size.height();
         output_rect = webrtc::DesktopRect::MakeLTRB(
             margin_x, 0, output_width + margin_x, output_size.height());
       }
@@ -222,7 +223,7 @@ void ScreenVideoCapturer::OnCaptureResult(
     } else {
       output_data = frame->data();
       output_stride = frame->stride();
-      //RTC_LOG(LS_ERROR) << __FUNCTION__ << "output_stride:" << output_stride;
+      //RTC_LOG(LS_ERROR) << __func__ << "output_stride:" << output_stride;
     }
 
     if (libyuv::ARGBToI420(

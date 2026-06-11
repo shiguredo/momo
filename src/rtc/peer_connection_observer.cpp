@@ -23,7 +23,7 @@ void PeerConnectionObserver::OnDataChannel(
 
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " :" << new_state;
+  RTC_LOG(LS_INFO) << __func__ << " :" << new_state;
   if (new_state == webrtc::PeerConnectionInterface::IceConnectionState::
                        kIceConnectionDisconnected) {
     ClearAllRegisteredTracks();

@@ -224,7 +224,7 @@ std::shared_ptr<RTCConnection> CreateRTCConnection(
   std::shared_ptr<RTCConnection> connection =
       manager->CreateConnection(rtc_config, sender);
   if (!connection) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": failed to create RTC connection";
+    RTC_LOG(LS_ERROR) << __func__ << ": failed to create RTC connection";
     return nullptr;
   }
   manager->InitTracks(connection.get(), direction);
@@ -287,7 +287,7 @@ void AyameClient::Reset() {
   URLParts parts;
   bool use_tls;
   if (!ParseURL(config_.signaling_url, parts, use_tls)) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": failed to prepare signaling url: "
+    RTC_LOG(LS_ERROR) << __func__ << ": failed to prepare signaling url: "
                       << config_.signaling_url;
     throw std::runtime_error("Failed to parse signaling url: " +
                              config_.signaling_url);
@@ -303,7 +303,7 @@ void AyameClient::Reset() {
 }
 
 void AyameClient::Connect() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 
   watchdog_.Enable(kInitialWatchdogTimeoutSeconds);
 
@@ -320,16 +320,16 @@ void AyameClient::ReconnectAfter() {
       std::min<int64_t>(interval_raw, kReconnectIntervalMaxSeconds);
   const int interval = static_cast<int>(clamped_interval);
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnect after " << interval << " sec";
+  RTC_LOG(LS_INFO) << __func__ << " reconnect after " << interval << " sec";
 
   watchdog_.Enable(interval);
   retry_count_++;
 }
 
 void AyameClient::OnWatchdogExpired() {
-  RTC_LOG(LS_WARNING) << __FUNCTION__;
+  RTC_LOG(LS_WARNING) << __func__;
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " reconnecting...:";
+  RTC_LOG(LS_INFO) << __func__ << " reconnecting...:";
   Reset();
   Connect();
 }
@@ -398,7 +398,7 @@ void AyameClient::OnClose(boost::system::error_code ec) {
 void AyameClient::OnRead(boost::system::error_code ec,
                          [[maybe_unused]] std::size_t bytes_transferred,
                          std::string text) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   // 書き込みのために読み込み処理がキャンセルされた時にこのエラーになるので、これはエラーとして扱わない
   if (ec == boost::asio::error::operation_aborted)
@@ -416,7 +416,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     return MOMO_BOOST_ERROR(ec, "Read");
   }
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
+  RTC_LOG(LS_INFO) << __func__ << ": text=" << text;
 
   auto json_message = boost::json::parse(text);
   const std::string type = json_message.at("type").as_string().c_str();
@@ -427,7 +427,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
         CreateRTCConnection(manager_, this, ice_servers_, config_.direction,
                             config_.video_codec_type, config_.audio_codec_type);
     if (!connection_) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__
+      RTC_LOG(LS_ERROR) << __func__
                         << ": peer connection setup failed at accept";
       Close();
       return;
@@ -449,7 +449,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
 
     // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
     if (is_exist_user) {
-      RTC_LOG(LS_INFO) << __FUNCTION__ << ": exist_user";
+      RTC_LOG(LS_INFO) << __func__ << ": exist_user";
       is_send_offer_ = true;
       connection_->CreateOffer(on_create_offer);
     } else if (!has_is_exist_user_flag_) {
@@ -464,7 +464,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
           config_.video_codec_type, config_.audio_codec_type);
     }
     if (!connection_) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__
+      RTC_LOG(LS_ERROR) << __func__
                         << ": peer connection is not ready for offer";
       Close();
       return;
@@ -507,7 +507,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
     watchdog_.Reset();
     DoSendPong();
   } else if (type == "bye") {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": bye";
+    RTC_LOG(LS_INFO) << __func__ << ": bye";
     connection_ = nullptr;
     Close();
   }
@@ -518,7 +518,7 @@ void AyameClient::OnRead(boost::system::error_code ec,
 // これらは別スレッドからやってくるので取り扱い注意
 void AyameClient::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
+  RTC_LOG(LS_INFO) << __func__ << " state:" << new_state;
   // デストラクタだと shared_from_this が機能しないので無視する
   if (destructed_) {
     return;
@@ -542,7 +542,7 @@ void AyameClient::OnIceCandidate(const std::string sdp_mid,
 
 void AyameClient::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": newState="
+  RTC_LOG(LS_INFO) << __func__ << ": newState="
                    << Util::IceConnectionStateToString(new_state);
 
   switch (new_state) {

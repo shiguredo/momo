@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
       new webrtc::FileRotatingLogSink("./", "webrtc_logs",
                                       kDefaultMaxLogFileSize, 10));
   if (!log_sink->Init()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to open log file";
+    RTC_LOG(LS_ERROR) << __func__ << "Failed to open log file";
     log_sink.reset();
     return 1;
   }
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
                            << ScreenVideoCapturer::GetSourceListString();
           webrtc::DesktopCapturer::SourceList sources;
           if (!ScreenVideoCapturer::GetSourceList(&sources)) {
-            RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
+            RTC_LOG(LS_ERROR) << __func__ << "Failed select screen source";
             return nullptr;
           }
           auto size = args.GetSize();
