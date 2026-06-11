@@ -27,19 +27,27 @@
     - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
     - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
   - @voluntas
-- [UPDATE] libwebrtc のバージョンを m148.7778.4.0 に上げる
+- [UPDATE] libwebrtc のバージョンを m150.7871.0.0 に上げる
   - Boost のバージョンを 1.91.0 に上げる
   - CMake のバージョンを 4.3.2 に上げる
   - VPL のバージョンを v2.16.0 に上げる
   - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
   - @torikizi
-- [UPDATE] libwebrtc m148 の API 変更に追従する
+- [UPDATE] libwebrtc m150 の変更に追従する
   - SSLCertificateVerifier の API が Verify から VerifyChain に変更
   - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
   - CryptoOptions が optional ではなくなった
   - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
   - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
   - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
+  - BitrateAdjuster のコンストラクタに Clock が必要になった
+    - m150 で BitrateAdjuster が Clock を必須とする API に変更されたため対応
+  - deadline_timer を steady_timer に変更
+    - deadline_timer + posix_time は非推奨のため、monotonic clock ベースの steady_timer + chrono に移行
+  - `__FUNCTION__` を `__func__` に変更
+    - `__FUNCTION__` は非標準のため、C++11 標準の `__func__` に統一
+  - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
+  - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
   - @torikizi
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
