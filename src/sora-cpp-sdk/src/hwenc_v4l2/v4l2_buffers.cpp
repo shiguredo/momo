@@ -25,7 +25,7 @@ int V4L2Buffers::Allocate(int fd,
   reqbufs.type = type;
   reqbufs.memory = memory;
   if (ioctl(fd, VIDIOC_REQBUFS, &reqbufs) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to request buffers";
+    RTC_LOG(LS_ERROR) << __func__ << "  Failed to request buffers";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   buffers_.resize(reqbufs.count);
@@ -43,7 +43,7 @@ int V4L2Buffers::Allocate(int fd,
       v4l2_buf.length = 1;
       v4l2_buf.m.planes = planes;
       if (ioctl(fd, VIDIOC_QUERYBUF, &v4l2_buf) < 0) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to query buffer"
+        RTC_LOG(LS_ERROR) << __func__ << "  Failed to query buffer"
                           << "  index: " << i;
         return WEBRTC_VIDEO_CODEC_ERROR;
       }
@@ -58,7 +58,7 @@ int V4L2Buffers::Allocate(int fd,
                    MAP_SHARED, fd, v4l2_buf.m.planes[j].m.mem_offset);
           if (plane.start == MAP_FAILED) {
             RTC_LOG(LS_ERROR)
-                << __FUNCTION__ << "  Failed to map plane buffer"
+                << __func__ << "  Failed to map plane buffer"
                 << "  buffer index: " << i << "  plane index: " << j;
             return WEBRTC_VIDEO_CODEC_ERROR;
           }
@@ -70,7 +70,7 @@ int V4L2Buffers::Allocate(int fd,
           expbuf.plane = j;
           if (ioctl(fd, VIDIOC_EXPBUF, &expbuf) < 0) {
             RTC_LOG(LS_ERROR)
-                << __FUNCTION__ << "  Failed to export buffer" << " index=" << i
+                << __func__ << "  Failed to export buffer" << " index=" << i
                 << " plane=" << j << " error=" << strerror(errno);
             return WEBRTC_VIDEO_CODEC_ERROR;
           }
@@ -98,7 +98,7 @@ void V4L2Buffers::Deallocate() {
       if (plane->start != nullptr) {
         if (munmap(plane->start, plane->length) < 0) {
           RTC_LOG(LS_ERROR)
-              << __FUNCTION__ << "  Failed to unmap buffer" << "  index: " << i;
+              << __func__ << "  Failed to unmap buffer" << "  index: " << i;
         }
       }
       if (plane->fd != 0) {
@@ -114,7 +114,7 @@ void V4L2Buffers::Deallocate() {
     reqbufs.type = type_;
     reqbufs.memory = memory_;
     if (ioctl(fd_, VIDIOC_REQBUFS, &reqbufs) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to free buffers: error="
+      RTC_LOG(LS_ERROR) << __func__ << "  Failed to free buffers: error="
                         << strerror(errno);
     }
     fd_ = 0;

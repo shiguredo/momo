@@ -17,6 +17,7 @@
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <rtc_base/platform_thread.h>
 #include <rtc_base/synchronization/mutex.h>
+#include <system_wrappers/include/clock.h>
 
 #include "v4l2_converter.h"
 

@@ -37,7 +37,7 @@ V4L2H264Encoder::V4L2H264Encoder(webrtc::VideoCodecType codec)
     : configured_width_(0),
       configured_height_(0),
       callback_(nullptr),
-      bitrate_adjuster_(.5, .95),
+      bitrate_adjuster_(webrtc::Clock::GetRealTimeClock(), .5, .95),
       target_framerate_fps_(30),
       configured_framerate_fps_(30) {}
 
@@ -68,7 +68,7 @@ int32_t V4L2H264Encoder::InitEncode(
   target_bitrate_bps_ = codec_settings->startBitrate * 1000;
   bitrate_adjuster_.SetTargetBitrateBps(target_bitrate_bps_);
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << "  width: " << codec_settings->width
+  RTC_LOG(LS_INFO) << __func__ << "  width: " << codec_settings->width
                    << "  height: " << codec_settings->height
                    << "  bitrate: " << target_bitrate_bps_ << "bit/sec";
 
@@ -143,7 +143,7 @@ void V4L2H264Encoder::SetRates(const RateControlParameters& parameters) {
   if (parameters.bitrate.get_sum_bps() <= 0 || parameters.framerate_fps <= 0)
     return;
 
-  RTC_LOG(LS_INFO) << __FUNCTION__
+  RTC_LOG(LS_INFO) << __func__
                    << "  bitrate:" << parameters.bitrate.get_sum_bps()
                    << "  fps:" << parameters.framerate_fps;
   target_bitrate_bps_ = parameters.bitrate.get_sum_bps();
@@ -158,13 +158,12 @@ void V4L2H264Encoder::SetBitrateBps(uint32_t bitrate_bps) {
   if (bitrate_bps < 300000 || configured_bitrate_bps_ == bitrate_bps) {
     return;
   }
-  RTC_LOG(LS_INFO) << __FUNCTION__ << "  bitrate: " << bitrate_bps
-                   << " bit/sec";
+  RTC_LOG(LS_INFO) << __func__ << "  bitrate: " << bitrate_bps << " bit/sec";
   v4l2_control ctrl = {};
   ctrl.id = V4L2_CID_MPEG_VIDEO_BITRATE;
   ctrl.value = bitrate_bps;
   if (ioctl(h264_encoder_->fd(), VIDIOC_S_CTRL, &ctrl) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set bitrate";
+    RTC_LOG(LS_ERROR) << __func__ << "  Failed to set bitrate";
     return;
   }
   configured_bitrate_bps_ = bitrate_bps;
@@ -176,13 +175,13 @@ void V4L2H264Encoder::SetFramerateFps(double framerate_fps) {
   if (configured_framerate_fps_ == framerate_fps) {
     return;
   }
-  RTC_LOG(LS_INFO) << __FUNCTION__ << "  fps: " << framerate_fps;
+  RTC_LOG(LS_INFO) << __func__ << "  fps: " << framerate_fps;
   v4l2_streamparm stream = {};
   stream.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
   stream.parm.output.timeperframe.numerator = 1;
   stream.parm.output.timeperframe.denominator = framerate_fps;
   if (ioctl(h264_encoder_->fd(), VIDIOC_S_PARM, &stream) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to set framerate";
+    RTC_LOG(LS_ERROR) << __func__ << "  Failed to set framerate";
     return;
   }
   configured_framerate_fps_ = framerate_fps;
@@ -246,7 +245,7 @@ int32_t V4L2H264Encoder::Encode(
     if (Configure(frame_buffer->type(), video_type, raw_width, raw_height,
                   stride, frame_buffer->width(),
                   frame_buffer->height()) != WEBRTC_VIDEO_CODEC_OK) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "  Failed to Configure";
+      RTC_LOG(LS_ERROR) << __func__ << "  Failed to Configure";
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
   }
@@ -314,8 +313,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
                                    int64_t timestamp_us,
                                    bool is_key_frame) {
   if (frame.timestamp_us() != timestamp_us) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << "  Frame parameter is not found. SkipFrame"
+    RTC_LOG(LS_ERROR) << __func__ << "  Frame parameter is not found. SkipFrame"
                       << "  timestamp_us: " << timestamp_us;
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -336,7 +334,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
 
   h264_bitstream_parser_.ParseBitstream(encoded_image_);
   encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << "  qp:" << encoded_image_.qp_;
+  RTC_LOG(LS_VERBOSE) << __func__ << "  qp:" << encoded_image_.qp_;
 
   webrtc::CodecSpecificInfo codec_specific;
   codec_specific.codecType = webrtc::kVideoCodecH264;
@@ -346,7 +344,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
   webrtc::EncodedImageCallback::Result result =
       callback_->OnEncodedImage(encoded_image_, &codec_specific);
   if (result.error != webrtc::EncodedImageCallback::Result::OK) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__ << "  OnEncodedImage failed"
+    RTC_LOG(LS_WARNING) << __func__ << "  OnEncodedImage failed"
                         << "  error:" << result.error;
   }
   bitrate_adjuster_.Update(size);

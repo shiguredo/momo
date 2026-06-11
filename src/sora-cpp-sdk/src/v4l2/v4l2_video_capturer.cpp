@@ -434,7 +434,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
       if (_captureVideoType == webrtc::VideoType::kMJPEG && bytesused >= 2) {
         if (data[0] != 0xff || data[1] != 0xd8) {
           RTC_LOG(LS_WARNING)
-              << __FUNCTION__ << " Invalid JPEG buffer frame skipped";
+              << __func__ << " Invalid JPEG buffer frame skipped";
         } else {
           unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
           uint8_t* p;
@@ -457,7 +457,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
 
       // enqueue the buffer again
       if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
-        RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
+        RTC_LOG(LS_INFO) << __func__ << " Failed to enqueue capture buffer";
       }
     }
   }
