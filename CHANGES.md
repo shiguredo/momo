@@ -11,15 +11,15 @@
 
 ## develop
 
-- [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
-  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
-  - @torikizi
 - [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
   - @voluntas
+- [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
+  - @torikizi
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
@@ -34,12 +34,6 @@
   - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
   - @torikizi
 - [UPDATE] libwebrtc m150 の変更に追従する
-  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
-  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
-  - CryptoOptions が optional ではなくなった
-  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
-  - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
-  - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
   - BitrateAdjuster のコンストラクタに Clock が必要になった
     - m150 で BitrateAdjuster が Clock を必須とする API に変更されたため対応
   - deadline_timer を steady_timer に変更
@@ -48,6 +42,14 @@
     - `__FUNCTION__` は非標準のため、C++11 標準の `__func__` に統一
   - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
   - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
+  - @torikizi
+- [UPDATE] libwebrtc m146 の変更に追従する
+  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
+  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
+  - CryptoOptions が optional ではなくなった
+  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
+  - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
+  - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
   - @torikizi
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
