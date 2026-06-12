@@ -10,7 +10,6 @@ on:
       - "THANKS"
       - "LICENSE"
       - "NOTICE"
-      - "test/**"
       - ".github/workflows/e2e-test.yml"
       - ".github/workflows/claude.yml"
   schedule:
