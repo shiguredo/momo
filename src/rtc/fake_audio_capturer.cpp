@@ -34,6 +34,8 @@ int32_t FakeAudioCapturer::RegisterAudioCallback(
 }
 
 int32_t FakeAudioCapturer::Init() {
+  // m150 以降、AudioDeviceBuffer のコンストラクタは TaskQueueFactory の
+  // ポインタではなく Environment を受け取るように変更された。
   device_buffer_ =
       std::make_unique<webrtc::AudioDeviceBuffer>(env_);
   initialized_ = true;

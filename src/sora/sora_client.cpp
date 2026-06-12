@@ -577,6 +577,9 @@ void SoraClient::OnRead(boost::system::error_code ec,
         json_message.at("event_type").as_string().c_str();
     if (event_type == "connection.created" ||
         event_type == "connection.destroyed") {
+      // m150 で使用している Boost 1.91 以降、boost::json::value の
+      // operator<< が使えなくなったため、明示的に as_string().c_str() で
+      // 文字列を取得してからストリームに出力する。
       RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
                         << ": client_id="
                         << json_message.at("client_id").as_string().c_str()
