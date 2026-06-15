@@ -16,9 +16,7 @@
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
   - @voluntas
 - [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
-  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
-  - @torikizi
-- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となる
   - @torikizi
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
@@ -45,6 +43,7 @@
   - CryptoOptions が optional ではなくなった
   - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
   - 各種ハードウェアエンコーダーのエラーハンドリングを修正
+  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
 - [UPDATE] CMake のバージョンを 4.1.2 に上げる
   - @torikizi
