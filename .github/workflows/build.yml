@@ -28,8 +28,8 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v6
-      - uses: microsoft/setup-msbuild@v3
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
       - name: Get Versions
         run: |
           Get-Content "DEPS" | Foreach-Object {
@@ -44,7 +44,7 @@ jobs:
       # （インストールする nvcc は解凍後で 100MB 程度なのでキャッシュ可能）
       - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
         id: cache-cuda
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: _install\windows_x86_64\release\cuda
           key: windows-cuda-${{ steps.versions.outputs.cuda_version }}.v1
@@ -61,12 +61,12 @@ jobs:
           echo "name=${PACKAGE_NAME}" >> ${Env:GITHUB_OUTPUT}
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
@@ -79,7 +79,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
       - run: python3 run.py build --package ${{ matrix.name }}
       - name: Get package name
         run: |
@@ -87,12 +87,12 @@ jobs:
           echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
@@ -112,7 +112,7 @@ jobs:
     name: Build momo for ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
       - name: Disk cleanup
         run: |
           set -x
@@ -170,12 +170,12 @@ jobs:
           echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
         id: package_name
       - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.package_name.outputs.name }}
           path: _package/${{ matrix.name }}/release/${{ steps.package_name.outputs.name }}
       - name: Upload Environment
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.name }}.env
           path: _package/${{ matrix.name }}/release/momo.env
@@ -197,7 +197,7 @@ jobs:
       - build-ubuntu
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
       - uses: ./.github/actions/download
         with:
           platform: windows_x86_64
@@ -240,7 +240,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notification:
     name: Slack Notification
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      actions: read
     needs:
       - build-windows
       - build-macos
@@ -249,16 +252,12 @@ jobs:
       - create-release
     if: always()
     steps:
-      - uses: actions/checkout@v6
-      - uses: rtCamp/action-slack-notify@v2
-        if: |
-          needs.build-windows.result == 'failure' ||
-          needs.build-macos.result == 'failure' ||
-          needs.build-ubuntu.result == 'failure' ||
-          needs.e2e_test.result == 'failure' ||
-          needs.create-release.result == 'failure'
+      - name: Slack Notification
+        uses: shiguredo/github-actions/.github/actions/slack-notify@main
+        with:
+          status: ${{ job.status }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          slack_channel: open-momo
+          notify_mode: failure_and_fixed
         env:
-          SLACK_CHANNEL: open-momo
-          SLACK_COLOR: danger
-          SLACK_TITLE: Failure build
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}

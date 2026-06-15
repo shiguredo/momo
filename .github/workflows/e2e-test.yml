@@ -80,12 +80,12 @@ jobs:
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
 
       # Homebrew のセットアップ (self-hosted macOS ランナー用)
       - name: Setup Homebrew
         if: ${{ runner.environment == 'self-hosted' && startsWith(matrix.package, 'macos') }}
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@2ebcf16054461267868620b1414507f3ccc765c1 # main
 
       # GitHub CLI のインストール (self-hosted macOS ランナー用)
       - name: Install GitHub CLI
@@ -132,7 +132,7 @@ jobs:
         run: echo "OPENH264_PATH=${{ steps.openh264.outputs.openh264_path }}" >> $GITHUB_ENV
 
       # UV のセットアップ
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       - run: uv sync
         working-directory: ./test
 
@@ -143,17 +143,21 @@ jobs:
 
   slack_notify_failed:
     needs: [e2e_test]
-    runs-on: ubuntu-24.04
-    # always() で常に実行し、needs.e2e_test.result で親ジョブの結果を確認
-    # タイムアウトは 'failure' として扱われる
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    permissions:
+      actions: read
     # build.yml から呼び出された場合は通知しない
-    if: always() && (needs.e2e_test.result == 'failure' || needs.e2e_test.result == 'cancelled') && inputs.from_build != true
+    if: ${{ !cancelled() && inputs.from_build != true }}
     steps:
       - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
+        uses: shiguredo/github-actions/.github/actions/slack-notify@main
+        with:
+          status: ${{ job.status }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          slack_channel: open-momo
+          slack_title: FAILED
+          slack_icon_emoji_failure: ":japanese_ogre:"
+          notify_mode: failure_and_fixed
         env:
-          SLACK_CHANNEL: open-momo
-          SLACK_COLOR: danger
-          SLACK_TITLE: "FAILED"
-          SLACK_ICON_EMOJI: ":japanese_ogre:"
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}

@@ -86,7 +86,7 @@ runs:
     
     - name: Download env artifact from current workflow run
       if: steps.determine_source.outputs.source == 'current_artifact'
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: ${{ inputs.platform }}.env
         path: ./
@@ -108,7 +108,7 @@ runs:
 
     - name: Download package artifact from current workflow run
       if: steps.determine_source.outputs.source == 'current_artifact'
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: ${{ steps.current_run_package.outputs.package_name }}
         path: ./

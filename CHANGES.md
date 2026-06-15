@@ -11,14 +11,12 @@
 
 ## develop
 
-- [CHANGE] `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
-  - @torikizi
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
   - @voluntas
 - [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
-  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となります。
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となる
   - @torikizi
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
@@ -50,6 +48,7 @@
   - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
   - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
   - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
+  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
   - @torikizi
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
@@ -107,6 +106,13 @@
 
 ### misc
 
+- [UPDATE] actions/download-artifact を v7 に上げる
+  - @torikizi
+- [UPDATE] Homebrew/actions/setup-homebrew を @master から @main に変更する
+  - 2026 年 6 月 10 日以降のリリースで Homebrew/actions/setup-homebrew の master ブランチは無効化されるため、main ブランチを使用するように変更する
+  - 参考 : Homebrew/actions/setup-homebrew の main ブランチへの移行コミット
+    - https://github.com/Homebrew/actions/commit/675fcd27b59e54d310c5484c8c27c01d03da660c
+  - @torikizi
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加
