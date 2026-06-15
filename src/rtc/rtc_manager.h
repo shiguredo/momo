@@ -32,7 +32,7 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
       webrtc::scoped_refptr<webrtc::ConnectionContext> context,
       webrtc::PeerConnectionFactoryDependencies* dependencies)
       : conn_context_(context),
-        webrtc::PeerConnectionFactory(context, dependencies) {}
+        webrtc::PeerConnectionFactory(webrtc::CreateEnvironment(), context, dependencies) {}
 
   static webrtc::scoped_refptr<CustomPeerConnectionFactory> Create(
       webrtc::PeerConnectionFactoryDependencies dependencies) {

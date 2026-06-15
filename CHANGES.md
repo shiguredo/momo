@@ -15,6 +15,9 @@
   - @voluntas
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
   - @voluntas
+- [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となる
+  - @torikizi
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
@@ -32,6 +35,16 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
+- [UPDATE] libwebrtc のバージョンを m146.7680.3.1 に上げる
+  - @torikizi
+- [UPDATE] libwebrtc m146 への追従対応
+  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
+  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
+  - CryptoOptions が optional ではなくなった
+  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
+  - 各種ハードウェアエンコーダーのエラーハンドリングを修正
+  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - @torikizi
 - [UPDATE] CMake のバージョンを 4.1.2 に上げる
   - @torikizi
 - [UPDATE] SDL3 のバージョンを 3.2.24 に上げる

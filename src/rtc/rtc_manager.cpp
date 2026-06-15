@@ -150,7 +150,7 @@ RTCManager::RTCManager(
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.event_log_factory =
-      absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
+      absl::make_unique<webrtc::RtcEventLogFactory>();
 
   dependencies.adm = worker_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
@@ -161,7 +161,7 @@ RTCManager::RTCManager(
         } else {
 #if defined(_WIN32)
           return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-              &env.task_queue_factory());
+              env);
 #else
           return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                  audio_layer);
@@ -244,7 +244,6 @@ RTCManager::RTCManager(
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
   factory_options.disable_encryption = false;
   factory_options.ssl_max_version = webrtc::SSL_PROTOCOL_DTLS_12;
-  factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
 #if defined(__APPLE__) || defined(__linux__)
@@ -347,6 +346,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+  rtc_config.crypto_options.srtp.enable_gcm_crypto_suites = true;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
