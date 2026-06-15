@@ -31,6 +31,8 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
   CustomPeerConnectionFactory(
       webrtc::scoped_refptr<webrtc::ConnectionContext> context,
       webrtc::PeerConnectionFactoryDependencies* dependencies)
+      // m150 以降、PeerConnectionFactory のコンストラクタに Environment が必要になった。
+      // CreateEnvironment() で生成した Environment を第一引数に渡す。
       : conn_context_(context),
         webrtc::PeerConnectionFactory(webrtc::CreateEnvironment(), context, dependencies) {}
 

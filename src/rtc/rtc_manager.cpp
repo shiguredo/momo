@@ -149,6 +149,8 @@ RTCManager::RTCManager(
   dependencies.network_thread = network_thread_.get();
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
+  // m150 以降、RtcEventLogFactory のコンストラクタは TaskQueueFactory の
+  // ポインタを受け取らなくなった。自動的に内部で必要なリソースを生成する。
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>();
 
@@ -160,6 +162,8 @@ RTCManager::RTCManager(
           return config_.create_adm();
         } else {
 #if defined(_WIN32)
+          // m150 以降、CreateWindowsCoreAudioAudioDeviceModule は
+          // TaskQueueFactory のポインタではなく Environment を受け取る。
           return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
               env);
 #else
@@ -242,6 +246,9 @@ RTCManager::RTCManager(
   }
 
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
+  // PeerConnectionFactory のオプション設定
+  // crypto_options は m150 より PeerConnection の RTCConfiguration で設定するため、
+  // factory_options からは削除した。CreateConnection 内で設定している。
   factory_options.disable_encryption = false;
   factory_options.ssl_max_version = webrtc::SSL_PROTOCOL_DTLS_12;
   factory_->SetOptions(factory_options);
@@ -346,6 +353,8 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+  // m150 以降、enable_gcm_crypto_suites は factory_options では設定できなくなった。
+  // RTCConfiguration に移動することで PeerConnection 単位で設定する。
   rtc_config.crypto_options.srtp.enable_gcm_crypto_suites = true;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
