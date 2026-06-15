@@ -153,19 +153,13 @@ def install_deps(
             sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
             install_boost_args["target_os"] = "darwin"
             install_boost_args["toolset"] = "clang"
-            # m150 以降、macOS のビルドには libwebrtc 管理下の clang/libc++ を使用する。
-            # Apple Clang の libc++ とは ABI 互換がないため、Boost のビルドにも
-            # 同じ clang/libc++ を使う必要がある。
+            # Boost のビルドにも libwebrtc 管理下の clang/libc++ を使用する
             install_boost_args["cxx"] = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
             install_boost_args["cflags"] = [
                 f"--sysroot={sysroot}",
                 f"-mmacosx-version-min={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
             ]
-            # libwebrtc 管理下の libc++ を使用するためのフラグ。
-            # _LIBCPP_ABI_NAMESPACE=Cr は libwebrtc の libc++ と ABI を一致させるために必要。
-            # _LIBCPP_HARDENING_MODE_EXTENSIVE は libwebrtc のビルド設定に合わせている。
-            # nostdinc++ でシステムの libc++ を除外し、isystem で libwebrtc 管理下の
-            # libc++ のインクルードパスを指定する。
+            # libwebrtc 管理下の libc++ と ABI を一致させるためのフラグ
             install_boost_args["cxxflags"] = [
                 "-fPIC",
                 f"--sysroot={sysroot}",
@@ -567,9 +561,7 @@ def _build(args):
             cmake_args.append(f"-DCMAKE_C_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
-            # m150 以降、macOS は libwebrtc 管理下の clang/libc++ を使用する。
-            # cmake にコンパイラとして libwebrtc 管理下の clang を指定し、
-            # リンクには libwebrtc の libc++ を使用するよう USE_LIBCXX と LIBCXX_INCLUDE_DIR を設定する。
+            # macOS は libwebrtc 管理下の clang/libc++ を使用する
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
             cmake_args.append("-DUSE_LIBCXX=ON")
             cmake_args.append(
