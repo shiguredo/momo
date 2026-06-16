@@ -390,7 +390,7 @@ void Websocket::OnRead(read_callback_t on_read,
                    << " ec=" << ec.message();
 
   if (ec) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << ec.message();
   }
 
   std::string text;
@@ -425,7 +425,7 @@ void Websocket::DoWriteText(std::string text, write_callback_t on_write) {
 void Websocket::DoWrite() {
   auto& data = write_data_.front();
 
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": "
+  RTC_LOG(LS_VERBOSE) << __func__ << ": "
                       << boost::beast::buffers_to_string(data->buffer.data());
 
   if (IsSSL()) {
@@ -447,7 +447,7 @@ void Websocket::OnWrite(boost::system::error_code ec,
                    << " ec=" << ec.message();
 
   if (ec) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << ec.message();
   }
 
   auto& data = write_data_.front();

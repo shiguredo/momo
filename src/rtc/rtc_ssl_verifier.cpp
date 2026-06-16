@@ -16,7 +16,6 @@
 #include "ssl_verifier.h"
 
 namespace {
-
 struct X509Deleter {
   void operator()(X509* p) const { X509_free(p); }
 };
@@ -31,6 +30,7 @@ using X509Ptr = std::unique_ptr<X509, X509Deleter>;
 using BIOPtr = std::unique_ptr<BIO, BIODeleter>;
 using X509ChainPtr = std::unique_ptr<STACK_OF(X509), X509ChainDeleter>;
 
+// webrtc::SSLCertificate を PEM 形式に変換し、OpenSSL の X509 オブジェクトとして読み込む
 X509Ptr ToX509(const webrtc::SSLCertificate& certificate) {
   std::string pem = certificate.ToPEMString();
   BIOPtr bio(BIO_new_mem_buf(pem.c_str(), pem.size()));

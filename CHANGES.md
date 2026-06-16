@@ -25,6 +25,36 @@
     - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
     - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
   - @voluntas
+- [UPDATE] libwebrtc のバージョンを m150.7871.0.0 に上げる
+  - Boost のバージョンを 1.91.0 に上げる
+  - CMake のバージョンを 4.3.2 に上げる
+  - VPL のバージョンを v2.16.0 に上げる
+  - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
+  - @torikizi
+- [UPDATE] libwebrtc m150 の変更に追従する
+  - BitrateAdjuster のコンストラクタに Clock が必要になった
+    - m150 で BitrateAdjuster が Clock を必須とする API に変更されたため対応
+  - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
+  - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
+  - screen_video_capturer.cpp に必要となった `#include <sstream>` を追加
+  - @torikizi
+- [UPDATE] sora-cpp-sdk の m150 コード更新を反映する
+  - deadline_timer を steady_timer に変更
+    - deadline_timer + posix_time は非推奨のため、monotonic clock ベースの steady_timer + chrono に移行
+  - `__FUNCTION__` を `__func__` に変更
+    - `__FUNCTION__` は非標準のため、C++11 標準の `__func__` に統一
+  - sora-cpp-sdk から取り込んだファイルを m150 に更新
+    - 各種ハードウェアエンコーダーの BitrateAdjuster 対応、VPL デコーダーのタイムアウト修正等を含む
+  - @torikizi
+- [UPDATE] libwebrtc m146 の変更に追従する
+  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
+  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
+  - CryptoOptions が optional ではなくなった
+  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
+  - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
+  - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
+  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - @torikizi
 - [UPDATE] blend2d のバージョンを 0.20.0 に上げる
   - blend2d の API 変更への追従 : camelCase から snake_case へ移行
     - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
@@ -35,22 +65,13 @@
     - 変更対象外の API
       - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
   - @voluntas @torikizi
-- [UPDATE] libwebrtc のバージョンを m146.7680.3.1 に上げる
-  - @torikizi
-- [UPDATE] libwebrtc m146 への追従対応
-  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
-  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
-  - CryptoOptions が optional ではなくなった
-  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
-  - 各種ハードウェアエンコーダーのエラーハンドリングを修正
-  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
-  - @torikizi
-- [UPDATE] CMake のバージョンを 4.1.2 に上げる
-  - @torikizi
 - [UPDATE] SDL3 のバージョンを 3.2.24 に上げる
   - @torikizi
 - [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
   - @torikizi
+- [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
+  - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
+  - @voluntas @melpon
 - [ADD] macOS でオーディオデバイス選択機能を追加
   - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
   - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
@@ -68,9 +89,6 @@
   - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
-  - @voluntas @melpon
-- [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
-  - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
   - @voluntas @melpon
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon

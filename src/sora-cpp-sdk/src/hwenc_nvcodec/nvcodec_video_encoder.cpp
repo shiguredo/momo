@@ -37,6 +37,7 @@
 #include <modules/video_coding/svc/scalable_video_controller.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
+#include <system_wrappers/include/clock.h>
 
 // libyuv
 #include <libyuv/convert_from.h>      // IWYU pragma: keep
@@ -118,7 +119,6 @@ class NvCodecVideoEncoderImpl : public NvCodecVideoEncoder {
   );
 
  private:
-  std::mutex mutex_;
   webrtc::EncodedImageCallback* callback_ = nullptr;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_ = 0;
@@ -158,7 +158,9 @@ class NvCodecVideoEncoderImpl : public NvCodecVideoEncoder {
 NvCodecVideoEncoderImpl::NvCodecVideoEncoderImpl(
     std::shared_ptr<CudaContext> cuda_context,
     CudaVideoCodec codec)
-    : cuda_context_(cuda_context), codec_(codec), bitrate_adjuster_(0.5, 0.95) {
+    : cuda_context_(cuda_context),
+      codec_(codec),
+      bitrate_adjuster_(webrtc::Clock::GetRealTimeClock(), 0.5, 0.95) {
 #ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
@@ -177,7 +179,7 @@ NvCodecVideoEncoderImpl::NvCodecVideoEncoderImpl(
   char szDesc[80];
   size_t result = 0;
   wcstombs_s(&result, szDesc, adapter_desc.Description, sizeof(szDesc));
-  RTC_LOG(LS_INFO) << __FUNCTION__ << "GPU in use: " << szDesc;
+  RTC_LOG(LS_INFO) << __func__ << "GPU in use: " << szDesc;
 #endif
 #ifdef __linux__
   cuda_.reset(new NvCodecVideoEncoderCuda(cuda_context_));
@@ -224,7 +226,6 @@ int32_t NvCodecVideoEncoderImpl::InitEncode(
 
 int32_t NvCodecVideoEncoderImpl::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
-  std::lock_guard<std::mutex> lock(mutex_);
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -236,7 +237,7 @@ int32_t NvCodecVideoEncoderImpl::Release() {
 int32_t NvCodecVideoEncoderImpl::Encode(
     const webrtc::VideoFrame& frame,
     const std::vector<webrtc::VideoFrameType>* frame_types) {
-  //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Start";
+  //RTC_LOG(LS_ERROR) << __func__ << " Start";
   if (!nv_encoder_) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
@@ -283,10 +284,10 @@ int32_t NvCodecVideoEncoderImpl::Encode(
     encode_config.rcParams.vbvInitialDelay =
         encode_config.rcParams.vbvBufferSize;
     try {
-      //RTC_LOG(LS_ERROR) << __FUNCTION__ << " Reconfigure";
+      //RTC_LOG(LS_ERROR) << __func__ << " Reconfigure";
       nv_encoder_->Reconfigure(&reconfigure_params);
     } catch (const NVENCException& e) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+      RTC_LOG(LS_ERROR) << __func__ << e.what();
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
 
@@ -376,7 +377,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
   try {
     nv_encoder_->EncodeFrame(v_packet_, &pic_params);
   } catch (const NVENCException& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+    RTC_LOG(LS_ERROR) << __func__ << e.what();
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -436,9 +437,13 @@ int32_t NvCodecVideoEncoderImpl::Encode(
           encoded_image_._frameType == webrtc::VideoFrameType::kVideoFrameKey;
       std::vector<webrtc::ScalableVideoController::LayerFrameConfig>
           layer_frames = svc_controller_->NextFrameConfig(is_key);
+      // AV1 の SVC では、まれにエンコード対象のレイヤーフレームが存在しない場合がある。
+      // 次のフレームを待つことで正常に継続可能なケースであるため、エラーではなく正常終了を返してスキップする。
+      if (layer_frames.empty()) {
+        return WEBRTC_VIDEO_CODEC_OK;
+      }
       codec_specific.end_of_picture = true;
       codec_specific.scalability_mode = scalability_mode_;
-      // layer_frames[0] が無効の場合、アクセス違反となるが、基本的に無効になることはない
       codec_specific.generic_frame_info =
           svc_controller_->OnEncodeDone(layer_frames[0]);
       if (is_key && codec_specific.generic_frame_info) {
@@ -453,7 +458,7 @@ int32_t NvCodecVideoEncoderImpl::Encode(
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << " OnEncodedImage failed error:" << result.error;
     }
     bitrate_adjuster_.Update(packet.size());
@@ -481,7 +486,7 @@ void NvCodecVideoEncoderImpl::SetRates(
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+  RTC_LOG(LS_INFO) << __func__ << " framerate_:" << framerate_
                    << " new_framerate: " << new_framerate
                    << " target_bitrate_bps_:" << target_bitrate_bps_
                    << " new_bitrate:" << new_bitrate
@@ -529,7 +534,7 @@ int32_t NvCodecVideoEncoderImpl::ReleaseNvEnc() {
       nv_encoder_->EndEncode(v_packet_);
       nv_encoder_->DestroyEncoder();
     } catch (const NVENCException& e) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+      RTC_LOG(LS_ERROR) << __func__ << e.what();
     }
     nv_encoder_ = nullptr;
 #ifdef _WIN32
@@ -580,7 +585,7 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
     encoder.reset(
         new NvEncoderD3D11(id3d11_device, width, height, nvenc_format));
   } catch (const NVENCException& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+    RTC_LOG(LS_ERROR) << __func__ << e.what();
     return nullptr;
   }
 #endif
@@ -589,7 +594,7 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
   try {
     encoder.reset(cuda->CreateNvEncoder(width, height, is_nv12));
   } catch (const NVENCException& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << e.what();
+    RTC_LOG(LS_ERROR) << __func__ << e.what();
     return nullptr;
   }
 #endif
@@ -655,11 +660,11 @@ std::unique_ptr<NvEncoder> NvCodecVideoEncoderImpl::CreateEncoder(
 
     encoder->CreateEncoder(&initialize_params);
 
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate:" << framerate
+    RTC_LOG(LS_INFO) << __func__ << " framerate:" << framerate
                      << " bitrate_bps:" << target_bitrate_bps
                      << " maxBitRate:" << encode_config.rcParams.maxBitRate;
   } catch (const NVENCException& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << e.what();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << e.what();
     return nullptr;
   }
 
@@ -726,7 +731,7 @@ bool NvCodecVideoEncoder::IsSupported(std::shared_ptr<CudaContext> cuda_context,
 
     return true;
   } catch (const NVENCException& e) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << e.what();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << e.what();
     return false;
   }
 }

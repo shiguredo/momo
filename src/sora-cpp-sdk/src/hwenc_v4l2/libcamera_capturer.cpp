@@ -76,7 +76,7 @@ void LibcameraCapturerImpl::LogDeviceList() {
   auto camera_manager = libcameracpp_CameraManager_new();
   int ret = libcamerac_CameraManager_start(camera_manager.get());
   if (ret) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << "libcamera CameraManager failed to start.  code: "
                       << ret;
   } else {
@@ -129,7 +129,7 @@ int32_t LibcameraCapturerImpl::InitLibcamera(int camera_id) {
   auto camera_manager = libcameracpp_CameraManager_new();
   int ret = libcamerac_CameraManager_start(camera_manager.get());
   if (ret) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " CameraManager failed to start."
+    RTC_LOG(LS_ERROR) << __func__ << " CameraManager failed to start."
                       << "  code: " << ret;
     return -1;
   }
@@ -137,11 +137,11 @@ int32_t LibcameraCapturerImpl::InitLibcamera(int camera_id) {
   auto cameras = libcameracpp_CameraManager_cameras(camera_manager.get());
   auto camera_size = libcamerac_vector_Camera_size(cameras.get());
   if (camera_size == 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " No cameras available.";
+    RTC_LOG(LS_ERROR) << __func__ << " No cameras available.";
     return -1;
   }
   if (camera_id >= camera_size) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Selected camera id is not available";
+    RTC_LOG(LS_ERROR) << __func__ << " Selected camera id is not available";
     return -1;
   }
 
@@ -151,12 +151,12 @@ int32_t LibcameraCapturerImpl::InitLibcamera(int camera_id) {
   camera_ =
       libcameracpp_CameraManager_get(camera_manager_.get(), cam_id.c_str());
   if (!camera_) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to find camera " << cam_id;
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to find camera " << cam_id;
     return -1;
   }
 
   if (libcamerac_Camera_acquire(camera_.get())) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to acquire camera " << cam_id;
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to acquire camera " << cam_id;
     return -1;
   }
   acquired_ = true;
@@ -168,6 +168,15 @@ void LibcameraCapturerImpl::ReleaseLibcamera() {
   if (acquired_)
     libcamerac_Camera_release(camera_.get());
   acquired_ = false;
+
+  for (auto& [buffer, spans] : mapped_buffers_) {
+    for (auto& span : spans) {
+      if (span.buffer != nullptr) {
+        munmap(span.buffer, span.length);
+      }
+    }
+  }
+  mapped_buffers_.clear();
 
   camera_.reset();
   configuration_.reset();
@@ -184,7 +193,7 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
   configuration_ = libcameracpp_Camera_generateConfiguration(
       camera_.get(), stream_roles.get());
   if (!configuration_) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to generateConfiguration";
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to generateConfiguration";
     return -1;
   }
 
@@ -200,23 +209,23 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
   auto validation =
       libcamerac_CameraConfiguration_validate(configuration_.get());
   if (validation == libcamerac_CameraConfiguration_Status_Invalid) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << " Failed to validate stream configurations";
     return -1;
   } else if (validation == libcamerac_CameraConfiguration_Status_Adjusted) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__ << " Camera configuration adjusted";
+    RTC_LOG(LS_WARNING) << __func__ << " Camera configuration adjusted";
     return -1;
   }
 
   if (libcamerac_Camera_configure(camera_.get(), configuration_.get()) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to configure camera";
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to configure camera";
     return -1;
   }
 
   allocator_ = libcameracpp_FrameBufferAllocator_new(camera_.get());
   stream_ = libcamerac_StreamConfiguration_stream(cfg);
   if (libcamerac_FrameBufferAllocator_allocate(allocator_.get(), stream_) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to allocate buffers";
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to allocate buffers";
     return -1;
   }
 
@@ -253,7 +262,7 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
     }
     auto request = libcameracpp_Camera_createRequest(camera_.get());
     if (!request) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to create request";
+      RTC_LOG(LS_ERROR) << __func__ << " Failed to create request";
       return -1;
     }
     requests_.push_back(request);
@@ -261,7 +270,7 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
     frame_buffer_.pop();
     if (libcamerac_Request_addBuffer(requests_.back().get(), stream_, buffer) <
         0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to add buffer to request";
+      RTC_LOG(LS_ERROR) << __func__ << " Failed to add buffer to request";
       return -1;
     }
   }
@@ -283,7 +292,7 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
   }
 
   if (libcamerac_Camera_start(camera_.get(), controls_.get())) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to start camera";
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to start camera";
     return -1;
   }
   libcamerac_ControlList_clear(controls_.get());
@@ -295,7 +304,7 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
 
   for (auto& request : requests_) {
     if (libcamerac_Camera_queueRequest(camera_.get(), request.get()) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to queue request";
+      RTC_LOG(LS_ERROR) << __func__ << " Failed to queue request";
       return -1;
     }
   }
@@ -307,7 +316,7 @@ int32_t LibcameraCapturerImpl::StopCapture() {
     std::lock_guard<std::mutex> lock(camera_stop_mutex_);
     if (camera_started_) {
       if (libcamerac_Camera_stop(camera_.get())) {
-        RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to stop camera";
+        RTC_LOG(LS_ERROR) << __func__ << " Failed to stop camera";
         return -1;
       }
       camera_started_ = false;
@@ -432,7 +441,7 @@ void LibcameraCapturerImpl::queueRequest(libcamerac_Request* request) {
 
   for (auto const& p : buffers) {
     if (libcamerac_Request_addBuffer(request, p.first, p.second) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to add buffer to request";
+      RTC_LOG(LS_ERROR) << __func__ << " Failed to add buffer to request";
       return;
     }
   }
@@ -442,7 +451,7 @@ void LibcameraCapturerImpl::queueRequest(libcamerac_Request* request) {
   libcamerac_ControlList_clear(controls_.get());
 
   if (libcamerac_Camera_queueRequest(camera_.get(), request) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " Failed to queue request";
+    RTC_LOG(LS_ERROR) << __func__ << " Failed to queue request";
     return;
   }
 }

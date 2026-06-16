@@ -51,8 +51,7 @@ std::shared_ptr<V4L2Runner> V4L2Runner::Create(
 
 int V4L2Runner::Enqueue(v4l2_buffer* v4l2_buf, OnCompleteCallback on_complete) {
   if (ioctl(fd_, VIDIOC_QBUF, v4l2_buf) < 0) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << "  Failed to queue output buffer: error="
+    RTC_LOG(LS_ERROR) << __func__ << "  Failed to queue output buffer: error="
                       << strerror(errno);
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -132,6 +131,10 @@ void V4L2Runner::PollProcess() {
         if (!on_complete) {
           RTC_LOG(LS_ERROR)
               << "[POLL][" << name_ << "] on_completes_ is empty.";
+          if (ioctl(fd_, VIDIOC_QBUF, &v4l2_buf) < 0) {
+            RTC_LOG(LS_ERROR) << "Failed to enqueue capture buffer: error="
+                              << strerror(errno);
+          }
         } else {
           (*on_complete)(&v4l2_buf, [fd = fd_, v4l2_buf]() mutable {
             v4l2_plane planes[VIDEO_MAX_PLANES] = {};

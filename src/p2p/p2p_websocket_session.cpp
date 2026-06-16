@@ -25,16 +25,16 @@ P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
       rtc_manager_(rtc_manager),
       config_(std::move(config)),
       watchdog_(ioc, std::bind(&P2PWebsocketSession::OnWatchdogExpired, this)) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 }
 
 P2PWebsocketSession::~P2PWebsocketSession() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 }
 
 void P2PWebsocketSession::Run(
     boost::beast::http::request<boost::beast::http::string_body> req) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
   DoAccept(std::move(req));
 }
 
@@ -54,7 +54,7 @@ void P2PWebsocketSession::DoAccept(
 }
 
 void P2PWebsocketSession::OnAccept(boost::system::error_code ec) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Accept");
@@ -71,7 +71,7 @@ void P2PWebsocketSession::DoRead() {
 void P2PWebsocketSession::OnRead(boost::system::error_code ec,
                                  std::size_t bytes_transferred,
                                  std::string recv_string) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   boost::ignore_unused(bytes_transferred);
 
@@ -87,7 +87,7 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     ~Guard() { f(); }
   } guard = {[this]() { DoRead(); }};
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": recv_string=" << recv_string;
+  RTC_LOG(LS_INFO) << __func__ << ": recv_string=" << recv_string;
 
   boost::system::error_code jec;
   boost::json::value recv_message = boost::json::parse(recv_string, jec);
@@ -157,7 +157,7 @@ std::shared_ptr<RTCConnection> P2PWebsocketSession::CreateRTCConnection() {
 
 void P2PWebsocketSession::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " rtc_state "
+  RTC_LOG(LS_INFO) << __func__ << " rtc_state "
                    << Util::IceConnectionStateToString(rtc_state_) << " -> "
                    << Util::IceConnectionStateToString(new_state);
 
@@ -167,7 +167,7 @@ void P2PWebsocketSession::OnIceConnectionStateChange(
 void P2PWebsocketSession::OnIceCandidate(const std::string sdp_mid,
                                          const int sdp_mlineindex,
                                          const std::string sdp) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 
   boost::json::object json_cand = {{"type", "candidate"}};
   json_cand["ice"] = {{"candidate", sdp},

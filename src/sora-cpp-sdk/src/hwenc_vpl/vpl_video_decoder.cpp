@@ -232,7 +232,7 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
 
   if (bitstream_.MaxLength < bitstream_.DataLength + input_image.size()) {
     bitstream_buffer_.resize(bitstream_.DataLength + input_image.size());
-    bitstream_.MaxLength = bitstream_.DataLength + bitstream_buffer_.size();
+    bitstream_.MaxLength = bitstream_buffer_.size();
     bitstream_.Data = bitstream_buffer_.data();
   }
   //printf("size=%zu\n", input_image.size());
@@ -305,7 +305,7 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
     }
     VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
-    sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 600000);
+    sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
     VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
 
     uint64_t pts = input_image.RtpTimestamp();
