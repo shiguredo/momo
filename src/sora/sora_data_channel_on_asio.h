@@ -41,9 +41,7 @@ class SoraDataChannelOnAsio : public RTCDataManager {
   void Close(const webrtc::DataBuffer& disconnect_message,
              std::function<void()> on_close,
              int disconnect_wait_timeout = 5) {
-    // deadline_timer は Boost 1.75 以降非推奨のため steady_timer に移行した。
-    // 合わせて posix_time から chrono ベースの expires_after を使用する。
-    timer_.expires_after(
+      timer_.expires_after(
         std::chrono::seconds(disconnect_wait_timeout));
     timer_.async_wait([on_close](const boost::system::error_code& ec) {
       if (ec == boost::asio::error::operation_aborted) {

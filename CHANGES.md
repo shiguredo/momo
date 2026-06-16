@@ -34,12 +34,17 @@
 - [UPDATE] libwebrtc m150 の変更に追従する
   - BitrateAdjuster のコンストラクタに Clock が必要になった
     - m150 で BitrateAdjuster が Clock を必須とする API に変更されたため対応
+  - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
+  - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
+  - screen_video_capturer.cpp に不足していた #include <sstream> を追加
+  - @torikizi
+- [UPDATE] sora-cpp-sdk の m150 コード更新を反映する
   - deadline_timer を steady_timer に変更
     - deadline_timer + posix_time は非推奨のため、monotonic clock ベースの steady_timer + chrono に移行
   - `__FUNCTION__` を `__func__` に変更
     - `__FUNCTION__` は非標準のため、C++11 標準の `__func__` に統一
-  - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
-  - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
+  - sora-cpp-sdk から取り込んだファイルを m150 に更新
+    - 各種ハードウェアエンコーダーの BitrateAdjuster 対応、__func__ 対応、VPL デコーダーのタイムアウト修正等を含む
   - @torikizi
 - [UPDATE] libwebrtc m146 の変更に追従する
   - SSLCertificateVerifier の API が Verify から VerifyChain に変更

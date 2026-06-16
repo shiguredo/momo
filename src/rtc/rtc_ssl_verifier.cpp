@@ -16,8 +16,6 @@
 #include "ssl_verifier.h"
 
 namespace {
-
-// OpenSSL のリソースを unique_ptr で自動解放するためのカスタムデリーター
 struct X509Deleter {
   void operator()(X509* p) const { X509_free(p); }
 };
