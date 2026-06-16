@@ -323,11 +323,11 @@ class Momo:
             quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
             print(f"Starting momo with command: {quoted_cmd}")
 
-            # プロセスを起動 (エラー出力をキャプチャして問題発生時に確認できるようにする)
+            # プロセスを起動 (標準出力とエラー出力を親プロセスに継承して CI ログで確認できるようにする)
             self.process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
+                stdout=None,
+                stderr=None,
                 text=True,
             )
             print(f"Started momo process with PID: {self.process.pid}")
