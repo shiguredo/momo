@@ -100,6 +100,9 @@
   - 参考 : Homebrew/actions/setup-homebrew の main ブランチへの移行コミット
     - https://github.com/Homebrew/actions/commit/675fcd27b59e54d310c5484c8c27c01d03da660c
   - @torikizi
+- [UPDATE] E2E テストの momo プロセス出力を CI ログに表示する
+  - stdout/stderr を親プロセスに継承して CI ログで確認できるようにする
+  - @torikizi
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加
