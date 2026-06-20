@@ -88,10 +88,15 @@ async fn handle_connection(
         }
     };
 
-    let path = head.uri.split('?').next().unwrap_or(&head.uri).to_owned();
-    info!(target: "p2p", method = head.method, %path, src_addr = %socket.peer_addr().map(|a| a.to_string()).unwrap_or_default(), "HTTP request");
+    let path = head
+        .uri()
+        .split('?')
+        .next()
+        .unwrap_or(head.uri())
+        .to_owned();
+    info!(target: "p2p", method = head.method(), %path, src_addr = %socket.peer_addr().map(|a| a.to_string()).unwrap_or_default(), "HTTP request");
 
-    if head.method == "GET" && path == "/ws" {
+    if head.method() == "GET" && path == "/ws" {
         let is_upgrade = head
             .get_header("Upgrade")
             .map(|v| v.eq_ignore_ascii_case("websocket"))
@@ -108,5 +113,5 @@ async fn handle_connection(
         }
     }
 
-    http::serve_static_file(socket, &head.method, &path, &config.document_root).await
+    http::serve_static_file(socket, head.method(), &path, &config.document_root).await
 }

@@ -149,33 +149,38 @@ async fn handle_request(mut socket: TcpStream, state: &MetricsState) -> Result<(
         }
     };
 
-    let path = head.uri.split('?').next().unwrap_or(&head.uri).to_owned();
+    let path = head
+        .uri()
+        .split('?')
+        .next()
+        .unwrap_or(head.uri())
+        .to_owned();
 
     if path == "/metrics" {
-        if head.method == "GET" {
+        if head.method() == "GET" {
             let body = state.collect_stats().await;
             let body_bytes = body.into_bytes();
-            let resp = Response::new(200, "OK")
-                .header("Content-Type", "application/json")
-                .header("Content-Length", &body_bytes.len().to_string())
-                .header("Access-Control-Allow-Origin", "*")
+            let resp = Response::new(200, "OK")?
+                .header("Content-Type", "application/json")?
+                .header("Content-Length", &body_bytes.len().to_string())?
+                .header("Access-Control-Allow-Origin", "*")?
                 .body(body_bytes);
-            socket.write_all(&resp.encode()).await?;
+            socket.write_all(&resp.encode()?).await?;
         } else {
             let body = b"400 Bad Request";
-            let resp = Response::new(400, "Bad Request")
-                .header("Content-Type", "text/plain; charset=utf-8")
-                .header("Content-Length", &body.len().to_string())
+            let resp = Response::new(400, "Bad Request")?
+                .header("Content-Type", "text/plain; charset=utf-8")?
+                .header("Content-Length", &body.len().to_string())?
                 .body(body.to_vec());
-            socket.write_all(&resp.encode()).await?;
+            socket.write_all(&resp.encode()?).await?;
         }
     } else {
         let body = b"404 Not Found";
-        let resp = Response::new(404, "Not Found")
-            .header("Content-Type", "text/plain; charset=utf-8")
-            .header("Content-Length", &body.len().to_string())
+        let resp = Response::new(404, "Not Found")?
+            .header("Content-Type", "text/plain; charset=utf-8")?
+            .header("Content-Length", &body.len().to_string())?
             .body(body.to_vec());
-        socket.write_all(&resp.encode()).await?;
+        socket.write_all(&resp.encode()?).await?;
     }
 
     Ok(())

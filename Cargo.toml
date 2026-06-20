@@ -2,7 +2,7 @@
 name = "shiguredo_momo"
 version = "2026.0.0"
 edition = "2024"
-rust-version = "1.95"
+rust-version = "1.96"
 description = "WebRTC Native Client Momo"
 readme = "README.md"
 homepage = "https://github.com/shiguredo/momo-rs"
@@ -24,17 +24,17 @@ raw_player = { version = "2026.1", optional = true }
 # 音声入出力デバイス (AudioCapture / ADM)
 shiguredo_audio_device = "2026.1"
 # HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
-shiguredo_http11 = "2026.3"
+shiguredo_http11 = "2026.6"
 # OpenH264 エンコーダー・デコーダー (openh264.rs)
 shiguredo_openh264 = "2026.1"
 # 映像入力デバイス (VideoCapture)
 shiguredo_video_device = "2026.1"
 # WebRTC 本体 (PeerConnection / トラック / RTP コーデック等)
-shiguredo_webrtc = "=0.147.2"
+shiguredo_webrtc = "=0.150.1"
 # WebSocket クライアント (Ayame / P2P シグナリング)
-shiguredo_websocket = "2026.1"
+shiguredo_websocket = "2026.3"
 # Sora 接続 SDK (sora モジュール)
-sora_sdk = { version = "2026.1.0-canary.9", optional = true }
+sora_sdk = { version = "2026.1.0-canary.10", optional = true }
 
 # 外部クレート
 

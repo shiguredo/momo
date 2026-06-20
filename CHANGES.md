@@ -27,6 +27,17 @@
 
 ### misc
 
+- [UPDATE] `shiguredo_http11` を 2026.6 にバージョンアップする
+  - `RequestHead::method` / `uri` がフィールドからメソッドに変わったため `head.method()` / `head.uri()` 形式に修正する
+  - `Response::new` / `Response::header` / `Response::encode` が `Result` を返すようになったため `?` で展開する
+  - @voluntas
+- [UPDATE] `shiguredo_websocket` を 2026.3 にバージョンアップする
+  - @voluntas
+- [UPDATE] `shiguredo_webrtc` を 0.150.1 にバージョンアップする
+  - `sora_sdk` 2026.1.0-canary.10 が要求するバージョンに揃える
+  - @voluntas
+- [UPDATE] `sora_sdk` を 2026.1.0-canary.10 にバージョンアップする
+  - @voluntas
 - [UPDATE] `CommonConfig` 構造体を `MomoConfig` にリネームする
   - 同時に変数名 `common` も `momo_config` にリネームする
   - @voluntas

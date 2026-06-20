@@ -15,11 +15,11 @@ pub(super) async fn serve_static_file(
 ) -> Result<(), BoxError> {
     if request_path.contains("..") {
         let body = b"403 Forbidden";
-        let resp = Response::new(403, "Forbidden")
-            .header("Content-Type", "text/plain; charset=utf-8")
-            .header("Content-Length", &body.len().to_string())
+        let resp = Response::new(403, "Forbidden")?
+            .header("Content-Type", "text/plain; charset=utf-8")?
+            .header("Content-Length", &body.len().to_string())?
             .body(body.to_vec());
-        socket.write_all(&resp.encode()).await?;
+        socket.write_all(&resp.encode()?).await?;
         return Ok(());
     }
 
@@ -33,32 +33,32 @@ pub(super) async fn serve_static_file(
         Ok(body) => {
             let ct = mime_type(&file_path);
             let resp = if method == "HEAD" {
-                Response::new(200, "OK")
-                    .header("Content-Type", ct)
-                    .header("Content-Length", &body.len().to_string())
+                Response::new(200, "OK")?
+                    .header("Content-Type", ct)?
+                    .header("Content-Length", &body.len().to_string())?
             } else {
-                Response::new(200, "OK")
-                    .header("Content-Type", ct)
-                    .header("Content-Length", &body.len().to_string())
+                Response::new(200, "OK")?
+                    .header("Content-Type", ct)?
+                    .header("Content-Length", &body.len().to_string())?
                     .body(body)
             };
-            socket.write_all(&resp.encode()).await?;
+            socket.write_all(&resp.encode()?).await?;
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             let body = b"404 Not Found";
-            let resp = Response::new(404, "Not Found")
-                .header("Content-Type", "text/plain; charset=utf-8")
-                .header("Content-Length", &body.len().to_string())
+            let resp = Response::new(404, "Not Found")?
+                .header("Content-Type", "text/plain; charset=utf-8")?
+                .header("Content-Length", &body.len().to_string())?
                 .body(body.to_vec());
-            socket.write_all(&resp.encode()).await?;
+            socket.write_all(&resp.encode()?).await?;
         }
         Err(e) => {
             let body = format!("500 Internal Server Error: {e}").into_bytes();
-            let resp = Response::new(500, "Internal Server Error")
-                .header("Content-Type", "text/plain; charset=utf-8")
-                .header("Content-Length", &body.len().to_string())
+            let resp = Response::new(500, "Internal Server Error")?
+                .header("Content-Type", "text/plain; charset=utf-8")?
+                .header("Content-Length", &body.len().to_string())?
                 .body(body);
-            socket.write_all(&resp.encode()).await?;
+            socket.write_all(&resp.encode()?).await?;
         }
     }
 
