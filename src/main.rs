@@ -1145,12 +1145,6 @@ async fn run_sora(
         .default("false")
         .take(&mut args)
         .then(|o| o.value().parse())?;
-    let _spotlight_number: u32 = noargs::opt("spotlight-number")
-        .ty("NUM")
-        .doc("Stream count delivered in spotlight")
-        .default("0")
-        .take(&mut args)
-        .then(|o| o.value().parse())?;
     let _port: i32 = noargs::opt("port")
         .ty("PORT")
         .doc("Port number (default: -1)")
