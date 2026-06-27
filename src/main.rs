@@ -280,22 +280,22 @@ async fn main() -> noargs::Result<()> {
         .doc("VP8 Decoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _vp9_encoder: Option<String> = noargs::opt("vp9-encoder")
+    let vp9_encoder: Option<String> = noargs::opt("vp9-encoder")
         .ty("TYPE")
         .doc("VP9 Encoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _vp9_decoder: Option<String> = noargs::opt("vp9-decoder")
+    let vp9_decoder: Option<String> = noargs::opt("vp9-decoder")
         .ty("TYPE")
         .doc("VP9 Decoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _av1_encoder: Option<String> = noargs::opt("av1-encoder")
+    let av1_encoder: Option<String> = noargs::opt("av1-encoder")
         .ty("TYPE")
         .doc("AV1 Encoder")
         .take(&mut args)
         .present_and_then(|o| o.value().parse())?;
-    let _av1_decoder: Option<String> = noargs::opt("av1-decoder")
+    let av1_decoder: Option<String> = noargs::opt("av1-decoder")
         .ty("TYPE")
         .doc("AV1 Decoder")
         .take(&mut args)
@@ -465,6 +465,10 @@ async fn main() -> noargs::Result<()> {
         h264_decoder: h264_decoder_value,
         h265_encoder: h265_encoder_value,
         h265_decoder: h265_decoder_value,
+        vp9_encoder,
+        vp9_decoder,
+        av1_encoder,
+        av1_decoder,
         video_input_device,
         audio_input_device,
         video_width,
@@ -556,6 +560,10 @@ struct MomoConfig {
     h264_decoder: Option<String>,
     h265_encoder: Option<String>,
     h265_decoder: Option<String>,
+    vp9_encoder: Option<String>,
+    vp9_decoder: Option<String>,
+    av1_encoder: Option<String>,
+    av1_decoder: Option<String>,
     video_input_device: Option<String>,
     audio_input_device: Option<String>,
     video_width: i32,
@@ -920,6 +928,33 @@ fn print_video_codec_engines() {
             use sora_sdk::InternalAppleVideoCodecCapability;
             if let Some(hwa) = InternalAppleVideoCodecCapability::new() {
                 capabilities.push(Box::new(hwa));
+            }
+        }
+
+        // NVIDIA NvCodec (NVENC/NVDEC)
+        #[cfg(feature = "nvcodec")]
+        {
+            use sora_sdk::NvCodecVideoCodecCapability;
+            if let Ok(cap) = NvCodecVideoCodecCapability::new() {
+                capabilities.push(Box::new(cap));
+            }
+        }
+
+        // Intel oneVPL
+        #[cfg(feature = "vpl")]
+        {
+            use sora_sdk::VplVideoCodecCapability;
+            if let Ok(cap) = VplVideoCodecCapability::new() {
+                capabilities.push(Box::new(cap));
+            }
+        }
+
+        // AMD AMF
+        #[cfg(feature = "amf")]
+        {
+            use sora_sdk::AmfVideoCodecCapability;
+            if let Ok(cap) = AmfVideoCodecCapability::new() {
+                capabilities.push(Box::new(cap));
             }
         }
 
@@ -1300,6 +1335,10 @@ async fn run_sora(
             h264_decoder: momo_config.h264_decoder,
             h265_encoder: momo_config.h265_encoder,
             h265_decoder: momo_config.h265_decoder,
+            vp9_encoder: momo_config.vp9_encoder,
+            vp9_decoder: momo_config.vp9_decoder,
+            av1_encoder: momo_config.av1_encoder,
+            av1_decoder: momo_config.av1_decoder,
             spotlight,
             simulcast,
             data_channel_signaling,

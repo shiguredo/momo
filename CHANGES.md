@@ -15,6 +15,12 @@
   - sora_sdk の `ProxyInfo` API に渡すことで HTTP プロキシ経由の接続に対応する
   - P2P / Ayame モードは対象外
   - @voluntas
+- [ADD] Sora モードで NVIDIA NvCodec / Intel oneVPL / AMD AMF の HW エンコーダー・デコーダーに対応する
+  - Cargo.toml に `nvcodec` / `vpl` / `amf` feature を追加し、sora_sdk の同名 feature を転送する
+  - `sora::run()` で各 HW capability の登録と `--h264-encoder` / `--h265-encoder` 等の preference 設定を行う
+  - `print_video_codec_engines()` で NVIDIA / Intel / AMD の一覧表示に対応する
+  - `--vp9-encoder` / `--vp9-decoder` / `--av1-encoder` / `--av1-decoder` オプションを有効化する
+  - @voluntas
 - [UPDATE] `--no-google-stun` を P2P モードでも有効にする
   - 従来は Ayame モードのみ反映されていた
   - Sora モードは sora_sdk 内部で ICE 管理するため対象外

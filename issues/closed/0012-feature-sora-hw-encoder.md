@@ -249,4 +249,34 @@ HW バックエンド未整備を理由とする `_` プレフィックス解除
 - 既存実装: `src/main.rs:897-932` `print_video_codec_engines()`
 - 既存 E2E テスト: `e2e-tests/test_sora_mode_nvidia_video_codec.py`, `e2e-tests/test_sora_mode_intel_vpl.py`
   - AMD AMF の E2E テストは未整備のため、本実装後に別途追加を検討する
+- Completed: 2026-06-28
 - Polished: 2026-06-28
+
+## 解決方法
+
+以下の変更を `feature/momo-rs` ブランチに直接コミットした:
+
+### Cargo.toml
+
+- `amf` / `nvcodec` / `vpl` feature を新設し、それぞれ `sora` + `sora_sdk/<feature>` を有効化する
+
+### src/sora/mod.rs
+
+- `SoraConfig` に `vp9_encoder` / `vp9_decoder` / `av1_encoder` / `av1_decoder` フィールドを追加
+- `apply_codec_preference()` 汎用ヘルパー関数を追加（`apply_video_toolbox_preference()` と同パターン）
+- `sora::run()` 内で以下を feature gated で実装:
+  - `#[cfg(feature = "nvcodec")]`: `NvCodecVideoCodecCapability` を登録し、H.264 / H.265 / AV1 の preference を設定
+  - `#[cfg(feature = "vpl")]`: `VplVideoCodecCapability` を登録し、VP9 / H.264 / H.265 / AV1 の preference を設定
+  - `#[cfg(feature = "amf")]`: `AmfVideoCodecCapability` を登録し、H.264 / H.265 / AV1 の preference を設定
+  - 各 capability は `new_from_capability()` で生成した preference を `merge()` で事前登録し、`apply_codec_preference()` で CLI 指定に応じた実装切り替えを行う
+
+### src/main.rs
+
+- `_vp9_encoder` / `_vp9_decoder` / `_av1_encoder` / `_av1_decoder` の `_` プレフィックスを除去し有効化
+- `MomoConfig` 構造体に上記 4 フィールドを追加
+- `run_sora()` で `sora::SoraConfig` に上記 4 フィールドを伝達
+- `print_video_codec_engines()` に NVIDIA NvCodec / Intel oneVPL / AMD AMF の capability 列挙を追加
+
+### CHANGES.md
+
+- `[ADD]` エントリを `## feature/momo-rs` に追記

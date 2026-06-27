@@ -975,6 +975,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "shiguredo_amf"
+version = "2026.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93ba1bd91dcf5c7191c2c98479392e20817063d351cf8ac8c6f977780f2ca5ae"
+dependencies = [
+ "bindgen",
+ "log",
+ "shiguredo_toml",
+]
+
+[[package]]
 name = "shiguredo_audio_device"
 version = "2026.2.0-canary.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1048,6 +1059,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b135058874815f8f13edae644ceedb659f7238fe4a9e2b1bdceecc72dc659b35"
 
 [[package]]
+name = "shiguredo_nvcodec"
+version = "2026.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab3b51ad8dee83d36d84d7f4c8bddb529523143b3303ff8d861829360cd1462a"
+dependencies = [
+ "bindgen",
+ "shiguredo_toml",
+]
+
+[[package]]
 name = "shiguredo_openh264"
 version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1065,9 +1086,9 @@ checksum = "b475c218cf15d056ed3e48c9e98693135b261b79530881e63b162650b236fdec"
 
 [[package]]
 name = "shiguredo_v4l2"
-version = "2026.1.0-canary.3"
+version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de21d390aa6740a367f09e1bc44d633bca222dad7ced252124572d01486f058"
+checksum = "63fb9cee9e5b07d3fab3accbef9a4748101b752adcb155e2d3b3ede880990af4"
 dependencies = [
  "libc",
 ]
@@ -1082,6 +1103,17 @@ dependencies = [
  "cc",
  "pkg-config",
  "windows",
+]
+
+[[package]]
+name = "shiguredo_vpl"
+version = "2026.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c623b31f830ff7c33c840f8d61274f1dea696e59f698081612629ff3ad22def"
+dependencies = [
+ "bindgen",
+ "shiguredo_cmake",
+ "shiguredo_toml",
 ]
 
 [[package]]
@@ -1164,9 +1196,12 @@ dependencies = [
  "rustls",
  "rustls-platform-verifier",
  "rustls-webpki",
+ "shiguredo_amf",
  "shiguredo_http11",
  "shiguredo_mp4",
+ "shiguredo_nvcodec",
  "shiguredo_openh264",
+ "shiguredo_vpl",
  "shiguredo_webrtc",
  "shiguredo_websocket",
  "tokio",

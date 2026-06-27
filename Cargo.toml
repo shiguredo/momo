@@ -89,12 +89,18 @@ libc = "0.2"
 
 [features]
 default = ["ayame", "player", "sora"]
+# AMD AMF ハードウェアエンコーダー・デコーダー (Sora モードのみ)
+amf = ["sora", "sora_sdk/amf"]
 ayame = [
   "dep:rustls",
   "dep:rustls-pki-types",
   "dep:rustls-platform-verifier",
   "dep:tokio-rustls"
 ]
+# NVIDIA NVENC/NVDEC ハードウェアエンコーダー・デコーダー (Sora モードのみ)
+nvcodec = ["sora", "sora_sdk/nvcodec"]
 player = ["dep:raw_player"]
 raspberrypi = ["shiguredo_libcamera", "shiguredo_v4l2"]
 sora = ["dep:sora_sdk"]
+# Intel oneVPL ハードウェアエンコーダー・デコーダー (Sora モードのみ)
+vpl = ["sora", "sora_sdk/vpl"]

@@ -9,9 +9,16 @@ use shiguredo_video_device::{VideoCapture, VideoCaptureConfig};
 use shiguredo_webrtc::{
     AdaptFrameResult, AdaptedVideoTrackSource, AudioDeviceModule, I420Buffer, TimestampAligner,
 };
+#[cfg(feature = "amf")]
+use sora_sdk::AmfVideoCodecCapability;
+#[cfg(feature = "nvcodec")]
+use sora_sdk::NvCodecVideoCodecCapability;
+#[cfg(feature = "vpl")]
+use sora_sdk::VplVideoCodecCapability;
 use sora_sdk::{
     AdmConfig, Audio, CodecDirection, JsonString, ProxyInfo, Role, SoraConnection,
-    SoraConnectionContext, SoraConnectionContextConfig, Video, VideoCodecPreference,
+    SoraConnectionContext, SoraConnectionContextConfig, Video, VideoCodecImplementation,
+    VideoCodecPreference,
 };
 use tokio::sync::{mpsc, oneshot};
 use tracing::info;
@@ -38,6 +45,10 @@ pub struct SoraConfig {
     pub h264_decoder: Option<String>,
     pub h265_encoder: Option<String>,
     pub h265_decoder: Option<String>,
+    pub vp9_encoder: Option<String>,
+    pub vp9_decoder: Option<String>,
+    pub av1_encoder: Option<String>,
+    pub av1_decoder: Option<String>,
     pub spotlight: bool,
     pub simulcast: bool,
     pub data_channel_signaling: Option<bool>,
@@ -136,6 +147,149 @@ pub async fn run(
             shiguredo_webrtc::VideoCodecType::H265,
             config.h265_decoder.as_deref(),
         )?;
+
+        // NVIDIA NvCodec: capability 登録 + preference 設定
+        #[cfg(feature = "nvcodec")]
+        if let Ok(nvcodec) = NvCodecVideoCodecCapability::new() {
+            ctx_config
+                .video_codec_preference
+                .merge(&VideoCodecPreference::new_from_capability(&nvcodec));
+            ctx_config.video_codec_capabilities.push(Box::new(nvcodec));
+
+            for (codec_type, encoder, decoder) in [
+                (
+                    shiguredo_webrtc::VideoCodecType::H264,
+                    config.h264_encoder.as_deref(),
+                    config.h264_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::H265,
+                    config.h265_encoder.as_deref(),
+                    config.h265_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::Av1,
+                    config.av1_encoder.as_deref(),
+                    config.av1_decoder.as_deref(),
+                ),
+            ] {
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Encoder,
+                    codec_type,
+                    encoder,
+                    "nvidia",
+                    "nvidia",
+                    "NVIDIA NVENC/NVDEC",
+                )?;
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Decoder,
+                    codec_type,
+                    decoder,
+                    "nvidia",
+                    "nvidia",
+                    "NVIDIA NVENC/NVDEC",
+                )?;
+            }
+        }
+
+        // Intel oneVPL: capability 登録 + preference 設定
+        #[cfg(feature = "vpl")]
+        if let Ok(vpl) = VplVideoCodecCapability::new() {
+            ctx_config
+                .video_codec_preference
+                .merge(&VideoCodecPreference::new_from_capability(&vpl));
+            ctx_config.video_codec_capabilities.push(Box::new(vpl));
+
+            for (codec_type, encoder, decoder) in [
+                (
+                    shiguredo_webrtc::VideoCodecType::Vp9,
+                    config.vp9_encoder.as_deref(),
+                    config.vp9_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::H264,
+                    config.h264_encoder.as_deref(),
+                    config.h264_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::H265,
+                    config.h265_encoder.as_deref(),
+                    config.h265_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::Av1,
+                    config.av1_encoder.as_deref(),
+                    config.av1_decoder.as_deref(),
+                ),
+            ] {
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Encoder,
+                    codec_type,
+                    encoder,
+                    "vpl",
+                    "vpl",
+                    "Intel oneVPL",
+                )?;
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Decoder,
+                    codec_type,
+                    decoder,
+                    "vpl",
+                    "vpl",
+                    "Intel oneVPL",
+                )?;
+            }
+        }
+
+        // AMD AMF: capability 登録 + preference 設定
+        #[cfg(feature = "amf")]
+        if let Ok(amf) = AmfVideoCodecCapability::new() {
+            ctx_config
+                .video_codec_preference
+                .merge(&VideoCodecPreference::new_from_capability(&amf));
+            ctx_config.video_codec_capabilities.push(Box::new(amf));
+
+            for (codec_type, encoder, decoder) in [
+                (
+                    shiguredo_webrtc::VideoCodecType::H264,
+                    config.h264_encoder.as_deref(),
+                    config.h264_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::H265,
+                    config.h265_encoder.as_deref(),
+                    config.h265_decoder.as_deref(),
+                ),
+                (
+                    shiguredo_webrtc::VideoCodecType::Av1,
+                    config.av1_encoder.as_deref(),
+                    config.av1_decoder.as_deref(),
+                ),
+            ] {
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Encoder,
+                    codec_type,
+                    encoder,
+                    "amf",
+                    "amf",
+                    "AMD AMF",
+                )?;
+                apply_codec_preference(
+                    &mut ctx_config.video_codec_preference,
+                    CodecDirection::Decoder,
+                    codec_type,
+                    decoder,
+                    "amf",
+                    "amf",
+                    "AMD AMF",
+                )?;
+            }
+        }
 
         // V4L2 ハードウェアエンコーダーの追加
         if config.use_v4l2_encoder {
@@ -487,6 +641,37 @@ fn apply_video_toolbox_preference(
         ));
         Ok(())
     }
+}
+
+/// 指定されたコーデック方向・種別に対して、CLI で指定された実装名が
+/// `target` と一致した場合に VideoCodecPreference を設定する汎用ヘルパー
+#[expect(dead_code)]
+fn apply_codec_preference(
+    preference: &mut VideoCodecPreference,
+    direction: CodecDirection,
+    codec_type: shiguredo_webrtc::VideoCodecType,
+    value: Option<&str>,
+    target: &str,
+    implementation_name: &'static str,
+    implementation_description: &'static str,
+) -> Result<(), BoxError> {
+    let Some(v) = value else {
+        return Ok(());
+    };
+    if v != target {
+        return Ok(());
+    }
+    let Some(codec) = preference.find_mut(direction, codec_type) else {
+        return Err(format!(
+            "video codec preference not found: direction={direction:?}, codec_type={codec_type:?}"
+        )
+        .into());
+    };
+    codec.set_implementation(VideoCodecImplementation::new(
+        implementation_name,
+        implementation_description,
+    ));
+    Ok(())
 }
 
 // ─── ADM 構築 ─────────────────────────────────────────────────────────────────
