@@ -990,9 +990,8 @@ fn print_devices_json() -> Result<(), crate::error::BoxError> {
     let audio_list = AudioDeviceList::enumerate_input()
         .map_err(|e| format!("音声入力デバイスの列挙に失敗: {e}"))?;
 
-    let videos: Vec<VDevice> = video_list
-        .devices()
-        .iter()
+    let videos: Vec<VDevice> = (&video_list)
+        .into_iter()
         .map(|d| VDevice {
             name: d.name().unwrap_or_default(),
             unique_id: d.unique_id().unwrap_or_default(),
@@ -1008,6 +1007,7 @@ fn print_devices_json() -> Result<(), crate::error::BoxError> {
                         PixelFormat::Nv12 => "nv12".to_string(),
                         PixelFormat::Yuy2 => "yuy2".to_string(),
                         PixelFormat::I420 => "i420".to_string(),
+                        PixelFormat::Mjpeg => "mjpeg".to_string(),
                         PixelFormat::Unknown(n) => format!("unknown({n})"),
                     },
                 })
