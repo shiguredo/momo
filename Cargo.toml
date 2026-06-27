@@ -18,27 +18,22 @@ path = "src/main.rs"
 # 時雨堂クレート
 
 # 2D グラフィックス描画 (フェイク映像生成: fake.rs)
-# canary 版を利用するため、Cargo の semver ルールに従いプリリリースバージョンを明示的に指定する
 raden = "2026.2.0-canary.0"
 # ローカルのプレビュー映像表示 (preview.rs)
-# canary 版を利用するため、Cargo の semver ルールに従いプリリリースバージョンを明示的に指定する
 raw_player = { version = "2026.2.0-canary.0", optional = true }
 # 音声入出力デバイス (AudioCapture / ADM)
-# canary 版を利用するため、Cargo の semver ルールに従いプリリリースバージョンを明示的に指定する
 shiguredo_audio_device = "2026.2.0-canary.0"
 # HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
 shiguredo_http11 = "2026.6"
 # OpenH264 エンコーダー・デコーダー (openh264.rs)
 shiguredo_openh264 = "2026.1"
 # 映像入力デバイス (VideoCapture)
-# canary 版を利用するため、Cargo の semver ルールに従いプリリリースバージョンを明示的に指定する
 shiguredo_video_device = "2026.2.0-canary.2"
 # WebRTC 本体 (PeerConnection / トラック / RTP コーデック等)
 shiguredo_webrtc = "0.150"
 # WebSocket クライアント (Ayame / P2P シグナリング)
 shiguredo_websocket = "2026.3"
 # Sora 接続 SDK (sora モジュール)
-# canary 版を利用するため、Cargo の semver ルールに従いプリリリースバージョンを明示的に指定する
 sora_sdk = { version = "2026.1.0-canary.11", optional = true }
 
 # 外部クレート
