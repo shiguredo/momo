@@ -71,7 +71,7 @@ amf = ["sora", "sora_sdk/amf"]
 各クレート (`shiguredo_nvcodec` / `shiguredo_vpl` / `shiguredo_amf`) は
 ビルド時に GPU ドライバを要求しない（動的ロード方式）。
 
-### 2. src/sora/mod.rs に NVIDIA / Intel 用 capability 登録と preference 設定を追加する
+### 2. src/sora/mod.rs に NVIDIA / Intel / AMD 用 capability 登録と preference 設定を追加する
 
 `SoraConnectionContextConfig::default()` は `InternalVideoCodecCapability` と
 `InternalAppleVideoCodecCapability` のみを自動登録する。`nvcodec` / `vpl` / `amf` feature が
@@ -239,8 +239,8 @@ HW バックエンド未整備を理由とする `_` プレフィックス解除
 
 - sora_sdk `src/video_codecs/nvcodec.rs`: `NvCodecVideoCodecCapability`
 - sora_sdk `src/video_codecs/vpl.rs`: `VplVideoCodecCapability`
-- sora_sdk `src/lib.rs:55`: `pub use crate::video_codecs::nvcodec::NvCodecVideoCodecCapability`
 - sora_sdk `src/lib.rs:46`: `pub use crate::video_codecs::amf::AmfVideoCodecCapability`
+- sora_sdk `src/lib.rs:55`: `pub use crate::video_codecs::nvcodec::NvCodecVideoCodecCapability`
 - sora_sdk `src/lib.rs:61`: `pub use crate::video_codecs::vpl::VplVideoCodecCapability`
 - sora_sdk `src/video_codec_preference.rs`: `VideoCodecPreference`, `PreferenceCodec`
 - sora_sdk `Cargo.toml` features: `nvcodec = ["dep:shiguredo_nvcodec"]`, `vpl = ["dep:shiguredo_vpl"]`, `amf = ["dep:shiguredo_amf"]`
