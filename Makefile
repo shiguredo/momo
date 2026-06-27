@@ -73,6 +73,7 @@ clean:
 # $(5): sysroot bin ディレクトリの絶対パス
 # $(6): cc-rs 用ターゲットトリプル (aarch64_unknown_linux_gnu)
 sysroot_env = \
+	SYSROOT_PATH=$(1) \
 	PKG_CONFIG_SYSROOT_DIR=$(1) \
 	PKG_CONFIG_PATH=$(1)/usr/lib/$(2)/pkgconfig:$(1)/usr/share/pkgconfig \
 	CARGO_TARGET_$(4)_LINKER=$(3) \

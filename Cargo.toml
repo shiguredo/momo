@@ -78,9 +78,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # 時雨堂クレート
 
 # libcamera 経由の映像キャプチャ (Raspberry Pi: libcamera.rs)
-shiguredo_libcamera = { version = "2026.1.0-canary.1", optional = true }
+shiguredo_libcamera = { version = "2026.1", optional = true }
 # V4L2 M2M ハードウェア H.264 エンコーダー (Raspberry Pi: v4l2_encoder.rs)
-shiguredo_v4l2 = { version = "2026.1.0-canary.1", optional = true }
+shiguredo_v4l2 = { version = "2026.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # termios / fcntl などの低レベルシステムコール (serial.rs)
