@@ -80,7 +80,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # libcamera 経由の映像キャプチャ (Raspberry Pi: libcamera.rs)
 shiguredo_libcamera = { version = "2026.1", optional = true }
 # V4L2 M2M ハードウェア H.264 エンコーダー (Raspberry Pi: v4l2_encoder.rs)
-shiguredo_v4l2 = { version = "2026.1", optional = true }
+# 2026.1.0 安定版はコールバック方式の H264Encoder API を持たないため canary.3 を使う
+shiguredo_v4l2 = { version = "2026.1.0-canary.3", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # termios / fcntl などの低レベルシステムコール (serial.rs)
