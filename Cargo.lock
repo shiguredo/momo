@@ -1004,9 +1004,9 @@ checksum = "521929c2893005420ccee04aada685000c967cbcae36cd46117b40bf5495e5ab"
 
 [[package]]
 name = "shiguredo_libcamera"
-version = "2026.1.0"
+version = "2026.1.0-canary.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71876728ceaf92451cd983c0560616be3a720d92b5e300e3fdecd37bd98b5483"
+checksum = "25daab38f2b2e19a9ac0f1bcd5cd49e1e320de5aa03afea956771b90ecd5a524"
 dependencies = [
  "bindgen",
  "cc",
@@ -1065,18 +1065,18 @@ checksum = "b475c218cf15d056ed3e48c9e98693135b261b79530881e63b162650b236fdec"
 
 [[package]]
 name = "shiguredo_v4l2"
-version = "2026.1.0"
+version = "2026.1.0-canary.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63fb9cee9e5b07d3fab3accbef9a4748101b752adcb155e2d3b3ede880990af4"
+checksum = "ce0377bc309ea9611934fbead0cabf422b9b917d39335b751d91e3f4d9a235bb"
 dependencies = [
  "libc",
 ]
 
 [[package]]
 name = "shiguredo_video_device"
-version = "2026.2.0-canary.2"
+version = "2026.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a15430c034f07a5b3a843d85880b325708ce34a8d9787985790215a9ccc8bab8"
+checksum = "79fc6bed758f11d7413d108650edf83aa8345de7f578eca7fca4750add71f4f2"
 dependencies = [
  "bindgen",
  "cc",
