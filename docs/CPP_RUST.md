@@ -43,7 +43,7 @@
 |------|--------|---------|------|
 | 自動再接続 | 有効（watchdog + 指数バックオフ） | 未実装 | 切断・`bye`・`reject` 時は終了。ICE failed はログ出力のみで無反応 |
 | `register` メタデータ | `ayameClient` / `libwebrtc` / `environment` 送信 | `type` / `roomId` / `clientId` / `key` のみ | |
-| legacy サーバー対応（`isExistUser` なし） | 対応（`isExistUser` 欠落時も offer 送信） | 未対応 | `isExistUser` 欠落時は `false` 扱いで offer を送信しない |
+| legacy サーバー対応（`isExistUser` なし） | 対応（`isExistUser` 欠落時も offer 送信） | 非対応（対応予定なし） | `isExistUser` 欠落時は `false` 扱いで offer を送信しない |
 | `ping` 受信時の watchdog リセット | 有り | なし | `pong` 返信のみ |
 | `reject` メッセージ | 無視 | 即エラー終了 | |
 | `bye` 後の再接続 | 再接続 | 即終了 | |
