@@ -24,13 +24,13 @@ raw_player = { version = "2026.2.0-canary.0", optional = true }
 # 音声入出力デバイス (AudioCapture / ADM)
 shiguredo_audio_device = "2026.2.0-canary.0"
 # HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
-shiguredo_http11 = "2026.6.1"
+shiguredo_http11 = "2026.6"
 # OpenH264 エンコーダー・デコーダー (openh264.rs)
 shiguredo_openh264 = "2026.1"
 # 映像入力デバイス (VideoCapture)
 shiguredo_video_device = "2026.2.0-canary.2"
 # WebRTC 本体 (PeerConnection / トラック / RTP コーデック等)
-shiguredo_webrtc = "=0.150.2"
+shiguredo_webrtc = "0.150"
 # WebSocket クライアント (Ayame / P2P シグナリング)
 shiguredo_websocket = "2026.3"
 # Sora 接続 SDK (sora モジュール)
@@ -78,9 +78,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # 時雨堂クレート
 
 # libcamera 経由の映像キャプチャ (Raspberry Pi: libcamera.rs)
-shiguredo_libcamera = { version = "2026.1.0", optional = true }
+shiguredo_libcamera = { version = "2026.1", optional = true }
 # V4L2 M2M ハードウェア H.264 エンコーダー (Raspberry Pi: v4l2_encoder.rs)
-shiguredo_v4l2 = { version = "2026.1.0", optional = true }
+shiguredo_v4l2 = { version = "2026.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # termios / fcntl などの低レベルシステムコール (serial.rs)
