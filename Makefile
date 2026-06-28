@@ -3,7 +3,8 @@
 	sysroot-clippy-raspberry-pi sysroot-clippy-ubuntu-24.04_arm64 sysroot-clippy-ubuntu-22.04_arm64 \
 	sysroot-build-raspberry-pi sysroot-build-raspberry-pi-release \
 	sysroot-build-ubuntu-24.04_arm64 sysroot-build-ubuntu-24.04_arm64-release \
-	sysroot-build-ubuntu-22.04_arm64 sysroot-build-ubuntu-22.04_arm64-release
+	sysroot-build-ubuntu-22.04_arm64 sysroot-build-ubuntu-22.04_arm64-release \
+	clippy-raspberry-pi
 
 # 全テストを実行する
 test:
@@ -132,6 +133,37 @@ sysroot-clippy-ubuntu-24.04_arm64:
 # Ubuntu 22.04 arm64 向け sysroot clippy する
 sysroot-clippy-ubuntu-22.04_arm64:
 	$(UBUNTU_2204_ARM64_ENV) cargo clippy --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora -- -D warnings
+
+# --- container を使った clippy ---
+
+# container 内で Raspberry Pi 向け clippy を実行する
+# sysroot が未構築の場合はコンテナ内で自動構築する
+# コンテナ内ではプロジェクトルートが /workspace にマウントされる
+clippy-raspberry-pi:
+	container build -t momo-dev -f .devcontainer/Dockerfile .devcontainer
+	container run --rm --cpus 8 --memory 16g \
+		-v $(CURDIR):/workspace -w /workspace \
+		-e PKG_CONFIG_ALLOW_CROSS=1 \
+		-e PKG_CONFIG_SYSROOT_DIR=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
+		-e PKG_CONFIG_LIBDIR=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/lib/aarch64-linux-gnu/pkgconfig:/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/share/pkgconfig \
+		-e BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu=--target=aarch64-linux-gnu --sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
+		-e CC_aarch64_unknown_linux_gnu=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/bin/aarch64-linux-gnu-gcc-with-sysroot.sh \
+		-e CXX_aarch64_unknown_linux_gnu=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/bin/aarch64-linux-gnu-g++-with-sysroot.sh \
+		-e CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+		-e CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS=-C link-arg=--sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
+		-e WEBRTC_C_TARGET=raspberry-pi-os_armv8 \
+		-e WEBRTC_C_SYSROOT=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
+		momo-dev bash -c ' \
+			if [ ! -d "target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/include" ]; then \
+				echo "=== sysroot を構築しています ===" ; \
+				CARGO_TARGET_DIR=/tmp/target cargo shiguredo-sysroot --config sysroot/raspberry-pi-os-trixie_arm64.json ; \
+				mkdir -p target/shiguredo-sysroot ; \
+				cp -r /tmp/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64 target/shiguredo-sysroot/ ; \
+				rm -f .cargo/config.toml ; \
+				echo "=== sysroot 構築完了 ===" ; \
+			fi ; \
+			cargo clippy --target aarch64-unknown-linux-gnu --no-default-features --features ayame,sora,raspberrypi -- -D warnings \
+		'
 
 # --- sysroot ビルド ---
 
