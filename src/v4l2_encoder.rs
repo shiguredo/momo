@@ -6,8 +6,8 @@
 use std::sync::{Arc, Mutex};
 
 use shiguredo_v4l2::v4l2_m2m::{
-    EncodeCallbackOutput, EncodeInput, EncoderConfig, Error as V4l2Error, H264Encoder, Memory,
-    Resolution,
+    EncodeInput, EncodedFrame, EncoderConfig, Error as V4l2Error, FnEncodeHandler, H264Encoder,
+    Memory, Resolution,
 };
 use shiguredo_webrtc::{
     CodecSpecificInfo, EncodedImage, EncodedImageBuffer, EnvironmentRef, H264PacketizationMode,
@@ -91,14 +91,14 @@ pub(crate) fn create_v4l2_encoder_factory(dmabuf_map: Option<DmaBufMap>) -> Vide
 /// エンコーダーコールバックに渡す値
 ///
 /// CAPTURE バッファが dequeue されるタイミングで V4L2 から戻ってくる。
-/// dmabuf エントリは V4L2 が消費しきるまで生かしておくためここに保持する。
+/// dmabuf の done_tx は V4L2 が消費しきるまで生かしておくためここに保持する。
 struct EncoderCallbackValue {
     rtp_timestamp: u32,
     width: u32,
     height: u32,
     /// dmabuf 入力時のみ Some。コールバックで `done_tx.send(())` を呼んで
     /// libcamera 側の requeue を解除する。
-    dmabuf_entry: Option<DmaBufEntry>,
+    dmabuf_done_tx: Option<std::sync::mpsc::SyncSender<()>>,
 }
 
 /// V4L2 エンコーダーの共有状態
@@ -107,17 +107,17 @@ struct EncoderCallbackValue {
 /// エンコーダー本体は Mutex で保護した共有状態に置く。
 #[derive(Default)]
 struct V4l2EncoderSharedState {
-    encoder: Option<H264Encoder<EncoderCallbackValue>>,
+    encoder: Option<H264Encoder<FnEncodeHandler<EncoderCallbackValue>>>,
     callback: Option<VideoEncoderEncodedImageCallbackPtr>,
 }
 
 /// V4L2 のコールバックスレッドからエンコード結果を受け取って WebRTC に転送する
 fn handle_v4l2_encode_callback(
     shared_state: &Arc<Mutex<V4l2EncoderSharedState>>,
-    result: shiguredo_v4l2::v4l2_m2m::Result<EncodeCallbackOutput<EncoderCallbackValue>>,
+    result: shiguredo_v4l2::v4l2_m2m::Result<EncodedFrame<EncoderCallbackValue>>,
 ) {
-    let (encoded, mut value) = match result {
-        Ok(EncodeCallbackOutput::Frame { frame, value }) => (frame, value),
+    let encoded = match result {
+        Ok(encoded) => encoded,
         Err(err) => {
             warn!(target: "v4l2", error = %err, "encode callback error");
             return;
@@ -127,8 +127,8 @@ fn handle_v4l2_encode_callback(
     // dmabuf 入力ならここで libcamera 側の requeue を解放する。
     // V4L2 コールバックが呼ばれた時点で V4L2 ハードウェアは入力 fd を
     // 消費しきっているため、libcamera にバッファを返して問題ない。
-    if let Some(entry) = value.dmabuf_entry.take() {
-        let _ = entry.done_tx.send(());
+    if let Some(ref done_tx) = encoded.user_data().dmabuf_done_tx {
+        let _ = done_tx.send(());
     }
 
     let Some(encoded_data) = encoded.data() else {
@@ -139,9 +139,9 @@ fn handle_v4l2_encode_callback(
     let buffer = EncodedImageBuffer::from_bytes(encoded_data);
     let mut image = EncodedImage::new();
     image.set_encoded_data(&buffer);
-    image.set_rtp_timestamp(value.rtp_timestamp);
-    image.set_encoded_width(value.width);
-    image.set_encoded_height(value.height);
+    image.set_rtp_timestamp(encoded.user_data().rtp_timestamp);
+    image.set_encoded_width(encoded.user_data().width);
+    image.set_encoded_height(encoded.user_data().height);
     image.set_frame_type(if encoded.is_keyframe() {
         VideoFrameType::Key
     } else {
@@ -189,15 +189,20 @@ impl V4l2H264Encoder {
         }
     }
 
-    fn build_encoder(&self) -> Result<H264Encoder<EncoderCallbackValue>, V4l2Error> {
+    fn build_encoder(
+        &self,
+    ) -> Result<H264Encoder<FnEncodeHandler<EncoderCallbackValue>>, V4l2Error> {
         let mut config = EncoderConfig::new(self.width, self.height, self.bitrate_bps.max(1));
         if self.dmabuf_map.is_some() {
             config.input_memory = Memory::DmaBuf;
         }
         let shared_state = self.shared_state.clone();
-        H264Encoder::new(config, move |result| {
-            handle_v4l2_encode_callback(&shared_state, result);
-        })
+        H264Encoder::new(
+            config,
+            FnEncodeHandler::new(move |result| {
+                handle_v4l2_encode_callback(&shared_state, result);
+            }),
+        )
     }
 }
 
@@ -255,16 +260,16 @@ impl VideoEncoderHandler for V4l2H264Encoder {
 
         if let Some(entry) = dmabuf_entry {
             // ── ネイティブモード: DMA-BUF fd をゼロコピーで渡す ──
-            // entry は V4L2 が消費しきるまで EncoderCallbackValue で生かしておく。
-            // ここで fd/bytesused/length を取り出してから entry を value に move する。
+            // entry の done_tx は V4L2 が消費しきるまで EncoderCallbackValue で生かしておく。
             let fd = entry.fd;
             let bytesused = entry.bytesused;
             let length = entry.length;
+            let done_tx = entry.done_tx;
             let value = EncoderCallbackValue {
                 rtp_timestamp,
                 width: self.width,
                 height: self.height,
-                dmabuf_entry: Some(entry),
+                dmabuf_done_tx: Some(done_tx),
             };
             let mut guard = self.shared_state.lock().unwrap();
             let Some(encoder) = guard.encoder.as_mut() else {
@@ -337,7 +342,7 @@ impl VideoEncoderHandler for V4l2H264Encoder {
             rtp_timestamp,
             width: self.width,
             height: self.height,
-            dmabuf_entry: None,
+            dmabuf_done_tx: None,
         };
         let mut guard = self.shared_state.lock().unwrap();
         let Some(encoder) = guard.encoder.as_mut() else {
