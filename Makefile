@@ -145,15 +145,15 @@ clippy-raspberry-pi:
 		-v $(CURDIR):/workspace -w /workspace \
 		-e PKG_CONFIG_ALLOW_CROSS=1 \
 		-e PKG_CONFIG_SYSROOT_DIR=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
-		-e PKG_CONFIG_LIBDIR=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/lib/aarch64-linux-gnu/pkgconfig:/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/share/pkgconfig \
-		-e BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu=--target=aarch64-linux-gnu --sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
+		-e PKG_CONFIG_PATH=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/lib/aarch64-linux-gnu/pkgconfig:/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/share/pkgconfig \
 		-e CC_aarch64_unknown_linux_gnu=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/bin/aarch64-linux-gnu-gcc-with-sysroot.sh \
 		-e CXX_aarch64_unknown_linux_gnu=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/bin/aarch64-linux-gnu-g++-with-sysroot.sh \
-		-e CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
-		-e CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS=-C link-arg=--sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
-		-e WEBRTC_C_TARGET=raspberry-pi-os_armv8 \
-		-e WEBRTC_C_SYSROOT=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot \
 		momo-dev bash -c ' \
+			export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc ; \
+			export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=--sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot" ; \
+			export BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu --sysroot=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot" ; \
+			export WEBRTC_C_TARGET=raspberry-pi-os_armv8 ; \
+			export WEBRTC_C_SYSROOT=/workspace/target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot ; \
 			if [ ! -d "target/shiguredo-sysroot/raspberry-pi-os-trixie_arm64/sysroot/usr/include" ]; then \
 				echo "=== sysroot を構築しています ===" ; \
 				CARGO_TARGET_DIR=/tmp/target cargo shiguredo-sysroot --config sysroot/raspberry-pi-os-trixie_arm64.json ; \
