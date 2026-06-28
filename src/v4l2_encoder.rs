@@ -19,7 +19,7 @@ use shiguredo_webrtc::{
 };
 use tracing::{error, info, warn};
 
-use crate::libcamera::{DmaBufEntry, DmaBufMap};
+use crate::libcamera::DmaBufMap;
 
 /// V4L2 H.264 エンコーダーファクトリ
 struct V4l2EncoderFactory {
