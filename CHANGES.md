@@ -25,7 +25,7 @@
     - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
     - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
   - @voluntas
-- [UPDATE] libwebrtc のバージョンを m150.7871.0.0 に上げる
+- [UPDATE] libwebrtc のバージョンを m150.7871.3.0 に上げる
   - Boost のバージョンを 1.91.0 に上げる
   - CMake のバージョンを 4.3.2 に上げる
   - VPL のバージョンを v2.16.0 に上げる
