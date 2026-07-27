@@ -18,9 +18,9 @@ path = "src/main.rs"
 # 時雨堂クレート
 
 # 2D グラフィックス描画 (フェイク映像生成: fake.rs)
-raden = "2026.2.0-canary.0"
+raden = "2026.2.0-canary.1"
 # ローカルのプレビュー映像表示 (preview.rs)
-raw_player = { version = "2026.2.0-canary.0", optional = true }
+raw_player = { version = "2026.2", optional = true }
 # 音声入出力デバイス (AudioCapture / ADM)
 shiguredo_audio_device = "2026.2.0-canary.0"
 # HTTP/1.1 のリクエスト・レスポンス処理 (metrics / P2P)
@@ -52,11 +52,11 @@ rustls = { version = "0.23", default-features = false, features = [
   "tls12",
 ], optional = true }
 # PEM など PKI 関連の型定義 (Ayame シグナリング)
-rustls-pki-types = { version = "1.14", features = ["std"], optional = true }
+rustls-pki-types = { version = "1.15", features = ["std"], optional = true }
 # OS の証明書ストアを使ったサーバー証明書検証 (Ayame シグナリング)
 rustls-platform-verifier = { version = "0.7", optional = true }
 # 非同期ランタイム
-tokio = { version = "1.52", features = [
+tokio = { version = "1.53", features = [
   "fs",
   "io-util",
   "macros",
