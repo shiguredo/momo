@@ -30,7 +30,7 @@ pub(crate) struct DmaBufEntry {
 pub(crate) type DmaBufMap = Arc<Mutex<HashMap<i64, DmaBufEntry>>>;
 
 /// YU12 (= I420) の FOURCC
-const YU12_FOURCC: u32 = u32::from_le_bytes([b'Y', b'U', b'1', b'2']);
+const YU12_FOURCC: u32 = u32::from_le_bytes(*b"YU12");
 
 /// libcamera キャプチャのハンドル
 ///
