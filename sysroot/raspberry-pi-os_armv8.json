@@ -1,0 +1,32 @@
+{
+    "name": "raspberry-pi-os_armv8",
+    "arch": "arm64",
+    "triplet": "aarch64-linux-gnu",
+    "packages": [
+        "libc6-dev",
+        "libstdc++-14-dev",
+        "libasound2-dev",
+        "libpulse-dev",
+        "libudev-dev",
+        "libexpat1-dev",
+        "libnss3-dev",
+        "libxext-dev",
+        "libxtst-dev",
+        "libcamera-dev"
+    ],
+    "repositories": [
+        {
+            "url": "https://deb.debian.org/debian",
+            "suite": "trixie",
+            "components": ["main"],
+            "signed_by": "keyrings/debian-archive-keyring.gpg"
+        },
+        {
+            "url": "https://archive.raspberrypi.com/debian",
+            "suite": "trixie",
+            "components": ["main"],
+            "signed_by": "keyrings/raspberrypi-archive-keyring.asc",
+            "pin_priority": 990
+        }
+    ]
+}

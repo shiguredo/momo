@@ -2,7 +2,7 @@
 
 - Priority: Medium
 - Created: 2026-07-23
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-18
 - Model: Composer 2.5
 - Branch: feature/change-raspberry-pi-os-multistrap-to-sysroot
 - Polished: 2026-08-18
@@ -185,3 +185,32 @@ elif platform.target.os == "raspberry-pi-os":
 - sora-cpp-sdk `issues/closed/0002-change-replace-multistrap-with-sysroot.md`
 - webrtc-build `feature/sysroot`（`sysroot_builder.py`）
 - 後続: [0004-change-jetson-multistrap-to-sysroot.md](./0004-change-jetson-multistrap-to-sysroot.md)
+
+## 解決方法
+
+sora-python-sdk 由来の `sysroot_builder.py` をリポジトリ直下に byte-identical にコピーし、Raspberry Pi OS の rootfs 生成経路を multistrap から署名検証付き sysroot builder へ切り替えた。Jetson は本 issue のスコープ外で従来通り multistrap を残す。
+
+### 追加
+
+- `sysroot_builder.py`（sora-python-sdk と byte-identical、`RepositoryConfig.pin_priority` 対応済み）。
+- `sysroot/raspberry-pi-os_armv8.json`：packages は現行 conf の `[Deb]` + `[Rasp]` を合わせた 10 個、Raspberry Pi ミラーは `archive.raspberrypi.com`（HTTPS）+ `pin_priority: 990` で `libcamera-dev` を Raspberry Pi Ltd 側から取得。
+- `sysroot/keyrings/{debian-archive-keyring.gpg, raspberrypi-archive-keyring.asc}`：sora-python-sdk から byte-identical に移植。SHA-256 は issue 記載値と一致。
+- `sysroot/keyrings/SHA256SUMS`：`sha256sum -c` 用の期待値ファイル。
+- `tests/sysroot_builder/test_sysroot_builder.py`：validation・fingerprint・symlink 相対化・manifest 再利用 / 拒否・`pin_priority` をネットワーク無しで検証する 24 テスト。canonical と同ディレクトリレイアウトを維持。
+
+### 変更
+
+- `run.py`：`install_sysroot()` を追加し、`install_deps()` の分岐で Raspberry Pi OS は `install_sysroot()`、Jetson は従来通り `install_rootfs()` を呼ぶように変更。`subprocess` と `sys` の import を追加。
+- `.github/workflows/build.yml`：deps step を Jetson 用と Raspberry Pi OS 用に分割。Raspberry Pi OS 側からは `multistrap` install と insecure sed を撤去。`sha256sum -c sysroot/keyrings/SHA256SUMS` の検証 step、`python3 -m pytest tests/sysroot_builder/` の実行 step、build 後の代表ヘッダ（`libcamera/libcamera/camera.h` と `c++/14/vector`）と `deb_files` の直接指定パッケージ 10 個の確認 step を追加。
+- `prek.toml`：`ruff-check` / `ruff-format` の `files` に `tests/` と `sysroot_builder.py` を追加。
+- `.gitignore`：`/__pycache__` を `__pycache__/` に変更し nested `__pycache__` を無視、`.pytest_cache/` も追加。
+- `CHANGES.md`：`## develop` に `[CHANGE]` エントリを追記。
+
+### 削除
+
+- `multistrap/raspberry-pi-os_armv8.conf`。`multistrap/` ディレクトリ自体と Jetson conf は 0004 で扱う。
+
+### 別途 issue 化を推奨
+
+- momo リポジトリ直下に `pyproject.toml` を導入し、`sysroot_builder.py` と `tests/sysroot_builder/` を uv 管理下へ置いて `ty check` の対象に含める。あわせて `prek.toml` を canonical 流の全 Python 対象へ統一する。
+- 0004 で Jetson が sysroot builder を利用するようになった時点で、CI の `Test sysroot_builder` step の `if:` gate を Jetson 側にも広げる（本 issue では Raspberry Pi OS 限定）。

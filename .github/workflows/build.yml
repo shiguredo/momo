@@ -132,13 +132,27 @@ jobs:
           # 1.4G
           sudo rm -rf /usr/share/dotnet
           df -h
-      - name: Install deps for Jetson and Raspberry Pi OS series
-        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
+      - name: Install deps for Jetson
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson'
         run: |
           sudo apt-get update
           sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
           # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
           sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
+      - name: Install deps for Raspberry Pi OS
+        if: matrix.name == 'raspberry-pi-os_armv8'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install binutils-aarch64-linux-gnu
+      - name: Verify sysroot keyring checksums
+        if: matrix.name == 'raspberry-pi-os_armv8'
+        working-directory: sysroot/keyrings
+        run: sha256sum -c SHA256SUMS
+      - name: Test sysroot_builder
+        if: matrix.name == 'raspberry-pi-os_armv8'
+        run: |
+          python3 -m pip install --user pytest
+          python3 -m pytest tests/sysroot_builder/
       - uses: shiguredo/github-actions/.github/actions/setup-cuda-toolkit@main
         if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
         id: cuda
@@ -164,6 +178,35 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libxrandr-dev libxdamage-dev libxcomposite-dev libxtst-dev
 
       - run: python3 run.py build --package ${{ matrix.name }}
+      - name: Verify Raspberry Pi OS sysroot contents
+        if: matrix.name == 'raspberry-pi-os_armv8'
+        run: |
+          set -eu
+          rootfs=_install/raspberry-pi-os_armv8/release/rootfs
+          # 代表ヘッダで libcamera-dev と libstdc++-14-dev の install 成否を確認する。
+          # libcamera は upstream 慣行で usr/include/libcamera/libcamera/ に配置される。
+          test -f "$rootfs/usr/include/libcamera/libcamera/camera.h"
+          test -f "$rootfs/usr/include/c++/14/vector"
+          # 直接指定した 10 パッケージが manifest の deb_files に含まれることを確認する。
+          # 依存で入る transitive package の件数はぶれるため、明示指定のパッケージだけを検証する。
+          python3 - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          rootfs = Path("_install/raspberry-pi-os_armv8/release/rootfs")
+          manifest = json.loads((rootfs / ".webrtc-build-sysroot.json").read_text())
+          config = json.loads(Path("sysroot/raspberry-pi-os_armv8.json").read_text())
+          deb_files = manifest["deb_files"]
+          missing = [
+              package
+              for package in config["packages"]
+              if not any(name.startswith(f"{package}_") for name in deb_files)
+          ]
+          if missing:
+              print(f"missing direct packages in deb_files: {missing}", file=sys.stderr)
+              sys.exit(1)
+          PY
       - name: Get package name
         run: |
           source _package/${{ matrix.name }}/release/momo.env

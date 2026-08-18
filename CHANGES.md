@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] Raspberry Pi OS の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
+  - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`debian-archive-keyring.gpg` / `raspberrypi-archive-keyring.asc`) で検証する
+  - Raspberry Pi ミラーのホストを `archive.raspberrypi.org` から `archive.raspberrypi.com` に変更し、APT pin priority 990 を付与して `libcamera-dev` を Raspberry Pi Ltd 側から取得する
+  - 旧経路由来の `_install/raspberry-pi-os_armv8/*/rootfs` がローカルに残っている場合は `rootfs` ディレクトリを手動で削除してから再ビルドすること (`rootfs.version` は新経路では読まれないが混乱を避けるため合わせて削除するのが望ましい)
+  - Jetson (`ubuntu-22.04_armv8_jetson`) の rootfs 生成は本変更のスコープ外で、従来通り multistrap を使う
+  - @voluntas
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas
 - [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
