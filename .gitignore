@@ -38,7 +38,8 @@ webrtc_logs_*
 .DS_Store
 *.swp
 
-/__pycache__
+__pycache__/
+.pytest_cache/
 /_build
 /_source
 /_install

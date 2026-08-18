@@ -5,6 +5,8 @@ import logging
 import multiprocessing
 import os
 import shutil
+import subprocess
+import sys
 import tarfile
 import zipfile
 from typing import List, Optional
@@ -45,6 +47,26 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
+def install_sysroot(config_path: str, install_dir: str) -> None:
+    """署名検証付き sysroot builder を呼び出して sysroot を生成する。
+
+    実装は canonical (`sysroot_builder.py`) に閉じ込め、ここでは
+    サブプロセスとして起動するだけにする。ホスト側の APT 状態や
+    ルート権限に依存せず、決定的に同じ sysroot が組み立てられる。
+    """
+    subprocess.run(
+        [
+            sys.executable,
+            os.path.join(BASE_DIR, "sysroot_builder.py"),
+            "--config",
+            config_path,
+            "--dest",
+            os.path.join(install_dir, "rootfs"),
+        ],
+        check=True,
+    )
+
+
 def install_deps(
     platform: Platform,
     source_dir: str,
@@ -59,8 +81,9 @@ def install_deps(
         deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
 
-        # multistrap を使った sysroot の構築
-        if platform.target.os == "jetson" or platform.target.os == "raspberry-pi-os":
+        # Jetson は従来通り multistrap ベースの install_rootfs を使う。
+        # multistrap 経路自体の廃止は Jetson 側の移行に合わせて別途対応する。
+        if platform.target.os == "jetson":
             conf = os.path.join(BASE_DIR, "multistrap", f"{platform.target.package_name}.conf")
             # conf ファイルのハッシュ値をバージョンとする
             version_md5 = hashlib.md5(open(conf, "rb").read()).hexdigest()
@@ -72,6 +95,12 @@ def install_deps(
                 "arch": "arm64",
             }
             install_rootfs(**install_rootfs_args)
+        # Raspberry Pi OS は署名検証付き sysroot builder に置き換えている。
+        # 再利用判定は builder 側 manifest (.webrtc-build-sysroot.json) に一本化し、
+        # 以前使っていた install_dir/rootfs.version は参照しない。
+        elif platform.target.os == "raspberry-pi-os":
+            config_path = os.path.join(BASE_DIR, "sysroot", f"{platform.target.package_name}.json")
+            install_sysroot(config_path=config_path, install_dir=install_dir)
 
         # WebRTC
         webrtc_platform = get_webrtc_platform(platform)
