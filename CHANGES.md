@@ -11,11 +11,20 @@
 
 ## develop
 
+- [CHANGE] Jetson の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
+  - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`jetson-ota-public.asc` / `ubuntu-archive-keyring.gpg`) で検証する
+  - `nvidia-jetpack` メタパッケージは sysroot 集合に入れず、`nvidia-l4t-core` / `nvidia-l4t-camera` / `nvidia-l4t-multimedia` / `nvidia-l4t-multimedia-utils` / `nvidia-l4t-jetson-multimedia-api` を個別指定する
+  - APT pin priority で NVIDIA (700) を Ubuntu Ports (500) より高くする
+  - Ubuntu Ports 側の C++ header を `libstdc++-10-dev` から `libstdc++-11-dev` に上げて JetPack 6 の Ubuntu 22.04 default toolchain に揃える
+  - `libnvbuf_fdmap.so` の互換 symlink 補正を `jetson_postprocess.py` に切り出し、`run.py` の `install_sysroot()` 直後に呼ぶ
+  - `multistrap/` ディレクトリを完全に削除する
+  - 旧経路由来の `_install/ubuntu-22.04_armv8_jetson/*/rootfs` がローカルに残っている場合は `rootfs` ディレクトリを手動で削除してから再ビルドすること (`rootfs.version` は新経路では読まれないが混乱を避けるため合わせて削除するのが望ましい)
+  - CI の Python テスト実行を `pip install --user pytest` から uv (`uv run --with pytest`) に切り替え、gate を Raspberry Pi OS と Jetson の両 matrix に拡張する
+  - @voluntas
 - [CHANGE] Raspberry Pi OS の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
   - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`debian-archive-keyring.gpg` / `raspberrypi-archive-keyring.asc`) で検証する
   - Raspberry Pi ミラーのホストを `archive.raspberrypi.org` から `archive.raspberrypi.com` に変更し、APT pin priority 990 を付与して `libcamera-dev` を Raspberry Pi Ltd 側から取得する
   - 旧経路由来の `_install/raspberry-pi-os_armv8/*/rootfs` がローカルに残っている場合は `rootfs` ディレクトリを手動で削除してから再ビルドすること (`rootfs.version` は新経路では読まれないが混乱を避けるため合わせて削除するのが望ましい)
-  - Jetson (`ubuntu-22.04_armv8_jetson`) の rootfs 生成は本変更のスコープ外で、従来通り multistrap を使う
   - @voluntas
 - [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
   - @voluntas

@@ -429,6 +429,41 @@ def test_build_sysroot_rejects_stale_symlink_without_force(tmp_path: Path) -> No
         build_sysroot(config, output_dir)
 
 
+def test_load_real_ubuntu_22_04_armv8_jetson_config() -> None:
+    # Jetson 用の JSON も実運用と同じ位置から load できることを確認する。
+    # スキーマ drift (pin_priority 範囲外、hostname 分割違反、キー綴り違い等) を
+    # cross-compile step 起動前に CI で早期に検知するため、単体テストで直接 load する。
+    repository_root = Path(__file__).resolve().parent.parent.parent
+    config_path = repository_root / "sysroot" / "ubuntu-22.04_armv8_jetson.json"
+
+    config = load_sysroot_config(config_path)
+
+    assert config.name == "ubuntu-22.04_armv8_jetson"
+    assert config.arch == "arm64"
+    assert config.triplet == "aarch64-linux-gnu"
+    # nvidia-jetpack meta-package を入れず、個別に列挙する方針が守られていること。
+    assert "nvidia-jetpack" not in config.packages
+    assert "nvidia-l4t-jetson-multimedia-api" in config.packages
+    # NVIDIA 側は 700、Ubuntu Ports 側は 500 で hostname 単位の pin 優先度が期待通りであること。
+    priorities = {
+        repository.hostname: repository.pin_priority for repository in config.repositories
+    }
+    assert priorities == {
+        "ports.ubuntu.com": 500,
+        "repo.download.nvidia.com": 700,
+    }
+    # hostname 単位の pin_priority は同一 hostname を潰すため、entry 数と suite の組でも検証する。
+    # 将来 t234 side を誤って削除しても、上の priorities assert だけでは検出できない。
+    repository_pairs = sorted((r.hostname, r.suite) for r in config.repositories)
+    assert repository_pairs == sorted(
+        [
+            ("ports.ubuntu.com", "jammy"),
+            ("repo.download.nvidia.com", "r36.3"),
+            ("repo.download.nvidia.com", "r36.3"),
+        ]
+    )
+
+
 def test_load_real_raspberry_pi_os_armv8_config() -> None:
     # 実際にリポジトリへ配置した設定と keyring が sysroot_builder の validation を通ることを、
     # ネットワーク無しで確認する。JSON 側の壊れやパス指定ミスを CI で拾える。

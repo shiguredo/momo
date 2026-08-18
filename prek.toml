@@ -2,8 +2,8 @@
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = "v0.14.14"
 hooks = [
-  { id = "ruff-check", files = "^(test/|tests/|sysroot_builder\\.py$)" },
-  { id = "ruff-format", files = "^(test/|tests/|sysroot_builder\\.py$)" },
+  { id = "ruff-check", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess)\\.py$)" },
+  { id = "ruff-format", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess)\\.py$)" },
 ]
 
 [[repos]]

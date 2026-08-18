@@ -1,6 +1,5 @@
 import argparse
 import glob
-import hashlib
 import logging
 import multiprocessing
 import os
@@ -32,7 +31,6 @@ from buildbase import (
     install_cuda_windows,
     install_llvm,
     install_openh264,
-    install_rootfs,
     install_sdl3,
     install_vpl,
     install_webrtc,
@@ -40,6 +38,7 @@ from buildbase import (
     read_version_file,
     rm_rf,
 )
+from jetson_postprocess import fixup_jetson_libnvbuf_fdmap_symlinks
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -81,26 +80,16 @@ def install_deps(
         deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
 
-        # Jetson は従来通り multistrap ベースの install_rootfs を使う。
-        # multistrap 経路自体の廃止は Jetson 側の移行に合わせて別途対応する。
-        if platform.target.os == "jetson":
-            conf = os.path.join(BASE_DIR, "multistrap", f"{platform.target.package_name}.conf")
-            # conf ファイルのハッシュ値をバージョンとする
-            version_md5 = hashlib.md5(open(conf, "rb").read()).hexdigest()
-            install_rootfs_args = {
-                "version": version_md5,
-                "version_file": os.path.join(install_dir, "rootfs.version"),
-                "install_dir": install_dir,
-                "conf": conf,
-                "arch": "arm64",
-            }
-            install_rootfs(**install_rootfs_args)
-        # Raspberry Pi OS は署名検証付き sysroot builder に置き換えている。
+        # Jetson / Raspberry Pi OS はいずれも署名検証付き sysroot builder に統一する。
         # 再利用判定は builder 側 manifest (.webrtc-build-sysroot.json) に一本化し、
         # 以前使っていた install_dir/rootfs.version は参照しない。
-        elif platform.target.os == "raspberry-pi-os":
+        if platform.target.os in ("jetson", "raspberry-pi-os"):
             config_path = os.path.join(BASE_DIR, "sysroot", f"{platform.target.package_name}.json")
             install_sysroot(config_path=config_path, install_dir=install_dir)
+            if platform.target.os == "jetson":
+                # NVIDIA が dpkg に登録しない libnvbuf_fdmap.so の互換 symlink を作る。
+                # canonical sysroot_builder.py に手を入れないため run.py 側で後処理する。
+                fixup_jetson_libnvbuf_fdmap_symlinks(os.path.join(install_dir, "rootfs"))
 
         # WebRTC
         webrtc_platform = get_webrtc_platform(platform)

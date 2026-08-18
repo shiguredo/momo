@@ -2,7 +2,7 @@
 
 - Priority: Medium
 - Created: 2026-07-23
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-18
 - Model: Composer 2.5
 - Branch: feature/change-jetson-multistrap-to-sysroot
 - Polished: 2026-08-18
@@ -217,3 +217,32 @@ if platform.target.os in ("jetson", "raspberry-pi-os"):
 - sora-python-sdk `issues/pending/0043-change-jetson-platform.md`（Jetson sysroot / NVIDIA keyring / `libnvbuf_fdmap.so` / meta-package 回避の議論。**pending 状態のため方針は保留中**であり、参考値・判断材料として引用する扱いにとどめる）
 - 現行 `multistrap/ubuntu-22.04_armv8_jetson.conf`
 - 現行 `buildbase.py` の `install_rootfs()` 内 Jetson symlink 補正
+
+## 解決方法
+
+Jetson の rootfs 生成を multistrap から、0003 で導入した署名検証付き sysroot builder に切り替え、`multistrap/` ディレクトリを完全撤去した。`buildbase.py` の `install_rootfs()` 実装は melpon/buildbase テンプレート由来のためリポジトリからは削除せず、`run.py` の呼び出し元だけを撤去して dead code 化させた。
+
+### 追加
+
+- `sysroot/ubuntu-22.04_armv8_jetson.json`：packages は `nvidia-jetpack` メタパッケージを避け、`libc6-dev` / `libstdc++-11-dev` / `libxext-dev` / `libxtst-dev` / `nvidia-l4t-core` / `nvidia-l4t-camera` / `nvidia-l4t-multimedia` / `nvidia-l4t-multimedia-utils` / `nvidia-l4t-jetson-multimedia-api` の 9 個。Ubuntu Ports (HTTPS, `signed_by`, `pin_priority=500`) と NVIDIA `jetson/common` / `jetson/t234` (HTTPS, `signed_by`, `pin_priority=700`, `suite=r36.3`) の 3 repository。
+- `sysroot/keyrings/jetson-ota-public.asc`：一次配布元 `https://repo.download.nvidia.com/jetson/jetson-ota-public.asc` から取得。SHA-256、primary fingerprint、encryption / signing subkey fingerprint、capability は issue 記載値と完全一致。
+- `sysroot/keyrings/ubuntu-archive-keyring.gpg`：Ubuntu 22.04 の `/usr/share/keyrings/ubuntu-archive-keyring.gpg` から byte-identical に vendoring。SHA-256: `1a4dd63e5c76728960a2edddae22e2e0fc53df8e8b87806deb971030ac704eb0`。
+- `jetson_postprocess.py`：`fixup_jetson_libnvbuf_fdmap_symlinks(rootfs_dir)` を公開する独立モジュール。tegra / nvidia 両ディレクトリ (JetPack 5 系 / 6 系) の `libnvbuf_fdmap.so` 互換 symlink を張り、既存 link の誤 target・dangling・通常ファイル上書きは `JetsonPostprocessError` で拒否する。
+- `tests/jetson_postprocess/test_jetson_postprocess.py`：正常系（nvidia / tegra / 両方）、idempotent（正しい既存 link は再利用）、拒否系（誤 target / dangling / 通常ファイル）、no-op 系（target なし / rootfs 空）の 9 テスト。
+
+### 変更
+
+- `run.py`：`install_deps()` の rootfs 生成分岐を Jetson と Raspberry Pi OS で `install_sysroot()` に統一し、Jetson だけ後処理 `fixup_jetson_libnvbuf_fdmap_symlinks()` を呼ぶ。`hashlib` と `install_rootfs` の import を削除し、`from jetson_postprocess import fixup_jetson_libnvbuf_fdmap_symlinks` を追加。
+- `.github/workflows/build.yml`：Jetson 用の multistrap install と insecure sed を撤去。deps step を `Install deps for cross-compile targets` に統合。`Verify sysroot keyring checksums` の gate を両 matrix に拡張。`Test sysroot Python modules` step を `python3 -m pip install --user pytest` から `astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0` + `uv run --with pytest --python 3.13 python -m pytest tests/` に切り替え、gate を Raspberry Pi OS と Jetson の両 matrix に拡張。build 後の代表パス確認 step `Verify Jetson sysroot contents` を追加し、`libnvbuf_fdmap.so.1.0.0` / `libnvbuf_fdmap.so` symlink / `NvBufSurface.h` / `deb_files` の直接指定 9 パッケージ含有を検証する。
+- `sysroot/keyrings/SHA256SUMS`：`jetson-ota-public.asc` と `ubuntu-archive-keyring.gpg` の期待 SHA-256 を追記。
+- `prek.toml`：`ruff-check` / `ruff-format` の `files` に `jetson_postprocess.py` を含める形へ拡張。
+- `CHANGES.md`：`## develop` に `[CHANGE]` エントリを追記。0003 のエントリからは、本 issue の反映で不成立になる「Jetson は本変更のスコープ外」の sub bullet を撤去。
+- `tests/sysroot_builder/test_sysroot_builder.py`：Jetson の実 config `sysroot/ubuntu-22.04_armv8_jetson.json` をローダーで load するテスト `test_load_real_ubuntu_22_04_armv8_jetson_config` を追加し、`nvidia-jetpack` 不在・pin_priority・hostname と suite の組の 3-tuple までを検証する。
+
+### 削除
+
+- `multistrap/ubuntu-22.04_armv8_jetson.conf`。0003 で Raspberry Pi OS 用 conf を撤去済みだったため、本 PR で `multistrap/` ディレクトリ自体が空になり Git 上から消える。
+
+### 別途 issue 化を推奨
+
+- momo リポジトリ直下に `pyproject.toml` を導入し、`sysroot_builder.py` と `jetson_postprocess.py` と `tests/` を uv 管理下へ置いて `ty check` の対象に含める。あわせて `prek.toml` を canonical 流の全 Python 対象へ統一する。
