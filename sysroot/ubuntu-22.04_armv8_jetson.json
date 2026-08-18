@@ -1,0 +1,39 @@
+{
+    "name": "ubuntu-22.04_armv8_jetson",
+    "arch": "arm64",
+    "triplet": "aarch64-linux-gnu",
+    "packages": [
+        "libc6-dev",
+        "libstdc++-11-dev",
+        "libxext-dev",
+        "libxtst-dev",
+        "nvidia-l4t-core",
+        "nvidia-l4t-camera",
+        "nvidia-l4t-multimedia",
+        "nvidia-l4t-multimedia-utils",
+        "nvidia-l4t-jetson-multimedia-api"
+    ],
+    "repositories": [
+        {
+            "url": "https://ports.ubuntu.com/ubuntu-ports",
+            "suite": "jammy",
+            "components": ["main", "universe"],
+            "signed_by": "keyrings/ubuntu-archive-keyring.gpg",
+            "pin_priority": 500
+        },
+        {
+            "url": "https://repo.download.nvidia.com/jetson/common",
+            "suite": "r36.3",
+            "components": ["main"],
+            "signed_by": "keyrings/jetson-ota-public.asc",
+            "pin_priority": 700
+        },
+        {
+            "url": "https://repo.download.nvidia.com/jetson/t234",
+            "suite": "r36.3",
+            "components": ["main"],
+            "signed_by": "keyrings/jetson-ota-public.asc",
+            "pin_priority": 700
+        }
+    ]
+}

@@ -1,2 +1,4 @@
 506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017  debian-archive-keyring.gpg
+576f852981855e5c6cfb9b625ffb51b984ca451f1181b2e70435b005034fad55  jetson-ota-public.asc
 76603890d82a492175caf17aba68dc73acb1189c9fd58ec0c19145dfa3866d56  raspberrypi-archive-keyring.asc
+1a4dd63e5c76728960a2edddae22e2e0fc53df8e8b87806deb971030ac704eb0  ubuntu-archive-keyring.gpg

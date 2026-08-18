@@ -132,27 +132,20 @@ jobs:
           # 1.4G
           sudo rm -rf /usr/share/dotnet
           df -h
-      - name: Install deps for Jetson
-        if: matrix.name == 'ubuntu-22.04_armv8_jetson'
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install multistrap binutils-aarch64-linux-gnu
-          # multistrap に insecure なリポジトリからの取得を許可する設定を入れる
-          sudo sed -e 's/Apt::Get::AllowUnauthenticated=true/Apt::Get::AllowUnauthenticated=true";\n$config_str .= " -o Acquire::AllowInsecureRepositories=true/' -i /usr/sbin/multistrap
-      - name: Install deps for Raspberry Pi OS
-        if: matrix.name == 'raspberry-pi-os_armv8'
+      - name: Install deps for cross-compile targets
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
         run: |
           sudo apt-get update
           sudo apt-get -y install binutils-aarch64-linux-gnu
       - name: Verify sysroot keyring checksums
-        if: matrix.name == 'raspberry-pi-os_armv8'
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
         working-directory: sysroot/keyrings
         run: sha256sum -c SHA256SUMS
-      - name: Test sysroot_builder
-        if: matrix.name == 'raspberry-pi-os_armv8'
-        run: |
-          python3 -m pip install --user pytest
-          python3 -m pytest tests/sysroot_builder/
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
+      - name: Test sysroot Python modules
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson' || matrix.name == 'raspberry-pi-os_armv8'
+        run: uv run --with pytest --python 3.13 python -m pytest tests/
       - uses: shiguredo/github-actions/.github/actions/setup-cuda-toolkit@main
         if: matrix.name == 'ubuntu-24.04_x86_64' || matrix.name == 'ubuntu-22.04_x86_64'
         id: cuda
@@ -197,6 +190,38 @@ jobs:
           rootfs = Path("_install/raspberry-pi-os_armv8/release/rootfs")
           manifest = json.loads((rootfs / ".webrtc-build-sysroot.json").read_text())
           config = json.loads(Path("sysroot/raspberry-pi-os_armv8.json").read_text())
+          deb_files = manifest["deb_files"]
+          missing = [
+              package
+              for package in config["packages"]
+              if not any(name.startswith(f"{package}_") for name in deb_files)
+          ]
+          if missing:
+              print(f"missing direct packages in deb_files: {missing}", file=sys.stderr)
+              sys.exit(1)
+          PY
+      - name: Verify Jetson sysroot contents
+        if: matrix.name == 'ubuntu-22.04_armv8_jetson'
+        run: |
+          set -eu
+          rootfs=_install/ubuntu-22.04_armv8_jetson/release/rootfs
+          # NVIDIA が配置する共有ライブラリ実体と、後処理で作った相対 symlink が両方揃っているか。
+          # symlink 側は `-L` で symlink であること + `-f` で resolve 先が実ファイルであることの両方を確認する。
+          test -f "$rootfs/usr/lib/aarch64-linux-gnu/nvidia/libnvbuf_fdmap.so.1.0.0"
+          test -L "$rootfs/usr/lib/aarch64-linux-gnu/nvidia/libnvbuf_fdmap.so"
+          test -f "$rootfs/usr/lib/aarch64-linux-gnu/nvidia/libnvbuf_fdmap.so"
+          # Jetson Multimedia API ヘッダの存在確認。CMakeLists の Jetson 分岐が参照する。
+          test -f "$rootfs/usr/src/jetson_multimedia_api/include/NvBufSurface.h"
+          # 直接指定したパッケージが manifest の deb_files に含まれることを確認する。
+          # 依存で入る transitive package の件数はぶれるため、明示指定のパッケージだけを検証する。
+          python3 - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          rootfs = Path("_install/ubuntu-22.04_armv8_jetson/release/rootfs")
+          manifest = json.loads((rootfs / ".webrtc-build-sysroot.json").read_text())
+          config = json.loads(Path("sysroot/ubuntu-22.04_armv8_jetson.json").read_text())
           deb_files = manifest["deb_files"]
           missing = [
               package
