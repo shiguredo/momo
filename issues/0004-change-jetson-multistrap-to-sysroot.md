@@ -61,7 +61,8 @@ Medium とする。
 6. `multistrap/ubuntu-22.04_armv8_jetson.conf` と `multistrap/` ディレクトリ自体を削除する。
 7. `buildbase.py` の `install_rootfs()` はリポジトリからは削除しない。呼び出し元 (run.py の Jetson 分岐) を無くすことで dead code 化するだけに留める（`buildbase.py` は melpon/buildbase テンプレートで次回 `curl -LO` 上書きで復活するため、削除しても維持できない。0003 の「テンプレート外への逸脱は次回上書きで巻き戻る」対称形）。
 8. `.github/workflows/build.yml` から `multistrap` install と insecure sed を完全削除する。0003 で target 別に分割された deps step のうち、Jetson 側の `if:` 分岐と `multistrap` / sed 行を落とす。
-9. `CHANGES.md` に `[CHANGE]` を追記する。
+9. 0003 で追加した `Test sysroot_builder` step の `if:` gate を Jetson matrix にも広げる（`raspberry-pi-os_armv8` に加えて `ubuntu-22.04_armv8_jetson` でも走らせる）。同 step の `python3 -m pip install --user pytest` を uv 経由に切り替える（`astral-sh/setup-uv` + `uv run --with pytest pytest tests/sysroot_builder/` など。`shiguredo-python` の「パッケージマネージャ・タスクランナーは uv のみ」に整合させる。pyproject.toml の新設はしない）。
+10. `CHANGES.md` に `[CHANGE]` を追記する。
 
 含まない:
 
