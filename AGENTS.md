@@ -31,6 +31,10 @@
 
 - issues を作成・管理するときは `shiguredo-issues` スキルを参照すること
 
+## GitHub Actions について
+
+- GitHub Actions を作成・変更・レビューするときは `shiguredo-github-actions` スキルを参照すること
+
 ## 言語について
 
 - Erlang/OTP のコードを書くときは `shiguredo-erlang` スキルを参照すること
