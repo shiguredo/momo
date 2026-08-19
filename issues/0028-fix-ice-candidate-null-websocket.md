@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-ice-candidate-null-websocket
 - Polished: {YYYY-MM-DD}
+- Milestone: 2026.1.0
 
 ## 目的
 
