@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-signaling-json-exception
 - Polished: 2026-08-19
+- Milestone: 2026.1.0
 
 ## 目的
 
