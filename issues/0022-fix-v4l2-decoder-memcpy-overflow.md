@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-v4l2-decoder-memcpy-overflow
 - Polished: {YYYY-MM-DD}
+- Milestone: 2026.1.0
 
 ## 目的
 
