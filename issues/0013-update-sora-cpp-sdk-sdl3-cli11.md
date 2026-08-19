@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/update-sora-cpp-sdk-sdl3-cli11
 - Polished: 2026-08-19
+- Milestone: 2026.1.0
 
 ## 目的
 
