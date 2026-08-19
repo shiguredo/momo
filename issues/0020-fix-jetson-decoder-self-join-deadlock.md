@@ -22,7 +22,7 @@ Jetson ハードウェアデコーダ (`JetsonVideoDecoder`) の CaptureLoop ス
 - `INIT_ERROR` は `JetsonConfigure()` 用に据え置き、`SetCapture()` 用に `Release()` を呼ばない派生マクロを新設するか、`SetCapture()` を `int32_t SetCaptureOnCaptureThread()` に分離して `got_error_ = true; return WEBRTC_VIDEO_CODEC_ERROR;` に統一する。呼び出し側 `CaptureLoop` は戻り値を無視せず `got_error_` を見て即時脱出する
 - `SetCapture()` 失敗時は `got_error_` を立てて `CaptureLoop` を即時脱出 (`break` / `return`) し、後段の `dqBuffer` に不正状態で到達しないようにする。`got_error_` は `JetsonConfigure()` 成功時または `JetsonRelease()` 末尾で `false` にリセットする。リソース (`dst_dma_fd_` / `capture_plane`) の後始末は `JetsonRelease()` に委ね、上位へのエラー通知は `CaptureLoop` 脱出で自然に `Release()` が呼ばれる経路を担保する
 - `JetsonRelease()` に CaptureLoop スレッド上なら `Finalize()` しないガードを追加する (`capture_loop_` が空でなく current thread が `capture_loop_` なら `Finalize()` をスキップし、リソース解放は外部 `Release()` に委譲する)。自己 Join を防ぐ
-- 本 issue では自己 Join の解消のみを扱い、`SendEOS` 未初期化は `0021`、`CHUNK_SIZE` 超過 `memcpy` は `0013` の 14 件確認に委譲する
+- 本 issue では自己 Join の解消のみを扱い、`SendEOS` 未初期化は `0021`、`CHUNK_SIZE` 超過 `memcpy` は `0013` の 13 件確認に委譲する
 
 ## 完了条件
 
