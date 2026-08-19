@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-jetson-encoder-send-eos
 - Polished: {YYYY-MM-DD}
+- Milestone: 2026.1.0
 
 ## 目的
 
