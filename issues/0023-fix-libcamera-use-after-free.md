@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-libcamera-use-after-free
 - Polished: {YYYY-MM-DD}
+- Milestone: 2026.1.0
 
 ## 目的
 
