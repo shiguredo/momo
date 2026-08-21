@@ -1,20 +1,21 @@
-# 埋め込まれた Let's Encrypt R3 中間証明書が失効済みのため削除する
+# 埋め込まれた Let's Encrypt R3 中間証明書が期限切れのため削除する
 
 - Created: 2026-08-19
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-expired-r3-certificate
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-08-20
 - Milestone: 2026.1.0
 
 ## 目的
 
-`src/ssl_verifier.cpp` にハードコードされた Let's Encrypt R3 中間証明書が `NotAfter: 2025-09-15` で失効済みである。trust anchor として直接 `X509_STORE_add_cert` に積んでいるため現状は接続が壊れていないが、中間証明書をルートとして pin する設計自体が誤解を招き、OpenSSL の挙動変更や別検証経路で接続障害になる潜在リスクがある。失効済みの証明書を削除する。
+`src/ssl_verifier.cpp` にハードコードされた Let's Encrypt R3 中間証明書は `NotAfter: 2025-09-15` で期限切れである。`X509_STORE_add_cert` で trust anchor として積んでいるが、実際の検証は `isrg_root` とサーバが提供するチェーンで成立しており、現在の検証経路で R3 は使用されない。また R3 自体が期限切れのため、R3 を含むチェーンは 2025-09-15 以降検証不能であり、R3 の pin は検証に寄与しない。期限切れの証明書を trust anchor として残す設計は誤解を招き、BoringSSL の挙動変更や別検証経路で接続障害になる潜在リスクがある。期限切れの証明書を削除する。
 
 ## 現状
 
-- `src/ssl_verifier.cpp` の `lets_encrypt_r3` (57-90 行) の notAfter が `250915160000Z` = 2025-09-15 で失効済み
-- `VerifyX509()` が `AddCert(lets_encrypt_r3, store)` (191 行) で trust anchor として追加
+- `src/ssl_verifier.cpp` の `lets_encrypt_r3` の notAfter が `250915160000Z` = 2025-09-15 で期限切れ
+- `VerifyX509()` が `AddCert(lets_encrypt_r3, store)` で trust anchor として追加
 - `isrg_root` (2035 年まで) は有効
+- 同一ファイルを変更する 0014 と並行しており、0014 は本 issue を先にマージしてから rebase する順序を推奨している
 
 ## 設計方針
 
@@ -24,7 +25,7 @@
 
 ## 完了条件
 
-- `src/ssl_verifier.cpp` から失効済み R3 証明書が削除されている
+- `src/ssl_verifier.cpp` から期限切れ R3 証明書が削除されている
 - WSS 接続の E2E テストが通る
 
 ## 解決方法
