@@ -1,7 +1,7 @@
 # README の libwebrtc バージョン表記と著作権年を実態に合わせる
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-21
 - Branch: feature/update-readme-version
 - Polished: 2026-08-21
 - Milestone: 2026.1.0
@@ -33,4 +33,12 @@ Copyright 2018 Shiguredo Inc.
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- `README.md` 先頭の libwebrtc バッジを `m150.7871.3.0` に更新し、リンク先を `branch-heads/7871` に変更した
+- ライセンスセクションの著作権表記を年範囲から初出年のみに変更した
+
+```text
+Copyright 2015 tnoho (Original Author)
+Copyright 2018 Shiguredo Inc.
+```
+
+- PR: https://github.com/shiguredo/momo/pull/461
