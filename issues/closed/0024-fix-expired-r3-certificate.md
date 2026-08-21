@@ -1,7 +1,7 @@
 # 埋め込まれた Let's Encrypt R3 中間証明書が期限切れのため削除する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-21
 - Branch: feature/fix-expired-r3-certificate
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -30,4 +30,8 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- `src/ssl_verifier.cpp` から `lets_encrypt_r3` 定数を削除した
+- `VerifyX509()` 内の `AddCert(lets_encrypt_r3, store)` 呼び出しを削除した
+- `isrg_root` と WebRTC 組込みルート・システム既定パスによる検証はそのまま残した
+- CI の全プラットフォームビルドおよび WSS を含む E2E が通過したことを確認した
+- PR: https://github.com/shiguredo/momo/pull/462
