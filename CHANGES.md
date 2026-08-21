@@ -105,6 +105,13 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] WSS 接続時にサーバ証明書のホスト名検証を行う
+  - チェーン検証に加え、接続先ホスト名と証明書の SAN / CN を照合するようにする
+  - `--insecure` 指定時は従来どおり検証をスキップする
+  - @Hexa
+- [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
+  - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
+  - @Hexa
 - [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
   - @melpon
 - [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
