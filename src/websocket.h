@@ -81,7 +81,7 @@ class Websocket {
 
  private:
   bool IsSSL() const;
-  void InitWss(ssl_websocket_t* wss, bool insecure);
+  void InitWss(ssl_websocket_t* wss);
 
   void OnResolve(boost::system::error_code ec,
                  boost::asio::ip::tcp::resolver::results_type results);

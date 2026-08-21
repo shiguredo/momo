@@ -10,6 +10,10 @@
 class SSLVerifier {
  public:
   static bool VerifyX509(X509* x509, STACK_OF(X509) * chain);
+  // host が空の場合はチェーン検証のみを行う
+  static bool VerifyX509(X509* x509,
+                         STACK_OF(X509) * chain,
+                         const std::string& host);
 
  private:
   // PEM 形式のルート証明書を追加する
