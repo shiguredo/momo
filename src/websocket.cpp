@@ -15,6 +15,30 @@
 #include "ssl_verifier.h"
 #include "util.h"
 
+namespace {
+
+// WSS ホスト名検証用に接続先ホスト名を正規化する
+std::string NormalizeHostForVerification(const std::string& host) {
+  std::string normalized = host;
+
+  // IPv6 リテラルのブラケットを除去する
+  if (!normalized.empty() && normalized.front() == '[') {
+    const auto end = normalized.find(']');
+    if (end != std::string::npos) {
+      normalized = normalized.substr(1, end - 1);
+    }
+  }
+
+  // 末尾ドットを除去する
+  while (!normalized.empty() && normalized.back() == '.') {
+    normalized.pop_back();
+  }
+
+  return normalized;
+}
+
+}  // namespace
+
 static std::shared_ptr<boost::asio::ssl::context> CreateSSLContext(
     const std::string& client_cert,
     const std::string& client_key) {
@@ -57,7 +81,7 @@ Websocket::Websocket(Websocket::ssl_tag,
       insecure_(insecure) {
   ssl_ctx_ = CreateSSLContext(client_cert, client_key);
   wss_.reset(new ssl_websocket_t(ioc, *ssl_ctx_));
-  InitWss(wss_.get(), insecure);
+  InitWss(wss_.get());
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
     : ws_(new websocket_t(std::move(socket))), strand_(ws_->get_executor()) {
@@ -73,6 +97,7 @@ Websocket::Websocket(https_proxy_tag,
                      std::string proxy_password)
     : resolver_(new boost::asio::ip::tcp::resolver(ioc)),
       strand_(ioc.get_executor()),
+      insecure_(insecure),
       https_proxy_(true),
       proxy_socket_(new boost::asio::ip::tcp::socket(ioc)),
       proxy_url_(std::move(proxy_url)),
@@ -89,22 +114,27 @@ bool Websocket::IsSSL() const {
   return https_proxy_ || wss_ != nullptr;
 }
 
-void Websocket::InitWss(ssl_websocket_t* wss, bool insecure) {
+void Websocket::InitWss(ssl_websocket_t* wss) {
   wss->write_buffer_bytes(8192);
 
   wss->next_layer().set_verify_mode(boost::asio::ssl::verify_peer);
   wss->next_layer().set_verify_callback(
-      [insecure](bool preverified, boost::asio::ssl::verify_context& ctx) {
-        if (preverified) {
-          return true;
-        }
-        // insecure の場合は証明書をチェックしない
-        if (insecure) {
+      [this](bool /*preverified*/, boost::asio::ssl::verify_context& ctx) {
+        if (this->insecure_) {
           return true;
         }
         X509* cert = X509_STORE_CTX_get0_cert(ctx.native_handle());
         STACK_OF(X509)* chain = X509_STORE_CTX_get0_chain(ctx.native_handle());
-        return SSLVerifier::VerifyX509(cert, chain);
+        const std::string host =
+            NormalizeHostForVerification(this->parts_.host);
+        if (!SSLVerifier::VerifyX509(cert, chain, host)) {
+          // 自前検証のため asio 側 ctx にエラーが載らない。
+          // ホスト名不一致時も ERR に積まれないため明示設定する
+          X509_STORE_CTX_set_error(ctx.native_handle(),
+                                   X509_V_ERR_APPLICATION_VERIFICATION);
+          return false;
+        }
+        return true;
       });
 }
 
@@ -366,7 +396,7 @@ void Websocket::OnReadProxy(boost::system::error_code ec,
 
   // wss を作って、あとは普通の SSL ハンドシェイクを行う
   wss_.reset(new ssl_websocket_t(std::move(*proxy_socket_), *ssl_ctx_));
-  InitWss(wss_.get(), insecure_);
+  InitWss(wss_.get());
 
   // SNI の設定を行う
   if (!SSL_set_tlsext_host_name(wss_->next_layer().native_handle(),
