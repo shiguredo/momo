@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m138.7204-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7204)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m150.7871.3.0-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7871)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/shiguredo/momo.svg)](https://github.com/shiguredo/momo)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/momo/actions/workflows/build.yml/badge.svg)](https://github.com/shiguredo/momo/actions/workflows/build.yml)
@@ -169,8 +169,8 @@ Momo を使ってみたい人は [USE.md](doc/USE.md) をお読みください�
 Apache License 2.0
 
 ```text
-Copyright 2015-2025, tnoho (Original Author)
-Copyright 2018-2025, Shiguredo Inc.
+Copyright 2015 tnoho (Original Author)
+Copyright 2018 Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
