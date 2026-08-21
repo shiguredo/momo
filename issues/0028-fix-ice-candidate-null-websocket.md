@@ -8,24 +8,27 @@
 
 ## 目的
 
-`SoraClient` / `AyameClient` の `OnIceCandidate` コールバックが `ws_` を null チェックなしで使用する。`ws_` は ioc スレッドの `Close()` や DataChannel シグナリングへの切替 (`switched`) で `nullptr` 化される一方、`OnIceCandidate` は WebRTC のシグナリングスレッドから呼ばれるため、切断中ウィンドウで null deref (または ayame では use-after-free) するレースがある。これを修正する。
+`SoraClient` / `AyameClient` の `OnIceCandidate` コールバックが `ws_` を null チェックなしで使用する。`ws_` は ioc スレッドの `Close()` や DataChannel シグナリングへの切替 (`switched`) で `nullptr` 化される一方、`OnIceCandidate` は WebRTC のシグナリングスレッドから呼ばれるため、切断中ウィンドウで null deref (または ayame では use-after-free) するレースがある。answer 送信など WebRTC スレッドから `ws_` にアクセスする他のコールバックも同様の問題を持つ。これを修正する。
 
 ## 現状
 
-- `src/sora/sora_client.cpp` の `OnIceCandidate()` (732-737 行): `ws_->WriteText()` を null チェックなしで呼ぶ
-- 同 `OnCreateAnswer` コールバック (531-539 行): `ws_` を null チェックなしで使用
-- `src/ayame/ayame_client.cpp` の `OnIceCandidate` (529-541 行) / `OnCreateAnswer` 相当 (474-496 行): 同様。ayame は `ws_` が `unique_ptr` で `Reset()` により破棄されるため use-after-free リスクがより高い
-- `ws_` は `Close()` (sora_client.cpp:88) / `switched` 処理 (619 行) で nullptr 化される
+- `src/sora/sora_client.cpp` の `OnIceCandidate()`: `ws_->WriteText()` を null チェックなしで呼ぶ
+- 同 `CreateAnswer` の完了コールバック: `ws_` を null チェックなしで使用 (ioc スレッドへの post 内だが、`Close()` / `switched` で `ws_` のみ null 化される場合に deref する)
+- `src/ayame/ayame_client.cpp` の `OnIceCandidate`: 同様。ayame は `ws_` が `unique_ptr` で `Reset()` により破棄されるため use-after-free リスクがより高い
+- 同 `CreateOffer` / `CreateAnswer` の完了コールバック: WebRTC シグナリングスレッドから `ws_` へ null チェックなしでアクセスする
+- `ws_` は `SoraClient::Close()` / `switched` 処理 (sora) で nullptr 化、`AyameClient::Reset()` で破棄される
+- 既存の `OnIceConnectionStateChange` (sora / ayame) は `destructed_` チェック + `boost::asio::post` + `shared_from_this()` のパターンを採用しており、本修正の参照点となる
 
 ## 設計方針
 
-- `ws_` のアクセスを ioc スレッドで post して行い、null チェックを追加する
+- `OnIceConnectionStateChange` と同じく、WebRTC スレッドからの `ws_` アクセスは `destructed_` チェック後に `boost::asio::post` で ioc スレッドへ移し、null チェックを追加する
 - `ws_` が nullptr の場合、そのコールバックを無視する
-- ayame の `unique_ptr` 破棄 (Reset) による use-after-free を防ぐため、破棄とコールバックの同期を取る
+- ayame の `unique_ptr` 破棄 (`Reset`) による use-after-free は、post と破棄が同一 ioc スレッドで直列化されることで防ぐ
 
 ## 完了条件
 
 - 切断・切替中に ICE candidate が届いてもクラッシュしない
+- 切断・切替後に answer 生成が完了してもクラッシュしない
 - 正常なシグナリングフローは従来通り動作する
 
 ## 解決方法
