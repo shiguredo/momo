@@ -1,7 +1,7 @@
 # WSS 接続でサーバ証明書のホスト名検証が行われていない
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-21
 - Branch: feature/fix-websocket-hostname-verification
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -38,4 +38,13 @@ Momo が Sora / Ayame / P2P のシグナリングサーバへ WSS 接続する�
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- `SSLVerifier::VerifyX509` にホスト名引数付きオーバーロードを追加し、チェーン検証成功後に `X509_check_host` / `X509_check_ip` で照合するようにした
+- `Websocket::InitWss` の verify コールバックから `preverified` 分岐を削除し、`[this]` 経由で `parts_.host` と `insecure_` を参照するようにした
+- ホスト名は Websocket 側で正規化 (IPv6 ブラケット除去・末尾ドット除去) してから渡す
+- 検証失敗時は `X509_V_ERR_APPLICATION_VERIFICATION` を設定してハンドシェイクを失敗させる
+- HTTP プロキシ経路でも接続先ホストで検証し、`https_proxy` コンストラクタの `insecure_` 初期化漏れを修正した
+- CI の全プラットフォームビルドおよび WSS を含む E2E が通過したことを確認した
+- PR の CI 成果物バイナリで手動確認した
+  - `wrong.host.badssl.com` 指定時: momo から Handshake Failure の Alert が送られる
+  - `--insecure` 追加時: Alert は送られず Application Data のやり取りまで進む
+- PR: https://github.com/shiguredo/momo/pull/463
