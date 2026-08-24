@@ -1,7 +1,7 @@
 # シグナリングサーバから受信した JSON のパース例外未処理でプロセスが落ちる
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-24
 - Branch: feature/fix-signaling-json-exception
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -34,4 +34,8 @@ Sora / Ayame / P2P の各シグナリングでサーバから受信する JSON �
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- `SoraClient::OnRead` / `SoraClient::OnMessage`、`AyameClient::OnRead`、`P2PWebsocketSession::OnRead` で `boost::json` のパースおよび `at` / `as_*` を try/catch し、失敗時は英語でエラーをロギングしたうえでメッセージを無視して受信を継続するようにした
+- `SoraClient::OnMessage` では `ZlibHelper::Uncompress` を JSON 用 try の外に置き、zlib 例外を偶然握り潰さないようにした
+- P2P 向けに実 WebSocket で不正 JSON（パース失敗・型不一致・キー欠落）を注入し、プロセスが生存したまま `register` に `accept` が返る回帰テストを追加した
+- CI の全プラットフォームビルドおよび build 経由の E2E（`from_build: true`）が通過したことを確認した
+- PR: https://github.com/shiguredo/momo/pull/464

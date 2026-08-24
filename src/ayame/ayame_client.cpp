@@ -418,100 +418,109 @@ void AyameClient::OnRead(boost::system::error_code ec,
 
   RTC_LOG(LS_INFO) << __func__ << ": text=" << text;
 
-  auto json_message = boost::json::parse(text);
-  const std::string type = json_message.at("type").as_string().c_str();
-  if (type == "accept") {
-    ice_servers_ =
-        CreateIceServersFromConfig(json_message, config_.no_google_stun);
-    connection_ =
-        CreateRTCConnection(manager_, this, ice_servers_, config_.direction,
-                            config_.video_codec_type, config_.audio_codec_type);
-    if (!connection_) {
-      RTC_LOG(LS_ERROR) << __func__
-                        << ": peer connection setup failed at accept";
-      Close();
-      return;
-    }
-    // isExistUser フラグが存在するか確認する
-    auto is_exist_user = false;
-    if (json_message.as_object().contains("isExistUser")) {
-      has_is_exist_user_flag_ = true;
-      is_exist_user = json_message.at("isExistUser").as_bool();
-    }
-
-    auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
-      std::string sdp;
-      desc->ToString(&sdp);
-      manager_->SetParameters();
-      boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
-      ws_->WriteText(boost::json::serialize(json_message));
-    };
-
-    // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
-    if (is_exist_user) {
-      RTC_LOG(LS_INFO) << __func__ << ": exist_user";
-      is_send_offer_ = true;
-      connection_->CreateOffer(on_create_offer);
-    } else if (!has_is_exist_user_flag_) {
-      // フラグがない場合とりあえず送信
-      connection_->CreateOffer(on_create_offer);
-    }
-  } else if (type == "offer") {
-    // isExistUser フラグがなかった場合もう一度 peer connection を生成する
-    if (!has_is_exist_user_flag_) {
+  try {
+    auto json_message = boost::json::parse(text);
+    const std::string type = json_message.at("type").as_string().c_str();
+    if (type == "accept") {
+      ice_servers_ =
+          CreateIceServersFromConfig(json_message, config_.no_google_stun);
       connection_ = CreateRTCConnection(
           manager_, this, ice_servers_, config_.direction,
           config_.video_codec_type, config_.audio_codec_type);
-    }
-    if (!connection_) {
-      RTC_LOG(LS_ERROR) << __func__
-                        << ": peer connection is not ready for offer";
-      Close();
-      return;
-    }
-    const std::string sdp = json_message.at("sdp").as_string().c_str();
-    auto self = shared_from_this();
-    connection_->SetOffer(sdp, [self]() {
-      boost::asio::post(self->ioc_, [self]() {
-        // Answer を作成する条件:
-        // 1. 自分から Offer を送信していない場合 (!is_send_offer_)
-        // 2. isExistUser フラグがなかった場合 (!has_is_exist_user_flag_)
-        // isExistUser フラグがある場合は既存ユーザーがいることを示すため、
-        // 2回目の Offer を受信した時にのみ Answer を作成する
-        const bool should_create_answer =
-            !self->is_send_offer_ || !self->has_is_exist_user_flag_;
-        if (should_create_answer) {
-          self->connection_->CreateAnswer(
-              [self](webrtc::SessionDescriptionInterface* desc) {
-                std::string sdp;
-                desc->ToString(&sdp);
-                self->manager_->SetParameters();
-                boost::json::value json_message = {{"type", "answer"},
-                                                   {"sdp", sdp}};
-                self->ws_->WriteText(boost::json::serialize(json_message));
-              });
-        }
-        self->is_send_offer_ = false;
+      if (!connection_) {
+        RTC_LOG(LS_ERROR) << __func__
+                          << ": peer connection setup failed at accept";
+        Close();
+        return;
+      }
+      // isExistUser フラグが存在するか確認する
+      auto is_exist_user = false;
+      if (json_message.as_object().contains("isExistUser")) {
+        has_is_exist_user_flag_ = true;
+        is_exist_user = json_message.at("isExistUser").as_bool();
+      }
+
+      auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        manager_->SetParameters();
+        boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
+        ws_->WriteText(boost::json::serialize(json_message));
+      };
+
+      // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
+      if (is_exist_user) {
+        RTC_LOG(LS_INFO) << __func__ << ": exist_user";
+        is_send_offer_ = true;
+        connection_->CreateOffer(on_create_offer);
+      } else if (!has_is_exist_user_flag_) {
+        // フラグがない場合とりあえず送信
+        connection_->CreateOffer(on_create_offer);
+      }
+    } else if (type == "offer") {
+      // isExistUser フラグがなかった場合もう一度 peer connection を生成する
+      if (!has_is_exist_user_flag_) {
+        connection_ = CreateRTCConnection(
+            manager_, this, ice_servers_, config_.direction,
+            config_.video_codec_type, config_.audio_codec_type);
+      }
+      if (!connection_) {
+        RTC_LOG(LS_ERROR) << __func__
+                          << ": peer connection is not ready for offer";
+        Close();
+        return;
+      }
+      const std::string sdp = json_message.at("sdp").as_string().c_str();
+      auto self = shared_from_this();
+      connection_->SetOffer(sdp, [self]() {
+        boost::asio::post(self->ioc_, [self]() {
+          // Answer を作成する条件:
+          // 1. 自分から Offer を送信していない場合 (!is_send_offer_)
+          // 2. isExistUser フラグがなかった場合 (!has_is_exist_user_flag_)
+          // isExistUser フラグがある場合は既存ユーザーがいることを示すため、
+          // 2回目の Offer を受信した時にのみ Answer を作成する
+          const bool should_create_answer =
+              !self->is_send_offer_ || !self->has_is_exist_user_flag_;
+          if (should_create_answer) {
+            self->connection_->CreateAnswer(
+                [self](webrtc::SessionDescriptionInterface* desc) {
+                  std::string sdp;
+                  desc->ToString(&sdp);
+                  self->manager_->SetParameters();
+                  boost::json::value json_message = {{"type", "answer"},
+                                                     {"sdp", sdp}};
+                  self->ws_->WriteText(boost::json::serialize(json_message));
+                });
+          }
+          self->is_send_offer_ = false;
+        });
       });
-    });
-  } else if (type == "answer") {
-    const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetAnswer(sdp);
-  } else if (type == "candidate") {
-    boost::json::value ice = json_message.at("ice");
-    std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
-    int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
-    std::string candidate = ice.at("candidate").as_string().c_str();
-    connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-  } else if (type == "ping") {
-    watchdog_.Reset();
-    DoSendPong();
-  } else if (type == "bye") {
-    RTC_LOG(LS_INFO) << __func__ << ": bye";
-    connection_ = nullptr;
-    Close();
+    } else if (type == "answer") {
+      const std::string sdp = json_message.at("sdp").as_string().c_str();
+      connection_->SetAnswer(sdp);
+    } else if (type == "candidate") {
+      boost::json::value ice = json_message.at("ice");
+      std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
+      int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
+      std::string candidate = ice.at("candidate").as_string().c_str();
+      connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
+    } else if (type == "ping") {
+      watchdog_.Reset();
+      DoSendPong();
+    } else if (type == "bye") {
+      RTC_LOG(LS_INFO) << __func__ << ": bye";
+      connection_ = nullptr;
+      Close();
+    }
+    DoRead();
+  } catch (const boost::system::system_error& e) {
+    // キー欠落・型不一致でもプロセスを落とさず、受信を継続する
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+    DoRead();
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+    DoRead();
   }
-  DoRead();
 }
 
 // WebRTC からのコールバック
