@@ -109,6 +109,9 @@
   - チェーン検証に加え、接続先ホスト名と証明書の SAN / CN を照合するようにする
   - `--insecure` 指定時は従来どおり検証をスキップする
   - @Hexa
+- [FIX] シグナリング JSON のパース例外未処理でプロセスが落ちる問題を修正する
+  - Sora / Ayame / P2P の受信経路で `boost::json` の例外を catch し、エラーをロギングしたうえで、受信を継続する
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa

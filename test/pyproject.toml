@@ -16,6 +16,7 @@ dev = [
     "ruff",
     "ty",
     "pyjwt",
+    "websockets",
 ]
 
 [tool.pytest.ini_options]

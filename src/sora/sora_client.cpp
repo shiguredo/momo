@@ -422,208 +422,219 @@ void SoraClient::OnRead(boost::system::error_code ec,
 
   RTC_LOG(LS_INFO) << __func__ << ": text=" << text;
 
-  auto json_message = boost::json::parse(text);
-  const std::string type = json_message.at("type").as_string().c_str();
-  if (type == "redirect") {
-    const std::string location =
-        json_message.at("location").as_string().c_str();
-    Redirect(location);
-    // Redirect の中で次の Read をしているのでここで return する
-    return;
-  } else if (type == "offer") {
-    // Data Channel の圧縮されたデータが送られてくるラベルを覚えておく
-    {
-      auto it = json_message.as_object().find("data_channels");
-      if (it != json_message.as_object().end()) {
-        const auto& ar = it->value().as_array();
-        for (const auto& v : ar) {
-          if (v.at("compress").as_bool()) {
-            compressed_labels_.insert(v.at("label").as_string().c_str());
+  try {
+    auto json_message = boost::json::parse(text);
+    const std::string type = json_message.at("type").as_string().c_str();
+    if (type == "redirect") {
+      const std::string location =
+          json_message.at("location").as_string().c_str();
+      Redirect(location);
+      // Redirect の中で次の Read をしているのでここで return する
+      return;
+    } else if (type == "offer") {
+      // Data Channel の圧縮されたデータが送られてくるラベルを覚えておく
+      {
+        auto it = json_message.as_object().find("data_channels");
+        if (it != json_message.as_object().end()) {
+          const auto& ar = it->value().as_array();
+          for (const auto& v : ar) {
+            if (v.at("compress").as_bool()) {
+              compressed_labels_.insert(v.at("label").as_string().c_str());
+            }
           }
         }
       }
-    }
 
-    connection_ = CreateRTCConnection(json_message.at("config"));
-    const std::string sdp = json_message.at("sdp").as_string().c_str();
+      connection_ = CreateRTCConnection(json_message.at("config"));
+      const std::string sdp = json_message.at("sdp").as_string().c_str();
 
-    connection_->SetOffer(sdp, [self = shared_from_this(), json_message]() {
-      boost::asio::post(self->ioc_, [self, json_message]() {
-        if (!self->connection_) {
-          return;
-        }
-
-        // simulcast では offer の setRemoteDescription が終わった後に
-        // トラックを追加する必要があるため、ここで初期化する
-        self->manager_->InitTracks(self->connection_.get(), std::nullopt);
-
-        if (self->config_.simulcast &&
-            json_message.as_object().count("encodings") != 0) {
-          std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
-
-          // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
-          auto encodings_json = json_message.at("encodings").as_array();
-          for (auto v : encodings_json) {
-            auto p = v.as_object();
-            webrtc::RtpEncodingParameters params;
-            // std::optional<uint32_t> ssrc;
-            // double bitrate_priority = kDefaultBitratePriority;
-            // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
-            // Priority network_priority = Priority::kLow;
-            // std::optional<int> max_bitrate_bps;
-            // std::optional<int> min_bitrate_bps;
-            // std::optional<double> max_framerate;
-            // std::optional<int> num_temporal_layers;
-            // std::optional<double> scale_resolution_down_by;
-            // bool active = true;
-            // std::string rid;
-            // bool adaptive_ptime = false;
-            params.rid = p["rid"].as_string().c_str();
-            if (p.count("maxBitrate") != 0) {
-              params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
-            }
-            if (p.count("minBitrate") != 0) {
-              params.min_bitrate_bps = p["minBitrate"].to_number<int>();
-            }
-            if (p.count("scaleResolutionDownBy") != 0) {
-              params.scale_resolution_down_by =
-                  p["scaleResolutionDownBy"].to_number<double>();
-            }
-            if (p.count("maxFramerate") != 0) {
-              params.max_framerate = p["maxFramerate"].to_number<double>();
-            }
-            if (p.count("active") != 0) {
-              params.active = p["active"].as_bool();
-            }
-            if (p.count("adaptivePtime") != 0) {
-              params.adaptive_ptime = p["adaptivePtime"].as_bool();
-            }
-            if (p.count("scalabilityMode") != 0) {
-              params.scalability_mode =
-                  p["scalabilityMode"].as_string().c_str();
-            }
-            encoding_parameters.push_back(params);
+      connection_->SetOffer(sdp, [self = shared_from_this(), json_message]() {
+        boost::asio::post(self->ioc_, [self, json_message]() {
+          if (!self->connection_) {
+            return;
           }
 
-          std::string mid;
-          {
-            // TODO(melpon): しばらく mid が無い可能性も考慮するが、そのうち必須にする
-            auto it = json_message.as_object().find("mid");
-            if (it != json_message.as_object().end()) {
-              const auto& midobj = it->value().as_object();
-              // video: false の場合は video フィールドが mid が無いのでチェックする
-              it = midobj.find("video");
-              if (it != midobj.end()) {
-                mid = it->value().as_string().c_str();
+          // simulcast では offer の setRemoteDescription が終わった後に
+          // トラックを追加する必要があるため、ここで初期化する
+          self->manager_->InitTracks(self->connection_.get(), std::nullopt);
+
+          if (self->config_.simulcast &&
+              json_message.as_object().count("encodings") != 0) {
+            std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+
+            // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+            auto encodings_json = json_message.at("encodings").as_array();
+            for (auto v : encodings_json) {
+              auto p = v.as_object();
+              webrtc::RtpEncodingParameters params;
+              // std::optional<uint32_t> ssrc;
+              // double bitrate_priority = kDefaultBitratePriority;
+              // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+              // Priority network_priority = Priority::kLow;
+              // std::optional<int> max_bitrate_bps;
+              // std::optional<int> min_bitrate_bps;
+              // std::optional<double> max_framerate;
+              // std::optional<int> num_temporal_layers;
+              // std::optional<double> scale_resolution_down_by;
+              // bool active = true;
+              // std::string rid;
+              // bool adaptive_ptime = false;
+              params.rid = p["rid"].as_string().c_str();
+              if (p.count("maxBitrate") != 0) {
+                params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
+              }
+              if (p.count("minBitrate") != 0) {
+                params.min_bitrate_bps = p["minBitrate"].to_number<int>();
+              }
+              if (p.count("scaleResolutionDownBy") != 0) {
+                params.scale_resolution_down_by =
+                    p["scaleResolutionDownBy"].to_number<double>();
+              }
+              if (p.count("maxFramerate") != 0) {
+                params.max_framerate = p["maxFramerate"].to_number<double>();
+              }
+              if (p.count("active") != 0) {
+                params.active = p["active"].as_bool();
+              }
+              if (p.count("adaptivePtime") != 0) {
+                params.adaptive_ptime = p["adaptivePtime"].as_bool();
+              }
+              if (p.count("scalabilityMode") != 0) {
+                params.scalability_mode =
+                    p["scalabilityMode"].as_string().c_str();
+              }
+              encoding_parameters.push_back(params);
+            }
+
+            std::string mid;
+            {
+              // TODO(melpon): しばらく mid が無い可能性も考慮するが、そのうち必須にする
+              auto it = json_message.as_object().find("mid");
+              if (it != json_message.as_object().end()) {
+                const auto& midobj = it->value().as_object();
+                // video: false の場合は video フィールドが mid が無いのでチェックする
+                it = midobj.find("video");
+                if (it != midobj.end()) {
+                  mid = it->value().as_string().c_str();
+                }
               }
             }
+            RTC_LOG(LS_INFO) << "mid: " << mid;
+            self->connection_->SetEncodingParameters(
+                mid, std::move(encoding_parameters));
           }
-          RTC_LOG(LS_INFO) << "mid: " << mid;
-          self->connection_->SetEncodingParameters(
-              mid, std::move(encoding_parameters));
-        }
 
-        self->connection_->CreateAnswer(
-            [self](webrtc::SessionDescriptionInterface* desc) {
-              std::string sdp;
-              desc->ToString(&sdp);
-              self->manager_->SetParameters();
-              boost::asio::post(self->ioc_, [self, sdp]() {
-                if (!self->connection_) {
-                  return;
-                }
+          self->connection_->CreateAnswer(
+              [self](webrtc::SessionDescriptionInterface* desc) {
+                std::string sdp;
+                desc->ToString(&sdp);
+                self->manager_->SetParameters();
+                boost::asio::post(self->ioc_, [self, sdp]() {
+                  if (!self->connection_) {
+                    return;
+                  }
 
-                boost::json::value json_message = {{"type", "answer"},
-                                                   {"sdp", sdp}};
-                self->ws_->WriteText(boost::json::serialize(json_message));
+                  boost::json::value json_message = {{"type", "answer"},
+                                                     {"sdp", sdp}};
+                  self->ws_->WriteText(boost::json::serialize(json_message));
+                });
               });
-            });
+        });
       });
-    });
-  } else if (type == "update" || type == "re-offer") {
-    if (connection_ == nullptr) {
-      return;
-    }
-    std::string answer_type = type == "update" ? "update" : "re-answer";
-    const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [self = shared_from_this(), answer_type]() {
-      boost::asio::post(self->ioc_, [self, answer_type]() {
-        if (!self->connection_) {
-          return;
-        }
+    } else if (type == "update" || type == "re-offer") {
+      if (connection_ == nullptr) {
+        return;
+      }
+      std::string answer_type = type == "update" ? "update" : "re-answer";
+      const std::string sdp = json_message.at("sdp").as_string().c_str();
+      connection_->SetOffer(sdp, [self = shared_from_this(), answer_type]() {
+        boost::asio::post(self->ioc_, [self, answer_type]() {
+          if (!self->connection_) {
+            return;
+          }
 
-        // エンコーディングパラメータの情報がクリアされるので設定し直す
-        if (self->config_.simulcast) {
-          self->connection_->ResetEncodingParameters();
-        }
+          // エンコーディングパラメータの情報がクリアされるので設定し直す
+          if (self->config_.simulcast) {
+            self->connection_->ResetEncodingParameters();
+          }
 
-        self->connection_->CreateAnswer(
-            [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
-              std::string sdp;
-              desc->ToString(&sdp);
-              self->manager_->SetParameters();
-              boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
-                if (!self->connection_) {
-                  return;
-                }
+          self->connection_->CreateAnswer(
+              [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
+                std::string sdp;
+                desc->ToString(&sdp);
+                self->manager_->SetParameters();
+                boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
+                  if (!self->connection_) {
+                    return;
+                  }
 
-                self->DoSendUpdate(sdp, answer_type);
+                  self->DoSendUpdate(sdp, answer_type);
+                });
               });
-            });
+        });
       });
-    });
-  } else if (type == "notify") {
-    const std::string event_type =
-        json_message.at("event_type").as_string().c_str();
-    if (event_type == "connection.created" ||
-        event_type == "connection.destroyed") {
-      RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
-                        << ": client_id="
-                        << json_message.at("client_id").as_string().c_str()
-                        << ": connection_id="
-                        << json_message.at("connection_id").as_string().c_str();
-    } else if (event_type == "spotlight.changed") {
-      RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
-                        << ": client_id="
-                        << json_message.at("client_id").as_string().c_str()
-                        << ": connection_id="
-                        << json_message.at("connection_id").as_string().c_str()
-                        << ": spotlight_id="
-                        << json_message.at("spotlight_id").as_string().c_str();
-    }
-  } else if (type == "ping") {
-    if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
-                          kIceConnectionConnected) {
-      DoRead();
-      return;
-    }
-    watchdog_.Reset();
-    auto it = json_message.as_object().find("stats");
-    if (it != json_message.as_object().end() && it->value().as_bool()) {
-      connection_->GetStats(
-          [self = shared_from_this()](
-              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
-                  report) { self->DoSendPong(report); });
-    } else {
-      DoSendPong();
-    }
-  } else if (type == "switched") {
-    // Data Channel による通信の開始
-    using_datachannel_ = true;
+    } else if (type == "notify") {
+      const std::string event_type =
+          json_message.at("event_type").as_string().c_str();
+      if (event_type == "connection.created" ||
+          event_type == "connection.destroyed") {
+        RTC_LOG(LS_INFO)
+            << __func__ << ": event_type=" << event_type << ": client_id="
+            << json_message.at("client_id").as_string().c_str()
+            << ": connection_id="
+            << json_message.at("connection_id").as_string().c_str();
+      } else if (event_type == "spotlight.changed") {
+        RTC_LOG(LS_INFO) << __func__ << ": event_type=" << event_type
+                         << ": client_id="
+                         << json_message.at("client_id").as_string().c_str()
+                         << ": connection_id="
+                         << json_message.at("connection_id").as_string().c_str()
+                         << ": spotlight_id="
+                         << json_message.at("spotlight_id").as_string().c_str();
+      }
+    } else if (type == "ping") {
+      if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
+                            kIceConnectionConnected) {
+        DoRead();
+        return;
+      }
+      watchdog_.Reset();
+      auto it = json_message.as_object().find("stats");
+      if (it != json_message.as_object().end() && it->value().as_bool()) {
+        connection_->GetStats(
+            [self = shared_from_this()](
+                const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                    report) { self->DoSendPong(report); });
+      } else {
+        DoSendPong();
+      }
+    } else if (type == "switched") {
+      // Data Channel による通信の開始
+      using_datachannel_ = true;
 
-    // ignore_disconnect_websocket == true の場合は WS を切断する
-    auto it = json_message.as_object().find("ignore_disconnect_websocket");
-    if (it != json_message.as_object().end() && it->value().as_bool() && ws_) {
-      RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
-      auto ws = ws_;
-      ws_ = nullptr;
-      ws->Close([self = shared_from_this(), ws](boost::system::error_code) {});
+      // ignore_disconnect_websocket == true の場合は WS を切断する
+      auto it = json_message.as_object().find("ignore_disconnect_websocket");
+      if (it != json_message.as_object().end() && it->value().as_bool() &&
+          ws_) {
+        RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
+        auto ws = ws_;
+        ws_ = nullptr;
+        ws->Close(
+            [self = shared_from_this(), ws](boost::system::error_code) {});
 
-      watchdog_.Enable(config_.data_channel_signaling_timeout);
-      return;
+        watchdog_.Enable(config_.data_channel_signaling_timeout);
+        return;
+      }
     }
+    DoRead();
+  } catch (const boost::system::system_error& e) {
+    // キー欠落・型不一致でもプロセスを落とさず、受信を継続する
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+    DoRead();
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+    DoRead();
   }
-  DoRead();
 }
 
 webrtc::DataBuffer SoraClient::ConvertToDataBuffer(const std::string& label,
@@ -654,6 +665,7 @@ void SoraClient::OnMessage(
   std::string label = data_channel->label();
   bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
   std::string data;
+  // ZlibHelper::Uncompress の例外は JSON 用 catch で握り潰さない (0029 とスコープを分ける)
   if (compressed) {
     data = ZlibHelper::Uncompress(buffer.data.cdata(), buffer.size());
   } else {
@@ -668,52 +680,57 @@ void SoraClient::OnMessage(
     return;
   }
 
-  boost::system::error_code ec;
-  auto json = boost::json::parse(data, ec);
-  if (ec) {
-    RTC_LOG(LS_ERROR) << "JSON Parse Error ec=" << ec.message();
-    return;
-  }
-
-  watchdog_.Reset();
-
-  if (label == "signaling") {
-    const std::string type = json.at("type").as_string().c_str();
-    if (type == "re-offer") {
-      const std::string sdp = json.at("sdp").as_string().c_str();
-      connection_->SetOffer(sdp, [self = shared_from_this()]() {
-        boost::asio::post(self->ioc_, [self]() {
-          if (!self->connection_) {
-            return;
-          }
-
-          // エンコーディングパラメータの情報がクリアされるので設定し直す
-          if (self->config_.simulcast) {
-            self->connection_->ResetEncodingParameters();
-          }
-
-          self->connection_->CreateAnswer(
-              [self](webrtc::SessionDescriptionInterface* desc) {
-                std::string sdp;
-                desc->ToString(&sdp);
-                boost::asio::post(self->ioc_, [self, sdp]() {
-                  if (!self->connection_) {
-                    return;
-                  }
-                  self->DoSendUpdate(sdp, "re-answer");
-                });
-              });
-        });
-      });
+  try {
+    boost::system::error_code ec;
+    auto json = boost::json::parse(data, ec);
+    if (ec) {
+      RTC_LOG(LS_ERROR) << "JSON Parse Error ec=" << ec.message();
+      return;
     }
-  }
 
-  if (label == "stats") {
-    connection_->GetStats(
-        [self = shared_from_this()](
-            const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-          self->DoSendPong(report);
+    watchdog_.Reset();
+
+    if (label == "signaling") {
+      const std::string type = json.at("type").as_string().c_str();
+      if (type == "re-offer") {
+        const std::string sdp = json.at("sdp").as_string().c_str();
+        connection_->SetOffer(sdp, [self = shared_from_this()]() {
+          boost::asio::post(self->ioc_, [self]() {
+            if (!self->connection_) {
+              return;
+            }
+
+            // エンコーディングパラメータの情報がクリアされるので設定し直す
+            if (self->config_.simulcast) {
+              self->connection_->ResetEncodingParameters();
+            }
+
+            self->connection_->CreateAnswer(
+                [self](webrtc::SessionDescriptionInterface* desc) {
+                  std::string sdp;
+                  desc->ToString(&sdp);
+                  boost::asio::post(self->ioc_, [self, sdp]() {
+                    if (!self->connection_) {
+                      return;
+                    }
+                    self->DoSendUpdate(sdp, "re-answer");
+                  });
+                });
+          });
         });
+      }
+    }
+
+    if (label == "stats") {
+      connection_->GetStats(
+          [self = shared_from_this()](
+              const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                  report) { self->DoSendPong(report); });
+    }
+  } catch (const boost::system::system_error& e) {
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
   }
 }
 
