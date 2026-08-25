@@ -41,6 +41,8 @@ class RTCConnection {
   bool SetVideoEnabled(bool enabled);
   bool IsAudioEnabled();
   bool IsVideoEnabled();
+  // Unified Plan では local_streams() が使えないため、送信 track の有無は GetSenders 経由で判定する
+  bool HasLocalSendTrack();
 
   void GetStats(std::function<void(const webrtc::scoped_refptr<
                                    const webrtc::RTCStatsReport>&)> callback);
@@ -53,7 +55,6 @@ class RTCConnection {
   webrtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
  private:
-  webrtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
   webrtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
   webrtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
   bool SetMediaEnabled(

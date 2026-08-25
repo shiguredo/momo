@@ -56,6 +56,10 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
   CreateOKWithJSON(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::json::value json_message);
+  static boost::beast::http::response<boost::beast::http::string_body>
+  CreateBadRequestWithJSON(
+      const boost::beast::http::request<boost::beast::http::string_body>& req,
+      boost::json::value json_message);
 
   template <class Body, class Fields>
   void SendResponse(boost::beast::http::response<Body, Fields> msg) {

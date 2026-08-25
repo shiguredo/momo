@@ -163,8 +163,7 @@ void RTCConnection::SetOffer(const std::string sdp,
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, sdp, &error);
   if (!session_description) {
-    RTC_LOG(LS_ERROR) << __func__
-                      << "Failed to create session description: "
+    RTC_LOG(LS_ERROR) << __func__ << "Failed to create session description: "
                       << error.description.c_str()
                       << "\nline: " << error.line.c_str();
     return;
@@ -203,8 +202,7 @@ void RTCConnection::SetAnswer(const std::string sdp,
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kAnswer, sdp, &error);
   if (!session_description) {
-    RTC_LOG(LS_ERROR) << __func__
-                      << "Failed to create session description: "
+    RTC_LOG(LS_ERROR) << __func__ << "Failed to create session description: "
                       << error.description.c_str()
                       << "\nline: " << error.line.c_str();
     return;
@@ -253,25 +251,20 @@ bool RTCConnection::IsVideoEnabled() {
   return IsMediaEnabled(GetLocalVideoTrack());
 }
 
-webrtc::scoped_refptr<webrtc::MediaStreamInterface>
-RTCConnection::GetLocalStream() {
-  return webrtc::scoped_refptr<webrtc::MediaStreamInterface>(
-      connection_->local_streams()->at(0));
+bool RTCConnection::HasLocalSendTrack() {
+  return GetLocalAudioTrack() != nullptr || GetLocalVideoTrack() != nullptr;
 }
 
 webrtc::scoped_refptr<webrtc::AudioTrackInterface>
 RTCConnection::GetLocalAudioTrack() {
-  webrtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      GetLocalStream();
-  if (!local_stream) {
-    return nullptr;
-  }
-
-  if (local_stream->GetAudioTracks().size() > 0) {
-    webrtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        local_stream->GetAudioTracks()[0]);
-    if (audio_track) {
-      return audio_track;
+  // Unified Plan では local_streams() が fatal check になるため GetSenders を使う
+  for (const auto& sender : connection_->GetSenders()) {
+    webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
+        sender->track();
+    if (track &&
+        track->kind() == webrtc::MediaStreamTrackInterface::kAudioKind) {
+      return webrtc::scoped_refptr<webrtc::AudioTrackInterface>(
+          static_cast<webrtc::AudioTrackInterface*>(track.get()));
     }
   }
   return nullptr;
@@ -279,17 +272,14 @@ RTCConnection::GetLocalAudioTrack() {
 
 webrtc::scoped_refptr<webrtc::VideoTrackInterface>
 RTCConnection::GetLocalVideoTrack() {
-  webrtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      GetLocalStream();
-  if (!local_stream) {
-    return nullptr;
-  }
-
-  if (local_stream->GetVideoTracks().size() > 0) {
-    webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        local_stream->GetVideoTracks()[0]);
-    if (video_track) {
-      return video_track;
+  // Unified Plan では local_streams() が fatal check になるため GetSenders を使う
+  for (const auto& sender : connection_->GetSenders()) {
+    webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
+        sender->track();
+    if (track &&
+        track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+      return webrtc::scoped_refptr<webrtc::VideoTrackInterface>(
+          static_cast<webrtc::VideoTrackInterface*>(track.get()));
     }
   }
   return nullptr;
