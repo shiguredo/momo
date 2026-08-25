@@ -115,6 +115,7 @@
 - [FIX] recvonly 等で `/mute` API を呼ぶとプロセスが落ちる問題を修正する
   - Unified Plan では使えない `local_streams()` をやめ、`GetSenders()` から送信 track を取得する
   - 送信 track が無い場合は `400` と JSON エラーを返し、不正な `/mute` JSON も `400` にする
+  - Sora の `recvonly` では `InitTracks` に role を渡し、送信 track を付けないようにする
   - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
