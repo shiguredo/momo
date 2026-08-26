@@ -455,8 +455,14 @@ void SoraClient::OnRead(boost::system::error_code ec,
           }
 
           // simulcast では offer の setRemoteDescription が終わった後に
-          // トラックを追加する必要があるため、ここで初期化する
-          self->manager_->InitTracks(self->connection_.get(), std::nullopt);
+          // トラックを追加する必要があるため、ここで初期化する。
+          // recvonly のときだけ direction を渡し、送信 track を付けない
+          // (nullopt のままだと AddTrack され、/mute が常に 200 になってしまう)
+          std::optional<std::string> direction;
+          if (self->config_.role == "recvonly") {
+            direction = self->config_.role;
+          }
+          self->manager_->InitTracks(self->connection_.get(), direction);
 
           if (self->config_.simulcast &&
               json_message.as_object().count("encodings") != 0) {

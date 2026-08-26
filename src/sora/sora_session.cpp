@@ -5,6 +5,9 @@
 #include <boost/beast/version.hpp>
 #include <boost/json.hpp>
 
+// WebRTC
+#include <rtc_base/logging.h>
+
 #include "util.h"
 
 SoraSession::SoraSession(boost::asio::ip::tcp::socket socket,
@@ -51,13 +54,17 @@ void SoraSession::OnRead(boost::system::error_code ec,
       SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
     } else if (req_.target() == "/mute/status") {
       std::shared_ptr<RTCConnection> rtc_conn = client_->GetRTCConnection();
-      if (rtc_conn) {
+      if (!rtc_conn) {
+        SendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
+      } else if (!rtc_conn->HasLocalSendTrack()) {
+        // 送信 track が無い (recvonly / デバイス無し等) と mute 状態を返せない
+        SendResponse(
+            CreateBadRequestWithJSON(req_, {{"error", "no local stream"}}));
+      } else {
         boost::json::value json_message = {
             {"audio", !rtc_conn->IsAudioEnabled()},
             {"video", !rtc_conn->IsVideoEnabled()}};
         SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
-      } else {
-        SendResponse(Util::ServerError(req_, "Invalid RTC Connection"));
       }
     } else {
       SendResponse(Util::BadRequest(req_, "Invalid Request"));
@@ -84,16 +91,31 @@ void SoraSession::OnRead(boost::system::error_code ec,
         SendResponse(Util::ServerError(req_, "Create RTC Connection Failed"));
         return;
       }
-      bool audioMute = recv_json.at("audio").as_bool();
-      rtc_conn->SetAudioEnabled(!audioMute);
+      if (!rtc_conn->HasLocalSendTrack()) {
+        // 送信 track が無い状態で mute しても意味が無く、旧実装は fatal check で落ちていた
+        SendResponse(
+            CreateBadRequestWithJSON(req_, {{"error", "no local stream"}}));
+        return;
+      }
 
-      bool videoMute = recv_json.at("video").as_bool();
-      rtc_conn->SetVideoEnabled(!videoMute);
+      try {
+        bool audioMute = recv_json.at("audio").as_bool();
+        rtc_conn->SetAudioEnabled(!audioMute);
 
-      boost::json::value json_message = {
-          {"audio", !rtc_conn->IsAudioEnabled()},
-          {"video", !rtc_conn->IsVideoEnabled()}};
-      SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
+        bool videoMute = recv_json.at("video").as_bool();
+        rtc_conn->SetVideoEnabled(!videoMute);
+
+        boost::json::value json_message = {
+            {"audio", !rtc_conn->IsAudioEnabled()},
+            {"video", !rtc_conn->IsVideoEnabled()}};
+        SendResponse(CreateOKWithJSON(req_, std::move(json_message)));
+      } catch (const boost::system::system_error& e) {
+        RTC_LOG(LS_ERROR) << "Failed to handle /mute JSON: " << e.what();
+        SendResponse(Util::BadRequest(req_, "Invalid JSON"));
+      } catch (const std::exception& e) {
+        RTC_LOG(LS_ERROR) << "Failed to handle /mute JSON: " << e.what();
+        SendResponse(Util::BadRequest(req_, "Invalid JSON"));
+      }
     } else {
       SendResponse(Util::BadRequest(req_, "Invalid Request"));
     }
@@ -137,6 +159,21 @@ SoraSession::CreateOKWithJSON(
     boost::json::value json_message) {
   boost::beast::http::response<boost::beast::http::string_body> res{
       boost::beast::http::status::ok, 11};
+  res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
+  res.set(boost::beast::http::field::content_type, "application/json");
+  res.keep_alive(req.keep_alive());
+  res.body() = boost::json::serialize(json_message);
+  res.prepare_payload();
+
+  return res;
+}
+
+boost::beast::http::response<boost::beast::http::string_body>
+SoraSession::CreateBadRequestWithJSON(
+    const boost::beast::http::request<boost::beast::http::string_body>& req,
+    boost::json::value json_message) {
+  boost::beast::http::response<boost::beast::http::string_body> res{
+      boost::beast::http::status::bad_request, 11};
   res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
   res.set(boost::beast::http::field::content_type, "application/json");
   res.keep_alive(req.keep_alive());
