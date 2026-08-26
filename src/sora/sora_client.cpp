@@ -360,7 +360,10 @@ void SoraClient::DoSendPong(
   }
 }
 void SoraClient::DoSendUpdate(const std::string& sdp, std::string type) {
-  boost::json::value json_message = {{"type", type}, {"sdp", sdp}};
+  DoSendSignaling({{"type", type}, {"sdp", sdp}});
+}
+
+void SoraClient::DoSendSignaling(boost::json::value json_message) {
   if (dc_ && using_datachannel_ && dc_->IsOpen("signaling")) {
     // DataChannel が使える場合は DataChannel に送る
     SendDataChannel("signaling", boost::json::serialize(json_message));
@@ -539,10 +542,7 @@ void SoraClient::OnRead(boost::system::error_code ec,
                   if (!self->connection_) {
                     return;
                   }
-
-                  boost::json::value json_message = {{"type", "answer"},
-                                                     {"sdp", sdp}};
-                  self->ws_->WriteText(boost::json::serialize(json_message));
+                  self->DoSendUpdate(sdp, "answer");
                 });
               });
         });
@@ -762,8 +762,14 @@ void SoraClient::OnIceConnectionStateChange(
 void SoraClient::OnIceCandidate(const std::string sdp_mid,
                                 const int sdp_mlineindex,
                                 const std::string sdp) {
-  boost::json::value json_message = {{"type", "candidate"}, {"candidate", sdp}};
-  ws_->WriteText(boost::json::serialize(json_message));
+  // デストラクタだと shared_from_this が機能しないので無視する
+  if (destructed_) {
+    return;
+  }
+  // WebRTC スレッドから ws_ を直接触らない。ioc 上で送信先を決める
+  boost::asio::post(ioc_, [self = shared_from_this(), sdp]() {
+    self->DoSendSignaling({{"type", "candidate"}, {"candidate", sdp}});
+  });
 }
 
 void SoraClient::DoIceConnectionStateChange(

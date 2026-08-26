@@ -440,12 +440,19 @@ void AyameClient::OnRead(boost::system::error_code ec,
         is_exist_user = json_message.at("isExistUser").as_bool();
       }
 
-      auto on_create_offer = [this](webrtc::SessionDescriptionInterface* desc) {
+      auto on_create_offer = [self = shared_from_this()](
+                                 webrtc::SessionDescriptionInterface* desc) {
         std::string sdp;
         desc->ToString(&sdp);
-        manager_->SetParameters();
-        boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
-        ws_->WriteText(boost::json::serialize(json_message));
+        self->manager_->SetParameters();
+        // WebRTC スレッドから ws_ を直接触らない
+        boost::asio::post(self->ioc_, [self, sdp]() {
+          if (!self->ws_) {
+            return;
+          }
+          boost::json::value json_message = {{"type", "offer"}, {"sdp", sdp}};
+          self->ws_->WriteText(boost::json::serialize(json_message));
+        });
       };
 
       // isExistUser フラグが存在してかつ true な場合 offer SDP を生成して送信する
@@ -481,15 +488,21 @@ void AyameClient::OnRead(boost::system::error_code ec,
           // 2回目の Offer を受信した時にのみ Answer を作成する
           const bool should_create_answer =
               !self->is_send_offer_ || !self->has_is_exist_user_flag_;
-          if (should_create_answer) {
+          if (should_create_answer && self->connection_) {
             self->connection_->CreateAnswer(
                 [self](webrtc::SessionDescriptionInterface* desc) {
                   std::string sdp;
                   desc->ToString(&sdp);
                   self->manager_->SetParameters();
-                  boost::json::value json_message = {{"type", "answer"},
-                                                     {"sdp", sdp}};
-                  self->ws_->WriteText(boost::json::serialize(json_message));
+                  // CreateAnswer 完了は WebRTC スレッド。ioc へ移してから送る
+                  boost::asio::post(self->ioc_, [self, sdp]() {
+                    if (!self->ws_) {
+                      return;
+                    }
+                    boost::json::value json_message = {{"type", "answer"},
+                                                       {"sdp", sdp}};
+                    self->ws_->WriteText(boost::json::serialize(json_message));
+                  });
                 });
           }
           self->is_send_offer_ = false;
@@ -538,15 +551,25 @@ void AyameClient::OnIceConnectionStateChange(
 void AyameClient::OnIceCandidate(const std::string sdp_mid,
                                  const int sdp_mlineindex,
                                  const std::string sdp) {
+  // デストラクタだと shared_from_this が機能しないので無視する
+  if (destructed_) {
+    return;
+  }
   // ayame では candidate sdp の交換で `ice` プロパティを用いる。 `candidate` ではないので注意
-  boost::json::value json_message = {
-      {"type", "candidate"},
-  };
-  // ice プロパティの中に object で candidate 情報をセットして送信する
-  json_message.as_object()["ice"] = {{"candidate", sdp},
-                                     {"sdpMLineIndex", sdp_mlineindex},
-                                     {"sdpMid", sdp_mid}};
-  ws_->WriteText(boost::json::serialize(json_message));
+  // WebRTC スレッドから ws_ を直接触らず、Reset による破棄と直列化する
+  boost::asio::post(
+      ioc_, [self = shared_from_this(), sdp_mid, sdp_mlineindex, sdp]() {
+        if (!self->ws_) {
+          return;
+        }
+        boost::json::value json_message = {
+            {"type", "candidate"},
+        };
+        json_message.as_object()["ice"] = {{"candidate", sdp},
+                                           {"sdpMLineIndex", sdp_mlineindex},
+                                           {"sdpMid", sdp_mid}};
+        self->ws_->WriteText(boost::json::serialize(json_message));
+      });
 }
 
 void AyameClient::DoIceConnectionStateChange(

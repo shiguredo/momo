@@ -93,6 +93,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void DoSendPong(
       const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void DoSendUpdate(const std::string& sdp, std::string type);
+  // DataChannel シグナリング利用中は DC、そうでなければ WebSocket。どちらも無ければ送らない
+  void DoSendSignaling(boost::json::value json_message);
   std::shared_ptr<RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
 
