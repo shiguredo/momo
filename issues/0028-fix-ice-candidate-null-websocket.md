@@ -1,7 +1,7 @@
 # シグナリング切断後に ICE candidate コールバックが ws_ を null deref するレースがある
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-26
 - Branch: feature/fix-ice-candidate-null-websocket
 - Polished: 2026-08-25
 - Milestone: 2026.1.0
@@ -36,4 +36,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+Sora / Ayame とも、WebRTC スレッドから直接呼ばれる送信を `destructed_` 確認のうえ `boost::asio::post` で ioc へ移し、`shared_from_this()` でオブジェクトを保持する。Sora は `DoSendSignaling` を追加し、DataChannel の `signaling` が開いていれば DC、`ws_` があれば WebSocket、どちらも無ければ送らない。`DoSendUpdate` と `OnIceCandidate`、初期 `CreateAnswer` はこの経路に揃えた。Ayame は `CreateOffer` / `CreateAnswer` 完了の `[this]` をやめ、ioc 上で `ws_` が無ければ送らない。CI の momo バイナリで Sora / Ayame の接続と配信を確認した。PR は https://github.com/shiguredo/momo/pull/467 。
