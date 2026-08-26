@@ -123,6 +123,10 @@
 - [FIX] DataChannel の zlib 展開が無制限にメモリを消費する問題を修正する
   - 展開失敗時は例外でプロセスを終了させず、エラーとしてメッセージを無視する
   - @Hexa
+- [FIX] シグナリング切断後に ICE candidate コールバックが WebSocket を不正参照する問題を修正する
+  - Sora / Ayame の WebRTC コールバックから ioc スレッドへ移して送信先を判定する
+  - Sora は DataChannel シグナリング利用中の candidate / 初期 answer を DC 経由で送る
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa
