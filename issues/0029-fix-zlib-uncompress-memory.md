@@ -1,7 +1,7 @@
 # zlib の Uncompress が倍々再試行でメモリを枯渇させる
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-26
 - Branch: feature/fix-zlib-uncompress-memory
 - Polished: 2026-08-21
 - Milestone: 2026.1.0
@@ -32,4 +32,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`ZlibHelper::Uncompress` に展開後サイズの上限 `kMaxUncompressedSize` (16 MiB) を設け、`Z_BUF_ERROR` で次の倍増が上限を超える場合は拡張せず失敗とする。失敗パス (`Z_DATA_ERROR` 等を含む) は `throw std::exception()` をやめ `std::optional<std::string>` の空を返す。唯一の呼び出し元 `SoraClient::OnMessage` では展開失敗をログ (`Failed to uncompress DataChannel message`) して当該メッセージを無視する。送信側の `Compress` は自己生成データが対象のため変更していない。変更履歴では上限導入を `[CHANGE]`、無制限拡張と未捕捉例外によるプロセス終了の解消を `[FIX]` として記載した。 PR は https://github.com/shiguredo/momo/pull/466 。
