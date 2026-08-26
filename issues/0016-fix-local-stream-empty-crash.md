@@ -1,7 +1,7 @@
 # /mute / /mute/status API を呼ぶと Unified Plan の local_streams() 使用でプロセスが落ちる
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-26
 - Branch: feature/fix-local-stream-empty-crash
 - Polished: 2026-08-25
 - Milestone: 2026.1.0
@@ -36,4 +36,9 @@ Sora モードの `/mute` / `/mute/status` API が `RTCConnection::GetLocalStrea
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- `GetLocalStream()` / `local_streams()` を廃止し、`GetLocalAudioTrack()` / `GetLocalVideoTrack()` を `GetSenders()` ベースに書き換えた。送信 track の有無判定用に `HasLocalSendTrack()` を追加した
+- `/mute` / `/mute/status` で送信 track が無い場合は `400` + `{"error":"no local stream"}` を返すようにした。JSON 400 用に `SoraSession::CreateBadRequestWithJSON` を追加し、`/mute` の不正 JSON も try/catch で `400` にした
+- Sora の offer 処理で `recvonly` のときだけ `InitTracks` に role を渡し、送信 track を付けないようにした（`sendonly` / `sendrecv` は従来どおり `nullopt`）
+- 手動検証: CI 成果物バイナリで `recvonly` + `--port` 接続後、`GET /mute/status` および `POST /mute` がプロセスを落とさず `400` + `{"error":"no local stream"}` を返すことを確認した。送信 track ありでは `POST /mute` が `200` で mute / unmute できることを確認した
+- CI の全プラットフォームビルドおよび build 経由の E2E（`from_build: true`）が通過したことを確認した
+- PR: https://github.com/shiguredo/momo/pull/465
