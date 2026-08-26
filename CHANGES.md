@@ -33,6 +33,9 @@
 - [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
   - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となる
   - @torikizi
+- [CHANGE] DataChannel の zlib 展開後サイズに 16 MiB の上限を設ける
+  - 上限を超える圧縮メッセージは展開せず無視する
+  - @Hexa
 - [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
   - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
@@ -118,7 +121,7 @@
   - Sora の `recvonly` では `InitTracks` に role を渡し、送信 track を付けないようにする
   - @Hexa
 - [FIX] DataChannel の zlib 展開が無制限にメモリを消費する問題を修正する
-  - 展開後サイズの上限を 16 MiB とし、失敗時は例外ではなくエラーとしてメッセージを無視する
+  - 展開失敗時は例外でプロセスを終了させず、エラーとしてメッセージを無視する
   - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
