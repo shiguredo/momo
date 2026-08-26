@@ -671,9 +671,16 @@ void SoraClient::OnMessage(
   std::string label = data_channel->label();
   bool compressed = compressed_labels_.find(label) != compressed_labels_.end();
   std::string data;
-  // ZlibHelper::Uncompress の例外は JSON 用 catch で握り潰さない (0029 とスコープを分ける)
+  // 展開失敗は JSON 用 catch の外で扱い、失敗メッセージを無視する
   if (compressed) {
-    data = ZlibHelper::Uncompress(buffer.data.cdata(), buffer.size());
+    auto uncompressed =
+        ZlibHelper::Uncompress(buffer.data.cdata(), buffer.size());
+    if (!uncompressed) {
+      RTC_LOG(LS_ERROR) << "Failed to uncompress DataChannel message: label="
+                        << label;
+      return;
+    }
+    data = std::move(*uncompressed);
   } else {
     data.assign((const char*)buffer.data.cdata(),
                 (const char*)buffer.data.cdata() + buffer.size());

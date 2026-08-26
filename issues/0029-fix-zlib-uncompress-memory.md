@@ -18,7 +18,7 @@
 
 ## 設計方針
 
-- 展開後の最大サイズを絶対値の定数で制限する (例: 数 MB)。正当な DataChannel メッセージ (signaling の re-offer SDP や stats) の展開後サイズは高々数十 KB 程度であり、数 MB で十分に余裕がある
+- 展開後の最大サイズを絶対値の定数 **16 MiB** で制限する。正当な DataChannel メッセージ (signaling の re-offer SDP や stats) は数十 KB 〜数 MB 程度で、libwebrtc の受信バッファ (5 MiB) と圧縮率の伸びしろを見ても 16 MiB あれば従来受信できていたデータを落とさない。zip 爆弾の無制限倍増はここで打ち切る
 - 上限超過・データ破損などすべての失敗パスで例外を投げず、エラーを返す。`Uncompress` の `throw std::exception()` は撤廃する (送信側の `Compress` は自己生成データが対象で、本 issue の変更対象外)
 - エラーの返し方は API の変更を伴う (例: `std::optional<std::string>` を返し、失敗時は `std::nullopt`) ため、唯一の呼び出し元 `SoraClient::OnMessage` でエラーをハンドリングする (エラーログを出力して該当メッセージを無視する等)
 - 入力サイズから上限を計算する方式は、展開後サイズが入力サイズに対して理論上限を持たない zip 爆弾を防げないため採用しない
