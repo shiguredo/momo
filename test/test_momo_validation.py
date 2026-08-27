@@ -1,5 +1,9 @@
 """Momo のモード固有オプション検証をテストする"""
 
+from __future__ import annotations
+
+import subprocess
+
 import pytest
 
 from momo import Momo, MomoMode
@@ -155,3 +159,47 @@ def test_sora_mode_with_ayame_direction_raises_error():
     assert "Invalid options specified for Sora mode" in str(exc_info.value)
     assert "direction" in str(exc_info.value)
     assert "ayame mode" in str(exc_info.value)
+
+
+def test_fake_capture_device_with_no_video_input_device_exits_2() -> None:
+    """
+    --no-video-input-device と --fake-capture-device の併用は矛盾する。
+    momo バイナリがクラッシュせず終了コード 2 と英語エラーを返すことを確認する。
+    フェイクキャプチャ非対応ビルドでは当該フラグが無いのでスキップする。
+    """
+    momo = Momo(
+        mode=MomoMode.SORA,
+        signaling_urls="wss://example.com",
+        channel_id="test",
+    )
+    help_result = subprocess.run(
+        [momo.executable_path, "--help"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    # フェイクキャプチャ無しのビルドではオプション自体が存在しない
+    if "--fake-capture-device" not in help_result.stdout:
+        pytest.skip("この momo バイナリは --fake-capture-device を含まない")
+
+    result = subprocess.run(
+        [
+            momo.executable_path,
+            "--no-video-input-device",
+            "--fake-capture-device",
+            "sora",
+            "--signaling-urls",
+            "wss://example.com",
+            "--channel-id",
+            "test",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert (
+        "error: --fake-capture-device cannot be used with --no-video-input-device" in result.stderr
+    )

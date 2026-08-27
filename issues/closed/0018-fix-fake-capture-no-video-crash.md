@@ -1,7 +1,7 @@
 # --no-video-input-device と --fake-capture-device の併用で nullptr メンバ呼び出しによりクラッシュする
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-27
 - Branch: feature/fix-fake-capture-no-video-crash
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -33,4 +33,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+CLI で `--no-video-input-device` と `--fake-capture-device` の併用を禁止し、stderr に英語メッセージを出して終了コード 2 で返す。`--help` にも併用不可を追記した。`create_adm` では `capturer` が null なら `SetAudioCapturer` を呼ばない。`test_momo_validation.py` で終了コード 2 を検証する。CI のビルドと E2E は成功。PR は https://github.com/shiguredo/momo/pull/470 。
