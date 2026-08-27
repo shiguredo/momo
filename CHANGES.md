@@ -134,6 +134,9 @@
 - [FIX] macOS でカメラ 0 台のときにクラッシュする問題を修正する
   - デバイス一覧が空のときは `objectAtIndex:` せず `nullptr` を返し、既存の起動失敗フローで終了する
   - @Hexa
+- [FIX] --no-video-input-device と --fake-capture-device 併用時のクラッシュを修正する
+  - 併用時は起動を拒否し、`create_adm` でも null の capturer を触らない
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa

@@ -274,6 +274,15 @@ int main(int argc, char* argv[]) {
 #endif
       })();
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  if (args.no_video_device && args.fake_capture_device) {
+    std::cerr << "error: --fake-capture-device cannot be used with "
+                 "--no-video-input-device"
+              << std::endl;
+    return 2;
+  }
+#endif
+
   if (!capturer && !args.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
@@ -335,6 +344,12 @@ int main(int argc, char* argv[]) {
     audio_config.fps = args.framerate;
     rtcm_config.create_adm = [audio_config, capturer]() {
       auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      // CLI を迂回しても null の capturer を触らない
+      if (!capturer) {
+        RTC_LOG(LS_WARNING)
+            << "CreateADM: capturer is null, skip SetAudioCapturer";
+        return fake_audio_capturer;
+      }
       // FakeVideoCapturer と連携するために fake_audio_capturer を設定する
       static_cast<FakeVideoCapturer*>(capturer.get())
           ->SetAudioCapturer(fake_audio_capturer);

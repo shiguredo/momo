@@ -96,7 +96,8 @@ void Util::ParseArgs(int argc,
                "List available audio and video devices and exit");
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   app.add_flag("--fake-capture-device", args.fake_capture_device,
-               "Use fake video capture device instead of real camera");
+               "Use fake video capture device instead of real camera. "
+               "Cannot be used with --no-video-input-device");
 #endif
   app.add_flag("--force-i420", args.force_i420,
                "Force I420 format for video capture (fails if not available)");
