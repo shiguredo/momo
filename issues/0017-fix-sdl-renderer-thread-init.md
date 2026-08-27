@@ -33,3 +33,7 @@
 ## 解決方法
 
 未着手 (PR 作成後に追記する)
+
+## pending にした理由
+
+クラッシュはプロセス停止時のデストラクタで起きる。macOS 上で `SDL_VIDEODRIVER=invalid` と `--use-sdl` により初期化失敗までは再現できたが、終了時は `SDL Thread error:-1` のみで、未初期化 `thread_` によるクラッシュは再現しなかった。SDL3 の `SDL_WaitThread(NULL)` は no-op で status が `-1` になるため、クラッシュ前提の完了条件を今は満たせない。再現手段が固まるまで保留する。
