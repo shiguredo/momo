@@ -1,5 +1,7 @@
 #include "metrics_server.h"
 
+#include <chrono>
+
 MetricsServer::MetricsServer(boost::asio::io_context& ioc,
                              boost::asio::ip::tcp::endpoint endpoint,
                              RTCManager* rtc_manager,
@@ -8,9 +10,10 @@ MetricsServer::MetricsServer(boost::asio::io_context& ioc,
     : ioc_(ioc),
       acceptor_(ioc),
       socket_(ioc),
+      accept_retry_timer_(ioc),
       rtc_manager_(rtc_manager),
-      stats_collector_(stats_collector),
-      config_(config) {
+      config_(config),
+      stats_collector_(stats_collector) {
   boost::system::error_code ec;
 
   // Open the acceptor
@@ -57,6 +60,7 @@ void MetricsServer::DoAccept() {
 void MetricsServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
+    RestartAccept(ec);
     return;
   }
 
@@ -65,5 +69,28 @@ void MetricsServer::OnAccept(boost::system::error_code ec) {
                          stats_collector_, std::move(config))
       ->Run();
 
+  DoAccept();
+}
+
+void MetricsServer::RestartAccept(boost::system::error_code ec) {
+  if (!acceptor_.is_open()) {
+    return;
+  }
+  // EMFILE / ENFILE が続く間に即再開すると ioc がビジーになるので待つ
+  const bool fd_exhausted =
+      ec == boost::asio::error::no_descriptors ||
+      ec == boost::system::errc::too_many_files_open ||
+      ec == boost::system::errc::too_many_files_open_in_system;
+  if (fd_exhausted) {
+    accept_retry_timer_.expires_after(std::chrono::milliseconds(100));
+    accept_retry_timer_.async_wait(
+        [self = shared_from_this()](boost::system::error_code wait_ec) {
+          if (wait_ec || !self->acceptor_.is_open()) {
+            return;
+          }
+          self->DoAccept();
+        });
+    return;
+  }
   DoAccept();
 }

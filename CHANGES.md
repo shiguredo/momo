@@ -127,6 +127,10 @@
   - Sora / Ayame の WebRTC コールバックから ioc スレッドへ移して送信先を判定する
   - Sora は DataChannel シグナリング利用中の candidate / 初期 answer を DC 経由で送る
   - @Hexa
+- [FIX] P2P / metrics サーバが accept エラー後に接続受付を停止する問題を修正する
+  - エラー時も `DoAccept()` を再開し、リスナー閉鎖時は再開しない
+  - EMFILE / ENFILE のときは 100ms 待ってから再開する
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa
