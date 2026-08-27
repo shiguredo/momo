@@ -131,6 +131,9 @@
   - エラー時も `DoAccept()` を再開し、リスナー閉鎖時は再開しない
   - EMFILE / ENFILE のときは 100ms 待ってから再開する
   - @Hexa
+- [FIX] macOS でカメラ 0 台のときにクラッシュする問題を修正する
+  - デバイス一覧が空のときは `objectAtIndex:` せず `nullptr` を返し、既存の起動失敗フローで終了する
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa

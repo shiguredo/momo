@@ -138,6 +138,14 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(
 
   size_t capture_device_index = SIZE_T_MAX;
   NSArray<AVCaptureDevice*>* devices = captureDevices();
+  // 空配列に objectAtIndex: すると NSRangeException になるため先に弾く
+  if (devices.count == 0) {
+    RTC_LOG(LS_ERROR)
+        << "Failed to create MacCapture: no video device found. Use "
+           "--list-devices to check available devices or "
+           "--no-video-input-device to run without camera";
+    return nullptr;
+  }
   [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
                                         BOOL* stop) {
     // 便利なのでデバイスの一覧をログに出力しておく
@@ -172,7 +180,8 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(
     }
   }
 
-  if (capture_device_index != SIZE_T_MAX) {
+  if (capture_device_index != SIZE_T_MAX &&
+      capture_device_index < devices.count) {
     AVCaptureDevice* device = [devices objectAtIndex:capture_device_index];
     RTC_LOG(LS_INFO) << "selected video device: [" << capture_device_index
                      << "] device_name=" << [device.localizedName UTF8String];
