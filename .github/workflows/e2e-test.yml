@@ -155,7 +155,7 @@ jobs:
         with:
           status: ${{ job.status }}
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
-          slack_channel: open-momo
+          slack_channel: momo
           slack_title: FAILED
           slack_icon_emoji_failure: ":japanese_ogre:"
           notify_mode: failure_and_fixed
