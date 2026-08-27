@@ -1,5 +1,7 @@
 #include "p2p_server.h"
 
+#include <chrono>
+
 #include "util.h"
 
 void P2PServer::GetStats(
@@ -19,6 +21,7 @@ P2PServer::P2PServer(boost::asio::io_context& ioc,
     : ioc_(ioc),
       acceptor_(ioc),
       socket_(ioc),
+      accept_retry_timer_(ioc),
       rtc_manager_(rtc_manager),
       config_(std::move(config)) {
   boost::system::error_code ec;
@@ -67,6 +70,7 @@ void P2PServer::DoAccept() {
 void P2PServer::OnAccept(boost::system::error_code ec) {
   if (ec) {
     MOMO_BOOST_ERROR(ec, "accept");
+    RestartAccept(ec);
     return;
   }
 
@@ -75,5 +79,28 @@ void P2PServer::OnAccept(boost::system::error_code ec) {
       P2PSession::Create(ioc_, std::move(socket_), rtc_manager_, config_);
   p2p_session_->Run();
 
+  DoAccept();
+}
+
+void P2PServer::RestartAccept(boost::system::error_code ec) {
+  if (!acceptor_.is_open()) {
+    return;
+  }
+  // EMFILE / ENFILE が続く間に即再開すると ioc がビジーになるので待つ
+  const bool fd_exhausted =
+      ec == boost::asio::error::no_descriptors ||
+      ec == boost::system::errc::too_many_files_open ||
+      ec == boost::system::errc::too_many_files_open_in_system;
+  if (fd_exhausted) {
+    accept_retry_timer_.expires_after(std::chrono::milliseconds(100));
+    accept_retry_timer_.async_wait(
+        [self = shared_from_this()](boost::system::error_code wait_ec) {
+          if (wait_ec || !self->acceptor_.is_open()) {
+            return;
+          }
+          self->DoAccept();
+        });
+    return;
+  }
   DoAccept();
 }

@@ -1,7 +1,7 @@
 # P2P / metrics サーバが accept エラーでサービスを永久停止する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-27
 - Branch: feature/fix-accept-error-restart
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -28,4 +28,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`P2PServer` / `MetricsServer` の `OnAccept` エラー時に `RestartAccept` を呼ぶ。`acceptor_.is_open()` が false なら再開せず、それ以外は `DoAccept()` する。EMFILE / ENFILE (`no_descriptors` / `too_many_files_open` / `too_many_files_open_in_system`) のときは `steady_timer` で 100ms 待ってから再開し、ioc のビジーループを避ける。CI の momo バイナリで P2P にアイドル TCP を張り `accept: Too many open files` を確認し、スクリプト終了後に `http://127.0.0.1:8080/html/p2p.html` が 200 になることを確認した。PR は https://github.com/shiguredo/momo/pull/468 。
