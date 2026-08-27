@@ -1,7 +1,7 @@
 # カメラが 0 台の macOS で起動時に NSRangeException が投げられクラッシュする
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-27
 - Branch: feature/fix-macos-no-camera-crash
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -33,4 +33,4 @@ macOS でカメラが 1 台も存在しない環境 (VM・ヘッドレス・プ�
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`MacCapturer::FindVideoDevice` で `captureDevices()` の直後に `devices.count == 0` なら英語ログを出して `nullptr` を返す。`objectAtIndex:` は `capture_device_index < devices.count` のときだけ呼ぶ。`Create` が `nullptr` を返せば既存の `failed to create capturer` で終了コード 1 になる。カメラ権限拒否では一覧が空にならないことを確認した。0 台の再現はカメラ無し VM 等が必要。CI のビルドと E2E は成功。PR は https://github.com/shiguredo/momo/pull/469 。
