@@ -1,7 +1,7 @@
 # WebSocket のプロキシ CONNECT レスポンスの HTTP ステータスを検証していない
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-28
 - Branch: feature/fix-proxy-connect-status
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -28,4 +28,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`OnReadProxy` で CONNECT 応答を `proxy_resp_parser_->get()` から取り、2xx でなければ TLS に進まない。ログにステータスと理由句を出し、`on_connect` には `permission_denied` を渡す。非 2xx の HTTP サーバで `Proxy CONNECT failed: 501 Not Implemented` を確認し、TLS に進まないことを確認した。CI のビルドと E2E は成功。PR は https://github.com/shiguredo/momo/pull/471 。
