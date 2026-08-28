@@ -51,14 +51,21 @@ SDLRenderer::SDLRenderer(int width, int height, bool fullscreen)
 #endif
 
   thread_ = SDL_CreateThread(SDLRenderer::RenderThreadExec, "Render", this);
+  if (thread_ == nullptr) {
+    RTC_LOG(LS_ERROR) << __func__ << ": SDL_CreateThread failed "
+                      << SDL_GetError();
+    return;
+  }
 }
 
 SDLRenderer::~SDLRenderer() {
   running_ = false;
-  int ret = 0;
-  SDL_WaitThread(thread_, &ret);
-  if (ret != 0) {
-    RTC_LOG(LS_ERROR) << __func__ << ": SDL Thread error:" << ret;
+  if (thread_ != nullptr) {
+    int ret = 0;
+    SDL_WaitThread(thread_, &ret);
+    if (ret != 0) {
+      RTC_LOG(LS_ERROR) << __func__ << ": SDL Thread error:" << ret;
+    }
   }
   if (renderer_) {
     SDL_DestroyRenderer(renderer_);

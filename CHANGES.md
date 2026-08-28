@@ -113,6 +113,9 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] SDL 初期化失敗時に未初期化のスレッドハンドルを WaitThread へ渡さない
+  - `thread_` を null 初期化し、作成失敗をログして、null では `SDL_WaitThread` しない
+  - @Hexa
 - [FIX] WSS 接続時にサーバ証明書のホスト名検証を行う
   - チェーン検証に加え、接続先ホスト名と証明書の SAN / CN を照合するようにする
   - `--insecure` 指定時は従来どおり検証をスキップする

@@ -84,7 +84,7 @@ class SDLRenderer : public VideoTrackReceiver {
       VideoTrackSinkVector;
   VideoTrackSinkVector sinks_;
   std::atomic<bool> running_;
-  SDL_Thread* thread_;
+  SDL_Thread* thread_ = nullptr;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
   std::function<void(std::function<void()>)> dispatch_;
