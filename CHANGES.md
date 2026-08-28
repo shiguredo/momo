@@ -87,6 +87,11 @@
   - @torikizi
 - [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
   - @torikizi
+- [UPDATE] sora-cpp-sdk を 2026.2.1 に同期する
+  - SDL3 のバージョンを 3.4.14 に上げる
+  - CLI11 のバージョンを v2.7.2 に上げる
+  - Boost のバージョンを 1.92.0 に上げる
+  - @Hexa
 - [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
   - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
   - @voluntas @melpon
@@ -164,6 +169,8 @@
 
 ### misc
 
+- [UPDATE] sora-cpp-sdk 同期スクリプトが third_party をコピーするよう修正する
+  - @Hexa
 - [UPDATE] actions/download-artifact を v7 に上げる
   - @torikizi
 - [UPDATE] Homebrew/actions/setup-homebrew を @master から @main に変更する
