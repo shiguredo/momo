@@ -151,7 +151,7 @@ jobs:
         id: cuda
         with:
           platform: ${{ matrix.os }}
-          cuda_version: 12.9.1
+          cuda_version: 13.3.1
       - name: Install deps for ${{ matrix.name }}
         run: |
           sudo apt-get update
