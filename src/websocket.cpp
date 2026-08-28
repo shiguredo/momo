@@ -1,5 +1,6 @@
 #include "websocket.h"
 
+#include <string>
 #include <utility>
 
 // WebRTC
@@ -400,7 +401,7 @@ void Websocket::OnReadProxy(boost::system::error_code ec,
   if (boost::beast::http::to_status_class(proxy_resp.result()) !=
       boost::beast::http::status_class::successful) {
     RTC_LOG(LS_ERROR) << "Proxy CONNECT failed: " << proxy_resp.result_int()
-                      << " " << proxy_resp.reason();
+                      << " " << std::string(proxy_resp.reason());
     auto on_connect = std::move(on_connect_);
     on_connect(boost::system::errc::make_error_code(
         boost::system::errc::permission_denied));
