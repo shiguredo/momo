@@ -113,6 +113,10 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] V4L2 デコーダが入力サイズを検証せず mmap バッファを越境書き込みする問題を修正する
+  - コピー前に mmap 実長 (`planes[0].length`) を超えていないか確認する
+  - 超過時はインデックスをキューへ戻し、エラーログを出して失敗する
+  - @Hexa
 - [FIX] SDL 初期化失敗時に未初期化のスレッドハンドルを WaitThread へ渡さない
   - `thread_` を null 初期化し、作成失敗をログして、null では `SDL_WaitThread` しない
   - @Hexa

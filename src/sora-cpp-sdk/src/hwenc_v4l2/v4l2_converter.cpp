@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <cstddef>
+
 // Linux
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -531,7 +533,7 @@ int V4L2DecodeConverter::Init(int src_pixelformat, bool dst_export_dmafds) {
 
   v4l2_format src_fmt = {};
   V4L2Helper::InitFormat(V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE, 0, 0,
-                         src_pixelformat, 0, 512 << 10, &src_fmt);
+                         src_pixelformat, 0, SRC_BUFFER_SIZEIMAGE, &src_fmt);
   if (ioctl(fd_, VIDIOC_S_FMT, &src_fmt) < 0) {
     RTC_LOG(LS_ERROR) << "Failed to set output format";
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -691,6 +693,14 @@ int V4L2DecodeConverter::Decode(const uint8_t* data,
   v4l2_buf.timestamp.tv_usec = timestamp_rtp % webrtc::kNumMicrosecsPerSec;
 
   auto& buffer = src_buffers_.at(*index);
+  // sizeimage は入力長で上書きされるため、容量判定は mmap 実長 length を使う
+  if (size < 0 || static_cast<size_t>(size) > buffer.planes[0].length) {
+    RTC_LOG(LS_ERROR) << __func__
+                      << "  Input frame exceeds mmap buffer length: size="
+                      << size << " length=" << buffer.planes[0].length;
+    runner_->PushAvailableBufferIndex(*index);
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
   memcpy(buffer.planes[0].start, data, size);
   buffer.planes[0].sizeimage = size;
 

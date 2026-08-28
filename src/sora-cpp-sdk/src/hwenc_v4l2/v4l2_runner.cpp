@@ -64,6 +64,10 @@ std::optional<int> V4L2Runner::PopAvailableBufferIndex() {
   return output_buffers_available_.pop();
 }
 
+void V4L2Runner::PushAvailableBufferIndex(int index) {
+  output_buffers_available_.push(index);
+}
+
 void V4L2Runner::PollProcess() {
   while (true) {
     RTC_LOG(LS_VERBOSE) << "[POLL][" << name_ << "] Start poll";
