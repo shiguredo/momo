@@ -27,8 +27,9 @@
 
 ## 完了条件
 
-- ヘッドレス環境で `DISPLAY` を空にして `--use-sdl` を指定した際に、`SDL_Init` 失敗 / `SDL_CreateWindow` 失敗 / `SDL_CreateRenderer` 失敗 (macOS) / `SDL_CreateThread` 失敗のいずれでもデストラクタでクラッシュせず英語の `RTC_LOG(LS_ERROR)` が出力され、プロセスが `SIGTERM` なくデストラクタまで到達する
-- 通常環境では従来通りウィンドウ表示とレンダリングが動作し、`SDL_CreateThread` 成功時に描画ループが回り `SIGTERM` で `SDL_WaitThread` が正常終了する
+- 初期化失敗 (`SDL_Init` / `SDL_CreateWindow` / Apple の `SDL_CreateRenderer` / `SDL_CreateThread`) のあと、デストラクタが未初期化ポインタを `SDL_WaitThread` に渡さない
+- その経路でプロセスが `SIGSEGV` せず、null の `thread_` では `SDL_WaitThread` を呼ばないため `SDL Thread error:-1` も出ない
+- 通常環境では従来通りウィンドウ表示とレンダリングが動作し、`SDL_CreateThread` 成功時に描画ループが回り終了時に `SDL_WaitThread` が正常終了する
 
 ## 解決方法
 
@@ -37,3 +38,7 @@
 ## pending にした理由
 
 クラッシュはプロセス停止時のデストラクタで起きる。macOS 上で `SDL_VIDEODRIVER=invalid` と `--use-sdl` により初期化失敗までは再現できたが、終了時は `SDL Thread error:-1` のみで、未初期化 `thread_` によるクラッシュは再現しなかった。SDL3 の `SDL_WaitThread(NULL)` は no-op で status が `-1` になるため、クラッシュ前提の完了条件を今は満たせない。再現手段が固まるまで保留する。
+
+## reopened にした理由
+
+クラッシュ再現を完了条件にすると SDL3 では永久に閉じられない。未初期化の `thread_` を `SDL_WaitThread` に渡すのは未定義動作のままであり、null のときの `SDL Thread error:-1` は初期化失敗をスレッドエラーと誤表示する。完了条件を「未初期化ポインタを渡さない / null では Wait しない」に更新して着手する。
