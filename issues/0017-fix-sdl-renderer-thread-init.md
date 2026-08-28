@@ -1,7 +1,7 @@
 # SDL 初期化失敗時に未初期化のスレッドハンドルを SDL_WaitThread に渡してクラッシュする
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-28
 - Branch: feature/fix-sdl-renderer-thread-init
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -33,7 +33,7 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`src/sdl_renderer/sdl_renderer.h` で `thread_` を `nullptr` に NSDMI した。コンストラクタは `SDL_CreateThread` が `nullptr` のとき英語の `RTC_LOG(LS_ERROR)` を出して `return` する。デストラクタは `thread_ != nullptr` のときだけ `SDL_WaitThread` する。null では Wait しないので、SDL3 の no-op による `status = -1` をスレッドエラーとして出さない。`window_` / `renderer_` の破棄と `SDL_Quit()` は変更していない。
 
 ## pending にした理由
 
