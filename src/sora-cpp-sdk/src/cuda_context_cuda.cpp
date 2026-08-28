@@ -62,7 +62,8 @@ std::shared_ptr<CudaContext> CudaContext::Create() {
     char device_name[80];
     ckerror(dyn::cuDeviceGetName(device_name, sizeof(device_name), device));
     //RTC_LOG(LS_INFO) << "GPU in use: " << device_name;
-    ckerror(dyn::cuCtxCreate(&context, 0, device));
+    // CUDA 13 で cuCtxCreate は cuCtxCreate_v4 (4 引数) になった
+    ckerror(dyn::cuCtxCreate(&context, nullptr, 0, device));
 
     auto impl = std::make_shared<CudaContextImpl>();
     impl->device = device;
@@ -93,7 +94,7 @@ bool CudaContext::CanCreate() {
     return false;
   }
 
-  r = dyn::cuCtxCreate(&context, 0, device);
+  r = dyn::cuCtxCreate(&context, nullptr, 0, device);
   if (r != CUDA_SUCCESS) {
     return false;
   }

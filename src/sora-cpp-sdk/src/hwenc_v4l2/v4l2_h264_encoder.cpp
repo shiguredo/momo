@@ -341,6 +341,7 @@ int32_t V4L2H264Encoder::SendFrame(const webrtc::VideoFrame& frame,
   codec_specific.codecSpecific.H264.packetization_mode =
       webrtc::H264PacketizationMode::NonInterleaved;
 
+  encoded_image_.set_end_of_temporal_unit(true);
   webrtc::EncodedImageCallback::Result result =
       callback_->OnEncodedImage(encoded_image_, &codec_specific);
   if (result.error != webrtc::EncodedImageCallback::Result::OK) {

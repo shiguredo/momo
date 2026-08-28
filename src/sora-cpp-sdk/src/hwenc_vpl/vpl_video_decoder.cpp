@@ -188,7 +188,7 @@ std::unique_ptr<MFXVideoDECODE> VplVideoDecoderImpl::CreateDecoderInternal(
   // （MFX_CODEC_AVC や MFX_CODEC_HEVC の時には Init 後に QueryIOSurf しても動いた）
   memset(alloc_request, 0, sizeof(*alloc_request));
   sts = decoder->QueryIOSurf(&param, alloc_request);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, nullptr);
 
   RTC_LOG(LS_INFO) << "Decoder NumFrameSuggested="
                    << alloc_request->NumFrameSuggested;
@@ -303,10 +303,10 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
                           << (int)sts;
       continue;
     }
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     uint64_t pts = input_image.RtpTimestamp();
     // NV12 から I420 に変換
@@ -349,6 +349,10 @@ const char* VplVideoDecoderImpl::ImplementationName() const {
 bool VplVideoDecoderImpl::InitVpl() {
   decoder_ = CreateDecoder(session_, codec_, {{4096, 4096}, {2048, 2048}}, true,
                            &alloc_request_);
+  if (decoder_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Failed to create decoder";
+    return false;
+  }
 
   mfxStatus sts = MFX_ERR_NONE;
 

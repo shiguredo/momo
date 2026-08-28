@@ -533,7 +533,7 @@ int32_t VplVideoEncoderImpl::Encode(
     memset(&param, 0, sizeof(param));
 
     sts = encoder_->GetVideoParam(&param);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     // ビットレートとフレームレートを変更する。
     // なお、encoder_->Reset() はキューイングしているサーフェスを
@@ -552,7 +552,7 @@ int32_t VplVideoEncoderImpl::Encode(
     param.mfx.FrameInfo.FrameRateExtD = 1;
 
     sts = encoder_->Reset(&param);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     reconfigure_needed_ = false;
 
@@ -572,10 +572,10 @@ int32_t VplVideoEncoderImpl::Encode(
     // もっと入力が必要なので出直す
     return WEBRTC_VIDEO_CODEC_OK;
   }
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
   sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
   //RTC_LOG(LS_ERROR) << "SurfaceSize=" << (surface->Data.U - surface->Data.Y);
   //RTC_LOG(LS_ERROR) << "DataLength=" << bitstream_.DataLength;
@@ -673,6 +673,7 @@ int32_t VplVideoEncoderImpl::Encode(
       // AV1 の SVC では、まれにエンコード対象のレイヤーフレームが存在しない場合がある。
       // 次のフレームを待つことで正常に継続可能なケースであるため、エラーではなく正常終了で返してスキップする。
       if (layer_frames.empty()) {
+        callback_->OnFrameDropped(frame.rtp_timestamp(), 0, true);
         return WEBRTC_VIDEO_CODEC_OK;
       }
       codec_specific.end_of_picture = true;
@@ -688,6 +689,7 @@ int32_t VplVideoEncoderImpl::Encode(
       }
     }
 
+    encoded_image_.set_end_of_temporal_unit(true);
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
@@ -749,13 +751,13 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   // Retrieve video parameters selected by encoder.
   // - BufferSizeInKB parameter is required to set bit stream buffer size
   sts = encoder_->GetVideoParam(&param);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
   RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB;
 
   // Query number of required surfaces for encoder
   memset(&alloc_request_, 0, sizeof(alloc_request_));
   sts = encoder_->QueryIOSurf(&param, &alloc_request_);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
   RTC_LOG(LS_INFO) << "Encoder NumFrameSuggested="
                    << alloc_request_.NumFrameSuggested;

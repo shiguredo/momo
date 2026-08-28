@@ -67,7 +67,7 @@ void ShowEncoderCapability() {
     char szDeviceName[80];
     ck(dyn::cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
     CUcontext cuContext = NULL;
-    ck(dyn::cuCtxCreate(&cuContext, 0, cuDevice));
+    ck(dyn::cuCtxCreate(&cuContext, nullptr, 0, cuDevice));
     NvEncoderCuda enc(cuContext, 1280, 720, NV_ENC_BUFFER_FORMAT_NV12);
 
     std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl
