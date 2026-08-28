@@ -137,6 +137,9 @@
 - [FIX] --no-video-input-device と --fake-capture-device 併用時のクラッシュを修正する
   - 併用時は起動を拒否し、`create_adm` でも null の capturer を触らない
   - @Hexa
+- [FIX] プロキシ経由の WSS で CONNECT の非 2xx をエラーにする
+  - 407 / 403 などのときは TLS ハンドシェイクに進まない
+  - @Hexa
 - [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
   - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
   - @Hexa
