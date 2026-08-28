@@ -11,11 +11,11 @@
 #include <vpl/mfxstructures.h>
 #include <vpl/mfxvp8.h>
 
-#define VPL_CHECK_RESULT(P, X, ERR)                    \
+#define VPL_CHECK_RESULT(P, X, ERR, RET)               \
   {                                                    \
     if ((X) > (P)) {                                   \
       RTC_LOG(LS_ERROR) << "Intel VPL Error: " << ERR; \
-      throw ERR;                                       \
+      return RET;                                      \
     }                                                  \
   }
 

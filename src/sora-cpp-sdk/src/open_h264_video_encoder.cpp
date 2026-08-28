@@ -649,6 +649,25 @@ int32_t OpenH264VideoEncoder::Encode(
   RTC_DCHECK_EQ(configurations_[0].width, frame_buffer->width());
   RTC_DCHECK_EQ(configurations_[0].height, frame_buffer->height());
 
+  int num_layers_to_send = 0;
+  std::vector<VideoFrameType> frame_types_to_send(
+      configurations_.size(), VideoFrameType::kVideoFrameDelta);
+  for (size_t i = 0; i < encoders_.size(); ++i) {
+    if (!configurations_[i].sending) {
+      frame_types_to_send[i] = VideoFrameType::kEmptyFrame;
+      continue;
+    }
+
+    const size_t simulcast_idx =
+        static_cast<size_t>(configurations_[i].simulcast_idx);
+    if (frame_types != nullptr && simulcast_idx < frame_types->size()) {
+      frame_types_to_send[i] = (*frame_types)[simulcast_idx];
+    }
+    if (frame_types_to_send[i] != VideoFrameType::kEmptyFrame) {
+      ++num_layers_to_send;
+    }
+  }
+
   // Encode image for each layer.
   for (size_t i = 0; i < encoders_.size(); ++i) {
     // EncodeFrame input.
@@ -687,23 +706,14 @@ int32_t OpenH264VideoEncoder::Encode(
                         configurations_[i].height, libyuv::kFilterBox);
     }
 
-    if (!configurations_[i].sending) {
+    if (frame_types_to_send[i] == VideoFrameType::kEmptyFrame) {
       continue;
-    }
-    if (frame_types != nullptr && i < frame_types->size()) {
-      // Skip frame?
-      if ((*frame_types)[i] == VideoFrameType::kEmptyFrame) {
-        continue;
-      }
     }
     // Send a key frame either when this layer is configured to require one
     // or we have explicitly been asked to.
-    const size_t simulcast_idx =
-        static_cast<size_t>(configurations_[i].simulcast_idx);
     bool send_key_frame =
         is_keyframe_needed ||
-        (frame_types && simulcast_idx < frame_types->size() &&
-         (*frame_types)[simulcast_idx] == VideoFrameType::kVideoFrameKey);
+        frame_types_to_send[i] == VideoFrameType::kVideoFrameKey;
     if (send_key_frame) {
       // API doc says ForceIntraFrame(false) does nothing, but calling this
       // function forces a key frame regardless of the `bIDR` argument's value.
@@ -737,6 +747,8 @@ int32_t OpenH264VideoEncoder::Encode(
     encoded_images_[i].SetColorSpace(input_frame.color_space());
     encoded_images_[i]._frameType = ConvertToVideoFrameType(info.eFrameType);
     encoded_images_[i].SetSimulcastIndex(configurations_[i].simulcast_idx);
+    --num_layers_to_send;
+    encoded_images_[i].set_end_of_temporal_unit(num_layers_to_send == 0);
 
     // Split encoded image up into fragments. This also updates
     // `encoded_image_`.
@@ -801,8 +813,14 @@ int32_t OpenH264VideoEncoder::Encode(
       }
       encoded_image_callback_->OnEncodedImage(encoded_images_[i],
                                               &codec_specific);
+    } else {
+      encoded_image_callback_->OnFrameDropped(
+          encoded_images_[i].RtpTimestamp(),
+          *encoded_images_[i].SimulcastIndex(),
+          *encoded_images_[i].is_end_of_temporal_unit());
     }
   }
+  RTC_DCHECK_EQ(num_layers_to_send, 0);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

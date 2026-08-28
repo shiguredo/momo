@@ -67,7 +67,12 @@ void ShowEncoderCapability() {
     char szDeviceName[80];
     ck(dyn::cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
     CUcontext cuContext = NULL;
+    // CUDA 13 のヘッダでは cuCtxCreate が 4 引数。momo は CUDA 12 を使う
+#if CUDA_VERSION >= 13000
+    ck(dyn::cuCtxCreate(&cuContext, nullptr, 0, cuDevice));
+#else
     ck(dyn::cuCtxCreate(&cuContext, 0, cuDevice));
+#endif
     NvEncoderCuda enc(cuContext, 1280, 720, NV_ENC_BUFFER_FORMAT_NV12);
 
     std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl

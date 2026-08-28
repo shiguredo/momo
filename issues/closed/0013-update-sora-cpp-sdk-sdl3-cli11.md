@@ -1,7 +1,7 @@
 # sora-cpp-sdk を 2026.2.1 に同期し、SDL3 / CLI11 を最新化する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-28
 - Branch: feature/update-sora-cpp-sdk-sdl3-cli11
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -56,4 +56,26 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`src/sora-cpp-sdk/` を `2026.2.1` (`1be196d647797d19c02d56bb054a3de6d81edd0a`) に同期し、`SDL3` を `3.4.14`、`CLI11` を `v2.7.2`、Boost を `1.92.0` にした。`BOOST_SHA256_HASH` は sora-cpp-sdk `2026.2.1` の `DEPS` と同じ `c4a3b310ddd2472416e091067166b0713be97c63f38c212c484ada022fd296ce` である。同期スクリプトは `third_party` をコピー対象に含め、`README.md` の手順を 2 引数形式に合わせた。
+
+libwebrtc は `m150.7871.3.0` のままビルドが通ったため `m150.7871.3.1` には上げていない。VPL / CMAKE も現行値のままである。CUDA は sora-cpp-sdk `2026.2.1` が `13.3.1-1` だが、clang-20 は CUDA 13 を扱えず Windows の展開でもヘッダ欠落が出たため `12.9.1-1` を維持した。vendored の `cuCtxCreate` は `CUDA_VERSION >= 13000` で 4 引数、それ以外で 3 引数に分岐した (`cuda_context_cuda.cpp` と `nvcodec_video_encoder_cuda.cpp`)。
+
+全プラットフォームの package ビルドと `from_build: true` の E2E は GitHub Actions で成功した。
+
+完了条件の 13 件はコードレビューで確認し、いずれも未解消である。`hwenc_jetson` は momo 独自のため同期では直らない。`0020`〜`0023` は別 finding であり、本リストをカバーしない。カバーされていない finding の issue 起票は本 issue の後に行う。
+
+| 対象 | 解消状況 | 根拠 | 対応先 issue |
+| --- | --- | --- | --- |
+| VPL `Data.UV` 未設定 | 未解消 | `vpl_video_decoder.cpp` に設定なし | 未起票 |
+| `configured_bitrate_bps_` 未初期化比較 | 未解消 | Jetson / V4L2 エンコーダとも未初期化 | 未起票 |
+| IVF ヘッダ除去の size アンダーフロー | 未解消 | Jetson / NvCodec / VPL エンコーダに残る | 未起票 |
+| Jetson `CHUNK_SIZE` 超過 memcpy | 未解消 | `jetson_video_decoder.cpp` に残る。`0020` から委譲 | 未起票 |
+| Jetson AV1 OBU サイズ 1 バイト固定 | 未解消 | `jetson_video_encoder.cpp` に残る | 未起票 |
+| NvCodec `frameRateNum=0` | 未解消 | `nvcodec_video_encoder.cpp` に残る | 未起票 |
+| `cuCtxPushCurrent` 例外で Pop なし | 未解消 | `nvcodec_decoder_cuda.cpp` に残る | 未起票 |
+| V4L2Runner が `POLLERR` / `HUP` を無視 | 未解消 | `v4l2_runner.cpp` に残る | 未起票 |
+| V4L2 デバイスパス直書き | 未解消 | `v4l2_converter.cpp` に残る | 未起票 |
+| libcamerac Span dangling | 未解消 | `libcamerac.cpp` に残る | 未起票 |
+| mmap の `MAP_FAILED` 未チェック | 未解消 | `libcamera_capturer.cpp` に残る | 未起票 |
+| NvCodec フレームサイズ未検証コピー | 未解消 | `nvcodec_video_encoder.cpp` に残る | 未起票 |
+| `V4L2H264Decoder::Release()` 空実装 | 未解消 | `v4l2_h264_decoder.cpp` に残る | 未起票 |
