@@ -10,6 +10,7 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
+#include <boost/beast/http/status.hpp>
 #include <boost/beast/websocket/stream.hpp>
 
 #include "ssl_verifier.h"
@@ -391,6 +392,18 @@ void Websocket::OnReadProxy(boost::system::error_code ec,
   if (ec) {
     auto on_connect = std::move(on_connect_);
     on_connect(ec);
+    return;
+  }
+
+  // CONNECT は 2xx のときだけトンネル確立。非 2xx では TLS に進まない
+  const auto& proxy_resp = proxy_resp_parser_->get();
+  if (boost::beast::http::to_status_class(proxy_resp.result()) !=
+      boost::beast::http::status_class::successful) {
+    RTC_LOG(LS_ERROR) << "Proxy CONNECT failed: " << proxy_resp.result_int()
+                      << " " << proxy_resp.reason();
+    auto on_connect = std::move(on_connect_);
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::permission_denied));
     return;
   }
 
