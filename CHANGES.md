@@ -91,7 +91,6 @@
   - SDL3 のバージョンを 3.4.14 に上げる
   - CLI11 のバージョンを v2.7.2 に上げる
   - Boost のバージョンを 1.92.0 に上げる
-  - CUDA のバージョンを 13.3.1-1 に上げる
   - @Hexa
 - [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
   - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
