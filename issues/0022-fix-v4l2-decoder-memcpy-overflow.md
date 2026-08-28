@@ -1,7 +1,7 @@
 # V4L2 デコーダが入力フレームのサイズ未検証で mmap バッファを越境書き込みする
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-28
 - Branch: feature/fix-v4l2-decoder-memcpy-overflow
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -37,4 +37,4 @@ Raspberry Pi の V4L2 デコーダ (`V4L2DecodeConverter`) が入力フレーム
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`V4L2DecodeConverter::Decode()` で `memcpy` の前に入力 `size` と mmap 実長 `planes[0].length` を比較する。超過時は `V4L2Runner::PushAvailableBufferIndex` でインデックスを戻し、英語のエラーログを出して `WEBRTC_VIDEO_CODEC_ERROR` を返す。入力の sizeimage 要求値は `SRC_BUFFER_SIZEIMAGE` にした。`V4L2H264Decoder::Decode()` は変換器の失敗を返す。MJPEG 経路は従来どおり戻り値を使わない。sora-cpp-sdk 本体への反映と `update-last-updated.sh` は、本リポジトリの vendored 修正のみとした。
