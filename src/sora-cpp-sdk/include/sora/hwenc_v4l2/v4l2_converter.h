@@ -130,6 +130,8 @@ class V4L2DecodeConverter {
  private:
   static constexpr int NUM_OUTPUT_BUFFERS = 4;
   static constexpr int NUM_CAPTURE_BUFFERS = 4;
+  // デコーダ入力 (OUTPUT) の sizeimage 要求値。実容量は mmap 後の planes[0].length
+  static constexpr int SRC_BUFFER_SIZEIMAGE = 512 << 10;
 
   int Init(int src_pixelformat, bool dst_export_dmafds);
 

@@ -68,6 +68,8 @@ class V4L2Runner {
   int Enqueue(v4l2_buffer* v4l2_buf, OnCompleteCallback on_complete);
 
   std::optional<int> PopAvailableBufferIndex();
+  // 取得済みインデックスを未使用キューへ戻す
+  void PushAvailableBufferIndex(int index);
 
  private:
   void PollProcess();

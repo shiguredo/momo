@@ -57,7 +57,7 @@ int32_t V4L2H264Decoder::Decode(const webrtc::EncodedImage& input_image,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  decoder_->Decode(
+  int r = decoder_->Decode(
       input_image.data(), input_image.size(), input_image.RtpTimestamp(),
       [this](webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer,
              int64_t timestamp_rtp) {
@@ -68,6 +68,9 @@ int32_t V4L2H264Decoder::Decode(const webrtc::EncodedImage& input_image,
         decode_complete_callback_->Decoded(decoded_image, std::nullopt,
                                            std::nullopt);
       });
+  if (r != WEBRTC_VIDEO_CODEC_OK) {
+    return r;
+  }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
