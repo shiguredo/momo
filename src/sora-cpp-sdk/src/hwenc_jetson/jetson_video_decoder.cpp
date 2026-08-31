@@ -56,6 +56,7 @@ JetsonVideoDecoder::JetsonVideoDecoder(webrtc::VideoCodecType codec)
       decoder_(nullptr),
       decode_complete_callback_(nullptr),
       buffer_pool_(false, 300 /* max_number_of_buffers*/),
+      capture_thread_id_(std::thread::id{}),
       eos_(false),
       got_error_(false),
       dst_dma_fd_(-1) {}
@@ -104,6 +105,9 @@ int32_t JetsonVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
                                    int64_t render_time_ms) {
   if (decoder_ == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+  if (got_error_) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
   if (decode_complete_callback_ == NULL) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
@@ -232,10 +236,6 @@ bool JetsonVideoDecoder::JetsonRelease() {
           break;
         }
       }
-      // CaptureLoop 自身からの呼び出しでは Join しない
-      if (capture_thread_id_.load() != std::this_thread::get_id()) {
-        capture_loop_.Finalize();
-      }
     }
     delete decoder_;
     decoder_ = nullptr;
@@ -243,6 +243,11 @@ bool JetsonVideoDecoder::JetsonRelease() {
   if (dst_dma_fd_ != -1) {
     NvBufSurf::NvDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
+  }
+  // decoder_ 破棄後も Join する。CaptureLoop 上では自己 Join しない
+  if (!capture_loop_.empty() &&
+      capture_thread_id_.load() != std::this_thread::get_id()) {
+    capture_loop_.Finalize();
   }
   got_error_ = false;
   return true;
@@ -297,6 +302,8 @@ void JetsonVideoDecoder::CaptureLoop() {
 
   if (!got_error_) {
     if (SetCapture() != WEBRTC_VIDEO_CODEC_OK) {
+      // 自己 Join せず decoder / DMA を破棄する。Join は外側の Release
+      JetsonRelease();
       return;
     }
   }
@@ -305,6 +312,7 @@ void JetsonVideoDecoder::CaptureLoop() {
     ret = decoder_->dqEvent(event, false);
     if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
       if (SetCapture() != WEBRTC_VIDEO_CODEC_OK) {
+        JetsonRelease();
         return;
       }
       continue;

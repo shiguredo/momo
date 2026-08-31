@@ -60,7 +60,7 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   webrtc::VideoFrameBufferPool buffer_pool_;
   webrtc::PlatformThread capture_loop_;
   // CaptureLoop 実行中のスレッド。自己 Join 判定に使う
-  std::atomic<std::thread::id> capture_thread_id_;
+  std::atomic<std::thread::id> capture_thread_id_{};
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;
