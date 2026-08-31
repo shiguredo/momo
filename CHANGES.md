@@ -113,6 +113,9 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] Jetson デコーダが解像度変更失敗時に CaptureLoop 自身を Join する問題を修正する
+  - `SetCapture` 失敗時は `Release` せず、ループを抜けてから外側で破棄する
+  - @Hexa
 - [FIX] libcamera キャプチャ停止時に破棄済み request を参照する問題を修正する
   - フレーム解放まで request を共有所有し、停止後は再キューしない
   - @Hexa

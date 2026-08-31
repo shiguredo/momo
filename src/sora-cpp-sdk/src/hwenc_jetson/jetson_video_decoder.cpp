@@ -13,6 +13,9 @@
 
 #include <unistd.h>
 
+#include <atomic>
+#include <thread>
+
 // WebRTC
 #include <modules/video_coding/include/video_error_codes.h>
 #include <rtc_base/checks.h>
@@ -37,6 +40,13 @@
     Release();                                 \
     return WEBRTC_VIDEO_CODEC_ERROR;           \
   }
+// CaptureLoop 上の SetCapture 用。Release / Finalize しない
+#define SET_CAPTURE_ERROR(cond, desc)          \
+  if (cond) {                                  \
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << desc; \
+    got_error_ = true;                         \
+    return WEBRTC_VIDEO_CODEC_ERROR;           \
+  }
 #define CHUNK_SIZE 4000000
 
 namespace sora {
@@ -49,6 +59,25 @@ JetsonVideoDecoder::JetsonVideoDecoder(webrtc::VideoCodecType codec)
       eos_(false),
       got_error_(false),
       dst_dma_fd_(-1) {}
+
+namespace {
+
+// CaptureLoop 在籍中だけ capture_thread_id_ をこのスレッドにする
+class CaptureThreadGuard {
+ public:
+  explicit CaptureThreadGuard(std::atomic<std::thread::id>& id) : id_(id) {
+    id_.store(std::this_thread::get_id());
+  }
+  ~CaptureThreadGuard() { id_.store(std::thread::id{}); }
+
+  CaptureThreadGuard(const CaptureThreadGuard&) = delete;
+  CaptureThreadGuard& operator=(const CaptureThreadGuard&) = delete;
+
+ private:
+  std::atomic<std::thread::id>& id_;
+};
+
+}  // namespace
 
 JetsonVideoDecoder::~JetsonVideoDecoder() {
   Release();
@@ -203,7 +232,10 @@ bool JetsonVideoDecoder::JetsonRelease() {
           break;
         }
       }
-      capture_loop_.Finalize();
+      // CaptureLoop 自身からの呼び出しでは Join しない
+      if (capture_thread_id_.load() != std::this_thread::get_id()) {
+        capture_loop_.Finalize();
+      }
     }
     delete decoder_;
     decoder_ = nullptr;
@@ -212,6 +244,7 @@ bool JetsonVideoDecoder::JetsonRelease() {
     NvBufSurf::NvDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
   }
+  got_error_ = false;
   return true;
 }
 
@@ -243,6 +276,7 @@ void JetsonVideoDecoder::CaptureLoopFunction(void* obj) {
 }
 
 void JetsonVideoDecoder::CaptureLoop() {
+  CaptureThreadGuard capture_thread_guard(capture_thread_id_);
   struct v4l2_event event;
   int ret;
   do {
@@ -262,13 +296,17 @@ void JetsonVideoDecoder::CaptureLoop() {
   } while (event.type != V4L2_EVENT_RESOLUTION_CHANGE && !got_error_);
 
   if (!got_error_) {
-    SetCapture();
+    if (SetCapture() != WEBRTC_VIDEO_CODEC_OK) {
+      return;
+    }
   }
 
   while (!(eos_ || got_error_ || decoder_->isInError())) {
     ret = decoder_->dqEvent(event, false);
     if (ret == 0 && event.type == V4L2_EVENT_RESOLUTION_CHANGE) {
-      SetCapture();
+      if (SetCapture() != WEBRTC_VIDEO_CODEC_OK) {
+        return;
+      }
       continue;
     }
 
@@ -383,16 +421,16 @@ void JetsonVideoDecoder::CaptureLoop() {
   }
 }
 
-int JetsonVideoDecoder::SetCapture() {
+int32_t JetsonVideoDecoder::SetCapture() {
   int32_t ret;
 
   struct v4l2_format format;
   ret = decoder_->capture_plane.getFormat(format);
-  INIT_ERROR(ret < 0, "Failed to getFormat at capture_plane");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to getFormat at capture_plane");
 
   capture_crop_.reset(new v4l2_crop());
   ret = decoder_->capture_plane.getCrop(*capture_crop_.get());
-  INIT_ERROR(ret < 0, "Failed to getCrop at capture_plane");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to getCrop at capture_plane");
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << " plane format "
                    << format.fmt.pix_mp.pixelformat << " "
@@ -416,25 +454,25 @@ int JetsonVideoDecoder::SetCapture() {
   cParams.memType = NVBUF_MEM_SURFACE_ARRAY;
 
   ret = NvBufSurf::NvAllocate(&cParams, 1, &dst_dma_fd_);
-  INIT_ERROR(ret == -1, "failed to NvBufSurfaceAllocate");
+  SET_CAPTURE_ERROR(ret == -1, "failed to NvBufSurfaceAllocate");
 
   decoder_->capture_plane.deinitPlane();
 
   ret = decoder_->setCapturePlaneFormat(format.fmt.pix_mp.pixelformat,
                                         format.fmt.pix_mp.width,
                                         format.fmt.pix_mp.height);
-  INIT_ERROR(ret < 0, "Failed to setCapturePlaneFormat at capture_plane");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to setCapturePlaneFormat at capture_plane");
 
   int32_t min_capture_buffer_size;
   ret = decoder_->getMinimumCapturePlaneBuffers(min_capture_buffer_size);
-  INIT_ERROR(ret < 0, "Failed to getMinimumCapturePlaneBuffers");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to getMinimumCapturePlaneBuffers");
 
   ret = decoder_->capture_plane.setupPlane(
       V4L2_MEMORY_MMAP, min_capture_buffer_size + 5, false, false);
-  INIT_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
   ret = decoder_->capture_plane.setStreamStatus(true);
-  INIT_ERROR(ret < 0, "Failed to setStreamStatus at decoder capture_plane");
+  SET_CAPTURE_ERROR(ret < 0, "Failed to setStreamStatus at decoder capture_plane");
 
   for (uint32_t i = 0; i < decoder_->capture_plane.getNumBuffers(); i++) {
     struct v4l2_buffer v4l2_buf;
@@ -446,7 +484,7 @@ int JetsonVideoDecoder::SetCapture() {
     v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_buf.memory = V4L2_MEMORY_MMAP;
     ret = decoder_->capture_plane.qBuffer(v4l2_buf, NULL);
-    INIT_ERROR(ret < 0, "Failed to qBuffer at encoder capture_plane");
+    SET_CAPTURE_ERROR(ret < 0, "Failed to qBuffer at encoder capture_plane");
   }
 
   return WEBRTC_VIDEO_CODEC_OK;

@@ -12,6 +12,9 @@
 #ifndef SORA_HWENC_JETSON_JETSON_VIDEO_DECODER_H_
 #define SORA_HWENC_JETSON_JETSON_VIDEO_DECODER_H_
 
+#include <atomic>
+#include <thread>
+
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
 #include <common_video/include/video_frame_buffer_pool.h>
@@ -56,6 +59,8 @@ class JetsonVideoDecoder : public webrtc::VideoDecoder {
   webrtc::DecodedImageCallback* decode_complete_callback_;
   webrtc::VideoFrameBufferPool buffer_pool_;
   webrtc::PlatformThread capture_loop_;
+  // CaptureLoop 実行中のスレッド。自己 Join 判定に使う
+  std::atomic<std::thread::id> capture_thread_id_;
   std::atomic<bool> eos_;
   std::atomic<bool> got_error_;
   int dst_dma_fd_;
