@@ -113,6 +113,9 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] libcamera キャプチャ停止時に破棄済み request を参照する問題を修正する
+  - フレーム解放まで request を共有所有し、停止後は再キューしない
+  - @Hexa
 - [FIX] V4L2 デコーダが入力サイズを検証せず mmap バッファを越境書き込みする問題を修正する
   - コピー前に mmap 実長 (`planes[0].length`) を超えていないか確認する
   - 超過時はインデックスをキューへ戻し、エラーログを出して失敗する

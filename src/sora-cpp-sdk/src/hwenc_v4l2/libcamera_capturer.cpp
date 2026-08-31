@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <iostream>
+#include <memory>
 
 // WebRTC
 #include <api/video/i420_buffer.h>
@@ -26,6 +27,14 @@ class LibcameraCapturerImpl : public LibcameraCapturer {
   static void LogDeviceList();
 
  private:
+  // カメラ停止後・オブジェクト破棄後もリリースコールバックが触ってよい状態
+  struct QueueState {
+    std::mutex mutex;
+    bool camera_started = false;
+    std::shared_ptr<libcamerac_Camera> camera;
+    std::shared_ptr<libcamerac_ControlList> controls;
+  };
+
   int32_t InitLibcamera(int camera_id);
   void ReleaseLibcamera();
   int32_t StartCapture(LibcameraCapturerConfig config);
@@ -34,7 +43,9 @@ class LibcameraCapturerImpl : public LibcameraCapturer {
   static void requestCompleteStatic(libcamerac_Request* request,
                                     void* user_data);
   void requestComplete(libcamerac_Request* request);
-  void queueRequest(libcamerac_Request* request);
+  std::shared_ptr<libcamerac_Request> FindRequest(libcamerac_Request* raw);
+  static void QueueRequest(std::shared_ptr<QueueState> state,
+                           std::shared_ptr<libcamerac_Request> request);
 
   std::shared_ptr<libcamerac_CameraManager> camera_manager_;
   std::shared_ptr<libcamerac_Camera> camera_;
@@ -51,8 +62,7 @@ class LibcameraCapturerImpl : public LibcameraCapturer {
   std::queue<libcamerac_FrameBuffer*> frame_buffer_;
   std::vector<std::shared_ptr<libcamerac_Request>> requests_;
   std::shared_ptr<libcamerac_ControlList> controls_;
-  bool camera_started_;
-  std::mutex camera_stop_mutex_;
+  std::shared_ptr<QueueState> queue_state_;
 };
 
 webrtc::scoped_refptr<LibcameraCapturer> LibcameraCapturer::Create(
@@ -119,7 +129,7 @@ LibcameraCapturerImpl::LibcameraCapturerImpl()
     : LibcameraCapturer(ScalableVideoTrackSourceConfig()),
       acquired_(false),
       controls_(libcameracpp_ControlList_controls()),
-      camera_started_(false) {}
+      queue_state_(std::make_shared<QueueState>()) {}
 
 LibcameraCapturerImpl::~LibcameraCapturerImpl() {
   ReleaseLibcamera();
@@ -296,7 +306,12 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
     return -1;
   }
   libcamerac_ControlList_clear(controls_.get());
-  camera_started_ = true;
+  queue_state_->camera = camera_;
+  queue_state_->controls = controls_;
+  {
+    std::lock_guard<std::mutex> lock(queue_state_->mutex);
+    queue_state_->camera_started = true;
+  }
 
   auto signal = libcamerac_Camera_requestCompleted(camera_.get());
   libcamerac_Signal_Request_connect(
@@ -312,14 +327,16 @@ int32_t LibcameraCapturerImpl::StartCapture(LibcameraCapturerConfig config) {
 }
 
 int32_t LibcameraCapturerImpl::StopCapture() {
+  int32_t result = 0;
   {
-    std::lock_guard<std::mutex> lock(camera_stop_mutex_);
-    if (camera_started_) {
+    std::lock_guard<std::mutex> lock(queue_state_->mutex);
+    if (queue_state_->camera_started) {
       if (libcamerac_Camera_stop(camera_.get())) {
         RTC_LOG(LS_ERROR) << __func__ << " Failed to stop camera";
-        return -1;
+        result = -1;
       }
-      camera_started_ = false;
+      // stop 失敗でも再キューしない。破棄経路はここを必ず通る
+      queue_state_->camera_started = false;
     }
   }
 
@@ -329,9 +346,12 @@ int32_t LibcameraCapturerImpl::StopCapture() {
         signal, &LibcameraCapturerImpl::requestCompleteStatic, this);
   }
 
-  requests_.clear();
+  {
+    std::lock_guard<std::mutex> lock(queue_state_->mutex);
+    requests_.clear();
+  }
 
-  return 0;
+  return result;
 }
 
 void LibcameraCapturerImpl::requestCompleteStatic(libcamerac_Request* request,
@@ -346,6 +366,18 @@ void LibcameraCapturerImpl::requestComplete(libcamerac_Request* request) {
     return;
   }
 
+  std::shared_ptr<libcamerac_Request> kept;
+  {
+    std::lock_guard<std::mutex> lock(queue_state_->mutex);
+    if (!queue_state_->camera_started) {
+      return;
+    }
+    kept = FindRequest(request);
+  }
+  if (!kept) {
+    return;
+  }
+
   auto cfg = libcamerac_CameraConfiguration_at(configuration_.get(), 0);
 
   int width = libcamerac_StreamConfiguration_get_size_width(cfg);
@@ -357,12 +389,12 @@ void LibcameraCapturerImpl::requestComplete(libcamerac_Request* request) {
   if (!AdaptFrame(width, height, timestamp_us, &adapted_width, &adapted_height,
                   &crop_width, &crop_height, &crop_x, &crop_y)) {
     RTC_LOG(LS_INFO) << "Drop frame";
-    queueRequest(request);
+    QueueRequest(queue_state_, kept);
     return;
   }
 
   libcamerac_FrameBuffer* buffer =
-      libcamerac_Request_findBuffer(request, stream_);
+      libcamerac_Request_findBuffer(kept.get(), stream_);
   auto item = mapped_buffers_.find(buffer);
   if (item == mapped_buffers_.end()) {
     return;
@@ -397,13 +429,14 @@ void LibcameraCapturerImpl::requestComplete(libcamerac_Request* request) {
                                          .set_rotation(webrtc::kVideoRotation_0)
                                          .build();
     OnFrame(video_frame);
-    queueRequest(request);
+    QueueRequest(queue_state_, kept);
   } else {
     // DMA なので V4L2NativeBuffer に格納する
+    auto state = queue_state_;
     frame_buffer = webrtc::make_ref_counted<V4L2NativeBuffer>(
         webrtc::VideoType::kI420, width, height, adapted_width, adapted_height,
         buffers[0].fd, nullptr, buffers[0].length, stride,
-        [this, request]() { queueRequest(request); });
+        [state, kept]() { QueueRequest(state, kept); });
     RTC_LOG(LS_VERBOSE) << "V4L2NativeBuffer created: with=" << width
                         << " height=" << height << " stride=" << stride
                         << " adapted_width=" << adapted_width
@@ -421,9 +454,30 @@ void LibcameraCapturerImpl::requestComplete(libcamerac_Request* request) {
   }
 }
 
-void LibcameraCapturerImpl::queueRequest(libcamerac_Request* request) {
+std::shared_ptr<libcamerac_Request> LibcameraCapturerImpl::FindRequest(
+    libcamerac_Request* raw) {
+  for (const auto& request : requests_) {
+    if (request.get() == raw) {
+      return request;
+    }
+  }
+  return nullptr;
+}
+
+void LibcameraCapturerImpl::QueueRequest(
+    std::shared_ptr<QueueState> state,
+    std::shared_ptr<libcamerac_Request> request) {
+  if (!state || !request) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> stop_lock(state->mutex);
+  if (!state->camera_started) {
+    return;
+  }
+
   std::map<const libcamerac_Stream*, libcamerac_FrameBuffer*> buffers;
-  auto map = libcamerac_Request_buffers(request);
+  auto map = libcamerac_Request_buffers(request.get());
   libcamerac_Request_BufferMap_foreach(
       map,
       [](const libcamerac_Stream* stream, libcamerac_FrameBuffer* buffer,
@@ -432,25 +486,20 @@ void LibcameraCapturerImpl::queueRequest(libcamerac_Request* request) {
                data))[stream] = buffer;
       },
       &buffers);
-  libcamerac_Request_reuse(request);
-
-  std::lock_guard<std::mutex> stop_lock(camera_stop_mutex_);
-  if (!camera_started_) {
-    return;
-  }
+  libcamerac_Request_reuse(request.get());
 
   for (auto const& p : buffers) {
-    if (libcamerac_Request_addBuffer(request, p.first, p.second) < 0) {
+    if (libcamerac_Request_addBuffer(request.get(), p.first, p.second) < 0) {
       RTC_LOG(LS_ERROR) << __func__ << " Failed to add buffer to request";
       return;
     }
   }
 
-  libcamerac_ControlList_copy(controls_.get(),
-                              libcamerac_Request_controls(request));
-  libcamerac_ControlList_clear(controls_.get());
+  libcamerac_ControlList_copy(state->controls.get(),
+                              libcamerac_Request_controls(request.get()));
+  libcamerac_ControlList_clear(state->controls.get());
 
-  if (libcamerac_Camera_queueRequest(camera_.get(), request) < 0) {
+  if (libcamerac_Camera_queueRequest(state->camera.get(), request.get()) < 0) {
     RTC_LOG(LS_ERROR) << __func__ << " Failed to queue request";
     return;
   }
