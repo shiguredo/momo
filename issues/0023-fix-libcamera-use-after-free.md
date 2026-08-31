@@ -1,7 +1,7 @@
 # libcamera キャプチャ停止時に保持中フレームのリリースコールバックが破棄済み request を参照する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-31
 - Branch: feature/fix-libcamera-use-after-free
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -34,4 +34,4 @@ Raspberry Pi の libcamera キャプチャ (`LibcameraCapturer`) が、`--use-li
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`requestComplete()` は `FindRequest()` で得た `std::shared_ptr<libcamerac_Request>` をフレーム解放まで保持する。`V4L2NativeBuffer` のリリースコールバックは `this` と生ポインタではなく `QueueState` と request の共有所有を捕まえる。`QueueRequest()` は `camera_started` を `libcamerac_Request_buffers()` より前に見る。`StopCapture()` は `Camera_stop` が失敗してもフラグを落とし、disconnect と `requests_.clear()` まで進める。sora-cpp-sdk 本体への反映と `update-last-updated.sh` は、本リポジトリの vendored 修正のみとした。
