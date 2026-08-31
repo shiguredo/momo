@@ -216,38 +216,42 @@ int32_t JetsonVideoDecoder::JetsonConfigure() {
 }
 
 bool JetsonVideoDecoder::JetsonRelease() {
-  if (decoder_) {
-    if (!capture_loop_.empty()) {
-      eos_ = true;
-      SendEOS(decoder_);
-      while (decoder_->output_plane.getNumQueuedBuffers() > 0 && !got_error_ &&
-             !decoder_->isInError()) {
-        struct v4l2_buffer v4l2_buf;
-        struct v4l2_plane planes[MAX_PLANES];
+  const bool on_capture_thread =
+      capture_thread_id_.load() == std::this_thread::get_id();
 
-        memset(&v4l2_buf, 0, sizeof(v4l2_buf));
-        memset(planes, 0, sizeof(planes));
+  if (decoder_ && !capture_loop_.empty()) {
+    eos_ = true;
+    SendEOS(decoder_);
+    while (decoder_->output_plane.getNumQueuedBuffers() > 0 && !got_error_ &&
+           !decoder_->isInError()) {
+      struct v4l2_buffer v4l2_buf;
+      struct v4l2_plane planes[MAX_PLANES];
 
-        v4l2_buf.m.planes = planes;
-        if (decoder_->output_plane.dqBuffer(v4l2_buf, NULL, NULL, -1) < 0) {
-          RTC_LOG(LS_ERROR)
-              << __FUNCTION__ << " Failed to dqBuffer at decoder output_plane";
-          got_error_ = true;
-          break;
-        }
+      memset(&v4l2_buf, 0, sizeof(v4l2_buf));
+      memset(planes, 0, sizeof(planes));
+
+      v4l2_buf.m.planes = planes;
+      if (decoder_->output_plane.dqBuffer(v4l2_buf, NULL, NULL, -1) < 0) {
+        RTC_LOG(LS_ERROR) << __FUNCTION__
+                          << " Failed to dqBuffer at decoder output_plane";
+        got_error_ = true;
+        break;
       }
     }
+  }
+
+  // CaptureLoop が decoder_ / DMA を使い終わるまで待ってから破棄する
+  if (!on_capture_thread && !capture_loop_.empty()) {
+    capture_loop_.Finalize();
+  }
+
+  if (decoder_) {
     delete decoder_;
     decoder_ = nullptr;
   }
   if (dst_dma_fd_ != -1) {
     NvBufSurf::NvDestroy(dst_dma_fd_);
     dst_dma_fd_ = -1;
-  }
-  // decoder_ 破棄後も Join する。CaptureLoop 上では自己 Join しない
-  if (!capture_loop_.empty() &&
-      capture_thread_id_.load() != std::this_thread::get_id()) {
-    capture_loop_.Finalize();
   }
   got_error_ = false;
   return true;
@@ -469,7 +473,8 @@ int32_t JetsonVideoDecoder::SetCapture() {
   ret = decoder_->setCapturePlaneFormat(format.fmt.pix_mp.pixelformat,
                                         format.fmt.pix_mp.width,
                                         format.fmt.pix_mp.height);
-  SET_CAPTURE_ERROR(ret < 0, "Failed to setCapturePlaneFormat at capture_plane");
+  SET_CAPTURE_ERROR(ret < 0,
+                    "Failed to setCapturePlaneFormat at capture_plane");
 
   int32_t min_capture_buffer_size;
   ret = decoder_->getMinimumCapturePlaneBuffers(min_capture_buffer_size);
@@ -480,7 +485,8 @@ int32_t JetsonVideoDecoder::SetCapture() {
   SET_CAPTURE_ERROR(ret < 0, "Failed to setupPlane at capture_plane");
 
   ret = decoder_->capture_plane.setStreamStatus(true);
-  SET_CAPTURE_ERROR(ret < 0, "Failed to setStreamStatus at decoder capture_plane");
+  SET_CAPTURE_ERROR(ret < 0,
+                    "Failed to setStreamStatus at decoder capture_plane");
 
   for (uint32_t i = 0; i < decoder_->capture_plane.getNumBuffers(); i++) {
     struct v4l2_buffer v4l2_buf;
