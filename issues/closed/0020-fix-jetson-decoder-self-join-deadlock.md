@@ -1,7 +1,7 @@
 # Jetson デコーダが解像度変更時の失敗で自己スレッドを Join してデッドロックする
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-01
 - Branch: feature/fix-jetson-decoder-self-join-deadlock
 - Polished: 2026-08-19
 - Milestone: 2026.1.0
@@ -34,4 +34,4 @@ Jetson ハードウェアデコーダ (`JetsonVideoDecoder`) の CaptureLoop ス
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`SetCapture()` は `SET_CAPTURE_ERROR` だけを使い、失敗時に `Release()` しない。`CaptureLoop` は戻り値を見て、失敗なら `JetsonRelease()` のあと return する。`JetsonRelease()` は CaptureLoop 上では `Finalize()` せず decoder / DMA を破棄し、外部からは Join してから破棄する。`capture_thread_id_` で自己 Join を判定し、空の id で初期化する。`Decode()` は `got_error_` ならエラーを返す。`JetsonConfigure()` の `INIT_ERROR` は変えていない。sora-cpp-sdk 本体への反映は、本リポジトリの vendored 修正のみとした。
