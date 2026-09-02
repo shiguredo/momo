@@ -81,7 +81,8 @@ JetsonVideoEncoder::JetsonVideoEncoder(const webrtc::Codec& codec)
       encoder_(nullptr),
       configured_framerate_(30),
       use_native_(false),
-      use_dmabuff_(false) {}
+      use_dmabuff_(false),
+      output_use_dmabuf_(false) {}
 
 JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
@@ -317,14 +318,17 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
         RTC_LOG(LS_ERROR) << "NvBufferCreateEx i:" << i << " fd:" << fd;
         output_plane_fd_[i] = fd;
       }
+      output_use_dmabuf_ = true;
     } else {
       ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_USERPTR, 1, false,
                                               false);
       INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+      output_use_dmabuf_ = false;
     }
   } else {
     ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+    output_use_dmabuf_ = false;
   }
 
   ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
@@ -381,13 +385,14 @@ void JetsonVideoEncoder::JetsonRelease() {
   }
   delete encoder_;
   encoder_ = nullptr;
+  output_use_dmabuf_ = false;
 }
 
 void JetsonVideoEncoder::SendEOS() {
   if (encoder_->output_plane.getStreamStatus()) {
     struct v4l2_buffer v4l2_buf;
     struct v4l2_plane planes[MAX_PLANES];
-    NvBuffer* buffer;
+    NvBuffer* buffer = nullptr;
 
     memset(&v4l2_buf, 0, sizeof(v4l2_buf));
     memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
@@ -397,11 +402,29 @@ void JetsonVideoEncoder::SendEOS() {
         encoder_->output_plane.getNumBuffers()) {
       if (encoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
         RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
+        return;
       }
+    } else {
+      // Encode と同じく、空きスロットを index で指す
+      buffer = encoder_->output_plane.getNthBuffer(
+          encoder_->output_plane.getNumQueuedBuffers());
+      v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
+    if (!buffer) {
+      RTC_LOG(LS_ERROR) << "Failed to get buffer at encoder output_plane";
+      return;
+    }
+
     planes[0].bytesused = 0;
-    for (int i = 0; i < buffer->n_planes; i++) {
-      buffer->planes[i].bytesused = 0;
+    if (output_use_dmabuf_) {
+      // reqbufs(DMABUF) した経路。Encode と同じく fd を付けて積む
+      planes[0].m.fd = output_plane_fd_[v4l2_buf.index];
+      v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+      v4l2_buf.memory = V4L2_MEMORY_DMABUF;
+    } else {
+      for (int i = 0; i < buffer->n_planes; i++) {
+        buffer->planes[i].bytesused = 0;
+      }
     }
     if (encoder_->output_plane.qBuffer(v4l2_buf, NULL) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
