@@ -113,6 +113,10 @@
   - PulseAudio API を使用
     - pipewire-pulse 経由を想定
   - @voluntas @melpon
+- [FIX] Jetson エンコーダの SendEOS が未初期化バッファを参照する問題を修正する
+  - キューに空きがあるときは `getNthBuffer` でスロットを決め、dq 失敗時は触らない
+  - native / DMABUF 経路の EOS は、output を DMABUF にしたときだけ `fd` を付けて `qBuffer` する
+  - @Hexa
 - [FIX] Jetson デコーダが解像度変更失敗時に CaptureLoop 自身を Join する問題を修正する
   - `SetCapture` 失敗時は自己 Join せずリソースを破棄し、Join は外側の `Release` に任せる
   - @Hexa
