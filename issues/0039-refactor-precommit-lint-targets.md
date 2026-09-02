@@ -4,6 +4,7 @@
 - Completed: {YYYY-MM-DD}
 - Branch: feature/refactor-precommit-lint-targets
 - Polished: {YYYY-MM-DD}
+- Milestone: 2026.1.0
 
 ## 目的
 
