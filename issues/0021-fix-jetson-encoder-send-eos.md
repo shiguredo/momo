@@ -1,7 +1,7 @@
 # Jetson エンコーダの SendEOS が未初期化の NvBuffer ポインタを参照する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-02
 - Branch: feature/fix-jetson-encoder-send-eos
 - Polished: 2026-08-20
 - Milestone: 2026.1.0
@@ -31,4 +31,4 @@ Jetson ハードウェアエンコーダ (`JetsonVideoEncoder`) の `SendEOS()` 
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`SendEOS()` はキューが満杯のときだけ `dqBuffer` し、失敗したら `buffer` を触らず return する。空きがあるときは `getNthBuffer` と index でスロットを決める。`buffer` が null なら return する。`JetsonConfigure()` で `reqbufs(V4L2_MEMORY_DMABUF)` したときだけ `output_use_dmabuf_` を立て、その経路の EOS は `fd` と `V4L2_MEMORY_DMABUF` を付けて `qBuffer` する。MMAP / USERPTR は `NvBuffer` の `bytesused` を 0 にしてから `qBuffer` する。sora-cpp-sdk 本体への反映は、本リポジトリの vendored 修正のみとした。
