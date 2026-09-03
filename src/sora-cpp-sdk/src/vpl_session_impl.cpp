@@ -59,7 +59,7 @@ std::shared_ptr<VplSession> VplSession::Create() {
     return nullptr;
   }
 
-  // Query selected implementation and version
+  // 選択された実装とバージョンを問い合わせる
   mfxIMPL impl;
   sts = MFXQueryIMPL(session->session, &impl);
   if (sts != MFX_ERR_NONE) {

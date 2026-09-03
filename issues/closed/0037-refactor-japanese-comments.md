@@ -1,7 +1,7 @@
 # 英語コメントを日本語に統一する (AGENTS.md 規約違反の解消)
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-03
 - Branch: feature/refactor-japanese-comments
 - Polished: 2026-09-02
 - Milestone: 2026.1.0
@@ -55,4 +55,4 @@ WebRTC / sora-cpp-sdk 由来:
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+説明用コメントを日本語に訳した。momo 固有では beast 由来の acceptor / セッション処理、`fake_audio_capturer.h` のセクション見出し、`device_video_capturer` を対象にした。`sora-cpp-sdk` では `third_party` を除き、Jetson / V4L2 キャプチャ、VPL、NvCodec、`open_h264_video_encoder.cpp`、`scalable_track_source.cpp` を対象にした。レビュー指摘で「アライン用」を「アライメント用」に、`kbit/秒` を `kbit/s` に直した。著作権ブロック、ログ文字列、CLI 見本、インクルード区切りラベル、コメントアウトされた実行コードは変更していない。

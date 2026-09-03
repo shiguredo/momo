@@ -135,7 +135,7 @@ void DeviceVideoCapturer::Destroy() {
 
   vcm_->StopCapture();
   vcm_->DeRegisterCaptureDataCallback();
-  // Release reference to VCM.
+  // VCM への参照を解放する
   vcm_ = nullptr;
 }
 

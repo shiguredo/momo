@@ -215,8 +215,8 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.CropY = 0;
   param.mfx.FrameInfo.CropW = width;
   param.mfx.FrameInfo.CropH = height;
-  // Width must be a multiple of 16
-  // Height must be a multiple of 16 in case of frame picture and a multiple of 32 in case of field picture
+  // 幅は 16 の倍数である必要がある
+  // 高さはフレームピクチャなら 16 の倍数、フィールドピクチャなら 32 の倍数である必要がある
   param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
   param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
 
@@ -271,10 +271,10 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     mfxVideoParam query_param;
     memcpy(&query_param, &param, sizeof(param));
     // ドキュメントによると、Query は以下のエラーを返す可能性がある。
-    // MFX_ERR_NONE	The function completed successfully.
-    // MFX_ERR_UNSUPPORTED	The function failed to identify a specific implementation for the required features.
-    // MFX_WRN_PARTIAL_ACCELERATION	The underlying hardware does not fully support the specified video parameters; The encoding may be partially accelerated. Only SDK HW implementations may return this status code.
-    // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
+    // MFX_ERR_NONE 関数は成功した
+    // MFX_ERR_UNSUPPORTED 要求機能に合う実装を特定できなかった
+    // MFX_WRN_PARTIAL_ACCELERATION ハードウェアが指定パラメータを完全にはサポートせず、エンコードは部分加速になることがある。HW 実装のみが返す
+    // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM 一部パラメータが他と非互換だったが、解消された
     mfxStatus sts = encoder->Query(&query_param, &query_param);
     if (sts >= 0) {
       memcpy(&param, &query_param, sizeof(param));
@@ -341,7 +341,7 @@ int32_t VplVideoEncoderImpl::InitEncode(
 
   RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
 
-  // Initialize encoded image. Default buffer size: size of unencoded data.
+  // EncodedImage を初期化する。既定バッファサイズは未エンコードデータのサイズとする
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
@@ -385,13 +385,13 @@ int32_t VplVideoEncoderImpl::Encode(
   bool send_key_frame = false;
 
   if (frame_types != nullptr) {
-    // We only support a single stream.
+    // 単一ストリームのみ対応する
     RTC_DCHECK_EQ(frame_types->size(), static_cast<size_t>(1));
-    // Skip frame?
+    // フレームをスキップするか
     if ((*frame_types)[0] == webrtc::VideoFrameType::kEmptyFrame) {
       return WEBRTC_VIDEO_CODEC_OK;
     }
-    // Force key frame?
+    // キーフレームを強制するか
     send_key_frame =
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
@@ -661,13 +661,13 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   mfxVideoParam param;
   memset(&param, 0, sizeof(param));
 
-  // Retrieve video parameters selected by encoder.
-  // - BufferSizeInKB parameter is required to set bit stream buffer size
+  // エンコーダが選んだビデオパラメータを取得する
+  // BufferSizeInKB はビットストリームバッファサイズの設定に必要
   sts = encoder_->GetVideoParam(&param);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
   RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB;
 
-  // Query number of required surfaces for encoder
+  // エンコーダに必要なサーフェス数を問い合わせる
   memset(&alloc_request_, 0, sizeof(alloc_request_));
   sts = encoder_->QueryIOSurf(&param, &alloc_request_);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);

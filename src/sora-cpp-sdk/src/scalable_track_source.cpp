@@ -122,8 +122,7 @@ bool ScalableVideoTrackSource::OnCapturedFrame(
       frame.video_frame_buffer();
 
   if (adapted_width != frame.width() || adapted_height != frame.height()) {
-    // Video adapter has requested a down-scale. Allocate a new buffer and
-    // return scaled version.
+    // Video adapter が縮小を要求している。新しいバッファを確保して縮小版を返す。
     webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         webrtc::I420Buffer::Create(adapted_width, adapted_height);
     i420_buffer->ScaleFrom(*buffer->ToI420());

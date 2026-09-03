@@ -34,17 +34,16 @@ P2PSession::P2PSession(boost::asio::io_context& ioc,
       rtc_manager_(rtc_manager),
       config_(std::move(config)) {}
 
-// Start the asynchronous operation
+// 非同期処理を開始する
 void P2PSession::Run() {
   DoRead();
 }
 
 void P2PSession::DoRead() {
-  // Make the request empty before reading,
-  // otherwise the operation behavior is undefined.
+  // 読み取り前にリクエストを空にする。空にしないと動作は未定義になる
   req_ = {};
 
-  // Read a request
+  // リクエストを読み取る
   boost::beast::http::async_read(
       socket_, buffer_, req_,
       boost::asio::bind_executor(
@@ -85,18 +84,18 @@ void P2PSession::HandleRequest() {
   boost::beast::http::request<boost::beast::http::string_body> req(
       std::move(req_));
 
-  // Make sure we can handle the method
+  // 扱える HTTP メソッドか確認する
   if (req.method() != boost::beast::http::verb::get &&
       req.method() != boost::beast::http::verb::head)
     return SendResponse(
         Util::BadRequest(std::move(req), "Unknown HTTP-method"));
 
-  // Request path must be absolute and not contain "..".
+  // リクエストパスは絶対パスで、".." を含んではならない
   if (req.target().empty() || req.target()[0] != '/' ||
       req.target().find("..") != boost::beast::string_view::npos)
     return SendResponse(Util::BadRequest(req, "Illegal request-target"));
 
-  // Build the path to the requested file
+  // 要求されたファイルのパスを組み立てる
   boost::filesystem::path path =
       boost::filesystem::path(config_.doc_root) / std::string(req.target());
 
@@ -107,20 +106,20 @@ void P2PSession::HandleRequest() {
   path.imbue(
       std::locale(std::locale(), new std::codecvt_utf8_utf16<wchar_t>()));
 #endif
-  // Attempt to open the file
+  // ファイルを開く
   boost::beast::error_code ec;
   boost::beast::http::file_body::value_type body;
   body.open(path.string().c_str(), boost::beast::file_mode::scan, ec);
 
-  // Handle the case where the file doesn't exist
+  // ファイルが存在しない場合
   if (ec == boost::system::errc::no_such_file_or_directory)
     return SendResponse(Util::NotFound(req, req.target()));
 
-  // Handle an unknown error
+  // 未知のエラーを処理する
   if (ec)
     return SendResponse(Util::ServerError(req, ec.message()));
 
-  // Cache the size since we need it after the move
+  // move 後も使うためサイズを保持する
   auto const size = body.size();
 
   // HEAD リクエスト

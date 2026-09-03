@@ -58,7 +58,7 @@ class P2PSession : public std::enable_shared_from_this<P2PSession> {
     // メンバに入れてライフタイムを延ばしてやる
     res_ = sp;
 
-    // Write the response
+    // レスポンスを書き込む
     boost::beast::http::async_write(
         socket_, *sp,
         boost::asio::bind_executor(

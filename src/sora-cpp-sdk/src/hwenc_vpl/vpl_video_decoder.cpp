@@ -196,7 +196,7 @@ std::unique_ptr<MFXVideoDECODE> VplVideoDecoderImpl::CreateDecoderInternal(
   // Query した上で Init しても MFX_ERR_UNSUPPORTED になることがあるので
   // 本来 Init が不要な時も常に呼ぶようにして確認する
   /*if (init)*/ {
-    // Initialize the Intel VPL encoder
+    // Intel VPL デコーダを初期化する
     sts = decoder->Init(&param);
     if (sts != MFX_ERR_NONE) {
       RTC_LOG(LS_VERBOSE) << "Init failed: resolution=" << width << "x"

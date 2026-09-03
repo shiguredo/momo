@@ -70,7 +70,7 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
     // メンバに入れてライフタイムを延ばしてやる
     res_ = sp;
 
-    // Write the response
+    // レスポンスを書き込む
     boost::beast::http::async_write(
         socket_, *sp,
         std::bind(&SoraSession::OnWrite, shared_from_this(),
