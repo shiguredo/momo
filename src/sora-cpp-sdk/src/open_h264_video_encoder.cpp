@@ -484,7 +484,7 @@ int32_t OpenH264VideoEncoder::InitEncode(
           configurations_[i].width / 2);
     }
 
-    // codec_settings は kbit/秒、エンコーダは bit/秒。
+    // codec_settings は kbit/s、エンコーダは bit/s。
     configurations_[i].max_bps = codec_.maxBitrate * 1000;
     configurations_[i].target_bps = codec_.startBitrate * 1000;
 
