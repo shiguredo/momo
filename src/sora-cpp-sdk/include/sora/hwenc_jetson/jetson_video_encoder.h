@@ -13,7 +13,9 @@
 #define SORA_HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <queue>
 
 // Linux
