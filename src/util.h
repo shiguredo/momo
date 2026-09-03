@@ -21,7 +21,6 @@ class Util {
                         MomoArgs& args);
   static std::string GenerateRandomChars();
   static std::string GenerateRandomChars(size_t length);
-  static std::string GenerateRandomNumericChars(size_t length);
   static std::string IceConnectionStateToString(
       webrtc::PeerConnectionInterface::IceConnectionState state);
 

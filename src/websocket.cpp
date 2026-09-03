@@ -49,7 +49,6 @@ static std::shared_ptr<boost::asio::ssl::context> CreateSSLContext(
   SSL_CTX_set_min_proto_version(handle, TLS1_2_VERSION);
   SSL_CTX_set_max_proto_version(handle, TLS1_3_VERSION);
   auto ctx = std::make_shared<boost::asio::ssl::context>(handle);
-  //ctx.set_default_verify_paths();
   ctx->set_options(boost::asio::ssl::context::default_workarounds |
                    boost::asio::ssl::context::no_sslv2 |
                    boost::asio::ssl::context::no_sslv3 |

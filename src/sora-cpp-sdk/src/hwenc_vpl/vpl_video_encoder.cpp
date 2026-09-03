@@ -163,14 +163,6 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
   std::unique_ptr<MFXVideoENCODE> encoder(
       new MFXVideoENCODE(GetVplSession(session)));
 
-  // mfxPlatform platform;
-  // memset(&platform, 0, sizeof(platform));
-  // MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
-  // RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
-  //                     << " CodeName=" << platform.CodeName
-  //                     << " DeviceId=" << platform.DeviceId
-  //                     << " MediaAdapterType=" << platform.MediaAdapterType;
-
   mfxVideoParam param;
   ExtBuffer ext;
   mfxStatus sts = Queries(encoder.get(), codec, width, height, framerate,
@@ -208,22 +200,6 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   memset(&param, 0, sizeof(param));
 
   param.mfx.CodecId = codec;
-  if (codec == MFX_CODEC_VP8) {
-    //param.mfx.CodecProfile = MFX_PROFILE_VP8_0;
-  } else if (codec == MFX_CODEC_VP9) {
-    //param.mfx.CodecProfile = MFX_PROFILE_VP9_0;
-  } else if (codec == MFX_CODEC_AVC) {
-    //param.mfx.CodecProfile = MFX_PROFILE_AVC_HIGH;
-    //param.mfx.CodecLevel = MFX_LEVEL_AVC_51;
-    //param.mfx.CodecProfile = MFX_PROFILE_AVC_MAIN;
-    //param.mfx.CodecLevel = MFX_LEVEL_AVC_1;
-  } else if (codec == MFX_CODEC_HEVC) {
-    // param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
-    // param.mfx.CodecLevel = MFX_LEVEL_HEVC_1;
-    // param.mfx.LowPower = MFX_CODINGOPTION_OFF;
-  } else if (codec == MFX_CODEC_AV1) {
-    //param.mfx.CodecProfile = MFX_PROFILE_AV1_MAIN;
-  }
 
   param.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
 
@@ -264,21 +240,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     ext_coding_option.Header.BufferSz = sizeof(ext_coding_option);
     ext_coding_option.AUDelimiter = MFX_CODINGOPTION_OFF;
     ext_coding_option.MaxDecFrameBuffering = 1;
-    //ext_coding_option.NalHrdConformance = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.VuiVclHrdParameters = MFX_CODINGOPTION_ON;
-    //ext_coding_option.SingleSeiNalUnit = MFX_CODINGOPTION_ON;
-    //ext_coding_option.RefPicMarkRep = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.PicTimingSEI = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.RecoveryPointSEI = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.FramePicture = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.FieldOutput = MFX_CODINGOPTION_ON;
 
     memset(&ext_coding_option2, 0, sizeof(ext_coding_option2));
     ext_coding_option2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
     ext_coding_option2.Header.BufferSz = sizeof(ext_coding_option2);
     ext_coding_option2.RepeatPPS = MFX_CODINGOPTION_ON;
-    //ext_coding_option2.MaxSliceSize = 1;
-    //ext_coding_option2.AdaptiveI = MFX_CODINGOPTION_ON;
 
     ext_buffers[0] = (mfxExtBuffer*)&ext_coding_option;
     ext_buffers[1] = (mfxExtBuffer*)&ext_coding_option2;
@@ -311,51 +277,6 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
     mfxStatus sts = encoder->Query(&query_param, &query_param);
     if (sts >= 0) {
-      // デバッグ用。
-      // Query によってどのパラメータが変更されたかを表示する
-      // #define F(NAME)                                           \
-      //   if (param.NAME != query_param.NAME)                     \
-      //   std::cout << "param " << #NAME << " old=" << param.NAME \
-      //             << " new=" << query_param.NAME << std::endl
-      //       F(mfx.LowPower);
-      //       F(mfx.BRCParamMultiplier);
-      //       F(mfx.FrameInfo.FrameRateExtN);
-      //       F(mfx.FrameInfo.FrameRateExtD);
-      //       F(mfx.FrameInfo.FourCC);
-      //       F(mfx.FrameInfo.ChromaFormat);
-      //       F(mfx.FrameInfo.PicStruct);
-      //       F(mfx.FrameInfo.CropX);
-      //       F(mfx.FrameInfo.CropY);
-      //       F(mfx.FrameInfo.CropW);
-      //       F(mfx.FrameInfo.CropH);
-      //       F(mfx.FrameInfo.Width);
-      //       F(mfx.FrameInfo.Height);
-      //       F(mfx.CodecId);
-      //       F(mfx.CodecProfile);
-      //       F(mfx.CodecLevel);
-      //       F(mfx.GopPicSize);
-      //       F(mfx.GopRefDist);
-      //       F(mfx.GopOptFlag);
-      //       F(mfx.IdrInterval);
-      //       F(mfx.TargetUsage);
-      //       F(mfx.RateControlMethod);
-      //       F(mfx.InitialDelayInKB);
-      //       F(mfx.TargetKbps);
-      //       F(mfx.MaxKbps);
-      //       F(mfx.BufferSizeInKB);
-      //       F(mfx.NumSlice);
-      //       F(mfx.NumRefFrame);
-      //       F(mfx.EncodedOrder);
-      //       F(mfx.DecodedOrder);
-      //       F(mfx.ExtendedPicStruct);
-      //       F(mfx.TimeStampCalc);
-      //       F(mfx.SliceGroupsPresent);
-      //       F(mfx.MaxDecFrameBuffering);
-      //       F(mfx.EnableReallocRequest);
-      //       F(AsyncDepth);
-      //       F(IOPattern);
-      // #undef F
-
       memcpy(&param, &query_param, sizeof(param));
     }
     return sts;
@@ -543,9 +464,7 @@ int32_t VplVideoEncoderImpl::Encode(
     //   param.AsyncDepth = 1;
     //   ext_coding_option.MaxDecFrameBuffering = 1;
     // を設定して、そもそもキューイングが起きないようにすることで対処している。
-    if (param.mfx.RateControlMethod == MFX_RATECONTROL_CQP) {
-      //param.mfx.QPI = h264_bitstream_parser_.GetLastSliceQp().value_or(30);
-    } else {
+    if (param.mfx.RateControlMethod != MFX_RATECONTROL_CQP) {
       param.mfx.TargetKbps = bitrate_adjuster_.GetAdjustedBitrateBps() / 1000;
     }
     param.mfx.FrameInfo.FrameRateExtN = framerate_;
@@ -577,16 +496,10 @@ int32_t VplVideoEncoderImpl::Encode(
   sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
   VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
-  //RTC_LOG(LS_ERROR) << "SurfaceSize=" << (surface->Data.U - surface->Data.Y);
-  //RTC_LOG(LS_ERROR) << "DataLength=" << bitstream_.DataLength;
   {
     uint8_t* p = bitstream_.Data + bitstream_.DataOffset;
     int size = bitstream_.DataLength;
     bitstream_.DataLength = 0;
-
-    //FILE* fp = fopen("test.mp4", "a+");
-    //fwrite(p, 1, size, fp);
-    //fclose(fp);
 
     if (codec_ == MFX_CODEC_VP9) {
       // VP9 はIVFヘッダーがエンコードフレームについているので取り除く

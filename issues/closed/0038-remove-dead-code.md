@@ -1,7 +1,7 @@
 # 死にコードとコメントアウトされた古いコードを削除する
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-03
 - Branch: feature/remove-dead-code
 - Polished: 2026-09-02
 - Milestone: 2026.1.0
@@ -71,4 +71,4 @@ CI ワークフローの死設定と意図的無効化は `0056-remove-ci-dead-w
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+列挙した死にコードを削除した。`Util::GenerateRandomNumericChars`、`src/rtc/native_buffer.{h,cpp}`、CMake 非掲載の `v4l2_video_codec.{h,cpp}`、`ShowEncoderCapability`、Jetson の `hex_dump` / `save_to_file` / `H264HWENC_HEADER_DEBUG`、未参照の `src/fix_cuda_noinline_macro_error.h` を対象にした。コメントアウトされていた実行コードと未使用 include も削除し、説明コメントは残した。VPL の CQP 再設定はコメントだけだったため、CQP 以外で `TargetKbps` を更新する形にした。`JetsonJpegDecoderPool` は無効化済みキューと mutex を外し、デストラクタが呼ぶ `Push` は空実装にした。JPEG プールから外した `<mutex>` に `jetson_video_encoder.h` が依存していたため、同ヘッダへ `<mutex>` と `<condition_variable>` を直接追加した。`on_frame` と `GenerateRandomChars` と `v4l2_native_buffer` は残した。`buildbase.py` と CI ワークフローは変更していない。CI のビルドと E2E は成功した。

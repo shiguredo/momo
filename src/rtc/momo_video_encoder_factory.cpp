@@ -382,9 +382,6 @@ std::unique_ptr<webrtc::VideoEncoder> MomoVideoEncoderFactory::CreateInternal(
   if (is_h264 && config_.h264_encoder == VideoCodecInfo::Type::Software) {
     return sora::CreateOpenH264VideoEncoder(format, config_.openh264);
   }
-  // if (is_h265 && config_.h265_encoder == VideoCodecInfo::Type::Software) {
-  //   return nullptr;
-  // }
 
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;

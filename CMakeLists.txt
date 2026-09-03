@@ -122,7 +122,6 @@ target_sources(momo
     src/rtc/device_video_capturer.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
-    src/rtc/native_buffer.cpp
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp

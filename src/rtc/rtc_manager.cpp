@@ -216,8 +216,6 @@ RTCManager::RTCManager(
   // あとでデバイス選択に使うため保存しておく
   auto adm = dependencies.adm;
 
-  //factory_ =
-  //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   using result_type =
       std::pair<webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>,
                 webrtc::scoped_refptr<webrtc::ConnectionContext>>;

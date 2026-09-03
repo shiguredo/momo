@@ -1,7 +1,5 @@
 #include "aligned_encoder_adapter.h"
 
-#include <rtc_base/logging.h>
-
 static int Align(int size, int alignment) {
   return size - (size % alignment);
 }
@@ -56,12 +54,6 @@ int AlignedEncoderAdapter::Encode(
   }
   auto crop_x = (frame.width() - crop_width) / 2;
   auto crop_y = (frame.height() - crop_height) / 2;
-  // RTC_LOG(LS_INFO) << "type=" << frame.video_frame_buffer()->type()
-  //                  << " crop_x=" << crop_x << " crop_y=" << crop_y
-  //                  << " crop_width=" << crop_width
-  //                  << " crop_height=" << crop_height << " width_=" << width_
-  //                  << " height_=" << height_ << " frame_width=" << frame.width()
-  //                  << " frame_height=" << frame.height();
   if (crop_x != 0 || crop_y != 0 || frame.width() != width_ ||
       frame.height() != height_) {
     auto buffer = frame.video_frame_buffer()->CropAndScale(

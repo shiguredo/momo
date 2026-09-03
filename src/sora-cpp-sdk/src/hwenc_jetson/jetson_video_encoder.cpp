@@ -38,41 +38,12 @@
 #include "jetson_util.h"
 #include "sora/hwenc_jetson/jetson_buffer.h"
 
-#define H264HWENC_HEADER_DEBUG 0
 #define INIT_ERROR(cond, desc)                 \
   if (cond) {                                  \
     RTC_LOG(LS_ERROR) << __FUNCTION__ << desc; \
     Release();                                 \
     return WEBRTC_VIDEO_CODEC_ERROR;           \
   }
-
-static std::string hex_dump(const uint8_t* buf, size_t len) {
-  std::stringstream ss;
-
-  for (size_t i = 0; i < len; ++i) {
-    // 行の先頭にオフセットを表示
-    if (i % 16 == 0) {
-      ss << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
-    }
-
-    // 値を16進数で表示
-    ss << std::setw(2) << std::setfill('0') << std::hex << (int)buf[i] << " ";
-
-    // 16バイトごとに改行
-    if ((i + 1) % 16 == 0 || i == len - 1) {
-      ss << "\n";
-    }
-  }
-
-  return ss.str();
-}
-
-static void save_to_file(const std::string& filename,
-                         const uint8_t* buf,
-                         size_t size) {
-  std::ofstream file(filename, std::ios::binary);
-  file.write((const char*)buf, size);
-}
 
 namespace sora {
 
@@ -88,31 +59,7 @@ JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
 }
 
-// 標準出力や標準エラーに出力されないようにいろいろする
-//struct SuppressErrors {
-//  SuppressErrors() {
-//    old_stdout = stdout;
-//    old_stderr = stderr;
-//    old_log_level = log_level;
-//    stdout = fopen("/dev/null", "w");
-//    stderr = fopen("/dev/null", "w");
-//    log_level = -1;
-//  }
-//  ~SuppressErrors() {
-//    fclose(stdout);
-//    fclose(stderr);
-//    stdout = old_stdout;
-//    stderr = old_stderr;
-//    log_level = old_log_level;
-//  }
-//  FILE* old_stdout;
-//  FILE* old_stderr;
-//  int old_log_level;
-//};
-
 bool JetsonVideoEncoder::IsSupported(webrtc::VideoCodecType codec) {
-  //SuppressErrors sup;
-
   auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
   auto ret = encoder->setCapturePlaneFormat(VideoCodecToV4L2Format(codec), 1024,
                                             768, 2 * 1024 * 1024);
@@ -915,8 +862,6 @@ int32_t JetsonVideoEncoder::SendFrame(
         // OBU_FRAME
         memcpy(p, buffer + 2, size - 2);
 
-        // RTC_LOG(LS_ERROR) << "\n" << hex_dump(new_buffer.data(), 64);
-        // save_to_file("keyframe2.obu", new_buffer.data(), new_buffer.size());
         encoded_image_buffer = webrtc::EncodedImageBuffer::Create(
             new_buffer.data(), new_buffer.size());
       } else {
