@@ -582,7 +582,7 @@ void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
 
     unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
     uint8_t* p;
-    // v4l2_buf.bytesused にはアライン用のパディングが含まれることがある
+    // v4l2_buf.bytesused にはアライメント用のパディングが含まれることがある
     // 正確なサイズを得るため EOF を探す
     if (eosSearchSize > bytesused)
       eosSearchSize = bytesused;
