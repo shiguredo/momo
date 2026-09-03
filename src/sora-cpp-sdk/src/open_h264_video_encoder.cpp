@@ -106,9 +106,9 @@ class OpenH264VideoEncoder : public VideoEncoder {
 
   ~OpenH264VideoEncoder() override;
 
-  // `settings.max_payload_size` is ignored.
-  // The following members of `codec_settings` are used. The rest are ignored.
-  // - codecType (must be kVideoCodecH264)
+  // `settings.max_payload_size` は無視する。
+  // `codec_settings` では次のメンバだけ使う。それ以外は無視する。
+  // - codecType (kVideoCodecH264 であること)
   // - targetBitrate
   // - maxFramerate
   // - width
@@ -121,14 +121,14 @@ class OpenH264VideoEncoder : public VideoEncoder {
       EncodedImageCallback* callback) override;
   void SetRates(const RateControlParameters& parameters) override;
 
-  // The result of encoding - an EncodedImage and CodecSpecificInfo - are
-  // passed to the encode complete callback.
+  // エンコード結果 (EncodedImage と CodecSpecificInfo) を
+  // encode complete コールバックへ渡す。
   int32_t Encode(const VideoFrame& frame,
                  const std::vector<VideoFrameType>* frame_types) override;
 
   EncoderInfo GetEncoderInfo() const override;
 
-  // Exposed for testing.
+  // テスト用に公開する。
   H264PacketizationMode PacketizationModeForTesting() const {
     return packetization_mode_;
   }
@@ -137,7 +137,7 @@ class OpenH264VideoEncoder : public VideoEncoder {
   SEncParamExt CreateEncoderParams(size_t i) const;
 
   webrtc::H264BitstreamParser h264_bitstream_parser_;
-  // Reports statistics with histograms.
+  // ヒストグラムで統計を報告する。
   void ReportInit();
   void ReportError();
 
@@ -187,11 +187,11 @@ namespace {
 
 const bool kOpenH264EncoderDetailedLogging = false;
 
-// QP scaling thresholds.
+// QP スケーリングの閾値。
 static const int kLowH264QpThreshold = 24;
 static const int kHighH264QpThreshold = 37;
 
-// Used by histograms. Values of entries should not be changed.
+// ヒストグラム用。エントリの値は変えてはならない。
 enum H264EncoderImplEvent {
   kH264EncoderEventInit = 0,
   kH264EncoderEventError = 1,
@@ -202,27 +202,25 @@ int NumberOfThreads(std::optional<int> encoder_thread_limit,
                     int width,
                     int height,
                     int number_of_cores) {
-  // TODO(hbos): In Chromium, multiple threads do not work with sandbox on Mac,
-  // see crbug.com/583348. Until further investigated, only use one thread.
-  // While this limitation is gone, this changes the bitstream format (see
-  // bugs.webrtc.org/14368) so still guarded by field trial to allow for
-  // experimentation using th experimental
-  // WebRTC-VideoEncoderSettings/encoder_thread_limit trial.
+  // TODO(hbos): Chromium の Mac サンドボックスでは複数スレッドが動かない。
+  // crbug.com/583348 を参照。調査が終わるまでスレッドは 1 本にする。
+  // 制限自体は解消済みだが、ビットストリーム形式が変わる (bugs.webrtc.org/14368)。
+  // 実験用 field trial WebRTC-VideoEncoderSettings/encoder_thread_limit でガードする。
   if (encoder_thread_limit.has_value()) {
     int limit = encoder_thread_limit.value();
     RTC_DCHECK_GE(limit, 1);
     if (width * height >= 1920 * 1080 && number_of_cores > 8) {
-      return std::min(limit, 8);  // 8 threads for 1080p on high perf machines.
+      return std::min(limit, 8);  // 高性能機の 1080p では 8 スレッド。
     } else if (width * height > 1280 * 960 && number_of_cores >= 6) {
-      return std::min(limit, 3);  // 3 threads for 1080p.
+      return std::min(limit, 3);  // 1080p では 3 スレッド。
     } else if (width * height > 640 * 480 && number_of_cores >= 3) {
-      return std::min(limit, 2);  // 2 threads for qHD/HD.
+      return std::min(limit, 2);  // qHD/HD では 2 スレッド。
     } else {
-      return 1;  // 1 thread for VGA or less.
+      return 1;  // VGA 以下では 1 スレッド。
     }
   }
-  // TODO(sprang): Also check sSliceArgument.uiSliceNum on GetEncoderParams(),
-  //               before enabling multithreading here.
+  // TODO(sprang): ここでマルチスレッドを有効にする前に、
+  // GetEncoderParams() の sSliceArgument.uiSliceNum も確認する。
   return 1;
 }
 
@@ -261,24 +259,22 @@ std::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
 
 }  // namespace
 
-// Helper method used by OpenH264VideoEncoder::Encode.
-// Copies the encoded bytes from `info` to `encoded_image`. The
-// `encoded_image->_buffer` may be deleted and reallocated if a bigger buffer is
-// required.
+// OpenH264VideoEncoder::Encode が使うヘルパ。
+// `info` のエンコード済みバイトを `encoded_image` へコピーする。
+// より大きいバッファが必要なら `encoded_image->_buffer` を破棄して再確保する。
 //
-// After OpenH264 encoding, the encoded bytes are stored in `info` spread out
-// over a number of layers and "NAL units". Each NAL unit is a fragment starting
-// with the four-byte start code {0,0,0,1}. All of this data (including the
-// start codes) is copied to the `encoded_image->_buffer`.
+// OpenH264 エンコード後、バイト列は複数レイヤーと NAL ユニットに分かれて `info` に入る。
+// 各 NAL ユニットは 4 バイトのスタートコード {0,0,0,1} で始まるフラグメントである。
+// スタートコードを含むこのデータをすべて `encoded_image->_buffer` へコピーする。
 static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
-  // Calculate minimum buffer size required to hold encoded data.
+  // エンコードデータを収める最小バッファサイズを計算する。
   size_t required_capacity = 0;
   size_t fragments_count = 0;
   for (int layer = 0; layer < info->iLayerNum; ++layer) {
     const SLayerBSInfo& layerInfo = info->sLayerInfo[layer];
     for (int nal = 0; nal < layerInfo.iNalCount; ++nal, ++fragments_count) {
       RTC_CHECK_GE(layerInfo.pNalLengthInByte[nal], 0);
-      // Ensure `required_capacity` will not overflow.
+      // `required_capacity` がオーバーフローしないことを確認する。
       RTC_CHECK_LE(layerInfo.pNalLengthInByte[nal],
                    std::numeric_limits<size_t>::max() - required_capacity);
       required_capacity += layerInfo.pNalLengthInByte[nal];
@@ -287,18 +283,18 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
   auto buffer = EncodedImageBuffer::Create(required_capacity);
   encoded_image->SetEncodedData(buffer);
 
-  // Iterate layers and NAL units, note each NAL unit as a fragment and copy
-  // the data to `encoded_image->_buffer`.
+  // レイヤーと NAL ユニットを順に見て、各 NAL をフラグメントとして記録し
+  // `encoded_image->_buffer` へコピーする。
   const uint8_t start_code[4] = {0, 0, 0, 1};
   size_t frag = 0;
   encoded_image->set_size(0);
   for (int layer = 0; layer < info->iLayerNum; ++layer) {
     const SLayerBSInfo& layerInfo = info->sLayerInfo[layer];
-    // Iterate NAL units making up this layer, noting fragments.
+    // このレイヤーを構成する NAL ユニットを順に見てフラグメントを記録する。
     size_t layer_len = 0;
     for (int nal = 0; nal < layerInfo.iNalCount; ++nal, ++frag) {
-      // Because the sum of all layer lengths, `required_capacity`, fits in a
-      // `size_t`, we know that any indices in-between will not overflow.
+      // 全レイヤー長の合計 `required_capacity` は `size_t` に収まるので、
+      // 途中のインデックスもオーバーフローしない。
       RTC_DCHECK_GE(layerInfo.pNalLengthInByte[nal], 4);
       RTC_DCHECK_EQ(layerInfo.pBsBuf[layer_len + 0], start_code[0]);
       RTC_DCHECK_EQ(layerInfo.pBsBuf[layer_len + 1], start_code[1]);
@@ -306,7 +302,7 @@ static void RtpFragmentize(EncodedImage* encoded_image, SFrameBSInfo* info) {
       RTC_DCHECK_EQ(layerInfo.pBsBuf[layer_len + 3], start_code[3]);
       layer_len += layerInfo.pNalLengthInByte[nal];
     }
-    // Copy the entire layer's data (including start codes).
+    // スタートコードを含め、レイヤー全体のデータをコピーする。
     memcpy(buffer->data() + encoded_image->size(), layerInfo.pBsBuf, layer_len);
     encoded_image->set_size(encoded_image->size() + layer_len);
   }
@@ -439,8 +435,8 @@ int32_t OpenH264VideoEncoder::InitEncode(
   encoder_thread_limit_ = settings.encoder_thread_limit;
   codec_ = *inst;
 
-  // Code expects simulcastStream resolutions to be correct, make sure they are
-  // filled even when there are no simulcast layers.
+  // コードは simulcastStream の解像度が正しいことを前提にする。
+  // サイマルキャストレイヤーが無くても埋めておく。
   if (codec_.numberOfSimulcastStreams == 0) {
     codec_.simulcastStream[0].width = codec_.width;
     codec_.simulcastStream[0].height = codec_.height;
@@ -449,9 +445,9 @@ int32_t OpenH264VideoEncoder::InitEncode(
   for (int i = 0, idx = number_of_streams - 1; i < number_of_streams;
        ++i, --idx) {
     ISVCEncoder* openh264_encoder;
-    // Create encoder.
+    // エンコーダを作成する。
     if (create_encoder_(&openh264_encoder) != 0) {
-      // Failed to create encoder.
+      // エンコーダの作成に失敗した。
       RTC_LOG(LS_ERROR) << "Failed to create OpenH264 encoder";
       RTC_DCHECK(!openh264_encoder);
       Release();
@@ -463,12 +459,12 @@ int32_t OpenH264VideoEncoder::InitEncode(
       int trace_level = WELS_LOG_DETAIL;
       openh264_encoder->SetOption(ENCODER_OPTION_TRACE_LEVEL, &trace_level);
     }
-    // else WELS_LOG_DEFAULT is used by default.
+    // それ以外は既定の WELS_LOG_DEFAULT を使う。
 
-    // Store h264 encoder.
+    // H.264 エンコーダを保存する。
     encoders_[i] = openh264_encoder;
 
-    // Set internal settings from codec_settings
+    // codec_settings から内部設定を入れる
     configurations_[i].simulcast_idx = idx;
     configurations_[i].sending = false;
     configurations_[i].width = codec_.simulcastStream[idx].width;
@@ -480,7 +476,7 @@ int32_t OpenH264VideoEncoder::InitEncode(
         std::max(codec_.H264()->numberOfTemporalLayers,
                  codec_.simulcastStream[idx].numberOfTemporalLayers);
 
-    // Create downscaled image buffers.
+    // 縮小画像バッファを作成する。
     if (i > 0) {
       downscaled_buffers_[i - 1] = I420Buffer::Create(
           configurations_[i].width, configurations_[i].height,
@@ -488,25 +484,25 @@ int32_t OpenH264VideoEncoder::InitEncode(
           configurations_[i].width / 2);
     }
 
-    // Codec_settings uses kbits/second; encoder uses bits/second.
+    // codec_settings は kbit/秒、エンコーダは bit/秒。
     configurations_[i].max_bps = codec_.maxBitrate * 1000;
     configurations_[i].target_bps = codec_.startBitrate * 1000;
 
-    // Create encoder parameters based on the layer configuration.
+    // レイヤー設定からエンコーダパラメータを作る。
     SEncParamExt encoder_params = CreateEncoderParams(i);
 
-    // Initialize.
+    // 初期化する。
     if (openh264_encoder->InitializeExt(&encoder_params) != 0) {
       RTC_LOG(LS_ERROR) << "Failed to initialize OpenH264 encoder";
       Release();
       ReportError();
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    // TODO(pbos): Base init params on these values before submitting.
+    // TODO(pbos): 投入前にこれらの値を初期化パラメータの根拠にする。
     int video_format = EVideoFormatType::videoFormatI420;
     openh264_encoder->SetOption(ENCODER_OPTION_DATAFORMAT, &video_format);
 
-    // Initialize encoded image. Default buffer size: size of unencoded data.
+    // EncodedImage を初期化する。既定バッファサイズは未エンコードデータのサイズとする。
 
     const size_t new_capacity =
         CalcBufferSize(VideoType::kI420, codec_.simulcastStream[idx].width,
@@ -575,7 +571,7 @@ void OpenH264VideoEncoder::SetRates(const RateControlParameters& parameters) {
   }
 
   if (parameters.bitrate.get_sum_bps() == 0) {
-    // Encoder paused, turn off all encoding.
+    // エンコーダが一時停止しているので、すべてのエンコードを止める。
     for (size_t i = 0; i < configurations_.size(); ++i) {
       configurations_[i].SetStreamState(false);
     }
@@ -586,7 +582,7 @@ void OpenH264VideoEncoder::SetRates(const RateControlParameters& parameters) {
 
   size_t stream_idx = encoders_.size() - 1;
   for (size_t i = 0; i < encoders_.size(); ++i, --stream_idx) {
-    // Update layer config.
+    // レイヤー設定を更新する。
     configurations_[i].target_bps =
         parameters.bitrate.GetSpatialLayerSum(stream_idx);
     configurations_[i].max_frame_rate = parameters.framerate_fps;
@@ -594,7 +590,7 @@ void OpenH264VideoEncoder::SetRates(const RateControlParameters& parameters) {
     if (configurations_[i].target_bps) {
       configurations_[i].SetStreamState(true);
 
-      // Update h264 encoder.
+      // H.264 エンコーダを更新する。
       SBitrateInfo target_bitrate;
       memset(&target_bitrate, 0, sizeof(SBitrateInfo));
       target_bitrate.iLayer = SPATIAL_LAYER_ALL,
@@ -638,9 +634,8 @@ int32_t OpenH264VideoEncoder::Encode(
   bool is_keyframe_needed = false;
   for (size_t i = 0; i < configurations_.size(); ++i) {
     if (configurations_[i].key_frame_request && configurations_[i].sending) {
-      // This is legacy behavior, generating a keyframe on all layers
-      // when generating one for a layer that became active for the first time
-      // or after being disabled.
+      // 従来の挙動。初めて有効になった、または無効化後に再び有効になったレイヤーで
+      // キーフレームを出すときは、全レイヤーでキーフレームを出す。
       is_keyframe_needed = true;
       break;
     }
@@ -668,15 +663,15 @@ int32_t OpenH264VideoEncoder::Encode(
     }
   }
 
-  // Encode image for each layer.
+  // レイヤーごとに画像をエンコードする。
   for (size_t i = 0; i < encoders_.size(); ++i) {
-    // EncodeFrame input.
+    // EncodeFrame の入力。
     pictures_[i] = {0};
     pictures_[i].iPicWidth = configurations_[i].width;
     pictures_[i].iPicHeight = configurations_[i].height;
     pictures_[i].iColorFormat = EVideoFormatType::videoFormatI420;
     pictures_[i].uiTimeStamp = input_frame.ntp_time_ms();
-    // Downscale images on second and ongoing layers.
+    // 2 番目以降のレイヤーでは画像を縮小する。
     if (i == 0) {
       pictures_[i].iStride[0] = frame_buffer->StrideY();
       pictures_[i].iStride[1] = frame_buffer->StrideU();
@@ -694,7 +689,7 @@ int32_t OpenH264VideoEncoder::Encode(
           const_cast<uint8_t*>(downscaled_buffers_[i - 1]->DataU());
       pictures_[i].pData[2] =
           const_cast<uint8_t*>(downscaled_buffers_[i - 1]->DataV());
-      // Scale the image down a number of times by downsampling factor.
+      // ダウンサンプリング係数に従って画像を縮小する。
       libyuv::I420Scale(pictures_[i - 1].pData[0], pictures_[i - 1].iStride[0],
                         pictures_[i - 1].pData[1], pictures_[i - 1].iStride[1],
                         pictures_[i - 1].pData[2], pictures_[i - 1].iStride[2],
@@ -709,19 +704,18 @@ int32_t OpenH264VideoEncoder::Encode(
     if (frame_types_to_send[i] == VideoFrameType::kEmptyFrame) {
       continue;
     }
-    // Send a key frame either when this layer is configured to require one
-    // or we have explicitly been asked to.
+    // このレイヤーがキーフレームを要求する設定か、明示的に要求されたときに送る。
     bool send_key_frame =
         is_keyframe_needed ||
         frame_types_to_send[i] == VideoFrameType::kVideoFrameKey;
     if (send_key_frame) {
-      // API doc says ForceIntraFrame(false) does nothing, but calling this
-      // function forces a key frame regardless of the `bIDR` argument's value.
-      // (If every frame is a key frame we get lag/delays.)
+      // API 文書では ForceIntraFrame(false) は何もしないとあるが、
+      // 実際は `bIDR` の値に関係なくキーフレームを強制する。
+      // (全フレームがキーフレームだと遅延が増える。)
       encoders_[i]->ForceIntraFrame(true);
       configurations_[i].key_frame_request = false;
     }
-    // EncodeFrame output.
+    // EncodeFrame の出力。
     SFrameBSInfo info;
     memset(&info, 0, sizeof(SFrameBSInfo));
 
@@ -731,7 +725,7 @@ int32_t OpenH264VideoEncoder::Encode(
       RTC_CHECK_EQ(layer_frames.size(), 1);
     }
 
-    // Encode!
+    // エンコードする。
     int enc_ret = encoders_[i]->EncodeFrame(&pictures_[i], &info);
     if (enc_ret != 0) {
       RTC_LOG(LS_ERROR)
@@ -750,19 +744,18 @@ int32_t OpenH264VideoEncoder::Encode(
     --num_layers_to_send;
     encoded_images_[i].set_end_of_temporal_unit(num_layers_to_send == 0);
 
-    // Split encoded image up into fragments. This also updates
-    // `encoded_image_`.
+    // エンコード画像をフラグメントに分割する。`encoded_image_` も更新する。
     RtpFragmentize(&encoded_images_[i], &info);
 
-    // Encoder can skip frames to save bandwidth in which case
-    // `encoded_images_[i]._length` == 0.
+    // 帯域節約のためフレームをスキップすることがあり、そのときは
+    // `encoded_images_[i]._length` == 0 になる。
     if (encoded_images_[i].size() > 0) {
-      // Parse QP.
+      // QP を解析する。
       h264_bitstream_parser_.ParseBitstream(encoded_images_[i]);
       encoded_images_[i].qp_ =
           h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
 
-      // Deliver encoded image.
+      // エンコード画像を届ける。
       CodecSpecificInfo codec_specific;
       codec_specific.codecType = kVideoCodecH264;
       codec_specific.codecSpecific.H264.packetization_mode =
@@ -778,8 +771,8 @@ int32_t OpenH264VideoEncoder::Encode(
             tid > 0 && tid < tl0sync_limit_[i];
         if (svc_controllers_[i]) {
           if (encoded_images_[i]._frameType == VideoFrameType::kVideoFrameKey) {
-            // Reset the ScalableVideoController on key frame
-            // to reset the expected dependency structure.
+            // キーフレームで ScalableVideoController をリセットし、
+            // 想定する依存構造を戻す。
             layer_frames =
                 svc_controllers_[i]->NextFrameConfig(/* restart= */ true);
             RTC_CHECK_EQ(layer_frames.size(), 1);
@@ -824,11 +817,10 @@ int32_t OpenH264VideoEncoder::Encode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-// Initialization parameters.
-// There are two ways to initialize. There is SEncParamBase (cleared with
-// memset(&p, 0, sizeof(SEncParamBase)) used in Initialize, and SEncParamExt
-// which is a superset of SEncParamBase (cleared with GetDefaultParams) used
-// in InitializeExt.
+// 初期化パラメータ。
+// 初期化方法は 2 通りある。Initialize では memset でクリアした SEncParamBase を使う。
+// InitializeExt では GetDefaultParams でクリアした SEncParamExt を使う。
+// SEncParamExt は SEncParamBase の上位集合である。
 SEncParamExt OpenH264VideoEncoder::CreateEncoderParams(size_t i) const {
   SEncParamExt encoder_params;
   encoders_[i]->GetDefaultParams(&encoder_params);
@@ -842,34 +834,32 @@ SEncParamExt OpenH264VideoEncoder::CreateEncoderParams(size_t i) const {
   encoder_params.iPicWidth = configurations_[i].width;
   encoder_params.iPicHeight = configurations_[i].height;
   encoder_params.iTargetBitrate = configurations_[i].target_bps;
-  // Keep unspecified. WebRTC's max codec bitrate is not the same setting
-  // as OpenH264's iMaxBitrate. More details in https://crbug.com/webrtc/11543
+  // 未指定のままにする。WebRTC の最大コーデックビットレートは
+  // OpenH264 の iMaxBitrate と同じ設定ではない。詳細は https://crbug.com/webrtc/11543
   encoder_params.iMaxBitrate = UNSPECIFIED_BIT_RATE;
-  // Rate Control mode
+  // レート制御モード
   encoder_params.iRCMode = RC_BITRATE_MODE;
   encoder_params.fMaxFrameRate = configurations_[i].max_frame_rate;
 
-  // The following parameters are extension parameters (they're in SEncParamExt,
-  // not in SEncParamBase).
+  // 以下は拡張パラメータ (SEncParamExt にあり SEncParamBase には無い)。
   encoder_params.bEnableFrameSkip = configurations_[i].frame_dropping_on;
-  // `uiIntraPeriod`    - multiple of GOP size
-  // `keyFrameInterval` - number of frames
+  // `uiIntraPeriod`    - GOP サイズの倍数
+  // `keyFrameInterval` - フレーム数
   encoder_params.uiIntraPeriod = configurations_[i].key_frame_interval;
-  // Reuse SPS id if possible. This helps to avoid reset of chromium HW decoder
-  // on each key-frame.
-  // Note that WebRTC resets encoder on resolution change which makes all
-  // EParameterSetStrategy modes except INCREASING_ID (default) essentially
-  // equivalent to CONSTANT_ID.
+  // 可能なら SPS ID を再利用する。Chromium の HW デコーダが
+  // キーフレームごとにリセットされるのを避ける。
+  // WebRTC は解像度変更でエンコーダをリセットするため、
+  // INCREASING_ID (既定) 以外の EParameterSetStrategy は実質 CONSTANT_ID と同じになる。
   encoder_params.eSpsPpsIdStrategy = SPS_LISTING;
   encoder_params.uiMaxNalSize = 0;
-  // Threading model: use auto.
-  //  0: auto (dynamic imp. internal encoder)
-  //  1: single thread (default value)
-  // >1: number of threads
+  // スレッドモデル: auto を使う。
+  //  0: auto (エンコーダ内部の動的実装)
+  //  1: 単一スレッド (既定値)
+  // >1: スレッド数
   encoder_params.iMultipleThreadIdc =
       NumberOfThreads(encoder_thread_limit_, encoder_params.iPicWidth,
                       encoder_params.iPicHeight, number_of_cores_);
-  // The base spatial layer 0 is the only one we use.
+  // 使う空間レイヤーはベースの 0 だけである。
   encoder_params.sSpatialLayers[0].iVideoWidth = encoder_params.iPicWidth;
   encoder_params.sSpatialLayers[0].iVideoHeight = encoder_params.iPicHeight;
   encoder_params.sSpatialLayers[0].fFrameRate = encoder_params.fMaxFrameRate;
@@ -879,19 +869,18 @@ SEncParamExt OpenH264VideoEncoder::CreateEncoderParams(size_t i) const {
       encoder_params.iMaxBitrate;
   encoder_params.iTemporalLayerNum = configurations_[i].num_temporal_layers;
   if (encoder_params.iTemporalLayerNum > 1) {
-    // iNumRefFrame specifies total number of reference buffers to allocate.
-    // For N temporal layers we need at least (N - 1) buffers to store last
-    // encoded frames of all reference temporal layers.
-    // Note that there is no API in OpenH264 encoder to specify exact set of
-    // references to be used to prediction of a given frame. Encoder can
-    // theoretically use all available reference buffers.
+    // iNumRefFrame は確保する参照バッファの総数である。
+    // 時間レイヤーが N 枚なら、参照時間レイヤーの直近フレームを置くため
+    // 少なくとも (N - 1) 本のバッファが必要である。
+    // OpenH264 エンコーダには、あるフレームの予測に使う参照集合を指定する API が無い。
+    // エンコーダは理論上、利用可能な参照バッファをすべて使える。
     encoder_params.iNumRefFrame = encoder_params.iTemporalLayerNum - 1;
   }
   RTC_LOG(LS_INFO) << "OpenH264 version is " << OPENH264_MAJOR << "."
                    << OPENH264_MINOR;
   switch (packetization_mode_) {
     case H264PacketizationMode::SingleNalUnit:
-      // Limit the size of the packets produced.
+      // 生成するパケットサイズを制限する。
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = 1;
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceMode =
           SM_SIZELIMITED_SLICE;
@@ -901,10 +890,9 @@ SEncParamExt OpenH264VideoEncoder::CreateEncoderParams(size_t i) const {
                        << max_payload_size_ << " bytes";
       break;
     case H264PacketizationMode::NonInterleaved:
-      // When uiSliceMode = SM_FIXEDSLCNUM_SLICE, uiSliceNum = 0 means auto
-      // design it with cpu core number.
-      // TODO(sprang): Set to 0 when we understand why the rate controller borks
-      //               when uiSliceNum > 1.
+      // uiSliceMode = SM_FIXEDSLCNUM_SLICE のとき uiSliceNum = 0 は
+      // CPU コア数で自動設計することを意味する。
+      // TODO(sprang): uiSliceNum > 1 でレート制御が壊れる理由が分かったら 0 にする。
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceNum = 1;
       encoder_params.sSpatialLayers[0].sSliceArgument.uiSliceMode =
           SM_FIXEDSLCNUM_SLICE;
@@ -943,7 +931,7 @@ VideoEncoder::EncoderInfo OpenH264VideoEncoder::GetEncoderInfo() const {
 
 void OpenH264VideoEncoder::LayerConfig::SetStreamState(bool send_stream) {
   if (send_stream && !sending) {
-    // Need a key frame if we have not sent this stream before.
+    // このストリームをまだ送っていなければキーフレームが必要である。
     key_frame_request = true;
   }
   sending = send_stream;

@@ -120,20 +120,20 @@ bool JetsonV4L2Capturer::FindDevice(const char* deviceUniqueIdUTF8,
                                     const std::string& device) {
   int fd;
   if ((fd = open(device.c_str(), O_RDONLY)) != -1) {
-    // query device capabilities
+    // デバイスの capabilities を問い合わせる
     struct v4l2_capability cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
       if (cap.bus_info[0] != 0) {
         if (strncmp((const char*)cap.bus_info, (const char*)deviceUniqueIdUTF8,
                     strlen((const char*)deviceUniqueIdUTF8)) ==
-            0)  // match with device id
+            0)  // デバイス ID が一致
         {
           close(fd);
           return true;
         }
       }
     }
-    close(fd);  // close since this is not the matching device
+    close(fd);  // 一致しないデバイスなので閉じる
   }
   return false;
 }
@@ -151,14 +151,14 @@ int32_t JetsonV4L2Capturer::Init(const char* deviceUniqueIdUTF8,
     }
   } else {
     // specifiedVideoDevice が指定されてない場合は頑張って探す
-    /* detect /dev/video [0-63] entries */
+    // /dev/video0 から /dev/video63 まで探す
     char device[32];
     int n;
     for (n = 0; n < 64; n++) {
       sprintf(device, "/dev/video%d", n);
       if (FindDevice(deviceUniqueIdUTF8, device)) {
         found = true;
-        _videoDevice = device;  // store the video device
+        _videoDevice = device;  // 見つかったデバイスを保存する
         break;
       }
     }
@@ -188,16 +188,15 @@ int32_t JetsonV4L2Capturer::StartCapture(
   }
 
   webrtc::MutexLock lock(&capture_lock_);
-  // first open /dev/video device
+  // まず /dev/video デバイスを開く
   if ((_deviceFd = open(_videoDevice.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
     RTC_LOG(LS_INFO) << "error in opening " << _videoDevice
                      << " errono = " << errno;
     return -1;
   }
 
-  // Supported video formats in preferred order.
-  // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
-  // I420 otherwise.
+  // 優先順の対応フォーマット。
+  // 要求解像度が VGA より大きいときは MJPEG を優先し、それ以外は I420 を優先する。
   int nFormats = 0;
   const int MaxFormats = 6;
   unsigned int fmts[MaxFormats] = {};
@@ -232,7 +231,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
     nFormats = 6;
   }
 
-  // Enumerate image formats.
+  // 画像フォーマットを列挙する
   struct v4l2_fmtdesc fmt;
   int fmtsIdx = nFormats;
   memset(&fmt, 0, sizeof(fmt));
@@ -243,12 +242,12 @@ int32_t JetsonV4L2Capturer::StartCapture(
     RTC_LOG(LS_INFO) << "  { pixelformat = "
                      << webrtc::GetFourccName(fmt.pixelformat)
                      << ", description = '" << fmt.description << "' }";
-    // Match the preferred order.
+    // 優先順と照合する
     for (int i = 0; i < nFormats; i++) {
       if (fmt.pixelformat == fmts[i] && i < fmtsIdx)
         fmtsIdx = i;
     }
-    // Keep enumerating.
+    // 列挙を続ける
     fmt.index++;
   }
 
@@ -268,13 +267,13 @@ int32_t JetsonV4L2Capturer::StartCapture(
   video_fmt.fmt.pix.height = config.height;
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
-  // set format and frame size now
+  // フォーマットとフレームサイズを設定する
   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
     RTC_LOG(LS_INFO) << "error in VIDIOC_S_FMT, errno = " << errno;
     return -1;
   }
 
-  // initialize current width and height
+  // 現在の幅と高さを初期化する
   _currentWidth = video_fmt.fmt.pix.width;
   _currentHeight = video_fmt.fmt.pix.height;
   _currentPixelFormat = video_fmt.fmt.pix.pixelformat;
@@ -293,7 +292,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = webrtc::VideoType::kMJPEG;
 
-  // Trying to set frame rate, before check driver capability.
+  // ドライバの対応を確認してからフレームレートを設定する
   bool driver_framerate_support = true;
   struct v4l2_streamparm streamparms;
   memset(&streamparms, 0, sizeof(streamparms));
@@ -301,11 +300,11 @@ int32_t JetsonV4L2Capturer::StartCapture(
   if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) < 0) {
     RTC_LOG(LS_INFO) << "error in VIDIOC_G_PARM errno = " << errno;
     driver_framerate_support = false;
-    // continue
+    // 続行する
   } else {
-    // check the capability flag is set to V4L2_CAP_TIMEPERFRAME.
+    // capability に V4L2_CAP_TIMEPERFRAME が立っているか確認する
     if (streamparms.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
-      // driver supports the feature. Set required framerate.
+      // ドライバが対応しているので要求フレームレートを設定する
       memset(&streamparms, 0, sizeof(streamparms));
       streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       streamparms.parm.capture.timeperframe.numerator = 1;
@@ -318,8 +317,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
       }
     }
   }
-  // If driver doesn't support framerate control, need to hardcode.
-  // Hardcoding the value based on the frame size.
+  // ドライバがフレームレート制御非対応なら、フレームサイズに応じて固定値を入れる
   if (!driver_framerate_support) {
     if (!config.use_native && _currentWidth >= 800 &&
         _captureVideoType != webrtc::VideoType::kMJPEG) {
@@ -334,7 +332,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
     return -1;
   }
 
-  // start capture thread;
+  // キャプチャスレッドを開始する
   if (_captureThread.empty()) {
     quit_ = false;
     _captureThread = webrtc::PlatformThread::SpawnJoinable(
@@ -342,7 +340,7 @@ int32_t JetsonV4L2Capturer::StartCapture(
         webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 
-  // Needed to start UVC camera - from the uvcview application
+  // UVC カメラの開始に必要 (uvcview アプリケーション由来)
   enum v4l2_buf_type type;
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
@@ -375,7 +373,7 @@ int32_t JetsonV4L2Capturer::StopCapture() {
   return 0;
 }
 
-// critical section protected by the caller
+// 呼び出し側が保護するクリティカルセクション
 
 bool JetsonV4L2Capturer::AllocateVideoBuffers() {
   struct v4l2_requestbuffers rbuffer;
@@ -420,7 +418,7 @@ bool JetsonV4L2Capturer::AllocateVideoBuffers() {
     }
   }
 
-  // Map the buffers
+  // バッファをマップする
   _pool = new Buffer[rbuffer.count];
 
   for (unsigned int i = 0; i < rbuffer.count; i++) {
@@ -474,7 +472,7 @@ bool JetsonV4L2Capturer::DeAllocateVideoBuffers() {
   if (_captureVideoType == webrtc::VideoType::kMJPEG) {
     jpeg_decoder_pool_ = nullptr;
 
-    // unmap buffers
+    // バッファのマップを解除する
     for (int i = 0; i < _buffersAllocatedByDevice; i++) {
       munmap(_pool[i].start, _pool[i].length);
     }
@@ -487,7 +485,7 @@ bool JetsonV4L2Capturer::DeAllocateVideoBuffers() {
     delete[] _pool;
   }
 
-  // turn off stream
+  // ストリームを停止する
   enum v4l2_buf_type type;
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl(_deviceFd, VIDIOC_STREAMOFF, &type) < 0) {
@@ -513,21 +511,21 @@ bool JetsonV4L2Capturer::CaptureProcess() {
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
 
-  // _deviceFd written only in StartCapture, when this thread isn't running.
+  // _deviceFd はキャプチャスレッド非動作時の StartCapture でのみ書き換える
   retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
   {
     webrtc::MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;
-    } else if (retVal < 0 && errno != EINTR /* continue if interrupted */) {
-      // select failed
+    } else if (retVal < 0 && errno != EINTR /* 割り込みなら続行 */) {
+      // select が失敗した
       return false;
     } else if (retVal == 0) {
-      // select timed out
+      // select がタイムアウトした
       return true;
     } else if (!FD_ISSET(_deviceFd, &rSet)) {
-      // not event on camera handle
+      // カメラハンドルにイベントがない
       return true;
     }
 
@@ -540,7 +538,7 @@ bool JetsonV4L2Capturer::CaptureProcess() {
       } else {
         buf.memory = V4L2_MEMORY_DMABUF;
       }
-      // dequeue a buffer - repeat until dequeued properly!
+      // バッファをデキューする。成功するまで繰り返す
       while (ioctl(_deviceFd, VIDIOC_DQBUF, &buf) < 0) {
         if (errno != EINTR) {
           RTC_LOG(LS_INFO) << "could not sync on a buffer on device "
@@ -551,7 +549,7 @@ bool JetsonV4L2Capturer::CaptureProcess() {
 
       OnCaptured(&buf);
 
-      // enqueue the buffer again
+      // バッファを再度エンキューする
       if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
         RTC_LOG(LS_INFO) << __FUNCTION__ << " Failed to enqueue capture buffer";
       }
@@ -584,8 +582,8 @@ void JetsonV4L2Capturer::OnCaptured(v4l2_buffer* buf) {
 
     unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
     uint8_t* p;
-    /* v4l2_buf.bytesused may have padding bytes for alignment
-              Search for EOF to get exact size */
+    // v4l2_buf.bytesused にはアライン用のパディングが含まれることがある
+    // 正確なサイズを得るため EOF を探す
     if (eosSearchSize > bytesused)
       eosSearchSize = bytesused;
     for (unsigned int i = 0; i < eosSearchSize; i++) {

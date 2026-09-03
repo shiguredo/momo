@@ -295,13 +295,13 @@ int32_t NvCodecVideoEncoderImpl::Encode(
   }
 
   if (frame_types != nullptr) {
-    // We only support a single stream.
+    // 単一ストリームのみ対応する
     RTC_DCHECK_EQ(frame_types->size(), static_cast<size_t>(1));
-    // Skip frame?
+    // フレームをスキップするか
     if ((*frame_types)[0] == webrtc::VideoFrameType::kEmptyFrame) {
       return WEBRTC_VIDEO_CODEC_OK;
     }
-    // Force key frame?
+    // キーフレームを強制するか
     send_key_frame =
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }

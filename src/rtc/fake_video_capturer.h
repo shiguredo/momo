@@ -18,7 +18,7 @@
 // Blend2D
 #include <blend2d.h>
 
-// Forward declaration
+// 前方宣言
 class FakeAudioCapturer;
 
 class FakeVideoCapturer : public sora::ScalableVideoTrackSource {

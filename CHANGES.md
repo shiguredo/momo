@@ -200,6 +200,8 @@
   - @torikizi
 - [UPDATE] 未使用コードとコメントアウトされた実行コードを削除する
   - @Hexa
+- [UPDATE] 英語の説明コメントを日本語に統一する
+  - @Hexa
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加

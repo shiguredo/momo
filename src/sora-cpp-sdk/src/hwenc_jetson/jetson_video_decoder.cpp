@@ -332,7 +332,7 @@ void JetsonVideoDecoder::CaptureLoop() {
       memset(planes, 0, sizeof(planes));
       v4l2_buf.m.planes = planes;
 
-      // Dequeue a filled buffer
+      // 充填済みバッファをデキューする
       if (decoder_->capture_plane.dqBuffer(v4l2_buf, &buffer, NULL, 0)) {
         if (errno == EAGAIN) {
           usleep(1000);
@@ -373,7 +373,7 @@ void JetsonVideoDecoder::CaptureLoop() {
           buffer_pool_.CreateI420Buffer(capture_crop_->c.width,
                                         capture_crop_->c.height);
       if (!i420_buffer.get()) {
-        // Pool has too many pending frames.
+        // プールに未処理フレームが多すぎる
         RTC_HISTOGRAM_BOOLEAN(
             "WebRTC.Video.LibvpxVp8Decoder.TooManyPendingFrames", 1);
         got_error_ = true;

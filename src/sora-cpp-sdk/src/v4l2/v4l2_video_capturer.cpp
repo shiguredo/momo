@@ -131,7 +131,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
   }
 
   webrtc::MutexLock lock(&capture_lock_);
-  // first open /dev/video device
+  // まず /dev/video デバイスを開く
   if ((_deviceFd = open(device_.path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
     RTC_LOG(LS_INFO) << "error in opening " << device_.path
                      << " errono = " << errno;
@@ -221,7 +221,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
   _currentWidth = video_fmt.fmt.pix.width;
   _currentHeight = video_fmt.fmt.pix.height;
 
-  // Trying to set frame rate, before check driver capability.
+  // ドライバの対応を確認してからフレームレートを設定する
   bool driver_framerate_support = true;
   struct v4l2_streamparm streamparms;
   memset(&streamparms, 0, sizeof(streamparms));
@@ -229,11 +229,11 @@ int32_t V4L2VideoCapturer::StartCapture() {
   if (ioctl(_deviceFd, VIDIOC_G_PARM, &streamparms) < 0) {
     RTC_LOG(LS_INFO) << "error in VIDIOC_G_PARM errno = " << errno;
     driver_framerate_support = false;
-    // continue
+    // 続行する
   } else {
-    // check the capability flag is set to V4L2_CAP_TIMEPERFRAME.
+    // capability に V4L2_CAP_TIMEPERFRAME が立っているか確認する
     if (streamparms.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
-      // driver supports the feature. Set required framerate.
+      // ドライバが対応しているので要求フレームレートを設定する
       memset(&streamparms, 0, sizeof(streamparms));
       streamparms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       streamparms.parm.capture.timeperframe.numerator = 1;
@@ -246,8 +246,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
       }
     }
   }
-  // If driver doesn't support framerate control, need to hardcode.
-  // Hardcoding the value based on the frame size.
+  // ドライバがフレームレート制御非対応なら、フレームサイズに応じて固定値を入れる
   if (!driver_framerate_support) {
     if (!config_.use_native && _currentWidth >= 800 &&
         _captureVideoType != webrtc::VideoType::kMJPEG) {
@@ -267,7 +266,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
     return -1;
   }
 
-  // start capture thread;
+  // キャプチャスレッドを開始する
   if (_captureThread.empty()) {
     quit_ = false;
     _captureThread = webrtc::PlatformThread::SpawnJoinable(
@@ -275,7 +274,7 @@ int32_t V4L2VideoCapturer::StartCapture() {
         webrtc::ThreadAttributes().SetPriority(webrtc::ThreadPriority::kHigh));
   }
 
-  // Needed to start UVC camera - from the uvcview application
+  // UVC カメラの開始に必要 (uvcview アプリケーション由来)
   enum v4l2_buf_type type;
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
@@ -309,7 +308,7 @@ int32_t V4L2VideoCapturer::StopCapture() {
   return 0;
 }
 
-// critical section protected by the caller
+// 呼び出し側が保護するクリティカルセクション
 
 bool V4L2VideoCapturer::AllocateVideoBuffers() {
   struct v4l2_requestbuffers rbuffer;
@@ -329,7 +328,7 @@ bool V4L2VideoCapturer::AllocateVideoBuffers() {
 
   _buffersAllocatedByDevice = rbuffer.count;
 
-  // Map the buffers
+  // バッファをマップする
   _pool = new Buffer[rbuffer.count];
 
   for (unsigned int i = 0; i < rbuffer.count; i++) {
@@ -362,13 +361,13 @@ bool V4L2VideoCapturer::AllocateVideoBuffers() {
 }
 
 bool V4L2VideoCapturer::DeAllocateVideoBuffers() {
-  // unmap buffers
+  // バッファのマップを解除する
   for (int i = 0; i < _buffersAllocatedByDevice; i++)
     munmap(_pool[i].start, _pool[i].length);
 
   delete[] _pool;
 
-  // turn off stream
+  // ストリームを停止する
   enum v4l2_buf_type type;
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl(_deviceFd, VIDIOC_STREAMOFF, &type) < 0) {
@@ -394,21 +393,21 @@ bool V4L2VideoCapturer::CaptureProcess() {
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
 
-  // _deviceFd written only in StartCapture, when this thread isn't running.
+  // _deviceFd はキャプチャスレッド非動作時の StartCapture でのみ書き換える
   retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
   {
     webrtc::MutexLock lock(&capture_lock_);
 
     if (quit_) {
       return false;
-    } else if (retVal < 0 && errno != EINTR /* continue if interrupted */) {
-      // select failed
+    } else if (retVal < 0 && errno != EINTR /* 割り込みなら続行 */) {
+      // select が失敗した
       return false;
     } else if (retVal == 0) {
-      // select timed out
+      // select がタイムアウトした
       return true;
     } else if (!FD_ISSET(_deviceFd, &rSet)) {
-      // not event on camera handle
+      // カメラハンドルにイベントがない
       return true;
     }
 
@@ -417,7 +416,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
       memset(&buf, 0, sizeof(struct v4l2_buffer));
       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       buf.memory = V4L2_MEMORY_MMAP;
-      // dequeue a buffer - repeat until dequeued properly!
+      // バッファをデキューする。成功するまで繰り返す
       while (ioctl(_deviceFd, VIDIOC_DQBUF, &buf) < 0) {
         if (errno != EINTR) {
           RTC_LOG(LS_INFO) << "could not sync on a buffer on device "
@@ -438,8 +437,8 @@ bool V4L2VideoCapturer::CaptureProcess() {
         } else {
           unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
           uint8_t* p;
-          /* v4l2_buf.bytesused may have padding bytes for alignment
-              Search for EOF to get exact size */
+          // v4l2_buf.bytesused にはアライン用のパディングが含まれることがある
+    // 正確なサイズを得るため EOF を探す
           if (eosSearchSize > bytesused)
             eosSearchSize = bytesused;
           for (unsigned int i = 0; i < eosSearchSize; i++) {
@@ -455,7 +454,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
         OnCaptured(data, bytesused);
       }
 
-      // enqueue the buffer again
+      // バッファを再度エンキューする
       if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
         RTC_LOG(LS_INFO) << __func__ << " Failed to enqueue capture buffer";
       }

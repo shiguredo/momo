@@ -24,11 +24,10 @@ void SoraSession::Run() {
 }
 
 void SoraSession::DoRead() {
-  // Make the request empty before reading,
-  // otherwise the operation behavior is undefined.
+  // 読み取り前にリクエストを空にする。空にしないと動作は未定義になる
   req_ = {};
 
-  // Read a request
+  // リクエストを読み取る
   boost::beast::http::async_read(
       socket_, buffer_, req_,
       std::bind(&SoraSession::OnRead, shared_from_this(), std::placeholders::_1,
@@ -39,7 +38,7 @@ void SoraSession::OnRead(boost::system::error_code ec,
                          std::size_t bytes_transferred) {
   boost::ignore_unused(bytes_transferred);
 
-  // This means they closed the connection
+  // 接続が閉じられた
   if (ec == boost::beast::http::error::end_of_stream)
     return DoClose();
 
@@ -133,24 +132,23 @@ void SoraSession::OnWrite(boost::system::error_code ec,
     return MOMO_BOOST_ERROR(ec, "write");
 
   if (close) {
-    // This means we should close the connection, usually because
-    // the response indicated the "Connection: close" semantic.
+    // 接続を閉じる。レスポンスが Connection: close を示している場合がほとんどである
     return DoClose();
   }
 
-  // We're done with the response so delete it
+  // レスポンスの処理が終わったので破棄する
   res_ = nullptr;
 
-  // Read another request
+  // 次のリクエストを読み取る
   DoRead();
 }
 
 void SoraSession::DoClose() {
-  // Send a TCP shutdown
+  // TCP の shutdown を送る
   boost::system::error_code ec;
   socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
 
-  // At this point the connection is closed gracefully
+  // この時点で接続は正常に閉じられている
 }
 
 boost::beast::http::response<boost::beast::http::string_body>
