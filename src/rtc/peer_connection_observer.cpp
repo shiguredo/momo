@@ -1,7 +1,5 @@
 #include "peer_connection_observer.h"
 
-#include <iostream>
-
 // WebRTC
 #include <rtc_base/logging.h>
 

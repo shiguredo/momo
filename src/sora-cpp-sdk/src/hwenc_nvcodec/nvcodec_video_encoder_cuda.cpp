@@ -3,8 +3,6 @@
 #include "nvcodec_video_encoder_cuda.h"
 
 #include <cstddef>
-#include <cstdlib>
-#include <iostream>
 #include <memory>
 
 // CUDA
@@ -53,110 +51,8 @@ NvEncoder* NvCodecVideoEncoderCuda::CreateNvEncoder(int width,
   return impl_->CreateNvEncoder(width, height, is_nv12);
 }
 
-void ShowEncoderCapability() {
-  int nGpu = 0;
-  ck(dyn::cuDeviceGetCount(&nGpu));
-  if (nGpu == 0) {
-    std::cerr << "CUDA Device not found" << std::endl;
-    exit(1);
-  }
-  std::cout << "Encoder Capability" << std::endl;
-  for (int iGpu = 0; iGpu < nGpu; iGpu++) {
-    CUdevice cuDevice = 0;
-    ck(dyn::cuDeviceGet(&cuDevice, iGpu));
-    char szDeviceName[80];
-    ck(dyn::cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice));
-    CUcontext cuContext = NULL;
-    // CUDA 13 のヘッダでは cuCtxCreate が 4 引数。momo は CUDA 12 を使う
-#if CUDA_VERSION >= 13000
-    ck(dyn::cuCtxCreate(&cuContext, nullptr, 0, cuDevice));
-#else
-    ck(dyn::cuCtxCreate(&cuContext, 0, cuDevice));
-#endif
-    NvEncoderCuda enc(cuContext, 1280, 720, NV_ENC_BUFFER_FORMAT_NV12);
-
-    std::cout << "GPU " << iGpu << " - " << szDeviceName << std::endl
-              << std::endl;
-    std::cout
-        << "\tH264:\t\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
-                                   NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tH264_444:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
-                                   NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tH264_ME:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
-                                   NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tH264_WxH:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
-                                   NV_ENC_CAPS_WIDTH_MAX))
-        << "*"
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_H264_GUID,
-                                   NV_ENC_CAPS_HEIGHT_MAX))
-        << std::endl
-        << "\tHEVC:\t\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_Main10:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORT_10BIT_ENCODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_Lossless:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_SAO:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORT_SAO)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_444:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORT_YUV444_ENCODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_ME:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_SUPPORT_MEONLY_MODE)
-                ? "yes"
-                : "no")
-        << std::endl
-        << "\tHEVC_WxH:\t" << "  "
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_WIDTH_MAX))
-        << "*"
-        << (enc.GetCapabilityValue(NV_ENC_CODEC_HEVC_GUID,
-                                   NV_ENC_CAPS_HEIGHT_MAX))
-        << std::endl;
-
-    std::cout << std::endl;
-
-    enc.DestroyEncoder();
-    ck(dyn::cuCtxDestroy(cuContext));
-  }
-}
-
 NvCodecVideoEncoderCudaImpl::NvCodecVideoEncoderCudaImpl(
     std::shared_ptr<CudaContext> ctx) {
-  //ShowEncoderCapability();
   cuda_context_ = ctx;
 }
 NvCodecVideoEncoderCudaImpl::~NvCodecVideoEncoderCudaImpl() {}

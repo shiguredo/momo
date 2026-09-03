@@ -516,17 +516,6 @@ std::string Util::GenerateRandomChars(size_t length) {
   return result;
 }
 
-std::string Util::GenerateRandomNumericChars(size_t length) {
-  auto random_numerics = []() -> char {
-    const char charset[] = "0123456789";
-    const size_t max_index = (sizeof(charset) - 1);
-    return charset[rand() % max_index];
-  };
-  std::string result(length, 0);
-  std::generate_n(result.begin(), length, random_numerics);
-  return result;
-}
-
 std::string Util::IceConnectionStateToString(
     webrtc::PeerConnectionInterface::IceConnectionState state) {
   switch (state) {

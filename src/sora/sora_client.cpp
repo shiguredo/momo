@@ -476,18 +476,6 @@ void SoraClient::OnRead(boost::system::error_code ec,
             for (auto v : encodings_json) {
               auto p = v.as_object();
               webrtc::RtpEncodingParameters params;
-              // std::optional<uint32_t> ssrc;
-              // double bitrate_priority = kDefaultBitratePriority;
-              // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
-              // Priority network_priority = Priority::kLow;
-              // std::optional<int> max_bitrate_bps;
-              // std::optional<int> min_bitrate_bps;
-              // std::optional<double> max_framerate;
-              // std::optional<int> num_temporal_layers;
-              // std::optional<double> scale_resolution_down_by;
-              // bool active = true;
-              // std::string rid;
-              // bool adaptive_ptime = false;
               params.rid = p["rid"].as_string().c_str();
               if (p.count("maxBitrate") != 0) {
                 params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
