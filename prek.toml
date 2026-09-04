@@ -2,8 +2,8 @@
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = "v0.14.14"
 hooks = [
-  { id = "ruff-check", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess)\\.py$)" },
-  { id = "ruff-format", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess)\\.py$)" },
+  { id = "ruff-check", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess|run|canary)\\.py$)" },
+  { id = "ruff-format", files = "^(test/|tests/|(sysroot_builder|jetson_postprocess|run|canary)\\.py$)" },
 ]
 
 [[repos]]
@@ -16,6 +16,15 @@ entry = "bash -c 'cd test && uv run ty check .'"
 language = "system"
 types = ["python"]
 files = "^test/"
+pass_filenames = false
+
+[[repos.hooks]]
+id = "ty-check-sysroot"
+name = "ty check sysroot"
+entry = "uv run --with ty --python 3.13 ty check sysroot_builder.py jetson_postprocess.py"
+language = "system"
+types = ["python"]
+files = "^(sysroot_builder|jetson_postprocess)\\.py$"
 pass_filenames = false
 
 [[repos.hooks]]

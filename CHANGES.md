@@ -202,6 +202,10 @@
   - @Hexa
 - [UPDATE] 英語の説明コメントを日本語に統一する
   - @Hexa
+- [ADD] CI と prek に Python の静的検証 (ruff / ty) を追加する
+  - run.py / canary.py を ruff-check と ruff-format の対象にする
+  - sysroot_builder.py / jetson_postprocess.py を ty で検査する
+  - @Hexa
 - [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
   - pytest-rerunfailures プラグインを追加
   - 失敗したテストを最大 3 回までリトライする設定を追加

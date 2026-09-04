@@ -19,6 +19,21 @@ on:
     - cron: "0 1 * * 1-5"
 
 jobs:
+  # run.py を使う全構成のゲート。sysroot pytest と同じ matrix if には閉じない。
+  python-static-check:
+    name: Python static check
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: ruff check
+        run: uvx ruff@0.14.14 check run.py canary.py sysroot_builder.py jetson_postprocess.py
+      - name: ruff format
+        run: uvx ruff@0.14.14 format --check run.py canary.py sysroot_builder.py jetson_postprocess.py
+      - name: ty check
+        run: uv run --with ty --python 3.13 ty check sysroot_builder.py jetson_postprocess.py
+
   build-windows:
     strategy:
       fail-fast: false
@@ -250,7 +265,7 @@ jobs:
 
   # E2E テストの実行
   e2e_test:
-    needs: [build-windows, build-macos, build-ubuntu]
+    needs: [python-static-check, build-windows, build-macos, build-ubuntu]
     uses: ./.github/workflows/e2e-test.yml
     with:
       from_build: true
@@ -260,6 +275,7 @@ jobs:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/202')
     needs:
+      - python-static-check
       - build-windows
       - build-macos
       - build-ubuntu
@@ -313,6 +329,7 @@ jobs:
     permissions:
       actions: read
     needs:
+      - python-static-check
       - build-windows
       - build-macos
       - build-ubuntu
