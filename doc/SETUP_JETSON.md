@@ -102,7 +102,7 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 ### 実行してみる
 
-ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
+ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.app/) を利用しています。
 
 Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
 

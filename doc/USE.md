@@ -40,7 +40,7 @@ Ayame モードでは時雨堂が開発しているオープンソースのシ�
 
 Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
-[Sora Labo](https://sora-labo.shiguredo.jp/) を利用することで、 Sora を無料で試すことが可能です。
+[Sora Labo](https://sora-labo.shiguredo.app/) を利用することで、 Sora を無料で試すことが可能です。
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
 
