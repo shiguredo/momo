@@ -133,7 +133,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
   - `--video true` は Sora への映像送信を有効に設定しています
   - `--audio true` は Sora への音声送信を有効に設定しています
   - `--video-codec-type VP8` はコーデックを VP8 に設定しています
-  - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
+  - `--video-bit-rate 15000` はビデオビットレートを 15 Mbps で設定しています
   - `--auto` は Sora との自動接続を有効に設定しています
   - `--role sendonly` は送信時の役割を送信のみで設定しています
   - `--metadata '{"access_token": "xyz"}'` は Sora Labo のアクセストークンをメタデータに設定しています
