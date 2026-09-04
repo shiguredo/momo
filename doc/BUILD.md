@@ -11,7 +11,7 @@ git clone https://github.com/shiguredo/momo.git
 Windows 向けの Momo をビルドするには、以下の OS とアプリケーションが必要になります。
 
 - 最新バージョンの Windows
-- [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも化）
+- [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも可)
   - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
 - [Python](https://www.python.org/downloads/)
   - 最新バージョンをインストールして下さい。
