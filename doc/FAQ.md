@@ -93,7 +93,7 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 - Logicool MX Brio
   - <https://www.logicool.co.jp/ja-jp/products/webcams/mx-brio.html>
-- Insta360 Link 2 yあ Link 2C
+- Insta360 Link 2 や Link 2C
   - <https://www.insta360.com/jp/product/insta360-link2>
 
 ## 120fps のカメラのオススメはありますか？
