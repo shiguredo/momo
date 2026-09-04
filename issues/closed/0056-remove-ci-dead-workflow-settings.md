@@ -1,7 +1,7 @@
 # CI ワークフローの死設定と意図的無効化を整理する
 
 - Created: 2026-09-02
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-04
 - Branch: feature/remove-ci-dead-workflow-settings
 - Polished: 2026-09-03
 - Milestone: 2026.1.0
@@ -41,4 +41,4 @@ C++ の死にコード削除は `0038-remove-dead-code` の担当であり、本
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`build.yml` の `on.push.paths-ignore` から、リポジトリに無い `.github/workflows/claude.yml` を削除した。`create-release` の `ubuntu-22.04_armv8_jetson` download、`e2e-test.yml` の `on.schedule`、Windows E2E matrix のコメントアウトは再有効化せず残した。C++ ソース、`prek.toml`、DEPS は変更していない。CI の Python static check、各プラットフォームのビルド、E2E は成功した。

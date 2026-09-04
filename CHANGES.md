@@ -202,6 +202,8 @@
   - @Hexa
 - [UPDATE] 英語の説明コメントを日本語に統一する
   - @Hexa
+- [UPDATE] 存在しない claude.yml への CI paths-ignore を削除する
+  - @Hexa
 - [ADD] CI と prek に Python の静的検証 (ruff / ty) を追加する
   - run.py / canary.py を ruff-check と ruff-format の対象にする
   - sysroot_builder.py / jetson_postprocess.py を ty で検査する
