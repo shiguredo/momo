@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import glob
 import logging
@@ -8,7 +10,6 @@ import subprocess
 import sys
 import tarfile
 import zipfile
-from typing import List, Optional
 
 from buildbase import (
     Platform,
@@ -41,9 +42,13 @@ from buildbase import (
 from jetson_postprocess import fixup_jetson_libnvbuf_fdmap_symlinks
 
 logging.basicConfig(level=logging.DEBUG)
-
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+class RunError(Exception):
+    """run.py の処理が続行できないときのエラー。"""
 
 
 def install_sysroot(config_path: str, install_dir: str) -> None:
@@ -72,10 +77,10 @@ def install_deps(
     build_dir: str,
     install_dir: str,
     debug: bool,
-    local_webrtc_build_dir: Optional[str],
-    local_webrtc_build_args: List[str],
+    local_webrtc_build_dir: str | None,
+    local_webrtc_build_args: list[str],
     disable_fake_capture_device: bool,
-):
+) -> None:
     with cd(BASE_DIR):
         deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
@@ -264,7 +269,7 @@ def install_deps(
         elif platform.build.os == "ubuntu" and platform.build.arch == "arm64":
             install_cmake_args["platform"] = "linux-aarch64"
         else:
-            raise Exception("Failed to install CMake")
+            raise RunError("Failed to install CMake")
         install_cmake(**install_cmake_args)
 
         if platform.build.os == "macos":
@@ -364,7 +369,7 @@ def install_deps(
                 f"-DCMAKE_SYSROOT={sysroot}",
             ]
         else:
-            raise Exception("Not supported platform")
+            raise RunError("Not supported platform")
 
         install_sdl3(**install_sdl3_args)
 
@@ -438,7 +443,7 @@ AVAILABLE_TARGETS = [
 WINDOWS_SDK_VERSION = "10.0.20348.0"
 
 
-def _find_clang_binary(name: str) -> Optional[str]:
+def _find_clang_binary(name: str) -> str | None:
     if shutil.which(name) is not None:
         return name
     else:
@@ -449,12 +454,12 @@ def _find_clang_binary(name: str) -> Optional[str]:
 
 
 def _format(
-    clang_format_path: Optional[str] = None,
-):
+    clang_format_path: str | None = None,
+) -> None:
     if clang_format_path is None:
         clang_format_path = _find_clang_binary("clang-format")
     if clang_format_path is None:
-        raise Exception("clang-format not found. Please install it or specify the path.")
+        raise RunError("clang-format not found. Please install it or specify the path")
     patterns = [
         "src/**/*.h",
         "src/**/*.cpp",
@@ -484,10 +489,10 @@ def _build(args):
     elif target == "ubuntu-22.04_armv8_jetson":
         platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
     else:
-        raise Exception(f"Unknown target {target}")
+        raise RunError(f"Unknown target {target}")
 
-    logging.info(f"Build platform: {platform.build.package_name}")
-    logging.info(f"Target platform: {platform.target.package_name}")
+    logger.info(f"Build platform: {platform.build.package_name}")
+    logger.info(f"Target platform: {platform.target.package_name}")
 
     configuration = "debug" if args.debug else "release"
     dir = platform.target.package_name
@@ -621,13 +626,16 @@ def _build(args):
             cmake_args.append("-DUSE_SCREEN_CAPTURER=ON")
 
         # NvCodec
-        if not args.disable_cuda:
-            if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
-                cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
-                if platform.target.os == "windows":
-                    cmake_args.append(
-                        f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
-                    )
+        if (
+            not args.disable_cuda
+            and platform.target.os in ("windows", "ubuntu")
+            and platform.target.arch == "x86_64"
+        ):
+            cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
+            if platform.target.os == "windows":
+                cmake_args.append(
+                    f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
+                )
 
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")
@@ -689,9 +697,8 @@ def _build(args):
         rm_rf(os.path.join(package_dir, "momo"))
         rm_rf(os.path.join(package_dir, "momo.env"))
 
-        with cd(BASE_DIR):
-            with open("VERSION", "r", encoding="utf-8") as f:
-                momo_version = f.read().strip()
+        with cd(BASE_DIR), open("VERSION", encoding="utf-8") as f:
+            momo_version = f.read().strip()
 
         def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:

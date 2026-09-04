@@ -1,7 +1,7 @@
 # CI に Python の静的検証 (ruff / ty) がなく、prek.toml の対象から run.py 等が除外されている
 
 - Created: 2026-08-19
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-04
 - Branch: feature/add-python-static-check-ci
 - Polished: 2026-09-02
 - Milestone: 2026.1.0
@@ -48,4 +48,4 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+`prek.toml` の `ruff-check` / `ruff-format` に `run.py` / `canary.py` を含めた。format 差分は無かったので format 対象にも入れた。既存の `test/` 向け `ty-check` は残し、`ty-check-sysroot` を追加して `uv run --with ty --python 3.13 ty check sysroot_builder.py jetson_postprocess.py` で検査するようにした。直下 `pyproject.toml` は入れてない。`build.yml` に独立 job `python-static-check` (`ubuntu-slim`) を置き、`uvx ruff@0.14.14` と上記 ty を sysroot pytest と同じ matrix `if` なしで実行する。`e2e_test` / `create-release` / `notification` の `needs` に足した。`run.py` の ruff 指摘はルール緩和せず直した（型注釈の更新、`RunError` への置き換え、モジュール logger、ネストした `if` / `with` の結合）。`canary.py` は指摘が無く未変更。`buildbase.py` と `e2e-test.yml`、存在しない `claude.yml` の `paths-ignore` や Jetson Release / E2E schedule / Windows matrix のコメントアウトは触っていない。CI の Python static check、各プラットフォームのビルド、E2E は成功した。
