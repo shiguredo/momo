@@ -72,84 +72,125 @@ FAQ に関しては [FAQ.md](FAQ.md) をお読みください。
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 2022.2.0 (8b57be45)
+WebRTC Native Client Momo 2026.1.0-canary.1 (3d7f740d)
 
-WebRTC: Shiguredo-Build M102.5005@{#7} (102.5005.7.4 6ff73180)
-Environment: [arm64] macOS Version 12.3 (Build 21E230)
-
-- USE_JETSON_ENCODER
-- USE_NVCODEC_ENCODER
+WebRTC: Shiguredo-Build M150.7871@{#3} (150.7871.3.0 1f975dfd)
+Environment: [arm64] macOS Version 26.5.2 (Build 25F84)
 ```
 
 ### ヘルプ
 
 ```
-$  ./momo --help
+$ ./momo --help
 Momo - WebRTC Native Client
-Usage: ./momo [OPTIONS] [SUBCOMMAND]
 
-Options:
-  -h,--help                   Print this help message and exit
-  --help-all                  Print help message for all modes and exit
-  --no-google-stun            Do not use google stun
-  --no-video-input-device     Do not use video input device
-  --no-audio-device           Do not use audio device
-  --force-i420                Prefer I420 format for video capture (only on supported devices)
-  --hw-mjpeg-decoder BOOLEAN:value in {false->0,true->1} OR {0,1}
-                              Perform MJPEG deoode and video resize by hardware acceleration (only on supported devices)
-  --use-libcamera             Use libcamera for video capture (only on supported devices)
-  --use-libcamera-native      Use native buffer for H.264 encoding
-  --video-input-device TEXT   Use the video device specified by an index or a name (use the first one if not specified)
-  --resolution TEXT           Video resolution (one of QVGA, VGA, HD, FHD, 4K, or [WIDTH]x[HEIGHT])
-  --framerate INT:INT in [1 - 60]
+
+./momo [OPTIONS] [SUBCOMMANDS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+          --help-all          Print help message for all modes and exit
+          --no-google-stun    Do not use google stun
+          --no-video-input-device
+                              Do not use video input device
+          --no-audio-device   Do not use audio device
+          --list-devices      List available audio and video devices and exit
+          --fake-capture-device
+                              Use fake video capture device instead of real camera. Cannot be
+                              used with --no-video-input-device
+          --force-i420 Excludes: --force-nv12 --force-yuy2
+                              Force I420 format for video capture (fails if not available)
+          --force-yuy2 Excludes: --force-i420 --force-nv12
+                              Force YUY2 format for video capture (fails if not available)
+          --force-nv12 Excludes: --force-i420 --force-yuy2
+                              Force NV12 format for video capture (fails if not available)
+          --hw-mjpeg-decoder BOOLEAN:value in {false->0,true->1} OR {0,1}
+                              Perform MJPEG deoode and video resize by hardware acceleration
+                              (only on supported devices)
+          --use-libcamera     Use libcamera for video capture (only on supported devices)
+          --use-libcamera-native
+                              Use native buffer for H.264 encoding
+          --libcamera-control [TEXT,TEXT] ...
+                              Set libcamera control (format: key value)
+          --video-input-device TEXT
+                              Use the video device specified by an index or a name (use the
+                              first one if not specified)
+          --audio-input-device TEXT
+                              Use the audio input device specified by an index or a name (use
+                              the system default if not specified)
+          --audio-output-device TEXT
+                              Use the audio output device specified by an index or a name (use
+                              the system default if not specified)
+          --resolution TEXT   Video resolution (one of QVGA, VGA, HD, FHD, 4K, or
+                              [WIDTH]x[HEIGHT])
+          --framerate INT:INT in [1 - 120]
                               Video framerate
-  --fixed-resolution          Maintain video resolution in degradation
-  --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
-                              Specifies the quality that is maintained against video degradation
-  --use-sdl                   Show video using SDL (if SDL is available)
-  --window-width INT:INT in [180 - 16384]
+          --fixed-resolution  Maintain video resolution in degradation
+          --priority TEXT:{BALANCE,FRAMERATE,RESOLUTION}
+                              Specifies the quality that is maintained against video
+                              degradation
+          --use-sdl           Show video using SDL (if SDL is available)
+          --window-width INT:INT in [180 - 16384]
                               Window width for videos (if SDL is available)
-  --window-height INT:INT in [180 - 16384]
+          --window-height INT:INT in [180 - 16384]
                               Window height for videos (if SDL is available)
-  --fullscreen                Use fullscreen window for videos (if SDL is available)
-  --version                   Show version information
-  --insecure                  Allow insecure server connections when using SSL
-  --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
+          --fullscreen        Use fullscreen window for videos (if SDL is available)
+          --version           Show version information
+          --insecure          Allow insecure server connections when using SSL
+          --log-level INT:value in {verbose->0,info->1,warning->2,error->3,none->4} OR {0,1,2,3,4}
                               Log severity level threshold
-  --screen-capture            Capture screen
-  --disable-echo-cancellation Disable echo cancellation for audio
-  --disable-auto-gain-control Disable auto gain control for audio
-  --disable-noise-suppression Disable noise suppression for audio
-  --disable-highpass-filter   Disable highpass filter for audio
-  --video-codec-engines       List available video encoders/decoders
-  --vp8-encoder ENUM:value in {default->0,software->7} OR {0,7}
+          --screen-capture    Capture screen
+          --disable-echo-cancellation
+                              Disable echo cancellation for audio
+          --disable-auto-gain-control
+                              Disable auto gain control for audio
+          --disable-noise-suppression
+                              Disable noise suppression for audio
+          --disable-highpass-filter
+                              Disable highpass filter for audio
+          --video-codec-engines
+                              List available video encoders/decoders
+          --vp8-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP8 Encoder
-  --vp8-decoder ENUM:value in {default->0,software->7} OR {0,7}
+          --vp8-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP8 Decoder
-  --vp9-encoder ENUM:value in {default->0,software->7} OR {0,7}
+          --vp9-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP9 Encoder
-  --vp9-decoder ENUM:value in {default->0,software->7} OR {0,7}
+          --vp9-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               VP9 Decoder
-  --av1-encoder ENUM:value in {default->0,software->7} OR {0,7}
+          --av1-encoder ENUM:value in {default->0,software->6} OR {0,6}
                               AV1 Encoder
-  --av1-decoder ENUM:value in {default->0,software->7} OR {0,7}
+          --av1-decoder ENUM:value in {default->0,software->6} OR {0,6}
                               AV1 Decoder
-  --h264-encoder ENUM:value in {default->0,videotoolbox->5} OR {0,5}
+          --h264-encoder ENUM:value in {default->0,videotoolbox->4,software->6} OR {0,4,6}
                               H.264 Encoder
-  --h264-decoder ENUM:value in {default->0,videotoolbox->5} OR {0,5}
+          --h264-decoder ENUM:value in {default->0,videotoolbox->4} OR {0,4}
                               H.264 Decoder
-  --serial TEXT:serial setting format
-                              Serial port settings for datachannel passthrough [DEVICE],[BAUDRATE]
-  --metrics-port INT:INT in [-1 - 65535]
+          --h265-encoder ENUM:value in {default->0,videotoolbox->4} OR {0,4}
+                              H.265 Encoder
+          --h265-decoder ENUM:value in {default->0,videotoolbox->4} OR {0,4}
+                              H.265 Decoder
+          --openh264 TEXT:FILE
+                              OpenH264 dynamic library path
+          --serial TEXT:serial setting format
+                              Serial port settings for datachannel passthrough
+                              [DEVICE],[BAUDRATE]
+          --metrics-port INT:INT in [-1 - 65535]
                               Metrics server port number (default: -1)
-  --metrics-allow-external-ip Allow access to Metrics server from external IP
-  --client-cert TEXT:FILE     Cert file path for client certification (PEM format)
-  --client-key TEXT:FILE      Private key file path for client certification (PEM format)
-  --proxy-url TEXT            Proxy URL
-  --proxy-username TEXT       Proxy username
-  --proxy-password TEXT       Proxy password
+          --metrics-allow-external-ip
+                              Allow access to Metrics server from external IP
+          --client-cert TEXT:FILE
+                              Cert file path for client certification (PEM format)
+          --client-key TEXT:FILE
+                              Private key file path for client certification (PEM format)
+          --proxy-url TEXT    Proxy URL
+          --proxy-username TEXT
+                              Proxy username
+          --proxy-password TEXT
+                              Proxy password
 
-Subcommands:
+SUBCOMMANDS:
   p2p                         P2P mode for momo development with simple HTTP server
   ayame                       Mode for working with WebRTC Signaling Server Ayame
   sora                        Mode for working with WebRTC SFU Sora
@@ -180,6 +221,13 @@ AV1:
 H264:
   Encoder:
     - VideoToolbox [videotoolbox] (default)
+    - Software [software]
+  Decoder:
+    - VideoToolbox [videotoolbox] (default)
+
+H265:
+  Encoder:
+    - VideoToolbox [videotoolbox] (default)
   Decoder:
     - VideoToolbox [videotoolbox] (default)
 ```
@@ -189,13 +237,17 @@ H264:
 ```
 $ ./momo p2p --help
 P2P mode for momo development with simple HTTP server
-Usage: ./momo p2p [OPTIONS]
 
-Options:
-  -h,--help                   Print this help message and exit
-  --help-all                  Print help message for all modes and exit
-  --document-root TEXT:DIR    HTTP document root directory
-  --port INT:INT in [0 - 65535]
+
+./momo p2p [OPTIONS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+          --help-all          Print help message for all modes and exit
+          --document-root TEXT:DIR
+                              HTTP document root directory
+          --port INT:INT in [0 - 65535]
                               Port number (default: 8080)
 ```
 
@@ -204,16 +256,27 @@ Options:
 ```
 $ ./momo ayame --help
 Mode for working with WebRTC Signaling Server Ayame
-Usage: ./momo ayame [OPTIONS]
 
-Options:
-  -h,--help                   Print this help message and exit
-  --help-all                  Print help message for all modes and exit
-  --signaling-url TEXT REQUIRED
+
+./momo ayame [OPTIONS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+          --help-all          Print help message for all modes and exit
+          --signaling-url TEXT REQUIRED
                               Signaling URL
-  --room-id TEXT REQUIRED     Room ID
-  --client-id TEXT            Client ID
-  --signaling-key TEXT        Signaling key
+          --room-id TEXT REQUIRED
+                              Room ID
+          --client-id TEXT    Client ID
+          --signaling-key TEXT
+                              Signaling key
+          --direction TEXT:{sendrecv,sendonly,recvonly}
+                              Direction (default: sendrecv)
+          --video-codec-type TEXT:{VP8,VP9,AV1,H264,H265}
+                              Video codec type (VP8, VP9, AV1, H264, H265)
+          --audio-codec-type TEXT:{OPUS,PCMU,PCMA}
+                              Audio codec type (OPUS, PCMU, PCMA)
 ```
 
 ### sora モードヘルプ
@@ -221,46 +284,52 @@ Options:
 ```
 $ ./momo sora --help
 Mode for working with WebRTC SFU Sora
-Usage: ./momo sora [OPTIONS]
 
-Options:
-  -h,--help                   Print this help message and exit
-  --help-all                  Print help message for all modes and exit
-  --signaling-urls TEXT ... REQUIRED
+
+./momo sora [OPTIONS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+          --help-all          Print help message for all modes and exit
+          --signaling-urls TEXT ... REQUIRED
                               Signaling URLs
-  --channel-id TEXT REQUIRED  Channel ID
-  --auto                      Connect to Sora automatically
-  --video BOOLEAN:value in {false->0,true->1} OR {0,1}
+          --channel-id TEXT REQUIRED
+                              Channel ID
+          --auto              Connect to Sora automatically
+          --video BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send video to sora (default: true)
-  --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
+          --audio BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Send audio to sora (default: true)
-  --video-codec-type TEXT:{VP8,VP9,AV1,H264}
+          --video-codec-type TEXT:{VP8,VP9,AV1,H264,H265}
                               Video codec for send
-  --audio-codec-type TEXT:{OPUS}
+          --audio-codec-type TEXT:{OPUS}
                               Audio codec for send
-  --video-bit-rate INT:INT in [0 - 30000]
+          --video-bit-rate INT:INT in [0 - 30000]
                               Video bit rate
-  --audio-bit-rate INT:INT in [0 - 510]
+          --audio-bit-rate INT:INT in [0 - 510]
                               Audio bit rate
-  --role TEXT:{sendonly,recvonly,sendrecv}
+          --role TEXT:{sendonly,recvonly,sendrecv}
                               Role (default: sendonly)
-  --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}
+          --spotlight BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use spotlight
-  --spotlight-number INT:INT in [0 - 8]
+          --spotlight-number INT:INT in [0 - 8]
                               Stream count delivered in spotlight
-  --port INT:INT in [-1 - 65535]
+          --port INT:INT in [-1 - 65535]
                               Port number (default: -1)
-  --simulcast BOOLEAN:value in {false->0,true->1} OR {0,1}
+          --simulcast BOOLEAN:value in {false->0,true->1} OR {0,1}
                               Use simulcast (default: false)
-  --data-channel-signaling TEXT:{true,false,none}
+          --data-channel-signaling TEXT:{true,false,none}
                               Use DataChannel for Sora signaling (default: none)
-  --data-channel-signaling-timeout INT:POSITIVE
+          --data-channel-signaling-timeout INT:POSITIVE
                               Timeout for Data Channel in seconds (default: 180)
-  --ignore-disconnect-websocket TEXT:{true,false,none}
-                              Ignore WebSocket disconnection if using Data Channel (default: none)
-  --disconnect-wait-timeout INT:POSITIVE
+          --ignore-disconnect-websocket TEXT:{true,false,none}
+                              Ignore WebSocket disconnection if using Data Channel (default:
+                              none)
+          --disconnect-wait-timeout INT:POSITIVE
                               Disconnecting timeout for Data Channel in seconds (default: 5)
-  --metadata TEXT:JSON Value  Signaling metadata used in connect message
+          --metadata TEXT:JSON Value
+                              Signaling metadata used in connect message
 ```
 
 ## うまく動作しない時
