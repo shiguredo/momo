@@ -51,7 +51,7 @@ python3 run.py build macos_arm64
 # このコマンドは Ubuntu 上でしか動作しません
 python3 run.py build raspberry-pi-os_armv8
 python3 run.py build ubuntu-22.04_x86_64
-python3 run.py build ubuntu-22.04_jetson
+python3 run.py build ubuntu-22.04_armv8_jetson
 ```
 
 生成された Momo の実行バイナリは `_build/<target>/release/momo` ディレクトリにあります。
