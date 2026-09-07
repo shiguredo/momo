@@ -152,8 +152,9 @@ macOS arm64 から FHD でスクリーンキャプチャを配信したい場合
 
 ## Windows で H.264 を利用できますか？
 
-NVIDIA のビデオカードの NVENC を利用することで H.264 が利用できるようになります。
-ご利用の環境で H.264 が利用できるかどうかは `./momo --video-codec-engines` を使用して H264 の項目をご確認ください。
+Windows では NVIDIA Video Codec、または Intel VPL のハードウェアアクセラレーターで H.264 を利用できます。
+利用できるかどうかは `./momo --video-codec-engines` で H264 の項目を確認してください。
+Intel VPL のセットアップは [VPL.md](VPL.md) を参照してください。
 
 ## Sora モードを利用するときに Sora の TURN 機能を無効にして利用することはできますか？
 
