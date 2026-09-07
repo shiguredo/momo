@@ -20,16 +20,7 @@ JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指�
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```console
-$ tree
-.
-├── html
-│   ├── p2p.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
-```
+解凍後の構成は [BUILD.md のパッケージ解凍後の構成](BUILD.md#パッケージ解凍後の構成) を参照してください。
 
 ## 動かしてみる
 

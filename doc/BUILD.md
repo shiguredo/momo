@@ -71,11 +71,11 @@ python3 run.py build windows_x86_64 --package
 
 ```console
 $ tree
-momo
-├── LICENSE
-├── NOTICE
+.
 ├── html
-│   ├── p2p.html
-│   └── webrtc.js
-└── momo
+│   ├── p2p.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
 ```

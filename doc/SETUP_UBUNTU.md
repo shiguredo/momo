@@ -8,16 +8,7 @@
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```bash
-$ tree
-.
-├── html
-│   ├── p2p.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
-```
+解凍後の構成は [BUILD.md のパッケージ解凍後の構成](BUILD.md#パッケージ解凍後の構成) を参照してください。
 
 ## 準備
 
