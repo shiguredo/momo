@@ -18,9 +18,13 @@
 
 ### デバイス一覧を取得する
 
+Momo が認識する映像入力、音声入力、音声出力の一覧は `--list-devices` で確認できます。
+
 ```bash
-system_profiler SPCameraDataType
+./momo --list-devices
 ```
+
+OS 側のカメラ一覧を確認する場合は `system_profiler SPCameraDataType` も利用できます。`--video-input-device` に指定する名前は `--list-devices` の出力に合わせてください。
 
 ### ビデオデバイスの指定方法
 
