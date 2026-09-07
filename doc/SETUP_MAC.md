@@ -60,6 +60,6 @@ OS 側のカメラ一覧を確認する場合は `system_profiler SPCameraDataTy
 
 ```console
 ./momo --video-input-device FaceTime p2p
-./momo --video-input-device "FaceTime HD" 1 p2p
+./momo --video-input-device "FaceTime HD" p2p
 ./momo --video-input-device "FaceTime HD Camera (Built-in)" p2p
 ```
