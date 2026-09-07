@@ -89,7 +89,6 @@ wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --de
 echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
 
 sudo apt update
-# Sora Python SDK に必要なライブラリをインストールする
 sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
 # Intel VPL に必要なライブラリをインストールする
 sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
@@ -120,7 +119,6 @@ wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --de
 echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
 
 sudo apt update
-# Sora Python SDK に必要なライブラリをインストールする
 sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
 # Intel VPL に必要なライブラリをインストールする
 sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
