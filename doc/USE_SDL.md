@@ -8,8 +8,10 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 
 ## 注意
 
-- この機能は ayame と sora モードでのみ利用できます
-  - p2p モードでは p2p.html が HTTPS ではないため getUserMedia を使用できません
+- `--use-sdl` は P2P モード、 Ayame モード、 Sora モードのいずれでも利用できます
+- P2P モードの `p2p.html` は HTTP で配信されるため、ブラウザから getUserMedia を利用できません
+  - これは SDL の制限ではありません
+  - Momo 間の双方向で受信映像を表示する手順は [USE_P2P.md](USE_P2P.md) を参照してください
 - この機能は Windows または macOS または Linux で利用できます
 
 ## SDL コマンド引数
