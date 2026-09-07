@@ -35,9 +35,11 @@ MetricsServer はデフォルトでループバック (127.0.0.1 で listen) ア
   "version": "MomoVersion::GetClientName() の戻り値",
   "environment": "MomoVersion::GetEnvironmentName() の戻り値",
   "libwebrtc": "MomoVersion::GetLibwebrtcName() の戻り値",
-  "stats": [`werbrtc::RTCStats`, ...] // Sora モードの pong メッセージに含まれるものと同じ"
+  "stats": []
 }
 ```
+
+`"stats"` は `webrtc::RTCStats` の配列です。Sora モードの pong メッセージに含まれるものと同じです。
 
 実際のレスポンスの例は次のようになります。
 
