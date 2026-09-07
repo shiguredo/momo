@@ -319,7 +319,9 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - 不要なコントロールの設定を避けてください
 - フレームレート制限を適切に設定してください
 
-## コントロールキー一覧
+## コントロールキーの例
+
+キーの名前と定義は libcamera の `control_ids_core.yaml`、`control_ids_draft.yaml`、`control_ids_rpi.yaml` を確認してください。
 
 ### Core Controls
 
@@ -415,5 +417,7 @@ SyncTimer
 
 - <https://libcamera.org/api-html/namespacelibcamera_1_1controls.html>
 - <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_core.yaml>
+- <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_draft.yaml>
+- <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_rpi.yaml>
 - [libcamera 公式ドキュメント](https://libcamera.org/)
 - [Raspberry Pi Camera Algorithm and Tuning Guide](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)
