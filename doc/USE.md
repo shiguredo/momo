@@ -22,6 +22,26 @@
 
 [SETUP_UBUNTU.md](SETUP_UBUNTU.md) をお読みください。
 
+## デバイスとハードウェア
+
+### ビデオデバイスを確認する / 指定する
+
+Linux では [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をお読みください。
+macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` と `--video-input-device` をお読みください。
+
+### 音声デバイスを確認する / 指定する
+
+Linux では [LINUX_AUDIO_DEVICE.md](LINUX_AUDIO_DEVICE.md) をお読みください。
+macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` をお読みください。
+
+### Raspberry Pi の CSI カメラを利用する
+
+[LIBCAMERA.md](LIBCAMERA.md) をお読みください。
+
+### Intel VPL を利用する
+
+[VPL.md](VPL.md) をお読みください。
+
 ## 動かす
 
 ### p2p モードを利用して Momo を動かしてみる
