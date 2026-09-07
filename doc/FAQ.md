@@ -124,7 +124,7 @@ Momo では Sora の DataChannel メッセージングに対応する予定は�
 
 ## Raspberry Pi Camera を利用することはできますか？
 
-Momo は Raspberry Pi Camera を利用できます。libcamera-control にも対応しているため、オートフォーカスの設定なども利用できます。
+Momo は Raspberry Pi Camera を利用できます。 `--libcamera-control` にも対応しているため、オートフォーカスの設定なども利用できます。
 
 詳細は [LIBCAMERA.md](LIBCAMERA.md) をご確認ください。
 
