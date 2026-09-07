@@ -48,17 +48,11 @@ sudo apt-get install libegl1-mesa-dev
 sudo apt-get install libgles2-mesa
 ```
 
-### Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
+### Raspberry Pi OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
 
-これは USB カメラを利用する場合は不要なオプションです。
+USB カメラを利用する場合、この手順は不要です。
 
-raspi-config で Camera を Enable にしてください。
-
-加えて、以下のコマンドを実行してください
-
-```bash
-sudo modprobe bcm2835-v4l2 max_video_width=2592 max_video_height=1944
-```
+Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用できません。CSI カメラは `--use-libcamera` を指定してください。詳細は [LIBCAMERA.md](LIBCAMERA.md) を参照してください。
 
 ## 使ってみる
 
@@ -101,11 +95,6 @@ MJPEG のハードウェアデコーダーの利用を検討してみてくだ�
 ```bash
 ./momo --hw-mjpeg-decoder true --no-audio-device p2p
 ```
-
-### Raspberry Pi の設定を見直す
-
-[Raspberry-Pi-OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合](#raspberry-pi-os-で-raspberry-pi-用カメラなどの-csi-カメラを利用する場合) を確認してください。
-特に `max_video_width=2592 max_video_height=1944` が記載されていなければ高解像度時にフレームレートが出ません。
 
 ### オプションを見直す
 
