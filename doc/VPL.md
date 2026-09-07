@@ -4,7 +4,7 @@ VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で H
 
 このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
-## Intel Media SDK について
+## Intel VPL について
 
 VPL の詳細については以下のリンクをご確認ください。
 
