@@ -2,7 +2,7 @@
 
 ## 注意
 
-Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS (64bit) を利用してください
+Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS (64 bit) を利用してください
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
@@ -121,4 +121,4 @@ force_turbo=1
 avoid_warnings=2
 ```
 
-この設定であれば HD は 30fps, FHD では 15fps 程度の性能を発揮します。
+この設定であれば HD は 30 fps, FHD では 15 fps 程度の性能を発揮します。

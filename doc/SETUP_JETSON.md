@@ -55,7 +55,7 @@ Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 
 
 > v4l2-ctl --set-ctrl=exposure_auto=1
 
-を実行してカメラの設定を変更してください。 4K 30fps が出力可能な設定は下記のとおりです
+を実行してカメラの設定を変更してください。 4K 30 fps が出力可能な設定は下記のとおりです
 
 ```console
 $ v4l2-ctl --list-ctrls
@@ -112,7 +112,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 
 コマンド例の構成は以下のようになっています。
 
-- ./momo ~ sora までは Momo に対して行うパラメータになっています。
+- ./momo ~ sora までは Momo に対して行うパラメータになっています
   - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
   - `--framerate 30` は フレームレートを 30 に設定しています
   - `--resolution 4K` は解像度を 4K に設定しています
@@ -141,6 +141,6 @@ Sora Labo を利用している場合はリモート統計機能を利用する�
 
 [![Image from Gyazo](https://i.gyazo.com/314e5ef5cc6ad4f9ad8583fada720809.png)](https://gyazo.com/314e5ef5cc6ad4f9ad8583fada720809)
 
-### それでも 30fps がでない場合
+### それでも 30 fps がでない場合
 
-もう一度 `4K@30 を出すためにやること` を確認してみてください。
+もう一度 `4K@30fps を出すためにやること` を確認してみてください。

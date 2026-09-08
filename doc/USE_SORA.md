@@ -20,7 +20,7 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
 - Sora モードのオプションである --metadata を利用し生成したアクセストークンを `access_token` で指定します
   - Sora Labo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
   - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
-  - ここではアクセストークンを `xyz` とします。
+  - ここではアクセストークンを `xyz` とします
 
 ```bash
 ./momo --no-audio-device \

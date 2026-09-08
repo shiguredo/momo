@@ -1,4 +1,4 @@
-# Ayame モードを 利用して Momo を動かしてみる
+# Ayame モードを利用して Momo を動かしてみる
 
 Ayame は時雨堂が開発し OSS として公開している、 WebRTC シグナリングサーバです。
 
@@ -36,7 +36,7 @@ Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ
 例えば GitHub ユーザー名が `shiguredo` の場合は `shiguredo@open-momo` となります。
 
 - ルーム ID に `GitHub ユーザー名` + `@` を先頭に指定する必要があります
-  - ここでは GitHub ユーザー名を `shiguredo` として、 `shiguredo@open-momo` をルーム ID としています。
+  - ここでは GitHub ユーザー名を `shiguredo` として、 `shiguredo@open-momo` をルーム ID としています
 - シグナリングキーを `--signaling-key` にて指定する必要があります
   - ここではシグナリングキーを `xyz` としています
 
@@ -56,7 +56,7 @@ Ayame SDK のオンラインサンプルを利用します。 URL の引数に�
 
 ## 送受信方向の制御
 
-Ayame モードでは `--direction` オプションを使用して、映像・音声の送受信方向を制御できます。
+Ayame モードでは `--direction` オプションを使用して、映像 / 音声の送受信方向を制御できます。
 
 ### 利用可能な値
 
@@ -66,7 +66,7 @@ Ayame モードでは `--direction` オプションを使用して、映像・�
 
 ### 送信のみを行う場合
 
-配信用途などで、映像・音声を送信のみ行いたい場合は `--direction sendonly` を指定します。
+配信用途などで、映像 / 音声を送信のみ行いたい場合は `--direction sendonly` を指定します。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction sendonly
@@ -74,7 +74,7 @@ Ayame モードでは `--direction` オプションを使用して、映像・�
 
 ### 受信のみを行う場合
 
-視聴用途などで、映像・音声を受信のみ行いたい場合は `--direction recvonly` を指定します。
+視聴用途などで、映像 / 音声を受信のみ行いたい場合は `--direction recvonly` を指定します。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction recvonly

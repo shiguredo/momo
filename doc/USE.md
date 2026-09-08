@@ -6,7 +6,7 @@
 
 [SETUP_JETSON.md](SETUP_JETSON.md) をお読みください。
 
-### Raspberry Pi で Momo を 準備する
+### Raspberry Pi で Momo を準備する
 
 [SETUP_RASPBERRY_PI.md](SETUP_RASPBERRY_PI.md) をお読みください。
 
@@ -48,7 +48,7 @@ macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` をお読みく�
 
 [USE_P2P.md](USE_P2P.md) をお読みください。
 
-### Ayame モードを 利用して Momo を動かしてみる
+### Ayame モードを利用して Momo を動かしてみる
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
@@ -56,7 +56,7 @@ Ayame モードでは時雨堂が開発しているオープンソースのシ�
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
-### Sora モードを 利用して Momo を動かしてみる
+### Sora モードを利用して Momo を動かしてみる
 
 Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 

@@ -28,7 +28,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 ### Sora モード
 
 - --role sendonly, --role recvonly または --role sendrecv
-  - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用できます。デフォルトは sendonly です。
+  - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用できます。デフォルトは sendonly です
 - --spotlight
   - Sora でスポットライト機能を利用する場合に指定します
 

@@ -17,7 +17,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 ## 4K@30 のカメラを購入する
 
-実際に Jetson で検証して 4K で 30fps の出力動作確認が取れているカメラです。
+実際に Jetson で検証して 4K で 30 fps の出力動作確認が取れているカメラです。
 
 - [高解像度 4 18K カメラモジュール 3840 × 2160 ソニー IMX317 Mjpeg 30fps ミニ Usb ウェブカメラ Web カメラ](https://ja.aliexpress.com/item/32999909513.html)
 
@@ -27,7 +27,7 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 - <https://ja.aliexpress.com/item/33016603918.html>
 - <https://ja.aliexpress.com/item/33012473257.html>
 
-色々 4K で 30fps が出せるカメラを試してきましたが、このカメラが一番安定しています。
+色々 4K で 30 fps が出せるカメラを試してきましたが、このカメラが一番安定しています。
 
 以下が購入の参考になると思います。
 

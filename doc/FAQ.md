@@ -98,9 +98,9 @@ NVENC が利用できるビデオカードは以下で確認してください�
 - Insta360 Link 2 や Link 2C
   - <https://www.insta360.com/jp/product/insta360-link2>
 
-## 120fps のカメラのオススメはありますか？
+## 120 fps のカメラのオススメはありますか？
 
-はい。 elgato FACECAM MK.2 が今のところ 720p で 120fps に対応しています。
+はい。 elgato FACECAM MK.2 が今のところ 720p で 120 fps に対応しています。
 
 <https://www.elgato.com/us/en/p/facecam-mk2>
 
@@ -116,9 +116,9 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 [ラズパイ\+momo で WebRTC で送信するときにマイクの代わりに音声ファイルを使用する \- Qiita](https://qiita.com/tetsu_koba/items/b887c1a0be9f26b795f2)
 
-## macOS で 60fps を利用できますか？
+## macOS で 60 fps を利用できますか？
 
-はい。 macOS では H.264 または H.265 のハードウェアアクセラレーターを利用する場合に 60fps を利用できます。
+はい。 macOS では H.264 または H.265 のハードウェアアクセラレーターを利用する場合に 60 fps を利用できます。
 
 ## Sora モードで DataChannel メッセージングは利用できますか？
 
