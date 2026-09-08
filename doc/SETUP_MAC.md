@@ -8,7 +8,7 @@
 
 動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
 
-## --video-input-device
+## `--video-input-device`
 
 `--video-input-device` は macOS でビデオデバイス（つまりカメラ）を指定する機能です。 1 台の macOS で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれ個々に割り当てたい時に利用できます。
 

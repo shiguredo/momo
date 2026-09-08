@@ -55,7 +55,7 @@ Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用で�
 
 ## Raspberry Pi 向けの追加のオプション
 
-### --force-i420
+### `--force-i420`
 
 `--force-i420` は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。
 USB カメラでは逆にフレームレートが落ちるため使わないでください。
@@ -68,7 +68,7 @@ USB カメラでは逆にフレームレートが落ちるため使わないで�
 
 Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラ（CSI 接続のカメラ）が利用できるようになりました。
 
-### --use-libcamera
+### `--use-libcamera`
 
 `--use-libcamera` は Raspberry Pi 専用カメラを利用するためのオプションです。
 
@@ -78,7 +78,7 @@ Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カ�
 
 ## Raspberry Pi 専用カメラでパフォーマンスが出ない
 
-### --hw-mjpeg-decoder
+### `--hw-mjpeg-decoder`
 
 MJPEG のハードウェアデコーダーの利用を検討してみてください。
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズをします。
@@ -99,7 +99,7 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 
 ## USB カメラでパフォーマンスが出ない
 
-### --hw-mjpeg-decoder
+### `--hw-mjpeg-decoder`
 
 一部の MJPEG に対応した USB カメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
 
@@ -107,7 +107,7 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 ./momo --hw-mjpeg-decoder true --no-audio-device p2p
 ```
 
-### Raspberry Pi で USB カメラ利用時に --hw-mjpeg-decoder を使ってもフレームレートが出ない
+### Raspberry Pi で USB カメラ利用時に `--hw-mjpeg-decoder` を使ってもフレームレートが出ない
 
 USB カメラ利用時にフレームレートを出したい場合は `--hw-mjpeg-decoder` を使わないことをおすすめします。ただし CPU 使用率はあがってしまいます。
 

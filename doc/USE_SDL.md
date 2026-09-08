@@ -16,20 +16,20 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 
 ## SDL コマンド引数
 
-- --use-sdl
+- `--use-sdl`
   - SDL 機能を使う場合は指定します
-- --window-width
+- `--window-width`
   - 映像を表示するウインドウの横幅を指定します
-- --window-height
+- `--window-height`
   - 映像を表示するウインドウの縦幅を指定します
-- --fullscreen
+- `--fullscreen`
   - 映像を表示するウインドウをフルスクリーンにします
 
 ### Sora モード
 
-- --role sendonly, --role recvonly または --role sendrecv
+- `--role sendonly`、`--role recvonly` または `--role sendrecv`
   - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用できます。デフォルトは sendonly です
-- --spotlight
+- `--spotlight`
   - Sora でスポットライト機能を利用する場合に指定します
 
 ## Ayame を利用した 1:1 の双方向

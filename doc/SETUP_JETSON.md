@@ -6,7 +6,7 @@ NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提として
 
 ## 既知の問題
 
-現在 JetPack 6 で --hw-mjpeg-decoder が有効だと H.264 が送信できない問題があります。
+現在 JetPack 6 で `--hw-mjpeg-decoder` が有効だと H.264 が送信できない問題があります。
 JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
 詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
 
@@ -32,7 +32,7 @@ JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指�
 
 ## Jetson 向けの追加のオプション
 
-### --hw-mjpeg-decoder
+### `--hw-mjpeg-decoder`
 
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
