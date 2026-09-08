@@ -39,7 +39,7 @@ OS 側のカメラ一覧を確認する場合は `system_profiler SPCameraDataTy
 
 #### デフォルトデバイス指定
 
-下記は全て同じデフォルトデバイスが選択されます。
+下記はすべて同じデフォルトデバイスが選択されます。
 
 ```console
 ./momo p2p
@@ -56,7 +56,7 @@ OS 側のカメラ一覧を確認する場合は `system_profiler SPCameraDataTy
 
 #### デバイス名で指定
 
-前方一致検索でマッチさせるため、下記は全て同じデバイスが選択されます。
+前方一致検索でマッチさせるため、下記はすべて同じデバイスが選択されます。
 
 ```console
 ./momo --video-input-device FaceTime p2p

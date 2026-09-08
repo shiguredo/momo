@@ -33,7 +33,7 @@ cat < /dev/ttys004
 
 <http://127.0.0.1:8080/html/p2p.html> にアクセスします。
 
-send のところでなにか文字列を送って無事 ttys004 経由で表示される事を確認してください。
+send のところでなにか文字列を送って無事 ttys004 経由で表示されることを確認してください。
 
 次に /dev/ttys004 に書き込んだら
 
@@ -41,7 +41,7 @@ send のところでなにか文字列を送って無事 ttys004 経由で表示
 echo "Hello, world" > /dev/ttys004
 ```
 
-<http://127.0.0.1:8080/html/p2p.html> の JavaScript Console に表示される事を確認してください。
+<http://127.0.0.1:8080/html/p2p.html> の JavaScript Console に表示されることを確認してください。
 
 ## 参考動画
 

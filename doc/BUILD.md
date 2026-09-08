@@ -12,9 +12,9 @@ Windows 向けの Momo をビルドするには、以下の OS とアプリケ�
 
 - 最新バージョンの Windows
 - [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも可)
-  - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
+  - C++ に関するコンポーネントを入れておいてください。特に MSVC, MSBuild は必須です。
 - [Python](https://www.python.org/downloads/)
-  - 最新バージョンをインストールして下さい。
+  - 最新バージョンをインストールしてください。
 
 ## 事前準備 (macOS)
 
@@ -41,7 +41,7 @@ Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下�
 
 ```bash
 # このコマンドは Windows 上でしか動作しません。
-# また、コマンドプロンプトや PowerShell 上で実行して下さい。
+# また、コマンドプロンプトや PowerShell 上で実行してください。
 # Git Bash や Cygwin などのシェル上では動作しません。
 python3 run.py build windows_x86_64
 

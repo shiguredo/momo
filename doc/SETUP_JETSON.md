@@ -87,7 +87,7 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
 
-- Jetson AGX Orin で momo を使うためのセットアップが全て完了している
+- Jetson AGX Orin で momo を使うためのセットアップがすべて完了している
 - 4K@30fps が可能なカメラがセットされている
 - Sora/Sora Labo のアカウントの用意がある
 
