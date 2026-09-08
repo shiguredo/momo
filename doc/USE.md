@@ -52,7 +52,7 @@ macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` をお読みく�
 
 Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
-[Ayame Labo](https://ayame-labo.shiguredo.app/) を利用することで、 Ayame を用意することなく Ayame を試すことが可能です。
+[Ayame Labo](https://ayame-labo.shiguredo.app/) を利用することで、 Ayame を用意することなく Ayame を試せます。
 
 [USE_AYAME.md](USE_AYAME.md) をお読みください。
 
@@ -60,19 +60,19 @@ Ayame モードでは時雨堂が開発しているオープンソースのシ�
 
 Sora モードでは時雨堂が開発、販売している WebRTC SFU Sora を利用します。
 
-[Sora Labo](https://sora-labo.shiguredo.app/) を利用することで、 Sora を無料で試すことが可能です。
+[Sora Labo](https://sora-labo.shiguredo.app/) を利用することで、 Sora を無料で試せます。
 
 [USE_SORA.md](USE_SORA.md) をお読みください。
 
 ### データチャネルを利用したシリアル読み書きを使ってみる
 
-P2P と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信が可能です。
+P2P と Ayame モードではデータチャネルを利用して指定したシリアルポートに対して送受信できます。
 
 [USE_SERIAL.md](USE_SERIAL.md) をお読みください。
 
 ### SDL を利用した受信機能を使ってみる
 
-Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力することが可能になります。
+Momo では SDL (Simple DirectMedia Layer) を利用して音声や映像を出力できるようになります。
 
 [USE_SDL.md](USE_SDL.md) をお読みください。
 

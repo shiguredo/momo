@@ -3,7 +3,7 @@
 ## 概要
 
 Momo は Raspberry Pi OS 64bit 環境で libcamera を利用したカメラ入力をサポートしています。
-libcamera は Linux 向けの新しいカメラスタックで、従来の V4L2 よりも高度なカメラ制御が可能です。
+libcamera は Linux 向けの新しいカメラスタックで、従来の V4L2 よりも高度なカメラ制御ができます。
 
 ## 基本的な使い方
 

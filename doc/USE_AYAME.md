@@ -8,13 +8,13 @@ Ayame は時雨堂が開発し OSS として公開している、 WebRTC シグ�
 
 Ayame を利用してシグナリングサーバを立てるのが面倒な人向けに Ayame Labo を提供しています。
 
-Ayame Labo は時雨堂が提供している Ayame を利用したサービスです。無料で利用可能です。
+Ayame Labo は時雨堂が提供している Ayame を利用したサービスです。無料で利用できます。
 
 <https://ayame-labo.shiguredo.app/>
 
 ### Ayame Labo にサインアップしない場合
 
-Ayame Labo はサインアップせずにシグナリングサーバを利用可能です。
+Ayame Labo はサインアップせずにシグナリングサーバを利用できます。
 
 ここではルーム ID は `open-momo` としておりますが、必ず推測されにくい値に変更してください。
 

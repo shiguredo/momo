@@ -37,7 +37,7 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
 
 ### 双方向配信をしてみる
 
-GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
+GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信ができるようになります。
 
 ```bash
 ./momo --resolution VGA --no-audio-device --use-sdl \

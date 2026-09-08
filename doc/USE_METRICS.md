@@ -2,7 +2,7 @@
 
 ## 概要
 
-Momo には統計情報を HTTP API 経由で JSON 形式で取得することができる MetricsServer が内臓されています。ここでは、MetricsServer の起動方法、レスポンスの形式などについて説明します。
+Momo には統計情報を HTTP API 経由で JSON 形式で取得できる MetricsServer が内臓されています。ここでは、MetricsServer の起動方法、レスポンスの形式などについて説明します。
 
 ## MetricsServer の起動方法
 
@@ -12,7 +12,7 @@ Momo には統計情報を HTTP API 経由で JSON 形式で取得すること�
 ./momo --metrics-port 8081 <mode>
 ```
 
-MetricsServer はデフォルトでループバック (127.0.0.1 で listen) アドレスからのみアクセス可能です。グローバル (0.0.0.0 で listen) アクセスを許可する場合は `--metrics-allow-external-ip` 引数を指定してください。
+MetricsServer はデフォルトでループバック (127.0.0.1 で listen) アドレスからのみアクセスできます。グローバル (0.0.0.0 で listen) アクセスを許可する場合は `--metrics-allow-external-ip` 引数を指定してください。
 
 ## 統計情報 API
 
@@ -24,11 +24,11 @@ MetricsServer はデフォルトでループバック (127.0.0.1 で listen) ア
 ./momo --metrics-port 8081 p2p
 ```
 
-<http://127.0.0.1:8081/metrics> にブラウザ、または `curl` などの HTTP クライアントでアクセスすることで統計情報を取得することができます。
+<http://127.0.0.1:8081/metrics> にブラウザ、または `curl` などの HTTP クライアントでアクセスすることで統計情報を取得できます。
 
 ### 統計情報 JSON の仕様
 
-統計情報は JSON 形式で取得することができます。JSON に含まれる内容は次の通りです。
+統計情報は JSON 形式で取得できます。JSON に含まれる内容は次の通りです。
 
 ```json
 {

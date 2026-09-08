@@ -137,7 +137,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 
 [![Image from Gyazo](https://i.gyazo.com/df47a19994982ed963e84d88adf4f407.png)](https://gyazo.com/df47a19994982ed963e84d88adf4f407)
 
-Sora Labo を利用している場合はリモート統計機能を利用することで確認することができます。
+Sora Labo を利用している場合はリモート統計機能を利用することで確認できます。
 
 [![Image from Gyazo](https://i.gyazo.com/314e5ef5cc6ad4f9ad8583fada720809.png)](https://gyazo.com/314e5ef5cc6ad4f9ad8583fada720809)
 

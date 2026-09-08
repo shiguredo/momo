@@ -39,7 +39,7 @@ Momo 2:
 ./momo --use-sdl ayame  --signaling-url ws://[Momo 1 の IP アドレス]:8080/ws --room-id p2p
 ```
 
-Google STUN を利用したくない場合は`--no-google-stun`をオプションを追加することで可能になります。
+Google STUN を利用したくない場合は`--no-google-stun`をオプションを追加することでできるようになります。
 
 Momo 1:
 

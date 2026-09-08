@@ -1,6 +1,6 @@
 # Momo で VPL を利用したハードウェアエンコーダー / デコーダーを利用する
 
-VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
+VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用できるようになります。
 
 このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
@@ -25,7 +25,7 @@ VPL の詳細については以下のリンクをご確認ください。
 
 ### ドライバーのインストール
 
-Windows 11 では Intel の公式サイトからドライバーをインストールすることで VPL を利用することができます。
+Windows 11 では Intel の公式サイトからドライバーをインストールすることで VPL を利用できます。
 
 - Intel の公式サイトからドライバーをダウンロードします。
   - Intel ドライバーおよびソフトウェアのダウンロード
@@ -35,7 +35,7 @@ Windows 11 では Intel の公式サイトからドライバーをインスト�
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用できます。
 
 PowerShell での実行コマンド例：
 
@@ -137,7 +137,7 @@ vainfo --display drm --device /dev/dri/renderD128
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用できます。
 
 実行コマンド例：
 
@@ -194,7 +194,7 @@ H264:
 ## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用することができます。
+Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用できます。
 
 ## VPL を認識できない場合
 
