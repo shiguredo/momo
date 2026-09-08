@@ -28,7 +28,7 @@ Ayame Labo はサインアップせずにシグナリングサーバを利用で
 .\momo.exe --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
 ```
 
-Ayame SDK のオンラインサンプルは利用できないため、momo どうしでの接続確認を行ってください。
+Ayame SDK のオンラインサンプルは利用できないため、Momo どうしでの接続確認を行ってください。
 
 ### Ayame Labo にサインアップする場合
 

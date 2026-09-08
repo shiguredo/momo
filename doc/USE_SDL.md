@@ -36,7 +36,7 @@ SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信�
 
 - Ayame Labo にサインアップしない場合の例です
 - ルーム ID を推測されにくい値に変更してください
-- momo どうしで 2 接続した場合の例です
+- Momo どうしで 2 接続した場合の例です
 
 ```bash
 ./momo --resolution VGA --no-audio-device --use-sdl ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id momo-sdl-ayame

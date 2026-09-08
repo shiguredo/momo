@@ -87,9 +87,9 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
 
-- Jetson AGX Orin で momo を使うためのセットアップがすべて完了している
+- Jetson AGX Orin で Momo を使うためのセットアップがすべて完了している
 - 4K@30fps が可能なカメラがセットされている
-- Sora/Sora Labo のアカウントの用意がある
+- Sora / Sora Labo のアカウントの用意がある
 
 ### 実行してみる
 
@@ -112,7 +112,7 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 
 コマンド例の構成は以下のようになっています。
 
-- ./momo ~ sora までは momo に対して行うパラメータになっています。
+- ./momo ~ sora までは Momo に対して行うパラメータになっています。
   - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
   - `--framerate 30` は フレームレートを 30 に設定しています
   - `--resolution 4K` は解像度を 4K に設定しています

@@ -27,7 +27,7 @@ Xcode に関しては、最低１回は単体で起動してライセンスに�
 
 ## 事前準備 (Ubuntu)
 
-Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下の OS が必要になります。
+Ubuntu、Raspberry Pi OS、Jetson 向けの Momo をビルドするには、以下の OS が必要になります。
 
 - Ubuntu 22.04 LTS
 

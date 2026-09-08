@@ -134,9 +134,9 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 いいえ。 Momo はレガシー版には対応せず、最新版かつ 64 ビットにのみ対応していきます。
 
-## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
+## Raspberry Pi OS で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
-RaspberryPi の MJPEG デコーダーは一部の MJPEG に対応したカメラでしか機能しません。
+Raspberry Pi の MJPEG デコーダーは一部の MJPEG に対応したカメラでしか機能しません。
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
 
@@ -175,7 +175,7 @@ Intel VPL のセットアップは [VPL.md](VPL.md) を参照してください�
 - `--proxy-username` : プロキシ認証に使用するユーザー名
 - `--proxy-password` : プロキシ認証に使用するパスワード
 
-## Raspberry Pi (Raspberry-Pi-OS) 64 bit で H.264 を利用できますか？
+## Raspberry Pi OS 64 bit で H.264 を利用できますか？
 
 はい。 Release 2023.1.0 以降から利用できます。
 

@@ -44,7 +44,7 @@ macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` をお読みく�
 
 ## 動かす
 
-### p2p モードを利用して Momo を動かしてみる
+### P2P モードを利用して Momo を動かしてみる
 
 [USE_P2P.md](USE_P2P.md) をお読みください。
 
@@ -252,7 +252,7 @@ H265:
     - VideoToolbox [videotoolbox] (default)
 ```
 
-### p2p モードヘルプ
+### P2P モードヘルプ
 
 ```
 $ ./momo p2p --help
@@ -271,7 +271,7 @@ OPTIONS:
                               Port number (default: 8080)
 ```
 
-### ayame モードヘルプ
+### Ayame モードヘルプ
 
 ```
 $ ./momo ayame --help
@@ -299,7 +299,7 @@ OPTIONS:
                               Audio codec type (OPUS, PCMU, PCMA)
 ```
 
-### sora モードヘルプ
+### Sora モードヘルプ
 
 ```
 $ ./momo sora --help

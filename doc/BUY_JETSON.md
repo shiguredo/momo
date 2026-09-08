@@ -4,8 +4,8 @@ NVIDIA Jetson を購入する場合のオススメリンクです。
 
 ## Momo の NVIDIA Jetson シリーズへの対応について
 
-- Jetpack 6 系のみの対応とします
-- Jetpack 5 と 4 系への対応を終了しました
+- JetPack 6 系のみの対応とします
+- JetPack 5 と 4 系への対応を終了しました
   - 優先実装にて対応できます
 - ハードウェアエンコードに対応しない Jetson Orin Nano への対応は行いません
 
