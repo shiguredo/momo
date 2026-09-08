@@ -118,7 +118,7 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 ## macOS で 60fps を利用できますか？
 
-はい。 macOS では H.264 または H.265 のハードウェアアクセラレータを利用する場合に 60fps を利用できます。
+はい。 macOS では H.264 または H.265 のハードウェアアクセラレーターを利用する場合に 60fps を利用できます。
 
 ## Sora モードで DataChannel メッセージングは利用できますか？
 
@@ -136,7 +136,7 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 ## Raspberry Pi (Raspberry-Pi-OS) で `--hw-mjpeg-decoder true` を指定した時に映像が出ません
 
-RaspberryPi の MJPEG デコーダ は一部の MJPEG に対応したカメラでしか機能しません。
+RaspberryPi の MJPEG デコーダーは一部の MJPEG に対応したカメラでしか機能しません。
 
 MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
 

@@ -32,11 +32,11 @@ Ayame SDK のオンラインサンプルは利用できないため、momo ど�
 
 ### Ayame Labo にサインアップする場合
 
-Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザ名を先頭に指定する必要があります。
-例えば GitHub ユーザ名が `shiguredo` の場合は `shiguredo@open-momo` となります。
+Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザー名を先頭に指定する必要があります。
+例えば GitHub ユーザー名が `shiguredo` の場合は `shiguredo@open-momo` となります。
 
-- ルーム ID に `GitHub ユーザ名` + `@` を先頭に指定する必要があります
-  - ここでは GitHub ユーザ名を `shiguredo` として、 `shiguredo@open-momo` をルーム ID としています。
+- ルーム ID に `GitHub ユーザー名` + `@` を先頭に指定する必要があります
+  - ここでは GitHub ユーザー名を `shiguredo` として、 `shiguredo@open-momo` をルーム ID としています。
 - シグナリングキーを `--signaling-key` にて指定する必要があります
   - ここではシグナリングキーを `xyz` としています
 
