@@ -1,12 +1,12 @@
 # Momo で VPL を利用したハードウェアエンコーダー / デコーダーを利用する
 
-VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用することが可能になります。
+VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で HWA を利用できるようになります。
 
 このドキュメントでは VPL を使用するためのセットアップ方法を記載します。
 
-## Intel Media SDK について
+## Intel VPL について
 
-VPL の詳細については以下のリンクをご確認ください。
+VPL の詳細については以下のリンクを確認してください。
 
 - デコーダーとエンコーダーの対応しているコーデックとチップセットの組み合わせ表
   - <https://github.com/intel/media-driver#decodingencoding-features>
@@ -25,17 +25,17 @@ VPL の詳細については以下のリンクをご確認ください。
 
 ### ドライバーのインストール
 
-Windows 11 では Intel の公式サイトからドライバーをインストールすることで VPL を利用することができます。
+Windows 11 では Intel の公式サイトからドライバーをインストールすることで VPL を利用できます。
 
-- Intel の公式サイトからドライバーをダウンロードします。
+- Intel の公式サイトからドライバーをダウンロードします
   - Intel ドライバーおよびソフトウェアのダウンロード
     - <https://www.intel.co.jp/content/www/jp/ja/download-center/home.html>
-- インストーラーに従ってインストールを行います。
-- インストール後に再起動を行います。
+- インストーラーに従ってインストールします
+- インストール後に再起動します
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用できます。
 
 PowerShell での実行コマンド例：
 
@@ -89,7 +89,6 @@ wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --de
 echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble client" | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
 
 sudo apt update
-# Sora Python SDK に必要なライブラリをインストールする
 sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
 # Intel VPL に必要なライブラリをインストールする
 sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
@@ -120,7 +119,6 @@ wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --de
 echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
 
 sudo apt update
-# Sora Python SDK に必要なライブラリをインストールする
 sudo apt -y install git libva2 libdrm2 make build-essential libx11-dev
 # Intel VPL に必要なライブラリをインストールする
 sudo apt -y install intel-media-va-driver-non-free libmfx1 libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo
@@ -139,7 +137,7 @@ vainfo --display drm --device /dev/dri/renderD128
 
 ### VPL が認識できているか確認
 
-Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用可能です。
+Momo を `--video-codec-engines` オプションを指定して実行することで利用可能なエンコーダーとデコーダー一覧が出力されます。 `Encoder` と `Decoder` に `Intel VPL [vpl]` が表示されているコーデックで利用できます。
 
 実行コマンド例：
 
@@ -179,7 +177,7 @@ H264:
 
 ## 動作確認ができたチップセット
 
-現在動作確認ができているチップセットは以下になります。
+現在、次のチップセットで動作を確認できています。
 
 - Intel(R) Core(TM) Ultra 5 Processor 125H
 - Intel(R) Core(TM) i9-9980HK
@@ -195,8 +193,8 @@ H264:
 
 ## エンコーダーが複数ある場合
 
-NVIDIA と共存させた環境の場合 INTEL と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用することができます。
+NVIDIA と共存させた環境の場合 Intel と NVIDIA のエンコーダーが表示されます。
+Momo では NVIDIA を優先して使用していますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用できます。
 
 ## VPL を認識できない場合
 

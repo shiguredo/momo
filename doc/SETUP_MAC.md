@@ -6,9 +6,9 @@
 
 ## 動かしてみる
 
-動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を確認してください。
 
-## --video-input-device
+## `--video-input-device`
 
 `--video-input-device` は macOS でビデオデバイス（つまりカメラ）を指定する機能です。 1 台の macOS で複数の Momo を起動し、ビデオデバイスが複数あり、それぞれ個々に割り当てたい時に利用できます。
 
@@ -18,13 +18,17 @@
 
 ### デバイス一覧を取得する
 
+Momo が認識する映像入力、音声入力、音声出力の一覧は `--list-devices` で確認できます。
+
 ```bash
-system_profiler SPCameraDataType
+./momo --list-devices
 ```
+
+OS 側のカメラ一覧を確認する場合は `system_profiler SPCameraDataType` も利用できます。`--video-input-device` に指定する名前は `--list-devices` の出力に合わせてください。
 
 ### ビデオデバイスの指定方法
 
-ビデオデバイスの指定には、デバイス番号、またはデバイス名を指定することができます。
+ビデオデバイスの指定には、デバイス番号、またはデバイス名を指定できます。
 
 - 指定がない場合は、デバイス番号が 0 のものが選択されます
 - デバイス番号 0 のエイリアスとして、`default` が使えます
@@ -35,7 +39,7 @@ system_profiler SPCameraDataType
 
 #### デフォルトデバイス指定
 
-下記は全て同じデフォルトデバイスが選択されます。
+下記はすべて同じデフォルトデバイスが選択されます。
 
 ```console
 ./momo p2p
@@ -52,10 +56,10 @@ system_profiler SPCameraDataType
 
 #### デバイス名で指定
 
-前方一致検索でマッチさせるため、下記は全て同じデバイスが選択されます。
+前方一致検索でマッチさせるため、下記はすべて同じデバイスが選択されます。
 
 ```console
 ./momo --video-input-device FaceTime p2p
-./momo --video-input-device "FaceTime HD" 1 p2p
+./momo --video-input-device "FaceTime HD" p2p
 ./momo --video-input-device "FaceTime HD Camera (Built-in)" p2p
 ```

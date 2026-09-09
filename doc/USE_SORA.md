@@ -6,7 +6,7 @@ Sora は時雨堂が開発、販売している商用 WebRTC SFU 製品です。
 
 ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.app/) を利用しています。
 
-Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)を確認してください。
 
 ## Sora Labo を使う
 
@@ -15,12 +15,12 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
 ### 片方向配信をしてみる
 
 - チャネル名に `<github-username>_<github-id>_<好きな文字列>` を指定してください
-  - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザ名が shiguredo とした場合は `shiguredo_0_sora` のように指定してください
+  - 好きな文字列が sora 、GitHub ID が 0 、 GitHub ユーザー名が shiguredo とした場合は `shiguredo_0_sora` のように指定してください
   - ここではチャネル ID を `shiguredo_0_sora` とします
-- sora モードのオプションである --metadata を利用し生成したアクセストークンを `access_token` で指定します
-  - SoraLabo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
-  - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
-  - ここではアクセストークンを `xyz` とします。
+- Sora モードのオプションである `--metadata` を利用し生成したアクセストークンを `access_token` で指定します
+  - Sora Labo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
+  - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能です
+  - ここではアクセストークンを `xyz` とします
 
 ```bash
 ./momo --no-audio-device \
@@ -37,7 +37,7 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
 
 ### 双方向配信をしてみる
 
-GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信が可能になります。
+GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受信ができるようになります。
 
 ```bash
 ./momo --resolution VGA --no-audio-device --use-sdl \

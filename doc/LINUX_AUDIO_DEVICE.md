@@ -2,9 +2,9 @@
 
 ## 概要
 
-Linux 環境で momo を使用して音声デバイスにアクセスするには、PipeWire と適切なユーザー権限が必要です。
+Linux 環境で Momo を使用して音声デバイスにアクセスするには、PipeWire と適切なユーザー権限が必要です。
 
-momo は PulseAudio API 経由で音声デバイスにアクセスします。最近の Ubuntu 環境では PipeWire が PulseAudio 互換レイヤー（pipewire-pulse）を提供しているため、PipeWire 経由で動作します。
+Momo は PulseAudio API 経由で音声デバイスにアクセスします。最近の Ubuntu 環境では PipeWire が PulseAudio 互換レイヤー（pipewire-pulse）を提供しているため、PipeWire 経由で動作します。
 
 ## 必要なソフトウェア
 
@@ -45,7 +45,7 @@ systemctl --user status pipewire pipewire-pulse wireplumber
      Active: active (running) since ...
 ```
 
-pipewire-pulse が動作していない場合、momo は音声デバイスにアクセスできません。
+pipewire-pulse が動作していない場合、Momo は音声デバイスにアクセスできません。
 
 ## ユーザー権限の設定
 
@@ -75,7 +75,7 @@ ls -l /dev/snd/
 crw-rw---- 1 root audio 116, 0 Oct 15 10:00 /dev/snd/controlC0
 ```
 
-この例では、`audio` グループに所属するユーザーのみが読み書き可能です。
+この例では、`audio` グループに所属するユーザーのみが読み書きできます。
 
 ### 現在のグループの確認
 
@@ -102,7 +102,7 @@ groups
 
 ## 音声デバイス一覧の確認
 
-### momo でのデバイス確認
+### Momo でのデバイス確認
 
 ```bash
 ./momo --list-devices

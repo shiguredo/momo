@@ -8,16 +8,7 @@
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```bash
-$ tree
-.
-├── html
-│   ├── p2p.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
-```
+解凍後の構成は [BUILD.md のパッケージ解凍後の構成](BUILD.md#パッケージ解凍後の構成) を参照してください。
 
 ## 準備
 
@@ -31,11 +22,11 @@ sudo apt-get upgrade
 sudo apt-get install libdrm2 libva2 libva-drm2
 ```
 
-Intel VPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+Intel VPL を利用したい場合は [VPL.md](VPL.md) を確認してください。
 
 ## 実行権限の付与
 
-ダウンロードした momo の実行ファイルに実行権限を付与してください
+ダウンロードした Momo の実行ファイルに実行権限を付与してください
 
 ```bash
 chmod a+x ./momo
@@ -43,8 +34,8 @@ chmod a+x ./momo
 
 ## 動かしてみる
 
-動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## ビデオデバイスの指定
 
-ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。

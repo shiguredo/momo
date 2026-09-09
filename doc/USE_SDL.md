@@ -4,37 +4,39 @@
 
 ## 概要
 
-SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信した映像を出力することができるようになります。
+SDL (Simple DirectMedia Layer) を利用することで、 Momo 自体が受信した映像を出力できるようになります。
 
 ## 注意
 
-- この機能は ayame と sora モードでのみ利用できます
-  - p2p モードでは p2p.html が HTTPS ではないため getUserMedia を使用できません
-- この機能は Windows または macOS または Linux で利用できます
+- `--use-sdl` は P2P モード、 Ayame モード、 Sora モードのいずれでも利用できます
+- P2P モードの `p2p.html` は HTTP で配信されるため、ブラウザから getUserMedia を利用できません
+  - これは SDL の制限ではありません
+  - Momo 間の双方向で受信映像を表示する手順は [USE_P2P.md](USE_P2P.md) を参照してください
+- この機能は Windows または macOS または Linux の GUI 環境で利用できます
 
 ## SDL コマンド引数
 
-- --use-sdl
+- `--use-sdl`
   - SDL 機能を使う場合は指定します
-- --window-width
+- `--window-width`
   - 映像を表示するウインドウの横幅を指定します
-- --window-height
+- `--window-height`
   - 映像を表示するウインドウの縦幅を指定します
-- --fullscreen
+- `--fullscreen`
   - 映像を表示するウインドウをフルスクリーンにします
 
 ### Sora モード
 
-- --role sendonly, --sora recvonly または --sora sendrecv
-  - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用可能です。デフォルトは sendonly です。
-- --spotlight
+- `--role sendonly`、`--role recvonly` または `--role sendrecv`
+  - Sora でロールを切り替える場合に指定します。送信専用にする場合は sendonly で、受信専用にする場合は recvonly、送受信する場合は sendrecv を指定します。sendrecv はマルチストリームの場合のみ利用できます。デフォルトは sendonly です
+- `--spotlight`
   - Sora でスポットライト機能を利用する場合に指定します
 
 ## Ayame を利用した 1:1 の双方向
 
 - Ayame Labo にサインアップしない場合の例です
-- ルーム ID を推測されにくい値に変更して下さい
-- momo 同士で 2 接続した場合の例です
+- ルーム ID を推測されにくい値に変更してください
+- Momo どうしで 2 接続した場合の例です
 
 ```bash
 ./momo --resolution VGA --no-audio-device --use-sdl ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id momo-sdl-ayame

@@ -8,17 +8,17 @@ git clone https://github.com/shiguredo/momo.git
 
 ## 事前準備 (Windows)
 
-Windows 向けの Momo をビルドするには、以下の OS とアプリケーションが必要になります。
+Windows 向けの Momo をビルドするには、以下の OS とアプリケーションが必要です。
 
 - 最新バージョンの Windows
-- [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも化）
-  - C++ に関するコンポーネントを入れておいて下さい。特に MSVC, MSBuild は必須です。
+- [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも可)
+  - C++ に関するコンポーネントを入れておいてください。特に MSVC, MSBuild は必須です
 - [Python](https://www.python.org/downloads/)
-  - 最新バージョンをインストールして下さい。
+  - 最新バージョンをインストールしてください
 
 ## 事前準備 (macOS)
 
-macOS 向けの Momo をビルドするには、以下の OS とアプリケーションが必要になります。
+macOS 向けの Momo をビルドするには、以下の OS とアプリケーションが必要です。
 
 - 最新バージョンの macOS
 - Xcode
@@ -27,7 +27,7 @@ Xcode に関しては、最低１回は単体で起動してライセンスに�
 
 ## 事前準備 (Ubuntu)
 
-Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下の OS が必要になります。
+Ubuntu、Raspberry Pi OS、Jetson 向けの Momo をビルドするには、以下の OS が必要です。
 
 - Ubuntu 22.04 LTS
 
@@ -41,7 +41,7 @@ Ubuntu、Raspberry OS、Jetson 向けの Momo をビルドするには、以下�
 
 ```bash
 # このコマンドは Windows 上でしか動作しません。
-# また、コマンドプロンプトや PowerShell 上で実行して下さい。
+# また、コマンドプロンプトや PowerShell 上で実行してください。
 # Git Bash や Cygwin などのシェル上では動作しません。
 python3 run.py build windows_x86_64
 
@@ -51,7 +51,7 @@ python3 run.py build macos_arm64
 # このコマンドは Ubuntu 上でしか動作しません
 python3 run.py build raspberry-pi-os_armv8
 python3 run.py build ubuntu-22.04_x86_64
-python3 run.py build ubuntu-22.04_jetson
+python3 run.py build ubuntu-22.04_armv8_jetson
 ```
 
 生成された Momo の実行バイナリは `_build/<target>/release/momo` ディレクトリにあります。
@@ -71,11 +71,11 @@ python3 run.py build windows_x86_64 --package
 
 ```console
 $ tree
-momo
-├── LICENSE
-├── NOTICE
+.
 ├── html
-│   ├── p2p.html
-│   └── webrtc.js
-└── momo
+│   ├── p2p.html
+│   └── webrtc.js
+├── LICENSE
+├── momo
+└── NOTICE
 ```

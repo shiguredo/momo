@@ -1,47 +1,36 @@
 # NVIDIA Jetson シリーズで Momo を使ってみる
 
-もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
-
 NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提としています。
 
 ## 既知の問題
 
-現在 Jetpack 6 で --hw-mjpeg-decoder が有効だと H.264 が送信できない問題があります。
-Jetson 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
-詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
+現在 JetPack 6 で `--hw-mjpeg-decoder` が有効だと H.264 が送信できない問題があります。
+JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
+詳細については https://github.com/shiguredo/momo/issues/355 を確認してください。
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
 <https://github.com/shiguredo/momo/releases> にて最新版のバイナリをダウンロードしてください。
 
 - `momo-<version>_ubuntu-22.04_armv8_jetson.tar.gz`
-  - Jetson AGX Orin または Jetson NX Orin
+  - Jetson AGX Orin または Jetson Orin NX
   - JetPack 6 の最新版に対応
 
 ## ダウンロードしたパッケージ、解凍後の構成
 
-```console
-$ tree
-.
-├── html
-│   ├── p2p.html
-│   └── webrtc.js
-├── LICENSE
-├── momo
-└── NOTICE
-```
+解凍後の構成は [BUILD.md のパッケージ解凍後の構成](BUILD.md#パッケージ解凍後の構成) を参照してください。
 
 ## 動かしてみる
 
-動かし方について、まずは [USE_P2P.md](USE_P2P.md) をご確認ください。
+動かし方について、まずは [USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## ビデオデバイスの指定
 
-ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。
 
 ## Jetson 向けの追加のオプション
 
-### --hw-mjpeg-decoder
+### `--hw-mjpeg-decoder`
 
 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と USB カメラ用の場合 MJPEG をハードウェアデコードします。
 Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 ハードウェアデコードに対応していないコーデックを利用したい場合は `--hw-mjpeg-decoder=false` を指定してください。
@@ -60,11 +49,11 @@ Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 
 
 一番多いのは暗い場所で利用しているパターンです。カメラが自動的に露光時間を伸ばすためフレームレートが下がります。部屋を明るくする。もしくはカメラの設定変更が可能な場合はフレームレート優先設定に変更してください。
 
-### [IMX317 を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) をご利用の場合
+### [IMX317 を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) を利用する場合
 
 > v4l2-ctl --set-ctrl=exposure_auto=1
 
-を実行してカメラの設定を変更してください。 4K 30fps が出力可能な設定は下記のとおりです
+を実行してカメラの設定を変更してください。 4K 30 fps が出力可能な設定は下記のとおりです
 
 ```console
 $ v4l2-ctl --list-ctrls
@@ -96,15 +85,15 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 4K@30fps のコマンドを実行する前に準備が完了しているか事前に確認をします。
 
-- Jetson AGX Orin で momo を使うためのセットアップが全て完了している
+- Jetson AGX Orin で Momo を使うためのセットアップがすべて完了している
 - 4K@30fps が可能なカメラがセットされている
-- Sora/Sora Labo のアカウントの用意がある
+- Sora / Sora Labo のアカウントの用意がある
 
 ### 実行してみる
 
-ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.jp/) を利用しています。
+ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.app/) を利用しています。
 
-Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)を確認してください。
 
 コマンド例を以下に記載します。
 
@@ -119,21 +108,21 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     --metadata '{"access_token": "xyz"}'
 ```
 
-コマンド例の構成は以下のようになっています。
+各オプションの意味は次のとおりです。
 
-- ./momo ~ sora までは momo に対して行うパラメータになっています。
+- ./momo ~ sora までは Momo 向けのオプションです
   - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
   - `--framerate 30` は フレームレートを 30 に設定しています
   - `--resolution 4K` は解像度を 4K に設定しています
   - `--log-level 2` は error と warning のログを出力するように設定しています
   - `sora` は Sora モードを利用するように設定しています
-- `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
+- `sora` 以降 2 行目からは Sora との接続のためのオプションです
   - `wss://canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
   - `shiguredo_0_sora` はチャネル ID を設定しています
   - `--video true` は Sora への映像送信を有効に設定しています
   - `--audio true` は Sora への音声送信を有効に設定しています
   - `--video-codec-type VP8` はコーデックを VP8 に設定しています
-  - `--video-bit-rate 15000` はビデオビットレートを 1.5Mbps で設定しています
+  - `--video-bit-rate 15000` はビデオビットレートを 15 Mbps で設定しています
   - `--auto` は Sora との自動接続を有効に設定しています
   - `--role sendonly` は送信時の役割を送信のみで設定しています
   - `--metadata '{"access_token": "xyz"}'` は Sora Labo のアクセストークンをメタデータに設定しています
@@ -146,10 +135,10 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
 
 [![Image from Gyazo](https://i.gyazo.com/df47a19994982ed963e84d88adf4f407.png)](https://gyazo.com/df47a19994982ed963e84d88adf4f407)
 
-Sora Labo を利用している場合はリモート統計機能を利用することで確認することができます。
+Sora Labo を利用している場合はリモート統計機能を利用することで確認できます。
 
 [![Image from Gyazo](https://i.gyazo.com/314e5ef5cc6ad4f9ad8583fada720809.png)](https://gyazo.com/314e5ef5cc6ad4f9ad8583fada720809)
 
-### それでも 30fps がでない場合
+### それでも 30 fps がでない場合
 
-もう一度 `4K@30 を出すためにやること` を確認してみてください。
+もう一度 `4K@30fps を出すためにやること` を確認してみてください。
