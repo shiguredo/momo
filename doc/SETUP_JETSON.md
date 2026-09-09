@@ -1,7 +1,5 @@
 # NVIDIA Jetson シリーズで Momo を使ってみる
 
-もし Jetson シリーズを購入する場合は [BUY_JETSON.md](BUY_JETSON.md) を参考にしてください。
-
 NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提としています。
 
 ## 既知の問題
