@@ -2,7 +2,7 @@
 
 ## 注意
 
-Raspberry Pi OS のレガシー版には対応しておりません。最新版の Raspberry Pi OS (64 bit) を利用してください
+Raspberry Pi OS のレガシー版には対応していません。最新版の Raspberry Pi OS (64 bit) を利用してください
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
@@ -47,11 +47,11 @@ Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用で�
 
 ## 使ってみる
 
-[USE_P2P.md](USE_P2P.md) をご確認ください。
+[USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## ビデオデバイスの指定
 
-ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。
 
 ## Raspberry Pi 向けの追加のオプション
 
@@ -95,7 +95,7 @@ Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` 
 ./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true p2p
 ```
 
-がリアルタイムでの最高解像度設定となります。
+がリアルタイムでの最高解像度設定です。
 
 ## USB カメラでパフォーマンスが出ない
 
@@ -113,7 +113,7 @@ USB カメラ利用時にフレームレートを出したい場合は `--hw-mjp
 
 CPU 使用率を抑えつつフレームレートを出したい場合は、`/boot/firmware/config.txt` の末尾に下記を追記して `--hw-mjpeg-decoder` を指定することで改善することがあります。
 
-bookworm より前のバージョンをご利用の場合は `/boot/config.txt` に追記してください。
+bookworm より前のバージョンを利用する場合は `/boot/config.txt` に追記してください。
 
 ```text
 gpu_mem=256

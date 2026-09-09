@@ -6,7 +6,7 @@ VPL を利用して Intel Quick Sync Video の HWA 機能を使った Momo で H
 
 ## Intel VPL について
 
-VPL の詳細については以下のリンクをご確認ください。
+VPL の詳細については以下のリンクを確認してください。
 
 - デコーダーとエンコーダーの対応しているコーデックとチップセットの組み合わせ表
   - <https://github.com/intel/media-driver#decodingencoding-features>
@@ -30,8 +30,8 @@ Windows 11 では Intel の公式サイトからドライバーをインスト�
 - Intel の公式サイトからドライバーをダウンロードします
   - Intel ドライバーおよびソフトウェアのダウンロード
     - <https://www.intel.co.jp/content/www/jp/ja/download-center/home.html>
-- インストーラーに従ってインストールを行います
-- インストール後に再起動を行います
+- インストーラーに従ってインストールします
+- インストール後に再起動します
 
 ### VPL が認識できているか確認
 
@@ -177,7 +177,7 @@ H264:
 
 ## 動作確認ができたチップセット
 
-現在動作確認ができているチップセットは以下になります。
+現在、次のチップセットで動作を確認できています。
 
 - Intel(R) Core(TM) Ultra 5 Processor 125H
 - Intel(R) Core(TM) i9-9980HK
@@ -194,7 +194,7 @@ H264:
 ## エンコーダーが複数ある場合
 
 NVIDIA と共存させた環境の場合 Intel と NVIDIA のエンコーダーが表示されます。
-Momo では NVIDIA を優先して使用するようになっていますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用できます。
+Momo では NVIDIA を優先して使用していますが `--h264-encoder` オプションを使用して `vpl` を指定することで Intel VPL を使用できます。
 
 ## VPL を認識できない場合
 

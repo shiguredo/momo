@@ -8,7 +8,7 @@ git clone https://github.com/shiguredo/momo.git
 
 ## 事前準備 (Windows)
 
-Windows 向けの Momo をビルドするには、以下の OS とアプリケーションが必要になります。
+Windows 向けの Momo をビルドするには、以下の OS とアプリケーションが必要です。
 
 - 最新バージョンの Windows
 - [Visual Studio 2022](https://visualstudio.microsoft.com/ja/downloads/) (どのエディションでも可)
@@ -18,7 +18,7 @@ Windows 向けの Momo をビルドするには、以下の OS とアプリケ�
 
 ## 事前準備 (macOS)
 
-macOS 向けの Momo をビルドするには、以下の OS とアプリケーションが必要になります。
+macOS 向けの Momo をビルドするには、以下の OS とアプリケーションが必要です。
 
 - 最新バージョンの macOS
 - Xcode
@@ -27,7 +27,7 @@ Xcode に関しては、最低１回は単体で起動してライセンスに�
 
 ## 事前準備 (Ubuntu)
 
-Ubuntu、Raspberry Pi OS、Jetson 向けの Momo をビルドするには、以下の OS が必要になります。
+Ubuntu、Raspberry Pi OS、Jetson 向けの Momo をビルドするには、以下の OS が必要です。
 
 - Ubuntu 22.04 LTS
 

@@ -22,7 +22,7 @@ sudo apt-get upgrade
 sudo apt-get install libdrm2 libva2 libva-drm2
 ```
 
-Intel VPL を利用したい場合は [VPL.md](VPL.md) を御覧ください。
+Intel VPL を利用したい場合は [VPL.md](VPL.md) を確認してください。
 
 ## 実行権限の付与
 
@@ -34,8 +34,8 @@ chmod a+x ./momo
 
 ## 動かしてみる
 
-動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## ビデオデバイスの指定
 
-ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。

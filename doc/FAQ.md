@@ -25,7 +25,7 @@
 
 ## H.265 は利用できますか？
 
-はい。 H.265 はハードウェアアクセラレーターが必須になります。
+はい。 H.265 はハードウェアアクセラレーターが必須です。
 
 - Linux と Windows では NVIDIA GPU、または Intel GPU (内蔵でも可) が必要
 - macOS では Apple VideoToolbox を利用
@@ -128,7 +128,7 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 はい。 Momo は Raspberry Pi Camera を利用できます。 `--libcamera-control` にも対応しているため、オートフォーカスの設定なども利用できます。
 
-詳細は [LIBCAMERA.md](LIBCAMERA.md) をご確認ください。
+詳細は [LIBCAMERA.md](LIBCAMERA.md) を確認してください。
 
 ## Raspberry Pi OS のレガシー版には対応していますか？
 
@@ -138,7 +138,7 @@ NVENC が利用できるビデオカードは以下で確認してください�
 
 Raspberry Pi の MJPEG デコーダーは一部の MJPEG に対応したカメラでしか機能しません。
 
-MJPEG に対応した CSI カメラや USB カメラをご用意いただくか、 `--hw-mjpeg-decoder false` にしてご利用ください。
+MJPEG に対応した CSI カメラや USB カメラを用意するか、 `--hw-mjpeg-decoder false` にして利用してください。
 
 ## macOS arm64 から H.264 の FHD でスクリーンキャプチャを配信したい
 
@@ -201,7 +201,7 @@ Jetson で Momo を実行すると `Capture Plane:Error in VIDIOC_S_FMT: Invalid
 
 Momo はハードウェアデコードを優先して使用するようになっており、AV1 のハードウェアデコードに対応しているのは Jetson Orin のみです。
 
-Jetson Orin 以外の Jetson をご利用の場合は `--av1-decoder` オプションで `software` を指定してください。
+Jetson Orin 以外の Jetson を利用する場合は `--av1-decoder` オプションで `software` を指定してください。
 
 ## Raspberry Pi カメラモジュール V3 は利用できますか？
 

@@ -59,4 +59,4 @@ Momo 2:
 
 うまく接続できたら、次は Ayame を利用して動かしてみてください。
 
-Ayame を利用する場合は [USE_AYAME.md](USE_AYAME.md) をご確認ください。
+Ayame を利用する場合は [USE_AYAME.md](USE_AYAME.md) を確認してください。

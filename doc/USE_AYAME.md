@@ -16,7 +16,7 @@ Ayame Labo は時雨堂が提供している Ayame を利用したサービス�
 
 Ayame Labo はサインアップせずにシグナリングサーバを利用できます。
 
-ここではルーム ID は `open-momo` としておりますが、必ず推測されにくい値に変更してください。
+ここではルーム ID は `open-momo` としていますが、必ず推測されにくい値に変更してください。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo
@@ -33,7 +33,7 @@ Ayame SDK のオンラインサンプルは利用できないため、Momo ど�
 ### Ayame Labo にサインアップする場合
 
 Ayame Labo にサインアップした場合はルーム ID に GitHub ユーザー名を先頭に指定する必要があります。
-例えば GitHub ユーザー名が `shiguredo` の場合は `shiguredo@open-momo` となります。
+例えば GitHub ユーザー名が `shiguredo` の場合は `shiguredo@open-momo` です。
 
 - ルーム ID に `GitHub ユーザー名` + `@` を先頭に指定する必要があります
   - ここでは GitHub ユーザー名を `shiguredo` として、 `shiguredo@open-momo` をルーム ID としています
@@ -60,29 +60,29 @@ Ayame モードでは `--direction` オプションを使用して、映像 / �
 
 ### 利用可能な値
 
-- `sendrecv` - 送受信両方を行う（デフォルト）
-- `sendonly` - 送信のみを行う
-- `recvonly` - 受信のみを行う
+- `sendrecv` - 送受信する（デフォルト）
+- `sendonly` - 送信専用
+- `recvonly` - 受信専用
 
-### 送信のみを行う場合
+### 送信する場合
 
-配信用途などで、映像 / 音声を送信のみ行いたい場合は `--direction sendonly` を指定します。
+配信用途などで、映像 / 音声を送信したい場合は `--direction sendonly` を指定します。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction sendonly
 ```
 
-### 受信のみを行う場合
+### 受信する場合
 
-視聴用途などで、映像 / 音声を受信のみ行いたい場合は `--direction recvonly` を指定します。
+視聴用途などで、映像 / 音声を受信したい場合は `--direction recvonly` を指定します。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction recvonly
 ```
 
-### 送受信両方を行う場合
+### 送受信する場合
 
-双方向通信を行う場合は `--direction sendrecv` を指定するか、オプションを省略します。
+双方向通信する場合は `--direction sendrecv` を指定するか、オプションを省略します。
 
 ```bash
 ./momo --no-audio-device ayame --signaling-url wss://ayame-labo.shiguredo.app/signaling --room-id open-momo --direction sendrecv

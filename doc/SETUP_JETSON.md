@@ -8,7 +8,7 @@ NVIDIA Jetson シリーズでは JetPack 6.0.0 のみの利用を前提として
 
 現在 JetPack 6 で `--hw-mjpeg-decoder` が有効だと H.264 が送信できない問題があります。
 JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指定してください。
-詳細については https://github.com/shiguredo/momo/issues/355 をご確認ください。
+詳細については https://github.com/shiguredo/momo/issues/355 を確認してください。
 
 ## Jetson シリーズ向けのバイナリは以下にて提供しています
 
@@ -24,11 +24,11 @@ JetPack 6 で H.264 を送信する場合は `--hw-mjpeg-decoder=false` を指�
 
 ## 動かしてみる
 
-動かし方について、まずは [USE_P2P.md](USE_P2P.md) をご確認ください。
+動かし方について、まずは [USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## ビデオデバイスの指定
 
-ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) をご確認ください。
+ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。
 
 ## Jetson 向けの追加のオプション
 
@@ -51,7 +51,7 @@ Jetson シリーズではデフォルトで `--hw-mjpeg-decoder=true` です。 
 
 一番多いのは暗い場所で利用しているパターンです。カメラが自動的に露光時間を伸ばすためフレームレートが下がります。部屋を明るくする。もしくはカメラの設定変更が可能な場合はフレームレート優先設定に変更してください。
 
-### [IMX317 を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) をご利用の場合
+### [IMX317 を搭載した推奨カメラ](https://ja.aliexpress.com/item/32999909513.html) を利用する場合
 
 > v4l2-ctl --set-ctrl=exposure_auto=1
 
@@ -95,7 +95,7 @@ error 5 getting ext_ctrl Zoom, Absolute
 
 ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.app/) を利用しています。
 
-Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)を確認してください。
 
 コマンド例を以下に記載します。
 
@@ -110,15 +110,15 @@ $ ./momo --hw-mjpeg-decoder true --framerate 30 --resolution 4K --log-level 2 so
     --metadata '{"access_token": "xyz"}'
 ```
 
-コマンド例の構成は以下のようになっています。
+各オプションの意味は次のとおりです。
 
-- ./momo ~ sora までは Momo に対して行うパラメータになっています
+- ./momo ~ sora までは Momo 向けのオプションです
   - `--hw-mjpeg-decoder true` は Hardware Acceleration を有効に設定しています
   - `--framerate 30` は フレームレートを 30 に設定しています
   - `--resolution 4K` は解像度を 4K に設定しています
   - `--log-level 2` は error と warning のログを出力するように設定しています
   - `sora` は Sora モードを利用するように設定しています
-- `sora` 以降 2 行目からは Sora との接続のためのパラメータになっています
+- `sora` 以降 2 行目からは Sora との接続のためのオプションです
   - `wss://canary.sora-labo.shiguredo.app/signaling` はシグナリング URL の設定をしています
   - `shiguredo_0_sora` はチャネル ID を設定しています
   - `--video true` は Sora への映像送信を有効に設定しています

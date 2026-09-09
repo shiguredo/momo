@@ -6,7 +6,7 @@
 
 ## 動かしてみる
 
-動かし方については [USE_P2P.md](USE_P2P.md) を御覧ください。
+動かし方については [USE_P2P.md](USE_P2P.md) を確認してください。
 
 ## `--video-input-device`
 

@@ -6,7 +6,7 @@ Sora は時雨堂が開発、販売している商用 WebRTC SFU 製品です。
 
 ここでは利用申請することで法人などで無料で検証可能な [Sora Labo](https://sora-labo.shiguredo.app/) を利用しています。
 
-Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)をご確認ください。
+Sora Labo の利用申請や使用方法については [Sora Labo のドキュメント](https://github.com/shiguredo/sora-labo-doc)を確認してください。
 
 ## Sora Labo を使う
 
@@ -19,7 +19,7 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
   - ここではチャネル ID を `shiguredo_0_sora` とします
 - Sora モードのオプションである `--metadata` を利用し生成したアクセストークンを `access_token` で指定します
   - Sora Labo Home のアクセストークン生成にて先程の `<チャネル名>` を入力してアクセストークンを生成してください
-  - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能になります
+  - この指定は商用の Sora を利用する場合は不要です。Sora Labo 専用の機能です
   - ここではアクセストークンを `xyz` とします
 
 ```bash
