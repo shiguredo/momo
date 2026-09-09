@@ -92,7 +92,7 @@ FAQ に関しては [FAQ.md](FAQ.md) をお読みください。
 
 ```
 $ ./momo --version
-WebRTC Native Client Momo 2026.1.0-canary.1 (3d7f740d)
+WebRTC Native Client Momo 2026.1.0 (3d7f740d)
 
 WebRTC: Shiguredo-Build M150.7871@{#3} (150.7871.3.0 1f975dfd)
 Environment: [arm64] macOS Version 26.5.2 (Build 25F84)
