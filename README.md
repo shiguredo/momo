@@ -52,6 +52,12 @@ Momo は Momo 自体がシグナリングサーバーを持っているため、
 
 Momo は WebRTC Signaling サーバーである Ayame に対応したモードがあり、 Momo 同士での利用もできます。
 
+### Sora モード
+
+[WebRTC SFU Sora](https://sora.shiguredo.jp/)
+
+Momo は時雨堂が開発、販売している WebRTC SFU Sora に対応したモードがあります。
+
 ### Raspberry Pi の libcamera に対応
 
 [raspberrypi/libcamera](https://github.com/raspberrypi/libcamera) に対応しています。
