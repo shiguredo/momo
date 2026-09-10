@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -28,6 +29,7 @@ struct SoraClientConfig {
   std::string channel_id;
 
   bool insecure = false;
+  std::optional<std::string> ca_cert;
   bool video = true;
   bool audio = true;
   std::string video_codec_type = "";
