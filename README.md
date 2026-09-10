@@ -202,7 +202,7 @@ limitations under the License.
 
 ## 優先実装
 
-優先実装とは Sora のライセンスを契約頂いているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
+優先実装とは Sora のライセンスを契約しているお客様限定で Momo の実装予定機能を有償にて前倒しで実装することです。
 
 - Windows 版 OSS 化
   - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
