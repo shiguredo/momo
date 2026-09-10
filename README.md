@@ -62,7 +62,7 @@ Momo は時雨堂が開発、販売している WebRTC SFU Sora に対応した�
 
 [raspberrypi/libcamera](https://github.com/raspberrypi/libcamera) に対応しています。
 
-詳細は [LIBCAMERA.md](doc/LIBCAMERA.md) をご確認ください。
+詳細は [LIBCAMERA.md](doc/LIBCAMERA.md) を確認してください。
 
 ### 120 fps 対応
 
@@ -112,7 +112,7 @@ Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出�
 
 Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定できます。
 
-Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
+Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) を確認してください。
 
 ## 動画
 
@@ -123,7 +123,7 @@ Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) を
 OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
 ブラウザやスマートフォン以外からの WebRTC をいろいろな用途で使ってもらえればと思っています。
 
-詳細については下記をご確認ください。
+詳細については下記を確認してください。
 
 [OpenMomo プロジェクト](https://gist.github.com/voluntas/51c67d0d8ce7af9f24655cee4d7dd253)
 
