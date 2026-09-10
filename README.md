@@ -36,7 +36,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 - Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [Jetson JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
+- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [NVIDIA JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 
@@ -149,7 +149,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 - macOS 14 arm64
 - Ubuntu 24.04 x86_64
 - Ubuntu 22.04 x86_64
-- Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
+- Ubuntu 22.04 ARMv8 (JetPack 6)
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
 - Raspberry Pi OS bookworm (64bit)
@@ -223,7 +223,7 @@ limitations under the License.
 - Windows 11 x86_64 での `--audio-input-device` オプション対応
 - Windows 11 x86_64 での `--audio-output-device` オプション対応
 - Windows 11 arm64
-- Ubuntu 20.04 arm64 (NVIDIA Jetson JetPack 5)
+- Ubuntu 20.04 arm64 (JetPack 5)
 
 ## Momo についての電子書籍
 
