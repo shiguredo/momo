@@ -50,7 +50,7 @@ macOS では [SETUP_MAC.md](SETUP_MAC.md) の `--list-devices` をお読みく�
 
 ### Ayame モードを利用して Momo を動かしてみる
 
-Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバ [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
+Ayame モードでは時雨堂が開発しているオープンソースのシグナリングサーバー [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame) を利用します。
 
 [Ayame Labo](https://ayame-labo.shiguredo.app/) を利用することで、 Ayame を用意することなく Ayame を試せます。
 
