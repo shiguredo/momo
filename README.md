@@ -120,7 +120,7 @@ Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) を
 
 ## OpenMomo プロジェクトについて
 
-OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発を行っていくプロジェクトです。
+OpenMomo は WebRTC Native Client Momo をオープンソースとして公開し継続的に開発していくプロジェクトです。
 ブラウザやスマートフォン以外からの WebRTC をいろいろな用途で使ってもらえればと思っています。
 
 詳細については下記を確認してください。
