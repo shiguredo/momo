@@ -244,6 +244,11 @@ void Util::ParseArgs(int argc,
   app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
                "Allow access to Metrics server from external IP");
 
+  app.add_option(
+         "--ca-cert", args.ca_cert,
+         "CA certificate file path for TLS verification (PEM format). "
+         "If specified, only this certificate is used as the trust anchor")
+      ->check(CLI::ExistingFile);
   app.add_option("--client-cert", args.client_cert,
                  "Cert file path for client certification (PEM format)")
       ->check(CLI::ExistingFile);

@@ -2,6 +2,8 @@
 #define RTC_MANAGER_H_
 
 #include <memory>
+#include <optional>
+#include <string>
 
 // WebRTC
 #include <api/environment/environment_factory.h>
@@ -50,6 +52,8 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
 
 struct RTCManagerConfig {
   bool insecure = false;
+  // 空なら OS のシステム CA、指定時はその PEM のみを trust anchor にする
+  std::optional<std::string> ca_cert;
 
   bool no_video_device = false;
   bool no_audio_device = false;

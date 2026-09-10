@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 // Boost
@@ -22,6 +23,7 @@
 
 struct AyameClientConfig {
   bool insecure = false;
+  std::optional<std::string> ca_cert;
   bool no_google_stun = false;
   std::string client_cert;
   std::string client_key;

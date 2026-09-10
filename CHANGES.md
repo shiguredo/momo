@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] TLS の証明書検証を OS のシステム CA に切り替える
+  - ハードコードした ISRG Root X1 と WebRTC 組込みルート (`rtc_base/ssl_roots.h`) を信頼ストアから外す
+  - 未指定時は OS のシステム CA を信頼し、`--ca-cert` 指定時はその PEM のみを trust anchor にする
+  - WSS のホスト名検証 (`X509_check_host` / `X509_check_ip`) は維持する
+  - @voluntas
+
 - [CHANGE] Jetson の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
   - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`jetson-ota-public.asc` / `ubuntu-archive-keyring.gpg`) で検証する
   - `nvidia-jetpack` メタパッケージは sysroot 集合に入れず、`nvidia-l4t-core` / `nvidia-l4t-camera` / `nvidia-l4t-multimedia` / `nvidia-l4t-multimedia-utils` / `nvidia-l4t-jetson-multimedia-api` を個別指定する
