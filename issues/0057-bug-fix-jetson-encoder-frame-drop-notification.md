@@ -3,13 +3,13 @@
 - Created: 2026-09-10
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-jetson-encoder-frame-drop-notification
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 
 ## 目的
 
-libwebrtc は VideoEncoder に対して、フレームをドロップしたときは `EncodedImageCallback::OnFrameDropped()` で通知し、送出する `EncodedImage` に `is_end_of_temporal_unit` を設定することを求めている。この破壊的変更は m149 以降に含まれており、Momo が利用する m150 にも入っている。
+libwebrtc は VideoEncoder に対して、フレームをドロップしたときは `EncodedImageCallback::OnFrameDropped()` で通知し、送出する `EncodedImage` に `is_end_of_temporal_unit` を設定することを求めている。この要件は Momo が利用する m150 に含まれている。
 
-Sora C++ SDK 側では独自エンコーダーの対応が完了しており、Momo も sora-cpp-sdk 2026.2.1 への同期 (`26d5bef7`) で OpenH264 / NvCodec / VPL / V4L2 の対応を取り込み済みである。しかし、sora-cpp-sdk には存在せず Momo 側だけで保守している Jetson エンコーダー (`JetsonVideoEncoder`) だけが対応から漏れている。Jetson でも同じ要求を満たすように修正する。
+Sora C++ SDK 側では独自エンコーダーの対応が完了しており、Momo も sora-cpp-sdk 2026.2.1 への同期 (`26d5bef7`) で OpenH264 / NvCodec / VPL / V4L2 の対応を取り込み済みである。しかし、sora-cpp-sdk の develop には存在せず Momo 側だけで保守している Jetson エンコーダー (`JetsonVideoEncoder`) だけが対応から漏れている。Jetson でも同じ要求を満たすように修正する。
 
 参考:
 
@@ -27,7 +27,7 @@ Sora C++ SDK 側では独自エンコーダーの対応が完了しており、M
 
 ### この状態による影響
 
-- `is_end_of_temporal_unit` が未設定のため、WebRTC がテンポラルユニットの完了を認識できず、エンコード完了後に不要なバッファ解放遅延が起こる可能性がある。将来 libwebrtc がフラグ未設定をエラーとして厳格化する可能性がある
+- `is_end_of_temporal_unit` が未設定のため、WebRTC がテンポラルユニットの完了を判定できず、古いフレーム情報の解放が遅れる可能性がある。将来 libwebrtc がフラグ未設定をエラーとして厳格化する可能性がある
 - ドロップしたフレームが `OnFrameDropped()` で通知されないため、Jetson エンコーダーのフレームドロップが libwebrtc のフレームドロップ統計や品質適応に反映されない
 
 ## 設計方針
@@ -36,9 +36,10 @@ Sora C++ SDK 側では独自エンコーダーの対応が完了しており、M
   - Jetson エンコーダーは H.264 / H.265 / VP8 / VP9 / AV1 のいずれも単一空間レイヤーで運用しており、1 入力 = 1 出力 = 1 テンポラルユニットなので `true` で正しい。NvCodec / VPL / V4L2 と同じ扱いにする
   - 単一ストリーム (SimulcastEncoderAdapter の bypass) ではエンコーダーが設定した値がそのまま使われるため、エンコーダー自身で設定する必要がある
 - `JetsonVideoEncoder::EncodeFinishedCallback()` で、ドロップしたフレームを `FrameParams::timestamp_rtp` から特定できる場合は `OnFrameDropped(rtp_timestamp, 0, true)` を呼ぶ
-  - `timestamp_us` が出力より古いためにキューから破棄された `FrameParams` は、出力が得られなかったフレームを特定できる
-  - `getMetadata()` 失敗時は、一致した `FrameParams` からフレームを特定できる
-  - `frame_params_` が空の場合はフレームを特定できないため通知しない
+  - do-while ループで出力 timestamp より古い `FrameParams` を pop した場合、それらは出力が得られなかったフレームなので、pop したそれぞれについて通知する。pop 直後にキューが空になっても、pop 済みのフレームは通知する
+  - `getMetadata()` 失敗時は、一致した `FrameParams` からフレームを特定できるため通知する
+  - 出力 timestamp より古い `FrameParams` を 1 件も pop しておらず、出力に対応する `FrameParams` も存在しない場合だけ、フレームを特定できないため通知しない
+  - ループを抜けた後に `params->timestamp_us` が出力 timestamp より大きくなる分岐 (出力より新しい `FrameParams` を pop した場合) は本 issue の通知対象外とし、現状の破棄挙動のままとする
 - 参照実装は libwebrtc の `h264_encoder_impl` と `libaom_av1_encoder`、および Sora C++ SDK の HWA エンコーダーの対応とする
 
 ## 完了条件
