@@ -50,7 +50,7 @@ Momo は Momo 自体がシグナリングサーバーを持っているため、
 
 [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame)
 
-Momo は WebRTC Signaling Server Ayame に対応したモードがあり、 Momo 同士での利用もできます。
+Momo は WebRTC Signaling Server Ayame に対応したモードがあり、 Momo どうしでの利用もできます。
 
 ### Sora モード
 
