@@ -23,20 +23,20 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### ハードウェアアクセラレーターへの対応
 
-- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を V4L2 M2M 経由で利用することができます
+- [Raspberry Pi](https://www.raspberrypi.org/) の GPU に積まれているハードウェアアクセラレーター機能を V4L2 M2M 経由で利用できます
   - ハードウェアエンコーダー: H.264
   - ハードウェアデコーダー: H.264
   - Raspberry Pi 5 では H.264 ハードウェアアクセラレーターが搭載されていないため利用できません
-- Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用することができます
+- Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用できます
   - ハードウェアエンコーダー: H.264 / H.265
   - ハードウェアデコーダー: H.264 / H.265
-- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用することができます
+- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用できます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用することが可能です
+- Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用できます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
-- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [NVIDIA JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用することができます
+- [NVIDIA Jetson](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/) に搭載されているハードウェアアクセラレーター機能を [NVIDIA JetPack SDK](https://developer.nvidia.com/embedded/jetpack) 経由で利用できます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 
@@ -44,7 +44,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 Momo は Momo 自体がシグナリングサーバーを持っているため、完全な P2P モードでの利用ができます。
 
-ブラウザから Momo にアクセスするだけで利用することができます。
+ブラウザから Momo にアクセスするだけで利用できます。
 
 ### Ayame モード
 
@@ -78,11 +78,11 @@ Momo は Sora モード利用時にサイマルキャスト（複数画質の同
 
 ### データチャネル経由でのシリアルの読み書き
 
-Momo はデータチャネルを利用しシリアルに直接読み書きが可能です。信頼性より低遅延を優先したい場合の利用を想定しています。
+Momo はデータチャネルを利用しシリアルに直接読み書きできます。信頼性より低遅延を優先したい場合の利用を想定しています。
 
 ### SDL を利用した音声や映像の受信
 
-Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像の受信を行うことができます。
+Momo を GUI 環境で利用した場合、[Simple DirectMedia Layer](https://www.libsdl.org/) を利用して音声や映像を受信できます。
 
 ### H.265 (HEVC) への対応
 
@@ -102,15 +102,15 @@ Momo は Sora モード利用時にクライアント証明書に対応してい
 
 ### OpenH264 の利用
 
-Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードを行うことができます。
+Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードができます。
 
 ### デバイス一覧の取得
 
-Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力、映像入力デバイスの一覧を取得することができます。
+Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力、映像入力デバイスの一覧を取得できます。
 
 ### 音声入出力デバイスの指定
 
-Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定することができます。
+Momo は Linux (Ubuntu / Raspberry Pi OS) と macOS で音声入力、音声出力デバイスを指定できます。
 
 Linux については [doc/LINUX_AUDIO_DEVICE.md](doc/LINUX_AUDIO_DEVICE.md) をご確認ください。
 
@@ -137,7 +137,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 
 ## バイナリ提供について
 
-以下からダウンロードが可能です。
+以下からダウンロードできます。
 
 <https://github.com/shiguredo/momo/releases>
 
