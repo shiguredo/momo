@@ -249,7 +249,7 @@ Discord へお願いします。
 
 ### 有料でのテクニカルサポートについて
 
-WebRTC Native Client Momo に対する有料でのテクニカルサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提となります。
+WebRTC Native Client Momo に対する有料でのテクニカルサポート契約については WebRTC SFU Sora ライセンス契約をしているお客様が前提です。
 
 - Momo のテクニカルサポート
 - OSS 公開前提での Momo への機能追加
