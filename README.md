@@ -144,6 +144,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 ## 動作環境
 
 - Windows 11 x86_64
+- macOS 26 arm64
 - macOS 15 arm64
 - macOS 14 arm64
 - Ubuntu 24.04 x86_64
