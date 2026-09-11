@@ -2,7 +2,7 @@
 
 ## 注意
 
-Raspberry Pi OS のレガシー版には対応していません。最新版の Raspberry Pi OS (64 bit) を利用してください
+Raspberry Pi OS のレガシー版には対応していません。最新版の Raspberry Pi OS (64 bit) を利用してください。
 
 ## Raspberry Pi 向けのバイナリは以下にて提供しています
 
@@ -24,12 +24,23 @@ Raspberry Pi OS のレガシー版には対応していません。最新版の 
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install libnspr4 libnss3
-sudo apt-get install libcamera0.6
 ```
+
+解凍したディレクトリで `ldd ./momo | grep not` を実行し、不足している共有ライブラリを確認してください。不足があれば、対応するパッケージをインストールしてください。
+
+CSI カメラを利用する場合は libcamera が必要です。パッケージに同梱されている `libcamerac.so` が libcamera に依存します。依存する SONAME はリリースごとに変わるため、特定バージョンのパッケージ名を固定しないでください。
+
+例: GitHub Releases の 2025.1.3 (`momo-2025.1.3_raspberry-pi-os_armv8.tar.gz`) では、`libcamerac.so` が `libcamera.so.0.7` と `libcamera-base.so.0.7` に依存します。この場合は次をインストールします。
+
+```bash
+sudo apt-get install libcamera0.7
+```
+
+利用するバイナリが 2025.1.3 でない場合は、そのバイナリで `ldd ./momo | grep not` を実行し、表示されたライブラリに合わせてパッケージを選んでください。
 
 #### Raspberry Pi OS Lite を利用する場合
 
-Raspberry Pi Lite では映像に関するパッケージが入っていないため、`ldd ./momo | grep not` を実行し、不足しているパッケージを確認してください。
+Raspberry Pi OS Lite では映像に関するパッケージが入っていないことがあります。同様に `ldd ./momo | grep not` で不足を確認してください。
 
 下記に実行する一例を示します。
 
@@ -39,11 +50,57 @@ sudo apt-get install libegl1-mesa-dev
 sudo apt-get install libgles2-mesa
 ```
 
-### Raspberry Pi OS で Raspberry Pi 用カメラなどの CSI カメラを利用する場合
+## CSI カメラ (libcamera)
 
-USB カメラを利用する場合、この手順は不要です。
+USB カメラを利用する場合、この節の手順は不要です。
 
-Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用できません。CSI カメラは `--use-libcamera` を指定してください。詳細は [LIBCAMERA.md](LIBCAMERA.md) を参照してください。
+Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用できません。CSI カメラ (Raspberry Pi 専用カメラ) は `--use-libcamera` を指定してください。詳細は [LIBCAMERA.md](LIBCAMERA.md) を確認してください。
+
+```bash
+./momo --use-libcamera --no-audio-device p2p
+```
+
+CSI カメラの性能を上げる場合は `--use-libcamera-native` を検討してください。H.264 かつサイマルキャストが無効のときだけ有効です。制約と使い方は [LIBCAMERA.md](LIBCAMERA.md) を確認してください。
+
+```bash
+./momo --use-libcamera --use-libcamera-native --no-audio-device p2p
+```
+
+`--force-i420` と `--hw-mjpeg-decoder` は V4L2 キャプチャー向けのオプションです。`--use-libcamera` 指定時に `--force-i420` を付けてもキャプチャー経路には効果がありません。`--hw-mjpeg-decoder true` を同時指定しても libcamera の MJPEG ハードウェアデコードや V4L2 リサイズは走らず、ソフトウェアエンコーダーを使わない設定だけが有効になります。CSI カメラの性能改善には使いません。
+
+## USB カメラ (V4L2)
+
+USB カメラは V4L2 キャプチャーを使います。`--use-libcamera` は指定しないでください。
+
+### `--hw-mjpeg-decoder`
+
+Raspberry Pi OS 向けバイナリでは、`--hw-mjpeg-decoder` のデフォルトは `false` です。一部の MJPEG に対応した USB カメラでは、`true` を指定すると MJPEG のハードウェアデコードとハードウェアによるビデオのリサイズを行います。この指定はソフトウェアエンコーダーを使わない設定にもなります。
+
+```bash
+./momo --hw-mjpeg-decoder true --no-audio-device p2p
+```
+
+USB カメラ利用時にフレームレートを出したい場合は `--hw-mjpeg-decoder` を指定しない方法もあります。ただし CPU 使用率は上がります。
+
+CPU 使用率を抑えつつフレームレートを出したい場合は、`/boot/firmware/config.txt` の末尾に下記を追記して `--hw-mjpeg-decoder` を指定することで改善することがあります。
+
+```text
+gpu_mem=256
+force_turbo=1
+avoid_warnings=2
+```
+
+この設定であれば HD は 30 fps、FHD では 15 fps 程度の性能を発揮します。
+
+### `--force-i420`
+
+`--force-i420` は V4L2 キャプチャーでピクセルフォーマットを I420 に固定します。利用できない場合は起動に失敗します。`--use-libcamera` 指定時には効果がありません。
+
+USB カメラではフレームレートが落ちることがあるため、使わないでください。
+
+```bash
+./momo --force-i420 --no-audio-device p2p
+```
 
 ## 使ってみる
 
@@ -52,73 +109,3 @@ Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用で�
 ## ビデオデバイスの指定
 
 ビデオデバイスの指定については [LINUX_VIDEO_DEVICE.md](LINUX_VIDEO_DEVICE.md) を確認してください。
-
-## Raspberry Pi 向けの追加のオプション
-
-### `--force-i420`
-
-`--force-i420` は Raspberry Pi 専用カメラ用では MJPEG を使うとパフォーマンスが落ちるため HD 以上の解像度でも MJPEG にせず強制的に I420 でキャプチャーします。
-USB カメラでは逆にフレームレートが落ちるため使わないでください。
-
-```bash
-./momo --force-i420 --no-audio-device p2p
-```
-
-## Raspberry Pi 専用カメラが利用できない
-
-Momo 2023.1.0 から Raspberry Pi OS (64 bit) でのみ Raspberry Pi 専用カメラ（CSI 接続のカメラ）が利用できるようになりました。
-
-### `--use-libcamera`
-
-`--use-libcamera` は Raspberry Pi 専用カメラを利用するためのオプションです。
-
-```bash
-./momo --use-libcamera --no-audio-device p2p
-```
-
-## Raspberry Pi 専用カメラでパフォーマンスが出ない
-
-### `--hw-mjpeg-decoder`
-
-MJPEG のハードウェアデコーダーの利用を検討してみてください。
-`--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズをします。
-
-```bash
-./momo --hw-mjpeg-decoder true --no-audio-device p2p
-```
-
-### オプションを見直す
-
-Raspberry Pi 用カメラ利用時には `--hw-mjpeg-decoder=true --force-i420` オプションを併用すると CPU 使用率が下がりフレームレートが上がります。例えば、 Raspberry Pi Zero の場合には
-
-```bash
-./momo --resolution=HD --force-i420 --hw-mjpeg-decoder=true p2p
-```
-
-がリアルタイムでの最高解像度設定です。
-
-## USB カメラでパフォーマンスが出ない
-
-### `--hw-mjpeg-decoder`
-
-一部の MJPEG に対応した USB カメラを使用している場合、 `--hw-mjpeg-decoder` は ハードウェアによるビデオのリサイズ と MJPEG をハードウェアデコードします。
-
-```bash
-./momo --hw-mjpeg-decoder true --no-audio-device p2p
-```
-
-### Raspberry Pi で USB カメラ利用時に `--hw-mjpeg-decoder` を使ってもフレームレートが出ない
-
-USB カメラ利用時にフレームレートを出したい場合は `--hw-mjpeg-decoder` を使わないことをおすすめします。ただし CPU 使用率はあがってしまいます。
-
-CPU 使用率を抑えつつフレームレートを出したい場合は、`/boot/firmware/config.txt` の末尾に下記を追記して `--hw-mjpeg-decoder` を指定することで改善することがあります。
-
-bookworm より前のバージョンを利用する場合は `/boot/config.txt` に追記してください。
-
-```text
-gpu_mem=256
-force_turbo=1
-avoid_warnings=2
-```
-
-この設定であれば HD は 30 fps, FHD では 15 fps 程度の性能を発揮します。
