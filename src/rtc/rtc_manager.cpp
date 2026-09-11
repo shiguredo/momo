@@ -349,13 +349,10 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
 
-  // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
-  // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
-  //
-  // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
+  // WebRTC 既定の組込みルートではなく、OS のシステム CA (または --ca-cert) で検証する。
   dependencies.tls_cert_verifier =
       std::unique_ptr<webrtc::SSLCertificateVerifier>(
-          new RTCSSLVerifier(config_.insecure));
+          new RTCSSLVerifier(config_.insecure, config_.ca_cert));
 
   dependencies.allocator.reset(new webrtc::BasicPortAllocator(
       webrtc::CreateEnvironment(), context_->default_network_manager(),

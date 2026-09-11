@@ -3,6 +3,8 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 
 // Boost
 #include <boost/asio/io_context.hpp>
@@ -49,13 +51,15 @@ class Websocket {
             boost::asio::io_context& ioc,
             bool insecure,
             const std::string& client_cert,
-            const std::string& client_key);
+            const std::string& client_key,
+            const std::optional<std::string>& ca_cert);
   // HTTP Proxy + SSL
   Websocket(https_proxy_tag,
             boost::asio::io_context& ioc,
             bool insecure,
             const std::string& client_cert,
             const std::string& client_key,
+            const std::optional<std::string>& ca_cert,
             std::string proxy_url,
             std::string proxy_username,
             std::string proxy_password);
@@ -121,6 +125,7 @@ class Websocket {
   URLParts parts_;
 
   bool insecure_ = false;
+  std::optional<std::string> ca_cert_;
   std::shared_ptr<boost::asio::ssl::context> ssl_ctx_;
 
   boost::asio::strand<websocket_t::executor_type> strand_;

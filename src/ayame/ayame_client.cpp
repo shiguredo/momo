@@ -294,9 +294,9 @@ void AyameClient::Reset() {
   }
 
   if (use_tls) {
-    ws_ = std::make_unique<Websocket>(Websocket::ssl_tag(), ioc_,
-                                      config_.insecure, config_.client_cert,
-                                      config_.client_key);
+    ws_ = std::make_unique<Websocket>(
+        Websocket::ssl_tag(), ioc_, config_.insecure, config_.client_cert,
+        config_.client_key, config_.ca_cert);
   } else {
     ws_ = std::make_unique<Websocket>(ioc_);
   }

@@ -1,7 +1,10 @@
 #include <atomic>
 #include <condition_variable>
 #include <csignal>
+#include <fstream>
 #include <iostream>
+#include <optional>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -69,6 +72,31 @@
 #endif
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
+
+// --ca-cert で指定した PEM ファイルを読み込む。空パスは未指定。
+// 読み込み失敗時は false を返す。
+static bool LoadCaCertPem(const std::string& path,
+                          std::optional<std::string>& ca_cert) {
+  if (path.empty()) {
+    ca_cert = std::nullopt;
+    return true;
+  }
+
+  std::ifstream ifs(path);
+  if (!ifs) {
+    std::cerr << "failed to read --ca-cert file: " << path << std::endl;
+    return false;
+  }
+
+  std::ostringstream oss;
+  oss << ifs.rdbuf();
+  if (!ifs && !ifs.eof()) {
+    std::cerr << "failed to read --ca-cert file: " << path << std::endl;
+    return false;
+  }
+  ca_cert = oss.str();
+  return true;
+}
 
 #if defined(__APPLE__) || defined(__linux__)
 
@@ -290,6 +318,11 @@ int main(int argc, char* argv[]) {
 
   RTCManagerConfig rtcm_config;
   rtcm_config.insecure = args.insecure;
+  std::optional<std::string> ca_cert;
+  if (!LoadCaCertPem(args.ca_cert, ca_cert)) {
+    return 1;
+  }
+  rtcm_config.ca_cert = ca_cert;
 
   rtcm_config.no_video_device = args.no_video_device;
   rtcm_config.no_audio_device = args.no_audio_device;
@@ -397,6 +430,7 @@ int main(int argc, char* argv[]) {
     if (use_sora) {
       SoraClientConfig config;
       config.insecure = args.insecure;
+      config.ca_cert = ca_cert;
       config.signaling_urls = args.sora_signaling_urls;
       config.channel_id = args.sora_channel_id;
       config.video = args.sora_video;
@@ -463,6 +497,7 @@ int main(int argc, char* argv[]) {
     if (use_ayame) {
       AyameClientConfig config;
       config.insecure = args.insecure;
+      config.ca_cert = ca_cert;
       config.no_google_stun = args.no_google_stun;
       config.client_cert = args.client_cert;
       config.client_key = args.client_key;
