@@ -13,7 +13,6 @@ sora-cpp-sdk は 2026.2.0 で既定の信頼ストアを OS のシステム CA �
 
 参考:
 
-- https://github.com/shiguredo/sora-oss-private/issues/2449
 - sora-cpp-sdk 2026.2.0 の `[CHANGE] TLS 検証の信頼ストアを OS のシステム CA に切り替える`
 - sora-cpp-sdk `issues/closed/0035-change-tls-trust-store-system-ca.md` (OS 別実装と CMake の差分)
 
