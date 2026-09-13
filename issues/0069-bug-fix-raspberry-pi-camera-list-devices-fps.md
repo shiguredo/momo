@@ -1,9 +1,9 @@
-# Raspberry Pi Camera で --list-devices に fps が表示されない問題を修正する
+# Raspberry Pi Camera で --list-devices に解像度と fps が表示されない問題を修正する
 
 - Created: 2026-09-11
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-raspberry-pi-camera-list-devices-fps
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-13
 - Reporter: @torikizi
 
 ## 目的
