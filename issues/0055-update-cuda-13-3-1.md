@@ -13,7 +13,7 @@ CUDA を `12.9.1-1` から `13.3.1-1` に上げる。sora-cpp-sdk はすでに 1
 
 - `DEPS` の `CUDA_VERSION` は `12.9.1-1`
 - `buildbase.py` の `install_cuda_windows` は `13.0.1-1` までの URL しか持たない。またコピーするのは `cuda_nvcc` と `cuda_cudart` だけで、CUDA 13 で分離された `cuda_crt`（`crt/host_config.h`）と `libnvvm`（`cicc`）を取り込んでいないため、`DEPS` の値を書き換えるだけでは Windows ビルドが通らない
-- `CMakeLists.txt` の Linux CUDA `COMPILE_OPTIONS` は `--cuda-gpu-arch=sm_60`。CUDA 13 は sm_50 〜 sm_70 をサポートしないため、この arch 指定は使えなくなる
+- `CMakeLists.txt` の Linux CUDA `COMPILE_OPTIONS` は `--cuda-gpu-arch=sm_60`。CUDA 13 は Maxwell / Pascal / Volta（sm_50 〜 sm_72）をサポートしなくなり、最小は Turing（sm_75）であるため、この arch 指定は使えなくなる
 - Ubuntu x86_64 のビルドは clang-20 を使っている（`run.py` の `CMAKE_C_COMPILER` / `CMAKE_CXX_COMPILER` と `build.yml` の `llvm.sh` にハードコード）。sora-cpp-sdk では CUDA 13.3 を clang でコンパイルするために clang 22 が必要だった。Jetson と Raspberry Pi のクロスビルドは webrtc 管理下の clang を使うため影響しない
 - `build.yml` は `setup-cuda-toolkit` に `cuda_version: 12.9.1` を直指定しており、Windows の CUDA キャッシュキーは `.v1` のまま
 - vendored の `src/sora-cpp-sdk/src/cuda_context_cuda.cpp` の `CudaContext::Create()` と `CudaContext::CanCreate()` は、`cuCtxCreate` を `#if CUDA_VERSION >= 13000` で CUDA 12 向け 3 引数版と分岐させている（コメントで「momo は CUDA 12 を使う」と述べている）。`src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp` にも同じ分岐が入っていたが、その唯一の呼び出し元である `ShowEncoderCapability()` は momo で死にコードとして削除済みのため、現在このファイルに `cuCtxCreate` の呼び出しは残っていない
