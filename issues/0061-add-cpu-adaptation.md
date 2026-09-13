@@ -3,7 +3,7 @@
 - Created: 2026-09-10
 - Completed: {YYYY-MM-DD}
 - Branch: feature/add-cpu-adaptation
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-14
 - Reporter: @Hexa
 
 ## 目的
