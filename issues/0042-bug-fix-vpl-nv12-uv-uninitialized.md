@@ -1,7 +1,7 @@
 # VPL デコーダが NV12 の `Data.UV` を設定せず色面が壊れる
 
 - Created: 2026-08-28
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-13
 - Branch: feature/fix-vpl-nv12-uv-uninitialized
 - Polished: {YYYY-MM-DD}
 
@@ -30,4 +30,12 @@ Intel VPL ハードウェアデコーダが NV12 出力を I420 に変換する�
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+polish-issue による照合の結果、報告されたバグは現行実装では存在しない (実測ではなく、oneVPL の一次資料と Intel 公式サンプルとのソース照合で否定)。そのため closed とする。`Polished:` は更新しない。
+
+### 照合結果
+
+- `Data.UV` が未設定という前提は誤り。`src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp` の `VplVideoDecoderImpl::InitVpl()` はサーフェス確保時に `surface.Data.U` を UV プレーン先頭 (`surface_buffer_.data() + i * size + width * height`) に設定しており、`Decode()` の `libyuv::NV12ToI420` に渡す `out_surface->Data.UV` はこの `Data.U` と常に同じ値を返す
+- 根拠は `mfxFrameData` の構造。momo が使用する VPL は `DEPS` の `VPL_VERSION=v2.16.0` で、`buildbase.py` の `install_vpl()` が `https://github.com/intel/libvpl.git` のタグ `v2.16.0` を clone する。その `api/vpl/mfxstructures.h` (356〜368 行付近) では色面ポインタが Y 用・U 用・V 用の 3 つの無名 union になっており、`Data.UV` と `Data.U` は同一ストレージを共有する (`//!< UV channel for UV merged formats.` と `//!< U channel.` が同じ union メンバ)。したがって `Data.U` を設定した時点で `Data.UV` も同じ非 null アドレスを指す
+- Intel 公式のデコードサンプル (`intel/libvpl` の `examples/api1x_core/legacy-decode/src/util.hpp` の `AllocateExternalSystemMemorySurfacePool()`、NV12 ケース) もサーフェスには `Data.Y` / `Data.U` / `Data.V` / `Data.Pitch` のみを設定し、`Data.UV` は設定しない。momo の実装はこの公式パターンと同一であり、`NV12ToI420` が未初期化または null の UV 面を読むことはない
+- 本 issue の設計方針 (サーフェス確保で `Data.UV` を `Data.Y + width * height` に設定する) は、`Data.U` と同じストレージに同じ値を書き込むだけの no-op となり、挙動を変えない。完了条件 3 項目も現行実装で既に満たされている
+- `issues/closed/0013-update-sora-cpp-sdk-sdl3-cli11.md` の finding「VPL `Data.UV` 未設定」は本 issue が引き継いだものであり、重複起票ではない。同 finding の「未解消」判定はソース照合によるもので、本照合で実装上の問題がないことを確認した
