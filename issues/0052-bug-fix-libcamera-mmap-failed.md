@@ -3,7 +3,7 @@
 - Created: 2026-08-28
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-libcamera-mmap-failed
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-13
 
 ## 目的
 
@@ -19,15 +19,16 @@
 
 ## 設計方針
 
-- `mmap` 直後に `MAP_FAILED` ならエラーログを出し、キャプチャ開始を失敗させる。失敗したエントリを `mapped_buffers_` に入れない
-- 途中まで成功した mmap は `munmap` する
+- `mmap` 直後に戻り値が `MAP_FAILED` なら英語のエラーログを出し、失敗したエントリを `mapped_buffers_` に入れず `StartCapture()` を `-1` で失敗させる
+- 途中まで成功した mmap の掃除は `StartCapture()` 内で明示的に `munmap` せず、`ReleaseLibcamera()` に任せる。`StartCapture()` が `-1` を返すと `Create()` が `nullptr` を返してインスタンスが破棄され、`ReleaseLibcamera()` が `mapped_buffers_` を走査して `munmap` する。明示的に `munmap` 後にエントリを残すと二重 `munmap` になるため、どちらか一方に責務を固定する
 - 修正は momo と sora-cpp-sdk の両方に入れ、`update-last-updated.sh` で同期する
 
 ## 完了条件
 
 - `mmap` 失敗で `MAP_FAILED` をフレームデータとして使わない
 - 成功時は従来通りキャプチャできる
-- 失敗時にエラーログが出て開始が失敗する
+- 失敗時に英語のエラーログが出て開始が失敗する
+- 失敗時は途中まで確保した mmap が `ReleaseLibcamera()` で一度だけ解放され、漏れも二重解放もない
 
 ## 解決方法
 
