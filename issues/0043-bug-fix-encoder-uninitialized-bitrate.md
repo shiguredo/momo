@@ -3,7 +3,7 @@
 - Created: 2026-08-28
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-encoder-uninitialized-bitrate
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-13
 
 ## 目的
 
@@ -12,7 +12,7 @@ Jetson と V4L2 のハードウェアエンコーダが、メンバ `configured_
 ## 現状
 
 - `src/sora-cpp-sdk/include/sora/hwenc_jetson/jetson_video_encoder.h` の `configured_bitrate_bps_` は宣言のみで初期化子がない
-- `src/sora-cpp-sdk/src/hwenc_jetson/jetson_video_encoder.cpp` のコンストラクタは `configured_framerate_` だけ初期化し、`SetBitrateBps()` で `configured_bitrate_bps_ == bitrate_bps` なら return する
+- `src/sora-cpp-sdk/src/hwenc_jetson/jetson_video_encoder.cpp` のコンストラクタは `configured_framerate_` などを初期化するが `configured_bitrate_bps_` は含めない。`SetBitrateBps()` は `configured_bitrate_bps_ == bitrate_bps` かつ `configured_framerate_ == framerate_` のとき return する
 - `src/sora-cpp-sdk/include/sora/hwenc_v4l2/v4l2_h264_encoder.h` も同様に初期化子がない
 - `src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_h264_encoder.cpp` のコンストラクタは `configured_framerate_fps_` などを初期化するが `configured_bitrate_bps_` は含めない。`SetBitrateBps()` で同じ比較をする
 - `hwenc_jetson` は momo 独自コードである。`hwenc_v4l2` は sora-cpp-sdk 由来である
