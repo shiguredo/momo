@@ -26,15 +26,15 @@ CUDA を `12.9.1-1` から `13.3.1-1` に上げる。sora-cpp-sdk はすでに 1
 - Ubuntu x86_64 の clang を 20 から 22 に上げる（`run.py` の 2 か所と `build.yml` の `llvm.sh`）
 - `build.yml` の `setup-cuda-toolkit` に渡す `cuda_version` を `13.3.1` に、Windows の CUDA キャッシュキーを `.v2` に上げる
 - vendored の `src/sora-cpp-sdk/src/cuda_context_cuda.cpp` から CUDA 12 向け 3 引数分岐とそのコメントを削除し、sora-cpp-sdk と同じ 4 引数呼び出しに戻す（`nvcodec_video_encoder_cuda.cpp` は `cuCtxCreate` を呼ぶコードが既に削除済みのため変更不要）
-- CUDA 13 で Maxwell / Pascal / Volta が使えなくなることは下位互換のない変更なので、`CHANGES.md` には `[UPDATE]`（CUDA のバージョン）と `[CHANGE]`（Pascal 世代以前のサポート廃止）を分けて記載する。`doc/FAQ.md` の動作確認が取れたビデオカード一覧にも Pascal 世代以前が利用できない旨を注記する
-- CI と `DEPS` のバージョン二重管理の解消は行わず、値の更新のみ行う（一元化は他 issue の範囲）
+- CUDA 13 で Maxwell / Pascal / Volta が使えなくなることは下位互換のない変更なので、`CHANGES.md` には `[UPDATE]`（CUDA のバージョン）と `[CHANGE]`（Turing より前（Maxwell / Pascal / Volta）のサポート廃止）を分けて記載する。`doc/FAQ.md` の動作確認が取れたビデオカード一覧にも Turing より前（Maxwell / Pascal / Volta）の GPU が利用できなくなる旨を注記する
+- CI と `DEPS` のバージョン二重管理の解消は行わず、値の更新のみ行う（一元化は他 issue の範囲）。0041（二重管理の一元化）が先行してマージされた場合は、clang と `setup-cuda-toolkit` のバージョン参照が `DEPS`（`CLANG_VERSION` / `CUDA_VERSION`）起点になっているため、その構造に合わせて値を更新する
 
 ## 完了条件
 
 - `DEPS` の `CUDA_VERSION` が `13.3.1-1` になっている
 - Windows / Ubuntu 22.04 / Ubuntu 24.04 のビルドが CI で通る
 - 自ホストランナーの NVIDIA Video Codec E2E テストが通る（対象 GPU は Turing 以降、CUDA 13 を受け付けるドライバーであることが前提）
-- `CHANGES.md` と `doc/FAQ.md` に Pascal 世代以前のサポート廃止が反映されている
+- `CHANGES.md` と `doc/FAQ.md` に Turing より前（Maxwell / Pascal / Volta）のサポート廃止が反映されている
 
 ## 参考
 
