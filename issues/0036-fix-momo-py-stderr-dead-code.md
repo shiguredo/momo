@@ -1,30 +1,36 @@
-# test/momo.py の stderr 読み取りコードがデッドコードで起動失敗の原因が調査不能
+# test/momo.py の stderr 読み取りデッドコードを削除する
 
 - Created: 2026-08-19
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-momo-py-stderr-dead-code
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-13
 
 ## 目的
 
-`test/momo.py` の `Momo` ラッパーは `subprocess.Popen(cmd, stdout=None, stderr=None, text=True)` で momo を起動するため `self.process.stderr` は常に `None` である。にもかかわらず「stderr を表示してデバッグ」するコードが 3 箇所あり、全て恒常的にスキップされるデッドコードになっている。momo が起動失敗した原因 (引数ミス等) がテスト出力から一切読み取れず、原因調査が著しく困難。これを修正する。
+`test/momo.py` の `Momo` クラスは `subprocess.Popen(cmd, stdout=None, stderr=None, text=True)` で momo を起動するため `self.process.stderr` は常に `None` である。にもかかわらず「stderr を表示してデバッグ」するコードが 3 ブロックあり、全て恒常的にスキップされるデッドコードになっている。コードを見た実装者が「起動失敗時に stderr を自前で表示できる仕組みがある」と誤解する原因になるため、デッドコードを削除して現行設計に合わせる。
 
 ## 現状
 
-- `test/momo.py` (327-332, 688-691, 730-749, 763-767 行) に `self.process.stderr` を読むデッドコードが複数
-- `subprocess.Popen(..., stderr=None)` のため `self.process.stderr` は常に `None`
-- 起動失敗時の stderr ログが取得できない
+- `test/momo.py` の `__enter__` の `subprocess.Popen` は `stdout=None` / `stderr=None` を指定しており、momo の出力は親プロセスへ継承される
+- `_wait_for_startup` 内に `self.process.stderr` を参照する 3 ブロックがある（それぞれ プロセス早期終了時の読み出し、起動待機中 5 秒ごとの `select` / `fcntl` による非ブロッキング読み出し、起動タイムアウト時の読み出し）
+- `stderr=None` のとき `self.process.stderr` は常に `None` のため、いずれのブロックも実行されない
+- なお継承された momo の stdout / stderr は、pytest の既定のキャプチャではテスト失敗時のレポート（Captured stdout / Captured stderr）に含まれ、CI ログから確認できる
 
 ## 設計方針
 
-- `subprocess.Popen` で `stderr=PIPE` を指定し、momo の stderr を収集できるようにする
-- 起動失敗時に stderr 内容をテストログへ出力する
-- デッドコードを削除する
+- `subprocess.Popen` は `stdout=None` / `stderr=None` のまま変更しない
+  - 出力を親プロセスへ継承して CI ログで確認できる方式は 2026-06-16 の「E2E テストの momo プロセス出力を CI ログに表示する」で意図的に導入され、`CHANGES.md` の develop 節にも記載されている
+  - open issue `0002-fix-e2e-test-transient-failure` の再発時対応手順も、「momo の stdout / stderr は CI ログに表示される」ことを前提にしている
+- `stderr=PIPE` による自前収集へは変更しない
+  - 起動完了後は stderr を読み出す主体がなくなり、ログ量によってはパイプバッファが満杯になって momo の書き込みがブロックするリスクがある
+  - 起動失敗時でも継承された stderr は pytest の失敗レポートで確認できるため、収集の利点がない
+- `_wait_for_startup` 内の 3 ブロックと、ブロック内だけで使われる `select` / `fcntl` / `os` のローカル import を削除する
 
 ## 完了条件
 
-- momo 起動失敗時に stderr ログがテスト出力から確認できる
-- デッドコードが削除されている
+- `test/momo.py` に `self.process.stderr` への参照が残っていない
+- `_wait_for_startup` のエラー処理（`RuntimeError` の送出）が損なわれない
+- 既存の E2E テスト（pytest）が通る
 
 ## 解決方法
 
