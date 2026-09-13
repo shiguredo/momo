@@ -3,7 +3,7 @@
 - Created: 2026-08-28
 - Completed: {YYYY-MM-DD}
 - Branch: feature/fix-v4l2-hardcoded-device-path
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-13
 
 ## 目的
 
@@ -19,7 +19,12 @@ Raspberry Pi 向け V4L2 M2M 変換器がエンコーダ / スケーラ / デコ
 ## 設計方針
 
 - デバイスは capabilities (`V4L2_CAP_VIDEO_M2M_MPLANE` 等) と pixelformat で列挙して選ぶ。番号決め打ちをやめる
-- 列挙に失敗したときだけ、現行パスをフォールバックにしてもよい。フォールバックする場合はログに使うパスを出す
+- 変換器ごとの選別規準は入出力方向と pixelformat の組で判定する
+  - エンコーダ: OUTPUT が YUV420、CAPTURE が H264
+  - デコーダ: OUTPUT が H264 または MJPEG、CAPTURE が YUV420
+  - スケーラ: OUTPUT と CAPTURE が YUV420
+  - エンコーダとデコーダはどちらも H264 を扱うため、pixelformat だけでは区別できず、入出力方向の判定が必須である
+- 列挙に成功したが該当する M2M デバイスが見つからない場合、または列挙自体に失敗した場合は、現行パスをフォールバックにしてもよい。フォールバックする場合はログに使うパスを出す
 - 修正は momo と sora-cpp-sdk の両方に入れ、`update-last-updated.sh` で同期する
 
 ## 完了条件
