@@ -3,7 +3,7 @@
 - Created: 2026-08-28
 - Completed: {YYYY-MM-DD}
 - Branch: feature/update-cuda-13-3-1
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-14
 
 ## 目的
 
@@ -16,16 +16,16 @@ CUDA を `12.9.1-1` から `13.3.1-1` に上げる。sora-cpp-sdk はすでに 1
 - `CMakeLists.txt` の Linux CUDA `COMPILE_OPTIONS` は `--cuda-gpu-arch=sm_60`。CUDA 13 は sm_50 〜 sm_70 をサポートしないため、この arch 指定は使えなくなる
 - Ubuntu x86_64 のビルドは clang-20 を使っている（`run.py` の `CMAKE_C_COMPILER` / `CMAKE_CXX_COMPILER` と `build.yml` の `llvm.sh` にハードコード）。sora-cpp-sdk では CUDA 13.3 を clang でコンパイルするために clang 22 が必要だった。Jetson と Raspberry Pi のクロスビルドは webrtc 管理下の clang を使うため影響しない
 - `build.yml` は `setup-cuda-toolkit` に `cuda_version: 12.9.1` を直指定しており、Windows の CUDA キャッシュキーは `.v1` のまま
-- vendored の `src/sora-cpp-sdk/src/cuda_context_cuda.cpp` と `src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp` は、`cuCtxCreate` を `#if CUDA_VERSION >= 13000` で CUDA 12 向け 3 引数版と分岐させている（コメントで「momo は CUDA 12 を使う」と述べている）
+- vendored の `src/sora-cpp-sdk/src/cuda_context_cuda.cpp` の `CudaContext::Create()` と `CudaContext::CanCreate()` は、`cuCtxCreate` を `#if CUDA_VERSION >= 13000` で CUDA 12 向け 3 引数版と分岐させている（コメントで「momo は CUDA 12 を使う」と述べている）。`src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp` にも同じ分岐が入っていたが、その唯一の呼び出し元である `ShowEncoderCapability()` は momo で死にコードとして削除済みのため、現在このファイルに `cuCtxCreate` の呼び出しは残っていない
 
 ## 設計方針
 
 - `DEPS` の `CUDA_VERSION` を `13.3.1-1` にする
-- `buildbase.py` の `install_cuda_windows` に `13.3.1-1` の Windows インストーラー URL を追加し、`cuda_crt` と `libnvvm` をインストール対象に追加する（`13.` 系でこれらのディレクトリが見つからない場合はエラーにする）
+- `buildbase.py` の `install_cuda_windows` に `13.3.1-1` の Windows インストーラー URL を追加し、`cuda_crt` と `libnvvm` をインストール対象に追加する（`13.` 系でこれらのディレクトリが見つからない場合はエラーにする。コピー階層は `89f14ca1` ではなく、後続の `9f9bf83` で修正された現行実装（`cuda_crt/crt`、`libnvvm/nvvm/nvvm`）に合わせる）
 - `CMakeLists.txt` の Linux CUDA `COMPILE_OPTIONS` を `--cuda-gpu-arch=sm_75`（Turing）に変更する
 - Ubuntu x86_64 の clang を 20 から 22 に上げる（`run.py` の 2 か所と `build.yml` の `llvm.sh`）
 - `build.yml` の `setup-cuda-toolkit` に渡す `cuda_version` を `13.3.1` に、Windows の CUDA キャッシュキーを `.v2` に上げる
-- vendored ソースから CUDA 12 向け 3 引数分岐とそのコメントを削除し、sora-cpp-sdk と同じ呼び出しに戻す
+- vendored の `src/sora-cpp-sdk/src/cuda_context_cuda.cpp` から CUDA 12 向け 3 引数分岐とそのコメントを削除し、sora-cpp-sdk と同じ 4 引数呼び出しに戻す（`nvcodec_video_encoder_cuda.cpp` は `cuCtxCreate` を呼ぶコードが既に削除済みのため変更不要）
 - CUDA 13 で Maxwell / Pascal / Volta が使えなくなることは下位互換のない変更なので、`CHANGES.md` には `[UPDATE]`（CUDA のバージョン）と `[CHANGE]`（Pascal 世代以前のサポート廃止）を分けて記載する。`doc/FAQ.md` の動作確認が取れたビデオカード一覧にも Pascal 世代以前が利用できない旨を注記する
 - CI と `DEPS` のバージョン二重管理の解消は行わず、値の更新のみ行う（一元化は他 issue の範囲）
 
@@ -43,6 +43,7 @@ CUDA を `12.9.1-1` から `13.3.1-1` に上げる。sora-cpp-sdk はすでに 1
   - `c5436508` CUDA 13.3 向けに clang 22 と cuda_crt を対応する
   - `9a20d6b7` CUDA 13 の cuCtxCreate_v4 に追従し GPU アーキテクチャを sm_75 に上げる
   - `89f14ca1` Windows で CUDA 13 の libnvvm に分離された cicc をインストール対象に含める
+  - `9f9bf83` `89f14ca1` の libnvvm コピー階層を修正する（インストーラー内は `libnvvm/nvvm/nvvm` と nvvm が二重になっている。`89f14ca1` のまま写すと Windows ビルドが通らない）
 - CUDA 13.3.1 の配信状況（本 issue 作成時に確認済み）
   - NVIDIA リポジトリの `ubuntu2204` / `ubuntu2404` に `cuda-toolkit-13_13.3.1-1_amd64.deb` が存在する
   - `https://developer.download.nvidia.com/compute/cuda/13.3.1/local_installers/cuda_13.3.1_windows.exe` が応答する
