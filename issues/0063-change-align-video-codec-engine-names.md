@@ -3,7 +3,7 @@
 - Created: 2026-09-11
 - Completed: {YYYY-MM-DD}
 - Branch: feature/change-align-video-codec-engine-names
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-14
 - Reporter: @torikizi
 
 ## 目的
@@ -29,7 +29,7 @@ Momo の `--video-codec-engines` と `--*-encoder` / `--*-decoder` で使うビ�
   - Momo `Type::V4L2` (`v4l2`) = Sora C++ SDK `raspi_v4l2m2m`
   - Momo `Type::Software` (`software`) は Sora C++ SDK の `internal` に対応するが、Momo は macOS の `Type::VideoToolbox` を別に持つため一対一ではない
   - Sora C++ SDK の `cisco_openh264` / `amd_amf` に対応する名前を Momo は持たない。Momo `Type::Jetson` / `Type::VideoToolbox` に対応する名前を Sora C++ SDK は持たない
-- `doc/USE.md` / `doc/VPL.md` / `doc/FAQ.md` に `nvidia` / `vpl` / `v4l2` / `software` が実行例・説明として載っている
+- `doc/VPL.md` に `Intel VPL [vpl]` (出力例) と `--h264-encoder vpl` が、`doc/USE.md` / `doc/FAQ.md` に `software` が実行例として載っている。`nvidia` / `v4l2` は doc に実行例がない (FAQ.md の `nvidia` は Discord チャネル名としての出現のみ)
 
 ## 設計方針
 
@@ -38,16 +38,16 @@ Momo の `--video-codec-engines` と `--*-encoder` / `--*-decoder` で使うビ�
   - `Type::Intel` -> `intel_vpl`
   - `Type::V4L2` -> `raspi_v4l2m2m`
 - 表示名 (`NVIDIA VIDEO CODEC SDK` / `Intel VPL` / `V4L2`) は利用者がエンジンを判別しやすい現状の表記を維持する。揃えるのは `--video-codec-engines` の `[ ]` 内と CLI オプション値
-- CLI オプション値は利用者が `--h264-encoder nvidia` のように指定する公開インターフェースであり、変更は後方互換を壊す。旧名を `CLI::CheckedTransformer` のエイリアスとして受け付けるか、破壊的変更として CHANGES.md に記載するかをここで決める
+- CLI オプション値は利用者が `--h264-encoder nvidia` のように指定する公開インターフェースであり、変更は後方互換を壊す。旧名 (`nvidia` / `vpl` / `v4l2`) はエイリアスとして受け付けず、破壊的変更として CHANGES.md に [CHANGE] として記載する (Momo は `--video-device` → `--video-input-device` でもエイリアスなしで [CHANGE] とした前例がある。旧名を残すと本 issue の目的である Sora C++ SDK との名前統一が完了しないため)
 - `Type::Software` / `Type::VideoToolbox` / `Type::Jetson` は Sora C++ SDK と一対一で対応しないため本 issue では変更しない
-- `doc/USE.md` / `doc/VPL.md` / `doc/FAQ.md` の実行例と説明を新しい名前に更新する
+- `doc/VPL.md` の該当箇所を新名前に更新する (`software` / `videotoolbox` は変更対象外のため `doc/USE.md` / `doc/FAQ.md` は変更しない)
 
 ## 完了条件
 
 - `--video-codec-engines` の `[ ]` 内と `--*-encoder` / `--*-decoder` に指定できる値が `nvidia_video_codec` / `intel_vpl` / `raspi_v4l2m2m` になる
-- 旧名 (`nvidia` / `vpl` / `v4l2`) の互換性の扱いが決まり、CHANGES.md に記載されている
-- `doc/USE.md` / `doc/VPL.md` / `doc/FAQ.md` の該当箇所が新名前に更新されている
-- NVIDIA / Intel VPL / Raspberry Pi (V4L2 M2M) の各環境で `--video-codec-engines` の出力と `--*-encoder` の指定が一致する (手動確認)
+- 旧名 (`nvidia` / `vpl` / `v4l2`) は受け付けず、破壊的変更として CHANGES.md に [CHANGE] として記載されている
+- `doc/VPL.md` の該当箇所が新名前に更新されている
+- NVIDIA / Intel VPL / Raspberry Pi (V4L2 M2M) の各環境で、`--video-codec-engines` に新名が表示され、その新名を該当する `--*-encoder` に指定して動作することを手動確認する
 
 ## 解決方法
 
