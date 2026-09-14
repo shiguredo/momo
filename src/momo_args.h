@@ -54,6 +54,8 @@ struct MomoArgs {
   std::string serial_device = "";
   unsigned int serial_rate = 9600;
   bool insecure = false;
+  // PEM ファイルのパス。空文字は未指定 (OS のシステム CA を使う)
+  std::string ca_cert;
   bool screen_capture = false;
   int metrics_port = -1;
   bool metrics_allow_external_ip = false;

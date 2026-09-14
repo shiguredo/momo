@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <optional>
 
 // WebRTC
 #include <rtc_base/ssl_certificate.h>
@@ -42,7 +43,9 @@ X509Ptr ToX509(const webrtc::SSLCertificate& certificate) {
 
 }  // namespace
 
-RTCSSLVerifier::RTCSSLVerifier(bool insecure) : insecure_(insecure) {}
+RTCSSLVerifier::RTCSSLVerifier(bool insecure,
+                               const std::optional<std::string>& ca_cert)
+    : insecure_(insecure), ca_cert_(ca_cert) {}
 
 bool RTCSSLVerifier::VerifyChain(const webrtc::SSLCertChain& chain) {
   if (insecure_) {
@@ -76,5 +79,6 @@ bool RTCSSLVerifier::VerifyChain(const webrtc::SSLCertChain& chain) {
     cert.release();
   }
 
-  return SSLVerifier::VerifyX509(x509.get(), x509_chain.get());
+  // TURN-TLS / DTLS にはホスト名検証が無いため host は空文字にする
+  return SSLVerifier::VerifyX509(x509.get(), x509_chain.get(), "", ca_cert_);
 }

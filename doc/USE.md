@@ -200,6 +200,10 @@ OPTIONS:
                               Metrics server port number (default: -1)
           --metrics-allow-external-ip
                               Allow access to Metrics server from external IP
+          --ca-cert TEXT:FILE
+                              CA certificate file path for TLS verification (PEM format).
+                              If specified, only this certificate is used as the trust
+                              anchor
           --client-cert TEXT:FILE
                               Cert file path for client certification (PEM format)
           --client-key TEXT:FILE

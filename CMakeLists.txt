@@ -105,6 +105,7 @@ string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(momo PRIVATE src/sora-cpp-sdk/include)
+target_include_directories(momo PRIVATE src/sora-cpp-sdk/src)
 target_include_directories(momo PRIVATE ${OPENH264_ROOT_DIR}/include)
 
 target_sources(momo
@@ -130,6 +131,7 @@ target_sources(momo
     src/serial_data_channel/serial_data_manager.cpp
     src/sora-cpp-sdk/src/open_h264_video_encoder.cpp
     src/sora-cpp-sdk/src/scalable_track_source.cpp
+    src/sora-cpp-sdk/src/ssl_verifier.cpp
     src/sora-cpp-sdk/src/vpl_session_impl.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
@@ -276,7 +278,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       ws2_32.lib
       # amstrmid.lib
       Strmiids.lib
-      # crypt32.lib
+      crypt32.lib
       dmoguids.lib
       iphlpapi.lib
       msdmo.lib
@@ -297,6 +299,11 @@ if ("${TARGET_OS}" STREQUAL "windows")
       UNICODE
       _UNICODE
       RTC_ENABLE_H265
+  )
+
+  target_sources(momo
+    PRIVATE
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_windows.cpp
   )
 
   # NVIDIA Video Codec SDK
@@ -393,6 +400,7 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/mac_capturer.mm
       src/mac_helper/macos_version.mm
       src/mac_helper/objc_codec_factory_helper.mm
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_macos.cpp
   )
 
   target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString -mmacosx-version-min=11.0)
@@ -422,9 +430,7 @@ elseif (TARGET_OS STREQUAL "macos")
     PRIVATE
       #"-framework Foundation"
       "-framework AVFoundation"
-      #"-framework CoreServices"
-      #"-framework CoreFoundation"
-      #"-framework AudioUnit"
+      "-framework CoreFoundation"
       "-framework AudioToolbox"
       "-framework CoreAudio"
       "-framework QuartzCore"
@@ -438,6 +444,7 @@ elseif (TARGET_OS STREQUAL "macos")
       "-framework OpenGL"
       "-framework IOSurface"
       "-framework ScreenCaptureKit"
+      "-framework Security"
   )
 
 elseif (TARGET_OS STREQUAL "linux")
@@ -447,6 +454,7 @@ elseif (TARGET_OS STREQUAL "linux")
     PRIVATE
       src/sora-cpp-sdk/src/v4l2/v4l2_device.cpp
       src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_ubuntu.cpp
   )
   target_compile_definitions(momo
     PRIVATE
