@@ -1,7 +1,7 @@
 # TLS の証明書検証を OS のシステム CA に切り替える
 
 - Created: 2026-09-10
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-14
 - Branch: feature/change-tls-system-ca
 - Polished: 2026-09-10
 
@@ -69,4 +69,13 @@ sora-cpp-sdk は 2026.2.0 で既定の信頼ストアを OS のシステム CA �
 
 ## 解決方法
 
-{YYYY-MM-DD} に追記する
+- `CMakeLists.txt` に sora-cpp-sdk の `ssl_verifier.cpp` と OS 別実装を追加し、macOS は Security / CoreFoundation、Windows は `crypt32.lib` をリンクするようにした
+- momo の `SSLVerifier::VerifyX509` はチェーン検証を `sora::SSLVerifier` に委譲し、成功後に既存の `VerifyHostname` で WSS のホスト名検証を行う 1 本に統一した
+- `isrg_root` と `rtc_base/ssl_roots.h` への依存を削除した
+- `--ca-cert` (PEM ファイルパス) を追加し、指定時はその PEM のみを trust anchor、未指定時は OS のシステム CA を使うようにした。`--insecure` の挙動は変えていない
+- CI の全対象プラットフォームでビルドが通り、Sora / Ayame / P2P の E2E が通ることを確認した
+- CI 成果物で WSS (Ayame Labo) と TURN-TLS (Sora Labo `turn_tls_only`) を手動確認した
+  - 未指定 / `isrgrootx1.pem` / 自己発行 + `--insecure` で接続でき、TURN-TLS では metrics の `relayProtocol` が `tls` になる
+  - 自己発行のみ、および WSS のホスト名不一致 (`wrong.host.badssl.com`) では `CERTIFICATE_VERIFY_FAILED` になる
+  - Ubuntu 24.04 では `ca-certificates.crt` から ISRG Root X1 / X2 を外すと未指定が失敗し、`isrgrootx1.pem` と `--insecure` は通ることも確認した
+- PR: https://github.com/shiguredo/momo/pull/483
