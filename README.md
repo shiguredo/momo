@@ -145,7 +145,7 @@ OpenMomo は WebRTC Native Client Momo をオープンソースとして公開�
 - Ubuntu 22.04 ARMv8 (NVIDIA Jetson JetPack 6)
   - [NVIDIA Jetson AGX Orin](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
   - [NVIDIA Jetson Orin NX](https://www.nvidia.com/ja-jp/autonomous-machines/embedded-systems/jetson-orin/)
-- Raspberry Pi OS bookworm (64bit)
+- Raspberry Pi OS Bookworm (64bit)
   - Raspberry Pi 5
   - Raspberry Pi 4
   - Raspberry Pi 3
