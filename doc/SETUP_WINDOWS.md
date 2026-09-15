@@ -10,9 +10,9 @@
 
 ### Sora モードで `--metadata` を指定するとき
 
-`--metadata` には JSON を渡します。momo の `argv` に届く文字列は `{"access_token": "xyz"}` の形である必要があります。
+`--metadata` には JSON を渡します。値は `{"access_token": "xyz"}` の形です。
 
-PowerShell からネイティブの `momo.exe` を呼ぶとき、単引用符の中身はそのまま `argv` にはなりません。PowerShell がコマンドラインを組み立て、C ランタイムがそれを分割します。そのため JSON の `"` は、単引用符の内側では `\"` と書きます。`{"access_token": "xyz"}` を単引用符で囲んだだけでは、コマンドライン上で引用が途切れ `is not JSON Value` になります。`{` をスクリプトブロックにしないため、全体は単引用符で囲みます。
+PowerShell では JSON 全体を単引用符で囲み、内側の `"` は `\"` と書きます。`{` がスクリプトブロックとして解釈されないようにするためです。
 
 PowerShell での実行例：
 
