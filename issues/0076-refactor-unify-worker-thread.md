@@ -1,7 +1,7 @@
 # RTCManager の worker thread を network thread に統一する
 
 - Created: 2026-09-15
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-15
 - Branch: feature/refactor-unify-worker-thread
 - Polished: {YYYY-MM-DD}
 
@@ -55,4 +55,13 @@ worker thread の利用箇所と API を全て無くす対応は、558821261 を
 
 ## 解決方法
 
-{YYYY-MM-DD} に追記する
+RTCManager の worker thread として network thread を使うようにした。
+
+- `src/rtc/rtc_manager.cpp` から worker thread の生成、`Start()`、`Stop()`、`dependencies.worker_thread` への専用 thread の設定を削除し、network thread を渡すようにした
+- ADM の生成と音声デバイスの再適用の `BlockingCall` を network thread に移し、`VideoTrackSourceProxy::Create` の第 2 引数も network thread に変更した
+- `src/rtc/rtc_manager.h` から `worker_thread_` メンバを削除した
+- `CHANGES.md` の `## develop` に追記した
+
+確認:
+
+- `python3 run.py build --package ubuntu-24.04_x86_64` が通ることを確認した
