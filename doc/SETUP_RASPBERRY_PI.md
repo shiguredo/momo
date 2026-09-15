@@ -90,8 +90,6 @@ force_turbo=1
 avoid_warnings=2
 ```
 
-この設定であれば HD は 30 fps、FHD では 15 fps 程度の性能を発揮します。
-
 ### `--force-i420`
 
 `--force-i420` は V4L2 キャプチャーでピクセルフォーマットを I420 に固定します。利用できない場合は起動に失敗します。`--use-libcamera` 指定時には効果がありません。

@@ -51,6 +51,6 @@
 - `--force-i420` は V4L2 向けであること、`--use-libcamera` 時は効果がないことを明記し、CSI の性能案内からは外した
 - `--hw-mjpeg-decoder` は USB カメラ向けに案内した。CSI との同時指定では MJPEG ハードウェアデコードや V4L2 リサイズは走らず、ソフトウェアエンコーダーを使わない設定だけが残ると書いた
 - 不足ライブラリの確認は `ldd ./momo | grep not` を正にした。GitHub Releases の 2025.1.3 では `libcamerac.so` が `libcamera.so.0.7` に依存するため、例として `libcamera0.7` を書いた。`libcamera0.6` 固定の唯一手順は残していない
-- `gpu_mem` / `force_turbo` / `avoid_warnings` は最新 Raspberry Pi OS での実機確認ができなかったため削除せず、USB カメラ + `--hw-mjpeg-decoder` 向けとして残した
+- `gpu_mem` / `force_turbo` / `avoid_warnings` の設定手順は残し、HD 30 fps / FHD 15 fps という未検証の性能値だけ削除した
 
 `doc/LIBCAMERA.md` は CSI の詳細として矛盾しないため、本文の変更はしていない。
