@@ -20,7 +20,7 @@ PowerShell での実行例：
 .\momo.exe --no-audio-device `
     sora `
         --signaling-urls `
-             wss://canary.sora-labo.shiguredo.app/signaling `
+             wss://sora.sora-labo.shiguredo.app/signaling `
         --channel-id shiguredo_0_sora `
         --video-codec-type VP8 --video-bit-rate 500 `
         --audio false `
@@ -35,7 +35,7 @@ PowerShell での実行例：
 .\momo.exe --no-audio-device ^
     sora ^
         --signaling-urls ^
-             wss://canary.sora-labo.shiguredo.app/signaling ^
+             wss://sora.sora-labo.shiguredo.app/signaling ^
         --channel-id shiguredo_0_sora ^
         --video-codec-type VP8 --video-bit-rate 500 ^
         --audio false ^
