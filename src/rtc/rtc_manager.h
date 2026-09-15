@@ -132,7 +132,6 @@ class RTCManager {
   webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::unique_ptr<webrtc::Thread> network_thread_;
-  std::unique_ptr<webrtc::Thread> worker_thread_;
   std::unique_ptr<webrtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
   VideoTrackReceiver* receiver_;

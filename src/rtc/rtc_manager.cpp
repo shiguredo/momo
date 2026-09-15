@@ -127,8 +127,6 @@ RTCManager::RTCManager(
 
   network_thread_ = webrtc::Thread::CreateWithSocketServer();
   network_thread_->Start();
-  worker_thread_ = webrtc::Thread::Create();
-  worker_thread_->Start();
   signaling_thread_ = webrtc::Thread::Create();
   signaling_thread_->Start();
 
@@ -147,12 +145,13 @@ RTCManager::RTCManager(
 
   webrtc::PeerConnectionFactoryDependencies dependencies;
   dependencies.network_thread = network_thread_.get();
-  dependencies.worker_thread = worker_thread_.get();
+  // worker thread には network thread を使う
+  dependencies.worker_thread = network_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>();
 
-  dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = network_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
         // create_adm が設定されている場合は、それを使って ADM を作成する
         webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
@@ -246,7 +245,7 @@ RTCManager::RTCManager(
 
 #if defined(__APPLE__) || defined(__linux__)
   if (adm) {
-    worker_thread_->BlockingCall([&]() {
+    network_thread_->BlockingCall([&]() {
       if (!config_.audio_input_device.empty()) {
         if (!SetAudioDevice(adm, config_.audio_input_device, true)) {
           RTC_LOG(LS_WARNING)
@@ -286,7 +285,7 @@ RTCManager::RTCManager(
   if (video_track_source && !config_.no_video_device) {
     webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
         webrtc::VideoTrackSourceProxy::Create(
-            signaling_thread_.get(), worker_thread_.get(), video_track_source);
+            signaling_thread_.get(), network_thread_.get(), video_track_source);
     video_track_ =
         factory_->CreateVideoTrack(video_source, Util::GenerateRandomChars());
     if (video_track_) {
@@ -308,7 +307,6 @@ RTCManager::~RTCManager() {
   context_ = nullptr;
   factory_ = nullptr;
   network_thread_->Stop();
-  worker_thread_->Stop();
   signaling_thread_->Stop();
 
   webrtc::CleanupSSL();
