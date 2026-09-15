@@ -1,7 +1,7 @@
 # SETUP_WINDOWS.md の metadata エスケープ説明を修正する
 
 - Created: 2026-09-15
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-15
 - Branch: feature/update-setup-windows-metadata-escape
 - Polished: 2026-09-15
 
@@ -34,4 +34,10 @@
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+2026-09-15 に `doc/SETUP_WINDOWS.md` の `--metadata` 案内を、PowerShell とコマンドプロンプトで分けて書き直した。
+
+- PowerShell は JSON 全体を単引用符で囲み、内側の `"` を `\"` と書く。`{` がスクリプトブロックにならないようにするためである。コードブロックの言語は `powershell` にした
+- コマンドプロンプトは JSON 全体を二重引用符で囲み、内側の `"` を `\"` と書く。行継続は `^` である。コードブロックの言語は `batch` にした
+- 実行例の `--signaling-urls` は `wss://sora.sora-labo.shiguredo.app/signaling` にした
+- Windows 上で、PowerShell の単引用符形式と `` ` `` による複数行、コマンドプロンプトの二重引用符形式と `^` による複数行を確認した。`--metadata` は `is_json` を通過した
+
