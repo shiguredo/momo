@@ -96,6 +96,8 @@ avoid_warnings=2
 
 USB カメラではフレームレートが落ちることがあるため、使わないでください。
 
+I420 固定を優先する場合の例は次のとおりです。
+
 ```bash
 ./momo --force-i420 --no-audio-device p2p
 ```
