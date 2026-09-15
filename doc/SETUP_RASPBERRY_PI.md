@@ -54,7 +54,7 @@ sudo apt-get install libgles2-mesa
 
 USB カメラを利用する場合、この節の手順は不要です。
 
-Raspberry Pi OS bookworm 以降では従来のカメラシステムは利用できません。CSI カメラ (Raspberry Pi 専用カメラ) は `--use-libcamera` を指定してください。詳細は [LIBCAMERA.md](LIBCAMERA.md) を確認してください。
+Raspberry Pi OS Bookworm 以降では従来のカメラシステムは利用できません。CSI カメラ (Raspberry Pi 専用カメラ) は `--use-libcamera` を指定してください。詳細は [LIBCAMERA.md](LIBCAMERA.md) を確認してください。
 
 ```bash
 ./momo --use-libcamera --no-audio-device p2p
