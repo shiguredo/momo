@@ -285,7 +285,7 @@ Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-L
 > 時雨堂がエンドユーザーの PC / デバイスに既に存在する AVC / H.264 エンコーダー / デコーダーに依存する製品を提供する場合は、
 > ソフトウェア製品は AVC ライセンスの対象外となり、ロイヤリティの対象にもなりません。
 
-- Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
+- Raspberry Pi のハードウェアエンコーダーのライセンス費用について
   - <https://forums.raspberrypi.com/viewtopic.php?t=200855>
 - Apple のライセンス費用は個人利用および非商用利用目的に限るため、配布においては別途、団体との契約が必要
   - <https://store.apple.com/Catalog/Japan/Images/EA0270_QTMPEG2.html>
