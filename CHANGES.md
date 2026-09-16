@@ -230,7 +230,8 @@
   - test_sora_mode_raspberry_pi.py テストファイルを追加
   - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
   - @voluntas
-- [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用する用にする
+- [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用するようにする
+  - @voluntas
 - [UPDATE] RTCManager の worker thread に network thread を使う
   - 専用 worker thread の生成を削除し、`PeerConnectionFactoryDependencies::worker_thread` に network thread を渡す
   - ADM の生成と音声デバイスの再適用を network thread 上で実行する
