@@ -26,7 +26,7 @@ GitHub アカウントを用意して <https://sora-labo.shiguredo.app/> にサ�
 ./momo --no-audio-device \
     sora \
         --signaling-urls \
-            wss://canary.sora-labo.shiguredo.app/signaling \
+            wss://sora.sora-labo.shiguredo.app/signaling \
         --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
@@ -43,7 +43,7 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 ./momo --resolution VGA --no-audio-device --use-sdl \
     sora \
         --signaling-urls \
-            wss://canary.sora-labo.shiguredo.app/signaling \
+            wss://sora.sora-labo.shiguredo.app/signaling \
         --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 1000 \
         --audio false \
@@ -58,7 +58,7 @@ GUI 環境で Momo を利用すると、 SDL を利用し音声や映像の受�
 ./momo --no-audio-device \
     sora \
         --signaling-urls \
-            wss://canary.sora-labo.shiguredo.app/signaling \
+            wss://sora.sora-labo.shiguredo.app/signaling \
         --channel-id shiguredo_0_sora \
         --video-codec-type VP8 --video-bit-rate 500 \
         --audio false \
