@@ -1,12 +1,12 @@
 # Ayame モードを利用して Momo を動かしてみる
 
-Ayame は時雨堂が開発し OSS として公開している、 WebRTC シグナリングサーバです。
+Ayame は時雨堂が開発し OSS として公開している、 WebRTC シグナリングサーバーです。
 
 [OpenAyame プロジェクト](https://gist.github.com/voluntas/90cc9686a11de2f1acca845c6278a824)
 
 ## Ayame を利用したサービス Ayame Labo を利用する
 
-Ayame を利用してシグナリングサーバを立てるのが面倒な人向けに Ayame Labo を提供しています。
+Ayame を利用してシグナリングサーバーを立てるのが面倒な人向けに Ayame Labo を提供しています。
 
 Ayame Labo は時雨堂が提供している Ayame を利用したサービスです。無料で利用できます。
 
@@ -14,7 +14,7 @@ Ayame Labo は時雨堂が提供している Ayame を利用したサービス�
 
 ### Ayame Labo にサインアップしない場合
 
-Ayame Labo はサインアップせずにシグナリングサーバを利用できます。
+Ayame Labo はサインアップせずにシグナリングサーバーを利用できます。
 
 ここではルーム ID は `open-momo` としていますが、必ず推測されにくい値に変更してください。
 
