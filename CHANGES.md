@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2026.1.0
+
+**リリース日**: 2026-09-16
+
 - [CHANGE] TLS の証明書検証を OS のシステム CA に切り替える
   - ハードコードした ISRG Root X1 と WebRTC 組込みルート (`rtc_base/ssl_roots.h`) を信頼ストアから外す
   - 未指定時は OS のシステム CA を信頼し、`--ca-cert` 指定時はその PEM のみを trust anchor にする
