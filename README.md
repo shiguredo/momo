@@ -30,7 +30,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしでさま�
 - Apple macOS に搭載されているハードウェアアクセラレーター機能を [Apple VideoToolbox](https://developer.apple.com/documentation/videotoolbox) 経由で利用できます
   - ハードウェアエンコーダー: H.264 / H.265
   - ハードウェアデコーダー: H.264 / H.265
-- NVIDIA グラフィックスカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用できます
+- NVIDIA ビデオカードに搭載されているハードウェアアクセラレーター機能を [NVIDIA Video Codec](https://developer.nvidia.com/nvidia-video-codec-sdk) 経由で利用できます
   - ハードウェアエンコーダー: VP9 / AV1 / H.264 / H.265
   - ハードウェアデコーダー: VP9 / AV1 / H.264 / H.265
 - Intel グラフィックスチップに搭載されているハードウェアアクセラレーター機能を [Intel VPL](https://www.intel.com/content/www/us/en/developer/tools/vpl/overview.html) 経由で Windows x86_64 と Ubuntu x86_64 にてハードウェアアクセラレーター機能を利用できます
