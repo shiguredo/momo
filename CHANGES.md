@@ -51,7 +51,7 @@
   - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
     - sm_60 は Pascal 世代の GPU からサポートされている
     - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
-    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるドロップ
+    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるためドロップ
   - @voluntas
 - [UPDATE] libwebrtc のバージョンを m150.7871.3.0 に上げる
   - Boost のバージョンを 1.91.0 に上げる
