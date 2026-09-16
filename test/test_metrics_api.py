@@ -39,6 +39,7 @@ def test_invalid_endpoint_returns_404(free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
+        assert m._http_client is not None
         response = m._http_client.get(f"http://localhost:{m.metrics_port}/invalid")
         assert response.status_code == 404
 
@@ -51,6 +52,7 @@ def test_post_method_returns_error(free_port, port_allocator):
         port=next(port_allocator),
         fake_capture_device=True,
     ) as m:
+        assert m._http_client is not None
         response = m._http_client.post(f"http://localhost:{m.metrics_port}/metrics")
         assert response.status_code == 400  # Bad Request
 

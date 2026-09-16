@@ -13,7 +13,9 @@
 #define SORA_HWENC_JETSON_JETSON_VIDEO_ENCODER_H_
 
 #include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <queue>
 
 // Linux
@@ -123,6 +125,8 @@ class JetsonVideoEncoder : public webrtc::VideoEncoder {
   int32_t height_;
   bool use_native_;
   bool use_dmabuff_;
+  // JetsonConfigure で output_plane を V4L2_MEMORY_DMABUF にしたか
+  bool output_use_dmabuf_;
   int dmabuff_fd_[CONVERTER_CAPTURE_NUM];
 
   webrtc::GofInfoVP9 gof_;

@@ -212,15 +212,8 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
 
         # r0 の解像度を確認
-        # 元の解像度 960x540 の 1/4 スケール (240x135)
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 128 (16×8) または 135 (元の値) の範囲を許容
-        assert outbound_rtp_r0["frameWidth"] == 240, (
-            f"Expected width 240 for r0, but got {outbound_rtp_r0['frameWidth']}"
-        )
-        assert 128 <= outbound_rtp_r0["frameHeight"] <= 135, (
-            f"Expected height between 128 and 135 for r0, but got {outbound_rtp_r0['frameHeight']}"
-        )
+        assert outbound_rtp_r0["frameWidth"] == 240
+        assert outbound_rtp_r0["frameHeight"] == 128
         print(f"r0: {outbound_rtp_r0['frameWidth']}x{outbound_rtp_r0['frameHeight']}")
 
         # r0 の qualityLimitationDurations を出力
@@ -251,15 +244,8 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
 
         # r1 の解像度を確認
-        # 元の解像度 960x540 の 1/2 スケール (480x270)
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 256 (16×16) から 270 (元の値) の範囲を許容
-        assert outbound_rtp_r1["frameWidth"] == 480, (
-            f"Expected width 480 for r1, but got {outbound_rtp_r1['frameWidth']}"
-        )
-        assert 256 <= outbound_rtp_r1["frameHeight"] <= 270, (
-            f"Expected height between 256 and 270 for r1, but got {outbound_rtp_r1['frameHeight']}"
-        )
+        assert outbound_rtp_r1["frameWidth"] == 480
+        assert outbound_rtp_r1["frameHeight"] == 256
         print(f"r1: {outbound_rtp_r1['frameWidth']}x{outbound_rtp_r1['frameHeight']}")
 
         # r1 の qualityLimitationDurations を出力
@@ -290,15 +276,8 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
         )
 
         # r2 の解像度を確認
-        # 元の解像度 960x540 そのまま
-        # ただし、エンコーダーが効率化のため高さを 16 の倍数に調整することがある
-        # 528 (16×33) から 540 (元の値) の範囲を許容
-        assert outbound_rtp_r2["frameWidth"] == 960, (
-            f"Expected width 960 for r2, but got {outbound_rtp_r2['frameWidth']}"
-        )
-        assert 528 <= outbound_rtp_r2["frameHeight"] <= 540, (
-            f"Expected height between 528 and 540 for r2, but got {outbound_rtp_r2['frameHeight']}"
-        )
+        assert outbound_rtp_r2["frameWidth"] == 960
+        assert outbound_rtp_r2["frameHeight"] == 528
         print(f"r2: {outbound_rtp_r2['frameWidth']}x{outbound_rtp_r2['frameHeight']}")
 
         # r2 の qualityLimitationDurations を出力
@@ -315,24 +294,27 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
             f"Expected r1 bytesSent ({outbound_rtp_r1['bytesSent']}) < r2 bytesSent ({outbound_rtp_r2['bytesSent']})"
         )
 
-        # 各統計タイプの詳細をチェック（outbound-rtp と codec は上で検証済みなのでスキップ）
-        for stat in stats:
-            match stat.get("type"):
-                case "transport":
-                    # transport の必須フィールドを確認
-                    assert "bytesSent" in stat
-                    assert "bytesReceived" in stat
-                    assert "dtlsState" in stat
-                    assert "iceState" in stat
+        # transport を取得して確認
+        transport_stats = [stat for stat in stats if stat.get("type") == "transport"]
+        assert len(transport_stats) == 1, f"Expected 1 transport, but got {len(transport_stats)}"
 
-                    # データが実際に送受信されていることを確認
-                    assert stat["bytesSent"] > 0
-                    assert stat["bytesReceived"] > 0
+        # transport の中身を検証
+        transport = transport_stats[0]
+        assert "bytesSent" in transport
+        assert "bytesReceived" in transport
+        assert "dtlsState" in transport
+        assert "iceState" in transport
+        assert transport["bytesSent"] > 0
+        assert transport["bytesReceived"] > 0
+        assert transport["dtlsState"] == "connected"
+        assert transport["iceState"] == "connected"
 
-                    # 接続状態の確認
-                    assert stat["dtlsState"] == "connected"
-                    assert stat["iceState"] == "connected"
+        # peer-connection を取得して確認
+        peer_connection_stats = [stat for stat in stats if stat.get("type") == "peer-connection"]
+        assert len(peer_connection_stats) == 1, (
+            f"Expected 1 peer-connection, but got {len(peer_connection_stats)}"
+        )
 
-                case "peer-connection":
-                    # peer-connection の必須フィールドを確認
-                    assert "dataChannelsOpened" in stat
+        # peer-connection の中身を検証
+        peer_connection = peer_connection_stats[0]
+        assert "dataChannelsOpened" in peer_connection

@@ -25,16 +25,16 @@ P2PWebsocketSession::P2PWebsocketSession(boost::asio::io_context& ioc,
       rtc_manager_(rtc_manager),
       config_(std::move(config)),
       watchdog_(ioc, std::bind(&P2PWebsocketSession::OnWatchdogExpired, this)) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 }
 
 P2PWebsocketSession::~P2PWebsocketSession() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 }
 
 void P2PWebsocketSession::Run(
     boost::beast::http::request<boost::beast::http::string_body> req) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
   DoAccept(std::move(req));
 }
 
@@ -54,7 +54,7 @@ void P2PWebsocketSession::DoAccept(
 }
 
 void P2PWebsocketSession::OnAccept(boost::system::error_code ec) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   if (ec)
     return MOMO_BOOST_ERROR(ec, "Accept");
@@ -71,7 +71,7 @@ void P2PWebsocketSession::DoRead() {
 void P2PWebsocketSession::OnRead(boost::system::error_code ec,
                                  std::size_t bytes_transferred,
                                  std::string recv_string) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec;
+  RTC_LOG(LS_INFO) << __func__ << ": " << ec.to_string();
 
   boost::ignore_unused(bytes_transferred);
 
@@ -87,56 +87,64 @@ void P2PWebsocketSession::OnRead(boost::system::error_code ec,
     ~Guard() { f(); }
   } guard = {[this]() { DoRead(); }};
 
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": recv_string=" << recv_string;
+  RTC_LOG(LS_INFO) << __func__ << ": recv_string=" << recv_string;
 
-  boost::system::error_code jec;
-  boost::json::value recv_message = boost::json::parse(recv_string, jec);
-  if (jec) {
-    return;
-  }
-
-  std::string type = recv_message.at("type").as_string().c_str();
-
-  if (type == "offer") {
-    std::string sdp = recv_message.at("sdp").as_string().c_str();
-
-    connection_ = CreateRTCConnection();
-    connection_->SetOffer(sdp, [this]() {
-      connection_->CreateAnswer(
-          [this](webrtc::SessionDescriptionInterface* desc) {
-            std::string sdp;
-            desc->ToString(&sdp);
-            boost::json::value json_desc = {{"type", "answer"}, {"sdp", sdp}};
-            std::string str_desc = boost::json::serialize(json_desc);
-            ws_->WriteText(std::move(str_desc));
-          });
-    });
-  } else if (type == "answer") {
-    if (!connection_) {
+  try {
+    boost::system::error_code jec;
+    boost::json::value recv_message = boost::json::parse(recv_string, jec);
+    if (jec) {
+      RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << jec.message();
       return;
     }
-    std::string sdp = recv_message.at("sdp").as_string().c_str();
-    connection_->SetAnswer(sdp);
-  } else if (type == "candidate") {
-    if (!connection_) {
+
+    std::string type = recv_message.at("type").as_string().c_str();
+
+    if (type == "offer") {
+      std::string sdp = recv_message.at("sdp").as_string().c_str();
+
+      connection_ = CreateRTCConnection();
+      connection_->SetOffer(sdp, [this]() {
+        connection_->CreateAnswer(
+            [this](webrtc::SessionDescriptionInterface* desc) {
+              std::string sdp;
+              desc->ToString(&sdp);
+              boost::json::value json_desc = {{"type", "answer"}, {"sdp", sdp}};
+              std::string str_desc = boost::json::serialize(json_desc);
+              ws_->WriteText(std::move(str_desc));
+            });
+      });
+    } else if (type == "answer") {
+      if (!connection_) {
+        return;
+      }
+      std::string sdp = recv_message.at("sdp").as_string().c_str();
+      connection_->SetAnswer(sdp);
+    } else if (type == "candidate") {
+      if (!connection_) {
+        return;
+      }
+      boost::json::value ice = recv_message.at("ice");
+      std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
+      int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
+      std::string candidate = ice.at("candidate").as_string().c_str();
+      connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
+    } else if (type == "close" || type == "bye") {
+      connection_ = nullptr;
+    } else if (type == "register") {
+      boost::json::value accept_message = {
+          {"type", "accept"},
+          {"isExistUser", true},
+      };
+      ws_->WriteText(boost::json::serialize(accept_message));
+      watchdog_.Enable(30);
+    } else {
       return;
     }
-    boost::json::value ice = recv_message.at("ice");
-    std::string sdp_mid = ice.at("sdpMid").as_string().c_str();
-    int sdp_mlineindex = ice.at("sdpMLineIndex").to_number<int>();
-    std::string candidate = ice.at("candidate").as_string().c_str();
-    connection_->AddIceCandidate(sdp_mid, sdp_mlineindex, candidate);
-  } else if (type == "close" || type == "bye") {
-    connection_ = nullptr;
-  } else if (type == "register") {
-    boost::json::value accept_message = {
-        {"type", "accept"},
-        {"isExistUser", true},
-    };
-    ws_->WriteText(boost::json::serialize(accept_message));
-    watchdog_.Enable(30);
-  } else {
-    return;
+  } catch (const boost::system::system_error& e) {
+    // キー欠落・型不一致でもプロセスを落とさず、Guard 経由で DoRead() を継続する
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
+  } catch (const std::exception& e) {
+    RTC_LOG(LS_ERROR) << "Failed to handle signaling JSON: " << e.what();
   }
 }
 
@@ -157,7 +165,7 @@ std::shared_ptr<RTCConnection> P2PWebsocketSession::CreateRTCConnection() {
 
 void P2PWebsocketSession::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " rtc_state "
+  RTC_LOG(LS_INFO) << __func__ << " rtc_state "
                    << Util::IceConnectionStateToString(rtc_state_) << " -> "
                    << Util::IceConnectionStateToString(new_state);
 
@@ -167,7 +175,7 @@ void P2PWebsocketSession::OnIceConnectionStateChange(
 void P2PWebsocketSession::OnIceCandidate(const std::string sdp_mid,
                                          const int sdp_mlineindex,
                                          const std::string sdp) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_LOG(LS_INFO) << __func__;
 
   boost::json::object json_cand = {{"type", "candidate"}};
   json_cand["ice"] = {{"candidate", sdp},

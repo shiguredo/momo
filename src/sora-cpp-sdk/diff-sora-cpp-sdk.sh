@@ -26,8 +26,9 @@ source LAST_UPDATED
 
 INCLUDE_FILES=$(find include -type f)
 SRC_FILES=$(find src -type f)
+THIRD_PARTY_FILES=$(find third_party -type f)
 
-ALL_FILES=$(echo -e "$INCLUDE_FILES\n$SRC_FILES" | sort)
+ALL_FILES=$(echo -e "$INCLUDE_FILES\n$SRC_FILES\n$THIRD_PARTY_FILES" | sort)
 
 pushd $SORA_CPP_SDK_DIR
   git fetch --all --tags

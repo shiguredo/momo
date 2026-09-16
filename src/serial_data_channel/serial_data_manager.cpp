@@ -12,9 +12,6 @@
 // WebRTC
 #include <rtc_base/log_sinks.h>
 
-// Boost
-#include <boost/asio/post.hpp>
-
 #define SERIAL_TX_BUFFER_SIZE 16
 #define SERIAL_RX_BUFFER_SIZE 256
 
@@ -129,8 +126,8 @@ void SerialDataManager::DoRead() {
 void SerialDataManager::OnRead(const boost::system::error_code& error,
                                size_t bytes_transferred) {
   if (error) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << " async_read_some failed  error :" << error;
+    RTC_LOG(LS_ERROR) << __func__
+                      << " async_read_some failed  error :" << error.message();
     DoCloseSerial();
     return;
   }
@@ -181,8 +178,8 @@ void SerialDataManager::DoWrite() {
 
 void SerialDataManager::OnWrite(const boost::system::error_code& error) {
   if (error) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
-                      << " async_write failed  error :" << error;
+    RTC_LOG(LS_ERROR) << __func__
+                      << " async_write failed  error :" << error.message();
     DoCloseSerial();
     return;
   }

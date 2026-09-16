@@ -88,15 +88,16 @@ void Util::ParseArgs(int argc,
 
   app.add_flag("--no-google-stun", args.no_google_stun,
                "Do not use google stun");
-  app.add_flag("--no-video-device", args.no_video_device,
-               "Do not use video device");
+  app.add_flag("--no-video-input-device", args.no_video_device,
+               "Do not use video input device");
   app.add_flag("--no-audio-device", args.no_audio_device,
                "Do not use audio device");
   app.add_flag("--list-devices", args.list_devices,
-               "List available video devices and exit");
+               "List available audio and video devices and exit");
 #if defined(USE_FAKE_CAPTURE_DEVICE)
   app.add_flag("--fake-capture-device", args.fake_capture_device,
-               "Use fake video capture device instead of real camera");
+               "Use fake video capture device instead of real camera. "
+               "Cannot be used with --no-video-input-device");
 #endif
   app.add_flag("--force-i420", args.force_i420,
                "Force I420 format for video capture (fails if not available)");
@@ -121,13 +122,21 @@ void Util::ParseArgs(int argc,
       ->allow_extra_args();
 
 #if defined(__APPLE__) || defined(_WIN32)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video device specified by an index or a name "
                  "(use the first one if not specified)");
 #elif defined(__linux__)
-  app.add_option("--video-device", args.video_device,
+  app.add_option("--video-input-device", args.video_device,
                  "Use the video input device specified by a name "
                  "(some device will be used if not specified)");
+#endif
+#if defined(__APPLE__) || defined(__linux__)
+  app.add_option("--audio-input-device", args.audio_input_device,
+                 "Use the audio input device specified by an index or a name "
+                 "(use the system default if not specified)");
+  app.add_option("--audio-output-device", args.audio_output_device,
+                 "Use the audio output device specified by an index or a name "
+                 "(use the system default if not specified)");
 #endif
   app.add_option("--resolution", args.resolution,
                  "Video resolution (one of QVGA, VGA, HD, FHD, 4K, or "
@@ -235,6 +244,11 @@ void Util::ParseArgs(int argc,
   app.add_flag("--metrics-allow-external-ip", args.metrics_allow_external_ip,
                "Allow access to Metrics server from external IP");
 
+  app.add_option(
+         "--ca-cert", args.ca_cert,
+         "CA certificate file path for TLS verification (PEM format). "
+         "If specified, only this certificate is used as the trust anchor")
+      ->check(CLI::ExistingFile);
   app.add_option("--client-cert", args.client_cert,
                  "Cert file path for client certification (PEM format)")
       ->check(CLI::ExistingFile);
@@ -504,17 +518,6 @@ std::string Util::GenerateRandomChars() {
 std::string Util::GenerateRandomChars(size_t length) {
   std::string result;
   webrtc::CreateRandomString(length, &result);
-  return result;
-}
-
-std::string Util::GenerateRandomNumericChars(size_t length) {
-  auto random_numerics = []() -> char {
-    const char charset[] = "0123456789";
-    const size_t max_index = (sizeof(charset) - 1);
-    return charset[rand() % max_index];
-  };
-  std::string result(length, 0);
-  std::generate_n(result.begin(), length, random_numerics);
   return result;
 }
 

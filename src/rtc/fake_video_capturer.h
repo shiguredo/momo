@@ -18,7 +18,7 @@
 // Blend2D
 #include <blend2d.h>
 
-// Forward declaration
+// 前方宣言
 class FakeAudioCapturer;
 
 class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
@@ -27,6 +27,7 @@ class FakeVideoCapturer : public sora::ScalableVideoTrackSource {
     int width = 640;
     int height = 480;
     int fps = 30;
+    bool force_nv12 = false;
   };
 
   static webrtc::scoped_refptr<FakeVideoCapturer> Create(Config config) {

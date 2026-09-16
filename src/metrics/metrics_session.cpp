@@ -28,17 +28,16 @@ MetricsSession::MetricsSession(boost::asio::io_context& ioc,
       stats_collector_(stats_collector),
       config_(std::move(config)) {}
 
-// Start the asynchronous operation
+// 非同期処理を開始する
 void MetricsSession::Run() {
   DoRead();
 }
 
 void MetricsSession::DoRead() {
-  // Make the request empty before reading,
-  // otherwise the operation behavior is undefined.
+  // 読み取り前にリクエストを空にする。空にしないと動作は未定義になる
   req_ = {};
 
-  // Read a request
+  // リクエストを読み取る
   boost::beast::http::async_read(
       socket_, buffer_, req_,
       boost::asio::bind_executor(

@@ -1,18 +1,22 @@
 #include "rtc_manager.h"
 
+#include <algorithm>
+#include <cctype>
+#include <exception>
 #include <iostream>
+#include <limits>
+#include <string>
+#include <vector>
 
 // WebRTC
 #include <absl/memory/memory.h>
+#include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
 #include <api/audio/builtin_audio_processing_builder.h>
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
-
-#if defined(USE_FAKE_CAPTURE_DEVICE)
-#include "rtc/fake_audio_capturer.h"
-#endif
 #include <api/enable_media.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
@@ -28,6 +32,7 @@
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
+#include "device_info.h"
 #include "momo_video_decoder_factory.h"
 #include "momo_video_encoder_factory.h"
 #include "peer_connection_observer.h"
@@ -35,6 +40,83 @@
 #include "sora/scalable_track_source.h"
 #include "url_parts.h"
 #include "util.h"
+
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+#include "rtc/fake_audio_capturer.h"
+#endif
+
+#if defined(__APPLE__) || defined(__linux__)
+namespace {
+
+// デバイス識別子の完全一致判定（大文字小文字を区別しない）
+bool MatchDeviceIdentifier(const std::string& target,
+                           const char* name,
+                           const char* guid) {
+  return absl::EqualsIgnoreCase(target, name) ||
+         absl::EqualsIgnoreCase(target, guid);
+}
+
+// デバイス名/インデックスからインデックスを解決
+bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
+                        const std::string& device_spec,
+                        bool is_input,
+                        uint16_t* resolved_index) {
+  if (absl::SimpleAtoi(device_spec, resolved_index)) {
+    if (*resolved_index >= infos.size()) {
+      RTC_LOG(LS_WARNING) << __func__
+                          << ": Device index out of range. index="
+                          << *resolved_index << " available=" << infos.size();
+      return false;
+    }
+    return true;
+  } else {
+    for (const auto& info : infos) {
+      if (MatchDeviceIdentifier(device_spec, info.name.c_str(),
+                                info.guid.c_str())) {
+        *resolved_index = info.index;
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+// デバイス名/インデックスからデバイスを設定する
+bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                    const std::string& device_spec,
+                    bool is_input) {
+  if (device_spec.empty()) {
+    return true;
+  }
+
+  auto infos = GetAudioDeviceInfos(adm, is_input);
+
+  uint16_t resolved_index = 0;
+  if (!ResolveDeviceIndex(infos, device_spec, is_input, &resolved_index)) {
+    return false;
+  }
+
+  RTC_LOG(LS_INFO) << __func__
+                   << ": Applying device index=" << resolved_index
+                   << " is_input=" << is_input;
+
+  // デバイスを設定
+  int32_t set_result = is_input ? adm->SetRecordingDevice(resolved_index)
+                                : adm->SetPlayoutDevice(resolved_index);
+  if (set_result != 0) {
+    RTC_LOG(LS_WARNING) << __func__
+                        << ": Failed to set audio device. index="
+                        << resolved_index << " is_input=" << is_input
+                        << " result=" << set_result;
+    return false;
+  }
+
+  return true;
+}
+
+}  // namespace
+
+#endif
 
 RTCManager::RTCManager(
     RTCManagerConfig config,
@@ -45,21 +127,12 @@ RTCManager::RTCManager(
 
   network_thread_ = webrtc::Thread::CreateWithSocketServer();
   network_thread_->Start();
-  worker_thread_ = webrtc::Thread::Create();
-  worker_thread_->Start();
   signaling_thread_ = webrtc::Thread::Create();
   signaling_thread_->Start();
 
 #if defined(__linux__)
-
-#if defined(USE_LINUX_PULSE_AUDIO)
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kLinuxPulseAudio;
-#else
-  webrtc::AudioDeviceModule::AudioLayer audio_layer =
-      webrtc::AudioDeviceModule::kLinuxAlsaAudio;
-#endif
-
 #else
   webrtc::AudioDeviceModule::AudioLayer audio_layer =
       webrtc::AudioDeviceModule::kPlatformDefaultAudio;
@@ -72,20 +145,22 @@ RTCManager::RTCManager(
 
   webrtc::PeerConnectionFactoryDependencies dependencies;
   dependencies.network_thread = network_thread_.get();
-  dependencies.worker_thread = worker_thread_.get();
+  // worker thread には network thread を使う
+  dependencies.worker_thread = network_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
   dependencies.event_log_factory =
-      absl::make_unique<webrtc::RtcEventLogFactory>(&env.task_queue_factory());
+      absl::make_unique<webrtc::RtcEventLogFactory>();
 
-  dependencies.adm = worker_thread_->BlockingCall(
+  dependencies.adm = network_thread_->BlockingCall(
       [&]() -> webrtc::scoped_refptr<webrtc::AudioDeviceModule> {
         // create_adm が設定されている場合は、それを使って ADM を作成する
+        webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
         if (config_.create_adm) {
           return config_.create_adm();
         } else {
 #if defined(_WIN32)
           return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-              &env.task_queue_factory());
+              env);
 #else
           return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                  audio_layer);
@@ -137,8 +212,9 @@ RTCManager::RTCManager(
 
   webrtc::EnableMedia(dependencies);
 
-  //factory_ =
-  //    webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
+  // あとでデバイス選択に使うため保存しておく
+  auto adm = dependencies.adm;
+
   using result_type =
       std::pair<webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>,
                 webrtc::scoped_refptr<webrtc::ConnectionContext>>;
@@ -157,7 +233,7 @@ RTCManager::RTCManager(
   factory_ = p.first;
   context_ = p.second;
   if (!factory_.get()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__
+    RTC_LOG(LS_ERROR) << __func__
                       << ": Failed to initialize PeerConnectionFactory";
     exit(1);
   }
@@ -165,8 +241,28 @@ RTCManager::RTCManager(
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
   factory_options.disable_encryption = false;
   factory_options.ssl_max_version = webrtc::SSL_PROTOCOL_DTLS_12;
-  factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
+
+#if defined(__APPLE__) || defined(__linux__)
+  if (adm) {
+    network_thread_->BlockingCall([&]() {
+      if (!config_.audio_input_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_input_device, true)) {
+          RTC_LOG(LS_WARNING)
+              << __func__
+              << ": Failed to reapply audio input device. Using default.";
+        }
+      }
+      if (!config_.audio_output_device.empty()) {
+        if (!SetAudioDevice(adm, config_.audio_output_device, false)) {
+          RTC_LOG(LS_WARNING)
+              << __func__
+              << ": Failed to reapply audio output device. Using default.";
+        }
+      }
+    });
+  }
+#endif
 
   if (!config_.no_audio_device) {
     webrtc::AudioOptions ao;
@@ -178,18 +274,18 @@ RTCManager::RTCManager(
       ao.noise_suppression = false;
     if (config_.disable_highpass_filter)
       ao.highpass_filter = false;
-    RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
+    RTC_LOG(LS_INFO) << __func__ << ": " << ao.ToString();
     audio_track_ = factory_->CreateAudioTrack(
         Util::GenerateRandomChars(), factory_->CreateAudioSource(ao).get());
     if (!audio_track_) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
+      RTC_LOG(LS_WARNING) << __func__ << ": Cannot create audio_track";
     }
   }
 
   if (video_track_source && !config_.no_video_device) {
     webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
         webrtc::VideoTrackSourceProxy::Create(
-            signaling_thread_.get(), worker_thread_.get(), video_track_source);
+            signaling_thread_.get(), network_thread_.get(), video_track_source);
     video_track_ =
         factory_->CreateVideoTrack(video_source, Util::GenerateRandomChars());
     if (video_track_) {
@@ -198,7 +294,7 @@ RTCManager::RTCManager(
             webrtc::VideoTrackInterface::ContentHint::kText);
       }
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
+      RTC_LOG(LS_WARNING) << __func__ << ": Cannot create video_track";
     }
   }
 }
@@ -211,7 +307,6 @@ RTCManager::~RTCManager() {
   context_ = nullptr;
   factory_ = nullptr;
   network_thread_->Stop();
-  worker_thread_->Stop();
   signaling_thread_->Stop();
 
   webrtc::CleanupSSL();
@@ -247,17 +342,15 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+  rtc_config.crypto_options.srtp.enable_gcm_crypto_suites = true;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_, &data_manager_dispatcher_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
 
-  // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
-  // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
-  //
-  // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
+  // WebRTC 既定の組込みルートではなく、OS のシステム CA (または --ca-cert) で検証する。
   dependencies.tls_cert_verifier =
       std::unique_ptr<webrtc::SSLCertificateVerifier>(
-          new RTCSSLVerifier(config_.insecure));
+          new RTCSSLVerifier(config_.insecure, config_.ca_cert));
 
   dependencies.allocator.reset(new webrtc::BasicPortAllocator(
       webrtc::CreateEnvironment(), context_->default_network_manager(),
@@ -294,7 +387,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
       connection = factory_->CreatePeerConnectionOrError(
           rtc_config, std::move(dependencies));
   if (!connection.ok()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
+    RTC_LOG(LS_ERROR) << __func__ << ": CreatePeerConnection failed";
     return nullptr;
   }
 
@@ -307,7 +400,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
   if (direction.has_value() && *direction != "sendrecv" &&
       *direction != "sendonly" && *direction != "recvonly") {
     RTC_LOG(LS_WARNING)
-        << __FUNCTION__
+        << __func__
         << ": direction must be nullopt, sendrecv, sendonly, or recvonly";
     return;
   }
@@ -323,7 +416,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
       webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
           audio_sender = connection->AddTrack(audio_track_, {stream_id});
       if (!audio_sender.ok()) {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
+        RTC_LOG(LS_WARNING) << __func__ << ": Cannot add audio_track_";
       }
     }
 
@@ -333,7 +426,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
       if (video_add_result.ok()) {
         video_sender_ = video_add_result.value();
       } else {
-        RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
+        RTC_LOG(LS_WARNING) << __func__ << ": Cannot add video_track_";
       }
     }
 
@@ -346,7 +439,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
         auto error = transceiver->SetDirectionWithError(transceiver_direction);
         if (!error.ok()) {
           RTC_LOG(LS_WARNING)
-              << __FUNCTION__
+              << __func__
               << ": Failed to set transceiver direction: " << error.message();
         }
       }
@@ -360,7 +453,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
     auto audio_result =
         connection->AddTransceiver(webrtc::MediaType::AUDIO, init);
     if (!audio_result.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << ": Cannot add audio transceiver for recvonly";
     }
 
@@ -368,7 +461,7 @@ void RTCManager::InitTracks(RTCConnection* conn,
     auto video_result =
         connection->AddTransceiver(webrtc::MediaType::VIDEO, init);
     if (!video_result.ok()) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__
+      RTC_LOG(LS_WARNING) << __func__
                           << ": Cannot add video transceiver for recvonly";
     }
   }

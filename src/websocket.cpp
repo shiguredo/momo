@@ -1,5 +1,6 @@
 #include "websocket.h"
 
+#include <string>
 #include <utility>
 
 // WebRTC
@@ -10,10 +11,35 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
+#include <boost/beast/http/status.hpp>
 #include <boost/beast/websocket/stream.hpp>
 
 #include "ssl_verifier.h"
 #include "util.h"
+
+namespace {
+
+// WSS ホスト名検証用に接続先ホスト名を正規化する
+std::string NormalizeHostForVerification(const std::string& host) {
+  std::string normalized = host;
+
+  // IPv6 リテラルのブラケットを除去する
+  if (!normalized.empty() && normalized.front() == '[') {
+    const auto end = normalized.find(']');
+    if (end != std::string::npos) {
+      normalized = normalized.substr(1, end - 1);
+    }
+  }
+
+  // 末尾ドットを除去する
+  while (!normalized.empty() && normalized.back() == '.') {
+    normalized.pop_back();
+  }
+
+  return normalized;
+}
+
+}  // namespace
 
 static std::shared_ptr<boost::asio::ssl::context> CreateSSLContext(
     const std::string& client_cert,
@@ -23,7 +49,6 @@ static std::shared_ptr<boost::asio::ssl::context> CreateSSLContext(
   SSL_CTX_set_min_proto_version(handle, TLS1_2_VERSION);
   SSL_CTX_set_max_proto_version(handle, TLS1_3_VERSION);
   auto ctx = std::make_shared<boost::asio::ssl::context>(handle);
-  //ctx.set_default_verify_paths();
   ctx->set_options(boost::asio::ssl::context::default_workarounds |
                    boost::asio::ssl::context::no_sslv2 |
                    boost::asio::ssl::context::no_sslv3 |
@@ -51,13 +76,15 @@ Websocket::Websocket(Websocket::ssl_tag,
                      boost::asio::io_context& ioc,
                      bool insecure,
                      const std::string& client_cert,
-                     const std::string& client_key)
+                     const std::string& client_key,
+                     const std::optional<std::string>& ca_cert)
     : resolver_(new boost::asio::ip::tcp::resolver(ioc)),
       strand_(ioc.get_executor()),
-      insecure_(insecure) {
+      insecure_(insecure),
+      ca_cert_(ca_cert) {
   ssl_ctx_ = CreateSSLContext(client_cert, client_key);
   wss_.reset(new ssl_websocket_t(ioc, *ssl_ctx_));
-  InitWss(wss_.get(), insecure);
+  InitWss(wss_.get());
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
     : ws_(new websocket_t(std::move(socket))), strand_(ws_->get_executor()) {
@@ -68,11 +95,14 @@ Websocket::Websocket(https_proxy_tag,
                      bool insecure,
                      const std::string& client_cert,
                      const std::string& client_key,
+                     const std::optional<std::string>& ca_cert,
                      std::string proxy_url,
                      std::string proxy_username,
                      std::string proxy_password)
     : resolver_(new boost::asio::ip::tcp::resolver(ioc)),
       strand_(ioc.get_executor()),
+      insecure_(insecure),
+      ca_cert_(ca_cert),
       https_proxy_(true),
       proxy_socket_(new boost::asio::ip::tcp::socket(ioc)),
       proxy_url_(std::move(proxy_url)),
@@ -89,22 +119,27 @@ bool Websocket::IsSSL() const {
   return https_proxy_ || wss_ != nullptr;
 }
 
-void Websocket::InitWss(ssl_websocket_t* wss, bool insecure) {
+void Websocket::InitWss(ssl_websocket_t* wss) {
   wss->write_buffer_bytes(8192);
 
   wss->next_layer().set_verify_mode(boost::asio::ssl::verify_peer);
   wss->next_layer().set_verify_callback(
-      [insecure](bool preverified, boost::asio::ssl::verify_context& ctx) {
-        if (preverified) {
-          return true;
-        }
-        // insecure の場合は証明書をチェックしない
-        if (insecure) {
+      [this](bool /*preverified*/, boost::asio::ssl::verify_context& ctx) {
+        if (this->insecure_) {
           return true;
         }
         X509* cert = X509_STORE_CTX_get0_cert(ctx.native_handle());
         STACK_OF(X509)* chain = X509_STORE_CTX_get0_chain(ctx.native_handle());
-        return SSLVerifier::VerifyX509(cert, chain);
+        const std::string host =
+            NormalizeHostForVerification(this->parts_.host);
+        if (!SSLVerifier::VerifyX509(cert, chain, host, this->ca_cert_)) {
+          // 自前検証のため asio 側 ctx にエラーが載らない。
+          // ホスト名不一致時も ERR に積まれないため明示設定する
+          X509_STORE_CTX_set_error(ctx.native_handle(),
+                                   X509_V_ERR_APPLICATION_VERIFICATION);
+          return false;
+        }
+        return true;
       });
 }
 
@@ -364,9 +399,21 @@ void Websocket::OnReadProxy(boost::system::error_code ec,
     return;
   }
 
+  // CONNECT は 2xx のときだけトンネル確立。非 2xx では TLS に進まない
+  const auto& proxy_resp = proxy_resp_parser_->get();
+  if (boost::beast::http::to_status_class(proxy_resp.result()) !=
+      boost::beast::http::status_class::successful) {
+    RTC_LOG(LS_ERROR) << "Proxy CONNECT failed: " << proxy_resp.result_int()
+                      << " " << std::string(proxy_resp.reason());
+    auto on_connect = std::move(on_connect_);
+    on_connect(boost::system::errc::make_error_code(
+        boost::system::errc::permission_denied));
+    return;
+  }
+
   // wss を作って、あとは普通の SSL ハンドシェイクを行う
   wss_.reset(new ssl_websocket_t(std::move(*proxy_socket_), *ssl_ctx_));
-  InitWss(wss_.get(), insecure_);
+  InitWss(wss_.get());
 
   // SNI の設定を行う
   if (!SSL_set_tlsext_host_name(wss_->next_layer().native_handle(),
@@ -390,7 +437,7 @@ void Websocket::OnRead(read_callback_t on_read,
                    << " ec=" << ec.message();
 
   if (ec) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << ec.message();
   }
 
   std::string text;
@@ -425,7 +472,7 @@ void Websocket::DoWriteText(std::string text, write_callback_t on_write) {
 void Websocket::DoWrite() {
   auto& data = write_data_.front();
 
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": "
+  RTC_LOG(LS_VERBOSE) << __func__ << ": "
                       << boost::beast::buffers_to_string(data->buffer.data());
 
   if (IsSSL()) {
@@ -447,7 +494,7 @@ void Websocket::OnWrite(boost::system::error_code ec,
                    << " ec=" << ec.message();
 
   if (ec) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": " << ec.message();
+    RTC_LOG(LS_ERROR) << __func__ << ": " << ec.message();
   }
 
   auto& data = write_data_.front();

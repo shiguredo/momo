@@ -21,7 +21,6 @@ class Util {
                         MomoArgs& args);
   static std::string GenerateRandomChars();
   static std::string GenerateRandomChars(size_t length);
-  static std::string GenerateRandomNumericChars(size_t length);
   static std::string IceConnectionStateToString(
       webrtc::PeerConnectionInterface::IceConnectionState state);
 
@@ -53,7 +52,7 @@ class Util {
 // のように、return と組み合わせて使える。
 #define MOMO_BOOST_ERROR(ec, what)                                      \
   ([&ec] {                                                              \
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << " " what ": " << ec.message(); \
+    RTC_LOG(LS_ERROR) << __func__ << " " what ": " << ec.message(); \
   }())
 
 #endif

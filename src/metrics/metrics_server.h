@@ -6,6 +6,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/system/error_code.hpp>
 
 #include "metrics_session.h"
@@ -37,11 +38,13 @@ class MetricsServer : public std::enable_shared_from_this<MetricsServer> {
  private:
   void DoAccept();
   void OnAccept(boost::system::error_code ec);
+  void RestartAccept(boost::system::error_code ec);
 
  private:
   boost::asio::io_context& ioc_;
   boost::asio::ip::tcp::acceptor acceptor_;
   boost::asio::ip::tcp::socket socket_;
+  boost::asio::steady_timer accept_retry_timer_;
 
   RTCManager* rtc_manager_;
   MetricsServerConfig config_;

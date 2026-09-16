@@ -1,9 +1,9 @@
 #ifndef DYN_DYN_H_
 #define DYN_DYN_H_
 
-#include <iostream>  // IWYU pragma: export
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #if defined(_WIN32)
@@ -111,9 +111,8 @@ class DynModule {
     auto f =                                                                   \
         (func_type)DynModule::Instance().GetFunc(soname, DYN_STRINGIZE(func)); \
     if (f == nullptr) {                                                        \
-      std::cerr << "Failed to GetFunc: " << DYN_STRINGIZE(func)                \
-                << " soname=" << soname << std::endl;                          \
-      exit(1);                                                                 \
+      throw std::runtime_error(std::string("Failed to GetFunc: ") +            \
+                               DYN_STRINGIZE(func) + " soname=" + soname);     \
     }                                                                          \
     return f(args...);                                                         \
   }

@@ -19,7 +19,6 @@ set(TARGET_ARCH_ARM "" CACHE STRING "TARGET_ARCH が arm の場合の詳細な C
 set(USE_NVCODEC_ENCODER OFF CACHE BOOL "NVIDIA VIDEO CODEC SDK のハードウェアエンコーダを利用するかどうか")
 set(USE_JETSON_ENCODER OFF CACHE BOOL "Jetson のハードウェアエンコーダを利用するかどうか")
 set(USE_VPL_ENCODER OFF CACHE BOOL "Intel VPL のハードウェアエンコーダを利用するかどうか")
-set(USE_LINUX_PULSE_AUDIO OFF CACHE BOOL "Linux で ALSA の代わりに PulseAudio を利用するか")
 set(USE_SCREEN_CAPTURER OFF CACHE BOOL "スクリーンキャプチャラを利用するかどうか")
 set(USE_FAKE_CAPTURE_DEVICE OFF CACHE BOOL "Fake capture device を利用するかどうか")
 set(BOOST_ROOT "" CACHE PATH "Boost のインストール先ディレクトリ\n空文字だった場合はデフォルト検索パスの Boost を利用する")
@@ -106,11 +105,13 @@ string(SUBSTRING "${WEBRTC_COMMIT}" 0 8 WEBRTC_COMMIT_SHORT)
 configure_file(src/momo_version.gen.h.template ${CMAKE_CURRENT_BINARY_DIR}/momo_version.gen.h)
 target_include_directories(momo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(momo PRIVATE src/sora-cpp-sdk/include)
+target_include_directories(momo PRIVATE src/sora-cpp-sdk/src)
 target_include_directories(momo PRIVATE ${OPENH264_ROOT_DIR}/include)
 
 target_sources(momo
   PRIVATE
     src/ayame/ayame_client.cpp
+    src/device_info.cpp
     src/main.cpp
     src/metrics/metrics_server.cpp
     src/metrics/metrics_session.cpp
@@ -122,7 +123,6 @@ target_sources(momo
     src/rtc/device_video_capturer.cpp
     src/rtc/momo_video_decoder_factory.cpp
     src/rtc/momo_video_encoder_factory.cpp
-    src/rtc/native_buffer.cpp
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
@@ -131,6 +131,7 @@ target_sources(momo
     src/serial_data_channel/serial_data_manager.cpp
     src/sora-cpp-sdk/src/open_h264_video_encoder.cpp
     src/sora-cpp-sdk/src/scalable_track_source.cpp
+    src/sora-cpp-sdk/src/ssl_verifier.cpp
     src/sora-cpp-sdk/src/vpl_session_impl.cpp
     src/sora/sora_client.cpp
     src/sora/sora_server.cpp
@@ -163,7 +164,6 @@ target_compile_definitions(momo
     $<$<BOOL:${USE_V4L2_ENCODER}>:USE_V4L2_ENCODER>
     $<$<BOOL:${USE_JETSON_ENCODER}>:USE_JETSON_ENCODER>
     $<$<BOOL:${USE_VPL_ENCODER}>:USE_VPL_ENCODER>
-    $<$<BOOL:${USE_LINUX_PULSE_AUDIO}>:USE_LINUX_PULSE_AUDIO>
     $<$<BOOL:${USE_SCREEN_CAPTURER}>:USE_SCREEN_CAPTURER>
     $<$<BOOL:${USE_FAKE_CAPTURE_DEVICE}>:USE_FAKE_CAPTURE_DEVICE>
     # https://github.com/boostorg/container_hash/issues/22 と同じ問題が clang-15 でも起きるので、これを手動で定義して回避する
@@ -212,6 +212,8 @@ if (USE_LIBCXX)
     PRIVATE
       "$<$<COMPILE_LANGUAGE:CXX>:-nostdinc++>"
       "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:LIBCXX_INCLUDE_DIR>>:-isystem${LIBCXX_INCLUDE_DIR}>"
+      "$<$<COMPILE_LANGUAGE:OBJCXX>:-nostdinc++>"
+      "$<$<AND:$<COMPILE_LANGUAGE:OBJCXX>,$<BOOL:LIBCXX_INCLUDE_DIR>>:-isystem${LIBCXX_INCLUDE_DIR}>"
   )
 endif()
 
@@ -276,7 +278,7 @@ if ("${TARGET_OS}" STREQUAL "windows")
       ws2_32.lib
       # amstrmid.lib
       Strmiids.lib
-      # crypt32.lib
+      crypt32.lib
       dmoguids.lib
       iphlpapi.lib
       msdmo.lib
@@ -299,18 +301,23 @@ if ("${TARGET_OS}" STREQUAL "windows")
       RTC_ENABLE_H265
   )
 
+  target_sources(momo
+    PRIVATE
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_windows.cpp
+  )
+
   # NVIDIA Video Codec SDK
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
-        third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
-        third_party/NvCodec/include
-        third_party/NvCodec/NvCodec)
+        src/sora-cpp-sdk/third_party/NvCodec/include
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec)
     target_link_libraries(momo
       PRIVATE
         DXGI.lib
@@ -326,14 +333,14 @@ if ("${TARGET_OS}" STREQUAL "windows")
 
     set_source_files_properties(
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
-        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       PROPERTIES
         CUDA_SOURCE_PROPERTY_FORMAT OBJ
     )
     cuda_compile(CUDA_FILES
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
-        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
       OPTIONS
         # VS 2022 の 17.10.x 以上に上げると、ツールセットのバージョンが 14.40 以上になってしまい、以下のエラーが出るため -allow-unsupported-compiler を指定する
@@ -357,8 +364,8 @@ if ("${TARGET_OS}" STREQUAL "windows")
         # ref: https://stackoverflow.com/questions/78515942/cuda-compatibility-with-visual-studio-2022-version-17-10
         -Xcompiler /D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
         -Xcompiler /utf-8
-        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/include
-        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/third_party/NvCodec/NvCodec
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src/sora-cpp-sdk/third_party/NvCodec/include
+        -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src/sora-cpp-sdk/third_party/NvCodec/NvCodec
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
         -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src/sora-cpp-sdk/include
         -Xcompiler "/MT$<$<CONFIG:Debug>:d>"
@@ -393,6 +400,7 @@ elseif (TARGET_OS STREQUAL "macos")
       src/mac_helper/mac_capturer.mm
       src/mac_helper/macos_version.mm
       src/mac_helper/objc_codec_factory_helper.mm
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_macos.cpp
   )
 
   target_compile_options(momo PRIVATE -fconstant-string-class=NSConstantString -mmacosx-version-min=11.0)
@@ -404,15 +412,25 @@ elseif (TARGET_OS STREQUAL "macos")
       WEBRTC_POSIX
       WEBRTC_MAC
       RTC_ENABLE_H265
+      _LIBCPP_ABI_NAMESPACE=Cr
+      _LIBCPP_ABI_VERSION=2
+      _LIBCPP_DISABLE_AVAILABILITY
+      _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+      _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
+      _LIBCPP_ENABLE_NODISCARD
+      _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE
+      # boost 1.91.0 で asio の kqueue_reactor 内部 mutex が
+      # atomic_slim_mutex (std::atomic::wait / notify_one) に切り替わったが、
+      # webrtc-build 同梱の libc++ + macOS の組み合わせで async_connect が
+      # ハングするため pthread ベースに戻す。
+      BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
 
   target_link_libraries(momo
     PRIVATE
       #"-framework Foundation"
       "-framework AVFoundation"
-      #"-framework CoreServices"
-      #"-framework CoreFoundation"
-      #"-framework AudioUnit"
+      "-framework CoreFoundation"
       "-framework AudioToolbox"
       "-framework CoreAudio"
       "-framework QuartzCore"
@@ -426,6 +444,7 @@ elseif (TARGET_OS STREQUAL "macos")
       "-framework OpenGL"
       "-framework IOSurface"
       "-framework ScreenCaptureKit"
+      "-framework Security"
   )
 
 elseif (TARGET_OS STREQUAL "linux")
@@ -435,6 +454,7 @@ elseif (TARGET_OS STREQUAL "linux")
     PRIVATE
       src/sora-cpp-sdk/src/v4l2/v4l2_device.cpp
       src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp
+      src/sora-cpp-sdk/src/ssl_verifier/ssl_verifier_ubuntu.cpp
   )
   target_compile_definitions(momo
     PRIVATE
@@ -473,9 +493,9 @@ elseif (TARGET_OS STREQUAL "linux")
   if (USE_NVCODEC_ENCODER)
     target_sources(momo
       PRIVATE
-        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder.cpp
@@ -484,8 +504,8 @@ elseif (TARGET_OS STREQUAL "linux")
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_decoder.cpp)
     target_include_directories(momo
       PRIVATE
-        third_party/NvCodec/include
-        third_party/NvCodec/NvCodec
+        src/sora-cpp-sdk/third_party/NvCodec/include
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec
         /usr/local/cuda/include)
 
     # これらのソースは CUDA としてコンパイルする
@@ -493,10 +513,10 @@ elseif (TARGET_OS STREQUAL "linux")
         src/sora-cpp-sdk/src/cuda_context_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_video_encoder_cuda.cpp
         src/sora-cpp-sdk/src/hwenc_nvcodec/nvcodec_decoder_cuda.cpp
-        third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-        third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+        src/sora-cpp-sdk/third_party/NvCodec/NvCodec/NvEncoder/NvEncoderCuda.cpp
       PROPERTIES
-        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_35;-std=gnu++17"
+        COMPILE_OPTIONS "-xcuda;--cuda-gpu-arch=sm_60;-std=gnu++17;-Wno-tautological-constant-out-of-range-compare;-D_ALLOW_UNSUPPORTED_LIBCPP"
     )
 
     target_link_directories(momo PRIVATE /usr/local/cuda/lib64)
@@ -583,7 +603,7 @@ elseif (TARGET_OS STREQUAL "linux")
         set_target_properties(camerac PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
         target_sources(camerac
           PRIVATE
-            src/libcamerac/libcamerac.cpp
+            src/sora-cpp-sdk/third_party/libcamerac/libcamerac.cpp
         )
         target_link_libraries(camerac
           PRIVATE
@@ -593,15 +613,16 @@ elseif (TARGET_OS STREQUAL "linux")
 
         target_sources(momo
           PRIVATE
-            src/hwenc_v4l2/libcamera_capturer.cpp
-            src/hwenc_v4l2/v4l2_buffers.cpp
-            src/hwenc_v4l2/v4l2_capturer.cpp
-            src/hwenc_v4l2/v4l2_converter.cpp
-            src/hwenc_v4l2/v4l2_h264_decoder.cpp
-            src/hwenc_v4l2/v4l2_h264_encoder.cpp
-            src/hwenc_v4l2/v4l2_native_buffer.cpp
-            src/hwenc_v4l2/v4l2_runner.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/libcamera_capturer.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_buffers.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_capturer.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_converter.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_h264_decoder.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_h264_encoder.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_native_buffer.cpp
+            src/sora-cpp-sdk/src/hwenc_v4l2/v4l2_runner.cpp
         )
+        target_include_directories(momo PRIVATE src/sora-cpp-sdk/third_party/libcamerac)
         target_link_libraries(momo PRIVATE camerac)
         set_target_properties(momo PROPERTIES BUILD_RPATH_USE_ORIGIN ON)
       endif()

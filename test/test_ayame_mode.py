@@ -102,6 +102,7 @@ def test_ayame_mode_with_codec(port_allocator, codec):
     room_id = str(uuid.uuid4())
 
     # コーデックごとのエンコーダー/デコーダー設定
+    codec_settings: dict[str, Any] = {}
     match codec:
         case "VP8":
             codec_settings = {
@@ -118,8 +119,6 @@ def test_ayame_mode_with_codec(port_allocator, codec):
                 "av1_encoder": "software",
                 "av1_decoder": "software",
             }
-        case _:
-            codec_settings = {}
 
     with Momo(
         mode=MomoMode.AYAME,

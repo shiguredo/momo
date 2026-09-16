@@ -38,14 +38,15 @@ webrtc_logs_*
 .DS_Store
 *.swp
 
-/__pycache__
+__pycache__/
+.pytest_cache/
 /_build
 /_source
 /_install
 /_package
 
-# Claude Code
-CLAUDE.local.md
-
-# Serena
-.serena
+# Agents
+.claude/
+.cursor/
+.opencode/
+.agents/

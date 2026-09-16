@@ -38,41 +38,12 @@
 #include "jetson_util.h"
 #include "sora/hwenc_jetson/jetson_buffer.h"
 
-#define H264HWENC_HEADER_DEBUG 0
 #define INIT_ERROR(cond, desc)                 \
   if (cond) {                                  \
     RTC_LOG(LS_ERROR) << __FUNCTION__ << desc; \
     Release();                                 \
     return WEBRTC_VIDEO_CODEC_ERROR;           \
   }
-
-static std::string hex_dump(const uint8_t* buf, size_t len) {
-  std::stringstream ss;
-
-  for (size_t i = 0; i < len; ++i) {
-    // 行の先頭にオフセットを表示
-    if (i % 16 == 0) {
-      ss << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
-    }
-
-    // 値を16進数で表示
-    ss << std::setw(2) << std::setfill('0') << std::hex << (int)buf[i] << " ";
-
-    // 16バイトごとに改行
-    if ((i + 1) % 16 == 0 || i == len - 1) {
-      ss << "\n";
-    }
-  }
-
-  return ss.str();
-}
-
-static void save_to_file(const std::string& filename,
-                         const uint8_t* buf,
-                         size_t size) {
-  std::ofstream file(filename, std::ios::binary);
-  file.write((const char*)buf, size);
-}
 
 namespace sora {
 
@@ -81,37 +52,14 @@ JetsonVideoEncoder::JetsonVideoEncoder(const webrtc::Codec& codec)
       encoder_(nullptr),
       configured_framerate_(30),
       use_native_(false),
-      use_dmabuff_(false) {}
+      use_dmabuff_(false),
+      output_use_dmabuf_(false) {}
 
 JetsonVideoEncoder::~JetsonVideoEncoder() {
   Release();
 }
 
-// 標準出力や標準エラーに出力されないようにいろいろする
-//struct SuppressErrors {
-//  SuppressErrors() {
-//    old_stdout = stdout;
-//    old_stderr = stderr;
-//    old_log_level = log_level;
-//    stdout = fopen("/dev/null", "w");
-//    stderr = fopen("/dev/null", "w");
-//    log_level = -1;
-//  }
-//  ~SuppressErrors() {
-//    fclose(stdout);
-//    fclose(stderr);
-//    stdout = old_stdout;
-//    stderr = old_stderr;
-//    log_level = old_log_level;
-//  }
-//  FILE* old_stdout;
-//  FILE* old_stderr;
-//  int old_log_level;
-//};
-
 bool JetsonVideoEncoder::IsSupported(webrtc::VideoCodecType codec) {
-  //SuppressErrors sup;
-
   auto encoder = NvVideoEncoder::createVideoEncoder("enc0");
   auto ret = encoder->setCapturePlaneFormat(VideoCodecToV4L2Format(codec), 1024,
                                             768, 2 * 1024 * 1024);
@@ -180,7 +128,7 @@ int32_t JetsonVideoEncoder::InitEncode(const webrtc::VideoCodec* codec_settings,
                    << target_bitrate_bps_ << "bit/sec　"
                    << codec_settings->maxBitrate << "kbit/sec　";
 
-  // Initialize encoded image.
+  // EncodedImage を初期化する
   encoded_image_.timing_.flags =
       webrtc::VideoSendTiming::TimingFrameFlags::kInvalid;
   encoded_image_.content_type_ =
@@ -317,14 +265,17 @@ int32_t JetsonVideoEncoder::JetsonConfigure() {
         RTC_LOG(LS_ERROR) << "NvBufferCreateEx i:" << i << " fd:" << fd;
         output_plane_fd_[i] = fd;
       }
+      output_use_dmabuf_ = true;
     } else {
       ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_USERPTR, 1, false,
                                               false);
       INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+      output_use_dmabuf_ = false;
     }
   } else {
     ret = encoder_->output_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
     INIT_ERROR(ret < 0, "Failed to setupPlane at encoder output_plane");
+    output_use_dmabuf_ = false;
   }
 
   ret = encoder_->capture_plane.setupPlane(V4L2_MEMORY_MMAP, 1, true, false);
@@ -381,13 +332,14 @@ void JetsonVideoEncoder::JetsonRelease() {
   }
   delete encoder_;
   encoder_ = nullptr;
+  output_use_dmabuf_ = false;
 }
 
 void JetsonVideoEncoder::SendEOS() {
   if (encoder_->output_plane.getStreamStatus()) {
     struct v4l2_buffer v4l2_buf;
     struct v4l2_plane planes[MAX_PLANES];
-    NvBuffer* buffer;
+    NvBuffer* buffer = nullptr;
 
     memset(&v4l2_buf, 0, sizeof(v4l2_buf));
     memset(planes, 0, MAX_PLANES * sizeof(struct v4l2_plane));
@@ -397,11 +349,29 @@ void JetsonVideoEncoder::SendEOS() {
         encoder_->output_plane.getNumBuffers()) {
       if (encoder_->output_plane.dqBuffer(v4l2_buf, &buffer, NULL, 10) < 0) {
         RTC_LOG(LS_ERROR) << "Failed to dqBuffer at encoder output_plane";
+        return;
       }
+    } else {
+      // Encode と同じく、空きスロットを index で指す
+      buffer = encoder_->output_plane.getNthBuffer(
+          encoder_->output_plane.getNumQueuedBuffers());
+      v4l2_buf.index = encoder_->output_plane.getNumQueuedBuffers();
     }
+    if (!buffer) {
+      RTC_LOG(LS_ERROR) << "Failed to get buffer at encoder output_plane";
+      return;
+    }
+
     planes[0].bytesused = 0;
-    for (int i = 0; i < buffer->n_planes; i++) {
-      buffer->planes[i].bytesused = 0;
+    if (output_use_dmabuf_) {
+      // reqbufs(DMABUF) した経路。Encode と同じく fd を付けて積む
+      planes[0].m.fd = output_plane_fd_[v4l2_buf.index];
+      v4l2_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+      v4l2_buf.memory = V4L2_MEMORY_DMABUF;
+    } else {
+      for (int i = 0; i < buffer->n_planes; i++) {
+        buffer->planes[i].bytesused = 0;
+      }
     }
     if (encoder_->output_plane.qBuffer(v4l2_buf, NULL) < 0) {
       RTC_LOG(LS_ERROR) << "Failed to qBuffer at encoder output_plane";
@@ -892,8 +862,6 @@ int32_t JetsonVideoEncoder::SendFrame(
         // OBU_FRAME
         memcpy(p, buffer + 2, size - 2);
 
-        // RTC_LOG(LS_ERROR) << "\n" << hex_dump(new_buffer.data(), 64);
-        // save_to_file("keyframe2.obu", new_buffer.data(), new_buffer.size());
         encoded_image_buffer = webrtc::EncodedImageBuffer::Create(
             new_buffer.data(), new_buffer.size());
       } else {

@@ -22,6 +22,8 @@
 #include <rtc_base/thread.h>
 #include <sora/scalable_track_source.h>
 
+#include "../device_info.h"
+
 RTC_FWD_DECL_OBJC_CLASS(AVCaptureDevice);
 RTC_FWD_DECL_OBJC_CLASS(RTCCameraVideoCapturer);
 RTC_FWD_DECL_OBJC_CLASS(RTCVideoSourceAdapter);
@@ -41,6 +43,9 @@ class MacCapturer : public sora::ScalableVideoTrackSource,
   virtual ~MacCapturer();
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
+
+  // デバイス一覧を取得する
+  static std::vector<VideoDeviceInfo> GetVideoDeviceInfos();
 
  private:
   void Destroy();

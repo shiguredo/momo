@@ -2,8 +2,8 @@
 
 ## 概要
 
-Momo は Raspberry Pi OS 64bit 環境で libcamera を利用したカメラ入力をサポートしています。
-libcamera は Linux 向けの新しいカメラスタックで、従来の V4L2 よりも高度なカメラ制御が可能です。
+Momo は Raspberry Pi OS 64 bit 環境で libcamera を利用したカメラ入力をサポートしています。
+libcamera は Linux 向けの新しいカメラスタックで、従来の V4L2 よりも高度なカメラ制御ができます。
 
 ## 基本的な使い方
 
@@ -126,7 +126,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 ### 未対応の型
 
 - Size 型
-- Point 型  
+- Point 型
 - マトリクス型（3x3 など）
 - その他の複雑な構造体
 
@@ -136,33 +136,33 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 | コントロール | 型 | 説明 | 値の例 |
 |------------|---|------|-------|
-| AeEnable | bool | 自動露出の有効/無効 | 0, 1 |
-| ExposureTime | int32 | 露出時間（マイクロ秒） | 10000 (1/100秒) |
-| AnalogueGain | float | アナログゲイン（1.0以上） | 2.0 |
+| AeEnable | bool | 自動露出の有効 / 無効 | 0, 1 |
+| ExposureTime | int32 | 露出時間（マイクロ秒） | 10000 (1/100 秒) |
+| AnalogueGain | float | アナログゲイン（1.0 以上） | 2.0 |
 | ExposureTimeMode | enum | 露出時間モード | Auto, Manual |
 | AnalogueGainMode | enum | ゲインモード | Auto, Manual |
 | AeMeteringMode | enum | 測光モード | CentreWeighted, Spot, Matrix |
-| ExposureValue | float | EV補正値 | -2.0 〜 2.0 |
+| ExposureValue | float | EV 補正値 | -2.0 〜 2.0 |
 
 ### オートフォーカス（AF）
 
 | コントロール | 型 | 説明 | 値の例 |
 |------------|---|------|-------|
-| AfMode | enum | AFモード | Manual, Auto, Continuous |
+| AfMode | enum | AF モード | Manual, Auto, Continuous |
 | AfRange | enum | フォーカス範囲 | Normal, Macro, Full |
 | AfSpeed | enum | フォーカス速度 | Normal, Fast |
-| AfTrigger | enum | AFトリガー | Start, Cancel |
-| AfWindows | Rectangle[] | AFエリア | "256,192,512,384" |
+| AfTrigger | enum | AF トリガー | Start, Cancel |
+| AfWindows | Rectangle[] | AF エリア | "256,192,512,384" |
 | LensPosition | float | レンズ位置（ジオプター） | 2.0 |
 
 ### ホワイトバランス（AWB）
 
 | コントロール | 型 | 説明 | 値の例 |
 |------------|---|------|-------|
-| AwbEnable | bool | AWBの有効/無効 | 0, 1 |
-| AwbMode | enum | AWBモード | Auto, Daylight, Cloudy, Tungsten |
+| AwbEnable | bool | AWB の有効 / 無効 | 0, 1 |
+| AwbMode | enum | AWB モード | Auto, Daylight, Cloudy, Tungsten |
 | ColourTemperature | int32 | 色温度（ケルビン） | 5500 |
-| ColourGains | float[2] | 赤・青ゲイン | 1.5,2.0 |
+| ColourGains | float[2] | 赤 / 青ゲイン | 1.5,2.0 |
 
 ### 画質調整
 
@@ -178,15 +178,15 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 | コントロール | 型 | 説明 | 値の例 |
 |------------|---|------|-------|
-| FrameDurationLimits | int64[2] | フレーム時間の最小/最大（マイクロ秒） | 33333,33333 (30fps固定) |
+| FrameDurationLimits | int64[2] | フレーム時間の最小 / 最大（マイクロ秒） | 33333,33333 (30 fps 固定) |
 
 ## enum 値一覧
 
 ### AfMode（オートフォーカスモード）
 
 - `Manual` または `0`: 手動フォーカス
-- `Auto` または `1`: シングルAF（一度フォーカスして停止）
-- `Continuous` または `2`: コンティニュアスAF
+- `Auto` または `1`: シングル AF（一度フォーカスして停止）
+- `Continuous` または `2`: コンティニュアス AF
 
 ### AfRange（フォーカス範囲）
 
@@ -220,17 +220,17 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 - `Daylight` または `5`: 昼光
 - `Cloudy` または `6`: 曇天
 
-### HdrMode（HDRモード）
+### HdrMode（HDR モード）
 
 - `Off` または `0`: 無効
 - `MultiExposureUnmerged` または `1`: 複数露出（未合成）
 - `MultiExposure` または `2`: 複数露出（合成）
-- `SingleExposure` または `3`: 単一露出HDR
+- `SingleExposure` または `3`: 単一露出 HDR
 - `Night` または `4`: ナイトモード
 
 ## 使用例
 
-### 例1: 明るい屋外での撮影設定
+### 例 1: 明るい屋外での撮影設定
 
 ```bash
 ./momo --use-libcamera \
@@ -241,7 +241,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
        sora ...
 ```
 
-### 例2: 暗所での撮影設定
+### 例 2: 暗所での撮影設定
 
 ```bash
 ./momo --use-libcamera \
@@ -252,7 +252,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
        sora ...
 ```
 
-### 例3: マクロ撮影設定
+### 例 3: マクロ撮影設定
 
 ```bash
 ./momo --use-libcamera \
@@ -263,7 +263,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
        sora ...
 ```
 
-### 例4: フレームレート固定（30fps）
+### 例 4: フレームレート固定（30 fps）
 
 ```bash
 ./momo --use-libcamera \
@@ -271,7 +271,7 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
        sora ...
 ```
 
-### 例5: 手動設定での完全制御
+### 例 5: 手動設定での完全制御
 
 ```bash
 ./momo --use-libcamera \
@@ -315,11 +315,13 @@ libcamera は 75 以上のカメラパラメーターを提供しています。
 
 ### パフォーマンスの問題
 
-- `--use-libcamera-native` オプションの使用を検討してください（H.264のみ）
+- `--use-libcamera-native` オプションの使用を検討してください（H.264 のみ）
 - 不要なコントロールの設定を避けてください
 - フレームレート制限を適切に設定してください
 
-## コントロールキー一覧
+## コントロールキーの例
+
+キーの名前と定義は libcamera の `control_ids_core.yaml`、`control_ids_draft.yaml`、`control_ids_rpi.yaml` を確認してください。
 
 ### Core Controls
 
@@ -415,5 +417,7 @@ SyncTimer
 
 - <https://libcamera.org/api-html/namespacelibcamera_1_1controls.html>
 - <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_core.yaml>
+- <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_draft.yaml>
+- <https://github.com/raspberrypi/libcamera/blob/main/src/libcamera/control_ids_rpi.yaml>
 - [libcamera 公式ドキュメント](https://libcamera.org/)
 - [Raspberry Pi Camera Algorithm and Tuning Guide](https://datasheets.raspberrypi.com/camera/raspberry-pi-camera-guide.pdf)

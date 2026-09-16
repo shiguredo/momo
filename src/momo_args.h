@@ -39,6 +39,10 @@ struct MomoArgs {
   // libcamera のコントロール設定。key value の形式で指定する。
   std::vector<std::pair<std::string, std::string>> libcamera_controls;
   std::string video_device = "";
+#if defined(__APPLE__) || defined(__linux__)
+  std::string audio_input_device = "";
+  std::string audio_output_device = "";
+#endif
   std::string resolution = "VGA";
   int framerate = 30;
   bool fixed_resolution = false;
@@ -50,6 +54,8 @@ struct MomoArgs {
   std::string serial_device = "";
   unsigned int serial_rate = 9600;
   bool insecure = false;
+  // PEM ファイルのパス。空文字は未指定 (OS のシステム CA を使う)
+  std::string ca_cert;
   bool screen_capture = false;
   int metrics_port = -1;
   bool metrics_allow_external_ip = false;

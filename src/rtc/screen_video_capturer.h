@@ -7,7 +7,6 @@
 // WebRTC
 #include <api/scoped_refptr.h>
 #include <modules/desktop_capture/desktop_capturer.h>
-#include <modules/video_capture/video_capture.h>
 #include <rtc_base/platform_thread.h>
 
 #include "sora/scalable_track_source.h"

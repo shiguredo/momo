@@ -34,6 +34,8 @@ class Momo:
         no_audio_device: bool = False,
         fake_capture_device: bool = True,
         force_i420: bool = False,
+        force_yuy2: bool = False,
+        force_nv12: bool = False,
         hw_mjpeg_decoder: bool | None = None,
         use_libcamera: bool = False,
         use_libcamera_native: bool = False,
@@ -149,6 +151,8 @@ class Momo:
             "no_audio_device": no_audio_device,
             "fake_capture_device": fake_capture_device,
             "force_i420": force_i420,
+            "force_yuy2": force_yuy2,
+            "force_nv12": force_nv12,
             "hw_mjpeg_decoder": hw_mjpeg_decoder,
             "use_libcamera": use_libcamera,
             "use_libcamera_native": use_libcamera_native,
@@ -319,11 +323,11 @@ class Momo:
             quoted_cmd = " ".join(shlex.quote(arg) for arg in cmd)
             print(f"Starting momo with command: {quoted_cmd}")
 
-            # プロセスを起動 (エラー出力をキャプチャして問題発生時に確認できるようにする)
+            # プロセスを起動 (標準出力とエラー出力を親プロセスに継承して CI ログで確認できるようにする)
             self.process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
+                stdout=None,
+                stderr=None,
                 text=True,
             )
             print(f"Started momo process with PID: {self.process.pid}")
@@ -370,13 +374,17 @@ class Momo:
         if kwargs.get("no_google_stun"):
             args.append("--no-google-stun")
         if kwargs.get("no_video_device"):
-            args.append("--no-video-device")
+            args.append("--no-video-input-device")
         if kwargs.get("no_audio_device"):
             args.append("--no-audio-device")
         if kwargs.get("fake_capture_device"):
             args.append("--fake-capture-device")
         if kwargs.get("force_i420"):
             args.append("--force-i420")
+        if kwargs.get("force_yuy2"):
+            args.append("--force-yuy2")
+        if kwargs.get("force_nv12"):
+            args.append("--force-nv12")
         if kwargs.get("hw_mjpeg_decoder") is not None:
             args.extend(["--hw-mjpeg-decoder", str(int(kwargs["hw_mjpeg_decoder"]))])
         if kwargs.get("use_libcamera"):
@@ -391,7 +399,7 @@ class Momo:
 
         # ビデオ設定
         if kwargs.get("video_device"):
-            args.extend(["--video-device", kwargs["video_device"]])
+            args.extend(["--video-input-device", kwargs["video_device"]])
         if kwargs.get("resolution"):
             args.extend(["--resolution", kwargs["resolution"]])
         if kwargs.get("framerate") is not None:

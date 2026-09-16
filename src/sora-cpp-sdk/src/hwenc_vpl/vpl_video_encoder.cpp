@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 // WebRTC
@@ -35,6 +34,7 @@
 #include <modules/video_coding/utility/vp9_uncompressed_header_parser.h>
 #include <rtc_base/checks.h>
 #include <rtc_base/logging.h>
+#include <system_wrappers/include/clock.h>
 
 // libyuv
 #include <libyuv/convert_from.h>
@@ -100,7 +100,6 @@ class VplVideoEncoderImpl : public VplVideoEncoder {
                            ExtBuffer& ext);
 
  private:
-  std::mutex mutex_;
   webrtc::EncodedImageCallback* callback_ = nullptr;
   webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_ = 0;
@@ -144,7 +143,9 @@ const int kHighH264QpThreshold = 40;
 
 VplVideoEncoderImpl::VplVideoEncoderImpl(std::shared_ptr<VplSession> session,
                                          mfxU32 codec)
-    : session_(session), codec_(codec), bitrate_adjuster_(0.5, 0.95) {}
+    : session_(session),
+      codec_(codec),
+      bitrate_adjuster_(webrtc::Clock::GetRealTimeClock(), 0.5, 0.95) {}
 
 VplVideoEncoderImpl::~VplVideoEncoderImpl() {
   Release();
@@ -161,14 +162,6 @@ std::unique_ptr<MFXVideoENCODE> VplVideoEncoderImpl::CreateEncoder(
     bool init) {
   std::unique_ptr<MFXVideoENCODE> encoder(
       new MFXVideoENCODE(GetVplSession(session)));
-
-  // mfxPlatform platform;
-  // memset(&platform, 0, sizeof(platform));
-  // MFXVideoCORE_QueryPlatform(GetVplSession(session), &platform);
-  // RTC_LOG(LS_VERBOSE) << "--------------- codec=" << CodecToString(codec)
-  //                     << " CodeName=" << platform.CodeName
-  //                     << " DeviceId=" << platform.DeviceId
-  //                     << " MediaAdapterType=" << platform.MediaAdapterType;
 
   mfxVideoParam param;
   ExtBuffer ext;
@@ -207,22 +200,6 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   memset(&param, 0, sizeof(param));
 
   param.mfx.CodecId = codec;
-  if (codec == MFX_CODEC_VP8) {
-    //param.mfx.CodecProfile = MFX_PROFILE_VP8_0;
-  } else if (codec == MFX_CODEC_VP9) {
-    //param.mfx.CodecProfile = MFX_PROFILE_VP9_0;
-  } else if (codec == MFX_CODEC_AVC) {
-    //param.mfx.CodecProfile = MFX_PROFILE_AVC_HIGH;
-    //param.mfx.CodecLevel = MFX_LEVEL_AVC_51;
-    //param.mfx.CodecProfile = MFX_PROFILE_AVC_MAIN;
-    //param.mfx.CodecLevel = MFX_LEVEL_AVC_1;
-  } else if (codec == MFX_CODEC_HEVC) {
-    // param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
-    // param.mfx.CodecLevel = MFX_LEVEL_HEVC_1;
-    // param.mfx.LowPower = MFX_CODINGOPTION_OFF;
-  } else if (codec == MFX_CODEC_AV1) {
-    //param.mfx.CodecProfile = MFX_PROFILE_AV1_MAIN;
-  }
 
   param.mfx.TargetUsage = MFX_TARGETUSAGE_BALANCED;
 
@@ -238,8 +215,8 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
   param.mfx.FrameInfo.CropY = 0;
   param.mfx.FrameInfo.CropW = width;
   param.mfx.FrameInfo.CropH = height;
-  // Width must be a multiple of 16
-  // Height must be a multiple of 16 in case of frame picture and a multiple of 32 in case of field picture
+  // 幅は 16 の倍数である必要がある
+  // 高さはフレームピクチャなら 16 の倍数、フィールドピクチャなら 32 の倍数である必要がある
   param.mfx.FrameInfo.Width = (width + 15) / 16 * 16;
   param.mfx.FrameInfo.Height = (height + 15) / 16 * 16;
 
@@ -263,21 +240,11 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     ext_coding_option.Header.BufferSz = sizeof(ext_coding_option);
     ext_coding_option.AUDelimiter = MFX_CODINGOPTION_OFF;
     ext_coding_option.MaxDecFrameBuffering = 1;
-    //ext_coding_option.NalHrdConformance = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.VuiVclHrdParameters = MFX_CODINGOPTION_ON;
-    //ext_coding_option.SingleSeiNalUnit = MFX_CODINGOPTION_ON;
-    //ext_coding_option.RefPicMarkRep = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.PicTimingSEI = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.RecoveryPointSEI = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.FramePicture = MFX_CODINGOPTION_OFF;
-    //ext_coding_option.FieldOutput = MFX_CODINGOPTION_ON;
 
     memset(&ext_coding_option2, 0, sizeof(ext_coding_option2));
     ext_coding_option2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
     ext_coding_option2.Header.BufferSz = sizeof(ext_coding_option2);
     ext_coding_option2.RepeatPPS = MFX_CODINGOPTION_ON;
-    //ext_coding_option2.MaxSliceSize = 1;
-    //ext_coding_option2.AdaptiveI = MFX_CODINGOPTION_ON;
 
     ext_buffers[0] = (mfxExtBuffer*)&ext_coding_option;
     ext_buffers[1] = (mfxExtBuffer*)&ext_coding_option2;
@@ -304,57 +271,12 @@ mfxStatus VplVideoEncoderImpl::Queries(MFXVideoENCODE* encoder,
     mfxVideoParam query_param;
     memcpy(&query_param, &param, sizeof(param));
     // ドキュメントによると、Query は以下のエラーを返す可能性がある。
-    // MFX_ERR_NONE	The function completed successfully.
-    // MFX_ERR_UNSUPPORTED	The function failed to identify a specific implementation for the required features.
-    // MFX_WRN_PARTIAL_ACCELERATION	The underlying hardware does not fully support the specified video parameters; The encoding may be partially accelerated. Only SDK HW implementations may return this status code.
-    // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM	The function detected some video parameters were incompatible with others; incompatibility resolved.
+    // MFX_ERR_NONE 関数は成功した
+    // MFX_ERR_UNSUPPORTED 要求機能に合う実装を特定できなかった
+    // MFX_WRN_PARTIAL_ACCELERATION ハードウェアが指定パラメータを完全にはサポートせず、エンコードは部分加速になることがある。HW 実装のみが返す
+    // MFX_WRN_INCOMPATIBLE_VIDEO_PARAM 一部パラメータが他と非互換だったが、解消された
     mfxStatus sts = encoder->Query(&query_param, &query_param);
     if (sts >= 0) {
-      // デバッグ用。
-      // Query によってどのパラメータが変更されたかを表示する
-      // #define F(NAME)                                           \
-      //   if (param.NAME != query_param.NAME)                     \
-      //   std::cout << "param " << #NAME << " old=" << param.NAME \
-      //             << " new=" << query_param.NAME << std::endl
-      //       F(mfx.LowPower);
-      //       F(mfx.BRCParamMultiplier);
-      //       F(mfx.FrameInfo.FrameRateExtN);
-      //       F(mfx.FrameInfo.FrameRateExtD);
-      //       F(mfx.FrameInfo.FourCC);
-      //       F(mfx.FrameInfo.ChromaFormat);
-      //       F(mfx.FrameInfo.PicStruct);
-      //       F(mfx.FrameInfo.CropX);
-      //       F(mfx.FrameInfo.CropY);
-      //       F(mfx.FrameInfo.CropW);
-      //       F(mfx.FrameInfo.CropH);
-      //       F(mfx.FrameInfo.Width);
-      //       F(mfx.FrameInfo.Height);
-      //       F(mfx.CodecId);
-      //       F(mfx.CodecProfile);
-      //       F(mfx.CodecLevel);
-      //       F(mfx.GopPicSize);
-      //       F(mfx.GopRefDist);
-      //       F(mfx.GopOptFlag);
-      //       F(mfx.IdrInterval);
-      //       F(mfx.TargetUsage);
-      //       F(mfx.RateControlMethod);
-      //       F(mfx.InitialDelayInKB);
-      //       F(mfx.TargetKbps);
-      //       F(mfx.MaxKbps);
-      //       F(mfx.BufferSizeInKB);
-      //       F(mfx.NumSlice);
-      //       F(mfx.NumRefFrame);
-      //       F(mfx.EncodedOrder);
-      //       F(mfx.DecodedOrder);
-      //       F(mfx.ExtendedPicStruct);
-      //       F(mfx.TimeStampCalc);
-      //       F(mfx.SliceGroupsPresent);
-      //       F(mfx.MaxDecFrameBuffering);
-      //       F(mfx.EnableReallocRequest);
-      //       F(AsyncDepth);
-      //       F(IOPattern);
-      // #undef F
-
       memcpy(&param, &query_param, sizeof(param));
     }
     return sts;
@@ -419,7 +341,7 @@ int32_t VplVideoEncoderImpl::InitEncode(
 
   RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
 
-  // Initialize encoded image. Default buffer size: size of unencoded data.
+  // EncodedImage を初期化する。既定バッファサイズは未エンコードデータのサイズとする
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
@@ -451,7 +373,6 @@ int32_t VplVideoEncoderImpl::InitEncode(
 }
 int32_t VplVideoEncoderImpl::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* callback) {
-  std::lock_guard<std::mutex> lock(mutex_);
   callback_ = callback;
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -464,13 +385,13 @@ int32_t VplVideoEncoderImpl::Encode(
   bool send_key_frame = false;
 
   if (frame_types != nullptr) {
-    // We only support a single stream.
+    // 単一ストリームのみ対応する
     RTC_DCHECK_EQ(frame_types->size(), static_cast<size_t>(1));
-    // Skip frame?
+    // フレームをスキップするか
     if ((*frame_types)[0] == webrtc::VideoFrameType::kEmptyFrame) {
       return WEBRTC_VIDEO_CODEC_OK;
     }
-    // Force key frame?
+    // キーフレームを強制するか
     send_key_frame =
         (*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey;
   }
@@ -533,7 +454,7 @@ int32_t VplVideoEncoderImpl::Encode(
     memset(&param, 0, sizeof(param));
 
     sts = encoder_->GetVideoParam(&param);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     // ビットレートとフレームレートを変更する。
     // なお、encoder_->Reset() はキューイングしているサーフェスを
@@ -543,16 +464,14 @@ int32_t VplVideoEncoderImpl::Encode(
     //   param.AsyncDepth = 1;
     //   ext_coding_option.MaxDecFrameBuffering = 1;
     // を設定して、そもそもキューイングが起きないようにすることで対処している。
-    if (param.mfx.RateControlMethod == MFX_RATECONTROL_CQP) {
-      //param.mfx.QPI = h264_bitstream_parser_.GetLastSliceQp().value_or(30);
-    } else {
+    if (param.mfx.RateControlMethod != MFX_RATECONTROL_CQP) {
       param.mfx.TargetKbps = bitrate_adjuster_.GetAdjustedBitrateBps() / 1000;
     }
     param.mfx.FrameInfo.FrameRateExtN = framerate_;
     param.mfx.FrameInfo.FrameRateExtD = 1;
 
     sts = encoder_->Reset(&param);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     reconfigure_needed_ = false;
 
@@ -572,21 +491,15 @@ int32_t VplVideoEncoderImpl::Encode(
     // もっと入力が必要なので出直す
     return WEBRTC_VIDEO_CODEC_OK;
   }
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
-  sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 600000);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
-  //RTC_LOG(LS_ERROR) << "SurfaceSize=" << (surface->Data.U - surface->Data.Y);
-  //RTC_LOG(LS_ERROR) << "DataLength=" << bitstream_.DataLength;
   {
     uint8_t* p = bitstream_.Data + bitstream_.DataOffset;
     int size = bitstream_.DataLength;
     bitstream_.DataLength = 0;
-
-    //FILE* fp = fopen("test.mp4", "a+");
-    //fwrite(p, 1, size, fp);
-    //fclose(fp);
 
     if (codec_ == MFX_CODEC_VP9) {
       // VP9 はIVFヘッダーがエンコードフレームについているので取り除く
@@ -673,6 +586,7 @@ int32_t VplVideoEncoderImpl::Encode(
       // AV1 の SVC では、まれにエンコード対象のレイヤーフレームが存在しない場合がある。
       // 次のフレームを待つことで正常に継続可能なケースであるため、エラーではなく正常終了で返してスキップする。
       if (layer_frames.empty()) {
+        callback_->OnFrameDropped(frame.rtp_timestamp(), 0, true);
         return WEBRTC_VIDEO_CODEC_OK;
       }
       codec_specific.end_of_picture = true;
@@ -688,12 +602,12 @@ int32_t VplVideoEncoderImpl::Encode(
       }
     }
 
+    encoded_image_.set_end_of_temporal_unit(true);
     webrtc::EncodedImageCallback::Result result =
         callback_->OnEncodedImage(encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__
-                        << " OnEncodedImage failed error:" << result.error;
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      RTC_LOG(LS_WARNING) << __func__
+                          << " OnEncodedImage failed error:" << result.error;
     }
     bitrate_adjuster_.Update(size);
   }
@@ -708,7 +622,7 @@ void VplVideoEncoderImpl::SetRates(const RateControlParameters& parameters) {
 
   uint32_t new_framerate = (uint32_t)parameters.framerate_fps;
   uint32_t new_bitrate = parameters.bitrate.get_sum_bps();
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " framerate_:" << framerate_
+  RTC_LOG(LS_INFO) << __func__ << " framerate_:" << framerate_
                    << " new_framerate: " << new_framerate
                    << " target_bitrate_bps_:" << target_bitrate_bps_
                    << " new_bitrate:" << new_bitrate
@@ -747,16 +661,16 @@ int32_t VplVideoEncoderImpl::InitVpl() {
   mfxVideoParam param;
   memset(&param, 0, sizeof(param));
 
-  // Retrieve video parameters selected by encoder.
-  // - BufferSizeInKB parameter is required to set bit stream buffer size
+  // エンコーダが選んだビデオパラメータを取得する
+  // BufferSizeInKB はビットストリームバッファサイズの設定に必要
   sts = encoder_->GetVideoParam(&param);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
   RTC_LOG(LS_INFO) << "BufferSizeInKB=" << param.mfx.BufferSizeInKB;
 
-  // Query number of required surfaces for encoder
+  // エンコーダに必要なサーフェス数を問い合わせる
   memset(&alloc_request_, 0, sizeof(alloc_request_));
   sts = encoder_->QueryIOSurf(&param, &alloc_request_);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
   RTC_LOG(LS_INFO) << "Encoder NumFrameSuggested="
                    << alloc_request_.NumFrameSuggested;

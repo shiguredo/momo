@@ -2,6 +2,8 @@
 #define RTC_MANAGER_H_
 
 #include <memory>
+#include <optional>
+#include <string>
 
 // WebRTC
 #include <api/environment/environment_factory.h>
@@ -32,7 +34,7 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
       webrtc::scoped_refptr<webrtc::ConnectionContext> context,
       webrtc::PeerConnectionFactoryDependencies* dependencies)
       : conn_context_(context),
-        webrtc::PeerConnectionFactory(context, dependencies) {}
+        webrtc::PeerConnectionFactory(webrtc::CreateEnvironment(), context, dependencies) {}
 
   static webrtc::scoped_refptr<CustomPeerConnectionFactory> Create(
       webrtc::PeerConnectionFactoryDependencies dependencies) {
@@ -50,6 +52,8 @@ class CustomPeerConnectionFactory : public webrtc::PeerConnectionFactory {
 
 struct RTCManagerConfig {
   bool insecure = false;
+  // 空なら OS のシステム CA、指定時はその PEM のみを trust anchor にする
+  std::optional<std::string> ca_cert;
 
   bool no_video_device = false;
   bool no_audio_device = false;
@@ -96,6 +100,11 @@ struct RTCManagerConfig {
   std::string proxy_password;
 
   std::function<webrtc::scoped_refptr<webrtc::AudioDeviceModule>()> create_adm;
+
+#if defined(__APPLE__) || defined(__linux__)
+  std::string audio_input_device;
+  std::string audio_output_device;
+#endif
 };
 
 class RTCManager {
@@ -123,7 +132,6 @@ class RTCManager {
   webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::unique_ptr<webrtc::Thread> network_thread_;
-  std::unique_ptr<webrtc::Thread> worker_thread_;
   std::unique_ptr<webrtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
   VideoTrackReceiver* receiver_;

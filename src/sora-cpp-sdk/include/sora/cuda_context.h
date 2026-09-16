@@ -1,5 +1,5 @@
-#ifndef CUDA_CONTEXT_H_
-#define CUDA_CONTEXT_H_
+#ifndef SORA_CUDA_CONTEXT_H_
+#define SORA_CUDA_CONTEXT_H_
 
 #include <memory>
 

@@ -56,6 +56,10 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
   CreateOKWithJSON(
       const boost::beast::http::request<boost::beast::http::string_body>& req,
       boost::json::value json_message);
+  static boost::beast::http::response<boost::beast::http::string_body>
+  CreateBadRequestWithJSON(
+      const boost::beast::http::request<boost::beast::http::string_body>& req,
+      boost::json::value json_message);
 
   template <class Body, class Fields>
   void SendResponse(boost::beast::http::response<Body, Fields> msg) {
@@ -66,7 +70,7 @@ class SoraSession : public std::enable_shared_from_this<SoraSession> {
     // メンバに入れてライフタイムを延ばしてやる
     res_ = sp;
 
-    // Write the response
+    // レスポンスを書き込む
     boost::beast::http::async_write(
         socket_, *sp,
         std::bind(&SoraSession::OnWrite, shared_from_this(),

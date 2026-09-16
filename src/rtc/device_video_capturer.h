@@ -47,7 +47,7 @@ class DeviceVideoCapturer
             size_t capture_device_index);
   void Destroy();
 
-  // webrtc::VideoSinkInterface interface.
+  // webrtc::VideoSinkInterface の実装
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
   int LogDeviceInfo();

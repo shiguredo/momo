@@ -1,10 +1,11 @@
 #ifndef SORA_DATA_CHANNEL_ON_ASIO_H_
 #define SORA_DATA_CHANNEL_ON_ASIO_H_
 
+#include <chrono>
+
 // Boost
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
-#include <boost/date_time.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include "sora_data_channel.h"
 
@@ -40,8 +41,8 @@ class SoraDataChannelOnAsio : public RTCDataManager {
   void Close(const webrtc::DataBuffer& disconnect_message,
              std::function<void()> on_close,
              int disconnect_wait_timeout = 5) {
-    timer_.expires_from_now(
-        boost::posix_time::seconds(disconnect_wait_timeout));
+      timer_.expires_after(
+        std::chrono::seconds(disconnect_wait_timeout));
     timer_.async_wait([on_close](const boost::system::error_code& ec) {
       if (ec == boost::asio::error::operation_aborted) {
         return;
@@ -65,7 +66,7 @@ class SoraDataChannelOnAsio : public RTCDataManager {
   boost::asio::io_context& ioc_;
   AsioPoster poster_;
   SoraDataChannel dc_;
-  boost::asio::deadline_timer timer_;
+  boost::asio::steady_timer timer_;
 };
 
 #endif

@@ -188,7 +188,7 @@ std::unique_ptr<MFXVideoDECODE> VplVideoDecoderImpl::CreateDecoderInternal(
   // （MFX_CODEC_AVC や MFX_CODEC_HEVC の時には Init 後に QueryIOSurf しても動いた）
   memset(alloc_request, 0, sizeof(*alloc_request));
   sts = decoder->QueryIOSurf(&param, alloc_request);
-  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+  VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, nullptr);
 
   RTC_LOG(LS_INFO) << "Decoder NumFrameSuggested="
                    << alloc_request->NumFrameSuggested;
@@ -196,7 +196,7 @@ std::unique_ptr<MFXVideoDECODE> VplVideoDecoderImpl::CreateDecoderInternal(
   // Query した上で Init しても MFX_ERR_UNSUPPORTED になることがあるので
   // 本来 Init が不要な時も常に呼ぶようにして確認する
   /*if (init)*/ {
-    // Initialize the Intel VPL encoder
+    // Intel VPL デコーダを初期化する
     sts = decoder->Init(&param);
     if (sts != MFX_ERR_NONE) {
       RTC_LOG(LS_VERBOSE) << "Init failed: resolution=" << width << "x"
@@ -232,7 +232,7 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
 
   if (bitstream_.MaxLength < bitstream_.DataLength + input_image.size()) {
     bitstream_buffer_.resize(bitstream_.DataLength + input_image.size());
-    bitstream_.MaxLength = bitstream_.DataLength + bitstream_buffer_.size();
+    bitstream_.MaxLength = bitstream_buffer_.size();
     bitstream_.Data = bitstream_buffer_.data();
   }
   //printf("size=%zu\n", input_image.size());
@@ -303,10 +303,10 @@ int32_t VplVideoDecoderImpl::Decode(const webrtc::EncodedImage& input_image,
                           << (int)sts;
       continue;
     }
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
-    sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 600000);
-    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+    sts = MFXVideoCORE_SyncOperation(GetVplSession(session_), syncp, 5000);
+    VPL_CHECK_RESULT(sts, MFX_ERR_NONE, sts, WEBRTC_VIDEO_CODEC_ERROR);
 
     uint64_t pts = input_image.RtpTimestamp();
     // NV12 から I420 に変換
@@ -349,6 +349,10 @@ const char* VplVideoDecoderImpl::ImplementationName() const {
 bool VplVideoDecoderImpl::InitVpl() {
   decoder_ = CreateDecoder(session_, codec_, {{4096, 4096}, {2048, 2048}}, true,
                            &alloc_request_);
+  if (decoder_ == nullptr) {
+    RTC_LOG(LS_ERROR) << "Failed to create decoder";
+    return false;
+  }
 
   mfxStatus sts = MFX_ERR_NONE;
 

@@ -15,28 +15,28 @@ SoraServer::SoraServer(boost::asio::io_context& ioc,
       config_(std::move(config)) {
   boost::system::error_code ec;
 
-  // Open the acceptor
+  // アクセプタを開く
   acceptor_.open(endpoint.protocol(), ec);
   if (ec) {
     MOMO_BOOST_ERROR(ec, "open");
     return;
   }
 
-  // Allow address reuse
+  // アドレスの再利用を許可する
   acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
   if (ec) {
     MOMO_BOOST_ERROR(ec, "set_option");
     return;
   }
 
-  // Bind to the server address
+  // サーバアドレスにバインドする
   acceptor_.bind(endpoint, ec);
   if (ec) {
     MOMO_BOOST_ERROR(ec, "bind");
     return;
   }
 
-  // Start listening for connections
+  // 接続の待ち受けを開始する
   acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
   if (ec) {
     MOMO_BOOST_ERROR(ec, "listen");

@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import argparse
 import glob
-import hashlib
 import logging
 import multiprocessing
 import os
 import shutil
+import subprocess
+import sys
 import tarfile
 import zipfile
-from typing import List, Optional
 
 from buildbase import (
     Platform,
@@ -30,20 +32,43 @@ from buildbase import (
     install_cuda_windows,
     install_llvm,
     install_openh264,
-    install_rootfs,
     install_sdl3,
     install_vpl,
     install_webrtc,
     mkdir_p,
     read_version_file,
-    read_version_string,
     rm_rf,
 )
+from jetson_postprocess import fixup_jetson_libnvbuf_fdmap_symlinks
 
 logging.basicConfig(level=logging.DEBUG)
-
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+class RunError(Exception):
+    """run.py の処理が続行できないときのエラー。"""
+
+
+def install_sysroot(config_path: str, install_dir: str) -> None:
+    """署名検証付き sysroot builder を呼び出して sysroot を生成する。
+
+    実装は canonical (`sysroot_builder.py`) に閉じ込め、ここでは
+    サブプロセスとして起動するだけにする。ホスト側の APT 状態や
+    ルート権限に依存せず、決定的に同じ sysroot が組み立てられる。
+    """
+    subprocess.run(
+        [
+            sys.executable,
+            os.path.join(BASE_DIR, "sysroot_builder.py"),
+            "--config",
+            config_path,
+            "--dest",
+            os.path.join(install_dir, "rootfs"),
+        ],
+        check=True,
+    )
 
 
 def install_deps(
@@ -52,28 +77,24 @@ def install_deps(
     build_dir: str,
     install_dir: str,
     debug: bool,
-    local_webrtc_build_dir: Optional[str],
-    local_webrtc_build_args: List[str],
+    local_webrtc_build_dir: str | None,
+    local_webrtc_build_args: list[str],
     disable_fake_capture_device: bool,
-):
+) -> None:
     with cd(BASE_DIR):
-        momo_version = read_version_string("VERSION")
         deps = read_version_file("DEPS")
         configuration = "Debug" if debug else "Release"
 
-        # multistrap を使った sysroot の構築
-        if platform.target.os == "jetson" or platform.target.os == "raspberry-pi-os":
-            conf = os.path.join(BASE_DIR, "multistrap", f"{platform.target.package_name}.conf")
-            # conf ファイルのハッシュ値をバージョンとする
-            version_md5 = hashlib.md5(open(conf, "rb").read()).hexdigest()
-            install_rootfs_args = {
-                "version": version_md5,
-                "version_file": os.path.join(install_dir, "rootfs.version"),
-                "install_dir": install_dir,
-                "conf": conf,
-                "arch": "arm64",
-            }
-            install_rootfs(**install_rootfs_args)
+        # Jetson / Raspberry Pi OS はいずれも署名検証付き sysroot builder に統一する。
+        # 再利用判定は builder 側 manifest (.webrtc-build-sysroot.json) に一本化し、
+        # 以前使っていた install_dir/rootfs.version は参照しない。
+        if platform.target.os in ("jetson", "raspberry-pi-os"):
+            config_path = os.path.join(BASE_DIR, "sysroot", f"{platform.target.package_name}.json")
+            install_sysroot(config_path=config_path, install_dir=install_dir)
+            if platform.target.os == "jetson":
+                # NVIDIA が dpkg に登録しない libnvbuf_fdmap.so の互換 symlink を作る。
+                # canonical sysroot_builder.py に手を入れないため run.py 側で後処理する。
+                fixup_jetson_libnvbuf_fdmap_symlinks(os.path.join(install_dir, "rootfs"))
 
         # WebRTC
         webrtc_platform = get_webrtc_platform(platform)
@@ -103,8 +124,7 @@ def install_deps(
         webrtc_deps = read_version_file(webrtc_info.deps_file)
 
         # Windows は MSVC を使うので不要
-        # macOS は Apple Clang を使うので不要
-        if platform.target.os not in ("windows", "macos") and local_webrtc_build_dir is None:
+        if platform.target.os != "windows" and local_webrtc_build_dir is None:
             # LLVM
             tools_url = webrtc_version["WEBRTC_SRC_TOOLS_URL"]
             tools_commit = webrtc_version["WEBRTC_SRC_TOOLS_COMMIT"]
@@ -156,16 +176,24 @@ def install_deps(
             sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
             install_boost_args["target_os"] = "darwin"
             install_boost_args["toolset"] = "clang"
-            install_boost_args["cxx"] = "clang++"
+            # Boost のビルドにも libwebrtc 管理下の clang/libc++ を使用する
+            install_boost_args["cxx"] = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
             install_boost_args["cflags"] = [
                 f"--sysroot={sysroot}",
                 f"-mmacosx-version-min={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
             ]
+            # libwebrtc 管理下の libc++ と ABI を一致させるためのフラグ
             install_boost_args["cxxflags"] = [
                 "-fPIC",
                 f"--sysroot={sysroot}",
                 "-std=gnu++17",
                 f"-mmacosx-version-min={webrtc_deps['MACOS_DEPLOYMENT_TARGET']}",
+                "-D_LIBCPP_ABI_NAMESPACE=Cr",
+                "-D_LIBCPP_ABI_VERSION=2",
+                "-D_LIBCPP_DISABLE_AVAILABILITY",
+                "-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
+                "-nostdinc++",
+                f"-isystem{os.path.join(webrtc_info.libcxx_dir, 'include')}",
             ]
             install_boost_args["visibility"] = "hidden"
             if platform.target.arch == "x86_64":
@@ -241,7 +269,7 @@ def install_deps(
         elif platform.build.os == "ubuntu" and platform.build.arch == "arm64":
             install_cmake_args["platform"] = "linux-aarch64"
         else:
-            raise Exception("Failed to install CMake")
+            raise RunError("Failed to install CMake")
         install_cmake(**install_cmake_args)
 
         if platform.build.os == "macos":
@@ -341,7 +369,7 @@ def install_deps(
                 f"-DCMAKE_SYSROOT={sysroot}",
             ]
         else:
-            raise Exception("Not supported platform")
+            raise RunError("Not supported platform")
 
         install_sdl3(**install_sdl3_args)
 
@@ -367,7 +395,6 @@ def install_deps(
                 "source_dir": source_dir,
                 "build_dir": build_dir,
                 "install_dir": install_dir,
-                "ios": False,
                 "cmake_args": [],
                 "expected_sha256": deps["BLEND2D_SHA256_HASH"],
             }
@@ -416,7 +443,7 @@ AVAILABLE_TARGETS = [
 WINDOWS_SDK_VERSION = "10.0.20348.0"
 
 
-def _find_clang_binary(name: str) -> Optional[str]:
+def _find_clang_binary(name: str) -> str | None:
     if shutil.which(name) is not None:
         return name
     else:
@@ -427,12 +454,12 @@ def _find_clang_binary(name: str) -> Optional[str]:
 
 
 def _format(
-    clang_format_path: Optional[str] = None,
-):
+    clang_format_path: str | None = None,
+) -> None:
     if clang_format_path is None:
         clang_format_path = _find_clang_binary("clang-format")
     if clang_format_path is None:
-        raise Exception("clang-format not found. Please install it or specify the path.")
+        raise RunError("clang-format not found. Please install it or specify the path")
     patterns = [
         "src/**/*.h",
         "src/**/*.cpp",
@@ -462,10 +489,10 @@ def _build(args):
     elif target == "ubuntu-22.04_armv8_jetson":
         platform = Platform("jetson", None, "armv8", target_extra="ubuntu-22.04")
     else:
-        raise Exception(f"Unknown target {target}")
+        raise RunError(f"Unknown target {target}")
 
-    logging.info(f"Build platform: {platform.build.package_name}")
-    logging.info(f"Target platform: {platform.target.package_name}")
+    logger.info(f"Build platform: {platform.build.package_name}")
+    logger.info(f"Target platform: {platform.target.package_name}")
 
     configuration = "debug" if args.debug else "release"
     dir = platform.target.package_name
@@ -508,7 +535,8 @@ def _build(args):
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_deps = read_version_file(webrtc_info.deps_file)
         with cd(BASE_DIR):
-            momo_version = read_version_string("VERSION")
+            with open("VERSION", "r", encoding="utf-8") as f:
+                momo_version = f.read().strip()
             momo_commit = cmdcap(["git", "rev-parse", "HEAD"])
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
@@ -542,6 +570,12 @@ def _build(args):
                 if platform.target.arch == "x86_64"
                 else "aarch64-apple-darwin"
             )
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang'))}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={cmake_path(os.path.join(webrtc_info.clang_dir, 'bin', 'clang++'))}"
+            )
             cmake_args.append(f"-DCMAKE_SYSTEM_PROCESSOR={platform.target.arch}")
             cmake_args.append(f"-DCMAKE_OSX_ARCHITECTURES={platform.target.arch}")
             cmake_args.append(
@@ -550,7 +584,12 @@ def _build(args):
             cmake_args.append(f"-DCMAKE_C_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
+            # macOS は libwebrtc 管理下の clang/libc++ を使用する
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+            cmake_args.append("-DUSE_LIBCXX=ON")
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
         if platform.target.os in ("jetson", "raspberry-pi-os"):
             triplet = "aarch64-linux-gnu"
             arch = "aarch64"
@@ -587,13 +626,16 @@ def _build(args):
             cmake_args.append("-DUSE_SCREEN_CAPTURER=ON")
 
         # NvCodec
-        if not args.disable_cuda:
-            if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
-                cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
-                if platform.target.os == "windows":
-                    cmake_args.append(
-                        f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
-                    )
+        if (
+            not args.disable_cuda
+            and platform.target.os in ("windows", "ubuntu")
+            and platform.target.arch == "x86_64"
+        ):
+            cmake_args.append("-DUSE_NVCODEC_ENCODER=ON")
+            if platform.target.os == "windows":
+                cmake_args.append(
+                    f"-DCUDA_TOOLKIT_ROOT_DIR={cmake_path(os.path.join(install_dir, 'cuda'))}"
+                )
 
         if platform.target.os in ("windows", "ubuntu") and platform.target.arch == "x86_64":
             cmake_args.append("-DUSE_VPL_ENCODER=ON")
@@ -655,8 +697,8 @@ def _build(args):
         rm_rf(os.path.join(package_dir, "momo"))
         rm_rf(os.path.join(package_dir, "momo.env"))
 
-        with cd(BASE_DIR):
-            momo_version = read_version_string("VERSION")
+        with cd(BASE_DIR), open("VERSION", encoding="utf-8") as f:
+            momo_version = f.read().strip()
 
         def archive(archive_path, files, is_windows, archive_dir_name=None):
             if is_windows:

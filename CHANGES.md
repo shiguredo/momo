@@ -11,6 +11,232 @@
 
 ## develop
 
+## 2026.1.0
+
+**リリース日**: 2026-09-16
+
+- [CHANGE] TLS の証明書検証を OS のシステム CA に切り替える
+  - ハードコードした ISRG Root X1 と WebRTC 組込みルート (`rtc_base/ssl_roots.h`) を信頼ストアから外す
+  - 未指定時は OS のシステム CA を信頼し、`--ca-cert` 指定時はその PEM のみを trust anchor にする
+  - WSS のホスト名検証 (`X509_check_host` / `X509_check_ip`) は維持する
+  - @voluntas
+
+- [CHANGE] Jetson の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
+  - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`jetson-ota-public.asc` / `ubuntu-archive-keyring.gpg`) で検証する
+  - `nvidia-jetpack` メタパッケージは sysroot 集合に入れず、`nvidia-l4t-core` / `nvidia-l4t-camera` / `nvidia-l4t-multimedia` / `nvidia-l4t-multimedia-utils` / `nvidia-l4t-jetson-multimedia-api` を個別指定する
+  - APT pin priority で NVIDIA (700) を Ubuntu Ports (500) より高くする
+  - Ubuntu Ports 側の C++ header を `libstdc++-10-dev` から `libstdc++-11-dev` に上げて JetPack 6 の Ubuntu 22.04 default toolchain に揃える
+  - `libnvbuf_fdmap.so` の互換 symlink 補正を `jetson_postprocess.py` に切り出し、`run.py` の `install_sysroot()` 直後に呼ぶ
+  - `multistrap/` ディレクトリを完全に削除する
+  - 旧経路由来の `_install/ubuntu-22.04_armv8_jetson/*/rootfs` がローカルに残っている場合は `rootfs` ディレクトリを手動で削除してから再ビルドすること (`rootfs.version` は新経路では読まれないが混乱を避けるため合わせて削除するのが望ましい)
+  - CI の Python テスト実行を `pip install --user pytest` から uv (`uv run --with pytest`) に切り替え、gate を Raspberry Pi OS と Jetson の両 matrix に拡張する
+  - @voluntas
+- [CHANGE] Raspberry Pi OS の rootfs 生成を multistrap から署名検証付き sysroot builder に切り替える
+  - 通信経路を HTTPS に統一し、Release ファイルを vendored keyring (`debian-archive-keyring.gpg` / `raspberrypi-archive-keyring.asc`) で検証する
+  - Raspberry Pi ミラーのホストを `archive.raspberrypi.org` から `archive.raspberrypi.com` に変更し、APT pin priority 990 を付与して `libcamera-dev` を Raspberry Pi Ltd 側から取得する
+  - 旧経路由来の `_install/raspberry-pi-os_armv8/*/rootfs` がローカルに残っている場合は `rootfs` ディレクトリを手動で削除してから再ビルドすること (`rootfs.version` は新経路では読まれないが混乱を避けるため合わせて削除するのが望ましい)
+  - @voluntas
+- [CHANGE] `--video-device` オプションを `--video-input-device` に変更する
+  - @voluntas
+- [CHANGE] `--no-video-device` オプションを `--no-video-input-device` に変更する
+  - @voluntas
+- [CHANGE] macOS が利用している clang, libc++ を Apple Clang のものから libwebrtc 管理下の Clang のものに変更する
+  - macOS のビルドに libwebrtc 管理下の clang, libc++ が必要になるので破壊的変更となる
+  - @torikizi
+- [CHANGE] DataChannel の zlib 展開後サイズに 16 MiB の上限を設ける
+  - 上限を超える圧縮メッセージは展開せず無視する
+  - @Hexa
+- [UPDATE] CUDA のバージョンを 12.9.1-1 に上げる
+  - CUDA コンパイルオプションに `D_ALLOW_UNSUPPORTED_LIBCPP` を追加する
+  - CUDA コンパイルオプションの `cuda-gpu-arch` を `sm_35` から `sm_60` に変更する
+    - sm_60 は Pascal 世代の GPU からサポートされている
+    - sm_35 は Kepler 世代の GPU からサポートされているが、Kepler は CUDA 10 までのサポートとなるためドロップ
+    - sm_50 は Maxwell 世代の GPU からサポートされているが、Maxwell は CUDA 11 までのサポートとなるためドロップ
+  - @voluntas
+- [UPDATE] libwebrtc のバージョンを m150.7871.3.0 に上げる
+  - Boost のバージョンを 1.91.0 に上げる
+  - CMake のバージョンを 4.3.2 に上げる
+  - VPL のバージョンを v2.16.0 に上げる
+  - macOS ビルドの cxxflags に BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT を追加
+  - @torikizi
+- [UPDATE] libwebrtc m150 の変更に追従する
+  - BitrateAdjuster のコンストラクタに Clock が必要になった
+    - m150 で BitrateAdjuster が Clock を必須とする API に変更されたため対応
+  - boost::system::error_code の operator<< が使えなくなったためログ出力を ec.to_string() / ec.message() に修正
+  - boost::json::value の operator<< が使えなくなったため .as_string().c_str() に修正
+  - screen_video_capturer.cpp に必要となった `#include <sstream>` を追加
+  - @torikizi
+- [UPDATE] sora-cpp-sdk の m150 コード更新を反映する
+  - deadline_timer を steady_timer に変更
+    - deadline_timer + posix_time は非推奨のため、monotonic clock ベースの steady_timer + chrono に移行
+  - `__FUNCTION__` を `__func__` に変更
+    - `__FUNCTION__` は非標準のため、C++11 標準の `__func__` に統一
+  - sora-cpp-sdk から取り込んだファイルを m150 に更新
+    - 各種ハードウェアエンコーダーの BitrateAdjuster 対応、VPL デコーダーのタイムアウト修正等を含む
+  - @torikizi
+- [UPDATE] libwebrtc m146 の変更に追従する
+  - SSLCertificateVerifier の API が Verify から VerifyChain に変更
+  - PeerConnectionFactory のコンストラクタが 3 引数 (Environment, ConnectionContext, Dependencies) に変更
+  - CryptoOptions が optional ではなくなった
+  - AudioDeviceBuffer のコンストラクタが TaskQueueFactory* から Environment に変更
+  - CreateWindowsCoreAudioAudioDeviceModule と RtcEventLogFactory の引数変更に対応
+  - 切断中の OnEncodedImage コールバックエラーで abort することがある問題を修正するため、WEBRTC_VIDEO_CODEC_ERROR を返していた箇所を削除してログ出力のみに変更
+  - `factory_options.crypto_options.srtp.enable_gcm_crypto_suites` を PeerConnectionFactory のオプションから PeerConnection の RTCConfiguration へ移動する
+  - @torikizi
+- [UPDATE] blend2d のバージョンを 0.20.0 に上げる
+  - blend2d の API 変更への追従 : camelCase から snake_case へ移行
+    - 影響範囲: `src/rtc/fake_video_capturer.cpp` のみ
+    - 変更内容（旧 → 新）の一例 :
+      - `image_.getData(&data);` -> `image_.get_data(&data);`
+      - `ctx.setFillStyle(BLRgba32(0, 255, 255));` -> `ctx.set_fill_style(BLRgba32(0, 255, 255));`
+      - `path.moveTo(sx + gap, sy);` -> `path.move_to(sx + gap, sy);`
+    - 変更対象外の API
+      - `ctx.end()`, `ctx.save()` , `ctx.restore()` は単語なので変更なし
+  - @voluntas @torikizi
+- [UPDATE] SDL3 のバージョンを 3.2.24 に上げる
+  - @torikizi
+- [UPDATE] CLI11 のバージョンを v2.6.1 に上げる
+  - @torikizi
+- [UPDATE] sora-cpp-sdk を 2026.2.1 に同期する
+  - SDL3 のバージョンを 3.4.14 に上げる
+  - CLI11 のバージョンを v2.7.2 に上げる
+  - Boost のバージョンを 1.92.0 に上げる
+  - @Hexa
+- [UPDATE] Linux のオーディオデバイス選択を PulseAudio API に統一する
+  - ALSA 専用のデバイス選択コードを削除して、常に `kLinuxPulseAudio` を利用する
+  - @voluntas @melpon
+- [ADD] macOS でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
+  - @voluntas @melpon
+- [ADD] macOS で `--list-devices` オプションを追加
+  - 利用可能なオーディオデバイスとビデオデバイスの一覧を表示する機能
+  - @voluntas @melpon
+- [ADD] Linux で `--list-devices` オプションにオーディオデバイス一覧表示を追加
+  - 既存のビデオデバイス一覧に加えて、オーディオ入力デバイスとオーディオ出力デバイスの一覧も表示するようにする
+  - @voluntas @melpon
+- [ADD] Linux でオーディオデバイス選択機能を追加
+  - `--audio-input-device` オプションでオーディオ入力デバイスを指定可能にする
+  - `--audio-output-device` オプションでオーディオ出力デバイスを指定可能にする
+  - デバイスはインデックス番号またはデバイス名（完全一致、大文字小文字を区別しない）で指定可能
+  - PulseAudio API を使用
+    - pipewire-pulse 経由を想定
+  - @voluntas @melpon
+- [FIX] Jetson エンコーダの SendEOS が未初期化バッファを参照する問題を修正する
+  - キューに空きがあるときは `getNthBuffer` でスロットを決め、dq 失敗時は触らない
+  - native / DMABUF 経路の EOS は、output を DMABUF にしたときだけ `fd` を付けて `qBuffer` する
+  - @Hexa
+- [FIX] Jetson デコーダが解像度変更失敗時に CaptureLoop 自身を Join する問題を修正する
+  - `SetCapture` 失敗時は自己 Join せずリソースを破棄し、Join は外側の `Release` に任せる
+  - @Hexa
+- [FIX] libcamera キャプチャ停止時に破棄済み request を参照する問題を修正する
+  - フレーム解放まで request を共有所有し、停止後は再キューしない
+  - @Hexa
+- [FIX] V4L2 デコーダが入力サイズを検証せず mmap バッファを越境書き込みする問題を修正する
+  - コピー前に mmap 実長 (`planes[0].length`) を超えていないか確認する
+  - 超過時はインデックスをキューへ戻し、エラーログを出して失敗する
+  - @Hexa
+- [FIX] SDL 初期化失敗時に未初期化のスレッドハンドルを WaitThread へ渡さない
+  - `thread_` を null 初期化し、作成失敗をログして、null では `SDL_WaitThread` しない
+  - @Hexa
+- [FIX] WSS 接続時にサーバ証明書のホスト名検証を行う
+  - チェーン検証に加え、接続先ホスト名と証明書の SAN / CN を照合するようにする
+  - `--insecure` 指定時は従来どおり検証をスキップする
+  - @Hexa
+- [FIX] シグナリング JSON のパース例外未処理でプロセスが落ちる問題を修正する
+  - Sora / Ayame / P2P の受信経路で `boost::json` の例外を catch し、エラーをロギングしたうえで、受信を継続する
+  - @Hexa
+- [FIX] recvonly 等で `/mute` API を呼ぶとプロセスが落ちる問題を修正する
+  - Unified Plan では使えない `local_streams()` をやめ、`GetSenders()` から送信 track を取得する
+  - 送信 track が無い場合は `400` と JSON エラーを返し、不正な `/mute` JSON も `400` にする
+  - Sora の `recvonly` では `InitTracks` に role を渡し、送信 track を付けないようにする
+  - @Hexa
+- [FIX] DataChannel の zlib 展開が無制限にメモリを消費する問題を修正する
+  - 展開失敗時は例外でプロセスを終了させず、エラーとしてメッセージを無視する
+  - @Hexa
+- [FIX] シグナリング切断後に ICE candidate コールバックが WebSocket を不正参照する問題を修正する
+  - Sora / Ayame の WebRTC コールバックから ioc スレッドへ移して送信先を判定する
+  - Sora は DataChannel シグナリング利用中の candidate / 初期 answer を DC 経由で送る
+  - @Hexa
+- [FIX] P2P / metrics サーバが accept エラー後に接続受付を停止する問題を修正する
+  - エラー時も `DoAccept()` を再開し、リスナー閉鎖時は再開しない
+  - EMFILE / ENFILE のときは 100ms 待ってから再開する
+  - @Hexa
+- [FIX] macOS でカメラ 0 台のときにクラッシュする問題を修正する
+  - デバイス一覧が空のときは `objectAtIndex:` せず `nullptr` を返し、既存の起動失敗フローで終了する
+  - @Hexa
+- [FIX] --no-video-input-device と --fake-capture-device 併用時のクラッシュを修正する
+  - 併用時は起動を拒否し、`create_adm` でも null の capturer を触らない
+  - @Hexa
+- [FIX] プロキシ経由の WSS で CONNECT の非 2xx をエラーにする
+  - 407 / 403 などのときは TLS ハンドシェイクに進まない
+  - @Hexa
+- [FIX] 期限切れの Let's Encrypt R3 中間証明書を削除する
+  - `ssl_verifier.cpp` に埋め込まれていた NotAfter 2025-09-15 の R3 を trust store から削除する
+  - @Hexa
+- [FIX] Ubuntu 環境のカメラで MJPEG より YUV が優先されてしまうのを修正
+  - @melpon
+- [FIX] Ayame モードで `--video-codec-type` / `--audio-codec-type` が大小文字の不一致で無視される問題を修正
+  - 指定したコーデック名と WebRTC 側の `RtpCodecCapability::name` を大文字・小文字を無視して比較するように変更
+  - 補助コーデック一覧を小文字にして、`IsAuxiliaryCodec()` の判定では大文字・小文字を無視して比較するように変更
+  - primary コーデックと補助コーデックを明示的にグルーピングし、`SetCodecPreferences()` へ渡す順序を保証
+  - @voluntas
+- [FIX] Ayame クライアントの実装を改善
+  - URL パース失敗時に適切な例外メッセージを出力するよう修正
+  - PeerConnection 作成失敗時の適切なエラーハンドリングを追加
+  - 非同期コールバックで shared_from_this() を適切に使用するよう修正
+  - `boost::ignore_unused` を C++17 の `[[maybe_unused]]` 属性に置き換え
+  - `should_create_answer` の条件式に詳細なコメントを追加
+  - ヘッダファイルでメンバ変数を初期化するよう変更（`retry_count_`, `rtc_state_`, `is_send_offer_`, `has_is_exist_user_flag_`）
+  - `ParseURL()`, `SetIceServersFromConfig()`, `CreatePeerConnection()`, `SetCodecPreference()` を AyameClient から切り離して無名名前空間で定義する
+    - これによってこの関数が何の値に依存しているのか分かりやすくなる
+  - `iceServers` はオプションなので項目がなければ無視するようにする
+  - @voluntas
+
+### misc
+
+- [UPDATE] sora-cpp-sdk 同期スクリプトが third_party をコピーするよう修正する
+  - @Hexa
+- [UPDATE] actions/download-artifact を v7 に上げる
+  - @torikizi
+- [UPDATE] Homebrew/actions/setup-homebrew を @master から @main に変更する
+  - 2026 年 6 月 10 日以降のリリースで Homebrew/actions/setup-homebrew の master ブランチは無効化されるため、main ブランチを使用するように変更する
+  - 参考 : Homebrew/actions/setup-homebrew の main ブランチへの移行コミット
+    - https://github.com/Homebrew/actions/commit/675fcd27b59e54d310c5484c8c27c01d03da660c
+  - @torikizi
+- [UPDATE] E2E テストの momo プロセス出力を CI ログに表示する
+  - stdout/stderr を親プロセスに継承して CI ログで確認できるようにする
+  - @torikizi
+- [UPDATE] 未使用コードとコメントアウトされた実行コードを削除する
+  - @Hexa
+- [UPDATE] 英語の説明コメントを日本語に統一する
+  - @Hexa
+- [UPDATE] 存在しない claude.yml への CI paths-ignore を削除する
+  - @Hexa
+- [ADD] CI と prek に Python の静的検証 (ruff / ty) を追加する
+  - run.py / canary.py を ruff-check と ruff-format の対象にする
+  - sysroot_builder.py / jetson_postprocess.py を ty で検査する
+  - @Hexa
+- [ADD] pytest の flaky テスト対策としてリトライ機能を追加する
+  - pytest-rerunfailures プラグインを追加
+  - 失敗したテストを最大 3 回までリトライする設定を追加
+  - @voluntas
+- [ADD] build.yml から e2e-test.yml を呼ぶように変更する
+  - build.yml のジョブ完了後に e2e-test.yml のジョブを呼び出すように変更
+  - @voluntas
+- [ADD] Raspberry Pi 64 bit 環境での E2E テストを追加する
+  - GitHub Actions の self-hosted runner を利用して Raspberry Pi OS armv8 環境での E2E テストを実行
+  - test_sora_mode_raspberry_pi.py テストファイルを追加
+  - libcamera を利用したカメラキャプチャーと V4L2 M2M エンコーダーを利用したテストを追加
+  - @voluntas
+- [FIX] CUDA 利用時のビルドを Ubuntu 22.04 / 24.04 に合わせたパッケージを利用するようにする
+  - @voluntas
+- [UPDATE] RTCManager の worker thread に network thread を使う
+  - 専用 worker thread の生成を削除し、`PeerConnectionFactoryDependencies::worker_thread` に network thread を渡す
+  - ADM の生成と音声デバイスの再適用を network thread 上で実行する
+  - @melpon
+
 ## 2025.1.3
 
 **リリース日**: 2026-02-12
@@ -217,10 +443,11 @@
 
 **リリース日**: 2025-06-10
 
-- [FIX] libcamera 0.4.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
-  - momo 2024.1.1 のリリースバイナリが依存する libcamera.so は 0.4 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.5 にあげる必要がある
-  - 最新の環境で再ビルドすることで事象が解消した
-  - @torikizi
+- [FIX] libcamera 0.4 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+
+- momo 2024.1.1 のリリースバイナリが依存する libcamera.so は 0.4 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.5 にあげる必要がある
+- 最新の環境で再ビルドすることで事象が解消した
+- @torikizi
 
 ## 2024.1.1
 
@@ -228,10 +455,11 @@
 
 **2025-02-17 のリリースにてリリースミスがあったためバイナリの作り直しと再リリースを行っています**
 
-- [FIX] libcamera 0.3.0 が最新の Raspberry Pi OS 環境で動作しない問題を修正
-  - momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
-  - 最新の環境で再ビルドすることで事象が解消した
-  - @melpon, @torikizi
+- [FIX] libcamera 0.3 が最新の Raspberry Pi OS 環境で動作しない問題を修正
+
+- momo 2024.1.0 のリリースバイナリが依存する libcamera.so は 0.3 だが最新の Raspberry Pi OS 環境と互換性がないため libcamera.so 0.4 にあげる必要がある
+- 最新の環境で再ビルドすることで事象が解消した
+- @melpon, @torikizi
 
 ### misc
 

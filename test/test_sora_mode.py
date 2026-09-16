@@ -71,5 +71,6 @@ def test_invalid_metrics_endpoint_returns_404(sora_settings, free_port):
         video=True,
         metadata=sora_settings.metadata,
     ) as m:
+        assert m._http_client is not None
         response = m._http_client.get(f"http://localhost:{m.metrics_port}/invalid")
         assert response.status_code == 404

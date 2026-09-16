@@ -1,7 +1,10 @@
 #include <atomic>
 #include <condition_variable>
 #include <csignal>
+#include <fstream>
 #include <iostream>
+#include <optional>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -10,7 +13,10 @@
 #include <SDL3/SDL_main.h>
 
 // WebRTC
+#include <api/audio/create_audio_device_module.h>
+#include <api/environment/environment_factory.h>
 #include <api/make_ref_counted.h>
+#include <modules/audio_device/include/audio_device.h>
 #include <rtc_base/log_sinks.h>
 #include <rtc_base/ref_counted_object.h>
 #include <rtc_base/string_utils.h>
@@ -27,8 +33,8 @@
 #elif defined(USE_NVCODEC_ENCODER)
 #include "sora/hwenc_nvcodec/nvcodec_v4l2_capturer.h"
 #elif defined(USE_V4L2_ENCODER)
-#include "hwenc_v4l2/libcamera_capturer.h"
-#include "hwenc_v4l2/v4l2_capturer.h"
+#include "sora/hwenc_v4l2/libcamera_capturer.h"
+#include "sora/hwenc_v4l2/v4l2_capturer.h"
 #endif
 #include "sora/v4l2/v4l2_video_capturer.h"
 #else
@@ -45,6 +51,7 @@
 #include "sdl_renderer/sdl_renderer.h"
 
 #include "ayame/ayame_client.h"
+#include "device_info.h"
 #include "metrics/metrics_server.h"
 #include "p2p/p2p_server.h"
 #include "rtc/rtc_manager.h"
@@ -66,18 +73,87 @@
 
 const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
 
-#if defined(__linux__)
+// --ca-cert で指定した PEM ファイルを読み込む。空パスは未指定。
+// 読み込み失敗時は false を返す。
+static bool LoadCaCertPem(const std::string& path,
+                          std::optional<std::string>& ca_cert) {
+  if (path.empty()) {
+    ca_cert = std::nullopt;
+    return true;
+  }
 
-static void ListVideoDevices() {
+  std::ifstream ifs(path);
+  if (!ifs) {
+    std::cerr << "failed to read --ca-cert file: " << path << std::endl;
+    return false;
+  }
+
+  std::ostringstream oss;
+  oss << ifs.rdbuf();
+  if (!ifs && !ifs.eof()) {
+    std::cerr << "failed to read --ca-cert file: " << path << std::endl;
+    return false;
+  }
+  ca_cert = oss.str();
+  return true;
+}
+
+#if defined(__APPLE__) || defined(__linux__)
+
+static void ListDevices() {
+  // オーディオデバイス一覧
+  auto print_audio_devices = [&](bool is_input) {
+    auto infos = GetAudioDeviceInfos(
+#if defined(__linux__)
+        webrtc::AudioDeviceModule::kLinuxPulseAudio,
+#else
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio,
+#endif
+        is_input);
+
+    const char* title = is_input ? "=== Available audio input devices ==="
+                                 : "=== Available audio output devices ===";
+    std::cout << title << std::endl;
+    std::cout << std::endl;
+
+    if (infos.empty()) {
+      std::cout << "  (none)" << std::endl << std::endl;
+      return;
+    }
+
+    for (const auto& info : infos) {
+      std::cout << "  [" << info.index << "] " << info.name;
+      if (!info.guid.empty()) {
+        std::cout << " (" << info.guid << ")";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  };
+
+  print_audio_devices(true);
+  print_audio_devices(false);
+
+  // ビデオデバイス一覧
+#if defined(__linux__)
   auto devices = sora::EnumV4L2CaptureDevices();
   if (!devices) {
     std::cerr << "Failed to enumerate video devices" << std::endl;
     return;
   }
+#endif
 
   std::cout << "=== Available video devices ===" << std::endl;
   std::cout << std::endl;
+#if defined(__linux__)
   std::cout << sora::FormatV4L2Devices(*devices);
+#else
+  auto video_device_infos = MacCapturer::GetVideoDeviceInfos();
+  for (const auto& info : video_device_infos) {
+    std::cout << "  [" << info.index << "] " << info.name << std::endl;
+  }
+  std::cout << std::endl;
+#endif
 }
 
 #endif
@@ -101,15 +177,16 @@ int main(int argc, char* argv[]) {
 
   Util::ParseArgs(argc, argv, use_p2p, use_ayame, use_sora, log_level, args);
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__APPLE__)
   // --list-devices オプションの処理
   if (args.list_devices) {
-    ListVideoDevices();
+    ListDevices();
     return 0;
   }
 #else
   if (args.list_devices) {
-    std::cerr << "--list-devices is only supported on Linux" << std::endl;
+    std::cerr << "--list-devices is not supported on this platform"
+              << std::endl;
     return 1;
   }
 #endif
@@ -122,7 +199,7 @@ int main(int argc, char* argv[]) {
       new webrtc::FileRotatingLogSink("./", "webrtc_logs",
                                       kDefaultMaxLogFileSize, 10));
   if (!log_sink->Init()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed to open log file";
+    RTC_LOG(LS_ERROR) << __func__ << "Failed to open log file";
     log_sink.reset();
     return 1;
   }
@@ -153,6 +230,7 @@ int main(int argc, char* argv[]) {
           video_config.width = size.width;
           video_config.height = size.height;
           video_config.fps = args.framerate;
+          video_config.force_nv12 = args.force_nv12;
           return FakeVideoCapturer::Create(video_config);
         }
 #endif
@@ -163,7 +241,7 @@ int main(int argc, char* argv[]) {
                            << ScreenVideoCapturer::GetSourceListString();
           webrtc::DesktopCapturer::SourceList sources;
           if (!ScreenVideoCapturer::GetSourceList(&sources)) {
-            RTC_LOG(LS_ERROR) << __FUNCTION__ << "Failed select screen source";
+            RTC_LOG(LS_ERROR) << __func__ << "Failed select screen source";
             return nullptr;
           }
           auto size = args.GetSize();
@@ -203,15 +281,15 @@ int main(int argc, char* argv[]) {
         }
 #elif defined(USE_V4L2_ENCODER)
         if (args.use_libcamera) {
-          LibcameraCapturerConfig libcamera_config = v4l2_config;
+          sora::LibcameraCapturerConfig libcamera_config = v4l2_config;
           // use_libcamera_native == true でも、サイマルキャストの場合はネイティブフレームを出力しない
           libcamera_config.native_frame_output =
               args.use_libcamera_native && !(use_sora && args.sora_simulcast);
           libcamera_config.controls = args.libcamera_controls;
-          return LibcameraCapturer::Create(libcamera_config);
+          return sora::LibcameraCapturer::Create(libcamera_config);
         } else if (v4l2_config.use_native &&
                    !(use_sora && args.sora_simulcast)) {
-          return V4L2Capturer::Create(std::move(v4l2_config));
+          return sora::V4L2Capturer::Create(std::move(v4l2_config));
         } else {
           return sora::V4L2VideoCapturer::Create(std::move(v4l2_config));
         }
@@ -224,6 +302,15 @@ int main(int argc, char* argv[]) {
 #endif
       })();
 
+#if defined(USE_FAKE_CAPTURE_DEVICE)
+  if (args.no_video_device && args.fake_capture_device) {
+    std::cerr << "error: --fake-capture-device cannot be used with "
+                 "--no-video-input-device"
+              << std::endl;
+    return 2;
+  }
+#endif
+
   if (!capturer && !args.no_video_device) {
     std::cerr << "failed to create capturer" << std::endl;
     return 1;
@@ -231,9 +318,18 @@ int main(int argc, char* argv[]) {
 
   RTCManagerConfig rtcm_config;
   rtcm_config.insecure = args.insecure;
+  std::optional<std::string> ca_cert;
+  if (!LoadCaCertPem(args.ca_cert, ca_cert)) {
+    return 1;
+  }
+  rtcm_config.ca_cert = ca_cert;
 
   rtcm_config.no_video_device = args.no_video_device;
   rtcm_config.no_audio_device = args.no_audio_device;
+#if defined(__APPLE__) || defined(__linux__)
+  rtcm_config.audio_input_device = args.audio_input_device;
+  rtcm_config.audio_output_device = args.audio_output_device;
+#endif
 
   rtcm_config.fixed_resolution = args.fixed_resolution;
   rtcm_config.simulcast = args.sora_simulcast;
@@ -281,6 +377,12 @@ int main(int argc, char* argv[]) {
     audio_config.fps = args.framerate;
     rtcm_config.create_adm = [audio_config, capturer]() {
       auto fake_audio_capturer = FakeAudioCapturer::Create(audio_config);
+      // CLI を迂回しても null の capturer を触らない
+      if (!capturer) {
+        RTC_LOG(LS_WARNING)
+            << "CreateADM: capturer is null, skip SetAudioCapturer";
+        return fake_audio_capturer;
+      }
       // FakeVideoCapturer と連携するために fake_audio_capturer を設定する
       static_cast<FakeVideoCapturer*>(capturer.get())
           ->SetAudioCapturer(fake_audio_capturer);
@@ -328,6 +430,7 @@ int main(int argc, char* argv[]) {
     if (use_sora) {
       SoraClientConfig config;
       config.insecure = args.insecure;
+      config.ca_cert = ca_cert;
       config.signaling_urls = args.sora_signaling_urls;
       config.channel_id = args.sora_channel_id;
       config.video = args.sora_video;
@@ -394,6 +497,7 @@ int main(int argc, char* argv[]) {
     if (use_ayame) {
       AyameClientConfig config;
       config.insecure = args.insecure;
+      config.ca_cert = ca_cert;
       config.no_google_stun = args.no_google_stun;
       config.client_cert = args.client_cert;
       config.client_key = args.client_key;

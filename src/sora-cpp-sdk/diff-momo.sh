@@ -20,8 +20,9 @@ source LAST_UPDATED
 
 INCLUDE_FILES=$(find include -type f)
 SRC_FILES=$(find src -type f)
+THIRD_PARTY_FILES=$(find third_party -type f)
 
-ALL_FILES=$(echo -e "$INCLUDE_FILES\n$SRC_FILES" | sort)
+ALL_FILES=$(echo -e "$INCLUDE_FILES\n$SRC_FILES\n$THIRD_PARTY_FILES" | sort)
 
 BASE_COMMIT=$(git rev-parse "$LAST_UPDATED_MOMO")
 TARGET_COMMIT=$(git rev-parse "$TARGET_REF")

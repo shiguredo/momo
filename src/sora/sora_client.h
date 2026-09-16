@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -28,6 +29,7 @@ struct SoraClientConfig {
   std::string channel_id;
 
   bool insecure = false;
+  std::optional<std::string> ca_cert;
   bool video = true;
   bool audio = true;
   std::string video_codec_type = "";
@@ -93,6 +95,8 @@ class SoraClient : public std::enable_shared_from_this<SoraClient>,
   void DoSendPong(
       const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void DoSendUpdate(const std::string& sdp, std::string type);
+  // DataChannel シグナリング利用中は DC、そうでなければ WebSocket。どちらも無ければ送らない
+  void DoSendSignaling(boost::json::value json_message);
   std::shared_ptr<RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
 
