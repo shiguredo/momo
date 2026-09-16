@@ -17,7 +17,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## WebRTC Native Client Momo について
 
-WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々な環境で動作する WebRTC ネイティブクライアントです。
+WebRTC Native Client Momo は libwebrtc を利用しブラウザなしでさまざまな環境で動作する WebRTC ネイティブクライアントです。
 
 <https://momo.shiguredo.jp/>
 
@@ -42,7 +42,7 @@ WebRTC Native Client Momo は libwebrtc を利用しブラウザなしで様々�
 
 ### P2P モード
 
-Momo は Momo 自体がシグナリングサーバーを持っているため、完全な P2P モードでの利用ができます。
+Momo は Momo 自体がシグナリングサーバーを持っているため、完全な P2P モードで利用できます。
 
 ブラウザから Momo にアクセスするだけで利用できます。
 
@@ -50,7 +50,7 @@ Momo は Momo 自体がシグナリングサーバーを持っているため、
 
 [WebRTC Signaling Server Ayame](https://github.com/OpenAyame/ayame)
 
-Momo は WebRTC Signaling Server Ayame に対応したモードがあり、 Momo どうしでの利用もできます。
+Momo は WebRTC Signaling Server Ayame に対応したモードがあり、 Momo どうしでも利用できます。
 
 ### Sora モード
 
@@ -66,15 +66,15 @@ Momo は時雨堂が開発、販売している WebRTC SFU Sora に対応した�
 
 ### 120 fps 対応
 
-Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用することで 120 fps の配信が利用できます。
+Momo はカメラの無圧縮映像に対応しているため、ハードウェアエンコーダーを利用することで 120 fps で配信できます。
 
-### 4K の配信/視聴
+### 4K の配信 / 視聴
 
-Momo はハードウェアアクセラレーターを利用することで WebRTC で 4K の配信/視聴を利用できます。
+Momo はハードウェアアクセラレーターを利用することで WebRTC で 4K の配信 / 視聴ができます。
 
 ### サイマルキャストへの対応
 
-Momo は Sora モード利用時にサイマルキャスト（複数画質の同時配信）に対応しています。
+Momo は Sora モード利用時にサイマルキャスト (複数画質の同時配信) に対応しています。
 
 ### データチャネル経由でのシリアルの読み書き
 
@@ -102,7 +102,7 @@ Momo は Sora モード利用時にクライアント証明書に対応してい
 
 ### OpenH264 の利用
 
-Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード/デコードができます。
+Momo は OpenH264 を利用して H.264 のソフトウェアのエンコード / デコードができます。
 
 ### デバイス一覧の取得
 
@@ -276,7 +276,7 @@ H.264 ハードウェアエンコーダー **のみ** を利用している Momo
 
 Momo の H.264 対応は [Via LA Licensing](https://www.via-la.com/) (旧 MPEG-LA) に連絡を取り、ロイヤリティの対象にならないことを確認しています。
 
-> 時雨堂がエンドユーザーの PC /デバイスに既に存在する AVC / H.264 エンコーダー/デコーダーに依存する製品を提供する場合は、
+> 時雨堂がエンドユーザーの PC / デバイスに既に存在する AVC / H.264 エンコーダー / デコーダーに依存する製品を提供する場合は、
 > ソフトウェア製品は AVC ライセンスの対象外となり、ロイヤリティの対象にもなりません。
 
 - Raspberry Pi のハードウェアエンコーダーのライセンス費用は Raspberry Pi の価格に含まれています
