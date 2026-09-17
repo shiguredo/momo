@@ -11,6 +11,12 @@
 
 ## develop
 
+- [ADD] TLS 証明書検証の動作確認を pytest E2E テストにする
+  - `test/momo.py` に `--ca-cert` を渡せるようにする
+  - 信頼ストア分岐（未指定 / ISRG Root X1 / 自己発行 + `--insecure` / 自己発行のみの失敗）を Sora 通常接続で確認する
+  - Sora Labo の JWT `turn_tls_only` で TURN-TLS を強制し、metrics の `relayProtocol` が `tls` であることを確認する
+  - @Hexa
+
 ## 2026.1.0
 
 **リリース日**: 2026-09-16
