@@ -1,7 +1,7 @@
 # TLS 証明書検証の動作確認を pytest E2E テストにする
 
 - Created: 2026-09-16
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-17
 - Branch: feature/add-tls-verification-e2e-test
 - Polished: 2026-09-17
 
@@ -55,3 +55,14 @@ TLS のシステム CA 切り替えと `--ca-cert` は実装済みだが、信�
 - Sora 通常接続で、自己発行のみのとき `with Momo(...)` が `_wait_for_startup` タイムアウト由来の `RuntimeError` になること（ログ文字列マッチやプロセス即終了アサーションに依存しない）
 - Sora + JWT `turn_tls_only` で TURN-TLS に接続し、metrics の relay candidate の `relayProtocol` が `tls` であることを確認できる（信頼ストアは未指定）
 - 追加した E2E が CI (`e2e-test.yml` の既存 `pytest .` 経路) で通る
+
+## 解決方法
+
+- `test/momo.py` の `Momo` に `ca_cert` を追加し、`--ca-cert` を渡せるようにした
+- `test/test_tls_verification.py` を追加し、Sora 通常接続で次を確認するようにした
+  - 未指定（システム CA） / `--ca-cert` に ISRG Root X1 / 自己発行 CA + `--insecure` で `wait_for_connection` が成功すること
+  - 自己発行 CA のみでは `Momo` プロセスの起動が `_wait_for_startup` 由来の `RuntimeError` で失敗すること
+- Sora Labo の JWT プライベートクレーム `turn_tls_only: true` で TURN-TLS を強制し、metrics の relay candidate の `relayProtocol` が `tls` であることを確認するようにした
+- ISRG Root X1 の公開 PEM を `test/data/isrgrootx1.pem` に置き、自己発行 CA は `openssl` でテスト内生成するようにした
+- CI (`e2e-test`) の全マトリクスで通ることを確認した
+- PR: https://github.com/shiguredo/momo/pull/488
