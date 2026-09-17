@@ -76,6 +76,7 @@ class Momo:
         metrics_allow_external_ip: bool = False,
         client_cert: str | None = None,  # PEM ファイルパス
         client_key: str | None = None,  # PEM ファイルパス
+        ca_cert: str | None = None,  # PEM ファイルパス（指定時はその PEM のみを trust anchor にする）
         proxy_url: str | None = None,
         proxy_username: str | None = None,
         proxy_password: str | None = None,
@@ -191,6 +192,7 @@ class Momo:
             "metrics_allow_external_ip": metrics_allow_external_ip,
             "client_cert": client_cert,
             "client_key": client_key,
+            "ca_cert": ca_cert,
             "proxy_url": proxy_url,
             "proxy_username": proxy_username,
             "proxy_password": proxy_password,
@@ -476,6 +478,8 @@ class Momo:
             args.extend(["--client-cert", kwargs["client_cert"]])
         if kwargs.get("client_key"):
             args.extend(["--client-key", kwargs["client_key"]])
+        if kwargs.get("ca_cert"):
+            args.extend(["--ca-cert", kwargs["ca_cert"]])
         if kwargs.get("proxy_url"):
             args.extend(["--proxy-url", kwargs["proxy_url"]])
         if kwargs.get("proxy_username"):
