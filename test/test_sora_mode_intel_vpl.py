@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoMode, VideoDecoderParams, VideoEncoderParams
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # Intel VPL 環境が有効でない場合もスキップ
@@ -27,7 +27,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -195,7 +195,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -465,7 +465,7 @@ def test_sora_sendonly_recvonly_pair(
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -477,7 +477,7 @@ def test_sora_sendonly_recvonly_pair(
             encoder_params["h265_encoder"] = "vpl"
 
     # デコーダー設定を準備
-    decoder_params = {}
+    decoder_params: VideoDecoderParams = {}
     match video_codec_type:
         case "VP9":
             decoder_params["vp9_decoder"] = "vpl"
@@ -489,7 +489,7 @@ def test_sora_sendonly_recvonly_pair(
             decoder_params["h265_decoder"] = "vpl"
 
     # 送信専用クライアント
-    with Momo(
+    sender = Momo(
         mode=MomoMode.SORA,
         signaling_urls=sora_settings.signaling_urls,
         channel_id=sora_settings.channel_id,
@@ -502,7 +502,23 @@ def test_sora_sendonly_recvonly_pair(
         metadata=sora_settings.metadata,
         initial_wait=10,
         **encoder_params,
-    ) as sender:
+    )
+
+    # 一部の環境では momo が Intel VPL の AV1 デコーダーを検出できず、--av1-decoder に
+    # vpl を指定できない。検出できるようになるまでの一時的な措置として、デコーダーが
+    # 使えない環境では xfail にする。
+    if video_codec_type == "AV1":
+        av1_decoders = sender.get_video_codec_engines().get("AV1", {}).get("Decoder", [])
+        # 正常な環境では AV1 のソフトウェアデコーダーが必ず含まれるため、一覧が空の場合は
+        # --video-codec-engines の出力を解析できていない。無言の xfail にはしない。
+        if not av1_decoders:
+            raise RuntimeError(
+                "--video-codec-engines の出力から AV1 デコーダーの一覧を取得できない"
+            )
+        if "Intel VPL" not in av1_decoders:
+            pytest.xfail("この環境では momo が Intel VPL の AV1 デコーダーを検出できない")
+
+    with sender:
         # 受信専用クライアント
         with Momo(
             mode=MomoMode.SORA,

@@ -1,7 +1,7 @@
 # E2E の AV1 ペアテストを Intel VPL デコーダーが使えない環境で xfail にする
 
 - Created: 2026-09-30
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-30
 - Branch: feature/change-e2e-av1-xfail
 - Polished: 2026-09-30
 
@@ -38,4 +38,10 @@ Intel VPL の AV1 デコーダーが検出されない環境で Intel VPL E2E �
 
 ## 解決方法
 
-{YYYY-MM-DD} に追記する
+2026-09-30 に解決した。
+
+- `test/momo.py` の `Momo` に `get_video_codec_engines()` を追加し、`--video-codec-engines` の出力からコーデックごとのエンコーダー / デコーダーの表示名を取得できるようにした
+- `test/test_sora_mode_intel_vpl.py` の `test_sora_sendonly_recvonly_pair` の AV1 のときだけ、AV1 デコーダーに `Intel VPL` が含まれない場合に実行時 `pytest.xfail(...)` を呼ぶようにした。一覧が空の場合は解析失敗として `RuntimeError` にし、無言の xfail にはしない
+- prek の ty チェックを通すため、`test/momo.py` に `VideoEncoderParams` / `VideoDecoderParams` を追加してコーデックエンジン指定の dict に型注釈を付け、各テストに適用した。`test_ayame_mode.py` の型チェッカーの ignore 指定を ty の形式に修正した
+- `CHANGES.md` の `## develop` に misc のエントリを追記した
+- 検証: `cd test && uv run ty check .` と `prek run` が通ることを確認した。xfail の実機動作は Intel VPL の self-hosted runner での CI 実行で確認する

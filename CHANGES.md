@@ -17,6 +17,16 @@
   - Sora Labo の JWT `turn_tls_only` で TURN-TLS を強制し、metrics の `relayProtocol` が `tls` であることを確認する
   - @Hexa
 
+### misc
+
+- [UPDATE] Intel VPL の E2E テストで、AV1 デコーダーが検出されない環境では AV1 のペアテストを xfail にする
+  - `--video-codec-engines` の出力で AV1 デコーダーに Intel VPL が含まれるかどうかを判定する
+  - @voluntas
+- [UPDATE] テストコードの型エラーを修正する
+  - ty の型検査が通るように TypedDict を追加する
+  - 型チェッカーの ignore 指定を ty の形式に修正する
+  - @voluntas
+
 ## 2026.1.0
 
 **リリース日**: 2026-09-16

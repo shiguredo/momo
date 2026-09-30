@@ -8,7 +8,7 @@ import time
 from enum import StrEnum
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, TypedDict
 
 import httpx
 
@@ -19,6 +19,34 @@ class MomoMode(StrEnum):
     P2P = "p2p"
     AYAME = "ayame"
     SORA = "sora"
+
+
+class VideoEncoderParams(TypedDict, total=False):
+    """Momo のキーワード引数へ `**` 展開して渡すビデオエンコーダーの指定
+
+    テスト側で dict を組み立てて `Momo(..., **encoder_params)` のように展開する。
+    キーと値の型をここで定義しておくことで、`**dict` 展開の型検査を通す。
+    """
+
+    vp8_encoder: Literal["default", "software"]
+    vp9_encoder: Literal["default", "vpl", "software"]
+    av1_encoder: Literal["default", "vpl", "nvidia", "software"]
+    h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"]
+    h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
+
+
+class VideoDecoderParams(TypedDict, total=False):
+    """Momo のキーワード引数へ `**` 展開して渡すビデオデコーダーの指定
+
+    テスト側で dict を組み立てて `Momo(..., **decoder_params)` のように展開する。
+    キーと値の型をここで定義しておくことで、`**dict` 展開の型検査を通す。
+    """
+
+    vp8_decoder: Literal["default", "software"]
+    vp9_decoder: Literal["default", "vpl", "nvidia", "software"]
+    av1_decoder: Literal["default", "vpl", "nvidia", "software"]
+    h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
+    h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
 
 
 class Momo:
@@ -76,7 +104,8 @@ class Momo:
         metrics_allow_external_ip: bool = False,
         client_cert: str | None = None,  # PEM ファイルパス
         client_key: str | None = None,  # PEM ファイルパス
-        ca_cert: str | None = None,  # PEM ファイルパス（指定時はその PEM のみを trust anchor にする）
+        ca_cert: str
+        | None = None,  # PEM ファイルパス（指定時はその PEM のみを trust anchor にする）
         proxy_url: str | None = None,
         proxy_username: str | None = None,
         proxy_password: str | None = None,
@@ -312,6 +341,54 @@ class Momo:
             )
 
         return str(momo_path)
+
+    def get_video_codec_engines(self) -> dict[str, dict[str, list[str]]]:
+        """momo の --video-codec-engines 出力を解析して利用できるエンジン一覧を返す
+
+        戻り値は {コーデック名: {"Encoder": [表示名, ...], "Decoder": [表示名, ...]}} の形式。
+        オプション値 (例: vpl) は将来変更される可能性があるため、環境の判定には
+        表示名 (例: Intel VPL) を使う。
+        """
+        result = subprocess.run(
+            [self.executable_path, "--video-codec-engines"],
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"momo --video-codec-engines failed with code {result.returncode}: {result.stderr}"
+            )
+
+        engines: dict[str, dict[str, list[str]]] = {}
+        codec_name: str | None = None
+        section_name: str | None = None
+        for line in result.stdout.splitlines():
+            if not line:
+                continue
+            if not line.startswith(" "):
+                # コーデック名の行 (例: "AV1:")
+                codec_name = line.removesuffix(":")
+                engines[codec_name] = {"Encoder": [], "Decoder": []}
+                section_name = None
+                continue
+            stripped_line = line.strip()
+            if stripped_line in ("Encoder:", "Decoder:"):
+                # エンコーダー / デコーダーのセクション行
+                section_name = stripped_line.removesuffix(":")
+                continue
+            if codec_name is None or section_name is None:
+                continue
+            if stripped_line == "*UNAVAILABLE*":
+                # 利用できるエンジンが無いコーデックはエンジン行が出力されない
+                continue
+            if stripped_line.startswith("- "):
+                # エンジン行 (例: "- Intel VPL [vpl] (default)")
+                engine_name = stripped_line.removeprefix("- ").split(" [", 1)[0]
+                engines[codec_name][section_name].append(engine_name)
+        return engines
 
     def __enter__(self) -> Self:
         """コンテキストマネージャーの開始"""
