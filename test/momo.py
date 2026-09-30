@@ -342,6 +342,54 @@ class Momo:
 
         return str(momo_path)
 
+    def get_video_codec_engines(self) -> dict[str, dict[str, list[str]]]:
+        """momo の --video-codec-engines 出力を解析して利用できるエンジン一覧を返す
+
+        戻り値は {コーデック名: {"Encoder": [表示名, ...], "Decoder": [表示名, ...]}} の形式。
+        オプション値 (例: vpl) は将来変更される可能性があるため、環境の判定には
+        表示名 (例: Intel VPL) を使う。
+        """
+        result = subprocess.run(
+            [self.executable_path, "--video-codec-engines"],
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"momo --video-codec-engines failed with code {result.returncode}: {result.stderr}"
+            )
+
+        engines: dict[str, dict[str, list[str]]] = {}
+        codec_name: str | None = None
+        section_name: str | None = None
+        for line in result.stdout.splitlines():
+            if not line:
+                continue
+            if not line.startswith(" "):
+                # コーデック名の行 (例: "AV1:")
+                codec_name = line.removesuffix(":")
+                engines[codec_name] = {"Encoder": [], "Decoder": []}
+                section_name = None
+                continue
+            stripped_line = line.strip()
+            if stripped_line in ("Encoder:", "Decoder:"):
+                # エンコーダー / デコーダーのセクション行
+                section_name = stripped_line.removesuffix(":")
+                continue
+            if codec_name is None or section_name is None:
+                continue
+            if stripped_line == "*UNAVAILABLE*":
+                # 利用できるエンジンが無いコーデックはエンジン行が出力されない
+                continue
+            if stripped_line.startswith("- "):
+                # エンジン行 (例: "- Intel VPL [vpl] (default)")
+                engine_name = stripped_line.removeprefix("- ").split(" [", 1)[0]
+                engines[codec_name][section_name].append(engine_name)
+        return engines
+
     def __enter__(self) -> Self:
         """コンテキストマネージャーの開始"""
         try:
