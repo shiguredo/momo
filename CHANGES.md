@@ -16,12 +16,13 @@
   - 信頼ストア分岐（未指定 / ISRG Root X1 / 自己発行 + `--insecure` / 自己発行のみの失敗）を Sora 通常接続で確認する
   - Sora Labo の JWT `turn_tls_only` で TURN-TLS を強制し、metrics の `relayProtocol` が `tls` であることを確認する
   - @Hexa
+- [FIX] Intel VPL の AV1 デコーダーが検出されない問題を修正する
+  - `Query` が `MFX_ERR_UNSUPPORTED` を返しても `QueryIOSurf` と `Init` が成功する場合はデコードに対応していると判定する
+  - mfx-gen 26.1.2 の環境で AV1 デコーダーの Intel VPL が検出されず、`--av1-decoder vpl` を指定できない問題が直る
+  - @voluntas
 
 ### misc
 
-- [UPDATE] Intel VPL の E2E テストで、AV1 デコーダーが検出されない環境では AV1 のペアテストを xfail にする
-  - `--video-codec-engines` の出力で AV1 デコーダーに Intel VPL が含まれるかどうかを判定する
-  - @voluntas
 - [UPDATE] テストコードの型エラーを修正する
   - ty の型検査が通るように TypedDict を追加する
   - 型チェッカーの ignore 指定を ty の形式に修正する
