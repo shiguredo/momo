@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoMode, VideoDecoderParams, VideoEncoderParams
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # Intel VPL 環境が有効でない場合もスキップ
@@ -27,7 +27,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -195,7 +195,7 @@ def test_connection_stats(sora_settings, video_codec_type, free_port):
 def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementation, free_port):
     """Sora モードで simulcast 接続時の統計情報を確認（Intel VPL 使用）"""
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -465,7 +465,7 @@ def test_sora_sendonly_recvonly_pair(
     expected_mime_type = f"video/{video_codec_type}"
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     match video_codec_type:
         case "VP9":
             encoder_params["vp9_encoder"] = "vpl"
@@ -477,7 +477,7 @@ def test_sora_sendonly_recvonly_pair(
             encoder_params["h265_encoder"] = "vpl"
 
     # デコーダー設定を準備
-    decoder_params = {}
+    decoder_params: VideoDecoderParams = {}
     match video_codec_type:
         case "VP9":
             decoder_params["vp9_decoder"] = "vpl"

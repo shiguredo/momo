@@ -8,7 +8,7 @@ import time
 from enum import StrEnum
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, TypedDict
 
 import httpx
 
@@ -19,6 +19,34 @@ class MomoMode(StrEnum):
     P2P = "p2p"
     AYAME = "ayame"
     SORA = "sora"
+
+
+class VideoEncoderParams(TypedDict, total=False):
+    """Momo のキーワード引数へ `**` 展開して渡すビデオエンコーダーの指定
+
+    テスト側で dict を組み立てて `Momo(..., **encoder_params)` のように展開する。
+    キーと値の型をここで定義しておくことで、`**dict` 展開の型検査を通す。
+    """
+
+    vp8_encoder: Literal["default", "software"]
+    vp9_encoder: Literal["default", "vpl", "software"]
+    av1_encoder: Literal["default", "vpl", "nvidia", "software"]
+    h264_encoder: Literal["default", "vpl", "nvidia", "videotoolbox", "software"]
+    h265_encoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
+
+
+class VideoDecoderParams(TypedDict, total=False):
+    """Momo のキーワード引数へ `**` 展開して渡すビデオデコーダーの指定
+
+    テスト側で dict を組み立てて `Momo(..., **decoder_params)` のように展開する。
+    キーと値の型をここで定義しておくことで、`**dict` 展開の型検査を通す。
+    """
+
+    vp8_decoder: Literal["default", "software"]
+    vp9_decoder: Literal["default", "vpl", "nvidia", "software"]
+    av1_decoder: Literal["default", "vpl", "nvidia", "software"]
+    h264_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
+    h265_decoder: Literal["default", "vpl", "nvidia", "videotoolbox"]
 
 
 class Momo:
@@ -76,7 +104,8 @@ class Momo:
         metrics_allow_external_ip: bool = False,
         client_cert: str | None = None,  # PEM ファイルパス
         client_key: str | None = None,  # PEM ファイルパス
-        ca_cert: str | None = None,  # PEM ファイルパス（指定時はその PEM のみを trust anchor にする）
+        ca_cert: str
+        | None = None,  # PEM ファイルパス（指定時はその PEM のみを trust anchor にする）
         proxy_url: str | None = None,
         proxy_username: str | None = None,
         proxy_password: str | None = None,
