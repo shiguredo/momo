@@ -1,7 +1,7 @@
 # Intel VPL の AV1 デコーダーが新しいメディアスタックで検出されない
 
 - Created: 2026-09-30
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-09-30
 - Branch: feature/fix-vpl-av1-decoder-detection
 - Polished: {YYYY-MM-DD}
 
@@ -45,4 +45,11 @@ Intel VPL の AV1 デコーダーを持つ環境で AV1 デコーダーの検出
 
 ## 解決方法
 
-{YYYY-MM-DD} に追記する
+2026-09-30 に解決した。
+
+- 原因は mfx-gen 26.1.2 (libvpl 2.16.0) で AV1 の `MFXVideoDECODE_Query` が `MFX_ERR_UNSUPPORTED` (-3) を返すこと。`Query` が失敗しても `QueryIOSurf` と `Init` は成功し、AV1 を実際にデコードできる
+- `src/sora-cpp-sdk/src/hwenc_vpl/vpl_video_decoder.cpp` の `VplVideoDecoderImpl::CreateDecoderInternal` で、`Query` の失敗を未対応と判定せずログを出して継続し、`QueryIOSurf` と `Init` の結果でデコード対応を判定するように修正した。`MFX_LEVEL_AV1_2` の設定は古いドライバー向けに残した
+- 0080 の xfail 回避策と `Momo.get_video_codec_engines()` を削除した
+- `CHANGES.md` の `## develop` に FIX のエントリを追記した
+- 検証: Intel VPL E2E の 12 件が Ubuntu 26.04 の self-hosted runner と Ubuntu 24.04 の self-hosted runner の両方で成功した。Ubuntu 26.04 の runner では `--video-codec-engines` の AV1 デコーダーに `Intel VPL [vpl]` が出ることも確認した
+- upstream の sora-cpp-sdk にも `Query` の失敗で未対応と判定する同じ実装があり、同様の修正が必要
