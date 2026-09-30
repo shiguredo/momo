@@ -504,20 +504,6 @@ def test_sora_sendonly_recvonly_pair(
         **encoder_params,
     )
 
-    # 一部の環境では momo が Intel VPL の AV1 デコーダーを検出できず、--av1-decoder に
-    # vpl を指定できない。検出できるようになるまでの一時的な措置として、デコーダーが
-    # 使えない環境では xfail にする。
-    if video_codec_type == "AV1":
-        av1_decoders = sender.get_video_codec_engines().get("AV1", {}).get("Decoder", [])
-        # 正常な環境では AV1 のソフトウェアデコーダーが必ず含まれるため、一覧が空の場合は
-        # --video-codec-engines の出力を解析できていない。無言の xfail にはしない。
-        if not av1_decoders:
-            raise RuntimeError(
-                "--video-codec-engines の出力から AV1 デコーダーの一覧を取得できない"
-            )
-        if "Intel VPL" not in av1_decoders:
-            pytest.xfail("この環境では momo が Intel VPL の AV1 デコーダーを検出できない")
-
     with sender:
         # 受信専用クライアント
         with Momo(
