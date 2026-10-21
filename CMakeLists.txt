@@ -600,7 +600,8 @@ elseif (TARGET_OS STREQUAL "linux")
       if (USE_V4L2_ENCODER)
         add_library(camerac SHARED)
         target_include_directories(camerac PRIVATE ${CMAKE_SYSROOT}/usr/include/libcamera)
-        set_target_properties(camerac PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+        # libcamera のヘッダーは 0.7.2+rpt20261009-1 以降 `std::span` を要求するため C++20 にする
+        set_target_properties(camerac PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
         target_sources(camerac
           PRIVATE
             src/sora-cpp-sdk/third_party/libcamerac/libcamerac.cpp
