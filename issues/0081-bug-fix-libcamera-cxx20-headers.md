@@ -1,7 +1,7 @@
 # Raspberry Pi OS のビルドが libcamera の C++20 ヘッダーで失敗する
 
 - Created: 2026-10-21
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-10-21
 - Branch: feature/fix-libcamera-cxx20-headers
 - Polished: 2026-10-21
 
@@ -44,3 +44,14 @@ Raspberry Pi OS 向けの GitHub Actions ビルド (`raspberry-pi-os_armv8`) が
 - `libcamerac.cpp` が無変更 (`#include <libcamera/base/span.h>` と `libcamera::Span` の 4 箇所が維持され、`std::span` を直接参照していない) のままで、古い `libcamera-dev` (`0.7.2+rpt20260817-1`) のヘッダーに対しても C++20 でコンパイルできる
 - 差分が `CMakeLists.txt` の `camerac` の `CXX_STANDARD` に限定され、sora-cpp-sdk 側のファイルと `LAST_UPDATED` に差分が出ていない
 - `camerac` は Raspberry Pi OS ビルド専用のため他プラットフォームのビルドに影響しない。CI の他のビルドジョブが従来どおり成功する
+
+## 解決方法
+
+2026-10-21 に解決した。
+
+- `CMakeLists.txt` の `if (USE_V4L2_ENCODER)` 内で `set_target_properties(camerac PROPERTIES CXX_STANDARD 20 C_STANDARD 99)` に変更し、`camerac` を本体 `momo` と同じ C++20 でコンパイルするようにした。理由をコメントとして残した
+- `libcamerac.cpp` は無変更で維持した。`#include <libcamera/base/span.h>` と `libcamera::Span` の 4 箇所はそのままで、新旧どちらのヘッダーでも通る
+- Raspberry Pi アーカイブの deb を展開したヘッダーで `libcamerac.cpp` を構文チェックした。`0.7.2+rpt20261009-1` と C++20 は deprecated 警告 4 件のみで成功、`0.7.2+rpt20260817-1` と C++20 は警告なしで成功、`0.7.2+rpt20261009-1` と C++17 は修正前のエラーを再現した
+- 差分は `CMakeLists.txt` の 2 行のみで、sora-cpp-sdk 側のファイルと `LAST_UPDATED` に差分は無い
+- 検証: `feature/fix-libcamera-cxx20-headers` の CI で `Build momo for raspberry-pi-os_armv8` を含む全ビルドジョブと E2E テストが成功した
+- `CHANGES.md` の `## develop` に FIX のエントリを追記した

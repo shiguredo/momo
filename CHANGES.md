@@ -20,6 +20,9 @@
   - `Query` が `MFX_ERR_UNSUPPORTED` を返しても `QueryIOSurf` と `Init` が成功する場合はデコードに対応していると判定する
   - mfx-gen 26.1.2 の環境で AV1 デコーダーの Intel VPL が検出されず、`--av1-decoder vpl` を指定できない問題が直る
   - @voluntas
+- [FIX] Raspberry Pi OS 向けのビルドが libcamera の C++20 ヘッダーで失敗する問題を修正する
+  - libcamera 0.7.2+rpt20261009-1 以降のヘッダーが `std::span` を要求するため `camerac` を C++20 でコンパイルする
+  - @Hexa
 
 ### misc
 
