@@ -11,6 +11,30 @@
 
 ## develop
 
+## 2026.1.1
+
+**リリース日**: 2026-10-23
+
+- [ADD] TLS 証明書検証の動作確認を pytest E2E テストにする
+  - `test/momo.py` に `--ca-cert` を渡せるようにする
+  - 信頼ストア分岐（未指定 / ISRG Root X1 / 自己発行 + `--insecure` / 自己発行のみの失敗）を Sora 通常接続で確認する
+  - Sora Labo の JWT `turn_tls_only` で TURN-TLS を強制し、metrics の `relayProtocol` が `tls` であることを確認する
+  - @Hexa
+- [FIX] Intel VPL の AV1 デコーダーが検出されない問題を修正する
+  - `Query` が `MFX_ERR_UNSUPPORTED` を返しても `QueryIOSurf` と `Init` が成功する場合はデコードに対応していると判定する
+  - mfx-gen 26.1.2 の環境で AV1 デコーダーの Intel VPL が検出されず、`--av1-decoder vpl` を指定できない問題が直る
+  - @voluntas
+- [FIX] Raspberry Pi OS 向けのビルドが libcamera の C++20 ヘッダーで失敗する問題を修正する
+  - libcamera 0.7.2+rpt20261009-1 以降のヘッダーが `std::span` を要求するため `camerac` を C++20 でコンパイルする
+  - @Hexa
+
+### misc
+
+- [UPDATE] テストコードの型エラーを修正する
+  - ty の型検査が通るように TypedDict を追加する
+  - 型チェッカーの ignore 指定を ty の形式に修正する
+  - @voluntas
+
 ## 2026.1.0
 
 **リリース日**: 2026-09-16

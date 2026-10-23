@@ -236,7 +236,7 @@ def test_ayame_mode_peer_connection(port_allocator):
             resolution="QVGA",
             initial_wait=10,
         ) as m2:
-            # 両方のピアの接続が確立されるまで弅機
+            # 両方のピアの接続が確立されるまで待機
             assert m1.wait_for_connection(timeout=10), (
                 "M1 failed to establish connection within timeout"
             )
@@ -384,8 +384,7 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
     """存在しないコーデックを指定した場合にエラーで終了することを確認"""
     room_id = str(uuid.uuid4())
 
-    # 存在しないビデオコーデックを指定
-    # 型チェッカーの警告を抑制するため type: ignore コメントを使用
+    # 存在しないビデオコーデックを指定する
     with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
         with Momo(
             mode=MomoMode.AYAME,
@@ -393,11 +392,11 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_video_codec_type="INVALID_CODEC",  # type: ignore[arg-type] 存在しないコーデック
+            ayame_video_codec_type="INVALID_CODEC",  # ty: ignore[invalid-argument-type]
         ):
             pass  # ここには到達しないはず
 
-    # 存在しないオーディオコーデックを指定
+    # 存在しないオーディオコーデックを指定する
     with pytest.raises(RuntimeError, match="momo process exited unexpectedly"):
         with Momo(
             mode=MomoMode.AYAME,
@@ -405,6 +404,6 @@ def test_ayame_mode_with_invalid_codec(port_allocator):
             room_id=room_id,
             metrics_port=next(port_allocator),
             fake_capture_device=True,
-            ayame_audio_codec_type="INVALID_AUDIO",  # type: ignore[arg-type] 存在しないコーデック
+            ayame_audio_codec_type="INVALID_AUDIO",  # ty: ignore[invalid-argument-type]
         ):
             pass  # ここには到達しないはず

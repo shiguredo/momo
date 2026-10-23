@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from momo import Momo, MomoMode
+from momo import Momo, MomoMode, VideoEncoderParams
 
 # Sora モードのテストは TEST_SORA_MODE_SIGNALING_URLS が設定されていない場合スキップ
 # macOS では simulcast のパフォーマンスが不足するためスキップ
@@ -34,7 +34,7 @@ def test_simulcast(sora_settings, video_codec_type, expected_encoder_implementat
     print(f"Free port: {free_port}")
 
     # エンコーダー設定を準備
-    encoder_params = {}
+    encoder_params: VideoEncoderParams = {}
     if video_codec_type == "VP8":
         encoder_params["vp8_encoder"] = "software"
         print(f"Setting VP8 encoder parameter: {encoder_params}")

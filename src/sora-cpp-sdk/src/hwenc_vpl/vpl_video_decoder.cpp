@@ -171,13 +171,13 @@ std::unique_ptr<MFXVideoDECODE> VplVideoDecoderImpl::CreateDecoderInternal(
 
   sts = decoder->Query(&param, &param);
   if (sts < 0) {
-    RTC_LOG(LS_VERBOSE) << "Unsupported decoder codec: resolution=" << width
+    // mfx-gen 26.1.2 では AV1 の Query が MFX_ERR_UNSUPPORTED を返すが、
+    // 後続の QueryIOSurf と Init は成功して実際にデコードできる。
+    // このため Query の失敗だけでは未対応と判定せず、Init の結果で判定する。
+    RTC_LOG(LS_VERBOSE) << "Query failed but continue: resolution=" << width
                         << "x" << height << " codec=" << CodecToString(codec)
                         << " sts=" << sts;
-    return nullptr;
-  }
-
-  if (sts != MFX_ERR_NONE) {
+  } else if (sts != MFX_ERR_NONE) {
     RTC_LOG(LS_VERBOSE)
         << "Supported specified codec but has warning: resolution=" << width
         << "x" << height << " sts=" << sts;
