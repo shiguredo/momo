@@ -1,7 +1,7 @@
 # canary.py に --release / --hotfix オプションを追加し develop 限定で実行する
 
 - Created: 2026-10-27
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-10-27
 - Branch: feature/add-canary-base-version-option
 - Polished: 2026-10-27
 
@@ -61,4 +61,23 @@
 
 ## 解決方法
 
-実装時に追記する。
+- `canary.py` に `CANARY_BRANCH`、`BASE_UPDATE_KEEP`、`BASE_UPDATE_MINOR`、`BASE_UPDATE_PATCH` を追加し、`--release` / `--hotfix` を `add_mutually_exclusive_group` で定義した
+- `current_branch` を追加し、`git rev-parse --abbrev-ref HEAD` を `check=False` で実行して標準出力を文字列で比較するようにした。`check=True` にすると git 管理外などでトレースバック終了となり usage 表示の経路に入らないため
+- `is_canary_version` を追加し、`-canary.N` の有無を判定するようにした
+- `update_sdk_version` のシグネチャに基点の方針 `base_update` を追加し、`--release` はマイナー +1 かつパッチを 0、`--hotfix` はパッチ +1 とし、年は据え置くようにした。`-canary.N` の採番 (無ければ `-canary.0`、あれば `N+1`) は同関数に集約した
+- `print_usage_and_error` を追加し、エラーメッセージと usage を stderr に出して経路ごとの終了コードで終了するようにした。`parser.error` は常に終了コード 2 になるため使わない
+- `main` で引数解析直後に `current_branch` を検証し、`develop` 以外では終了コード 1 で終了するようにした。続いて VERSION を読み込み、`-canary.N` 付きで `--release` / `--hotfix` が指定された場合は終了コード 1、安定版でオプション未指定の場合は終了コード 0 で終了するようにした
+- `write_version_file` と `git_operations` は変更していない
+
+動作確認は `develop` 上で `--dry-run` を使って次のとおり行い、期待どおりの結果を得た。
+
+- `2026.1.1` + オプションなし: usage を stderr に表示して終了コード 0、VERSION 不変
+- `2026.1.1` + `--release`: `2026.2.0-canary.0`
+- `2026.1.1` + `--hotfix`: `2026.1.2-canary.0`
+- `2026.1.0-canary.0` + オプションなし: `2026.1.0-canary.1`
+- `2026.1.0-canary.9` + オプションなし: `2026.1.0-canary.10`
+- `2026.1.0-canary.0` + `--release` / `--hotfix`: エラーメッセージと usage を stderr に表示して終了コード 1、VERSION 不変
+- `--release` と `--hotfix` の同時指定: argparse が usage とエラーメッセージを stderr に表示して終了コード 2
+- `feature/add-canary-base-version-option` などの非 develop ブランチ: エラーメッセージと usage を stderr に表示して終了コード 1、VERSION 不変
+
+`ruff check` と `ruff format --check` (ruff 0.14.14) はどちらもパスした。
