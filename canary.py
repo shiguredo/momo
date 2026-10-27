@@ -48,11 +48,18 @@ def update_sdk_version(version_content: str, base_update: str) -> str:
     canary_number = version_match.group(5)
 
     # 年は canary 実行者が VERSION を直接編集して変更するため、ここでは据え置く
-    if base_update == BASE_UPDATE_MINOR:
+    if base_update == BASE_UPDATE_KEEP:
+        # ベースバージョンは据え置き、canary 番号だけを進める
+        pass
+    elif base_update == BASE_UPDATE_MINOR:
         minor = minor + 1
         patch = 0
     elif base_update == BASE_UPDATE_PATCH:
         patch = patch + 1
+    else:
+        # 未知の基点指定は基点を進めていないのに成功したように見えるため、
+        # 無言で進めずに明示的に失敗させる
+        raise ValueError(f"Unknown base update: base_update is '{base_update}'")
 
     major_minor_patch = f"{year}.{minor}.{patch}"
 
