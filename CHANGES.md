@@ -13,7 +13,6 @@
 
 - [UPDATE] Raspberry Pi OS 向けビルドを libcamera 0.8.0 に追従する
   - libcamera の SONAME が `libcamera.so.0.7` から `libcamera.so.0.8` に変わるため、libcamera 0.8 系でビルドした Raspberry Pi OS 向けバイナリは `libcamera0.8` が入った端末で動かす必要がある
-  - sysroot は設定を変えない限り再利用されるため、ローカルに libcamera 0.7 系の sysroot が残っている場合は `_install/raspberry-pi-os_armv8/release/rootfs` を削除してから再ビルドすること
   - @voluntas
 
 ## 2026.1.1
