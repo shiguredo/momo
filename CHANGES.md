@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Raspberry Pi OS 向けビルドを libcamera 0.8.0 に追従する
+  - @voluntas
+
 ## 2026.1.1
 
 **リリース日**: 2026-10-23
