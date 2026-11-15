@@ -1,7 +1,7 @@
 # Raspberry Pi OS 向けビルドを libcamera 0.8.0 に追従する
 
 - Created: 2026-11-15
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-11-15
 - Branch: feature/update-support-libcamera-0.8
 - Polished: {YYYY-MM-DD}
 
@@ -40,3 +40,14 @@ libcamera は soname で ABI が分かれており、0.8 系でビルドした `
 - `doc/SETUP_RASPBERRY_PI.md` が libcamera 0.8 系のバイナリと `libcamera0.8` の対応に触れている
 - `CHANGES.md` に追従内容が記載されている
 - Raspberry Pi 実機で libcamera を利用した送受信が動作する (CI の self-hosted runner で確認する)
+
+## 解決方法
+
+2026-11-15 に対応した。
+
+- ソースコードの変更は不要だった。libcamera 0.8.0 の API 差分は momo が利用していない
+- 0.8.0+rpt20261104-1 の sysroot を生成し、`python3 run.py build raspberry-pi-os_armv8` が成功することを確認した。`libcamerac.so` の `NEEDED` は `libcamera.so.0.8` と `libcamera-base.so.0.8` になった
+- `doc/SETUP_RASPBERRY_PI.md` の例を 2026.1.1 に更新し、libcamera 0.8 系でビルドしたバイナリ向けに `libcamera0.8` のインストール手順を追加した
+- `CHANGES.md` の `## develop` に `[UPDATE]` を追記した
+- `tests/` の pytest 34 件と ruff check / format が通過した
+- Raspberry Pi 実機での E2E は CI の self-hosted runner で確認する
