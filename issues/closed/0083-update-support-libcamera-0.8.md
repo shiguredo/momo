@@ -9,7 +9,7 @@
 
 Raspberry Pi の apt リポジトリに libcamera 0.8.0 が配布されたため、momo の Raspberry Pi OS 向けビルドを 0.8.0 に追従させる。
 
-libcamera は soname で ABI が分かれており、0.8 系でビルドした `libcamerac.so` は `libcamera.so.0.8` に依存する。0.7 系しか入っていない端末では読み込めないため、追従を遅らせると、Raspberry Pi OS を更新した利用者との組み合わせで libcamera を利用したカメラキャプチャが動かなくなる期間が長くなる。
+libcamera は SONAME で ABI が分かれており、0.8 系でビルドした `libcamerac.so` は `libcamera.so.0.8` に依存する。0.7 系しか入っていない端末では読み込めないため、追従を遅らせると、Raspberry Pi OS を更新した利用者との組み合わせで libcamera を利用したカメラキャプチャが動かなくなる期間が長くなる。
 
 ## 現状
 
