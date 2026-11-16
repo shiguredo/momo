@@ -50,4 +50,9 @@ libcamera は SONAME で ABI が分かれており、0.8 系でビルドした `
 - `doc/SETUP_RASPBERRY_PI.md` の例を 2026.1.1 に更新し、libcamera 0.8 系でビルドしたバイナリ向けに `libcamera0.8` のインストール手順を追加した
 - `CHANGES.md` の `## develop` に `[UPDATE]` を追記した
 - `tests/` の pytest 34 件と ruff check / format が通過した
-- Raspberry Pi 実機での E2E は CI の self-hosted runner で確認する
+- Raspberry Pi 実機での E2E は CI の self-hosted runner で確認した
+  - build.yml の実行 #2203 で生成された `momo-2026.1.1_raspberry-pi-os_armv8` パッケージを Raspberry Pi 実機で `ldd ./momo` して、`libcamerac.so` の依存が `libcamera.so.0.8` と `libcamera-base.so.0.8` に解決されることを確認した
+  - 同時に、libcamera 0.8 の推移的依存である `libpisp.so.1`・`libgnutls.so.30`・`liblttng-ust.so.1`・`libudev.so.1`・`libyaml-0.so.2`・`libdw.so.1`・`libboost_log.so.1.83.0` なども解決されることを確認した
+  - 未解決 (not found) のライブラリはない
+  - 同じバイナリを Raspberry Pi 実機で `./momo --use-libcamera --no-audio-device --resolution HD --log-level 0 p2p` と `--resolution FHD` で起動し、別 PC の Chrome で `html/p2p.html` に接続して、それぞれの解像度で映像がブラウザに表示されることを確認した
+  - `--libcamera-control AeEnable 0 --libcamera-control ExposureTime 20000 --libcamera-control AnalogueGain 4.0` を指定して起動し、`libcamera_capturer.cpp:300` から `Set control AeEnable = 0`、`Set control ExposureTime = 20000`、`Set control AnalogueGain = 4.0` が出力されることを確認した。libcamera 0.8 でもコントロールの解決と適用が従来どおり動作している
