@@ -41,8 +41,7 @@ class SoraDataChannelOnAsio : public RTCDataManager {
   void Close(const webrtc::DataBuffer& disconnect_message,
              std::function<void()> on_close,
              int disconnect_wait_timeout = 5) {
-      timer_.expires_after(
-        std::chrono::seconds(disconnect_wait_timeout));
+    timer_.expires_after(std::chrono::seconds(disconnect_wait_timeout));
     timer_.async_wait([on_close](const boost::system::error_code& ec) {
       if (ec == boost::asio::error::operation_aborted) {
         return;

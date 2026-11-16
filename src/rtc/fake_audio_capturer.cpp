@@ -34,8 +34,7 @@ int32_t FakeAudioCapturer::RegisterAudioCallback(
 }
 
 int32_t FakeAudioCapturer::Init() {
-  device_buffer_ =
-      std::make_unique<webrtc::AudioDeviceBuffer>(env_);
+  device_buffer_ = std::make_unique<webrtc::AudioDeviceBuffer>(env_);
   initialized_ = true;
   return 0;
 }
