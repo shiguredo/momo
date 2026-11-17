@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2026.1.2
+
+**リリース日**: 2026-11-17
+
 - [UPDATE] Raspberry Pi OS 向けビルドを libcamera 0.8.0 に追従する
   - `libcamerac.so` が依存する SONAME が `libcamera.so.0.8` と `libcamera-base.so.0.8` になる。libcamera 0.7 系しか入っていない Raspberry Pi OS では `sudo apt-get install libcamera0.8` で 0.8 系を入れる必要がある
   - @voluntas
@@ -19,7 +23,7 @@
 
 - [UPDATE] C++ ソースを clang-format 20.1.0 に合わせて整形する
   - prek の `clang-format` フックを 20.1.0 固定にし、ファイルを書き換える `-i` から確認のみの `--dry-run --Werror` に変える
-  - @voluntas
+  - @Hexa
 
 ## 2026.1.1
 
