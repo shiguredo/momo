@@ -1,7 +1,7 @@
 # clang-format の違反を修正し、prek のフックをバージョン固定する
 
 - Created: 2026-11-16
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-11-17
 - Branch: feature/refactor-clang-format-hook
 - Polished: 2026-11-16
 
@@ -84,4 +84,14 @@
 
 ## 解決方法
 
-{YYYY-MM-DD} に追記する
+2026-11-17 に対応した。整形コミットとフック設定コミットの 2 つに分けて実施している。
+
+- clang-format 20.1.0 で 8 ファイルを整形した。差分は折り返しとインデントのみで、トークン列は 8 ファイルすべてで一致している。`#include` の並べ替えも発生していない
+- 整形前後で、コメントと行継続用のバックスラッシュを除いて空白と改行を正規化した文字列が一致することを確認した。`src/util.h` の `MOMO_BOOST_ERROR` マクロは 3 行から 2 行に統合されたが、`__LINE__` を使っておらず `__func__` のみのため動作は変わらない
+- `src/sora/sora_data_channel_on_asio.h` の `Close` で `timer_.expires_after` は 1 行になり 4 スペースのインデントになった。`src/sora-cpp-sdk/src/v4l2/v4l2_video_capturer.cpp` では「正確なサイズを得るため EOF を探す」コメントが直前のコメントと同じ 10 スペースに揃った
+- 整形後の 163 ファイルを clang-format 20.1.0 で検査して違反 0 件、18.1.8 でも 8 ファイルの違反が 0 件であることを確認した。`third_party` は `DisableFormat: true` により対象外である
+- `prek.toml` の `clang-format` フックを `language = "python"` と `additional_dependencies = ["clang-format==20.1.0"]` に変更し、`entry` を `clang-format -i` から `clang-format --dry-run --Werror` に変えた
+- `PREK_HOME` を新規ディレクトリにしてフック環境を作り直し、PATH 上に clang-format 23.1.5 がある場合、PATH から外した場合、18.1.8 がある場合の 3 通りで `prek run clang-format --all-files` が 0 で終了することを確認した。いずれもフックが使うバイナリは 20.1.0 である
+- フックが整形漏れを検出できることを確認するため、`src/util.h` を整形前に戻して `prek run clang-format --all-files` を実行し、`-Wclang-format-violations` で失敗することを確認した。ファイルは実行後に復元している
+- ローカルで `prek run --all-files` を実行し、ruff check / ruff format / ty check / ty check sysroot / clang-format のすべてが通過し、実行後に `git status` に新たな変更が現れないことを確認した
+- 本 issue は momo 側の整形のみを行っており、`LAST_UPDATED` は更新していない。`v4l2_video_capturer.cpp` の整形差分は次回の sora-cpp-sdk 同期時に sora-cpp-sdk 側へ反映する
