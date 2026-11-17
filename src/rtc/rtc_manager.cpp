@@ -63,8 +63,7 @@ bool ResolveDeviceIndex(const std::vector<AudioDeviceInfo>& infos,
                         uint16_t* resolved_index) {
   if (absl::SimpleAtoi(device_spec, resolved_index)) {
     if (*resolved_index >= infos.size()) {
-      RTC_LOG(LS_WARNING) << __func__
-                          << ": Device index out of range. index="
+      RTC_LOG(LS_WARNING) << __func__ << ": Device index out of range. index="
                           << *resolved_index << " available=" << infos.size();
       return false;
     }
@@ -96,16 +95,14 @@ bool SetAudioDevice(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
     return false;
   }
 
-  RTC_LOG(LS_INFO) << __func__
-                   << ": Applying device index=" << resolved_index
+  RTC_LOG(LS_INFO) << __func__ << ": Applying device index=" << resolved_index
                    << " is_input=" << is_input;
 
   // デバイスを設定
   int32_t set_result = is_input ? adm->SetRecordingDevice(resolved_index)
                                 : adm->SetPlayoutDevice(resolved_index);
   if (set_result != 0) {
-    RTC_LOG(LS_WARNING) << __func__
-                        << ": Failed to set audio device. index="
+    RTC_LOG(LS_WARNING) << __func__ << ": Failed to set audio device. index="
                         << resolved_index << " is_input=" << is_input
                         << " result=" << set_result;
     return false;
@@ -159,8 +156,7 @@ RTCManager::RTCManager(
           return config_.create_adm();
         } else {
 #if defined(_WIN32)
-          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-              env);
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(env);
 #else
           return webrtc::CreateAudioDeviceModule(webrtc::CreateEnvironment(),
                                                  audio_layer);
