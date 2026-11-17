@@ -30,13 +30,19 @@ sudo apt-get install libnspr4 libnss3
 
 CSI カメラを利用する場合は libcamera が必要です。パッケージに同梱されている `libcamerac.so` が libcamera に依存します。依存する SONAME はリリースごとに変わるため、特定バージョンのパッケージ名を固定しないでください。
 
-例: GitHub Releases の 2025.1.3 (`momo-2025.1.3_raspberry-pi-os_armv8.tar.gz`) では、`libcamerac.so` が `libcamera.so.0.7` と `libcamera-base.so.0.7` に依存します。この場合は次をインストールします。
+例: GitHub Releases の 2026.1.1 (`momo-2026.1.1_raspberry-pi-os_armv8.tar.gz`) では、`libcamerac.so` が `libcamera.so.0.7` と `libcamera-base.so.0.7` に依存します。この場合は次をインストールします。
 
 ```bash
 sudo apt-get install libcamera0.7
 ```
 
-利用するバイナリが 2025.1.3 でない場合は、そのバイナリで `ldd ./momo | grep not` を実行し、表示されたライブラリに合わせてパッケージを選んでください。
+libcamera 0.8 系でビルドしたバイナリでは、`libcamerac.so` が `libcamera.so.0.8` と `libcamera-base.so.0.8` に依存します。この場合は次をインストールします。
+
+```bash
+sudo apt-get install libcamera0.8
+```
+
+利用するバイナリで `ldd ./momo | grep not` を実行し、表示されたライブラリに合わせてパッケージを選んでください。
 
 #### Raspberry Pi OS Lite を利用する場合
 

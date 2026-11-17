@@ -438,7 +438,7 @@ bool V4L2VideoCapturer::CaptureProcess() {
           unsigned int eosSearchSize = MJPEG_EOS_SEARCH_SIZE;
           uint8_t* p;
           // v4l2_buf.bytesused にはアライメント用のパディングが含まれることがある
-    // 正確なサイズを得るため EOF を探す
+          // 正確なサイズを得るため EOF を探す
           if (eosSearchSize > bytesused)
             eosSearchSize = bytesused;
           for (unsigned int i = 0; i < eosSearchSize; i++) {

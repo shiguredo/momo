@@ -30,6 +30,10 @@ pass_filenames = false
 [[repos.hooks]]
 id = "clang-format"
 name = "clang-format"
-entry = "clang-format -i"
-language = "system"
+# CI の llvm.sh 20 と揃えたバージョンを固定して使い、開発者の PATH 上の
+# clang-format に依存しないようにする
+# ファイルを書き換えず、整形されていない場合だけコミットを失敗させる
+entry = "clang-format --dry-run --Werror"
+language = "python"
+additional_dependencies = ["clang-format==20.1.0"]
 types_or = ["c", "c++", "objective-c"]
